@@ -12,10 +12,15 @@ import {
 
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
-import DataSourceEventHandler from './datasource/DataSourceEventHandler';
-import { DataSourceState } from './datasource/DataSourceStatus';
-import DataSourceStatusManager from './datasource/DataSourceStatusManager';
-import Requestor from './datasource/Requestor';
+import {
+  createDataSourceEventHandler,
+  DataSourceEventHandler,
+} from './datasource/DataSourceEventHandler';
+import {
+  createDataSourceStatusManager,
+  DataSourceStatusManager,
+} from './datasource/DataSourceStatusManager';
+import { Requestor } from './datasource/Requestor';
 import { FlagManager } from './flag-manager/FlagManager';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
@@ -88,8 +93,8 @@ export abstract class BaseDataManager implements DataManager {
     protected readonly diagnosticsManager?: internal.DiagnosticsManager,
   ) {
     this.logger = config.logger;
-    this.dataSourceStatusManager = new DataSourceStatusManager(emitter);
-    this._dataSourceEventHandler = new DataSourceEventHandler(
+    this.dataSourceStatusManager = createDataSourceStatusManager(emitter);
+    this._dataSourceEventHandler = createDataSourceEventHandler(
       flagManager,
       this.dataSourceStatusManager,
       this.config.logger,
@@ -214,16 +219,16 @@ export abstract class BaseDataManager implements DataManager {
     return {
       start: () => {
         // update status before starting processor to ensure potential errors are reported after initializing
-        statusManager.requestStateUpdate(DataSourceState.Initializing);
+        statusManager.requestStateUpdate('INITIALIZING');
         processor.start();
       },
       stop: () => {
         processor.stop();
-        statusManager.requestStateUpdate(DataSourceState.Closed);
+        statusManager.requestStateUpdate('CLOSED');
       },
       close: () => {
         processor.close();
-        statusManager.requestStateUpdate(DataSourceState.Closed);
+        statusManager.requestStateUpdate('CLOSED');
       },
     };
   }

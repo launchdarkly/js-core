@@ -1,7 +1,7 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
 import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
-import Requestor, { makeRequestor } from './datasource/Requestor';
+import { makeRequestor, Requestor } from './datasource/Requestor';
 import LDClientImpl from './LDClientImpl';
 import LDEmitter, { EventName } from './LDEmitter';
 

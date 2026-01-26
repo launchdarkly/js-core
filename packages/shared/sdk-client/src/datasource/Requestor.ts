@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import {
   Encoding,
   getPollingUri,
@@ -28,33 +27,8 @@ export class LDRequestError extends Error implements HttpErrorResponse {
  * Note: The requestor is implemented independently from polling such that it can be used to
  * make a one-off request.
  */
-export default class Requestor {
-  constructor(
-    private _requests: Requests,
-    private readonly _uri: string,
-    private readonly _headers: { [key: string]: string },
-    private readonly _method: string,
-    private readonly _body?: string,
-  ) {}
-
-  async requestPayload(): Promise<string> {
-    let status: number | undefined;
-    try {
-      const res = await this._requests.fetch(this._uri, {
-        method: this._method,
-        headers: this._headers,
-        body: this._body,
-      });
-      if (isOk(res.status)) {
-        return await res.text();
-      }
-      // Assigning so it can be thrown after the try/catch.
-      status = res.status;
-    } catch (err: any) {
-      throw new LDRequestError(err?.message);
-    }
-    throw new LDRequestError(`Unexpected status code: ${status}`, status);
-  }
+export interface Requestor {
+  requestPayload(): Promise<string>;
 }
 
 export function makeRequestor(
@@ -68,8 +42,8 @@ export function makeRequestor(
   withReasons?: boolean,
   useReport?: boolean,
   secureModeHash?: string,
-) {
-  let body;
+): Requestor {
+  let body: string | undefined;
   let method = 'GET';
   const headers: { [key: string]: string } = { ...baseHeaders };
 
@@ -92,5 +66,27 @@ export function makeRequestor(
   }
 
   const uri = getPollingUri(serviceEndpoints, path, parameters);
-  return new Requestor(requests, uri, headers, method, body);
+
+  return {
+    async requestPayload(): Promise<string> {
+      let status: number | undefined;
+      try {
+        const res = await requests.fetch(uri, {
+          method,
+          headers,
+          body,
+        });
+        if (isOk(res.status)) {
+          return await res.text();
+        }
+        // Assigning so it can be thrown after the try/catch.
+        status = res.status;
+      } catch (err: any) {
+        throw new LDRequestError(err?.message);
+      }
+      throw new LDRequestError(`Unexpected status code: ${status}`, status);
+    },
+  };
 }
+
+export default Requestor;
