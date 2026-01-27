@@ -48,5 +48,3 @@ alwaysApply: true
 - Tests should be run using `yarn workspace <package name> test`
 - The package name can be found in the package.json file
 - Unit tests should be run for any packages that have been modified
-
-

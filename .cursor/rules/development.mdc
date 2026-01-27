@@ -28,3 +28,6 @@ alwaysApply: true
   ```
 - Replace package name as needed
 - Running `yarn build` in individual packages won't rebuild dependencies
+
+## Opening pull requests
+- When creating a Pull Request, always create it as a Draft Pull Request unless explicitly instructed otherwise.

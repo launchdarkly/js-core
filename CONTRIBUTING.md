@@ -164,6 +164,7 @@ flowchart LR
     server-ai[sdk/server-ai]
     react-universal[sdk/react-universal]
     svelte[sdk/svelte]
+    shopify-oxygen[sdk/shopify-oxygen]
 
     %% Store packages
     redis[store/node-server-sdk-redis]
@@ -191,6 +192,7 @@ flowchart LR
     
     sdk-server --> server-node
     sdk-server --> server-ai
+    sdk-server --> shopify-oxygen
     
     sdk-server-edge --> cloudflare
     sdk-server-edge --> fastly
