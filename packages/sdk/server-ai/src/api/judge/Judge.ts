@@ -26,9 +26,30 @@ export class Judge {
     logger?: LDLogger,
   ) {
     this._logger = logger;
-    this._evaluationResponseStructure = EvaluationSchemaBuilder.build(
-      this._aiConfig.evaluationMetricKeys,
-    );
+    const evaluationMetricKey = this._getEvaluationMetricKey();
+    this._evaluationResponseStructure = EvaluationSchemaBuilder.build(evaluationMetricKey);
+  }
+
+  /**
+   * Gets the evaluation metric key, prioritizing evaluationMetricKey over evaluationMetricKeys.
+   * Falls back to the first valid (non-empty, non-whitespace) value in evaluationMetricKeys if evaluationMetricKey is not provided.
+   * Treats empty strings and whitespace-only strings as invalid.
+   * @returns The evaluation metric key, or undefined if not available
+   */
+  private _getEvaluationMetricKey(): string | undefined {
+    if (
+      this._aiConfig.evaluationMetricKey &&
+      this._aiConfig.evaluationMetricKey.trim().length > 0
+    ) {
+      return this._aiConfig.evaluationMetricKey.trim();
+    }
+    if (this._aiConfig.evaluationMetricKeys && this._aiConfig.evaluationMetricKeys.length > 0) {
+      const validKey = this._aiConfig.evaluationMetricKeys.find(
+        (key) => key && key.trim().length > 0,
+      );
+      return validKey ? validKey.trim() : undefined;
+    }
+    return undefined;
   }
 
   /**
@@ -45,12 +66,10 @@ export class Judge {
     samplingRate: number = 1,
   ): Promise<JudgeResponse | undefined> {
     try {
-      if (
-        !this._aiConfig.evaluationMetricKeys ||
-        this._aiConfig.evaluationMetricKeys.length === 0
-      ) {
+      const evaluationMetricKey = this._getEvaluationMetricKey();
+      if (!evaluationMetricKey) {
         this._logger?.warn(
-          'Judge configuration is missing required evaluationMetricKeys',
+          'Judge configuration is missing required evaluation metric key',
           this._aiConfigTracker.getTrackData(),
         );
         return undefined;
@@ -78,11 +97,11 @@ export class Judge {
 
       let { success } = response.metrics;
 
-      const evals = this._parseEvaluationResponse(response.data);
+      const evals = this._parseEvaluationResponse(response.data, evaluationMetricKey);
 
-      if (Object.keys(evals).length !== this._aiConfig.evaluationMetricKeys.length) {
+      if (!evals[evaluationMetricKey]) {
         this._logger?.warn(
-          'Judge evaluation did not return all evaluations',
+          'Judge evaluation did not return the expected evaluation',
           this._aiConfigTracker.getTrackData(),
         );
         success = false;
@@ -169,7 +188,10 @@ export class Judge {
   /**
    * Parses the structured evaluation response from the AI provider.
    */
-  private _parseEvaluationResponse(data: Record<string, unknown>): Record<string, EvalScore> {
+  private _parseEvaluationResponse(
+    data: Record<string, unknown>,
+    evaluationMetricKey: string,
+  ): Record<string, EvalScore> {
     const evaluations = data.evaluations as Record<string, unknown>;
     const results: Record<string, EvalScore> = {};
 
@@ -178,40 +200,38 @@ export class Judge {
       return results;
     }
 
-    this._aiConfig.evaluationMetricKeys.forEach((metricKey) => {
-      const evaluation = evaluations[metricKey];
+    const evaluation = evaluations[evaluationMetricKey];
 
-      if (!evaluation || typeof evaluation !== 'object') {
-        this._logger?.warn(
-          `Missing evaluation for metric key: ${metricKey}`,
-          this._aiConfigTracker.getTrackData(),
-        );
-        return;
-      }
+    if (!evaluation || typeof evaluation !== 'object') {
+      this._logger?.warn(
+        `Missing evaluation for metric key: ${evaluationMetricKey}`,
+        this._aiConfigTracker.getTrackData(),
+      );
+      return results;
+    }
 
-      const evalData = evaluation as Record<string, unknown>;
+    const evalData = evaluation as Record<string, unknown>;
 
-      if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
-        this._logger?.warn(
-          `Invalid score evaluated for ${metricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
-          this._aiConfigTracker.getTrackData(),
-        );
-        return;
-      }
+    if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
+      this._logger?.warn(
+        `Invalid score evaluated for ${evaluationMetricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
+        this._aiConfigTracker.getTrackData(),
+      );
+      return results;
+    }
 
-      if (typeof evalData.reasoning !== 'string') {
-        this._logger?.warn(
-          `Invalid reasoning evaluated for ${metricKey}: ${evalData.reasoning}. Reasoning must be a string`,
-          this._aiConfigTracker.getTrackData(),
-        );
-        return;
-      }
+    if (typeof evalData.reasoning !== 'string') {
+      this._logger?.warn(
+        `Invalid reasoning evaluated for ${evaluationMetricKey}: ${evalData.reasoning}. Reasoning must be a string`,
+        this._aiConfigTracker.getTrackData(),
+      );
+      return results;
+    }
 
-      results[metricKey] = {
-        score: evalData.score,
-        reasoning: evalData.reasoning,
-      };
-    });
+    results[evaluationMetricKey] = {
+      score: evalData.score,
+      reasoning: evalData.reasoning,
+    };
 
     return results;
   }

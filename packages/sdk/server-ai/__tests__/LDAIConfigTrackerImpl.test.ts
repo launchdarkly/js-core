@@ -813,3 +813,70 @@ describe('trackMetricsOf', () => {
     );
   });
 });
+
+describe('trackJudgeResponse', () => {
+  it('tracks evaluation metric key with score', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const judgeResponse = {
+      judgeConfigKey: 'test-judge',
+      evals: {
+        relevance: { score: 0.8, reasoning: 'The response is relevant' },
+      },
+      success: true,
+    };
+
+    tracker.trackJudgeResponse(judgeResponse);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      'relevance',
+      testContext,
+      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
+      0.8,
+    );
+  });
+
+  it('tracks multiple evaluation metrics when present', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const judgeResponse = {
+      judgeConfigKey: 'test-judge',
+      evals: {
+        relevance: { score: 0.8, reasoning: 'Relevant' },
+        accuracy: { score: 0.9, reasoning: 'Accurate' },
+      },
+      success: true,
+    };
+
+    tracker.trackJudgeResponse(judgeResponse);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      'relevance',
+      testContext,
+      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
+      0.8,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      'accuracy',
+      testContext,
+      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
+      0.9,
+    );
+  });
+});
