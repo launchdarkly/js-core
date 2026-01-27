@@ -113,54 +113,6 @@ interface ConfigurationValues {
   [index: string]: any;
 }
 
-function validateTypesAndNames(
-  pristineOptions: LDOptions,
-  values: ConfigurationValues,
-  _logger: LDLogger,
-): string[] {
-  const errors: string[] = [];
-
-  Object.entries(pristineOptions).forEach(([k, v]) => {
-    const validator = validators[k as keyof LDOptions];
-
-    if (validator) {
-      if (!validator.is(v)) {
-        const validatorType = validator.getType();
-
-        if (validatorType === 'boolean') {
-          errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-          // eslint-disable-next-line no-param-reassign
-          values[k] = !!v;
-        } else if (validatorType === 'boolean | undefined | null') {
-          errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-
-          if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
-            // eslint-disable-next-line no-param-reassign
-            values[k] = !!v;
-          }
-        } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
-          const { min } = validator as NumberWithMinimum;
-          errors.push(OptionMessages.optionBelowMinimum(k, v, min));
-          // eslint-disable-next-line no-param-reassign
-          values[k] = min;
-        } else {
-          errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
-        }
-      } else if (k === 'logger') {
-        // Logger already assigned.
-      } else {
-        // if an option is explicitly null, coerce to undefined
-        // eslint-disable-next-line no-param-reassign
-        values[k] = v ?? undefined;
-      }
-    } else {
-      errors.push(OptionMessages.unknownOption(k));
-    }
-  });
-
-  return errors;
-}
-
 export function createConfiguration(
   pristineOptions: LDOptions = {},
   internalOptions: LDClientInternalOptions = {
@@ -193,8 +145,40 @@ export function createConfiguration(
     inspectors: [],
   };
 
-  const errors = validateTypesAndNames(pristineOptions, values, logger);
-  errors.forEach((e: string) => logger.warn(e));
+  // Validate options and update values
+  Object.entries(pristineOptions).forEach(([k, v]) => {
+    const validator = validators[k as keyof LDOptions];
+
+    if (validator) {
+      if (!validator.is(v)) {
+        const validatorType = validator.getType();
+
+        if (validatorType === 'boolean') {
+          logger.warn(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
+          values[k] = !!v;
+        } else if (validatorType === 'boolean | undefined | null') {
+          logger.warn(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
+
+          if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
+            values[k] = !!v;
+          }
+        } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
+          const { min } = validator as NumberWithMinimum;
+          logger.warn(OptionMessages.optionBelowMinimum(k, v, min));
+          values[k] = min;
+        } else {
+          logger.warn(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
+        }
+      } else if (k === 'logger') {
+        // Logger already assigned.
+      } else {
+        // if an option is explicitly null, coerce to undefined
+        values[k] = v ?? undefined;
+      }
+    } else {
+      logger.warn(OptionMessages.unknownOption(k));
+    }
+  });
 
   // Remove internal URI properties that shouldn't be on the final Configuration
   const { baseUri, eventsUri, streamUri, payloadFilterKey, ...configValues } = values;
