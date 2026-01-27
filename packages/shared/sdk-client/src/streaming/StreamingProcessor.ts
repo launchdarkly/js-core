@@ -18,7 +18,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { StreamingDataSourceConfig } from '../datasource/DataSourceConfig';
-import Requestor, { LDRequestError } from '../datasource/Requestor';
+import { LDRequestError, Requestor } from '../datasource/Requestor';
 
 const reportJsonError = (
   type: string,

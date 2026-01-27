@@ -3,31 +3,26 @@
  * Not exported - only used internally by TrackedJudge.
  */
 class EvaluationSchemaBuilder {
-  static build(evaluationMetricKeys: string[]): Record<string, unknown> {
+  static build(evaluationMetricKey?: string): Record<string, unknown> {
+    if (!evaluationMetricKey) {
+      return {};
+    }
     return {
       type: 'object',
       properties: {
         evaluations: {
           type: 'object',
-          description: `Object containing evaluation results for ${evaluationMetricKeys.join(', ')} metrics`,
-          properties: this._buildKeyProperties(evaluationMetricKeys),
-          required: evaluationMetricKeys,
+          description: `Object containing evaluation results for ${evaluationMetricKey} metric`,
+          properties: {
+            [evaluationMetricKey]: this._buildKeySchema(evaluationMetricKey),
+          },
+          required: [evaluationMetricKey],
           additionalProperties: false,
         },
       },
       required: ['evaluations'],
       additionalProperties: false,
     } as const;
-  }
-
-  private static _buildKeyProperties(evaluationMetricKeys: string[]) {
-    return evaluationMetricKeys.reduce(
-      (acc, key) => {
-        acc[key] = this._buildKeySchema(key);
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
   }
 
   private static _buildKeySchema(key: string) {

@@ -11,7 +11,7 @@ import {
   ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 
-import Requestor, { makeRequestor } from '../../src/datasource/Requestor';
+import { makeRequestor, Requestor } from '../../src/datasource/Requestor';
 import PollingProcessor from '../../src/polling/PollingProcessor';
 import { DataSourcePaths } from '../../src/streaming';
 
