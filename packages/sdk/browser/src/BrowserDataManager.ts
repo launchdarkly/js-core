@@ -4,6 +4,7 @@ import {
   Context,
   DataSourceErrorKind,
   DataSourcePaths,
+  DataSourceState,
   FlagManager,
   httpErrorMessage,
   internal,
@@ -93,7 +94,7 @@ export default class BrowserDataManager extends BaseDataManager {
     this._secureModeHash = browserIdentifyOptions?.hash;
 
     if (browserIdentifyOptions?.bootstrap) {
-      this._finishIdentifyFromBootstrap(context, browserIdentifyOptions.bootstrap, identifyResolve);
+      this._finishIdentifyFromBootstrap(context, browserIdentifyOptions, identifyResolve);
     } else {
       if (await this.flagManager.loadCached(context)) {
         this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
@@ -160,7 +161,7 @@ export default class BrowserDataManager extends BaseDataManager {
     identifyReject: (err: Error) => void,
   ) {
     try {
-      this.dataSourceStatusManager.requestStateUpdate('INITIALIZING');
+      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
 
       const payload = await this._requestPayload(context);
 
@@ -186,10 +187,14 @@ export default class BrowserDataManager extends BaseDataManager {
 
   private _finishIdentifyFromBootstrap(
     context: Context,
-    bootstrap: unknown,
+    browserIdentifyOptions: BrowserIdentifyOptions,
     identifyResolve: () => void,
   ) {
-    this.flagManager.setBootstrap(context, readFlagsFromBootstrap(this.logger, bootstrap));
+    let { bootstrapParsed } = browserIdentifyOptions;
+    if (!bootstrapParsed) {
+      bootstrapParsed = readFlagsFromBootstrap(this.logger, browserIdentifyOptions.bootstrap);
+    }
+    this.flagManager.setBootstrap(context, bootstrapParsed);
     this._debugLog('Identify - Initialization completed from bootstrap');
     identifyResolve();
   }
