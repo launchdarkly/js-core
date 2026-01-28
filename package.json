@@ -18,6 +18,7 @@
     "packages/sdk/react-native/example",
     "packages/sdk/react-universal",
     "packages/sdk/react-universal/example",
+    "packages/sdk/react-universal/contract-tests",
     "packages/sdk/vercel",
     "packages/sdk/svelte",
     "packages/sdk/svelte/example",
