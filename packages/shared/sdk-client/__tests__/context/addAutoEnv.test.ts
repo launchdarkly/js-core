@@ -7,7 +7,7 @@ import {
   LDUser,
 } from '@launchdarkly/js-sdk-common';
 
-import { Configuration, ConfigurationImpl } from '../../src/configuration';
+import { Configuration, createConfiguration } from '../../src/configuration';
 import {
   addApplicationInfo,
   addAutoEnv,
@@ -37,7 +37,7 @@ describe('automatic environment attributes', () => {
   beforeEach(() => {
     ({ crypto, info } = mockPlatform);
     (crypto.randomUUID as jest.Mock).mockResolvedValue('test-device-key-1');
-    config = new ConfigurationImpl({ logger });
+    config = createConfiguration({ logger });
   });
 
   afterEach(() => {
@@ -342,7 +342,7 @@ describe('automatic environment attributes', () => {
 
   describe('addApplicationInfo', () => {
     test('add id, version, name, versionName', async () => {
-      config = new ConfigurationImpl({
+      config = createConfiguration({
         applicationInfo: {
           id: 'com.from-config.ld',
           version: '2.2.2',
@@ -435,7 +435,7 @@ describe('automatic environment attributes', () => {
       info.platformData = jest
         .fn()
         .mockReturnValueOnce({ ld_application: { version: null, locale: '' } });
-      config = new ConfigurationImpl({ applicationInfo: { version: '1.2.3' } });
+      config = createConfiguration({ applicationInfo: { version: '1.2.3' } });
       const ldApplication = await addApplicationInfo(mockPlatform, config);
 
       expect(ldApplication).toBeUndefined();

@@ -76,141 +76,128 @@ function ensureSafeLogger(logger?: LDLogger): LDLogger {
   return createSafeLogger(logger);
 }
 
-export default class ConfigurationImpl implements Configuration {
-  public readonly logger: LDLogger = createSafeLogger();
-
-  // Naming conventions is not followed for these lines because the config validation
-  // accesses members based on the keys of the options. (sdk-763)
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly baseUri = DEFAULT_POLLING;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly eventsUri = ServiceEndpoints.DEFAULT_EVENTS;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  private readonly streamUri = DEFAULT_STREAM;
-
-  public readonly maxCachedContexts = 5;
-
-  public readonly capacity = 100;
-  public readonly diagnosticRecordingInterval = 900;
-  public readonly flushInterval = 30;
-  public readonly streamInitialReconnectDelay = 1;
-
-  public readonly allAttributesPrivate: boolean = false;
-  public readonly debug: boolean = false;
-  public readonly diagnosticOptOut: boolean = false;
-  public readonly sendEvents: boolean = true;
-  public readonly sendLDHeaders: boolean = true;
-
-  public readonly useReport: boolean = false;
-  public readonly withReasons: boolean = false;
-
-  public readonly privateAttributes: string[] = [];
-
-  public readonly tags: ApplicationTags;
-  public readonly applicationInfo?: {
+interface ConfigurationValues {
+  logger: LDLogger;
+  baseUri: string;
+  eventsUri: string;
+  streamUri: string;
+  maxCachedContexts: number;
+  capacity: number;
+  diagnosticRecordingInterval: number;
+  flushInterval: number;
+  streamInitialReconnectDelay: number;
+  allAttributesPrivate: boolean;
+  debug: boolean;
+  diagnosticOptOut: boolean;
+  sendEvents: boolean;
+  sendLDHeaders: boolean;
+  useReport: boolean;
+  withReasons: boolean;
+  privateAttributes: string[];
+  applicationInfo?: {
     id?: string;
     version?: string;
     name?: string;
     versionName?: string;
   };
-  public readonly bootstrap?: LDFlagSet;
-
-  // TODO: implement requestHeaderTransform
-  public readonly requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
-  public readonly stream?: boolean;
-  public readonly hash?: string;
-  public readonly wrapperName?: string;
-  public readonly wrapperVersion?: string;
-
-  public readonly serviceEndpoints: ServiceEndpoints;
-
-  public readonly pollInterval: number = DEFAULT_POLLING_INTERVAL;
-
-  public readonly userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent';
-
-  public readonly hooks: Hook[] = [];
-
-  public readonly inspectors: LDInspection[] = [];
-
-  public readonly trackEventModifier: (
-    event: internal.InputCustomEvent,
-  ) => internal.InputCustomEvent;
-
-  public readonly credentialType: 'clientSideId' | 'mobileKey';
-  public readonly getImplementationHooks: (
-    environmentMetadata: LDPluginEnvironmentMetadata,
-  ) => Hook[];
-
-  // Allow indexing Configuration by a string
+  bootstrap?: LDFlagSet;
+  requestHeaderTransform?: (headers: Map<string, string>) => Map<string, string>;
+  stream?: boolean;
+  hash?: string;
+  wrapperName?: string;
+  wrapperVersion?: string;
+  pollInterval: number;
+  hooks: Hook[];
+  inspectors: LDInspection[];
+  payloadFilterKey?: string;
   [index: string]: any;
+}
 
-  constructor(
-    pristineOptions: LDOptions = {},
-    internalOptions: LDClientInternalOptions = {
-      getImplementationHooks: () => [],
-      credentialType: 'mobileKey',
-    },
-  ) {
-    this.logger = ensureSafeLogger(pristineOptions.logger);
-    const errors = this._validateTypesAndNames(pristineOptions);
-    errors.forEach((e: string) => this.logger.warn(e));
+export function createConfiguration(
+  pristineOptions: LDOptions = {},
+  internalOptions: LDClientInternalOptions = {
+    getImplementationHooks: () => [],
+    credentialType: 'mobileKey',
+  },
+): Configuration {
+  const logger = ensureSafeLogger(pristineOptions.logger);
 
-    this.serviceEndpoints = new ServiceEndpoints(
-      this.streamUri,
-      this.baseUri,
-      this.eventsUri,
+  const values: ConfigurationValues = {
+    logger,
+    baseUri: DEFAULT_POLLING,
+    eventsUri: ServiceEndpoints.DEFAULT_EVENTS,
+    streamUri: DEFAULT_STREAM,
+    maxCachedContexts: 5,
+    capacity: 100,
+    diagnosticRecordingInterval: 900,
+    flushInterval: 30,
+    streamInitialReconnectDelay: 1,
+    allAttributesPrivate: false,
+    debug: false,
+    diagnosticOptOut: false,
+    sendEvents: true,
+    sendLDHeaders: true,
+    useReport: false,
+    withReasons: false,
+    privateAttributes: [],
+    pollInterval: DEFAULT_POLLING_INTERVAL,
+    hooks: [],
+    inspectors: [],
+  };
+
+  // Validate options and update values
+  Object.entries(pristineOptions).forEach(([k, v]) => {
+    const validator = validators[k as keyof LDOptions];
+
+    if (validator) {
+      if (!validator.is(v)) {
+        const validatorType = validator.getType();
+
+        if (validatorType === 'boolean') {
+          logger.warn(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
+          values[k] = !!v;
+        } else if (validatorType === 'boolean | undefined | null') {
+          logger.warn(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
+
+          if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
+            values[k] = !!v;
+          }
+        } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
+          const { min } = validator as NumberWithMinimum;
+          logger.warn(OptionMessages.optionBelowMinimum(k, v, min));
+          values[k] = min;
+        } else {
+          logger.warn(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
+        }
+      } else if (k === 'logger') {
+        // Logger already assigned.
+      } else {
+        // if an option is explicitly null, coerce to undefined
+        values[k] = v ?? undefined;
+      }
+    } else {
+      logger.warn(OptionMessages.unknownOption(k));
+    }
+  });
+
+  // Remove internal URI properties that shouldn't be on the final Configuration
+  const { baseUri, eventsUri, streamUri, payloadFilterKey, ...configValues } = values;
+
+  return {
+    ...configValues,
+    tags: new ApplicationTags({ application: values.applicationInfo, logger }),
+    serviceEndpoints: new ServiceEndpoints(
+      streamUri,
+      baseUri,
+      eventsUri,
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
-      pristineOptions.payloadFilterKey,
-    );
-    this.useReport = pristineOptions.useReport ?? false;
-
-    this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
-    this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
-    this.trackEventModifier = internalOptions.trackEventModifier ?? ((event) => event);
-
-    this.credentialType = internalOptions.credentialType;
-    this.getImplementationHooks = internalOptions.getImplementationHooks;
-  }
-
-  private _validateTypesAndNames(pristineOptions: LDOptions): string[] {
-    const errors: string[] = [];
-
-    Object.entries(pristineOptions).forEach(([k, v]) => {
-      const validator = validators[k as keyof LDOptions];
-
-      if (validator) {
-        if (!validator.is(v)) {
-          const validatorType = validator.getType();
-
-          if (validatorType === 'boolean') {
-            errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-            this[k] = !!v;
-          } else if (validatorType === 'boolean | undefined | null') {
-            errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-
-            if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
-              this[k] = !!v;
-            }
-          } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
-            const { min } = validator as NumberWithMinimum;
-            errors.push(OptionMessages.optionBelowMinimum(k, v, min));
-            this[k] = min;
-          } else {
-            errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
-          }
-        } else if (k === 'logger') {
-          // Logger already assigned.
-        } else {
-          // if an option is explicitly null, coerce to undefined
-          this[k] = v ?? undefined;
-        }
-      } else {
-        errors.push(OptionMessages.unknownOption(k));
-      }
-    });
-
-    return errors;
-  }
+      payloadFilterKey,
+    ),
+    userAgentHeaderName: internalOptions.userAgentHeaderName ?? 'user-agent',
+    trackEventModifier: internalOptions.trackEventModifier ?? ((event) => event),
+    credentialType: internalOptions.credentialType,
+    getImplementationHooks: internalOptions.getImplementationHooks,
+  };
 }
