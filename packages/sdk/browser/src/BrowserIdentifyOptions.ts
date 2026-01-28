@@ -1,4 +1,4 @@
-import { LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common';
+import { ItemDescriptor, LDIdentifyOptions } from '@launchdarkly/js-client-sdk-common';
 
 /**
  * @property sheddable - If true, the identify operation will be sheddable. This means that if multiple identify operations are done, without
@@ -28,4 +28,12 @@ export interface BrowserIdentifyOptions extends Omit<LDIdentifyOptions, 'waitFor
    * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/features/bootstrapping#javascript).
    */
   bootstrap?: unknown;
+
+  /**
+   * Parsed bootstrap data that could be stored to ensure that the bootstrap data is only parsed once during the intialization
+   * process.
+   *
+   * @hidden
+   */
+  bootstrapParsed?: { [key: string]: ItemDescriptor };
 }
