@@ -1,24 +1,24 @@
 import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceState } from '../../src/datasource/DataSourceStatus';
-import DataSourceStatusManager from '../../src/datasource/DataSourceStatusManager';
+import { createDataSourceStatusManager } from '../../src/datasource/DataSourceStatusManager';
 import LDEmitter from '../../src/LDEmitter';
 
 describe('DataSourceStatusManager', () => {
   test('its first state is closed', async () => {
-    const underTest = new DataSourceStatusManager(new LDEmitter());
+    const underTest = createDataSourceStatusManager(new LDEmitter());
     expect(underTest.status.state).toEqual(DataSourceState.Closed);
   });
 
   test('it stays at initializing if receives recoverable error', async () => {
-    const underTest = new DataSourceStatusManager(new LDEmitter());
+    const underTest = createDataSourceStatusManager(new LDEmitter());
     underTest.requestStateUpdate(DataSourceState.Initializing);
     underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.state).toEqual(DataSourceState.Initializing);
   });
 
   test('it moves to closed if receives unrecoverable error', async () => {
-    const underTest = new DataSourceStatusManager(new LDEmitter());
+    const underTest = createDataSourceStatusManager(new LDEmitter());
     underTest.requestStateUpdate(DataSourceState.Initializing);
     underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, false);
     expect(underTest.status.state).toEqual(DataSourceState.Closed);
@@ -27,7 +27,7 @@ describe('DataSourceStatusManager', () => {
   test('it updates last error time with each error, but not stateSince', async () => {
     let time = 0;
     const stamper: () => number = () => time;
-    const underTest = new DataSourceStatusManager(new LDEmitter(), stamper);
+    const underTest = createDataSourceStatusManager(new LDEmitter(), stamper);
     underTest.reportError(DataSourceErrorKind.ErrorResponse, 'womp', 404, true);
     expect(underTest.status.stateSince).toEqual(0);
     expect(underTest.status.lastError?.time).toEqual(0);
@@ -47,7 +47,7 @@ describe('DataSourceStatusManager', () => {
     let time = 0;
     const stamper: () => number = () => time;
 
-    const underTest = new DataSourceStatusManager(new LDEmitter(), stamper);
+    const underTest = createDataSourceStatusManager(new LDEmitter(), stamper);
     expect(underTest.status.state).toEqual(DataSourceState.Closed);
     expect(underTest.status.stateSince).toEqual(0);
 
@@ -65,7 +65,7 @@ describe('DataSourceStatusManager', () => {
     const stamper: () => number = () => time;
     const emitter = new LDEmitter();
     const spy = jest.spyOn(emitter, 'emit');
-    const underTest = new DataSourceStatusManager(emitter, stamper);
+    const underTest = createDataSourceStatusManager(emitter, stamper);
 
     underTest.requestStateUpdate(DataSourceState.SetOffline);
     time += 1;

@@ -94,7 +94,11 @@ export interface RNSpecificOptions {
    * Storage is used used for caching flag values for context as well as persisting generated
    * identifiers. Storage could be used for additional features in the future.
    *
-   * Defaults to @react-native-async-storage/async-storage.
+   * Defaults to `@react-native-async-storage/async-storage` see [their documentation](https://react-native-async-storage.github.io/2.0/) for more information.
+   *
+   * @remarks
+   * If there is an issue with the storage implementation, then generated keys and context caches may not be persisted. This will cause the SDK to
+   * generate new keys and context caches on every startup.
    */
   readonly storage?: RNStorage;
 

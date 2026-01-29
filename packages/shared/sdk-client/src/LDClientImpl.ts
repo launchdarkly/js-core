@@ -1,11 +1,11 @@
 import {
   AutoEnvAttributes,
+  cancelableTimedPromise,
   clone,
   Context,
   defaultHeaders,
   internal,
   LDClientError,
-  LDContext,
   LDFlagSet,
   LDFlagValue,
   LDHeaders,
@@ -20,18 +20,29 @@ import {
   Hook,
   LDClient,
   LDClientIdentifyResult,
+  LDContext,
+  LDContextStrict,
   LDIdentifyError,
   LDIdentifyResult,
   LDIdentifyShed,
   LDIdentifySuccess,
   LDIdentifyTimeout,
   type LDOptions,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationTimeout,
 } from './api';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './api/LDEvaluationDetail';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { createAsyncTaskQueue } from './async/AsyncTaskQueue';
 import { Configuration, ConfigurationImpl, LDClientInternalOptions } from './configuration';
 import { addAutoEnv } from './context/addAutoEnv';
+import {
+  ActiveContextTracker,
+  createActiveContextTracker,
+} from './context/createActiveContextTracker';
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
@@ -41,8 +52,9 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import DefaultFlagManager, { FlagManager } from './flag-manager/FlagManager';
+import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
+import { ItemDescriptor } from './flag-manager/ItemDescriptor';
 import HookRunner from './HookRunner';
 import { getInspectorHook } from './inspection/getInspectorHook';
 import InspectorManager from './inspection/InspectorManager';
@@ -55,11 +67,11 @@ const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
 export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private readonly _config: Configuration;
-  private _uncheckedContext?: LDContext;
-  private _checkedContext?: Context;
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
   readonly logger: LDLogger;
+
+  private _activeContextTracker: ActiveContextTracker = createActiveContextTracker();
 
   private readonly _highTimeoutThreshold: number = 15;
 
@@ -75,6 +87,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
   private _identifyQueue = createAsyncTaskQueue<void>();
+
+  // The initialized promise is used to track the initialization state of the client.
+  // This is separate from identify operations because initialization may complete
+  // through the first identify call.
+  protected initializedPromise?: Promise<LDWaitForInitializationResult>;
+  protected initResolve?: (result: LDWaitForInitializationResult) => void;
+  protected initializeResult?: LDWaitForInitializationResult;
 
   /**
    * Creates the client object synchronously. No async, no network calls.
@@ -121,7 +140,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this._diagnosticsManager,
     );
     this.emitter = new LDEmitter();
-    this.emitter.on('error', (c: LDContext, err: any) => {
+    this.emitter.on('error', (c: LDContextStrict, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
     });
 
@@ -159,6 +178,28 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (this._inspectorManager.hasInspectors()) {
       this._hookRunner.addHook(getInspectorHook(this._inspectorManager));
     }
+
+    if (
+      options.cleanOldPersistentData &&
+      internalOptions?.getLegacyStorageKeys &&
+      this.platform.storage
+    ) {
+      // NOTE: we are letting this fail silently because it's not critical and we don't want to block the client from initializing.
+      try {
+        this.logger.debug('Cleaning old persistent data.');
+        Promise.all(
+          internalOptions.getLegacyStorageKeys().map((key) => this.platform.storage?.clear(key)),
+        )
+          .catch((error) => {
+            this.logger.error(`Error cleaning old persistent data: ${error}`);
+          })
+          .finally(() => {
+            this.logger.debug('Cleaned old persistent data.');
+          });
+      } catch (error) {
+        this.logger.error(`Error cleaning old persistent data: ${error}`);
+      }
+    }
   }
 
   allFlags(): LDFlagSet {
@@ -194,33 +235,28 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     return { result: true };
   }
 
-  getContext(): LDContext | undefined {
+  getContext(): LDContextStrict | undefined {
     // The LDContext returned here may have been modified by the SDK (for example: adding auto env attributes).
     // We are returning an LDContext here to maintain a consistent representation of context to the consuming
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
-    return this._uncheckedContext ? clone<LDContext>(this._uncheckedContext) : undefined;
+    return this._activeContextTracker.hasContext()
+      ? clone<LDContextStrict>(this._activeContextTracker.getUnwrappedContext())
+      : undefined;
   }
 
   protected getInternalContext(): Context | undefined {
-    return this._checkedContext;
+    return this._activeContextTracker.getContext();
   }
 
-  private _createIdentifyPromise(): {
-    identifyPromise: Promise<void>;
-    identifyResolve: () => void;
-    identifyReject: (err: Error) => void;
-  } {
-    let res: any;
-    let rej: any;
-
-    const basePromise = new Promise<void>((resolve, reject) => {
-      res = resolve;
-      rej = reject;
-    });
-
-    return { identifyPromise: basePromise, identifyResolve: res, identifyReject: rej };
+  /**
+   * Preset flags are used to set the flags before the client is initialized. This is useful for
+   * when client has precached flags that are ready to evaluate without full initialization.
+   * @param newFlags - The flags to preset.
+   */
+  protected presetFlags(newFlags: { [key: string]: ItemDescriptor }) {
+    this._flagManager.presetFlags(newFlags);
   }
 
   /**
@@ -307,15 +343,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               this.emitter.emit('error', context, error);
               return Promise.reject(error);
             }
-            this._uncheckedContext = context;
-            this._checkedContext = checkedContext;
+            this._activeContextTracker.set(context, checkedContext);
 
             this._eventProcessor?.sendEvent(
-              this._eventFactoryDefault.identifyEvent(this._checkedContext),
+              this._eventFactoryDefault.identifyEvent(checkedContext),
             );
             const { identifyPromise, identifyResolve, identifyReject } =
-              this._createIdentifyPromise();
-            this.logger.debug(`Identifying ${JSON.stringify(this._checkedContext)}`);
+              this._activeContextTracker.newIdentificationPromise();
+            this.logger.debug(`Identifying ${JSON.stringify(checkedContext)}`);
 
             await this.dataManager.identify(
               identifyResolve,
@@ -340,12 +375,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       )
       .then((res) => {
         if (res.status === 'error') {
-          return { status: 'error', error: res.error } as LDIdentifyError;
+          const errorResult = { status: 'error', error: res.error } as LDIdentifyError;
+          // Track initialization state for waitForInitialization
+          this.maybeSetInitializationResult({ status: 'failed', error: res.error });
+          return errorResult;
         }
         if (res.status === 'shed') {
           return { status: 'shed' } as LDIdentifyShed;
         }
-        return { status: 'completed' } as LDIdentifySuccess;
+        const successResult = { status: 'completed' } as LDIdentifySuccess;
+        // Track initialization state for waitForInitialization
+        this.maybeSetInitializationResult({ status: 'complete' });
+        return successResult;
       });
 
     if (noTimeout) {
@@ -360,6 +401,86 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     return Promise.race([callSitePromise, timeoutPromise]);
   }
 
+  /**
+   * Sets the initialization result and resolves any pending waitForInitialization promises.
+   * This method is idempotent and will only be set by the initialization flow. Subsequent calls
+   * should not do anything.
+   * @param result The initialization result.
+   */
+  protected maybeSetInitializationResult(result: LDWaitForInitializationResult): void {
+    if (this.initializeResult === undefined) {
+      this.initializeResult = result;
+      this.emitter.emit('ready');
+      if (result.status === 'complete') {
+        this.emitter.emit('initialized');
+      }
+      if (this.initResolve) {
+        this.initResolve(result);
+        this.initResolve = undefined;
+      }
+    }
+  }
+
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult> {
+    const timeout = options?.timeout ?? 5;
+
+    // If initialization has already completed (successfully or failed), return the result immediately.
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
+    }
+
+    // If waitForInitialization was previously called, then return the promise with a timeout.
+    // This condition should only be triggered if waitForInitialization was called multiple times.
+    if (this.initializedPromise) {
+      return this.promiseWithTimeout(this.initializedPromise, timeout);
+    }
+
+    // Create a new promise for tracking initialization
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
+      });
+    }
+
+    return this.promiseWithTimeout(this.initializedPromise, timeout);
+  }
+
+  /**
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   *
+   * @param basePromise The promise to race against a timeout.
+   * @param timeout The timeout in seconds.
+   * @returns A promise that resolves to the initialization result or timeout.
+   *
+   * @privateRemarks
+   * This method is protected because it is used by the browser SDK's `start` method.
+   * Eventually, the start method will be moved to this common implementation and this method will
+   * be made private.
+   */
+  protected promiseWithTimeout(
+    basePromise: Promise<LDWaitForInitializationResult>,
+    timeout: number,
+  ): Promise<LDWaitForInitializationResult> {
+    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
+    return Promise.race([
+      basePromise.then((res: LDWaitForInitializationResult) => {
+        cancelableTimeout.cancel();
+        return res;
+      }),
+      cancelableTimeout.promise
+        // If the promise resolves without error, then the initialization completed successfully.
+        // NOTE: this should never return as the resolution would only be triggered by the basePromise
+        // being resolved.
+        .then(() => ({ status: 'complete' }) as LDWaitForInitializationComplete)
+        .catch(() => ({ status: 'timeout' }) as LDWaitForInitializationTimeout),
+    ]).catch((reason) => {
+      this.logger?.error(reason.message);
+      return { status: 'failed', error: reason as Error } as LDWaitForInitializationFailed;
+    });
+  }
+
   on(eventName: EventName, listener: Function): void {
     this.emitter.on(eventName, listener);
   }
@@ -369,7 +490,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   }
 
   track(key: string, data?: any, metricValue?: number): void {
-    if (!this._checkedContext || !this._checkedContext.valid) {
+    if (!this._activeContextTracker.hasValidContext()) {
       this.logger.warn(ClientMessages.MissingContextKeyNoEvent);
       return;
     }
@@ -381,14 +502,19 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._eventProcessor?.sendEvent(
       this._config.trackEventModifier(
-        this._eventFactoryDefault.customEvent(key, this._checkedContext!, data, metricValue),
+        this._eventFactoryDefault.customEvent(
+          key,
+          this._activeContextTracker.getContext()!,
+          data,
+          metricValue,
+        ),
       ),
     );
 
     this._hookRunner.afterTrack({
       key,
       // The context is pre-checked above, so we know it can be unwrapped.
-      context: this._uncheckedContext!,
+      context: this._activeContextTracker.getUnwrappedContext()!,
       data,
       metricValue,
     });
@@ -400,23 +526,32 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
   ): LDEvaluationDetail {
-    if (!this._uncheckedContext) {
-      this.logger.debug(ClientMessages.MissingContextKeyNoEvent);
-      return createErrorEvaluationDetail(ErrorKinds.UserNotSpecified, defaultValue);
+    // We are letting evaulations happen without a context. The main case for this
+    // is when cached data is loaded, but the client is not fully initialized. In this
+    // case, we will write out a warning for each evaluation attempt.
+
+    // NOTE: we will be changing this behavior soon once we have a tracker on the
+    // client initialization state.
+    const hasContext = this._activeContextTracker.hasContext();
+    if (!hasContext) {
+      this.logger?.warn(
+        'Flag evaluation called before client is fully initialized, data from this evaulation could be stale.',
+      );
     }
 
-    const evalContext = Context.fromLDContext(this._uncheckedContext);
+    const evalContext = this._activeContextTracker.getContext()!;
     const foundItem = this._flagManager.get(flagKey);
 
     if (foundItem === undefined || foundItem.flag.deleted) {
       const defVal = defaultValue ?? null;
-      const error = new LDClientError(
-        `Unknown feature flag "${flagKey}"; returning default value ${defVal}.`,
-      );
-      this.emitter.emit('error', this._uncheckedContext, error);
-      this._eventProcessor?.sendEvent(
-        this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
-      );
+
+      this.logger?.warn(`Unknown feature flag "${flagKey}"; returning default value ${defVal}.`);
+
+      if (hasContext) {
+        this._eventProcessor?.sendEvent(
+          this._eventFactoryDefault.unknownFlagEvent(flagKey, defVal, evalContext),
+        );
+      }
       return createErrorEvaluationDetail(ErrorKinds.FlagNotFound, defaultValue);
     }
 
@@ -425,20 +560,22 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
-        this._eventProcessor?.sendEvent(
-          eventFactory.evalEventClient(
-            flagKey,
-            defaultValue, // track default value on type errors
-            defaultValue,
-            foundItem.flag,
-            evalContext,
-            reason,
-          ),
-        );
+        if (hasContext) {
+          this._eventProcessor?.sendEvent(
+            eventFactory.evalEventClient(
+              flagKey,
+              defaultValue, // track default value on type errors
+              defaultValue,
+              foundItem.flag,
+              evalContext,
+              reason,
+            ),
+          );
+        }
         const error = new LDClientError(
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
-        this.emitter.emit('error', this._uncheckedContext, error);
+        this.emitter.emit('error', this._activeContextTracker.getUnwrappedContext(), error);
         return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
       }
     }
@@ -452,31 +589,36 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     prerequisites?.forEach((prereqKey) => {
       this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
     });
-    this._eventProcessor?.sendEvent(
-      eventFactory.evalEventClient(
-        flagKey,
-        value,
-        defaultValue,
-        foundItem.flag,
-        evalContext,
-        reason,
-      ),
-    );
+    if (hasContext) {
+      this._eventProcessor?.sendEvent(
+        eventFactory.evalEventClient(
+          flagKey,
+          value,
+          defaultValue,
+          foundItem.flag,
+          evalContext,
+          reason,
+        ),
+      );
+    }
     return successDetail;
   }
 
   variation(flagKey: string, defaultValue?: LDFlagValue): LDFlagValue {
     const { value } = this._hookRunner.withEvaluation(
       flagKey,
-      this._uncheckedContext,
+      this._activeContextTracker.getUnwrappedContext(),
       defaultValue,
       () => this._variationInternal(flagKey, defaultValue, this._eventFactoryDefault),
     );
     return value;
   }
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
-    return this._hookRunner.withEvaluation(flagKey, this._uncheckedContext, defaultValue, () =>
-      this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
+    return this._hookRunner.withEvaluation(
+      flagKey,
+      this._activeContextTracker.getUnwrappedContext(),
+      defaultValue,
+      () => this._variationInternal(flagKey, defaultValue, this._eventFactoryWithReasons),
     );
   }
 
@@ -486,8 +628,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     eventFactory: EventFactory,
     typeChecker: (value: unknown) => [boolean, string],
   ): LDEvaluationDetailTyped<T> {
-    return this._hookRunner.withEvaluation(key, this._uncheckedContext, defaultValue, () =>
-      this._variationInternal(key, defaultValue, eventFactory, typeChecker),
+    return this._hookRunner.withEvaluation(
+      key,
+      this._activeContextTracker.getUnwrappedContext(),
+      defaultValue,
+      () => this._variationInternal(key, defaultValue, eventFactory, typeChecker),
     );
   }
 
@@ -581,6 +726,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this._eventProcessor?.sendEvent(event);
   }
 
+  protected getDebugOverrides(): LDDebugOverride | undefined {
+    return this._flagManager.getDebugOverride?.();
+  }
+
   private _handleInspectionChanged(flagKeys: Array<string>, type: FlagChangeType) {
     if (!this._inspectorManager.hasInspectors()) {
       return;
@@ -595,13 +744,14 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       } else {
         details[flagKey] = {
           value: undefined,
-          // For backwards compatibility purposes reason and variationIndex are null instead of
-          // being undefined.
-          reason: null,
           variationIndex: null,
         };
       }
     });
+
+    // NOTE: we are not tracking "override" changes because, at the time of writing,
+    // these changes are only used for debugging purposes and are not persisted. This
+    // may change in the future.
     if (type === 'init') {
       this._inspectorManager.onFlagsChanged(details);
     } else if (type === 'patch') {

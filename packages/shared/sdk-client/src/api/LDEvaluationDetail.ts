@@ -8,8 +8,6 @@ import {
 // used by server SDKs, has a required reason. This file contains a client specific
 // LDEvaluationDetail which has an optional reason.
 
-// TODO: On major version change "reason" to be optional instead of nullable.
-
 /**
  * An object that combines the result of a feature flag evaluation with information about
  * how it was calculated.
@@ -20,7 +18,7 @@ export type LDEvaluationDetail = Omit<CommonDetail, 'reason'> & {
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason: LDEvaluationReason | null;
+  reason?: LDEvaluationReason;
 };
 
 /**
@@ -33,5 +31,5 @@ export type LDEvaluationDetailTyped<TFlag> = Omit<CommonDetailTyped<TFlag>, 'rea
   /**
    * An optional object describing the main factor that influenced the flag evaluation value.
    */
-  reason: LDEvaluationReason | null;
+  reason?: LDEvaluationReason;
 };

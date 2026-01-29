@@ -53,13 +53,13 @@ app.post('/', async (req: Request, res: Response) => {
 });
 
 app.post('/clients/:id', async (req: Request, res: Response) => {
-  await clientPool.runCommand(req.params.id, req.body, res);
+  await clientPool.runCommand(req.params.id as string, req.body, res);
 });
 
 app.delete('/clients/:id', async (req: Request, res: Response) => {
   console.debug('DELETE request received /clients/:id');
   console.debug(req.params.id);
-  await clientPool.deleteClient(req.params.id, res);
+  await clientPool.deleteClient(req.params.id as string, res);
 });
 
 server = app.listen(port, () => {

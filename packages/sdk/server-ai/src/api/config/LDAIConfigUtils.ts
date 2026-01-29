@@ -29,6 +29,7 @@ export interface LDAIConfigFlagValue {
   messages?: LDMessage[];
   provider?: LDProviderConfig;
   instructions?: string;
+  evaluationMetricKey?: string;
   evaluationMetricKeys?: string[];
   judgeConfiguration?: LDJudgeConfiguration;
 }
@@ -64,6 +65,9 @@ export class LDAIConfigUtils {
     }
     if ('instructions' in config && config.instructions !== undefined) {
       flagValue.instructions = config.instructions;
+    }
+    if ('evaluationMetricKey' in config && config.evaluationMetricKey !== undefined) {
+      flagValue.evaluationMetricKey = config.evaluationMetricKey;
     }
     if ('evaluationMetricKeys' in config && config.evaluationMetricKeys !== undefined) {
       flagValue.evaluationMetricKeys = config.evaluationMetricKeys;
@@ -121,7 +125,6 @@ export class LDAIConfigUtils {
           key,
           enabled: false,
           tracker: undefined,
-          evaluationMetricKeys: [],
         } as LDAIJudgeConfig;
       case 'completion':
       default:
@@ -202,11 +205,22 @@ export class LDAIConfigUtils {
     flagValue: LDAIConfigFlagValue,
     tracker: LDAIConfigTracker,
   ): LDAIJudgeConfig {
+    // Prioritize evaluationMetricKey, fallback to first valid (non-empty, non-whitespace) value in evaluationMetricKeys
+    let evaluationMetricKey: string | undefined;
+    if (flagValue.evaluationMetricKey && flagValue.evaluationMetricKey.trim().length > 0) {
+      evaluationMetricKey = flagValue.evaluationMetricKey.trim();
+    } else if (flagValue.evaluationMetricKeys && flagValue.evaluationMetricKeys.length > 0) {
+      const validKey = flagValue.evaluationMetricKeys.find(
+        (metricKey) => metricKey && metricKey.trim().length > 0,
+      );
+      evaluationMetricKey = validKey ? validKey.trim() : undefined;
+    }
+
     return {
       ...this._toBaseConfig(key, flagValue),
       tracker,
       messages: flagValue.messages,
-      evaluationMetricKeys: flagValue.evaluationMetricKeys || [],
+      evaluationMetricKey,
     };
   }
 }

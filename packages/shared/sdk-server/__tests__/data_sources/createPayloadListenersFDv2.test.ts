@@ -104,7 +104,7 @@ const changesTransferNone = {
 
 describe('createPayloadListenerFDv2', () => {
   let dataSourceUpdates: LDTransactionalDataSourceUpdates;
-  let basisReceived: jest.Mock;
+  let initializedCallback: jest.Mock;
 
   beforeEach(() => {
     dataSourceUpdates = {
@@ -112,7 +112,7 @@ describe('createPayloadListenerFDv2', () => {
       upsert: jest.fn(),
       applyChanges: jest.fn(),
     };
-    basisReceived = jest.fn();
+    initializedCallback = jest.fn();
   });
 
   afterEach(() => {
@@ -120,11 +120,11 @@ describe('createPayloadListenerFDv2', () => {
   });
 
   test('data source updates called with basis true', async () => {
-    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
     listener(fullTransferPayload);
 
-    expect(logger.debug).toBeCalledWith(expect.stringMatching(/initializing/i));
-    expect(dataSourceUpdates.applyChanges).toBeCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/initializing/i));
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
       true,
       {
         features: {
@@ -134,17 +134,17 @@ describe('createPayloadListenerFDv2', () => {
           segkey: { key: 'segkey', version: 2 },
         },
       },
-      basisReceived,
+      expect.any(Function),
       { environmentId: 'envId' },
       'initial',
     );
   });
 
   test('data source updates called with basis false', async () => {
-    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
     listener(changesTransferPayload);
 
-    expect(logger.debug).toBeCalledWith(expect.stringMatching(/updating/i));
+    expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/updating/i));
     expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(1);
     expect(dataSourceUpdates.applyChanges).toHaveBeenNthCalledWith(
       1,
@@ -168,17 +168,79 @@ describe('createPayloadListenerFDv2', () => {
           },
         },
       },
-      basisReceived,
+      expect.any(Function),
       { environmentId: 'envId' },
       'changes',
     );
   });
 
   test('data source updates not called when basis is false and changes are empty', async () => {
-    const listener = createPayloadListener(dataSourceUpdates, logger, basisReceived);
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
     listener(changesTransferNone);
 
     expect(logger.debug).toBeCalledWith(expect.stringMatching(/ignoring/i));
     expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(0);
+  });
+
+  test('calls initializedCallback when state is non-empty (initial)', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+    let capturedCallback: (() => void) | undefined;
+
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => {
+      capturedCallback = callback;
+    });
+
+    listener(fullTransferPayload);
+
+    expect(capturedCallback).toBeDefined();
+    expect(initializedCallback).not.toHaveBeenCalled();
+
+    // Simulate applyChanges calling the callback
+    capturedCallback?.();
+
+    expect(initializedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not call initializedCallback when state is empty (file data initializer)', () => {
+    const fileDataPayload = {
+      initMetadata: {
+        environmentId: 'envId',
+      },
+      payload: {
+        id: 'payloadID',
+        version: 99,
+        state: '',
+        basis: true,
+        updates: [
+          {
+            kind: 'flag',
+            key: 'flagkey',
+            version: 1,
+            object: {
+              key: 'flagkey',
+              version: 1,
+            },
+          },
+        ],
+      },
+    };
+
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+    let capturedCallback: (() => void) | undefined;
+
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => {
+      capturedCallback = callback;
+    });
+
+    listener(fileDataPayload);
+
+    expect(capturedCallback).toBeDefined();
+    expect(initializedCallback).not.toHaveBeenCalled();
+
+    // Simulate applyChanges calling the callback
+    capturedCallback?.();
+
+    // Should still not be called because state is empty
+    expect(initializedCallback).not.toHaveBeenCalled();
   });
 });

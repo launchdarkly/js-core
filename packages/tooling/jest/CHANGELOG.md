@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.2.2](https://github.com/launchdarkly/js-core/compare/jest-v0.2.1...jest-v0.2.2) (2026-01-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/react-native-client-sdk bumped from ~10.12.5 to ~10.12.6
+
+## [0.2.1](https://github.com/launchdarkly/js-core/compare/jest-v0.2.0...jest-v0.2.1) (2026-01-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/react-native-client-sdk bumped from ~10.12.4 to ~10.12.5
+
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/jest-v0.1.15...jest-v0.2.0) (2026-01-06)
+
+
+### Features
+
+* add waitForInitialization to RN SDK ([#1048](https://github.com/launchdarkly/js-core/issues/1048)) ([13ce456](https://github.com/launchdarkly/js-core/commit/13ce456d9e3a5bcf043734f757415d4856034257))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/react-native-client-sdk bumped from ~10.12.3 to ~10.12.4
+
+## [0.1.15](https://github.com/launchdarkly/js-core/compare/jest-v0.1.14...jest-v0.1.15) (2025-12-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/react-native-client-sdk bumped from ~10.12.2 to ~10.12.3
+
 ## [0.1.14](https://github.com/launchdarkly/js-core/compare/jest-v0.1.13...jest-v0.1.14) (2025-12-05)
 
 

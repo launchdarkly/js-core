@@ -171,3 +171,123 @@ describe('sdk-client identify timeout', () => {
     expect(logger.warn).not.toHaveBeenCalledWith(expect.stringMatching(/timeout greater/));
   });
 });
+
+describe('sdk-client waitForInitialization', () => {
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  beforeEach(() => {
+    defaultPutResponse = clone<Flags>(mockResponseJson);
+
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateEvents('put', simulatedEvents);
+        return mockEventSource;
+      },
+    );
+
+    ldc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      mockPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, mockPlatform),
+    );
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('blocks until the client is ready when waitForInitialization is called', async () => {
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
+    const waitPromise = ldc.waitForInitialization({ timeout: 10 });
+    const identifyPromise = ldc.identifyResult(carContext);
+
+    jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
+
+    await Promise.all([waitPromise, identifyPromise]);
+
+    await expect(waitPromise).resolves.toEqual({ status: 'complete' });
+    await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
+  });
+
+  it('can call waitForInitialization multiple times', async () => {
+    simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
+
+    const waitPromise = ldc.waitForInitialization({ timeout: 10 });
+    const identifyPromise = ldc.identifyResult(carContext);
+
+    jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
+
+    await Promise.all([waitPromise, identifyPromise]);
+
+    await expect(waitPromise).resolves.toEqual({ status: 'complete' });
+    await expect(identifyPromise).resolves.toEqual({ status: 'completed' });
+
+    const waitPromise2 = ldc.waitForInitialization({ timeout: 10 });
+    await expect(waitPromise2).resolves.toEqual({ status: 'complete' });
+  });
+
+  it('resolves waitForInitialization with timeout status when initialization does not complete before the timeout', async () => {
+    // set simulated events to be empty so initialization does not complete
+    simulatedEvents = [];
+
+    const waitPromise = ldc.waitForInitialization({ timeout: 10 });
+    const identifyPromise = ldc.identifyResult(carContext);
+
+    jest.advanceTimersByTimeAsync(10 * 1000 + 1).then();
+
+    await Promise.all([waitPromise, identifyPromise]);
+
+    await expect(waitPromise).resolves.toEqual({ status: 'timeout' });
+    await expect(identifyPromise).resolves.toEqual({
+      timeout: DEFAULT_IDENTIFY_TIMEOUT,
+      status: 'timeout',
+    });
+  });
+
+  it('resolves waitForInitialization with failed status immediately when identify fails', async () => {
+    const errorPlatform = createBasicPlatform();
+    const identifyError = new Error('Network error');
+
+    // Mock fetch to reject with an error
+    errorPlatform.requests.createEventSource.mockImplementation(() => {
+      throw identifyError;
+    });
+
+    const errorLdc = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      errorPlatform,
+      {
+        logger,
+        sendEvents: false,
+      },
+      makeTestDataManagerFactory(testSdkKey, errorPlatform),
+    );
+
+    const waitPromise = errorLdc.waitForInitialization({ timeout: 10 });
+    const identifyPromise = errorLdc.identifyResult(carContext);
+
+    // Advance timers to allow error handler to be set up and error to propagate
+    await jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT);
+    jest.runAllTicks();
+
+    const identifyResult = await identifyPromise;
+
+    expect(identifyResult.status).toBe('error');
+
+    // Verify that waitForInitialization returns immediately with failed status
+    await expect(waitPromise).resolves.toEqual({
+      status: 'failed',
+      error: identifyError,
+    });
+  });
+});

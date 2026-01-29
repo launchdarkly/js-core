@@ -1,7 +1,6 @@
 import {
   clone,
   internal,
-  LDContext,
   LDContextCommon,
   LDMultiKindContext,
   LDSingleKindContext,
@@ -9,6 +8,7 @@ import {
   Platform,
 } from '@launchdarkly/js-sdk-common';
 
+import type { LDContext, LDContextStrict } from '../api/LDContext';
 import { getOrGenerateKey } from '../storage/getOrGenerateKey';
 import { namespaceForAnonymousGeneratedContextKey } from '../storage/namespaceUtils';
 
@@ -63,8 +63,11 @@ const ensureKeyLegacy = async (c: LDUser, platform: Platform) => {
  * @param context
  * @param platform
  */
-export const ensureKey = async (context: LDContext, platform: Platform): Promise<LDContext> => {
-  const cloned = clone<LDContext>(context);
+export const ensureKey = async (
+  context: LDContext,
+  platform: Platform,
+): Promise<LDContextStrict> => {
+  const cloned = clone<LDContextStrict>(context);
 
   if (isSingleKind(cloned)) {
     await ensureKeySingle(cloned as LDSingleKindContext, platform);

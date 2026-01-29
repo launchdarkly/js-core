@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.17.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.17.0...js-server-sdk-common-v2.17.1) (2025-12-09)
+
+
+### Bug Fixes
+
+* FDv2 initializer readiness ([#1017](https://github.com/launchdarkly/js-core/issues/1017)) ([7a3af02](https://github.com/launchdarkly/js-core/commit/7a3af024ca4db273a90e1b9a1f21ec53ef2fed35))
+
 ## [2.17.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.16.2...js-server-sdk-common-v2.17.0) (2025-12-05)
 
 

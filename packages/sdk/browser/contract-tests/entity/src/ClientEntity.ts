@@ -1,4 +1,4 @@
-import { initialize, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
+import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
 
 import { CommandParams, CommandType, ValueType } from './CommandParams';
 import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
@@ -207,11 +207,15 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||
     makeDefaultInitialContext();
-  const client = initialize(options.configuration.credential || 'unknown-env-id', sdkConfig);
+  const client = createClient(
+    options.configuration.credential || 'unknown-env-id',
+    initialContext,
+    sdkConfig,
+  );
   let failed = false;
   try {
     await Promise.race([
-      client.identify(initialContext),
+      client.start(),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
       }),

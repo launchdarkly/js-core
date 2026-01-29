@@ -1,9 +1,14 @@
-import { LDContext, LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
+import type { LDContext, LDContextStrict } from './LDContext';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
 import { LDIdentifyResult } from './LDIdentifyResult';
+import {
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+} from './LDWaitForInitialization';
 
 /**
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
@@ -81,7 +86,7 @@ export interface LDClient {
    * This is the context that was most recently passed to {@link identify}, or, if {@link identify} has never
    * been called, this will be undefined.
    */
-  getContext(): LDContext | undefined;
+  getContext(): LDContextStrict | undefined;
 
   /**
    * Identifies a context to LaunchDarkly.
@@ -333,6 +338,41 @@ export interface LDClient {
    * @param Hook The hook to add.
    */
   addHook(hook: Hook): void;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The Promise will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
+   *
+   * @example
+   * This example shows use of async/await syntax for specifying handlers:
+   * ```
+   *     const result = await client.waitForInitialization({ timeout: 5 });
+   *
+   *     if (result.status === 'complete') {
+   *       doSomethingWithSuccessfullyInitializedClient();
+   *     } else if (result.status === 'failed') {
+   *       doSomethingForFailedStartup(result.error);
+   *     } else if (result.status === 'timeout') {
+   *       doSomethingForTimedOutStartup();
+   *     }
+   * ```
+   *
+   * @remarks
+   * You can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * indicates success, and `"error"` indicates an error.
+   *
+   * @param options
+   *  Optional configuration. Please see {@link LDWaitForInitializationOptions}.
+   *
+   * @returns
+   *   A Promise that will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   *   status of the waitForInitialization operation.
+   */
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult>;
 }
 
 /**

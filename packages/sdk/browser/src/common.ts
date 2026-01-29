@@ -21,6 +21,7 @@ export type {
   LDContext,
   LDContextCommon,
   LDContextMeta,
+  LDContextStrict,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDEvaluationReason,
@@ -43,6 +44,12 @@ export type {
   LDIdentifyError,
   LDIdentifyTimeout,
   LDIdentifyShed,
+  LDDebugOverride,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationTimeout,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

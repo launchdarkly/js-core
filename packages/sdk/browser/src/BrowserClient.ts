@@ -15,23 +15,33 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
   Platform,
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-import { LDClient } from './LDClient';
+import { LDClient, LDStartOptions } from './LDClient';
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
+import { getAllStorageKeys } from './platform/LocalStorage';
 
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
+
+  private _initialContext?: LDContext;
+
+  // NOTE: This also keeps track of when we tried to initialize the client.
+  private _startPromise?: Promise<LDWaitForInitializationResult>;
 
   constructor(
     clientSideId: string,
@@ -114,6 +124,9 @@ class BrowserClientImpl extends LDClientImpl {
           diagnosticsManager,
         ),
       {
+        // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
+        getLegacyStorageKeys: () =>
+          getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
         analyticsEventPath: `/events/bulk/${clientSideId}`,
         diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
         includeAuthorizationHeader: false,
@@ -195,6 +208,15 @@ class BrowserClientImpl extends LDClientImpl {
       client,
       this._plugins || [],
     );
+
+    const override = this.getDebugOverrides();
+    if (override) {
+      safeRegisterDebugOverridePlugins(this.logger, override, this._plugins || []);
+    }
+  }
+
+  setInitialContext(context: LDContext): void {
+    this._initialContext = context;
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
@@ -205,15 +227,72 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
+    if (!this._startPromise) {
+      this.logger.error(
+        'Client must be started before it can identify a context, did you forget to call start()?',
+      );
+      return { status: 'error', error: new Error('Identify called before start') };
+    }
+
     const identifyOptionsWithUpdatedDefaults = {
       ...identifyOptions,
     };
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
     }
+
     const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
+
     this._goalManager?.startTracking();
     return res;
+  }
+
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
+    }
+    if (this._startPromise) {
+      return this._startPromise;
+    }
+    if (!this._initialContext) {
+      this.logger.error('Initial context not set');
+      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
+    }
+
+    // When we get to this point, we assume this is the first time that start is being
+    // attempted. This line should only be called once during the lifetime of the client.
+    const identifyOptions = {
+      ...(options?.identifyOptions ?? {}),
+
+      // Initial identify operations are not sheddable.
+      sheddable: false,
+    };
+
+    // If the bootstrap data is provided in the start options, and the identify options do not have bootstrap data,
+    // then use the bootstrap data from the start options.
+    if (options?.bootstrap && !identifyOptions.bootstrap) {
+      identifyOptions.bootstrap = options.bootstrap;
+    }
+
+    if (identifyOptions?.bootstrap) {
+      try {
+        const bootstrapData = readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
+        this.presetFlags(bootstrapData);
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
+    }
+
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
+      });
+    }
+
+    this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
+
+    this.identifyResult(this._initialContext!, identifyOptions);
+    return this._startPromise;
   }
 
   setStreaming(streaming?: boolean): void {
@@ -243,11 +322,13 @@ class BrowserClientImpl extends LDClientImpl {
 
 export function makeClient(
   clientSideId: string,
+  initialContext: LDContext,
   autoEnvAttributes: AutoEnvAttributes,
   options: BrowserOptions = {},
   overridePlatform?: Platform,
 ): LDClient {
   const impl = new BrowserClientImpl(clientSideId, autoEnvAttributes, options, overridePlatform);
+  impl.setInitialContext(initialContext);
 
   // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
   // In the future we should consider updating the common SDK code to not use inheritance and instead compose
@@ -282,7 +363,10 @@ export function makeClient(
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
     addHook: (hook: Hook) => impl.addHook(hook),
+    waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
+      impl.waitForInitialization(waitOptions),
     logger: impl.logger,
+    start: (startOptions?: LDStartOptions) => impl.start(startOptions),
   };
 
   impl.registerPlugins(client);

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "1.15.2",
+  "version": "1.17.2",
   "type": "module",
   "main": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.ts",
@@ -37,7 +37,7 @@
     "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix",
+    "lint:fix": "npx eslint . --ext .ts --fix",
     "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
     "check": "yarn && yarn prettier && yarn lint && tsc && yarn test"
   },

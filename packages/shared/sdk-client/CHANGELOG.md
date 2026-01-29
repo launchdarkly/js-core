@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.17.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.1...js-client-sdk-common-v1.17.2) (2026-01-21)
+
+
+### Bug Fixes
+
+* evaluation detail type should be optional ([#1064](https://github.com/launchdarkly/js-core/issues/1064)) ([e81c333](https://github.com/launchdarkly/js-core/commit/e81c333034f2e8206dfaf70d6fdb6001747b777f))
+* update LDClient to not require context key for client side identify methods ([#1045](https://github.com/launchdarkly/js-core/issues/1045)) ([0cf7660](https://github.com/launchdarkly/js-core/commit/0cf76600af7fb5b3ef42d4e2b4cb73a27443a5e3))
+
+## [1.17.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.0...js-client-sdk-common-v1.17.1) (2026-01-08)
+
+
+### Bug Fixes
+
+* browser logging for non-existing flags ([#1054](https://github.com/launchdarkly/js-core/issues/1054)) ([f87b418](https://github.com/launchdarkly/js-core/commit/f87b418ff63866199667be2d7a49e1dc22156b44))
+
+## [1.17.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.16.0...js-client-sdk-common-v1.17.0) (2026-01-06)
+
+
+### Features
+
+* add legacy storage key cleanup functionality ([#1043](https://github.com/launchdarkly/js-core/issues/1043)) ([fe4725e](https://github.com/launchdarkly/js-core/commit/fe4725e24917fe795cee448383b4fe8fa8b4b56f))
+* add waitForInitialization to RN SDK ([#1048](https://github.com/launchdarkly/js-core/issues/1048)) ([13ce456](https://github.com/launchdarkly/js-core/commit/13ce456d9e3a5bcf043734f757415d4856034257))
+
+## [1.16.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.15.2...js-client-sdk-common-v1.16.0) (2025-12-18)
+
+
+### Features
+
+* adding support for debug override plugins ([#1033](https://github.com/launchdarkly/js-core/issues/1033)) ([17f5e7d](https://github.com/launchdarkly/js-core/commit/17f5e7d7d11d502d54a6ccf88aea6bec3e4b775c))
+* allow clients to evaluate bootstrapped flags when not ready ([#1036](https://github.com/launchdarkly/js-core/issues/1036)) ([9b4542a](https://github.com/launchdarkly/js-core/commit/9b4542a722e5d19e123e860faef113d134dad47c))
+* implement `waitForInitialization` for browser sdk 4.x ([#1028](https://github.com/launchdarkly/js-core/issues/1028)) ([156532a](https://github.com/launchdarkly/js-core/commit/156532aea3ec39635dab21dbab125c81fc31a3f5))
+
 ## [1.15.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.15.1...js-client-sdk-common-v1.15.2) (2025-12-05)
 
 

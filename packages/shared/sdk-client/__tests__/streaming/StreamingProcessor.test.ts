@@ -14,7 +14,7 @@ import {
   ServiceEndpoints,
 } from '@launchdarkly/js-sdk-common';
 
-import Requestor, { makeRequestor } from '../../src/datasource/Requestor';
+import { makeRequestor, Requestor } from '../../src/datasource/Requestor';
 import {
   DataSourcePaths,
   StreamingDataSourceConfig,

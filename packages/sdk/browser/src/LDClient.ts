@@ -2,9 +2,26 @@ import {
   LDClient as CommonClient,
   LDContext,
   LDIdentifyResult,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
+
+export interface LDStartOptions extends LDWaitForInitializationOptions {
+  /**
+   * Optional bootstrap data to use for the identify operation. If {@link LDIdentifyOptions.bootstrap} is provided, it will be ignored.
+   */
+  bootstrap?: unknown;
+
+  /**
+   * Optional identify options to use for the identify operation. See {@link LDIdentifyOptions} for more information.
+   *
+   * @remarks
+   * Since the first identify option should never be sheddable, we omit the sheddable option from the interface to avoid confusion.
+   */
+  identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
+}
 
 /**
  *
@@ -66,4 +83,49 @@ export type LDClient = Omit<
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
+
+  /**
+   * Returns a Promise that tracks the client's initialization state.
+   *
+   * The Promise will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
+   *
+   * @example
+   * This example shows use of async/await syntax for specifying handlers:
+   * ```
+   *     const result = await client.waitForInitialization({ timeout: 5 });
+   *
+   *     if (result.status === 'complete') {
+   *       doSomethingWithSuccessfullyInitializedClient();
+   *     } else if (result.status === 'failed') {
+   *       doSomethingForFailedStartup(result.error);
+   *     } else if (result.status === 'timeout') {
+   *       doSomethingForTimedOutStartup();
+   *     }
+   * ```
+   *
+   * @remarks
+   * You can also use event listeners ({@link on}) for the same purpose: the event `"initialized"`
+   * indicates success, and `"error"` indicates an error.
+   *
+   * @param options
+   *  Optional configuration. Please see {@link LDWaitForInitializationOptions}.
+   *
+   * @returns
+   *   A Promise that will be resolved to a {@link LDWaitForInitializationResult} object containing the
+   *   status of the waitForInitialization operation.
+   */
+  waitForInitialization(
+    options?: LDWaitForInitializationOptions,
+  ): Promise<LDWaitForInitializationResult>;
+
+  /**
+   * Starts the client and returns a promise that resolves to the initialization result.
+   *
+   * The promise will resolve to a {@link LDWaitForInitializationResult} object containing the
+   * status of the waitForInitialization operation.
+   *
+   * @param options Optional configuration. Please see {@link LDStartOptions}.
+   */
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult>;
 };

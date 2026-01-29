@@ -2,11 +2,11 @@ import { EventEmitter } from 'node:events';
 import { get } from 'svelte/store';
 import { afterEach, beforeEach, describe, expect, it, Mock, vi } from 'vitest';
 
-import { initialize, LDClient } from '@launchdarkly/js-client-sdk/compat';
+import { createClient, LDClient } from '@launchdarkly/js-client-sdk';
 
 import { LD } from '../../../src/lib/client/SvelteLDClient';
 
-vi.mock('@launchdarkly/js-client-sdk/compat', { spy: true });
+vi.mock('@launchdarkly/js-client-sdk', { spy: true });
 
 const clientSideID = 'test-client-side-id';
 const rawFlags = { 'test-flag': true, 'another-test-flag': 'flag-value' };
@@ -21,6 +21,8 @@ const mockLDClient = {
   allFlags: vi.fn().mockReturnValue(rawFlags),
   variation: vi.fn((_, defaultValue) => defaultValue),
   identify: vi.fn(),
+  start: vi.fn(),
+  waitForInitialization: vi.fn().mockReturnValue(Promise.resolve({ status: 'complete' })),
 };
 
 describe('launchDarkly', () => {
@@ -31,7 +33,7 @@ describe('launchDarkly', () => {
       expect(ld).toHaveProperty('identify');
       expect(ld).toHaveProperty('flags');
       expect(ld).toHaveProperty('initialize');
-      expect(ld).toHaveProperty('initializing');
+      expect(ld).toHaveProperty('initalizationState');
       expect(ld).toHaveProperty('watch');
       expect(ld).toHaveProperty('useFlag');
     });
@@ -40,8 +42,7 @@ describe('launchDarkly', () => {
       const ld = LD;
 
       beforeEach(() => {
-        // mocks the initialize function to return the mockLDClient
-        (initialize as Mock<typeof initialize>).mockReturnValue(
+        (createClient as Mock<typeof createClient>).mockReturnValue(
           mockLDClient as unknown as LDClient,
         );
       });
@@ -62,27 +63,25 @@ describe('launchDarkly', () => {
       });
 
       it('should set the loading status to false when the client is ready', async () => {
-        const { initializing } = ld;
-        ld.initialize(clientSideID, mockContext);
+        const { initalizationState } = ld;
+        const promise = ld.initialize(clientSideID, mockContext);
 
-        expect(get(initializing)).toBe(true); // should be true before the ready event is emitted
-        mockLDEventEmitter.emit('ready');
+        expect(get(initalizationState)).toBe('pending');
 
-        expect(get(initializing)).toBe(false);
+        await promise;
+        expect(get(initalizationState)).toBe('complete');
       });
 
       it('should initialize the LaunchDarkly SDK instance', () => {
         ld.initialize(clientSideID, mockContext);
 
-        expect(initialize).toHaveBeenCalledWith('test-client-side-id', mockContext);
+        expect(createClient).toHaveBeenCalledWith('test-client-side-id', mockContext, undefined);
       });
 
-      it('should register function that gets flag values when client is ready', () => {
+      it('should register function that gets flag values when client is ready', async () => {
         const newFlags = { ...rawFlags, 'new-flag': true };
         const allFlagsSpy = vi.spyOn(mockLDClient, 'allFlags').mockReturnValue(newFlags);
-
-        ld.initialize(clientSideID, mockContext);
-        mockLDEventEmitter.emit('ready');
+        await ld.initialize(clientSideID, mockContext);
 
         expect(allFlagsSpy).toHaveBeenCalledOnce();
         expect(allFlagsSpy).toHaveReturnedWith(newFlags);
@@ -104,8 +103,7 @@ describe('launchDarkly', () => {
       const ld = LD;
 
       beforeEach(() => {
-        // mocks the initialize function to return the mockLDClient
-        (initialize as Mock<typeof initialize>).mockReturnValue(
+        (createClient as Mock<typeof createClient>).mockReturnValue(
           mockLDClient as unknown as LDClient,
         );
       });
@@ -124,16 +122,14 @@ describe('launchDarkly', () => {
         expect(get(flagStore)).toBe(true);
       });
 
-      it('should update the flag store when the flag value changes', () => {
+      it('should update the flag store when the flag value changes', async () => {
         const booleanFlagKey = 'test-flag';
         const stringFlagKey = 'another-test-flag';
-        ld.initialize(clientSideID, mockContext);
+        const initializationPromise = ld.initialize(clientSideID, mockContext);
         const flagStore = ld.watch(booleanFlagKey);
         const flagStore2 = ld.watch(stringFlagKey);
 
-        // emit ready event to set initial flag values
-        mockLDEventEmitter.emit('ready');
-
+        await initializationPromise;
         // 'test-flag' initial value is true according to `rawFlags`
         expect(get(flagStore)).toBe(true);
         // 'another-test-flag' intial value is 'flag-value' according to `rawFlags`
@@ -166,8 +162,7 @@ describe('launchDarkly', () => {
       const ld = LD;
 
       beforeEach(() => {
-        // mocks the initialize function to return the mockLDClient
-        (initialize as Mock<typeof initialize>).mockReturnValue(
+        (createClient as Mock<typeof createClient>).mockReturnValue(
           mockLDClient as unknown as LDClient,
         );
       });
@@ -191,8 +186,7 @@ describe('launchDarkly', () => {
       const ld = LD;
 
       beforeEach(() => {
-        // mocks the initialize function to return the mockLDClient
-        (initialize as Mock<typeof initialize>).mockReturnValue(
+        (createClient as Mock<typeof createClient>).mockReturnValue(
           mockLDClient as unknown as LDClient,
         );
       });

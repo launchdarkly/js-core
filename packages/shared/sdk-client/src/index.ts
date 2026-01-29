@@ -1,7 +1,7 @@
 import { LDClientInternalOptions } from './configuration/Configuration';
 import DataSourceStatus, { DataSourceState } from './datasource/DataSourceStatus';
 import DataSourceStatusErrorInfo from './datasource/DataSourceStatusErrorInfo';
-import Requestor, { makeRequestor } from './datasource/Requestor';
+import { makeRequestor, Requestor } from './datasource/Requestor';
 import LDClientImpl from './LDClientImpl';
 import LDEmitter, { EventName } from './LDEmitter';
 
@@ -36,10 +36,19 @@ export type {
   LDIdentifyTimeout,
   LDIdentifyShed,
   LDClientIdentifyResult,
+  LDPluginBase,
+  LDWaitForInitializationOptions,
+  LDWaitForInitializationResult,
+  LDWaitForInitializationComplete,
+  LDWaitForInitializationFailed,
+  LDWaitForInitializationTimeout,
+  LDContext,
+  LDContextStrict,
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
-export type { FlagManager } from './flag-manager/FlagManager';
+export type { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
+export { safeRegisterDebugOverridePlugins } from './plugins/safeRegisterDebugOverridePlugins';
 export type { Configuration } from './configuration/Configuration';
 
 export type { LDEmitter };

@@ -19,14 +19,12 @@ describe('given an inspector manager with no registered inspectors', () => {
       'flag-key',
       {
         value: null,
-        reason: null,
       },
       { key: 'key' },
     );
     manager.onFlagsChanged({});
     manager.onFlagChanged('flag-key', {
       value: null,
-      reason: null,
     });
 
     expect(logger.debug).not.toHaveBeenCalled();
@@ -159,7 +157,7 @@ describe('given an inspector with callbacks of every type', () => {
 
   it('executes `onFlags` handler', async () => {
     manager.onFlagsChanged({
-      example: { value: 'a-value', reason: null },
+      example: { value: 'a-value' },
     });
 
     const event = await eventQueue.take();
@@ -172,7 +170,7 @@ describe('given an inspector with callbacks of every type', () => {
   });
 
   it('executes `onFlagChanged` handler', async () => {
-    manager.onFlagChanged('the-flag', { value: 'a-value', reason: null });
+    manager.onFlagChanged('the-flag', { value: 'a-value' });
 
     const event = await eventQueue.take();
     expect(event).toMatchObject({

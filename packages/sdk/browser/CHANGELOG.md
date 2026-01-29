@@ -1,5 +1,84 @@
 # Changelog
 
+## [0.13.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.12.1...js-client-sdk-v0.13.0) (2026-01-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove 3.x compatability layer ([#1063](https://github.com/launchdarkly/js-core/issues/1063))
+
+### Features
+
+* remove 3.x compatability layer ([#1063](https://github.com/launchdarkly/js-core/issues/1063)) ([a471805](https://github.com/launchdarkly/js-core/commit/a471805924784fd80ce7a60c7c4df1d967cfb117))
+
+
+### Bug Fixes
+
+* update LDClient to not require context key for client side identify methods ([#1045](https://github.com/launchdarkly/js-core/issues/1045)) ([0cf7660](https://github.com/launchdarkly/js-core/commit/0cf76600af7fb5b3ef42d4e2b4cb73a27443a5e3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.1 to 1.17.2
+
+## [0.12.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.12.0...js-client-sdk-v0.12.1) (2026-01-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.0 to 1.17.1
+
+## [0.12.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.11.0...js-client-sdk-v0.12.0) (2026-01-06)
+
+
+### Features
+
+* add legacy storage key cleanup functionality ([#1043](https://github.com/launchdarkly/js-core/issues/1043)) ([fe4725e](https://github.com/launchdarkly/js-core/commit/fe4725e24917fe795cee448383b4fe8fa8b4b56f))
+* add waitForInitialization to RN SDK ([#1048](https://github.com/launchdarkly/js-core/issues/1048)) ([13ce456](https://github.com/launchdarkly/js-core/commit/13ce456d9e3a5bcf043734f757415d4856034257))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.16.0 to 1.17.0
+
+## [0.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.10.0...js-client-sdk-v0.11.0) (2025-12-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* align browser v4 intialization flow to specs ([#1040](https://github.com/launchdarkly/js-core/issues/1040))
+
+### Features
+
+* adding support for debug override plugins ([#1033](https://github.com/launchdarkly/js-core/issues/1033)) ([17f5e7d](https://github.com/launchdarkly/js-core/commit/17f5e7d7d11d502d54a6ccf88aea6bec3e4b775c))
+* allow clients to evaluate bootstrapped flags when not ready ([#1036](https://github.com/launchdarkly/js-core/issues/1036)) ([9b4542a](https://github.com/launchdarkly/js-core/commit/9b4542a722e5d19e123e860faef113d134dad47c))
+* implement `waitForInitialization` for browser sdk 4.x ([#1028](https://github.com/launchdarkly/js-core/issues/1028)) ([156532a](https://github.com/launchdarkly/js-core/commit/156532aea3ec39635dab21dbab125c81fc31a3f5))
+
+
+### Code Refactoring
+
+* align browser v4 intialization flow to specs ([#1040](https://github.com/launchdarkly/js-core/issues/1040)) ([eff6a55](https://github.com/launchdarkly/js-core/commit/eff6a55163508bee4f2dec574ad256f88ec513d6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.15.2 to 1.16.0
+
+## [0.10.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.9.1...js-client-sdk-v0.10.0) (2025-12-09)
+
+
+### Features
+
+* add initial polling retries to BrowserDataManager ([#1030](https://github.com/launchdarkly/js-core/issues/1030)) ([cd91013](https://github.com/launchdarkly/js-core/commit/cd910130cabb210b13f1dbb7e48cc179347bb05a))
+
 ## [0.9.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.9.0...js-client-sdk-v0.9.1) (2025-12-05)
 
 

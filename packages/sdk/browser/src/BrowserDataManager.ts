@@ -4,14 +4,16 @@ import {
   Context,
   DataSourceErrorKind,
   DataSourcePaths,
-  DataSourceState,
   FlagManager,
+  httpErrorMessage,
   internal,
   LDEmitter,
   LDHeaders,
   LDIdentifyOptions,
   makeRequestor,
   Platform,
+  shouldRetry,
+  sleep,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
@@ -102,29 +104,66 @@ export default class BrowserDataManager extends BaseDataManager {
     this._updateStreamingState();
   }
 
+  /**
+   * A helper function for the initial poll request. This is mainly here to facilitate
+   * the retry logic.
+   *
+   * @param context - LDContext to request payload for.
+   * @returns Payload as a string.
+   */
+  private async _requestPayload(context: Context): Promise<string> {
+    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const pollingRequestor = makeRequestor(
+      plainContextString,
+      this.config.serviceEndpoints,
+      this.getPollingPaths(),
+      this.platform.requests,
+      this.platform.encoding!,
+      this.baseHeaders,
+      [],
+      this.config.withReasons,
+      this.config.useReport,
+      this._secureModeHash,
+    );
+
+    // NOTE: We are currently hardcoding in 3 retries for the initial
+    // poll. We can make this configurable in the future.
+    const maxRetries = 3;
+
+    let lastError: any;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        return await pollingRequestor.requestPayload();
+      } catch (e: any) {
+        if (!shouldRetry(e)) {
+          throw e;
+        }
+        lastError = e;
+        // NOTE: current we are hardcoding the retry interval to 1 second.
+        // We can make this configurable in the future.
+        if (attempt < maxRetries) {
+          this._debugLog(httpErrorMessage(e, 'initial poll request', 'will retry'));
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(1000);
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
   private async _finishIdentifyFromPoll(
     context: Context,
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
   ) {
     try {
-      this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Initializing);
+      this.dataSourceStatusManager.requestStateUpdate('INITIALIZING');
 
-      const plainContextString = JSON.stringify(Context.toLDContext(context));
-      const pollingRequestor = makeRequestor(
-        plainContextString,
-        this.config.serviceEndpoints,
-        this.getPollingPaths(),
-        this.platform.requests,
-        this.platform.encoding!,
-        this.baseHeaders,
-        [],
-        this.config.withReasons,
-        this.config.useReport,
-        this._secureModeHash,
-      );
+      const payload = await this._requestPayload(context);
 
-      const payload = await pollingRequestor.requestPayload();
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
         const putListener = listeners.get('put');
