@@ -11,7 +11,7 @@ import { LDMultiKindContext } from '@launchdarkly/vercel-server-sdk';
 export const runtime = 'edge';
 
 export default async function RootLayout({ children }: { children: ReactElement }) {
-  const headersList = headers();
+  const headersList = await headers();
   await ldEdgeClient.waitForInitialization();
 
   // Here we are using basic information from the request as the LaunchDarkly context. If you have session auth in place,
