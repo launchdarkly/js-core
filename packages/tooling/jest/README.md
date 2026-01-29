@@ -8,7 +8,7 @@
 
 
 
-> **Easily unit test LaunchDarkly feature flagged applications with jest** :clap:
+**Easily unit test LaunchDarkly feature flagged applications with jest**
 
 For more information, see the [complete reference guide for unit testing](https://docs.launchdarkly.com/guides/sdk/unit-tests).
 
