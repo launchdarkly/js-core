@@ -1,8 +1,7 @@
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import { PropsWithChildren, useMemo } from 'react';
 
 import ReactNativeLDClient from '../ReactNativeLDClient';
-import { Provider, ReactContext } from './reactContext';
-import setupListeners from './setupListeners';
+import { Provider } from './reactContext';
 
 type LDProps = {
   client: ReactNativeLDClient;
@@ -19,13 +18,12 @@ type LDProps = {
  * @constructor
  */
 const LDProvider = ({ client, children }: PropsWithChildren<LDProps>) => {
-  const [state, setState] = useState<ReactContext>({ client });
+  // NOTE: this could only provide marginal benefits, if the provider is
+  // a child component of a parent that is re-rendering then this
+  // may still re-render the context value.
+  const clientContext = useMemo(() => ({ client }), [client]);
 
-  useEffect(() => {
-    setupListeners(client, setState);
-  }, []);
-
-  return <Provider value={state}>{children}</Provider>;
+  return <Provider value={clientContext}>{children}</Provider>;
 };
 
 export default LDProvider;
