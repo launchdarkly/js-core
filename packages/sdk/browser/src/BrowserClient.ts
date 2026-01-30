@@ -276,8 +276,11 @@ class BrowserClientImpl extends LDClientImpl {
 
     if (identifyOptions?.bootstrap) {
       try {
-        const bootstrapData = readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
-        this.presetFlags(bootstrapData);
+        identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
+          this.logger,
+          identifyOptions.bootstrap,
+        );
+        this.presetFlags(identifyOptions.bootstrapParsed);
       } catch (error) {
         this.logger.error('Failed to bootstrap data', error);
       }
