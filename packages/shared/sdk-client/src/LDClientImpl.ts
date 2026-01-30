@@ -51,7 +51,7 @@ import {
   createSuccessEvaluationDetail,
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
-import EventFactory from './events/EventFactory';
+import EventFactory, { createEventFactory } from './events/EventFactory';
 import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
@@ -75,8 +75,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
   private readonly _highTimeoutThreshold: number = 15;
 
-  private _eventFactoryDefault = new EventFactory(false);
-  private _eventFactoryWithReasons = new EventFactory(true);
+  private _eventFactoryDefault = createEventFactory(false);
+  private _eventFactoryWithReasons = createEventFactory(true);
   protected emitter: LDEmitter;
   private _flagManager: FlagManager;
 
