@@ -1,14 +1,13 @@
 import { render } from '@testing-library/react';
+import React from 'react';
 
 import { AutoEnvAttributes, LDContext, LDOptions } from '@launchdarkly/js-client-sdk-common';
 
 import { useLDClient } from '../../src/hooks';
 import LDProvider from '../../src/provider/LDProvider';
-import setupListeners from '../../src/provider/setupListeners';
 import ReactNativeLDClient from '../../src/ReactNativeLDClient';
 
 jest.mock('../../src/ReactNativeLDClient');
-jest.mock('../../src/provider/setupListeners');
 
 const TestApp = () => {
   const ldClient = useLDClient();
@@ -22,7 +21,6 @@ const TestApp = () => {
 };
 describe('LDProvider', () => {
   let ldc: ReactNativeLDClient;
-  const mockSetupListeners = setupListeners as jest.Mock;
 
   beforeEach(() => {
     jest.useFakeTimers();
@@ -45,9 +43,7 @@ describe('LDProvider', () => {
         };
       },
     );
-    mockSetupListeners.mockImplementation((client: ReactNativeLDClient, setState: any) => {
-      setState({ client });
-    });
+
     ldc = new ReactNativeLDClient('mobile-key', AutoEnvAttributes.Enabled);
   });
 
