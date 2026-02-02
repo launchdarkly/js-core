@@ -38,12 +38,16 @@ jobs:
       - name: Launch the test service in the background
         run: yarn contract-test-service 2>&1 &
       - name: Clone and run contract tests from feat/fdv2 branch
+        # NOTE: This is a temporary workaround to run the contract tests from the feat/fdv2 branch.
+        # The commit hash is a few commits before the HEAD of the feat/fdv2 branch. We do this because
+        # the HEAD of the feat/fdv2 branch requires the synchronizers be passed as a list which is not
+        # implemented yet. (SDK-1798)
         run: |
           mkdir -p /tmp/sdk-test-harness
           git clone https://github.com/launchdarkly/sdk-test-harness.git /tmp/sdk-test-harness
           cp ./contract-tests/testharness-suppressions-fdv2.txt /tmp/sdk-test-harness/testharness-suppressions-fdv2.txt
           cd /tmp/sdk-test-harness
-          git checkout feat/fdv2
+          git checkout de833af990da23a89b66c5366809b5be8c27e3f8
           go build -o test-harness .
           ./test-harness -url http://localhost:8000 -debug --skip-from=testharness-suppressions-fdv2.txt
         env:
