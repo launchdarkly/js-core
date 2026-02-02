@@ -55,9 +55,9 @@ export const useTypedVariation = <T extends boolean | number | string | unknown>
         setValue(newValue);
       }
     };
-    ldClient.on('change', handleChange);
+    ldClient.on(`change:${key}`, handleChange);
     return () => {
-      ldClient.off('change', handleChange);
+      ldClient.off(`change:${key}`, handleChange);
     };
   }, [key, defaultValue]);
 
@@ -148,9 +148,9 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
         setDetail(newDetail);
       }
     };
-    ldClient.on('change', handleChange);
+    ldClient.on(`change:${key}`, handleChange);
     return () => {
-      ldClient.off('change', handleChange);
+      ldClient.off(`change:${key}`, handleChange);
     };
   }, [key, defaultValue]);
 
