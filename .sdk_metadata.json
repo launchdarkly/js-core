@@ -205,8 +205,8 @@
       },
       "userAgents": ["NodeJSAIClient"],
       "features": {
-        "aiConfig": { "introduced": "0.1" },
-        "aiMetrics": { "introduced": "0.1" },
+        "aiCompletionConfig": { "introduced": "0.1" },
+        "aiTrackMetrics": { "introduced": "0.1" },
         "contexts": { "introduced": "0.1" },
         "experimentation": { "introduced": "0.1" },
         "privateAttrs": { "introduced": "0.1" }
