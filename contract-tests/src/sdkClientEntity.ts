@@ -14,6 +14,8 @@ import ld, {
   LDOptions,
   LDSerialExecution,
   LDUser,
+  PollingDataSourceConfiguration,
+  StreamingDataSourceConfiguration,
 } from '@launchdarkly/node-server-sdk';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
@@ -36,7 +38,7 @@ interface SdkConfigOptions {
   };
   dataSystem?: {
     initializers?: SDKDataSystemInitializerParams[];
-    synchronizers?: SDKDataSystemSynchronizerParams;
+    synchronizers?: SDKDataSystemSynchronizerParams[];
     payloadFilter?: string;
   };
   events?: {
@@ -74,14 +76,8 @@ interface SdkConfigOptions {
 }
 
 export interface SDKDataSystemSynchronizerParams {
-  primary?: {
-    streaming?: SDKDataSourceStreamingParams;
-    polling?: SDKDataSourcePollingParams;
-  };
-  secondary?: {
-    streaming?: SDKDataSourceStreamingParams;
-    polling?: SDKDataSourcePollingParams;
-  };
+  streaming?: SDKDataSourceStreamingParams;
+  polling?: SDKDataSourcePollingParams;
 }
 
 export interface SDKDataSystemInitializerParams {
@@ -222,52 +218,54 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
   }
 
   if (options.dataSystem) {
-    const dataSourceStreamingOptions: SDKDataSourceStreamingParams | undefined =
-      options.dataSystem.synchronizers?.primary?.streaming ??
-      options.dataSystem.synchronizers?.secondary?.streaming;
-    const dataSourcePollingOptions: SDKDataSourcePollingParams | undefined =
-      options.dataSystem.initializers?.[0]?.polling ??
-      options.dataSystem.synchronizers?.primary?.polling ??
-      options.dataSystem.synchronizers?.secondary?.polling;
+    const dataSourceOptions: DataSourceOptions = {
+      dataSourceOptionsType: 'custom',
+      initializers: [],
+      synchronizers: [],
+    };
 
-    if (dataSourceStreamingOptions) {
-      cf.streamUri = dataSourceStreamingOptions.baseUri;
-      cf.streamInitialReconnectDelay = maybeTime(dataSourceStreamingOptions.initialRetryDelayMs);
-    }
-    if (dataSourcePollingOptions) {
-      cf.stream = false;
-      cf.baseUri = dataSourcePollingOptions.baseUri;
-      cf.pollInterval = maybeTime(dataSourcePollingOptions.pollIntervalMs);
+    if (options.dataSystem.initializers) {
+      options.dataSystem.initializers.forEach((initializer) => {
+        if (initializer.polling) {
+          cf.baseUri = initializer.polling.baseUri;
+          cf.pollInterval = maybeTime(initializer.polling.pollIntervalMs);
+
+          const initializerOptions: PollingDataSourceConfiguration = {
+            type: 'polling',
+            pollInterval: maybeTime(initializer.polling.pollIntervalMs),
+          };
+
+          dataSourceOptions.initializers.push(initializerOptions);
+        }
+      });
     }
 
-    let dataSourceOptions: DataSourceOptions | undefined;
-    if (dataSourceStreamingOptions && dataSourcePollingOptions) {
-      dataSourceOptions = {
-        dataSourceOptionsType: 'standard',
-        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
-          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
-        }),
-        ...(dataSourcePollingOptions.pollIntervalMs != null && {
-          pollInterval: dataSourcePollingOptions.pollIntervalMs,
-        }),
-      };
-    } else if (dataSourceStreamingOptions) {
-      dataSourceOptions = {
-        dataSourceOptionsType: 'streamingOnly',
-        ...(dataSourceStreamingOptions.initialRetryDelayMs != null && {
-          streamInitialReconnectDelay: maybeTime(dataSourceStreamingOptions.initialRetryDelayMs),
-        }),
-      };
-    } else if (dataSourcePollingOptions) {
-      dataSourceOptions = {
-        dataSourceOptionsType: 'pollingOnly',
-        ...(dataSourcePollingOptions.pollIntervalMs != null && {
-          pollInterval: dataSourcePollingOptions.pollIntervalMs,
-        }),
-      };
-    } else {
-      // No data source options were specified
-      dataSourceOptions = undefined;
+    if (options.dataSystem.synchronizers) {
+      options.dataSystem.synchronizers.forEach((synchronizer) => {
+        if (synchronizer.streaming) {
+          cf.streamUri = synchronizer.streaming.baseUri;
+
+          const synchronizerOptions: StreamingDataSourceConfiguration = {
+            type: 'streaming',
+          };
+
+          synchronizerOptions.streamInitialReconnectDelay = maybeTime(
+            synchronizer.streaming.initialRetryDelayMs,
+          );
+
+          dataSourceOptions.synchronizers.push(synchronizerOptions);
+        } else if (synchronizer.polling) {
+          cf.baseUri = synchronizer.polling.baseUri;
+          cf.pollInterval = maybeTime(synchronizer.polling.pollIntervalMs);
+
+          const synchronizerOptions: PollingDataSourceConfiguration = {
+            type: 'polling',
+            pollInterval: maybeTime(synchronizer.polling.pollIntervalMs),
+          };
+
+          dataSourceOptions.synchronizers.push(synchronizerOptions);
+        }
+      });
     }
 
     if (options.dataSystem.payloadFilter) {

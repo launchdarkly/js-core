@@ -437,18 +437,18 @@ function constructFDv2(
             ),
         );
       }
-
-      // This is short term handling and will be removed once FDv2 adoption is sufficient.
-      fdv1FallbackSynchronizers.push(
-        () =>
-          new PollingProcessorFDv2(
-            new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
-            pollingInterval,
-            config.logger,
-            true,
-          ),
-      );
     }
+
+    // This is short term handling and will be removed once FDv2 adoption is sufficient.
+    fdv1FallbackSynchronizers.push(
+      () =>
+        new PollingProcessorFDv2(
+          new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
+          config.pollInterval ?? DEFAULT_POLL_INTERVAL,
+          config.logger,
+          true,
+        ),
+    );
 
     dataSource = new CompositeDataSource(
       initializers,
