@@ -59,7 +59,7 @@ export const useTypedVariation = <T extends boolean | number | string | unknown>
     return () => {
       ldClient.off('change', handleChange);
     };
-  }, [key]);
+  }, [key, defaultValue]);
 
   return value;
 };
@@ -152,7 +152,7 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
     return () => {
       ldClient.off('change', handleChange);
     };
-  }, [key]);
+  }, [key, defaultValue]);
 
   return detail;
 };
