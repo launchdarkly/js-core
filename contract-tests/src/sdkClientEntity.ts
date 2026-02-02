@@ -328,22 +328,9 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
     options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
-
-
-  // TODO: synchronizer should be a list, but for this is a temporary workaround
-  // so that we can pass the contract tests in a more reasonable manner.
-  // SDK-1798
-  const adaptedConfigs = {
-    ...options.configuration,
-  };
-
-  adaptedConfigs.dataSystem.synchronizers = {
-    primary: options.configuration.dataSystem.synchronizers?.[0],
-    secondary: options.configuration.dataSystem.synchronizers?.[1],
-  }
   const client: LDClient = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
-    makeSdkConfig(adaptedConfigs, options.tag),
+    makeSdkConfig(options.configuration, options.tag),
   );
   try {
     await client.waitForInitialization({ timeout });
