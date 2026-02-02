@@ -22,7 +22,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@launchdarkly/node-server-sdk": "^9.7.1",
-    "@launchdarkly/server-sdk-ai": "0.15.2",
+    "@launchdarkly/server-sdk-ai": "0.16.0",
     "@launchdarkly/server-sdk-ai-openai": "^0.4.0",
     "openai": "^4.58.1"
   },

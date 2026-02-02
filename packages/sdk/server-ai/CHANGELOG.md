@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.15.2...server-sdk-ai-v0.16.0) (2026-01-27)
+
+
+### Features
+
+* Added custom judge support for ai configs ([#1073](https://github.com/launchdarkly/js-core/issues/1073)) ([2066e70](https://github.com/launchdarkly/js-core/commit/2066e707aa906485691594d4c09ff6c3466e5e3e))
+
 ## [0.15.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.15.1...server-sdk-ai-v0.15.2) (2025-12-09)
 
 

@@ -6,21 +6,22 @@
 [![NPM][jest-dm-badge]][jest-npm-link]
 [![NPM][jest-dt-badge]][jest-npm-link]
 
-> [!CAUTION]
-> This library is a beta version and should not be considered ready for production use while this message is visible.
 
-> **Easily unit test LaunchDarkly applications with jest** :clap:
+
+**Easily unit test LaunchDarkly feature flagged applications with jest**
 
 For more information, see the [complete reference guide for unit testing](https://docs.launchdarkly.com/guides/sdk/unit-tests).
 
 ## Installation
 
-```shell
-# npm
-npm i @launchdarkly/jest --save-dev
-
-# yarn
+```bash
 yarn add -D @launchdarkly/jest
+```
+
+or
+
+```bash
+npm install @launchdarkly/jest --save-dev
 ```
 
 Then in `jest.config.js` add `@launchdarkly/jest/{framework}` to setupFiles:
@@ -33,34 +34,59 @@ module.exports = {
 };
 ```
 
-## Quickstart
+## Usage
 
-// Welcome.test.tsx
+Use these 3 APIs for your test cases:
+
+- `mockFlags(flags: LDFlagSet)`: Mock flags at the start of each test case. Only mocks flags returned by the `useFlags` hook.
+
+- `getLDClient()`: Returns a jest mock of the [LDClient](https://launchdarkly.github.io/js-client-sdk/interfaces/_launchdarkly_js_client_sdk_.ldclient.html). All methods of this object are jest mocks.
+
+- `resetLDMocks()`: Resets both mockFlags and getLDClient mocks.
+
+## Example
+
+```tsx
 import React from 'react';
-import { render } from '@testing-library/react-native';
-import {
-  mockFlags,
-  resetLDMocks,
-  getLDClient,
-} from '@launchdarkly/js-core/tooling/jest';
+import { render, fireEvent } from '@testing-library/react-native';
+import { mockFlags, resetLDMocks, getLDClient } from '@launchdarkly/jest/react-native';
 import Welcome from './Welcome';
 
-afterEach(() => {
-  resetLDMocks();
-});
+describe('Welcome component', () => {
+  afterEach(() => {
+    // reset before each test case
+    resetLDMocks();
+  });
 
-test('evaluates a boolean flag', () => {
-  mockFlags({ 'my-boolean-flag': true });
-  const { getByText } = render(<Welcome />);
-  expect(getByText('Flag value is true')).toBeTruthy();
-});
+  test('evaluates a boolean flag', () => {
+    // arrange
+    // You can use camelCase, kebab-case, or snake_case keys
+    mockFlags({ 'my-boolean-flag': true });
 
-test('captures a track call', () => {
-  const client = getLDClient(); // mocked client from LD jest tooling
-  client.track('event-name', { foo: 'bar' });
-  expect(client.track).toHaveBeenCalledWith('event-name', { foo: 'bar' });
-  expect(client.track).toHaveBeenCalledTimes(1);
+    // act
+    const { getByText } = render(<Welcome />);
+
+    // assert
+    expect(getByText('Flag value is true')).toBeTruthy();
+  });
+
+  test('captures a track call', () => {
+    // arrange
+    mockFlags({ myBooleanFlag: true });
+    const client = getLDClient();
+
+    // act
+    const { getByTestId } = render(<Welcome />);
+    fireEvent.press(getByTestId('track-button'));
+
+    // assert: track gets called
+    expect(client.track).toHaveBeenCalledWith('event-name', { foo: 'bar' });
+    expect(client.track).toHaveBeenCalledTimes(1);
+  });
 });
+```
+
+---
 
 ## Developing this package
 
@@ -71,6 +97,9 @@ yarn && yarn build && cd packages/tooling/jest
 # run tests
 yarn test
 ```
+## Note
+
+LaunchDarkly plans to support [test data sources](https://launchdarkly.com/docs/sdk/features/test-data-sources) for the React Native and other client-side SDKs in the future. Once this feature is avaliable, we will deprecate this package.
 
 ## Verifying SDK build provenance with the SLSA framework
 
