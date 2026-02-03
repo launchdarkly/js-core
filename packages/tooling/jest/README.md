@@ -40,7 +40,7 @@ Use these 3 APIs for your test cases:
 
 - `mockFlags(flags: LDFlagSet)`: Mock flags at the start of each test case. Only mocks flags returned by the `useFlags` hook.
 
-- `getLDClient()`: Returns a jest mock of the [LDClient](https://launchdarkly.github.io/js-client-sdk/interfaces/_launchdarkly_js_client_sdk_.ldclient.html). All methods of this object are jest mocks.
+- `getLDClient()`: Returns a jest mock of the [LDClient](https://launchdarkly.github.io/js-core/packages/shared/sdk-client/docs/classes/LDClientImpl.html). All methods of this object are jest mocks.
 
 - `resetLDMocks()`: Resets both mockFlags and getLDClient mocks.
 
