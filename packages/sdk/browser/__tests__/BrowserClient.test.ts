@@ -231,6 +231,102 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(client.getContext()).toEqual({ kind: 'user', key: 'bob' });
   });
 
+  it('parses bootstrap data only once when using start()', async () => {
+    const bootstrapModule = await import('../src/bootstrap');
+    const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
+
+    const client = makeClient(
+      'client-side-id',
+      { kind: 'user', key: 'bob' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+      },
+      platform,
+    );
+
+    await client.start({
+      identifyOptions: {
+        bootstrap: goodBootstrapDataWithReasons,
+      },
+    });
+
+    expect(readFlagsFromBootstrapSpy).toHaveBeenCalledTimes(1);
+    expect(readFlagsFromBootstrapSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      goodBootstrapDataWithReasons,
+    );
+
+    readFlagsFromBootstrapSpy.mockRestore();
+  });
+
+  it('uses the latest bootstrap data when identify is called with new bootstrap data', async () => {
+    const initialBootstrapData = {
+      'string-flag': 'is bob',
+      'my-boolean-flag': false,
+      $flagsState: {
+        'string-flag': {
+          variation: 1,
+          version: 3,
+        },
+        'my-boolean-flag': {
+          variation: 1,
+          version: 11,
+        },
+      },
+      $valid: true,
+    };
+
+    const newBootstrapData = {
+      'string-flag': 'is alice',
+      'my-boolean-flag': true,
+      $flagsState: {
+        'string-flag': {
+          variation: 1,
+          version: 4,
+        },
+        'my-boolean-flag': {
+          variation: 0,
+          version: 12,
+        },
+      },
+      $valid: true,
+    };
+
+    const client = makeClient(
+      'client-side-id',
+      { kind: 'user', key: 'bob' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+      },
+      platform,
+    );
+
+    await client.start({
+      identifyOptions: {
+        bootstrap: initialBootstrapData,
+      },
+    });
+
+    expect(client.stringVariation('string-flag', 'default')).toBe('is bob');
+    expect(client.boolVariation('my-boolean-flag', false)).toBe(false);
+
+    await client.identify(
+      { kind: 'user', key: 'alice' },
+      {
+        bootstrap: newBootstrapData,
+      },
+    );
+
+    expect(client.stringVariation('string-flag', 'default')).toBe('is alice');
+    expect(client.boolVariation('my-boolean-flag', false)).toBe(true);
+  });
+
   it('can shed intermediate identify calls', async () => {
     const client = makeClient(
       'client-side-id',
