@@ -44,14 +44,17 @@ export const useTypedVariation = <T extends boolean | number | string | unknown>
   const valueRef = useRef<T>(value);
 
   useEffect(() => {
-    valueRef.current = value;
-  }, [value]);
+    // If the key changes, then we will need to make sure that the value is updated.
+    const initialValue = getTypedVariation(ldClient, key, defaultValue);
+    if (valueRef.current !== initialValue) {
+      valueRef.current = initialValue;
+      setValue(initialValue);
+    }
 
-  useEffect(() => {
-    setValue(getTypedVariation(ldClient, key, defaultValue));
     const handleChange = (): void => {
       const newValue = getTypedVariation(ldClient, key, defaultValue);
       if (newValue !== valueRef.current) {
+        valueRef.current = newValue;
         setValue(newValue);
       }
     };
@@ -137,14 +140,17 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
   const detailRef = useRef<LDEvaluationDetailTyped<T>>(detail);
 
   useEffect(() => {
-    detailRef.current = detail;
-  }, [detail]);
+    // If the key changes, then we will need to make sure that the value is updated.
+    const initialDetail = getTypedVariationDetail(ldClient, key, defaultValue);
+    if (detailRef.current.value !== initialDetail.value) {
+      detailRef.current = initialDetail;
+      setDetail(initialDetail);
+    }
 
-  useEffect(() => {
-    setDetail(getTypedVariationDetail(ldClient, key, defaultValue));
     const handleChange = () => {
       const newDetail = getTypedVariationDetail(ldClient, key, defaultValue);
       if (newDetail.value !== detailRef.current.value) {
+        detailRef.current = newDetail;
         setDetail(newDetail);
       }
     };
