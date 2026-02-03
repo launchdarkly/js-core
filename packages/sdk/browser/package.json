@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "description": "LaunchDarkly SDK for JavaScript in Browsers",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser",
   "repository": {
