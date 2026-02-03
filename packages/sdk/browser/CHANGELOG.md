@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.13.0...js-client-sdk-v0.13.1) (2026-02-03)
+
+
+### Bug Fixes
+
+* js-client-sdk bootstrap data parsed 2x ([#1077](https://github.com/launchdarkly/js-core/issues/1077)) ([2afaee0](https://github.com/launchdarkly/js-core/commit/2afaee09a5b248d15812ceadfb7d55a6e7732b92))
+
 ## [0.13.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.12.1...js-client-sdk-v0.13.0) (2026-01-21)
 
 
