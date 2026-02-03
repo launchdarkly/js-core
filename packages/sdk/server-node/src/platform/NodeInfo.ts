@@ -4,7 +4,7 @@ import * as os from 'os';
 import { platform } from '@launchdarkly/js-server-sdk-common';
 
 const sdkName = '@launchdarkly/node-server-sdk';
-const sdkVersion = '9.10.5'; // x-release-please-version
+const sdkVersion = '9.10.6'; // x-release-please-version
 
 function processPlatformName(name: string): string {
   switch (name) {

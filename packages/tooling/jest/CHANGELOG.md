@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/jest-v0.2.2...jest-v1.0.0) (2026-02-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* updating to major version 1 ([#1089](https://github.com/launchdarkly/js-core/issues/1089))
+
+### Bug Fixes
+
+* updating to major version 1 ([#1089](https://github.com/launchdarkly/js-core/issues/1089)) ([4c194d8](https://github.com/launchdarkly/js-core/commit/4c194d8112d39e3693688c0cbe0bc7ef27b67869))
+
 ## [0.2.2](https://github.com/launchdarkly/js-core/compare/jest-v0.2.1...jest-v0.2.2) (2026-01-21)
 
 
