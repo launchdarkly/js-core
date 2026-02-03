@@ -17,5 +17,5 @@
     "stripInternal": true,
     "moduleResolution": "node"
   },
-  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "contract-tests"]
 }

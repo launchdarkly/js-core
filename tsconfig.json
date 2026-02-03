@@ -74,7 +74,7 @@
       "path": "./packages/sdk/fastly/tsconfig.ref.json"
     },
     {
-      "path": "./contract-tests/tsconfig.ref.json"
+      "path": "./packages/sdk/server-node/contract-tests/tsconfig.ref.json"
     },
     {
       "path": "./packages/sdk/combined-browser/tsconfig.ref.json"
