@@ -1,0 +1,49 @@
+{
+  "name": "@launchdarkly/react-sdk",
+  "version": "0.0.1",
+  "description": "LaunchDarkly SDK for React frameworks",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@4.2.2",
+  "keywords": [
+    "launchdarkly",
+    "react",
+    "isomorphic",
+    "nextjs",
+    "remix"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./client": {
+      "types": "./dist/src/client/index.d.ts",
+      "default": "./dist/src/client/index.js"
+    },
+    "./server": {
+      "types": "./dist/src/server/index.d.ts",
+      "default": "./dist/src/server/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "^4.0.0",
+    "@launchdarkly/js-client-sdk-common": "^1.1.4",
+    "@launchdarkly/node-server-sdk": "^9.4.6"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}
