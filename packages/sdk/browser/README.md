@@ -6,25 +6,6 @@
 [![NPM][browser-sdk-dm-badge]][browser-sdk-npm-link]
 [![NPM][browser-sdk-dt-badge]][browser-sdk-npm-link]
 
-# ⛔️⛔️⛔️⛔️
-
-> [!CAUTION]
-> This library is a alpha version and should not be considered ready for production use while this message is visible.
-
-# ☝️☝️☝️☝️☝️☝️
-
-<!--
-## Install
-
-```shell
-# npm
-npm i @launchdarkly/js-client-sdk
-
-# yarn
-yarn add -D @launchdarkly/js-client-sdk
-```
--->
-
 ## Getting started
 
 Refer to the [SDK documentation](https://docs.launchdarkly.com/sdk/client-side/javascript#getting-started) for instructions on getting started with using the SDK.
