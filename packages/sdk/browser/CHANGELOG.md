@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.13.1...js-client-sdk-v4.0.0) (2026-02-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* release js-client-sdk v4 ([#1093](https://github.com/launchdarkly/js-core/issues/1093))
+
+### Features
+
+* release js-client-sdk v4 ([#1093](https://github.com/launchdarkly/js-core/issues/1093)) ([1457793](https://github.com/launchdarkly/js-core/commit/1457793489aeb94113e796b47a80c222975096c3))
+
 ## [0.13.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.13.0...js-client-sdk-v0.13.1) (2026-02-03)
 
 
