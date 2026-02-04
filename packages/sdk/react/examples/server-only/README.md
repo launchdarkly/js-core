@@ -1,0 +1,1 @@
+Very simple template, copy this to do different scenarios

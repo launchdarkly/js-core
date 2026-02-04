@@ -30,6 +30,9 @@ function getVariationDetail<T extends LDFlagType>(
  * @param defaultValue The value to return if the flag is not available.
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns The typed evaluation detail, including `value`, `variationIndex`, and `reason`.
+ *
+ * @deprecated Use `useLDClient` with the client's variationDetail methods directly. This hook will
+ * be removed in a future major version.
  */
 export function useFlagDetail<T extends LDFlagType>(
   key: string,
@@ -37,6 +40,14 @@ export function useFlagDetail<T extends LDFlagType>(
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<T> {
   const { client, context } = useContext(reactContext ?? LDReactContext);
+
+  useEffect(() => {
+    client.logger.warn(
+      '[LaunchDarkly] useFlagDetail is deprecated and will be removed in a future major version.',
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const defaultValueRef = useRef(defaultValue);
   defaultValueRef.current = defaultValue;
   const [detail, setDetail] = useState<LDEvaluationDetailTyped<T>>(() =>

@@ -1,0 +1,24 @@
+import { init } from '@launchdarkly/node-server-sdk';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+
+const ldClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
+
+const context = {
+  kind: 'user',
+  key: 'example-user-key',
+  name: 'Sandy',
+};
+
+const flagKey = 'sample-feature';
+
+const serverSession = createLDServerSession(ldClient, context);
+
+export default async function Home() {
+  // We assume this is called elsewhere
+  await ldClient.waitForInitialization({ timeout: 10 });
+
+  const featureFlag = await serverSession.boolVariation(flagKey, false);
+  console.log(`Feature flag ${flagKey} is ${featureFlag ? 'enabled' : 'disabled'}`);
+
+  return <>{featureFlag ? 'Hello world' : 'Hello world disabled'}</>;
+}

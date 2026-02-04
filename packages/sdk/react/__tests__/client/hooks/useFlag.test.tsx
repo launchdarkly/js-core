@@ -4,7 +4,7 @@
 import { act, render } from '@testing-library/react';
 import React from 'react';
 
-import { useFlag } from '../../../src/client/hooks/useFlag';
+import { useFlag } from '../../../src/client/deprecated-hooks/useFlag';
 import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { makeMockClient } from './mockClient';
@@ -272,6 +272,28 @@ it('calls variation again when context changes after identify', () => {
   });
 
   expect((mockClient.boolVariation as jest.Mock).mock.calls.length).toBeGreaterThan(callsBefore);
+});
+
+it('logs a deprecation warning on mount via client.logger.warn', async () => {
+  const mockClient = makeMockClient();
+  const Wrapper = makeWrapper(mockClient);
+
+  function FlagConsumer() {
+    useFlag('my-flag', false);
+    return null;
+  }
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <FlagConsumer />
+      </Wrapper>,
+    );
+  });
+
+  expect(mockClient.logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('[LaunchDarkly] useFlag is deprecated'),
+  );
 });
 
 it('updates value immediately when key changes without waiting for change event', () => {

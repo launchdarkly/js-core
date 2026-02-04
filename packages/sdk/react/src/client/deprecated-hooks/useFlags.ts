@@ -12,11 +12,22 @@ import { LDReactContext } from '../provider/LDReactContext';
  *
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns All current flag values as `T`.
+ *
+ * @deprecated Use `useLDClient` with `client.allFlags()` directly. This hook will be removed in a
+ * future major version.
  */
 export function useFlags<T extends LDFlagSet = LDFlagSet>(
   reactContext?: React.Context<LDReactClientContextValue>,
 ): T {
   const { client } = useContext(reactContext ?? LDReactContext);
+
+  useEffect(() => {
+    client.logger.warn(
+      '[LaunchDarkly] useFlags is deprecated and will be removed in a future major version.',
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [flags, setFlags] = useState<T>(() => client.allFlags() as T);
 
   useEffect(() => {

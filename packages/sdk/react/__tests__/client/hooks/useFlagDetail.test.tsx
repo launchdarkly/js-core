@@ -6,7 +6,7 @@ import React from 'react';
 
 import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
-import { useFlagDetail } from '../../../src/client/hooks/useFlagDetail';
+import { useFlagDetail } from '../../../src/client/deprecated-hooks/useFlagDetail';
 import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { makeMockClient } from './mockClient';
@@ -276,6 +276,28 @@ it('calls variation detail again when context changes after identify', () => {
 
   expect((mockClient.boolVariationDetail as jest.Mock).mock.calls.length).toBeGreaterThan(
     callsBefore,
+  );
+});
+
+it('logs a deprecation warning on mount via client.logger.warn', async () => {
+  const mockClient = makeMockClient();
+  const Wrapper = makeWrapper(mockClient);
+
+  function FlagConsumer() {
+    useFlagDetail('my-flag', false);
+    return null;
+  }
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <FlagConsumer />
+      </Wrapper>,
+    );
+  });
+
+  expect(mockClient.logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('[LaunchDarkly] useFlagDetail is deprecated'),
   );
 });
 
