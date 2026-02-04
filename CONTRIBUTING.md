@@ -68,8 +68,9 @@ Contract tests are standardized tests that can be ran against all of our SDKs.
 For more information [see here](https://github.com/launchdarkly/sdk-test-harness).
 
 Note that not all packages in this monorepo have implemented contract tests. The ones that
-have contract tests should have a `contract-test` directory at the root directory of the
-workspace. For example, [see node server sdk contract test](./packages/sdk/server-node/contract-tests/README.md).
+have contract tests should have a `contract-test` directory at the root directory of their project.
+For example, see the node server sdk contract test in
+[`packages/sdk/server-node/contract-tests`](./packages/sdk/server-node/contract-tests/).
 
 ---
 For docs on our module publishing process, see [our publishing doc](contributing/publishing.md)
