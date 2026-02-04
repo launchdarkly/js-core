@@ -34,14 +34,14 @@ jobs:
       - name: Install contract test service dependencies
         run: yarn workspace node-server-sdk-contract-tests install --no-immutable
       - name: Build the test service
-        run: yarn contract-test-service-build
+        run: yarn workspace node-server-sdk-contract-tests build
       - name: Launch the test service in the background
-        run: yarn contract-test-service 2>&1 &
+        run: yarn workspace node-server-sdk-contract-tests start 2>&1 &
       - name: Clone and run contract tests from feat/fdv2 branch
         run: |
           mkdir -p /tmp/sdk-test-harness
           git clone https://github.com/launchdarkly/sdk-test-harness.git /tmp/sdk-test-harness
-          cp ./contract-tests/testharness-suppressions-fdv2.txt /tmp/sdk-test-harness/testharness-suppressions-fdv2.txt
+          cp ./packages/sdk/server-node/contract-tests/testharness-suppressions-fdv2.txt /tmp/sdk-test-harness/testharness-suppressions-fdv2.txt
           cd /tmp/sdk-test-harness
           git checkout feat/fdv2
           go build -o test-harness .
@@ -52,4 +52,4 @@ jobs:
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
-          extra_params: '--skip-from=./contract-tests/testharness-suppressions.txt -stop-service-at-end'
+          extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions.txt -stop-service-at-end'
