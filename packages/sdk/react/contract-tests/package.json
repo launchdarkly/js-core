@@ -1,0 +1,4 @@
+{
+  "name": "@internal/react-sdk-contract-tests",
+  "packageManager": "yarn@3.4.1"
+}
