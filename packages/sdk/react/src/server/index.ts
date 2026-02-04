@@ -1,21 +1,20 @@
 import {
-  LDClient,
-  type LDEvaluationDetail,
+  LDContext,
   type LDEvaluationDetailTyped,
   type LDFlagsState,
   type LDFlagsStateOptions,
 } from '@launchdarkly/js-server-sdk-common';
 
-import { LDReactServerClient } from './LDClient';
-import { LDReactServerOptions } from './LDOptions';
-
-export type * from './LDContextProvider';
-export type * from './LDOptions';
 export type * from './LDClient';
+export type * from './LDServerBaseClient';
+export { LDIsomorphicProvider } from './LDIsomorphicProvider';
+
+import { LDServerBaseClient } from './LDServerBaseClient';
+import { LDServerSession } from './LDClient';
 
 const CLIENT_SIDE_REASON = { kind: 'ERROR' as const, errorKind: 'CLIENT_NOT_READY' };
 
-function makeNoOpDetail<T>(value: T): LDEvaluationDetail & { value: T } {
+function makeNoOpDetail<T>(value: T): LDEvaluationDetailTyped<T> {
   return {
     value,
     variationIndex: null,
@@ -41,124 +40,95 @@ export function isServer(): boolean {
   return typeof window === 'undefined';
 }
 
-/**
- * @returns A no-op client that returns default values and does not call the underlying LaunchDarkly client.
- * This is useful when dealing with applications that are using React Server Components.
- *
- * This fallback is helpful when compilers attempt to prerender components on build time.
- * This will enable the components to at least be prerendered with their default values.
- */
-function makeNoOpClient(): LDReactServerClient {
+function makeNoOpSession(context: LDContext): LDServerSession {
   return {
-    variation: (key, defaultValue, callback) => {
-      const result = Promise.resolve(defaultValue);
-      if (callback) {
-        result.then((res) => callback(null, res)).catch((err) => callback(err, defaultValue));
-      }
-      return result;
-    },
-    variationDetail: (key, defaultValue, callback) => {
-      const detail = makeNoOpDetail(defaultValue);
-      const result = Promise.resolve(detail);
-      if (callback) {
-        result.then((res) => callback(null, res)).catch((err) => callback(err, detail));
-      }
-      return result;
-    },
-    boolVariation: (key, defaultValue) => Promise.resolve(defaultValue),
-    numberVariation: (key, defaultValue) => Promise.resolve(defaultValue),
-    stringVariation: (key, defaultValue) => Promise.resolve(defaultValue),
-    jsonVariation: (key, defaultValue) => Promise.resolve(defaultValue),
-    boolVariationDetail: (key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue) as LDEvaluationDetailTyped<boolean>),
-    numberVariationDetail: (key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue) as LDEvaluationDetailTyped<number>),
-    stringVariationDetail: (key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue) as LDEvaluationDetailTyped<string>),
-    jsonVariationDetail: (key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue) as LDEvaluationDetailTyped<unknown>),
     initialized: () => false,
-    allFlagsState: (allFlagsStateOptions, callback) => {
-      const state = makeNoOpFlagsState();
-      const result = Promise.resolve(state);
-      if (callback) {
-        result.then((res) => callback(null, res)).catch((err) => callback(err, null));
-      }
-      return result;
-    },
+    getContext: () => context,
+    boolVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
+    numberVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
+    stringVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
+    jsonVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
+    boolVariationDetail: (_key, defaultValue) =>
+      Promise.resolve(makeNoOpDetail(defaultValue)),
+    numberVariationDetail: (_key, defaultValue) =>
+      Promise.resolve(makeNoOpDetail(defaultValue)),
+    stringVariationDetail: (_key, defaultValue) =>
+      Promise.resolve(makeNoOpDetail(defaultValue)),
+    jsonVariationDetail: (_key, defaultValue) =>
+      Promise.resolve(makeNoOpDetail(defaultValue)),
+    allFlagsState: () => Promise.resolve(makeNoOpFlagsState()),
   };
 }
 
 /**
+ * Creates a per-request evaluation scope by binding an {@link LDServerBaseClient} to a specific
+ * context.
+ *
+ * @remarks
+ * Call this once per request (or share a session when the context is static, e.g. a shared
+ * anonymous context). The returned {@link LDServerSession} exposes the same variation API as the
+ * server SDK, but without the `context` parameter — the context is bound at creation time.
+ *
+ * When called in a browser environment (e.g. during build-time pre-rendering), returns a no-op
+ * session that resolves every variation to its default value. This allows server components to
+ * render safely at build time without contacting LaunchDarkly.
+ *
+ * @example
+ * ```ts
+ * // lib/ld-server.ts
+ * import { init } from '@launchdarkly/node-server-sdk';
+ * import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+ *
+ * const ldBaseClient = await init(process.env.LAUNCHDARKLY_SDK_KEY || '');
+ * export const serverSession = createLDServerSession(ldBaseClient, defaultContext);
+ * ```
+ *
+ * @param client Any LaunchDarkly server SDK client that satisfies {@link LDServerBaseClient}.
+ * @param context The context to bind to this session. Typically resolved from the request
+ *   (e.g. from auth tokens, cookies, or headers).
+ * @returns An {@link LDServerSession} scoped to the given context.
+ */
+export function createLDServerSession(
+  client: LDServerBaseClient,
+  context: LDContext,
+): LDServerSession {
+  if (!isServer()) {
+    return makeNoOpSession(context);
+  }
+
+  return {
+    initialized: () => client.initialized(),
+    getContext: () => context,
+    boolVariation: (key, defaultValue) => client.boolVariation(key, context, defaultValue),
+    numberVariation: (key, defaultValue) => client.numberVariation(key, context, defaultValue),
+    stringVariation: (key, defaultValue) => client.stringVariation(key, context, defaultValue),
+    jsonVariation: (key, defaultValue) => client.jsonVariation(key, context, defaultValue),
+    boolVariationDetail: (key, defaultValue) =>
+      client.boolVariationDetail(key, context, defaultValue),
+    numberVariationDetail: (key, defaultValue) =>
+      client.numberVariationDetail(key, context, defaultValue),
+    stringVariationDetail: (key, defaultValue) =>
+      client.stringVariationDetail(key, context, defaultValue),
+    jsonVariationDetail: (key, defaultValue) =>
+      client.jsonVariationDetail(key, context, defaultValue),
+    allFlagsState: (options?: LDFlagsStateOptions) => client.allFlagsState(context, options),
+  };
+}
+
+/**
+ * @deprecated Use {@link createLDServerSession} instead.
+ *
  * @experimental
  * This function is experimental and may change in the future.
  *
  * Creates a restricted version of the common server client that is used for server side rendering.
  * When not running on the server (e.g. in the browser), returns a no-op client that returns default
  * values and does not call the underlying LaunchDarkly client.
- *
- * @param client The LaunchDarkly client.
- * @param options The options for the React server client.
- * @returns The React server client. The client is a restricted version of the common server client.
  */
 export function createReactServerClient(
-  client: LDClient,
-  options: LDReactServerOptions,
-): LDReactServerClient {
-  if (!isServer()) {
-    return makeNoOpClient();
-  }
-
-  if (!options.contextProvider) {
-    throw new Error('contextProvider is required');
-  }
-
-  const { contextProvider } = options;
-  return {
-    variation: (key, defaultValue, callback) => {
-      const context = contextProvider.getContext();
-      return client.variation(key, context, defaultValue, callback);
-    },
-    variationDetail: (key, defaultValue, callback) => {
-      const context = contextProvider.getContext();
-      return client.variationDetail(key, context, defaultValue, callback);
-    },
-    boolVariation: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.boolVariation(key, context, defaultValue);
-    },
-    numberVariation: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.numberVariation(key, context, defaultValue);
-    },
-    stringVariation: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.stringVariation(key, context, defaultValue);
-    },
-    jsonVariation: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.jsonVariation(key, context, defaultValue);
-    },
-    boolVariationDetail: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.boolVariationDetail(key, context, defaultValue);
-    },
-    numberVariationDetail: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.numberVariationDetail(key, context, defaultValue);
-    },
-    stringVariationDetail: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.stringVariationDetail(key, context, defaultValue);
-    },
-    jsonVariationDetail: (key, defaultValue) => {
-      const context = contextProvider.getContext();
-      return client.jsonVariationDetail(key, context, defaultValue);
-    },
-    initialized: () => client.initialized(),
-    allFlagsState: (allFlagsStateOptions: LDFlagsStateOptions, callback) => {
-      const context = contextProvider.getContext();
-      return client.allFlagsState(context, allFlagsStateOptions, callback);
-    },
-  };
+  client: LDServerBaseClient,
+  options: { contextProvider: { getContext: () => LDContext } },
+): LDServerSession {
+  const context = options.contextProvider.getContext();
+  return createLDServerSession(client, context);
 }

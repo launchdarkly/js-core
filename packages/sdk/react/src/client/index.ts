@@ -4,5 +4,8 @@ export * from './LDOptions';
 
 export * from './provider/LDReactContext';
 export { createLDReactProvider, createLDReactProviderWithClient } from './provider/LDReactProvider';
+export { LDBootstrapClientProvider } from './provider/LDBootstrapClientProvider';
+export type { LDBootstrapClientProviderProps } from './provider/LDBootstrapClientProvider';
 export { createClient } from './LDReactClient';
+export * from './deprecated-hooks';
 export * from './hooks';

@@ -4,7 +4,7 @@
 import { act, render } from '@testing-library/react';
 import React from 'react';
 
-import { useFlags } from '../../../src/client/hooks/useFlags';
+import { useFlags } from '../../../src/client/deprecated-hooks/useFlags';
 import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { makeMockClient } from './mockClient';
@@ -86,6 +86,28 @@ it('re-renders with new flags when change event fires', async () => {
   });
 
   expect(captured[captured.length - 1]).toEqual({ 'flag-a': true });
+});
+
+it('logs a deprecation warning on mount via client.logger.warn', async () => {
+  const mockClient = makeMockClient();
+  const Wrapper = makeWrapper(mockClient);
+
+  function FlagConsumer() {
+    useFlags();
+    return null;
+  }
+
+  await act(async () => {
+    render(
+      <Wrapper>
+        <FlagConsumer />
+      </Wrapper>,
+    );
+  });
+
+  expect(mockClient.logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('[LaunchDarkly] useFlags is deprecated'),
+  );
 });
 
 it('does not re-render when a different key changes', async () => {

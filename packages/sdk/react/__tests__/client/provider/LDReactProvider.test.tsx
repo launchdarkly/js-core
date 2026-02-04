@@ -20,7 +20,6 @@ jest.mock('../../../src/client/LDReactClient', () => ({
 }));
 
 // ─── createLDReactProviderWithClient ────────────────────────────────────────
-
 it('renders children', () => {
   const client = makeMockClient();
   const Provider = createLDReactProviderWithClient(client);

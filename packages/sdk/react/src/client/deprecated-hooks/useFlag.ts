@@ -28,6 +28,9 @@ function getVariation<T extends LDFlagType>(
  * @param defaultValue The value to return if the flag is not available.
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns The typed flag value, or `defaultValue` if the flag is unavailable.
+ *
+ * @deprecated Use `useLDClient` with the client's variation methods directly. This hook will be
+ * removed in a future major version.
  */
 export function useFlag<T extends LDFlagType>(
   key: string,
@@ -35,6 +38,14 @@ export function useFlag<T extends LDFlagType>(
   reactContext?: React.Context<LDReactClientContextValue>,
 ): T {
   const { client, context } = useContext(reactContext ?? LDReactContext);
+
+  useEffect(() => {
+    client.logger.warn(
+      '[LaunchDarkly] useFlag is deprecated and will be removed in a future major version.',
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Using a ref here to capture the latest defaultValue without
   // making it a depencency of the effect.
   const defaultValueRef = useRef(defaultValue);
