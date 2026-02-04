@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.17.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.17.1...js-server-sdk-common-v2.17.2) (2026-02-03)
+
+
+### Bug Fixes
+
+* **node-server-sdk:** No FDv1 fallback when using custom datasystem ([#1088](https://github.com/launchdarkly/js-core/issues/1088)) ([5111112](https://github.com/launchdarkly/js-core/commit/5111112b6ddba8107edb8d455de0b1da114b2af6))
+
 ## [2.17.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.17.0...js-server-sdk-common-v2.17.1) (2025-12-09)
 
 
