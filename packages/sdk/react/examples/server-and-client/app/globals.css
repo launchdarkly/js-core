@@ -1,0 +1,155 @@
+/* ── Global ──────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  background: var(--lp-color-bg-ui-secondary);
+  min-height: 100vh;
+}
+
+/* ── Page (page.tsx) ─────────────────────────────────────────── */
+.page-main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px var(--lp-spacing-500);
+  font-family: var(--lp-font-family-base);
+}
+
+.page-heading {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--lp-color-text-ui-primary-base);
+  margin: 0 0 4px;
+}
+
+.page-subheading {
+  font-size: 14px;
+  color: var(--lp-color-text-ui-secondary);
+  margin: 0 0 var(--lp-spacing-700);
+}
+
+.tree-details {
+  margin-bottom: var(--lp-spacing-700);
+}
+
+.tree-summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lp-color-text-ui-primary-base);
+  user-select: none;
+}
+
+.tree-pre {
+  background: var(--lp-color-bg-ui-primary);
+  border: 1px solid var(--lp-color-border-ui-primary);
+  border-radius: var(--lp-border-radius-medium);
+  padding: var(--lp-spacing-400) var(--lp-spacing-500);
+  font-size: 12px;
+  font-family: var(--lp-font-family-monospace);
+  line-height: 1.8;
+  margin: 10px 0 0;
+  overflow-x: auto;
+}
+
+/* ── ComponentBox ────────────────────────────────────────────── */
+.box {
+  border: 2px solid transparent;
+  border-radius: var(--lp-border-radius-medium);
+  margin: 14px 0;
+  overflow: hidden;
+  font-family: var(--lp-font-family-base);
+}
+
+.box.server { border-color: var(--lp-color-blue-400); }
+.box.client { border-color: var(--lp-color-purple-400); }
+
+.box-header {
+  color: #fff;
+  padding: var(--lp-spacing-300) 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.box-header.server { background: var(--lp-color-blue-600); }
+.box-header.client { background: var(--lp-color-purple-700); }
+
+.box-badge {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--lp-border-radius-regular);
+  padding: 2px var(--lp-spacing-300);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-family: var(--lp-font-family-monospace);
+  white-space: nowrap;
+}
+
+.box-filename {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.box-description {
+  background: rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 5px 14px;
+  font-size: 12px;
+  color: var(--lp-color-text-ui-secondary);
+}
+
+.box-body {
+  padding: 14px;
+}
+
+.box-body.server { background: var(--lp-color-blue-50); }
+.box-body.client { background: var(--lp-color-purple-50); }
+
+/* ── FlagBadge ───────────────────────────────────────────────── */
+.flag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lp-spacing-300);
+  margin: 4px 0;
+  font-family: var(--lp-font-family-monospace);
+  font-size: 13px;
+}
+
+.flag-key {
+  background: var(--lp-color-bg-ui-secondary);
+  color: var(--lp-color-text-ui-primary-base);
+  font-family: var(--lp-font-family-monospace);
+  padding: 2px 6px;
+  border-radius: var(--lp-border-radius-regular);
+  border: 1px solid var(--lp-color-border-ui-primary);
+}
+
+.flag-arrow {
+  color: var(--lp-color-text-ui-secondary);
+}
+
+.flag-value {
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: var(--lp-border-radius-regular);
+  min-width: 44px;
+  text-align: center;
+}
+
+.flag-value.on  { background: var(--lp-color-bg-feedback-success); color: var(--lp-color-text-feedback-success); }
+.flag-value.off { background: var(--lp-color-bg-feedback-error);   color: var(--lp-color-text-feedback-error); }
+
+/* ── Shared client component helpers ─────────────────────────── */
+.init-text {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--lp-color-text-field-placeholder);
+}
+
+.flag-live {
+  font-size: 11px;
+  color: var(--lp-color-text-feedback-info);
+  background: var(--lp-color-bg-feedback-info);
+  padding: 2px 7px;
+  border-radius: var(--lp-border-radius-regular);
+  font-family: var(--lp-font-family-base);
+}

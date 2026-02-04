@@ -1,4 +1,34 @@
 {
   "name": "@internal/react-sdk-contract-tests",
-  "packageManager": "yarn@3.4.1"
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "yarn@3.4.1",
+  "scripts": {
+    "install-playwright-browsers": "playwright install --with-deps chromium",
+    "start:adapter": "yarn workspace browser-contract-test-adapter run start",
+    "dev": "next dev -p 8002",
+    "build": "next build",
+    "start:entity": "next start -p 8002",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
+  },
+  "dependencies": {
+    "next": "16.1.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "playwright": "^1.49.1",
+    "prettier": "^3.0.0",
+    "typescript": "^5"
+  }
 }

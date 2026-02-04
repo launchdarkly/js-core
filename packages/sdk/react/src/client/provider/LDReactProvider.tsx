@@ -1,6 +1,7 @@
 import React from 'react';
 
-import { LDReactClient, LDReactClientContextValue } from '../LDClient';
+import type { LDReactClient, LDReactClientContextValue } from "../LDClient";
+import { LDReactContext } from './LDReactContext';
 
 /**
  * Creates a new LaunchDarkly React provider.
@@ -41,8 +42,11 @@ export function createLDReactProvider(
     intializedState: 'unknown',
   };
 
+  const ContextProvider = ReactContext?.Provider ?? LDReactContext.Provider;
+
+  // TODO: this will become its own function once we have more state handling
   const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <ReactContext.Provider value={contextValue}>{children}</ReactContext.Provider>
+    <ContextProvider value={contextValue}>{children}</ContextProvider>
   );
 
   return Provider;

@@ -56,40 +56,6 @@ export interface LDReactClientContextValue {
  * some important functions.
  *
  * The LaunchDarkly client context provider interface for React.
- * This interface will contain the react context created by `createContext` function
- * as well as scoped react hooks.
+ * This will be the type that is returned from our createContext function.
  */
-export interface LDReactClientContext {
-  context: React.Context<LDReactClientContextValue>;
-
-  /**
-   * NOTE: I am keeping everything below this line as a reference for future implementation
-   * so they will all be optional for now. Hopefully this can help us articulate what we are
-   * planning to do with this.
-   *
-   * This is also not the final list of hooks that we will be providing.
-   */
-  useLDClient?: () => LDReactClient | undefined;
-  useVariation?: (key: string, defaultValue: LDFlagValue) => LDFlagValue | undefined;
-  useVariationDetail?: (key: string, defaultValue: LDFlagValue) => LDEvaluationDetail | undefined;
-  useBoolVariation?: (key: string, defaultValue: boolean) => boolean | undefined;
-  useBoolVariationDetail?: (
-    key: string,
-    defaultValue: boolean,
-  ) => LDEvaluationDetailTyped<boolean> | undefined;
-  useNumberVariation?: (key: string, defaultValue: number) => number | undefined;
-  useNumberVariationDetail?: (
-    key: string,
-    defaultValue: number,
-  ) => LDEvaluationDetailTyped<number> | undefined;
-  useStringVariation?: (key: string, defaultValue: string) => string | undefined;
-  useStringVariationDetail?: (
-    key: string,
-    defaultValue: string,
-  ) => LDEvaluationDetailTyped<string> | undefined;
-  useJsonVariation?: (key: string, defaultValue: unknown) => unknown | undefined;
-  useJsonVariationDetail?: (
-    key: string,
-    defaultValue: unknown,
-  ) => LDEvaluationDetailTyped<unknown> | undefined;
-}
+export type LDReactClientContext = React.Context<LDReactClientContextValue>;
