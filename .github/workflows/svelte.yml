@@ -23,3 +23,7 @@ jobs:
           workspace_name: '@launchdarkly/svelte-client-sdk'
           workspace_path: packages/sdk/svelte
           should_build_docs: false
+      - name: Build example
+        run: |
+          yarn workspaces focus ld-svelte-example
+          yarn workspaces foreach -pR --topological-dev --from 'ld-svelte-example' run build

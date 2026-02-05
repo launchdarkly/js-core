@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { LDFlag } from '@launchdarkly/svelte-client-sdk';
-	import { PUBLIC_LD_FLAG_KEY } from '$env/static/public';
+	import  * as envvars from '$env/static/public';
+
+	const { PUBLIC_LD_FLAG_KEY = 'sample-feature' } = envvars;
 </script>
 
 <style>
