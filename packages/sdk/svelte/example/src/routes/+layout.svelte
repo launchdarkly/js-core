@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { LDProvider } from '@launchdarkly/svelte-client-sdk';
-	import { PUBLIC_LD_CLIENT_ID } from '$env/static/public';
+	import  * as envvars from '$env/static/public';
+
+	const { PUBLIC_LD_CLIENT_ID = '' } = envvars;
 
 	const context = {
 		kind: 'user',
