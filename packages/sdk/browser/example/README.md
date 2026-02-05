@@ -1,13 +1,5 @@
 # LaunchDarkly sample javascript application
 
-# ⛔️⛔️⛔️⛔️
-
-> [!CAUTION]
-> This example is created against a non-production SDK which means things may change and this example might
-> not work while this message is visible.
-
-# ☝️☝️☝️☝️☝️☝️
-
 We've built a simple browser application that demonstrates how this LaunchDarkly SDK works.
 
 Below, you'll find the build procedure. For more comprehensive instructions, you can visit your [Quickstart page](https://app.launchdarkly.com/quickstart#/) or
