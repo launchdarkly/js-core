@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { fastDeepEqual } from '@launchdarkly/js-client-sdk-common';
+
 import type ReactNativeLDClient from '../../ReactNativeLDClient';
 import useLDClient from '../useLDClient';
 import { LDEvaluationDetailTyped } from './LDEvaluationDetail';
@@ -46,14 +48,14 @@ export const useTypedVariation = <T extends boolean | number | string | unknown>
   useEffect(() => {
     // If the key changes, then we will need to make sure that the value is updated.
     const initialValue = getTypedVariation(ldClient, key, defaultValue);
-    if (valueRef.current !== initialValue) {
+    if (!fastDeepEqual(initialValue, valueRef.current)) {
       valueRef.current = initialValue;
       setValue(initialValue);
     }
 
     const handleChange = (): void => {
       const newValue = getTypedVariation(ldClient, key, defaultValue);
-      if (newValue !== valueRef.current) {
+      if (!fastDeepEqual(newValue, valueRef.current)) {
         valueRef.current = newValue;
         setValue(newValue);
       }
@@ -142,14 +144,14 @@ export const useTypedVariationDetail = <T extends boolean | number | string | un
   useEffect(() => {
     // If the key changes, then we will need to make sure that the value is updated.
     const initialDetail = getTypedVariationDetail(ldClient, key, defaultValue);
-    if (detailRef.current.value !== initialDetail.value) {
+    if (!fastDeepEqual(initialDetail, detailRef.current)) {
       detailRef.current = initialDetail;
       setDetail(initialDetail);
     }
 
     const handleChange = () => {
       const newDetail = getTypedVariationDetail(ldClient, key, defaultValue);
-      if (newDetail.value !== detailRef.current.value) {
+      if (!fastDeepEqual(newDetail, detailRef.current)) {
         detailRef.current = newDetail;
         setDetail(newDetail);
       }
