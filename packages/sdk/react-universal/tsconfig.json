@@ -20,5 +20,5 @@
     "types": ["jest", "node", "react/canary"],
     "jsx": "react"
   },
-  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
+  "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example", "contract-tests"]
 }
