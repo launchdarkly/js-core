@@ -6,12 +6,8 @@
 [![NPM][server-ai-vercel-dm-badge]][server-ai-vercel-npm-link]
 [![NPM][server-ai-vercel-dt-badge]][server-ai-vercel-npm-link]
 
-# ⛔️⛔️⛔️⛔️
-
 > [!CAUTION]
-> This library is a alpha version and should not be considered ready for production use while this message is visible.
-
-# ☝️☝️☝️☝️☝️☝️
+> This SDK is in pre-release and not subject to backwards compatibility guarantees or semantic versioning. The API may change based on feedback.
 
 ## LaunchDarkly overview
 

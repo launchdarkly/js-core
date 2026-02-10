@@ -6,15 +6,11 @@
 [![NPM][server-ai-openai-dm-badge]][server-ai-openai-npm-link]
 [![NPM][server-ai-openai-dt-badge]][server-ai-openai-npm-link]
 
-# ⛔️⛔️⛔️⛔️
-
 > [!CAUTION]
-> This library is a alpha version and should not be considered ready for production use while this message is visible.
+> This SDK is in pre-release and not subject to backwards compatibility guarantees or semantic versioning. The API may change based on feedback.
 
 > [!NOTE]
 > This provider currently uses OpenAI's completion API. We plan to migrate to the responses API in a future release to take advantage of improved functionality and performance.
-
-# ☝️☝️☝️☝️☝️☝️
 
 ## LaunchDarkly overview
 
