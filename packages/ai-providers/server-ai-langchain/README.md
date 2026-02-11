@@ -7,7 +7,10 @@
 [![NPM][server-ai-langchain-dt-badge]][server-ai-langchain-npm-link]
 
 > [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility guarantees or semantic versioning. The API may change based on feedback.
+> This SDK is in pre-release and not subject to backwards compatibility
+> guarantees. The API may change based on feedback.
+>
+> Pin to a specific minor version to avoid breaking changes.
 
 ## LaunchDarkly overview
 

@@ -7,7 +7,10 @@
 [![NPM][server-ai-openai-dt-badge]][server-ai-openai-npm-link]
 
 > [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility guarantees or semantic versioning. The API may change based on feedback.
+> This SDK is in pre-release and not subject to backwards compatibility
+> guarantees. The API may change based on feedback.
+>
+> Pin to a specific minor version to avoid breaking changes.
 
 > [!NOTE]
 > This provider currently uses OpenAI's completion API. We plan to migrate to the responses API in a future release to take advantage of improved functionality and performance.

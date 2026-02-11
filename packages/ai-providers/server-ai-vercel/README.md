@@ -7,7 +7,10 @@
 [![NPM][server-ai-vercel-dt-badge]][server-ai-vercel-npm-link]
 
 > [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility guarantees or semantic versioning. The API may change based on feedback.
+> This SDK is in pre-release and not subject to backwards compatibility
+> guarantees. The API may change based on feedback.
+>
+> Pin to a specific minor version to avoid breaking changes.
 
 ## LaunchDarkly overview
 
