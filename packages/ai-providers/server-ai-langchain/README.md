@@ -10,7 +10,7 @@
 > This SDK is in pre-release and not subject to backwards compatibility
 > guarantees. The API may change based on feedback.
 >
-> Pin to a specific minor version to avoid breaking changes.
+> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
 
 ## LaunchDarkly overview
 
