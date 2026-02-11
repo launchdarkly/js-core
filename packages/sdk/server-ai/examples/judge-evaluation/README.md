@@ -25,7 +25,7 @@ Make sure you have an AI Config configured in LaunchDarkly with `mode: "judge"`:
 
 1. Create an AI Config in LaunchDarkly:
    - Navigate to the AI Configs section in your LaunchDarkly dashboard
-   - Create a new AI Config with the key `sample-ai-config`
+   - Create a new AI Config in Completion mode with the key `sample-ai-config`
    - Add a variation with the following settings:
      - **Model Selection**: Select "OpenAI" as the provider and "gpt-3.5-turbo" as the model
      - **Messages**: Add a system message with the content: "You are a helpful assistant for {{companyName}}. You should be friendly and informative."
