@@ -90,6 +90,9 @@
     },
     {
       "path": "./packages/sdk/shopify-oxygen/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/electron/tsconfig.ref.json"
     }
   ]
 }
