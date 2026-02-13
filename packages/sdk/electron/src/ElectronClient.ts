@@ -192,7 +192,7 @@ export class ElectronClient extends LDClientImpl {
 
     this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
 
-    this.identify(this._initialContext, identifyOptions);
+    this.identifyResult(this._initialContext, identifyOptions);
     return this._startPromise;
   }
 
