@@ -1,5 +1,3 @@
-import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
-
 /**
  * Synchronous IPC channel names and helpers for type-safe main/renderer communication.
  */
@@ -63,12 +61,12 @@ export const AllAsyncChannels: readonly IPCAsyncChannel[] = [
 export type IPCChannel = IPCSyncChannel | IPCAsyncChannel;
 
 /**
- * Interface for IPC event handlers.
+ * Per-event state for the broadcast pattern: one SDK listener per event name
+ * that forwards to all renderer ports subscribed to that event.
  */
-export interface IpcEventHandler {
-  port: Electron.MessagePortMain;
-  eventName: LDEmitterEventName;
-  callback: (...args: any[]) => void;
+export interface IpcEventSubscription {
+  broadcastCallback: (...args: any[]) => void;
+  ports: Map<string, Electron.MessagePortMain>;
 }
 
 /**

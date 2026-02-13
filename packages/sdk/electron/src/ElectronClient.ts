@@ -19,6 +19,7 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
+import type { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
 
 import { readFlagsFromBootstrap } from './bootstrap';
 import ElectronDataManager from './ElectronDataManager';
@@ -27,7 +28,7 @@ import {
   AllAsyncChannels,
   AllSyncChannels,
   getIPCChannelName,
-  IpcEventHandler,
+  IpcEventSubscription,
 } from './ElectronIPC';
 import type { ElectronOptions as LDOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
@@ -48,7 +49,10 @@ export class ElectronClient extends LDClientImpl {
 
   private _ipcNamespace?: string;
 
-  private _ipcEventHandlers?: Map<string, IpcEventHandler>;
+  private _ipcEventSubscriptions?: Map<LDEmitterEventName, IpcEventSubscription>;
+
+  // reverse lookup table to make removals faster
+  private _ipcCallbackIdToEventName?: Map<string, LDEmitterEventName>;
 
   constructor(credential: string, initialContext: LDContext, options: LDOptions = {}) {
     const { logger: customLogger, debug } = options;
@@ -265,34 +269,57 @@ export class ElectronClient extends LDClientImpl {
 
   private _openIPCChannels(credential: string): void {
     this._ipcNamespace = credential;
-    this._ipcEventHandlers = new Map<string, IpcEventHandler>();
+    this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
+    this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
 
     ipcMain.on(getIPCChannelName(credential, 'addEventHandler'), (event, messageData) => {
-      const { callbackId, eventName } = messageData;
-      if (!this._ipcEventHandlers!.has(callbackId)) {
-        const [port] = event.ports;
-        const callback = (...args: any[]) => {
-          port.postMessage(args);
-        };
-        this.on(eventName, callback);
-        this._ipcEventHandlers!.set(callbackId, { port, eventName, callback });
+      const { callbackId, eventName } = messageData as {
+        callbackId: string;
+        eventName: LDEmitterEventName;
+      };
+      if (this._ipcCallbackIdToEventName!.has(callbackId)) {
+        return;
       }
+      const [port] = event.ports;
+      let entry = this._ipcEventSubscriptions!.get(eventName);
+      if (!entry) {
+        const ports = new Map<string, Electron.MessagePortMain>();
+        const broadcastCallback = (...args: any[]) => {
+          ports.forEach((p) => p.postMessage(args));
+        };
+        this.on(eventName, broadcastCallback);
+        entry = { broadcastCallback, ports };
+        this._ipcEventSubscriptions!.set(eventName, entry);
+      }
+      entry.ports.set(callbackId, port);
+      this._ipcCallbackIdToEventName!.set(callbackId, eventName);
     });
 
     ipcMain.on(
       getIPCChannelName(credential, 'removeEventHandler'),
       (event, eventName, callbackId) => {
-        const existingHandler = this._ipcEventHandlers!.get(callbackId);
-        if (existingHandler && existingHandler.eventName === eventName) {
-          this.off(eventName, existingHandler.callback);
-          existingHandler.port.close();
-          this._ipcEventHandlers!.delete(callbackId);
-          // eslint-disable-next-line no-param-reassign
-          event.returnValue = true;
-        } else {
+        const resolvedEventName = this._ipcCallbackIdToEventName!.get(callbackId);
+        if (resolvedEventName !== eventName) {
           // eslint-disable-next-line no-param-reassign
           event.returnValue = false;
+          return;
         }
+        const entry = this._ipcEventSubscriptions!.get(eventName);
+        const port = entry?.ports.get(callbackId);
+        if (!entry || !port) {
+          // eslint-disable-next-line no-param-reassign
+          event.returnValue = false;
+          return;
+        }
+        entry.ports.delete(callbackId);
+        this._ipcCallbackIdToEventName!.delete(callbackId);
+        port.close();
+        if (entry.ports.size === 0) {
+          this.off(eventName as LDEmitterEventName, entry.broadcastCallback);
+          this._ipcEventSubscriptions!.delete(eventName);
+        }
+        // eslint-disable-next-line no-param-reassign
+        event.returnValue = true;
       },
     );
 
@@ -399,13 +426,14 @@ export class ElectronClient extends LDClientImpl {
       return;
     }
 
-    if (this._ipcEventHandlers) {
-      this._ipcEventHandlers.forEach((handler: IpcEventHandler) => {
-        handler.port.close();
-        this.off(handler.eventName, handler.callback);
+    if (this._ipcEventSubscriptions) {
+      this._ipcEventSubscriptions.forEach((entry, eventName) => {
+        this.off(eventName, entry.broadcastCallback);
+        entry.ports.forEach((port) => port.close());
       });
-      this._ipcEventHandlers.clear();
+      this._ipcEventSubscriptions.clear();
     }
+    this._ipcCallbackIdToEventName?.clear();
 
     AllSyncChannels.forEach((channel) => {
       ipcMain.removeAllListeners(getIPCChannelName(this._ipcNamespace!, channel));
@@ -414,7 +442,8 @@ export class ElectronClient extends LDClientImpl {
       ipcMain.removeHandler(getIPCChannelName(this._ipcNamespace!, channel));
     });
 
-    this._ipcEventHandlers = undefined;
+    this._ipcEventSubscriptions = undefined;
+    this._ipcCallbackIdToEventName = undefined;
     this._ipcNamespace = undefined;
   }
 

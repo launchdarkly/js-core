@@ -398,6 +398,30 @@ describe('given an initialized ElectronClient', () => {
     expect(mockPort.close).toHaveBeenCalledTimes(1);
     expect(event.returnValue).toEqual(true);
   });
+
+  it('broadcasts to all ports when multiple renderer subscribers listen to the same event', () => {
+    const mockPort1: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const mockPort2: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const onSpy = jest.spyOn(client, 'on');
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [mockPort1] } as MockIpcEvent,
+      { callbackId: 'sub1', eventName: 'change' },
+    );
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [mockPort2] } as MockIpcEvent,
+      { callbackId: 'sub2', eventName: 'change' },
+    );
+
+    expect(onSpy).toHaveBeenCalledTimes(1);
+    const broadcastCallback = onSpy.mock.calls[0][1];
+    broadcastCallback('arg1', 'arg2');
+
+    expect(mockPort1.postMessage).toHaveBeenCalledTimes(1);
+    expect(mockPort1.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
+    expect(mockPort2.postMessage).toHaveBeenCalledTimes(1);
+    expect(mockPort2.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
+  });
 });
 
 describe('close()', () => {
