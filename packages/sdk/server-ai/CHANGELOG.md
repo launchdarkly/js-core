@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.2](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.1...server-sdk-ai-v0.16.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* Update pre-release usage guidance ([#1098](https://github.com/launchdarkly/js-core/issues/1098)) ([07e3b5e](https://github.com/launchdarkly/js-core/commit/07e3b5ec500fb6d064d7d449e891b58054ac4af5))
+
 ## [0.16.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.0...server-sdk-ai-v0.16.1) (2026-02-03)
 
 
