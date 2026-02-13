@@ -2,7 +2,8 @@ import * as os from 'os';
 
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
-import * as packageJson from '../../package.json';
+const sdkName = '@launchdarkly/electron-client-sdk';
+const sdkVersion = '0.0.0'; // x-release-please-version
 
 function processPlatformName(name: string): string {
   switch (name) {
@@ -35,8 +36,8 @@ export default class ElectronInfo implements Info {
 
   sdkData(): SdkData {
     return {
-      name: packageJson.name,
-      version: packageJson.version,
+      name: sdkName,
+      version: sdkVersion,
       userAgentBase: 'ElectronClient',
     };
   }
