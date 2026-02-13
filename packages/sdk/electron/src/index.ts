@@ -12,6 +12,8 @@ import type { LDPlugin } from './LDPlugin';
 
 export * from '@launchdarkly/js-client-sdk-common';
 
+export * from './ElectronIPC';
+
 export type {
   ElectronIdentifyOptions,
   ElectronOptions as LDOptions,

@@ -23,6 +23,12 @@ import {
 import { readFlagsFromBootstrap } from './bootstrap';
 import ElectronDataManager from './ElectronDataManager';
 import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
+import {
+  AllAsyncChannels,
+  AllSyncChannels,
+  getIPCChannelName,
+  IpcEventHandler,
+} from './ElectronIPC';
 import type { ElectronOptions as LDOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
@@ -39,6 +45,10 @@ export class ElectronClient extends LDClientImpl {
   private _startPromise?: Promise<LDWaitForInitializationResult>;
 
   private readonly _plugins: LDPlugin[];
+
+  private _ipcNamespace?: string;
+
+  private _ipcEventHandlers?: Map<string, IpcEventHandler>;
 
   constructor(credential: string, initialContext: LDContext, options: LDOptions = {}) {
     const { logger: customLogger, debug } = options;
@@ -253,132 +263,163 @@ export class ElectronClient extends LDClientImpl {
     return dataManager.getConnectionMode() === 'offline';
   }
 
-  private _openIPCChannels(clientSideId: string): void {
-    interface Handler {
-      port: Electron.MessagePortMain;
-      eventName: string;
-      callback: (...args: any[]) => void;
-    }
+  private _openIPCChannels(credential: string): void {
+    this._ipcNamespace = credential;
+    this._ipcEventHandlers = new Map<string, IpcEventHandler>();
 
-    const eventHandlers: Map<string, Handler> = new Map();
-
-    const getEventName = (baseName: string) => `ld:${clientSideId}:${baseName}`;
-
-    ipcMain.on(getEventName('addEventHandler'), (event, messageData) => {
+    ipcMain.on(getIPCChannelName(credential, 'addEventHandler'), (event, messageData) => {
       const { callbackId, eventName } = messageData;
-      if (!eventHandlers.has(callbackId)) {
+      if (!this._ipcEventHandlers!.has(callbackId)) {
         const [port] = event.ports;
         const callback = (...args: any[]) => {
           port.postMessage(args);
         };
         this.on(eventName, callback);
-        eventHandlers.set(callbackId, { port, eventName, callback });
+        this._ipcEventHandlers!.set(callbackId, { port, eventName, callback });
       }
     });
 
-    ipcMain.on(getEventName('removeEventHandler'), (event, eventName, callbackId) => {
-      const existingHandler = eventHandlers.get(callbackId);
-      if (existingHandler && existingHandler.eventName === eventName) {
-        this.off(eventName, existingHandler.callback);
-        existingHandler.port.close();
-        eventHandlers.delete(callbackId);
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = true;
-      } else {
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = false;
-      }
-    });
+    ipcMain.on(
+      getIPCChannelName(credential, 'removeEventHandler'),
+      (event, eventName, callbackId) => {
+        const existingHandler = this._ipcEventHandlers!.get(callbackId);
+        if (existingHandler && existingHandler.eventName === eventName) {
+          this.off(eventName, existingHandler.callback);
+          existingHandler.port.close();
+          this._ipcEventHandlers!.delete(callbackId);
+          // eslint-disable-next-line no-param-reassign
+          event.returnValue = true;
+        } else {
+          // eslint-disable-next-line no-param-reassign
+          event.returnValue = false;
+        }
+      },
+    );
 
     ipcMain.handle(
-      getEventName('waitForInitialization'),
+      getIPCChannelName(credential, 'waitForInitialization'),
       (_event, options?: LDWaitForInitializationOptions): Promise<LDWaitForInitializationResult> =>
         this.waitForInitialization(options),
     );
 
-    ipcMain.on(getEventName('allFlags'), (event) => {
+    ipcMain.on(getIPCChannelName(credential, 'allFlags'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.allFlags();
     });
 
-    ipcMain.on(getEventName('boolVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'boolVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariation(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('boolVariationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'boolVariationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariationDetail(key, defaultValue);
     });
 
-    ipcMain.handle(getEventName('flush'), (_event) => this.flush());
+    ipcMain.handle(getIPCChannelName(credential, 'flush'), (_event) => this.flush());
 
-    ipcMain.on(getEventName('getContext'), (event) => {
+    ipcMain.on(getIPCChannelName(credential, 'getContext'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getContext();
     });
 
-    ipcMain.handle(getEventName('identify'), (_event, context, identifyOptions) =>
+    ipcMain.handle(getIPCChannelName(credential, 'identify'), (_event, context, identifyOptions) =>
       this.identifyResult(context, identifyOptions),
     );
 
-    ipcMain.on(getEventName('jsonVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'jsonVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariation(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('jsonVariationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'jsonVariationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariationDetail(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('numberVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'numberVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.numberVariation(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('numberVariationDetail'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
-      event.returnValue = this.numberVariationDetail(key, defaultValue);
-    });
+    ipcMain.on(
+      getIPCChannelName(credential, 'numberVariationDetail'),
+      (event, key, defaultValue) => {
+        // eslint-disable-next-line no-param-reassign
+        event.returnValue = this.numberVariationDetail(key, defaultValue);
+      },
+    );
 
-    ipcMain.on(getEventName('stringVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'stringVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.stringVariation(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('stringVariationDetail'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
-      event.returnValue = this.stringVariationDetail(key, defaultValue);
-    });
+    ipcMain.on(
+      getIPCChannelName(credential, 'stringVariationDetail'),
+      (event, key, defaultValue) => {
+        // eslint-disable-next-line no-param-reassign
+        event.returnValue = this.stringVariationDetail(key, defaultValue);
+      },
+    );
 
-    ipcMain.on(getEventName('track'), (event, key, data, metricValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'track'), (event, key, data, metricValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.track(key, data, metricValue);
     });
 
-    ipcMain.on(getEventName('variation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'variation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variation(key, defaultValue);
     });
 
-    ipcMain.on(getEventName('variationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(credential, 'variationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variationDetail(key, defaultValue);
     });
 
-    ipcMain.handle(getEventName('setConnectionMode'), (_event, mode) =>
+    ipcMain.handle(getIPCChannelName(credential, 'setConnectionMode'), (_event, mode) =>
       this.setConnectionMode(mode),
     );
 
-    ipcMain.on(getEventName('getConnectionMode'), (event) => {
+    ipcMain.on(getIPCChannelName(credential, 'getConnectionMode'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getConnectionMode();
     });
 
-    ipcMain.on(getEventName('isOffline'), (event) => {
+    ipcMain.on(getIPCChannelName(credential, 'isOffline'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.isOffline();
     });
+  }
+
+  private _closeIPCChannels(): void {
+    if (!this._ipcNamespace) {
+      return;
+    }
+
+    if (this._ipcEventHandlers) {
+      this._ipcEventHandlers.forEach((handler: IpcEventHandler) => {
+        handler.port.close();
+        this.off(handler.eventName, handler.callback);
+      });
+      this._ipcEventHandlers.clear();
+    }
+
+    AllSyncChannels.forEach((channel) => {
+      ipcMain.removeAllListeners(getIPCChannelName(this._ipcNamespace!, channel));
+    });
+    AllAsyncChannels.forEach((channel) => {
+      ipcMain.removeHandler(getIPCChannelName(this._ipcNamespace!, channel));
+    });
+
+    this._ipcEventHandlers = undefined;
+    this._ipcNamespace = undefined;
+  }
+
+  override async close(): Promise<void> {
+    this._closeIPCChannels();
+    await super.close();
   }
 }

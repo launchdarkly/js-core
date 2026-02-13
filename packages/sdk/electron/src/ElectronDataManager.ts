@@ -66,7 +66,7 @@ export default class ElectronDataManager extends BaseDataManager {
     }
     this.context = context;
 
-    // When boostrap is provided, we will resolve the identify immediately. Then we will fallthrough to connect
+    // When bootstrap is provided, we will resolve the identify immediately. Then we will fallthrough to connect
     // to the configured connection mode.
     const electronIdentifyOptions = identifyOptions as ElectronIdentifyOptions | undefined;
     if (electronIdentifyOptions?.bootstrap) {

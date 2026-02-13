@@ -10,11 +10,16 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { ElectronClient } from '../src/ElectronClient';
+import { getIPCChannelName } from '../src/ElectronIPC';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
 import ElectronInfo from '../src/platform/ElectronInfo';
 
-type MockIpcMain = IpcMain & { getHandler: (eventName: string) => Function };
+type MockIpcMain = IpcMain & {
+  getHandler: (eventName: string) => Function | undefined;
+  removeAllListeners: (channel: string) => void;
+  removeHandler: (channel: string) => void;
+};
 type MockPort = { postMessage: Function; close: Function };
 type MockIpcEvent = { returnValue?: any; ports?: MockPort[] };
 
@@ -25,6 +30,8 @@ jest.mock('electron', () => {
       on: (eventName: string, handler: Function) => handlers.set(eventName, handler),
       handle: (eventName: string, handler: Function) => handlers.set(eventName, handler),
       getHandler: (eventName: string) => handlers.get(eventName),
+      removeAllListeners: (channel: string) => handlers.delete(channel),
+      removeHandler: (channel: string) => handlers.delete(channel),
     },
   };
 });
@@ -55,7 +62,8 @@ const mockPort: MockPort = {
   close: jest.fn(),
 };
 
-const getEventName = (baseName: string) => `ld:${clientSideId}:${baseName}`;
+const getEventName = (baseName: Parameters<typeof getIPCChannelName>[1]) =>
+  getIPCChannelName(clientSideId, baseName);
 
 const DEFAULT_INITIAL_CONTEXT = { kind: 'user' as const, key: 'test-user' };
 
@@ -389,5 +397,64 @@ describe('given an initialized ElectronClient', () => {
     expect(spy).toHaveBeenNthCalledWith(1, 'event1', expect.any(Function));
     expect(mockPort.close).toHaveBeenCalledTimes(1);
     expect(event.returnValue).toEqual(true);
+  });
+});
+
+describe('close()', () => {
+  const logger: LDLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  it('removes all ipcMain listeners and handlers for the client so channels are no longer registered', async () => {
+    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'offline',
+      enableIPC: true,
+      logger,
+      diagnosticOptOut: true,
+    });
+    await client.start();
+
+    expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeDefined();
+
+    await client.close();
+
+    expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeUndefined();
+    expect(mockIpcMain.getHandler(getEventName('flush'))).toBeUndefined();
+  });
+
+  it('closes all event-handler MessagePorts when addEventHandler had been used', async () => {
+    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'offline',
+      enableIPC: true,
+      logger,
+      diagnosticOptOut: true,
+    });
+    await client.start();
+
+    const event: MockIpcEvent = { ports: [mockPort] };
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(event, {
+      callbackId: 'callback1',
+      eventName: 'change',
+    });
+
+    await client.close();
+
+    expect(mockPort.close).toHaveBeenCalled();
+  });
+
+  it('is idempotent so calling close() twice does not throw', async () => {
+    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'offline',
+      enableIPC: true,
+      logger,
+      diagnosticOptOut: true,
+    });
+    await client.start();
+
+    await client.close();
+    await expect(client.close()).resolves.not.toThrow();
   });
 });
