@@ -77,8 +77,8 @@ function createAgent(
   proxyOptions?: LDProxyOptions,
   logger?: LDLogger,
 ): https.Agent | http.Agent | undefined {
-  if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
-    logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
+  if (proxyOptions && tlsOptions && !proxyOptions.scheme?.startsWith('https')) {
+    logger?.warn('Proxy configured with TLS options, but proxy is not using https scheme.');
   }
   if (tlsOptions) {
     const agentOptions = processTlsOptions(tlsOptions);
@@ -111,6 +111,7 @@ export default class ElectronRequests implements platform.Requests {
     enableEventCompression?: boolean,
   ) {
     this._agent = createAgent(tlsOptions, proxyOptions, logger);
+    this._tlsOptions = tlsOptions;
     this._hasProxy = !!proxyOptions;
     this._hasProxyAuth = !!proxyOptions?.auth;
     this._enableBodyCompression = !!enableEventCompression;
