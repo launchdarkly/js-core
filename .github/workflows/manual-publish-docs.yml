@@ -25,6 +25,7 @@ on:
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
+          - packages/sdk/electron
 name: Publish Documentation
 jobs:
   build-publish:
