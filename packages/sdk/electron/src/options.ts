@@ -52,7 +52,7 @@ const validators: { [Property in keyof ElectronOptions]: TypeValidator | undefin
 export function filterToBaseOptions(opts: ElectronOptions): LDOptionsBase {
   const baseOptions: LDOptionsBase = { ...opts };
 
-  // Remove any RN specific configuration keys so we don't get warnings from
+  // Remove any Electron specific configuration keys so we don't get warnings from
   // the base implementation for unknown configuration.
   Object.keys(optDefaults).forEach((key) => {
     delete (baseOptions as any)[key];

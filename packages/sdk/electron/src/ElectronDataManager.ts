@@ -72,13 +72,15 @@ export default class ElectronDataManager extends BaseDataManager {
     if (electronIdentifyOptions?.bootstrap) {
       this._finishIdentifyFromBootstrap(context, electronIdentifyOptions, identifyResolve);
     }
+    // Bootstrap path already called resolve so we use this to prevent duplicate resolve calls.
+    const resolvedFromBootstrap = !!electronIdentifyOptions?.bootstrap;
 
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
 
     const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !waitForNetworkResults) {
+    if (loadedFromCache && !waitForNetworkResults && !resolvedFromBootstrap) {
       this._debugLog('Identify completing with cached flags');
       identifyResolve();
     }
@@ -95,7 +97,9 @@ export default class ElectronDataManager extends BaseDataManager {
         this._debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
-        identifyResolve();
+        if (!resolvedFromBootstrap) {
+          identifyResolve();
+        }
       }
     } else {
       // Context has been validated in LDClientImpl.identify
