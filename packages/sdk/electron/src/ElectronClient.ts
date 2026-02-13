@@ -1,4 +1,5 @@
-import { ipcMain } from 'electron';
+import { ipcMain  } from 'electron';
+import type { MessagePortMain, IpcMainEvent } from 'electron';
 
 import {
   AutoEnvAttributes,
@@ -28,6 +29,7 @@ import {
   AllAsyncChannels,
   AllSyncChannels,
   getIPCChannelName,
+  IpcEventCallback,
   IpcEventSubscription,
 } from './ElectronIPC';
 import type { ElectronOptions as LDOptions } from './ElectronOptions';
@@ -272,18 +274,16 @@ export class ElectronClient extends LDClientImpl {
     this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
     this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
 
-    ipcMain.on(getIPCChannelName(credential, 'addEventHandler'), (event, messageData) => {
-      const { callbackId, eventName } = messageData as {
-        callbackId: string;
-        eventName: LDEmitterEventName;
-      };
-      if (this._ipcCallbackIdToEventName!.has(callbackId)) {
-        return;
-      }
+    ipcMain.on(getIPCChannelName(credential, 'addEventHandler'), (event: IpcMainEvent, messageData: IpcEventCallback) => {
+      const { callbackId, eventName } = messageData;
       const [port] = event.ports;
       let entry = this._ipcEventSubscriptions!.get(eventName);
+      // If event has not been subscribed to yet, create a new entry
+      // that will subscribe to the event then broadcast the event
+      // to all renderer ports.
       if (!entry) {
-        const ports = new Map<string, Electron.MessagePortMain>();
+        // renderer ports are stored in a map keyed by callbackId
+        const ports = new Map<string, MessagePortMain>();
         const broadcastCallback = (...args: any[]) => {
           ports.forEach((p) => p.postMessage(args));
         };
@@ -291,20 +291,23 @@ export class ElectronClient extends LDClientImpl {
         entry = { broadcastCallback, ports };
         this._ipcEventSubscriptions!.set(eventName, entry);
       }
+      // Store the renderer port in the entry so it can be closed when the event is removed.
       entry.ports.set(callbackId, port);
+      // Store the callbackId to eventName mapping so it can be removed when the event is removed.
       this._ipcCallbackIdToEventName!.set(callbackId, eventName);
     });
 
     ipcMain.on(
       getIPCChannelName(credential, 'removeEventHandler'),
-      (event, eventName, callbackId) => {
+      (event: IpcMainEvent, eventName: LDEmitterEventName, callbackId: string) => {
         const resolvedEventName = this._ipcCallbackIdToEventName!.get(callbackId);
+        // If the callbackId is not associated with the eventName, then there is no entry to remove.
         if (resolvedEventName !== eventName) {
           // eslint-disable-next-line no-param-reassign
           event.returnValue = false;
           return;
         }
-        const entry = this._ipcEventSubscriptions!.get(eventName);
+        const entry = this._ipcEventSubscriptions!.get(resolvedEventName);
         const port = entry?.ports.get(callbackId);
         if (!entry || !port) {
           // eslint-disable-next-line no-param-reassign
@@ -314,8 +317,10 @@ export class ElectronClient extends LDClientImpl {
         entry.ports.delete(callbackId);
         this._ipcCallbackIdToEventName!.delete(callbackId);
         port.close();
+
+        // If there are no more renderer ports associated with the event, then remove the entry.
         if (entry.ports.size === 0) {
-          this.off(eventName as LDEmitterEventName, entry.broadcastCallback);
+          this.off(eventName, entry.broadcastCallback);
           this._ipcEventSubscriptions!.delete(eventName);
         }
         // eslint-disable-next-line no-param-reassign

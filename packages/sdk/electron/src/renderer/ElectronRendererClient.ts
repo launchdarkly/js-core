@@ -17,6 +17,14 @@ import type { LDRendererClient } from './LDRendererClient';
 
 export class ElectronRendererClient implements LDRendererClient {
   private readonly _ldClientBridge: LDClientBridge;
+  
+  // Map of callback to event name to an array of callback ids.
+  // The reason for this is that we remove a listener using the callback reference,
+  // however, we need to know which event name to remove the listener from for it to be
+  // meaningful to the main process.
+  //
+  // There is also a scenario where the same callback is added to the same event name
+  // multiple times. For those cases, we need to keep track of all the callback ids for the same event name.
   private readonly _callbacks: Map<Function, Map<string, string[]>> = new Map();
 
   constructor(clientSideId: string) {
@@ -88,6 +96,7 @@ export class ElectronRendererClient implements LDRendererClient {
       callbackEvents = new Map();
       this._callbacks.set(callback, callbackEvents);
     }
+
     const callbackIds = callbackEvents.get(key);
     if (!callbackIds) {
       callbackEvents.set(key, [callbackId]);

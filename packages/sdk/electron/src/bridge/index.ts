@@ -17,8 +17,9 @@ import type { ElectronIdentifyOptions } from '../ElectronIdentifyOptions';
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge } from './LDClientBridge';
 
-const generateCallbackId = () =>
-  `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
+const generateCallbackId = () => {
+  return `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
+}
 
 const ldClientBridge = (namespace: string): LDClientBridge => ({
   allFlags: (): LDFlagSet => ipcRenderer.sendSync(getIPCChannelName(namespace, 'allFlags')),

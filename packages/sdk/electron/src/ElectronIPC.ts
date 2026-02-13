@@ -1,3 +1,5 @@
+import { LDEmitterEventName } from "@launchdarkly/js-client-sdk-common";
+
 /**
  * Synchronous IPC channel names and helpers for type-safe main/renderer communication.
  */
@@ -67,6 +69,11 @@ export type IPCChannel = IPCSyncChannel | IPCAsyncChannel;
 export interface IpcEventSubscription {
   broadcastCallback: (...args: any[]) => void;
   ports: Map<string, Electron.MessagePortMain>;
+}
+
+export interface IpcEventCallback {
+  callbackId: string;
+  eventName: LDEmitterEventName;
 }
 
 /**
