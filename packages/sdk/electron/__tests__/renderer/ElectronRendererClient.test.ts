@@ -286,8 +286,9 @@ describe('given an instance of ElectronRendererClient', () => {
   it('can register an event callback with on()', () => {
     (ldClientBridge.addEventHandler as jest.Mock).mockReturnValueOnce('callback-1-id');
 
-    client.on('event-1', callback);
+    const handle = client.on('event-1', callback);
 
+    expect(handle).toEqual('callback-1-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
     expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-1', callback);
   });
@@ -295,8 +296,9 @@ describe('given an instance of ElectronRendererClient', () => {
   it('can register an event callback twice to the same event with on()', () => {
     (ldClientBridge.addEventHandler as jest.Mock).mockReturnValueOnce('callback-2-id');
 
-    client.on('event-1', callback);
+    const handle = client.on('event-1', callback);
 
+    expect(handle).toEqual('callback-2-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
     expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-1', callback);
   });
@@ -304,8 +306,9 @@ describe('given an instance of ElectronRendererClient', () => {
   it('can register an event callback to a different event with on()', () => {
     (ldClientBridge.addEventHandler as jest.Mock).mockReturnValueOnce('callback-3-id');
 
-    client.on('event-2', callback);
+    const handle = client.on('event-2', callback);
 
+    expect(handle).toEqual('callback-3-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
     expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-2', callback);
   });
@@ -313,46 +316,55 @@ describe('given an instance of ElectronRendererClient', () => {
   it('will not complete off() if bridge reports that the handler could not be removed', () => {
     (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValueOnce(false);
 
-    client.off('event-1', callback);
+    client.off('callback-1-id');
 
     expect(ldClientBridge.removeEventHandler).toHaveBeenCalledTimes(1);
-    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(
-      1,
-      'event-1',
-      'callback-2-id',
-    );
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(1, 'callback-1-id');
   });
 
-  it('will unregister callback from event with off() in reverse registration order per event', () => {
-    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValueOnce(true);
-    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValueOnce(true);
-    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValueOnce(true);
+  it('unregisters by handle with off()', () => {
+    const clientForOff = new ElectronRendererClient(clientSideId);
+    (ldClientBridge.addEventHandler as jest.Mock)
+      .mockReturnValueOnce('id-1')
+      .mockReturnValueOnce('id-2')
+      .mockReturnValueOnce('id-3');
 
-    client.off('event-1', callback);
-    client.off('event-1', callback);
-    client.off('event-2', callback);
+    const a = clientForOff.on('event-1', callback);
+    const b = clientForOff.on('event-1', callback);
+    const c = clientForOff.on('event-2', callback);
+
+    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValue(true);
+
+    clientForOff.off(a);
+    clientForOff.off(b);
+    clientForOff.off(c);
 
     expect(ldClientBridge.removeEventHandler).toHaveBeenCalledTimes(3);
-    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(
-      1,
-      'event-1',
-      'callback-2-id',
-    );
-    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(
-      2,
-      'event-1',
-      'callback-1-id',
-    );
-    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(
-      3,
-      'event-2',
-      'callback-3-id',
-    );
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(1, 'id-1');
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(2, 'id-2');
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(3, 'id-3');
   });
 
   it('unregistering with off() does nothing if callback is not registered', () => {
-    client.off('event-1', callback);
+    client.off('unknown-handle');
 
     expect(ldClientBridge.removeEventHandler).not.toHaveBeenCalled();
+  });
+
+  it('close() removes all registered event handlers', async () => {
+    const clientForClose = new ElectronRendererClient(clientSideId);
+    (ldClientBridge.addEventHandler as jest.Mock)
+      .mockReturnValueOnce('handle-1')
+      .mockReturnValueOnce('handle-2');
+    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValue(true);
+
+    clientForClose.on('event-1', callback);
+    clientForClose.on('event-2', callback);
+
+    await clientForClose.close();
+
+    expect(ldClientBridge.removeEventHandler).toHaveBeenCalledTimes(2);
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(1, 'handle-1');
+    expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(2, 'handle-2');
   });
 });

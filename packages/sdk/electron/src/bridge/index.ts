@@ -17,9 +17,8 @@ import type { ElectronIdentifyOptions } from '../ElectronIdentifyOptions';
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge } from './LDClientBridge';
 
-const generateCallbackId = () => {
-  return `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
-}
+const generateCallbackId = () =>
+  `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
 
 const ldClientBridge = (namespace: string): LDClientBridge => ({
   allFlags: (): LDFlagSet => ipcRenderer.sendSync(getIPCChannelName(namespace, 'allFlags')),
@@ -105,8 +104,8 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
    * Unregisters the handler identified by callbackId in the main process. Returns whether removal
    * succeeded. Synchronous so the renderer can rely on the handler being removed before the next event.
    */
-  removeEventHandler: (eventName: string, callbackId: string): boolean =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'removeEventHandler'), eventName, callbackId),
+  removeEventHandler: (callbackId: string): boolean =>
+    ipcRenderer.sendSync(getIPCChannelName(namespace, 'removeEventHandler'), callbackId),
 });
 
 contextBridge.exposeInMainWorld('ldClientBridge', ldClientBridge);

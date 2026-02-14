@@ -17,15 +17,9 @@ import type { LDRendererClient } from './LDRendererClient';
 
 export class ElectronRendererClient implements LDRendererClient {
   private readonly _ldClientBridge: LDClientBridge;
-  
-  // Map of callback to event name to an array of callback ids.
-  // The reason for this is that we remove a listener using the callback reference,
-  // however, we need to know which event name to remove the listener from for it to be
-  // meaningful to the main process.
-  //
-  // There is also a scenario where the same callback is added to the same event name
-  // multiple times. For those cases, we need to keep track of all the callback ids for the same event name.
-  private readonly _callbacks: Map<Function, Map<string, string[]>> = new Map();
+
+  // Keep a set of callback handles to support closing this client.
+  private readonly _callbacks: Set<string> = new Set();
 
   constructor(clientSideId: string) {
     this._ldClientBridge = (globalThis.window as any)?.ldClientBridge?.(
@@ -79,30 +73,18 @@ export class ElectronRendererClient implements LDRendererClient {
     return this._ldClientBridge.jsonVariationDetail(key, defaultValue);
   }
 
-  off(key: string, callback: (...args: any[]) => void): void {
-    const callbackIds = this._callbacks.get(callback)?.get(key);
-    if (callbackIds && callbackIds.length) {
-      const lastId = callbackIds[callbackIds.length - 1];
-      if (this._ldClientBridge.removeEventHandler(key, lastId)) {
-        callbackIds.pop();
-      }
+  off(handle: string): void {
+    // TODO: need to close the port associated with this handle
+    // https://github.com/launchdarkly/electron-client-sdk/blob/main/packages/sdk/electron/src/ElectronClient.ts#L299
+    if (this._callbacks.has(handle) && this._ldClientBridge.removeEventHandler(handle)) {
+      this._callbacks.delete(handle);
     }
   }
 
-  on(key: string, callback: (...args: any[]) => void): void {
+  on(key: string, callback: (...args: any[]) => void): string {
     const callbackId = this._ldClientBridge.addEventHandler(key, callback);
-    let callbackEvents = this._callbacks.get(callback);
-    if (!callbackEvents) {
-      callbackEvents = new Map();
-      this._callbacks.set(callback, callbackEvents);
-    }
-
-    const callbackIds = callbackEvents.get(key);
-    if (!callbackIds) {
-      callbackEvents.set(key, [callbackId]);
-    } else {
-      callbackIds.push(callbackId);
-    }
+    this._callbacks.add(callbackId);
+    return callbackId;
   }
 
   numberVariation(key: string, defaultValue: number): number {
@@ -143,5 +125,10 @@ export class ElectronRendererClient implements LDRendererClient {
 
   isOffline(): boolean {
     return this._ldClientBridge.isOffline();
+  }
+
+  async close(): Promise<void> {
+    const callbacks = Array.from(this._callbacks);
+    callbacks.forEach((callbackId) => this.off(callbackId));
   }
 }

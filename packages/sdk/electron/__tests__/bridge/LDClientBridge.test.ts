@@ -347,13 +347,12 @@ describe('given a registered LDClientBridge', () => {
   it('unregisters callback with removeHandler()', () => {
     (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(true);
 
-    const result = bridge.removeEventHandler('event1', 'callback-id-1');
+    const result = bridge.removeEventHandler('callback-id-1');
 
     expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
     expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
       1,
       getEventName('removeEventHandler'),
-      'event1',
       'callback-id-1',
     );
     expect(result).toEqual(true);

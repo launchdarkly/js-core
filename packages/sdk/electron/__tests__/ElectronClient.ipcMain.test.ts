@@ -362,24 +362,11 @@ describe('given an initialized ElectronClient', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
-  it('does not call off() when calling removeEventHandler with an invalid eventName', () => {
+  it('does not call off() when calling removeEventHandler with an unknown callbackId', () => {
     const spy = jest.spyOn(client, 'off');
-    spy.mockReturnValueOnce();
 
     const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'event2', 'callback1');
-
-    expect(spy).not.toHaveBeenCalled();
-    expect(mockPort.close).not.toHaveBeenCalled();
-    expect(event.returnValue).toEqual(false);
-  });
-
-  it('does not call off() when calling removeEventHandler with an invalid callbackId', () => {
-    const spy = jest.spyOn(client, 'off');
-    spy.mockReturnValueOnce();
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'event1', 'callback2');
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'unknown-callback-id');
 
     expect(spy).not.toHaveBeenCalled();
     expect(mockPort.close).not.toHaveBeenCalled();
@@ -387,11 +374,17 @@ describe('given an initialized ElectronClient', () => {
   });
 
   it('calls off() for removeEventHandler call', () => {
+    const eventWithPort: MockIpcEvent = { ports: [mockPort] };
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(eventWithPort, {
+      callbackId: 'callback1',
+      eventName: 'event1',
+    });
+
     const spy = jest.spyOn(client, 'off');
     spy.mockReturnValueOnce();
 
     const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'event1', 'callback1');
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'callback1');
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenNthCalledWith(1, 'event1', expect.any(Function));

@@ -1,4 +1,4 @@
-import { LDEmitterEventName } from "@launchdarkly/js-client-sdk-common";
+import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
 
 /**
  * Synchronous IPC channel names and helpers for type-safe main/renderer communication.
