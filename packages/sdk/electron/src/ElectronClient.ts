@@ -31,7 +31,6 @@ import ElectronPlatform from './platform/ElectronPlatform';
 // NOTE: we can choose to validate events with a whitelist? However, this might be
 // more for the implementers to do.
 
-// TODO: we will need to refactor the verbiage of client side id to mobile key in the future.
 export class ElectronClient extends LDClientImpl {
   private readonly _initialContext: LDContext;
 
@@ -212,21 +211,6 @@ export class ElectronClient extends LDClientImpl {
     };
     if (identifyOptions?.sheddable === undefined) {
       identifyOptionsWithUpdatedDefaults.sheddable = true;
-    }
-
-    const options = identifyOptionsWithUpdatedDefaults;
-    if (options.bootstrap) {
-      try {
-        if (!options.bootstrapParsed) {
-          (options as ElectronIdentifyOptions).bootstrapParsed = readFlagsFromBootstrap(
-            this.logger,
-            options.bootstrap,
-          );
-        }
-        this.presetFlags(options.bootstrapParsed!);
-      } catch (error) {
-        this.logger.error('Failed to bootstrap data', error);
-      }
     }
 
     return super.identifyResult(pristineContext, identifyOptionsWithUpdatedDefaults);
