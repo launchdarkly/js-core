@@ -11,9 +11,9 @@ import {
   LDIdentifyOptions,
   makeRequestor,
   Platform,
+  readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ValidatedOptions } from './options';
 

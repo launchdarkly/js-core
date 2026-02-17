@@ -17,9 +17,9 @@ import {
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationResult,
+  readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import ElectronDataManager from './ElectronDataManager';
 import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ElectronOptions, ElectronOptions as LDOptions } from './ElectronOptions';

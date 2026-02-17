@@ -1,4 +1,7 @@
-import { Flag, ItemDescriptor, LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+
+import { Flag } from '../types';
+import { ItemDescriptor } from './ItemDescriptor';
 
 export function readFlagsFromBootstrap(
   logger: LDLogger,

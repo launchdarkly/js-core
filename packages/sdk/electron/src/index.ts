@@ -1,15 +1,12 @@
-import type { LDContext } from '@launchdarkly/js-client-sdk-common';
-
 import { makeClient } from './ElectronClient';
-import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ElectronOptions, LDProxyOptions, LDTLSOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
+import type { LDContext } from './LDCommon';
 import type { LDPlugin } from './LDPlugin';
 
-export * from '@launchdarkly/js-client-sdk-common';
+export * from './LDCommon';
 
 export type {
-  ElectronIdentifyOptions,
   ElectronOptions as LDOptions,
   LDClient,
   LDPlugin,

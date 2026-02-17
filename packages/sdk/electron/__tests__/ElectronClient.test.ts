@@ -767,8 +767,8 @@ it('can use bootstrap data with identify', async () => {
 });
 
 it('parses bootstrap data only once when identify is called with bootstrap', async () => {
-  const bootstrapModule = await import('../src/bootstrap');
-  const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
+  const commonModule = await import('@launchdarkly/js-client-sdk-common');
+  const readFlagsFromBootstrapSpy = jest.spyOn(commonModule, 'readFlagsFromBootstrap');
 
   (ElectronPlatform as jest.Mock).mockReturnValue({
     crypto: new ElectronCrypto(),

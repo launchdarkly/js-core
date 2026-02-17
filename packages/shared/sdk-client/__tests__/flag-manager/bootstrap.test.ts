@@ -1,4 +1,4 @@
-import { readFlagsFromBootstrap } from '../src/bootstrap';
+import { readFlagsFromBootstrap } from '../../src/flag-manager/bootstrap';
 import { goodBootstrapData, goodBootstrapDataWithReasons } from './testBootstrapData';
 
 it('can read valid bootstrap data', () => {
