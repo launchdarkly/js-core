@@ -13,11 +13,11 @@ import {
   LDIdentifyOptions,
   makeRequestor,
   Platform,
+  readFlagsFromBootstrap,
   shouldRetry,
   sleep,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import { BrowserIdentifyOptions } from './BrowserIdentifyOptions';
 import { ValidatedOptions } from './options';
 
