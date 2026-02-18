@@ -4,7 +4,7 @@ Below are some breaking changes between this SDK major version
 and the previous [Electron SDK](https://github.com/launchdarkly/electron-client-sdk)
 
 ## SDK initialization (createClient and start)
-> NOTE: LDClient **MUST** be ran in the main process.
+> NOTE: LDClient **MUST** be run in the main process.
 
 The main-process entry point is now **`createClient`** (replacing `initializeInMain`). Update any references accordingly.
 
