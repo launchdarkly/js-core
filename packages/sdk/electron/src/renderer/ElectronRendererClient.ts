@@ -74,15 +74,15 @@ export class ElectronRendererClient implements LDRendererClient {
   }
 
   off(handle: string): void {
-    // TODO: need to close the port associated with this handle
-    // https://github.com/launchdarkly/electron-client-sdk/blob/main/packages/sdk/electron/src/ElectronClient.ts#L299
-    if (this._callbacks.has(handle) && this._ldClientBridge.removeEventHandler(handle)) {
-      this._callbacks.delete(handle);
+    if (this._callbacks.has(handle)) {
+      this._ldClientBridge.removeEventHandler(handle);
     }
   }
 
   on(key: string, callback: (...args: any[]) => void): string {
-    const callbackId = this._ldClientBridge.addEventHandler(key, callback);
+    const callbackId = this._ldClientBridge.addEventHandler(key, callback, () =>
+      this._callbacks.delete(callbackId),
+    );
     this._callbacks.add(callbackId);
     return callbackId;
   }

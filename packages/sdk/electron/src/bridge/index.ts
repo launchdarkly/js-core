@@ -15,7 +15,7 @@ import type {
 
 import type { ElectronIdentifyOptions } from '../ElectronIdentifyOptions';
 import { getIPCChannelName } from '../ElectronIPC';
-import type { LDClientBridge } from './LDClientBridge';
+import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 
 const generateCallbackId = () =>
   `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
@@ -87,7 +87,11 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
    * the main process emits that event. Uses a MessageChannel: port2 is transferred to main so
    * it can postMessage event args back; port1 stays here and runs the user callback on message.
    */
-  addEventHandler: (eventName: string, callback: (...args: any[]) => void): string => {
+  addEventHandler: (
+    eventName: string,
+    callback: (...args: any[]) => void,
+    onClose?: () => void,
+  ): string => {
     // Creates an ID for the callback so we can keep track of it.
     const callbackId = generateCallbackId();
     const { port1, port2 } = new MessageChannel();
@@ -97,6 +101,7 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
       [port2],
     );
     port1.onmessage = (event) => callback(...event.data);
+    (port1 as LDMessagePort).onclose = () => onClose?.();
     return callbackId;
   },
 

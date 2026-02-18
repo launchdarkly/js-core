@@ -26,6 +26,7 @@ beforeAll(() => {
 
 const port1Mock = {
   onmessage: null,
+  onclose: null as (() => void) | null,
   postMessage: jest.fn(),
   addEventListener: jest.fn(),
 };
@@ -46,6 +47,7 @@ const getEventName = (baseName: string) => `ld:${clientSideId}:${baseName}`;
 beforeEach(() => {
   jest.clearAllMocks();
   port1Mock.onmessage = null;
+  port1Mock.onclose = null;
   port2Mock.onmessage = null;
 });
 
@@ -356,5 +358,17 @@ describe('given a registered LDClientBridge', () => {
       'callback-id-1',
     );
     expect(result).toEqual(true);
+  });
+
+  it('invokes optional onClose when the message port is closed', () => {
+    const callback = jest.fn();
+    const onClose = jest.fn();
+
+    bridge.addEventHandler('event1', callback, onClose);
+
+    expect(port1Mock.onclose).toBeDefined();
+    port1Mock.onclose?.();
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

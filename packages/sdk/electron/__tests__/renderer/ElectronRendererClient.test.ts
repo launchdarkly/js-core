@@ -290,7 +290,26 @@ describe('given an instance of ElectronRendererClient', () => {
 
     expect(handle).toEqual('callback-1-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
-    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-1', callback);
+    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(
+      1,
+      'event-1',
+      callback,
+      expect.any(Function),
+    );
+  });
+
+  it('passes an onClose callback to addEventHandler so the handle can be removed when the port closes remotely', () => {
+    (ldClientBridge.addEventHandler as jest.Mock).mockReturnValueOnce('handle-for-close');
+
+    client.on('event-1', callback);
+
+    expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
+    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(
+      1,
+      'event-1',
+      callback,
+      expect.any(Function),
+    );
   });
 
   it('can register an event callback twice to the same event with on()', () => {
@@ -300,7 +319,12 @@ describe('given an instance of ElectronRendererClient', () => {
 
     expect(handle).toEqual('callback-2-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
-    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-1', callback);
+    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(
+      1,
+      'event-1',
+      callback,
+      expect.any(Function),
+    );
   });
 
   it('can register an event callback to a different event with on()', () => {
@@ -310,7 +334,12 @@ describe('given an instance of ElectronRendererClient', () => {
 
     expect(handle).toEqual('callback-3-id');
     expect(ldClientBridge.addEventHandler).toHaveBeenCalledTimes(1);
-    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(1, 'event-2', callback);
+    expect(ldClientBridge.addEventHandler).toHaveBeenNthCalledWith(
+      1,
+      'event-2',
+      callback,
+      expect.any(Function),
+    );
   });
 
   it('will not complete off() if bridge reports that the handler could not be removed', () => {
