@@ -1,6 +1,8 @@
 # Chat with Observability Example
 
-This example demonstrates how to use the LaunchDarkly AI SDK chat with the LaunchDarkly observability plugin for Node.js. The observability plugin captures and sends SDK operations, flag evaluations, error monitoring, logging, and distributed tracing to LaunchDarkly.
+This example demonstrates how to use the LaunchDarkly AI SDK chat with the LaunchDarkly observability plugin and OpenLLMetry for Node.js. The observability plugin captures and sends SDK operations, flag evaluations, error monitoring, logging, and distributed tracing to LaunchDarkly. OpenLLMetry (via `@traceloop/instrumentation-openai`) instruments the OpenAI provider so LLM spans are correctly tagged with model, prompts, token usage, and latency in LaunchDarkly's Traces view.
+
+Initialization order follows [LLM observability docs](https://launchdarkly.com/docs/home/observability/llm-observability): LaunchDarkly SDK is initialized first, then OpenLLMetry instrumentations are registered, and only then is the chat code (which loads the OpenAI client) run.
 
 ## Prerequisites
 
@@ -35,4 +37,4 @@ yarn start
 
 This will initialize the LaunchDarkly client with the observability plugin, create a chat from your AI Config, send two example messages, and stream the responses. Observability data is sent automatically to LaunchDarkly.
 
-View your data in the LaunchDarkly dashboard under **Observability** (SDK operations, flag evaluations, errors, logs, and traces).
+View your data in the LaunchDarkly dashboard under **Observability** (SDK operations, flag evaluations, errors, logs, and traces). LLM requests appear as spans marked with a green LLM symbol in **Monitor → Traces**; select a span to see model name, prompt/response, token counts, and latency.
