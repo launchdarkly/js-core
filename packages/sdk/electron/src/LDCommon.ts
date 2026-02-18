@@ -56,7 +56,7 @@ export type {
  *
  * To use the logger created by this function, put it into {@link LDOptions.logger}. If
  * you do not set {@link LDOptions.logger} to anything, the SDK uses a default logger
- * that will log "info" level and higher priorty messages and it will log messages to
+ * that will log "info" level and higher priority messages and it will log messages to
  * console.info, console.warn, and console.error.
  *
  * @param options Configuration for the logger. If no options are specified, the
@@ -80,7 +80,7 @@ export type {
  *   };
  * ```
  *
- *  * @example
+ * @example
  * The configuration also allows you to control the destination for each log level.
  * ```javascript
  *   const ldOptions = {
