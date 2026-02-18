@@ -1,0 +1,27 @@
+{
+  "name": "chat-observability-example",
+  "version": "1.0.0",
+  "description": "LaunchDarkly AI SDK chat example with observability plugin",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint . --ext .ts",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.0",
+    "@launchdarkly/node-server-sdk": "^9.10.0",
+    "@launchdarkly/observability-node": "^1.0.0",
+    "@launchdarkly/server-sdk-ai": "0.16.2",
+    "@launchdarkly/server-sdk-ai-langchain": "^0.4.0",
+    "@launchdarkly/server-sdk-ai-openai": "^0.4.0",
+    "@opentelemetry/instrumentation": "^0.52.0",
+    "@traceloop/instrumentation-openai": "^0.22.0",
+    "dotenv": "^16.0.0",
+    "langchain": "^0.3.0",
+    "openai": "^6.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
