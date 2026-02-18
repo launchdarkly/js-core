@@ -1,5 +1,3 @@
-import { LDClient } from '@launchdarkly/js-client-sdk-common';
-
 import { LDReactClient } from './client/LDClient';
 import { LDReactServerClient } from './server/LDClient';
 
@@ -12,26 +10,21 @@ import { LDReactServerClient } from './server/LDClient';
  * @privateRemarks
  * NOTE: This interface might be replaced shared functions in the future which
  * maybe better for tree shaking.
- *
- * @see {@link LDReactClient} for the client side implementation
- * @see {@link LDReactServerClient} for the server side implementation
- *
  */
 export interface LDIsomorphicClient extends Omit<
-  LDClient,
+  LDReactClient,
   'waitForInitialization' | 'start' | 'addHook'
 > {
-  /**
-   * useServerClient is used to create a server side client.
-   *
-   * @returns The server side client.
-   */
-  useServerClient: () => LDReactServerClient;
 
   /**
-   * useBrowserClient is used to create a browser side client.
+   * A builder function that will federate the current client with a server component.
+   * RSC components will ONLY be available if this function is called.
    *
-   * @returns The browser side client.
+   * @remarks
+   * By default, the react client will only be doing client side rendering.
+   *
+   * @param LDServerClient A LaunchDarkly server client
+   * @returns 
    */
-  useBrowserClient: () => LDReactClient;
+  useServerClient: (LDServerClient: LDReactServerClient) => this;
 }

@@ -39,9 +39,9 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "^4.0.0",
-    "@launchdarkly/js-client-sdk-common": "^1.1.4",
-    "@launchdarkly/node-server-sdk": "^9.4.6"
+    "@launchdarkly/js-client-sdk": "workspace:^",
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18.0.0"

@@ -1,6 +1,12 @@
 import { LDClient, LDContext, LDWaitForInitializationResult } from '@launchdarkly/js-client-sdk';
 
 /**
+ * Initialization state of the client. This type should be consistent with 
+ * the `status` field of the `LDWaitForInitializationResult` type.
+ */
+export type IntializedState = LDWaitForInitializationResult['status'] | 'initializing' | 'unknown';
+
+/**
  * The LaunchDarkly client interface for React.
  *
  * @privateRemarks
@@ -16,16 +22,16 @@ export interface LDReactClient extends LDClient {
    *
    * @see {@link LDWaitForInitializationResult} for the possible values and their meaning
    *
-   * @returns {Promise<LDWaitForInitializationResult>} The initialization state of the client.
+   * @returns {IntializedState} The initialization state of the client.
    */
-  getInitializationState(): Promise<LDWaitForInitializationResult>;
+  getInitializationState(): IntializedState;
 }
 
 /**
  * The react context interface for the launchdarkly client. This will be the type that is
  * used in the `createContext` function.
  */
-export interface LDReactClientContext {
+export interface LDReactClientContextValue {
   /**
    * The LaunchDarkly client.
    */
@@ -39,5 +45,14 @@ export interface LDReactClientContext {
   /**
    * The initialization state of the client.
    */
-  intializedState: LDWaitForInitializationResult;
+  intializedState: IntializedState;
 }
+
+/**
+ * The LaunchDarkly client context provider interface for React.
+ * This will be the type that is returned from our createContext function.
+ */
+export interface LDReactClientContextProvider {
+  Context: React.Context<LDReactClientContextValue>;
+}
+

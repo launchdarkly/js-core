@@ -1,8 +1,12 @@
-import { LDContext } from '@launchdarkly/node-server-sdk';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * A provider for the LaunchDarkly context that can be used in
  * the server components.
+ *
+ * @privateRemarks
+ * This interface is still under consideration and we will need to refine
+ * this when we start to implement some examples to see how it works in practice.
  */
 export interface LDContextProvider {
   /**

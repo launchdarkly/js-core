@@ -1,9 +1,4 @@
-import {
-  LDContext,
-  LDIdentifyOptions,
-  LDOptions as LDOptionsBase,
-  LDStartOptions,
-} from '@launchdarkly/js-client-sdk';
+import { LDContext, LDOptions as LDOptionsBase, LDStartOptions } from '@launchdarkly/js-client-sdk';
 
 /**
  * Initialization options for the LaunchDarkly React SDK.
@@ -39,16 +34,15 @@ export interface LDReactProviderOptions {
 
   /**
    * Your project and environment specific client side ID. You can find
-   * this in your LaunchDarkly portal under Account settings. This is
-   * the only mandatory property required to use the React SDK.
+   * this in your LaunchDarkly portal under Account settings.
    */
   clientSideID: string;
 
   /**
-   * A LaunchDarkly context object. If unspecified, an anonymous context
-   * with kind: 'user' will be created and used.
+   * A LaunchDarkly context object. This will be used as the initial
+   * context for the client.
    */
-  context?: LDContext;
+  context: LDContext;
 
   /**
    * Options for starting the LaunchDarkly client.
@@ -71,5 +65,3 @@ export interface LDReactProviderOptions {
    */
   deferInitialization?: boolean;
 }
-
-export interface LDReactIdentifyOptions extends LDIdentifyOptions {}
