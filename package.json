@@ -40,6 +40,7 @@
     "packages/sdk/server-ai/examples/judge-evaluation",
     "packages/sdk/server-ai/examples/openai",
     "packages/sdk/server-ai/examples/tracked-chat",
+    "packages/sdk/server-ai/examples/chat-observability",
     "packages/sdk/server-ai/examples/vercel-ai",
     "packages/telemetry/browser-telemetry",
     "packages/sdk/combined-browser",
