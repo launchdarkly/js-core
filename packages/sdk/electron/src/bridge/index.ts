@@ -29,7 +29,7 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
   boolVariationDetail: (key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> =>
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'boolVariationDetail'), key, defaultValue),
 
-  // I don't think we should allow flush to be called from the renderer process.
+  // Flush is exposed so the renderer can request a flush; the main process performs the actual flush.
   flush: (): Promise<{ error?: Error; result: boolean }> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'flush')),
 

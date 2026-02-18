@@ -58,17 +58,22 @@ app.on('ready', async () => {
   launchDarklyMainProcessClient.on(
     'change',
     (context: LDContextStrict, changedFlagKeys: string[]) => {
+      // eslint-disable-next-line no-console
       console.log('change event received');
+      // eslint-disable-next-line no-console
       console.log('context', context);
+      // eslint-disable-next-line no-console
       console.log('changedFlagKeys', changedFlagKeys);
     },
   );
 
   launchDarklyMainProcessClient.on('error', (error: Error) => {
+    // eslint-disable-next-line no-console
     console.error('error event received', error);
   });
 
   launchDarklyMainProcessClient.on('ready', () => {
+    // eslint-disable-next-line no-console
     console.log('ready event received');
   });
 

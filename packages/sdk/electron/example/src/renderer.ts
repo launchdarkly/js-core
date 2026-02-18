@@ -14,13 +14,16 @@ function updateFlagValues() {
 }
 
 (async () => {
+  // eslint-disable-next-line no-console
   console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 
   await launchDarklyBrowserClient.waitForInitialization({ timeout: 5000 });
 
+  // eslint-disable-next-line no-console
   console.log('waitForInitialization complete');
   // Listening for the "change" event allows us to receive flag changes at any time.
   launchDarklyBrowserClient.on('change', () => {
+    // eslint-disable-next-line no-console
     console.log('change event received');
     updateFlagValues();
   });

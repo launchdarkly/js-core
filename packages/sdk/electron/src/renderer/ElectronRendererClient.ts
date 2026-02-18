@@ -74,8 +74,8 @@ export class ElectronRendererClient implements LDRendererClient {
   }
 
   off(handle: string): void {
-    if (this._callbacks.has(handle)) {
-      this._ldClientBridge.removeEventHandler(handle);
+    if (this._callbacks.has(handle) && this._ldClientBridge.removeEventHandler(handle)) {
+      this._callbacks.delete(handle);
     }
   }
 

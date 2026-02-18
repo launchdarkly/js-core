@@ -8,12 +8,12 @@ The real LaunchDarkly client (streaming connection, flag storage, identify, and 
 
 The design has three layers:
 
-- **Main process**: [ElectronClient](src/ElectronClient.ts) is created via `initInMain(sdkKey, options)`. The first argument is the SDK key: by default the SDK uses a **mobile key**; for legacy client-side ID usage pass `useClientSideId: true` in options. When `enableIPC: true` (the default), it registers IPC handlers so the renderer can call through to the real client.
+- **Main process**: [ElectronClient](src/ElectronClient.ts) is created via `createClient(credential, initialContext, options)`. The first argument is the credential (mobile key or client-side ID when `useClientSideId: true`). When `enableIPC: true` (the default), it registers IPC handlers so the renderer can call through to the real client.
   > NOTE: When `enableIPC` is set to `false`, no IPC handlers will be registered in browser windows. This means
   > that only the main process is able to use the LaunchDarkly SDK.
 
 - **Preload (bridge)**: [bridge/index.ts](src/bridge/index.ts) runs in the preload script. It builds an object that forwards each LD client method over IPC and exposes it via `contextBridge.exposeInMainWorld('ldClientBridge', ldClientBridge)`.
-- **Renderer**: [ElectronRendererClient](src/renderer/ElectronRendererClient.ts) is created via `initInRenderer(sdkKey)` from `@launchdarkly/electron-client-sdk/renderer`. The value must match the key passed to `initInMain`. The renderer obtains the bridge from `window.ldClientBridge(sdkKey)` and delegates every call to the bridge (and thus to the main process over IPC).
+- **Renderer**: [ElectronRendererClient](src/renderer/ElectronRendererClient.ts) is created via `initInRenderer(clientSideId)` from `@launchdarkly/electron-client-sdk/renderer`, which returns an `ElectronRendererClient` instance. The `clientSideId` must match the credential passed to `createClient` in the main process. The renderer obtains the bridge from `window.ldClientBridge(clientSideId)` and delegates every call to the bridge (and thus to the main process over IPC).
 
 ```mermaid
 flowchart LR
@@ -40,7 +40,7 @@ flowchart LR
 
 **Channel pattern**: All channels use the form `ld:${sdkKey}:${methodName}`. Examples: `ld:my-mobile-key:variation`, `ld:my-mobile-key:identify`. This namespaces by the SDK key so multiple LD clients could coexist (e.g. different environments).
 
-**Where handlers are registered**: Handlers are registered only in the main process, inside `ElectronClient._registerInMain()`, and only when the client is created with `enableIPC: true`. The preload script does not register any handlers; it only sends or invokes on these channels.
+**Where handlers are registered**: Handlers are registered only in the main process, inside `ElectronClient._openIPCChannels()`, and only when the client is created with `enableIPC: true`. The preload script does not register any handlers; it only sends or invokes on these channels.
 
 **Event registration: on() and off()**
 

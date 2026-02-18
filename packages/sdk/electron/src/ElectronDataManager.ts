@@ -129,7 +129,7 @@ export default class ElectronDataManager extends BaseDataManager {
   ) {
     const rawContext = Context.toLDContext(context)!;
 
-    const plainContextString = JSON.stringify(Context.toLDContext(context));
+    const plainContextString = JSON.stringify(rawContext);
     const requestor = makeRequestor(
       plainContextString,
       this.config.serviceEndpoints,
@@ -165,7 +165,7 @@ export default class ElectronDataManager extends BaseDataManager {
       default:
         break;
     }
-    this.updateProcessor!.start();
+    this.updateProcessor?.start();
   }
 
   setNetworkAvailability(available: boolean): void {

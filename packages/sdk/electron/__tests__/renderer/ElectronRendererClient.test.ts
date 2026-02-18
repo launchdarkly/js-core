@@ -160,7 +160,7 @@ it('passes jsonVariationDetail() call through to bridge', () => {
   expect(result).toEqual(expected);
 });
 
-it('passes numberVariaion() call through to bridge', () => {
+it('passes numberVariation() call through to bridge', () => {
   (ldClientBridge.numberVariation as jest.Mock).mockReturnValueOnce(1234.5);
 
   const client = new ElectronRendererClient(clientSideId);
@@ -171,7 +171,7 @@ it('passes numberVariaion() call through to bridge', () => {
   expect(result).toEqual(1234.5);
 });
 
-it('passes numberVariaionDetail() call through to bridge', () => {
+it('passes numberVariationDetail() call through to bridge', () => {
   const expected: LDEvaluationDetailTyped<number> = {
     value: 1234.5,
     reason: { kind: 'RULE_MATCH' },
@@ -187,7 +187,7 @@ it('passes numberVariaionDetail() call through to bridge', () => {
   expect(result).toEqual(expected);
 });
 
-it('passes stringVariaion() call through to bridge', () => {
+it('passes stringVariation() call through to bridge', () => {
   (ldClientBridge.stringVariation as jest.Mock).mockReturnValueOnce('value');
 
   const client = new ElectronRendererClient(clientSideId);
@@ -198,7 +198,7 @@ it('passes stringVariaion() call through to bridge', () => {
   expect(result).toEqual('value');
 });
 
-it('passes stringVariaionDetail() call through to bridge', () => {
+it('passes stringVariationDetail() call through to bridge', () => {
   const expected: LDEvaluationDetailTyped<string> = {
     value: 'value',
     reason: { kind: 'RULE_MATCH' },

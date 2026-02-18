@@ -101,7 +101,7 @@ describe('given an initialized ElectronClient', () => {
     expect(event.returnValue).toEqual({ flag1: 'value1', flag2: true });
   });
 
-  it('handles boolVariaion() call', () => {
+  it('handles boolVariation() call', () => {
     const spy = jest.spyOn(client, 'boolVariation');
     spy.mockReturnValueOnce(true);
 

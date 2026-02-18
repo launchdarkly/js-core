@@ -39,9 +39,6 @@ import type { LDPlugin } from './LDPlugin';
 import validateOptions, { filterToBaseOptions } from './options';
 import ElectronPlatform from './platform/ElectronPlatform';
 
-// NOTE: we can choose to validate events with a whitelist? However, this might be
-// more for the implementers to do.
-
 export class ElectronClient extends LDClientImpl {
   private readonly _initialContext: LDContext;
 
