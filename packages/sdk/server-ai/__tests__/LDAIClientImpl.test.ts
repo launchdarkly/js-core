@@ -9,6 +9,7 @@ import { Judge } from '../src/api/judge/Judge';
 import { AIProviderFactory } from '../src/api/providers/AIProviderFactory';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
+import { aiSdkLanguage, aiSdkName, aiSdkVersion } from '../src/sdkInfo';
 
 // Mock Judge and AIProviderFactory
 jest.mock('../src/api/judge/Judge');
@@ -25,6 +26,20 @@ beforeEach(() => {
 });
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
+
+describe('init tracking', () => {
+  it('tracks init in constructor with SDK name, version, and language in data', () => {
+    const client = new LDAIClientImpl(mockLdClient);
+
+    expect(mockLdClient.track).toHaveBeenNthCalledWith(
+      1,
+      '$ld:ai:sdk-info',
+      { kind: 'user', key: 'ld-internal-tracking', anonymous: true },
+      { aiSdkName, aiSdkVersion, aiSdkLanguage },
+      1,
+    );
+  });
+});
 
 describe('config evaluation', () => {
   it('evaluates completion config successfully with variable interpolation', async () => {
@@ -403,7 +418,7 @@ describe('completionConfig method', () => {
     const result = await client.completionConfig(key, testContext, defaultValue, variables);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:config:function:single',
+      '$ld:ai:usage:completion-config',
       testContext,
       key,
       1,
@@ -444,7 +459,7 @@ describe('agentConfig method', () => {
     const result = await client.agentConfig(key, testContext, defaultValue, variables);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:agent:function:single',
+      '$ld:ai:usage:agent-config',
       testContext,
       key,
       1,
@@ -529,7 +544,7 @@ describe('agents method', () => {
     });
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:agent:function:multiple',
+      '$ld:ai:usage:agent-configs',
       testContext,
       agentConfigs.length,
       agentConfigs.length,
@@ -544,7 +559,7 @@ describe('agents method', () => {
     expect(result).toEqual({});
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:agent:function:multiple',
+      '$ld:ai:usage:agent-configs',
       testContext,
       0,
       0,
@@ -577,7 +592,7 @@ describe('judgeConfig method', () => {
     const result = await client.judgeConfig(key, testContext, defaultValue, variables);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:judge:function:single',
+      '$ld:ai:usage:judge-config',
       testContext,
       key,
       1,
@@ -633,7 +648,7 @@ describe('createJudge method', () => {
     const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(mockLdClient.track).toHaveBeenCalledWith(
-      '$ld:ai:judge:function:createJudge',
+      '$ld:ai:usage:create-judge',
       testContext,
       key,
       1,

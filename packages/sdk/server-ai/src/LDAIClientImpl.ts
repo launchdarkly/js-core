@@ -23,22 +23,35 @@ import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
+import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
 
 /**
  * Tracking event keys for AI SDK usage metrics.
  */
-const TRACK_CONFIG_SINGLE = '$ld:ai:config:function:single';
-const TRACK_CONFIG_CREATE_CHAT = '$ld:ai:config:function:createChat';
-const TRACK_JUDGE_SINGLE = '$ld:ai:judge:function:single';
-const TRACK_JUDGE_CREATE = '$ld:ai:judge:function:createJudge';
-const TRACK_AGENT_SINGLE = '$ld:ai:agent:function:single';
-const TRACK_AGENT_MULTIPLE = '$ld:ai:agent:function:multiple';
+const TRACK_SDK_INFO = '$ld:ai:sdk-info';
+const TRACK_USAGE_COMPLETION_CONFIG = '$ld:ai:usage:completion-config';
+const TRACK_USAGE_CREATE_CHAT = '$ld:ai:usage:create-chat';
+const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
+const TRACK_USAGE_CREATE_JUDGE = '$ld:ai:usage:create-judge';
+const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
+const TRACK_USAGE_AGENT_CONFIGS = '$ld:ai:usage:agent-configs';
+
+const INIT_TRACK_CONTEXT: LDContext = {
+  kind: 'user',
+  key: 'ld-internal-tracking',
+  anonymous: true,
+};
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
 
   constructor(private _ldClient: LDClientMin) {
     this._logger = _ldClient.logger;
+    this._ldClient.track(TRACK_SDK_INFO, INIT_TRACK_CONTEXT, {
+      aiSdkName,
+      aiSdkVersion,
+      aiSdkLanguage,
+    }, 1);
   }
 
   private _interpolateTemplate(template: string, variables: Record<string, unknown>): string {
@@ -146,7 +159,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig> {
-    this._ldClient.track(TRACK_CONFIG_SINGLE, context, key, 1);
+    this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
     return config as LDAICompletionConfig;
@@ -170,7 +183,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig> {
-    this._ldClient.track(TRACK_JUDGE_SINGLE, context, key, 1);
+    this._ldClient.track(TRACK_USAGE_JUDGE_CONFIG, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'judge', variables);
     return config as LDAIJudgeConfig;
@@ -182,7 +195,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
-    this._ldClient.track(TRACK_AGENT_SINGLE, context, key, 1);
+    this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
 
     const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
     return config as LDAIAgentConfig;
@@ -204,7 +217,7 @@ export class LDAIClientImpl implements LDAIClient {
     agentConfigs: T,
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
-    this._ldClient.track(TRACK_AGENT_MULTIPLE, context, agentConfigs.length, agentConfigs.length);
+    this._ldClient.track(TRACK_USAGE_AGENT_CONFIGS, context, agentConfigs.length, agentConfigs.length);
 
     const agents = {} as Record<T[number]['key'], LDAIAgentConfig>;
 
@@ -241,7 +254,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
-    this._ldClient.track(TRACK_CONFIG_CREATE_CHAT, context, key, 1);
+    this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
 
     const config = await this.completionConfig(key, context, defaultValue, variables);
 
@@ -272,7 +285,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined> {
-    this._ldClient.track(TRACK_JUDGE_CREATE, context, key, 1);
+    this._ldClient.track(TRACK_USAGE_CREATE_JUDGE, context, key, 1);
 
     try {
       if (variables?.message_history !== undefined) {
