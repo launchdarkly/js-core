@@ -1,4 +1,4 @@
-import { LDOptions as LDOptionsCommon } from '@launchdarkly/node-server-sdk';
+import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 import { LDContextProvider } from './LDContextProvider';
 
