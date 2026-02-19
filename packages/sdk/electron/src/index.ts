@@ -6,8 +6,6 @@ import type { LDPlugin } from './LDPlugin';
 
 export * from './LDCommon';
 
-export * from './ElectronIPC';
-
 export type {
   ElectronOptions as LDOptions,
   LDClient,

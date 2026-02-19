@@ -6,10 +6,10 @@ import type {
   LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
+  LDIdentifyOptions,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
-  LDIdentifyOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDClientBridge } from '../bridge/LDClientBridge';
@@ -58,10 +58,7 @@ export class ElectronRendererClient implements LDRendererClient {
     return this._ldClientBridge.getContext();
   }
 
-  identify(
-    context: LDContext,
-    identifyOptions?: LDIdentifyOptions,
-  ): Promise<LDIdentifyResult> {
+  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult> {
     return this._ldClientBridge.identify(context, identifyOptions);
   }
 

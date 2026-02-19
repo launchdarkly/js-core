@@ -392,6 +392,23 @@ describe('given an initialized ElectronClient', () => {
     expect(event.returnValue).toEqual(true);
   });
 
+  it('closes port and does not register when addEventHandler arrives after removeEventHandler for same callbackId (remove-before-add race)', () => {
+    const onSpy = jest.spyOn(client, 'on');
+    const portForRace: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+
+    const removeEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(removeEvent, 'race-callback-id');
+    expect(removeEvent.returnValue).toEqual(false);
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [portForRace] } as MockIpcEvent,
+      { callbackId: 'race-callback-id', eventName: 'change' },
+    );
+
+    expect(onSpy).not.toHaveBeenCalled();
+    expect(portForRace.close).toHaveBeenCalledTimes(1);
+  });
+
   it('broadcasts to all ports when multiple renderer subscribers listen to the same event', () => {
     const mockPort1: MockPort = { postMessage: jest.fn(), close: jest.fn() };
     const mockPort2: MockPort = { postMessage: jest.fn(), close: jest.fn() };
