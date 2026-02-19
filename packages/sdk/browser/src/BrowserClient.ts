@@ -18,6 +18,7 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   Platform,
+  readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -271,6 +272,20 @@ class BrowserClientImpl extends LDClientImpl {
     // then use the bootstrap data from the start options.
     if (options?.bootstrap && !identifyOptions.bootstrap) {
       identifyOptions.bootstrap = options.bootstrap;
+    }
+
+    if (identifyOptions?.bootstrap) {
+      try {
+        if (!identifyOptions.bootstrapParsed) {
+          identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
+            this.logger,
+            identifyOptions.bootstrap,
+          );
+        }
+        this.presetFlags(identifyOptions.bootstrapParsed!);
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
     }
 
     if (!this.initializedPromise) {

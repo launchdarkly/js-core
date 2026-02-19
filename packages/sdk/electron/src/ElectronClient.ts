@@ -17,6 +17,7 @@ import {
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationResult,
+  readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from './ElectronDataManager';
@@ -166,6 +167,20 @@ export class ElectronClient extends LDClientImpl {
       !identifyOptions.bootstrap
     ) {
       identifyOptions.bootstrap = options.bootstrap;
+    }
+
+    if (identifyOptions.bootstrap) {
+      try {
+        if (!identifyOptions.bootstrapParsed) {
+          identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
+            this.logger,
+            identifyOptions.bootstrap,
+          );
+        }
+        this.presetFlags(identifyOptions.bootstrapParsed!);
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
     }
 
     if (!this.initializedPromise) {
