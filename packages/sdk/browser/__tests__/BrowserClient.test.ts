@@ -232,7 +232,7 @@ describe('given a mock platform for a BrowserClient', () => {
   });
 
   it('parses bootstrap data only once when using start()', async () => {
-    const bootstrapModule = await import('../src/bootstrap');
+    const bootstrapModule = await import('@launchdarkly/js-client-sdk-common');
     const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
 
     const client = makeClient(

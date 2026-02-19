@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.18.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.2...js-client-sdk-common-v1.18.0) (2026-02-19)
+
+
+### Features
+
+* adding the implementation for main process client ([#1103](https://github.com/launchdarkly/js-core/issues/1103)) ([0abb86c](https://github.com/launchdarkly/js-core/commit/0abb86c6f6ed95a644e671ce967c4be5fd2ad9d4))
+
 ## [1.17.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.1...js-client-sdk-common-v1.17.2) (2026-01-21)
 
 
