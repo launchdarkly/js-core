@@ -53,6 +53,9 @@ export class ElectronClient extends LDClientImpl {
   // reverse lookup table to make removals faster
   private _ipcCallbackIdToEventName?: Map<string, LDEmitterEventName>;
 
+  // callbackIds for which removeEventHandler was called before addEventHandler was processed (IPC ordering race)
+  private _ipcPendingRemoves?: Set<string>;
+
   constructor(credential: string, initialContext: LDContext, options: ElectronOptions = {}) {
     const { logger: customLogger, debug } = options;
     const logger =
@@ -255,12 +258,18 @@ export class ElectronClient extends LDClientImpl {
     this._ipcNamespace = credential;
     this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
     this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
+    this._ipcPendingRemoves = new Set<string>();
 
     ipcMain.on(
       getIPCChannelName(credential, 'addEventHandler'),
       (event: IpcMainEvent, messageData: IpcEventCallback) => {
         const { callbackId, eventName } = messageData;
         const [port] = event.ports;
+        if (this._ipcPendingRemoves!.has(callbackId)) {
+          this._ipcPendingRemoves!.delete(callbackId);
+          port.close();
+          return;
+        }
         let entry = this._ipcEventSubscriptions!.get(eventName);
         // If event has not been subscribed to yet, create a new entry
         // that will subscribe to the event then broadcast the event
@@ -287,6 +296,7 @@ export class ElectronClient extends LDClientImpl {
       (event: IpcMainEvent, callbackId: string) => {
         const eventName = this._ipcCallbackIdToEventName!.get(callbackId);
         if (!eventName) {
+          this._ipcPendingRemoves!.add(callbackId);
           // eslint-disable-next-line no-param-reassign
           event.returnValue = false;
           return;
@@ -423,6 +433,7 @@ export class ElectronClient extends LDClientImpl {
       this._ipcEventSubscriptions.clear();
     }
     this._ipcCallbackIdToEventName?.clear();
+    this._ipcPendingRemoves?.clear();
 
     AllSyncChannels.forEach((channel) => {
       ipcMain.removeAllListeners(getIPCChannelName(this._ipcNamespace!, channel));
@@ -433,6 +444,7 @@ export class ElectronClient extends LDClientImpl {
 
     this._ipcEventSubscriptions = undefined;
     this._ipcCallbackIdToEventName = undefined;
+    this._ipcPendingRemoves = undefined;
     this._ipcNamespace = undefined;
   }
 
