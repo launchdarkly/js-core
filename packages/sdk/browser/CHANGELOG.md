@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.0.0...js-client-sdk-v4.0.0) (2026-02-19)
+
+
+### Features
+
+* **browser:** use shared readFlagsFromBootstrap from js-client-sdk-common ([#1107](https://github.com/launchdarkly/js-core/issues/1107)) ([68fe311](https://github.com/launchdarkly/js-core/commit/68fe311c5c655a831df69abbd8f0eb543cf9333d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.2 to 1.18.0
+
 ## [4.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.13.1...js-client-sdk-v4.0.0) (2026-02-04)
 
 

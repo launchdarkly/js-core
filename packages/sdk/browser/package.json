@@ -45,7 +45,7 @@
     "check": "yarn prettier && yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.17.2"
+    "@launchdarkly/js-client-sdk-common": "1.18.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
