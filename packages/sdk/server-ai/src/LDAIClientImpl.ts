@@ -47,11 +47,16 @@ export class LDAIClientImpl implements LDAIClient {
 
   constructor(private _ldClient: LDClientMin) {
     this._logger = _ldClient.logger;
-    this._ldClient.track(TRACK_SDK_INFO, INIT_TRACK_CONTEXT, {
-      aiSdkName,
-      aiSdkVersion,
-      aiSdkLanguage,
-    }, 1);
+    this._ldClient.track(
+      TRACK_SDK_INFO,
+      INIT_TRACK_CONTEXT,
+      {
+        aiSdkName,
+        aiSdkVersion,
+        aiSdkLanguage,
+      },
+      1,
+    );
   }
 
   private _interpolateTemplate(template: string, variables: Record<string, unknown>): string {
@@ -217,7 +222,12 @@ export class LDAIClientImpl implements LDAIClient {
     agentConfigs: T,
     context: LDContext,
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
-    this._ldClient.track(TRACK_USAGE_AGENT_CONFIGS, context, agentConfigs.length, agentConfigs.length);
+    this._ldClient.track(
+      TRACK_USAGE_AGENT_CONFIGS,
+      context,
+      agentConfigs.length,
+      agentConfigs.length,
+    );
 
     const agents = {} as Record<T[number]['key'], LDAIAgentConfig>;
 
