@@ -12,7 +12,6 @@ import {
   LDTokenUsage,
 } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
-import { aiSdkName, aiSdkVersion } from './sdkInfo';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   private _trackedMetrics: LDAIMetricSummary = {};
@@ -33,8 +32,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
-    aiSdkName: string;
-    aiSdkVersion: string;
   } {
     return {
       variationKey: this._variationKey,
@@ -42,8 +39,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
-      aiSdkName,
-      aiSdkVersion,
     };
   }
 
