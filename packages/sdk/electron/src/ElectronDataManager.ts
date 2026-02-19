@@ -13,8 +13,6 @@ import {
   Platform,
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
-
-import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ValidatedOptions } from './options';
 
 const logTag = '[ElectronDataManager]';
@@ -68,12 +66,11 @@ export default class ElectronDataManager extends BaseDataManager {
 
     // When bootstrap is provided, we will resolve the identify immediately. Then we will fallthrough to connect
     // to the configured connection mode.
-    const electronIdentifyOptions = identifyOptions as ElectronIdentifyOptions | undefined;
-    if (electronIdentifyOptions?.bootstrap) {
-      this._finishIdentifyFromBootstrap(context, electronIdentifyOptions, identifyResolve);
+    if (identifyOptions?.bootstrap) {
+      this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
     }
     // Bootstrap path already called resolve so we use this to prevent duplicate resolve calls.
-    const resolvedFromBootstrap = !!electronIdentifyOptions?.bootstrap;
+    const resolvedFromBootstrap = !!identifyOptions?.bootstrap;
 
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
@@ -109,12 +106,12 @@ export default class ElectronDataManager extends BaseDataManager {
 
   private _finishIdentifyFromBootstrap(
     context: Context,
-    electronIdentifyOptions: ElectronIdentifyOptions,
+    identifyOpts: LDIdentifyOptions,
     identifyResolve: () => void,
   ): void {
-    let { bootstrapParsed } = electronIdentifyOptions;
+    let { bootstrapParsed } = identifyOpts;
     if (!bootstrapParsed) {
-      bootstrapParsed = readFlagsFromBootstrap(this.logger, electronIdentifyOptions.bootstrap);
+      bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
     this._debugLog('Identify - Initialization completed from bootstrap');

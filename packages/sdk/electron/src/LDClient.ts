@@ -2,17 +2,16 @@ import type {
   ConnectionMode,
   LDClient as LDClientBase,
   LDContext,
+  LDIdentifyOptions,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
 
-import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
-
 export interface LDStartOptions extends LDWaitForInitializationOptions {
   /**
    * Optional bootstrap data to use for the identify operation. If
-   * {@link ElectronIdentifyOptions.bootstrap} is provided in identifyOptions, it takes precedence.
+   * {@link LDIdentifyOptions.bootstrap} is provided in identifyOptions, it takes precedence.
    */
   bootstrap?: unknown;
 
@@ -20,7 +19,7 @@ export interface LDStartOptions extends LDWaitForInitializationOptions {
    * Optional identify options to use for the first identify. Since the first identify is not
    * sheddable, the sheddable option is omitted from this type.
    */
-  identifyOptions?: Omit<ElectronIdentifyOptions, 'sheddable'>;
+  identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
 }
 
 export interface LDClient extends Omit<LDClientBase, 'identify'> {
@@ -31,12 +30,12 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
    * Must not be called before {@link LDClient.start} has been called.
    *
    * @param context The context to identify.
-   * @param identifyOptions Optional configuration including {@link ElectronIdentifyOptions.bootstrap}.
+   * @param identifyOptions Optional configuration including {@link LDIdentifyOptions.bootstrap}.
    * @returns A promise which resolves to an object containing the result of the identify operation.
    */
   identify(
     context: LDContext,
-    identifyOptions?: ElectronIdentifyOptions,
+    identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult>;
 
   /**

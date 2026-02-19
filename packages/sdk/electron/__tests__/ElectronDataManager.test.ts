@@ -16,7 +16,6 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from '../src/ElectronDataManager';
-import type { ElectronIdentifyOptions } from '../src/ElectronIdentifyOptions';
 import { ValidatedOptions } from '../src/options';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
@@ -200,7 +199,7 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
 
     await dataManager.identify(identifyResolve, identifyReject, context, {
       bootstrap: goodBootstrapData,
-    } as ElectronIdentifyOptions);
+    } as LDIdentifyOptions);
 
     expect(flagManager.setBootstrap).toHaveBeenCalledWith(
       context,
