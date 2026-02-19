@@ -13,6 +13,7 @@ import {
   Platform,
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
+
 import type { ValidatedOptions } from './options';
 
 const logTag = '[ElectronDataManager]';
