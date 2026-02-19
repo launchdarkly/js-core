@@ -3,25 +3,16 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { asyncWithLDProvider, LDContext } from 'launchdarkly-react-client-sdk';
-import { LD_CLIENT_SIDE_ID } from './ld-config';
+
+import { Provider } from './LDClient';
 
 (async () => {
-  const context: LDContext = {
-    kind: 'user',
-    key: 'test-user-1',
-  };
-
-  const LDProvider = await asyncWithLDProvider({
-    clientSideID: LD_CLIENT_SIDE_ID,
-    context,
-  });
 
   const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
   root.render(
-    <LDProvider>
+    <Provider>
       <App />
-    </LDProvider>
+    </Provider>
   );
 
   // If you want to start measuring performance in your app, pass a function

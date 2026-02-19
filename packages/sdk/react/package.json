@@ -16,25 +16,37 @@
     "nextjs",
     "remix"
   ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsup"
+  },
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     },
     "./client": {
-      "types": "./dist/src/client/index.d.ts",
-      "default": "./dist/src/client/index.js"
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "require": "./dist/client.cjs",
+      "default": "./dist/client.js"
     },
     "./server": {
-      "types": "./dist/src/server/index.d.ts",
-      "default": "./dist/src/server/index.js"
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs",
+      "default": "./dist/server.js"
     }
   },
   "files": [
     "dist"
   ],
   "devDependencies": {
+    "tsup": "^8.5.1",
+    "tsup-plugin-prepend-directive": "^0.1.2",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },

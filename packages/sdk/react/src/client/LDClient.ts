@@ -1,4 +1,5 @@
-import { LDClient, LDContext, LDWaitForInitializationResult } from '@launchdarkly/js-client-sdk';
+import React from 'react';
+import { LDClient, LDContextStrict, LDWaitForInitializationResult } from '@launchdarkly/js-client-sdk';
 
 /**
  * Initialization state of the client. This type should be consistent with 
@@ -38,9 +39,9 @@ export interface LDReactClientContextValue {
   client: LDReactClient;
 
   /**
-   * The LaunchDarkly context.
+   * The LaunchDarkly context. This will be undefined if the client is not initialized.
    */
-  context: LDContext;
+  context?: LDContextStrict;
 
   /**
    * The initialization state of the client.
@@ -49,10 +50,14 @@ export interface LDReactClientContextValue {
 }
 
 /**
+ * @experimental This interface is still under construction and is missing
+ * some important functions.
+ *
  * The LaunchDarkly client context provider interface for React.
  * This will be the type that is returned from our createContext function.
  */
 export interface LDReactClientContextProvider {
   Context: React.Context<LDReactClientContextValue>;
+  Provider: React.FC<{ children: React.ReactNode }>;
 }
 

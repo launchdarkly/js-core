@@ -1,9 +1,9 @@
 {
-  "name": "typescript",
+  "name": "@internal/react-sdk-example-client-only",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "launchdarkly-react-client-sdk": "^3.0.8",
+    "@launchdarkly/react-sdk": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "web-vitals": "^2.1.4"

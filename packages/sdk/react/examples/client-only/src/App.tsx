@@ -1,19 +1,33 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useContext, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { useFlags } from 'launchdarkly-react-client-sdk';
+import { Context } from './LDClient';
+import { LDContext } from '@launchdarkly/react-sdk';
 
 function App() {
-  const flags = useFlags();
+  const { client } = useContext(Context);
   const [flagKey, setFlagKey] = useState('sample-feature');
   const [inputValue, setInputValue] = useState(flagKey);
+
+  console.log(client.getInitializationState());
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setFlagKey(inputValue.trim() || 'sampleFeature');
   };
 
-  const isOn = flags[flagKey];
+  useEffect(() => {
+    const changeHandler = (context: LDContext, flags: string[]) => {
+      console.log('change from App.tsx', context, flags);
+    };
+    client.on('change:sample-feature', changeHandler);
+    client.start();
+    return () => {
+      client.off('change:sample-feature', changeHandler);
+    };
+  }, []);
+
+  const isOn = false;
 
   return (
     <div className="App">
