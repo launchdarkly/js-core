@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.1.5](https://github.com/launchdarkly/js-core/compare/browser-v0.1.4...browser-v0.1.5) (2026-02-19)
+
 ## [0.1.4](https://github.com/launchdarkly/js-core/compare/browser-v0.1.3...browser-v0.1.4) (2026-02-04)
 
 
