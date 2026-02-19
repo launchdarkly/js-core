@@ -30,7 +30,7 @@ const testContext: LDContext = { kind: 'user', key: 'test-user' };
 describe('init tracking', () => {
   it('tracks init in constructor with SDK name, version, and language in data', () => {
     const client = new LDAIClientImpl(mockLdClient);
-
+    expect(client).toBeDefined();
     expect(mockLdClient.track).toHaveBeenNthCalledWith(
       1,
       '$ld:ai:sdk-info',
