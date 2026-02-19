@@ -1,6 +1,5 @@
 import { AutoEnvAttributes, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
-import createPlatform from '../src/platform';
 import PlatformCrypto from '../src/platform/crypto';
 import PlatformEncoding from '../src/platform/PlatformEncoding';
 import PlatformInfo from '../src/platform/PlatformInfo';
