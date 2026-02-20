@@ -52,7 +52,6 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
-import { readFlagsFromBootstrap } from './flag-manager/bootstrap';
 import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
@@ -339,17 +338,6 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
           },
           execute: async (beforeResult) => {
             const { context, checkedContext } = beforeResult!;
-
-            if (identifyOptions?.bootstrap) {
-              try {
-                const bootstrapParsed =
-                  identifyOptions.bootstrapParsed ??
-                  readFlagsFromBootstrap(this.logger, identifyOptions.bootstrap);
-                this.presetFlags(bootstrapParsed);
-              } catch (error) {
-                this.logger.error('Failed to bootstrap data', error);
-              }
-            }
 
             if (!checkedContext.valid) {
               const error = new Error('Context was unspecified or had no key');
