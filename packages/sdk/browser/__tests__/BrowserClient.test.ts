@@ -8,6 +8,21 @@ import { makeClient } from '../src/BrowserClient';
 import { makeBasicPlatform } from './BrowserClient.mocks';
 import { goodBootstrapDataWithReasons } from './testBootstrapData';
 
+function makeStreamingPlatform() {
+  const eventSourceClose = jest.fn();
+  const platform = makeBasicPlatform();
+  // @ts-ignore
+  platform.requests.createEventSource = jest.fn(() => ({
+    close: eventSourceClose,
+    addEventListener: jest.fn(),
+    onclose: jest.fn(),
+    onerror: jest.fn(),
+    onopen: jest.fn(),
+    onretrying: jest.fn(),
+  }));
+  return { platform, eventSourceClose };
+}
+
 describe('given a mock platform for a BrowserClient', () => {
   const logger: LDLogger = {
     debug: jest.fn(),
@@ -692,6 +707,142 @@ describe('given a mock platform for a BrowserClient', () => {
 
     // Verify that only one identify call was made (one for polling)
     expect(platform.requests.fetch.mock.calls.length).toBe(1);
+  });
+
+  describe('automatic streaming state based on event listeners', () => {
+    // streaming must be left undefined so automatic streaming (driven by listener count) can work.
+    // streaming: false would force it off permanently; streaming: true would force it on permanently.
+    const clientOptions = {
+      logger,
+      diagnosticOptOut: true,
+      sendEvents: false,
+      fetchGoals: false,
+    };
+
+    it('enables streaming when a generic change listener is added', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+
+      client.on('change', jest.fn());
+
+      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+      expect(eventSourceClose).not.toHaveBeenCalled();
+    });
+
+    it('enables streaming when an individual flag change listener is added', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+
+      client.on('change:my-flag', jest.fn());
+
+      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+      expect(eventSourceClose).not.toHaveBeenCalled();
+    });
+
+    it('disables streaming when the only individual flag change listener is removed', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      const handler = jest.fn();
+      client.on('change:my-flag', handler);
+      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+
+      client.off('change:my-flag', handler);
+
+      expect(eventSourceClose).toHaveBeenCalled();
+    });
+
+    it('keeps streaming active when one of several individual flag listeners is removed', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      const handlerA = jest.fn();
+      const handlerB = jest.fn();
+      client.on('change:flag-a', handlerA);
+      client.on('change:flag-b', handlerB);
+
+      client.off('change:flag-a', handlerA);
+
+      expect(eventSourceClose).not.toHaveBeenCalled();
+
+      client.off('change:flag-b', handlerB);
+
+      expect(eventSourceClose).toHaveBeenCalled();
+    });
+
+    it('keeps streaming active when an individual flag listener is removed but a generic change listener remains', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      const genericHandler = jest.fn();
+      const flagHandler = jest.fn();
+      client.on('change', genericHandler);
+      client.on('change:my-flag', flagHandler);
+
+      client.off('change:my-flag', flagHandler);
+
+      expect(eventSourceClose).not.toHaveBeenCalled();
+    });
+
+    it('keeps streaming active when the generic change listener is removed but individual flag listeners remain', async () => {
+      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const client = makeClient(
+        'client-side-id',
+        { key: 'user-key', kind: 'user' },
+        AutoEnvAttributes.Disabled,
+        clientOptions,
+        platform,
+      );
+      await client.start();
+
+      const genericHandler = jest.fn();
+      const flagHandler = jest.fn();
+      client.on('change', genericHandler);
+      client.on('change:my-flag', flagHandler);
+
+      client.off('change', genericHandler);
+
+      expect(eventSourceClose).not.toHaveBeenCalled();
+    });
   });
 
   it('cannot call identify before start', async () => {
