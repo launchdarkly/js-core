@@ -26,8 +26,8 @@ export default class LDEmitter {
   constructor(private _logger?: LDLogger) {}
 
   on(name: EventName, listener: Function) {
-    if(typeof name !== 'string') {
-      this._logger?.warn("Only string event names are supported.");
+    if (typeof name !== 'string') {
+      this._logger?.warn('Only string event names are supported.');
       return;
     }
     if (!this._listeners.has(name)) {
