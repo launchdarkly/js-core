@@ -157,7 +157,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     );
     payloadReader.addPayloadListener((payload) => {
       this._logConnectionResult(true);
-      dataCallback(payload.basis, { initMetadata: this._initMetadata, payload });
+      dataCallback(payload.type === 'full', { initMetadata: this._initMetadata, payload });
     });
 
     eventSource.onclose = () => {

@@ -26,7 +26,7 @@ export const createPayloadListener =
   ) =>
   (dataContainer: DataCallbackContainer) => {
     const { initMetadata, payload } = dataContainer;
-    if (payload.basis) {
+    if (payload.type === 'full') {
       logger?.debug('Initializing all data');
     } else if (payload.updates.length > 0) {
       logger?.debug('Applying updates');
@@ -66,7 +66,7 @@ export const createPayloadListener =
 
     // TODO: SDK-1209 - SUpport initMetadata in FDv2 datasources
     dataSourceUpdates.applyChanges(
-      payload.basis,
+      payload.type === 'full',
       converted,
       () => {
         if (payload.state !== '') {

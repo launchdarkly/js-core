@@ -62,7 +62,7 @@ describe('given a one shot initializer', () => {
     expect(mockDataCallback).toHaveBeenNthCalledWith(1, true, {
       initMetadata: undefined,
       payload: {
-        basis: true,
+        type: 'full',
         id: `mockId`,
         state: `mockState`,
         updates: [

@@ -1,6 +1,6 @@
 import { EventListener, EventName, LDLogger } from '../../../src/api';
-import { Payload } from '../../../src/internal/fdv2/payloadProcessor';
 import { EventStream, PayloadStreamReader } from '../../../src/internal/fdv2/payloadStreamReader';
+import { Payload } from '../../../src/internal/fdv2/protocolHandler';
 
 class MockEventStream implements EventStream {
   private _listeners: Record<EventName, EventListener> = {};
@@ -14,7 +14,7 @@ class MockEventStream implements EventStream {
   }
 }
 
-it('it sets basis to true when intent code is xfer-full', () => {
+it('it sets type to full when intent code is xfer-full', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadStreamReader(mockStream, {
@@ -33,10 +33,10 @@ it('it sets basis to true when intent code is xfer-full', () => {
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
 });
 
-it('it sets basis to false when intent code is xfer-changes', () => {
+it('it sets type to partial when intent code is xfer-changes', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadStreamReader(mockStream, {
@@ -55,10 +55,10 @@ it('it sets basis to false when intent code is xfer-changes', () => {
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(false);
+  expect(receivedPayloads[0].type).toEqual('partial');
 });
 
-it('it sets basis to false and emits empty payload when intent code is none', () => {
+it('it sets type to none and emits empty payload when intent code is none', () => {
   const mockStream = new MockEventStream();
   const receivedPayloads: Payload[] = [];
   const readerUnderTest = new PayloadStreamReader(mockStream, {
@@ -74,7 +74,7 @@ it('it sets basis to false and emits empty payload when intent code is none', ()
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].version).toEqual(42);
-  expect(receivedPayloads[0].basis).toEqual(false);
+  expect(receivedPayloads[0].type).toEqual('none');
 });
 
 it('it handles xfer-full then xfer-changes', () => {
@@ -106,14 +106,14 @@ it('it handles xfer-full then xfer-changes', () => {
   expect(receivedPayloads.length).toEqual(2);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
   expect(receivedPayloads[0].updates[0].deleted).toEqual(undefined);
 
   expect(receivedPayloads[1].id).toEqual('mockId');
   expect(receivedPayloads[1].state).toEqual('mockState');
-  expect(receivedPayloads[1].basis).toEqual(false);
+  expect(receivedPayloads[1].type).toEqual('partial');
   expect(receivedPayloads[1].updates.length).toEqual(1);
   expect(receivedPayloads[1].updates[0].object).toEqual({ objectFieldA: 'newValue' });
   expect(receivedPayloads[1].updates[0].deleted).toEqual(undefined);
@@ -147,7 +147,7 @@ it('it includes multiple types of updates in payload', () => {
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(3);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
   expect(receivedPayloads[0].updates[0].deleted).toEqual(undefined);
@@ -311,13 +311,13 @@ it('discards partially transferred data when an error is encountered', () => {
   expect(receivedPayloads.length).toEqual(2);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldB: 'objectValueB' });
   expect(receivedPayloads[0].updates[0].deleted).toEqual(undefined);
   expect(receivedPayloads[1].id).toEqual('mockId2');
   expect(receivedPayloads[1].state).toEqual('mockState2');
-  expect(receivedPayloads[1].basis).toEqual(true);
+  expect(receivedPayloads[1].type).toEqual('full');
   expect(receivedPayloads[1].updates.length).toEqual(3);
   expect(receivedPayloads[1].updates[0].object).toEqual({ objectFieldX: 'objectValueX' });
   expect(receivedPayloads[1].updates[0].deleted).toEqual(undefined);
@@ -352,7 +352,7 @@ it('silently ignores unrecognized kinds', () => {
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
 });
@@ -382,7 +382,7 @@ it('ignores additional payloads beyond the first payload in the server-intent me
   expect(receivedPayloads.length).toEqual(1);
   expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
-  expect(receivedPayloads[0].basis).toEqual(true);
+  expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
 });
