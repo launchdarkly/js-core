@@ -33,488 +33,434 @@ function heartbeatEvent(): FDv2Event {
 }
 
 const passthrough: Record<string, (o: any) => any> = {
-  flag: (it: any) => it,
-  segment: (it: any) => it,
+  flag: (obj: any) => obj,
+  segment: (obj: any) => obj,
 };
 
-function createHandler(logger?: LDLogger): ProtocolHandler {
+function createHandler(logger?: LDLogger) {
   return createProtocolHandler(passthrough, logger);
 }
 
-describe('createProtocolHandler', () => {
-  describe('initial state', () => {
-    it('starts in inactive state', () => {
-      const handler = createHandler();
-      expect(handler.state).toBe('inactive');
-    });
+it('starts in inactive state', () => {
+  const handler = createHandler();
+  expect(handler.state).toBe('inactive');
+});
+
+it('transitions to full state on xfer-full server-intent', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(intentEvent('xfer-full'));
+  expect(action.type).toBe('none');
+  expect(handler.state).toBe('full');
+});
+
+it('emits a full payload after xfer-full and payload-transferred', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'p1', 52));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+
+  const action = handler.processEvent(transferredEvent('(p:p1:52)', 52));
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
+
+  expect(action.payload.type).toBe('full');
+  expect(action.payload.id).toBe('p1');
+  expect(action.payload.version).toBe(52);
+  expect(action.payload.state).toBe('(p:p1:52)');
+  expect(action.payload.updates).toHaveLength(2);
+  expect(action.payload.updates[0].key).toBe('f1');
+  expect(action.payload.updates[1].key).toBe('f2');
+});
+
+it('transitions to changes state on xfer-changes server-intent', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(intentEvent('xfer-changes'));
+  expect(action.type).toBe('none');
+  expect(handler.state).toBe('changes');
+});
+
+it('emits a partial payload after xfer-changes and payload-transferred', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-changes', 'p1', 52));
+  handler.processEvent(putEvent('flag', 'f-cat', 13, { on: true }));
+  handler.processEvent(deleteEvent('flag', 'f-bat', 13));
+  handler.processEvent(putEvent('flag', 'f-cow', 14, { on: false }));
+
+  const action = handler.processEvent(transferredEvent('(p:p1:52)', 52));
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
+
+  expect(action.payload.type).toBe('partial');
+  expect(action.payload.updates).toHaveLength(3);
+  expect(action.payload.updates[0]).toMatchObject({
+    kind: 'flag',
+    key: 'f-cat',
+    object: { on: true },
   });
-
-  describe('server-intent with xfer-full', () => {
-    it('transitions to full state and returns none', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(intentEvent('xfer-full'));
-      expect(action.type).toBe('none');
-      expect(handler.state).toBe('full');
-    });
-
-    it('emits full payload on payload-transferred', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full', 'p1', 52));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
-
-      const action = handler.processEvent(transferredEvent('(p:p1:52)', 52));
-      expect(action.type).toBe('payload');
-      if (action.type !== 'payload') return;
-
-      expect(action.payload.type).toBe('full');
-      expect(action.payload.id).toBe('p1');
-      expect(action.payload.version).toBe(52);
-      expect(action.payload.state).toBe('(p:p1:52)');
-      expect(action.payload.updates).toHaveLength(2);
-      expect(action.payload.updates[0].key).toBe('f1');
-      expect(action.payload.updates[1].key).toBe('f2');
-    });
+  expect(action.payload.updates[1]).toMatchObject({ kind: 'flag', key: 'f-bat', deleted: true });
+  expect(action.payload.updates[2]).toMatchObject({
+    kind: 'flag',
+    key: 'f-cow',
+    object: { on: false },
   });
+});
 
-  describe('server-intent with xfer-changes', () => {
-    it('transitions to changes state and returns none', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(intentEvent('xfer-changes'));
-      expect(action.type).toBe('none');
-      expect(handler.state).toBe('changes');
-    });
+it('returns a none-type payload immediately on intent-none', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(intentEvent('none', 'p1', 42));
 
-    it('emits partial payload on payload-transferred', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-changes', 'p1', 52));
-      handler.processEvent(putEvent('flag', 'f-cat', 13, { on: true }));
-      handler.processEvent(deleteEvent('flag', 'f-bat', 13));
-      handler.processEvent(putEvent('flag', 'f-cow', 14, { on: false }));
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
 
-      const action = handler.processEvent(transferredEvent('(p:p1:52)', 52));
-      expect(action.type).toBe('payload');
-      if (action.type !== 'payload') return;
+  expect(action.payload.type).toBe('none');
+  expect(action.payload.id).toBe('p1');
+  expect(action.payload.version).toBe(42);
+  expect(action.payload.updates).toHaveLength(0);
+  expect(action.payload.state).toBeUndefined();
+});
 
-      expect(action.payload.type).toBe('partial');
-      expect(action.payload.updates).toHaveLength(3);
-      expect(action.payload.updates[0]).toMatchObject({
-        kind: 'flag',
-        key: 'f-cat',
-        object: { on: true },
-      });
-      expect(action.payload.updates[1]).toMatchObject({
-        kind: 'flag',
-        key: 'f-bat',
-        deleted: true,
-      });
-      expect(action.payload.updates[2]).toMatchObject({
-        kind: 'flag',
-        key: 'f-cow',
-        object: { on: false },
-      });
-    });
+it('transitions to changes state after intent-none for subsequent updates', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('none', 'p1', 1));
+
+  handler.processEvent(putEvent('flag', 'f1', 2, { on: true }));
+  const action = handler.processEvent(transferredEvent('(p:p1:2)', 2));
+
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
+  expect(action.payload.type).toBe('partial');
+});
+
+it('returns a missing-payload error when server-intent has an empty payloads list', () => {
+  const handler = createHandler();
+  const action = handler.processEvent({
+    event: 'server-intent',
+    data: { payloads: [] },
   });
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('MISSING_PAYLOAD');
+});
 
-  describe('server-intent with none', () => {
-    it('returns a none-type payload immediately', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(intentEvent('none', 'p1', 42));
-
-      expect(action.type).toBe('payload');
-      if (action.type !== 'payload') return;
-
-      expect(action.payload.type).toBe('none');
-      expect(action.payload.id).toBe('p1');
-      expect(action.payload.version).toBe(42);
-      expect(action.payload.updates).toHaveLength(0);
-      expect(action.payload.state).toBeUndefined();
-    });
-
-    it('transitions to changes state for subsequent updates', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('none', 'p1', 1));
-
-      handler.processEvent(putEvent('flag', 'f1', 2, { on: true }));
-      const action = handler.processEvent(transferredEvent('(p:p1:2)', 2));
-
-      expect(action.type).toBe('payload');
-      if (action.type !== 'payload') return;
-      expect(action.payload.type).toBe('partial');
-    });
+it('uses only the first payload when server-intent contains multiple', () => {
+  const handler = createHandler();
+  const action = handler.processEvent({
+    event: 'server-intent',
+    data: {
+      payloads: [
+        { intentCode: 'xfer-changes', id: 'p1', target: 10, reason: 'stale' },
+        { intentCode: 'none', id: 'p2', target: 20, reason: 'up-to-date' },
+      ],
+    },
   });
+  expect(action.type).toBe('none');
+  expect(handler.state).toBe('changes');
+});
 
-  describe('server-intent edge cases', () => {
-    it('returns error when payloads list is empty', () => {
-      const handler = createHandler();
-      const action = handler.processEvent({
-        event: 'server-intent',
-        data: { payloads: [] },
-      });
-      expect(action.type).toBe('error');
-      if (action.type !== 'error') return;
-      expect(action.kind).toBe('MISSING_PAYLOAD');
-    });
+it('warns and returns none for an unrecognized intent code', () => {
+  const logger: LDLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const handler = createProtocolHandler(passthrough, logger);
+  const action = handler.processEvent(intentEvent('unknown-code'));
+  expect(action.type).toBe('none');
+  expect(logger.warn).toHaveBeenCalled();
+});
 
-    it('uses only the first payload when multiple are present', () => {
-      const handler = createHandler();
-      const action = handler.processEvent({
-        event: 'server-intent',
-        data: {
-          payloads: [
-            { intentCode: 'xfer-changes', id: 'p1', target: 10, reason: 'stale' },
-            { intentCode: 'none', id: 'p2', target: 20, reason: 'up-to-date' },
-          ],
-        },
-      });
-      expect(action.type).toBe('none');
-      expect(handler.state).toBe('changes');
-    });
+it('accumulates put-objects during a transfer', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { key: 'f1', on: true, version: 314 }));
 
-    it('warns and returns none for unrecognized intent code', () => {
-      const logger: LDLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-      };
-      const handler = createProtocolHandler(passthrough, logger);
-      const action = handler.processEvent(intentEvent('unknown-code'));
-      expect(action.type).toBe('none');
-      expect(logger.warn).toHaveBeenCalled();
-    });
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
+
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].object).toEqual({ key: 'f1', on: true, version: 314 });
+  expect(action.payload.updates[0].deleted).toBeUndefined();
+});
+
+it('ignores put-objects received before a server-intent', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  expect(action.type).toBe('none');
+});
+
+it('silently ignores put-objects with unrecognized kinds', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('unknownKind', 'f1', 1, { on: true }));
+
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
+  expect(action.payload.updates).toHaveLength(0);
+});
+
+it('accumulates delete-objects during a transfer', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-changes'));
+  handler.processEvent(deleteEvent('segment', 'old-segment', 99));
+
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
+
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0]).toMatchObject({
+    kind: 'segment',
+    key: 'old-segment',
+    version: 99,
+    deleted: true,
   });
+  expect(action.payload.updates[0].object).toBeUndefined();
+});
 
-  describe('put-object', () => {
-    it('accumulates objects during a transfer', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { key: 'f1', on: true, version: 314 }));
+it('ignores delete-objects received before a server-intent', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(deleteEvent('flag', 'f1', 1));
+  expect(action.type).toBe('none');
+});
 
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
+it('returns a protocol error when payload-transferred is received in inactive state', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(transferredEvent('s', 1));
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('PROTOCOL_ERROR');
+  expect(action.message).toContain('without an intent');
+});
 
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].object).toEqual({ key: 'f1', on: true, version: 314 });
-      expect(action.payload.updates[0].deleted).toBeUndefined();
-    });
+it('transitions to changes state after payload-transferred emission', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(transferredEvent('s1', 1));
 
-    it('is ignored before server-intent (inactive state)', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      expect(action.type).toBe('none');
-    });
+  expect(handler.state).toBe('changes');
 
-    it('silently ignores unrecognized kinds', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('unknownKind', 'f1', 1, { on: true }));
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+  const action = handler.processEvent(transferredEvent('s2', 2));
+  if (action.type !== 'payload') return;
+  expect(action.payload.type).toBe('partial');
+});
 
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
-      expect(action.payload.updates).toHaveLength(0);
-    });
+it('emits an empty full changeset for a transfer with no objects', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
+  expect(action.payload.type).toBe('full');
+  expect(action.payload.updates).toHaveLength(0);
+});
+
+it('resets to inactive when payload-transferred has a missing state field', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  const action = handler.processEvent({
+    event: 'payload-transferred',
+    data: { version: 1 },
   });
+  expect(action.type).toBe('none');
+  expect(handler.state).toBe('inactive');
+});
 
-  describe('delete-object', () => {
-    it('accumulates deletes during a transfer', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-changes'));
-      handler.processEvent(deleteEvent('segment', 'old-segment', 99));
+it('discards partially transferred data when a server error is received', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
 
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
+  const errorAction = handler.processEvent(errorEvent('Something went wrong', 'p1'));
+  expect(errorAction.type).toBe('serverError');
 
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0]).toMatchObject({
-        kind: 'segment',
-        key: 'old-segment',
-        version: 99,
-        deleted: true,
-      });
-      expect(action.payload.updates[0].object).toBeUndefined();
-    });
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f3', 1, { on: true }));
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
 
-    it('is ignored before server-intent (inactive state)', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(deleteEvent('flag', 'f1', 1));
-      expect(action.type).toBe('none');
-    });
-  });
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].key).toBe('f3');
+});
 
-  describe('payload-transferred', () => {
-    it('returns protocol error when received in inactive state', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(transferredEvent('s', 1));
-      expect(action.type).toBe('error');
-      if (action.type !== 'error') return;
-      expect(action.kind).toBe('PROTOCOL_ERROR');
-      expect(action.message).toContain('without an intent');
-    });
+it('maintains current protocol state after a server error', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-changes'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(errorEvent('error'));
 
-    it('transitions to changes state after emission', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(transferredEvent('s1', 1));
+  expect(handler.state).toBe('changes');
 
-      expect(handler.state).toBe('changes');
+  handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
+  const action = handler.processEvent(transferredEvent('s', 1));
+  if (action.type !== 'payload') return;
 
-      // Subsequent transfer should be partial
-      handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
-      const action = handler.processEvent(transferredEvent('s2', 2));
-      if (action.type !== 'payload') return;
-      expect(action.payload.type).toBe('partial');
-    });
+  expect(action.payload.type).toBe('partial');
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].key).toBe('f2');
+});
 
-    it('emits empty changeset for transfer with no objects', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
-      expect(action.payload.type).toBe('full');
-      expect(action.payload.updates).toHaveLength(0);
-    });
+it('returns a goodbye action with reason and logs it', () => {
+  const logger: LDLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const handler = createProtocolHandler(passthrough, logger);
+  const action = handler.processEvent(goodbyeEvent('Server is shutting down'));
 
-    it('resets all state when state field is missing', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      const action = handler.processEvent({
-        event: 'payload-transferred',
-        data: { version: 1 }, // missing state
-      });
-      expect(action.type).toBe('none');
-      expect(handler.state).toBe('inactive');
-    });
-  });
+  expect(action.type).toBe('goodbye');
+  if (action.type !== 'goodbye') return;
+  expect(action.reason).toBe('Server is shutting down');
+  expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Server is shutting down'));
+});
 
-  describe('error handling', () => {
-    it('discards partially transferred data', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
+it('silently ignores heartbeat events', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(heartbeatEvent());
+  expect(action.type).toBe('none');
+});
 
-      const errorAction = handler.processEvent(errorEvent('Something went wrong', 'p1'));
-      expect(errorAction.type).toBe('serverError');
+it('returns an unknown-event error for unrecognized event types', () => {
+  const handler = createHandler();
+  const action = handler.processEvent({ event: 'totally-unknown', data: {} });
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('UNKNOWN_EVENT');
+  expect(action.message).toContain('totally-unknown');
+});
 
-      // Recovery: server sends new transfer
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f3', 1, { on: true }));
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
+it('handles full then incremental transfer cycles', () => {
+  const handler = createHandler();
 
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].key).toBe('f3');
-    });
+  handler.processEvent(intentEvent('xfer-full', 'p1', 52));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
+  const action1 = handler.processEvent(transferredEvent('(p:p1:52)', 52));
+  if (action1.type !== 'payload') return;
+  expect(action1.payload.type).toBe('full');
+  expect(action1.payload.updates).toHaveLength(2);
 
-    it('maintains current state (full/changes) after error', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-changes'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(errorEvent('error'));
+  handler.processEvent(putEvent('flag', 'f1', 2, { on: false }));
+  handler.processEvent(deleteEvent('flag', 'f2', 2));
+  const action2 = handler.processEvent(transferredEvent('(p:p1:53)', 53));
+  if (action2.type !== 'payload') return;
+  expect(action2.payload.type).toBe('partial');
+  expect(action2.payload.updates).toHaveLength(2);
 
-      expect(handler.state).toBe('changes');
+  handler.processEvent(putEvent('flag', 'f3', 3, { on: true }));
+  const action3 = handler.processEvent(transferredEvent('(p:p1:54)', 54));
+  if (action3.type !== 'payload') return;
+  expect(action3.payload.type).toBe('partial');
+  expect(action3.payload.updates).toHaveLength(1);
+});
 
-      // Continue receiving changes without new server-intent
-      handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
-      const action = handler.processEvent(transferredEvent('s', 1));
-      if (action.type !== 'payload') return;
+it('resets accumulated changes when a new server-intent arrives mid-transfer', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'p1', 1));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
 
-      expect(action.payload.type).toBe('partial');
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].key).toBe('f2');
-    });
-  });
+  handler.processEvent(intentEvent('xfer-full', 'p1', 2));
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+  const action = handler.processEvent(transferredEvent('(p:p1:2)', 2));
+  if (action.type !== 'payload') return;
 
-  describe('goodbye', () => {
-    it('returns goodbye action with reason', () => {
-      const logger: LDLogger = {
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn(),
-      };
-      const handler = createProtocolHandler(passthrough, logger);
-      const action = handler.processEvent(goodbyeEvent('Server is shutting down'));
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].key).toBe('f2');
+});
 
-      expect(action.type).toBe('goodbye');
-      if (action.type !== 'goodbye') return;
-      expect(action.reason).toBe('Server is shutting down');
-      expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Server is shutting down'));
-    });
-  });
+it('clears accumulated changes and returns to inactive on reset', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
 
-  describe('heartbeat', () => {
-    it('is silently ignored', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(heartbeatEvent());
-      expect(action.type).toBe('none');
-    });
-  });
+  handler.reset();
+  expect(handler.state).toBe('inactive');
 
-  describe('unknown events', () => {
-    it('returns unknown event error', () => {
-      const handler = createHandler();
-      const action = handler.processEvent({ event: 'totally-unknown', data: {} });
-      expect(action.type).toBe('error');
-      if (action.type !== 'error') return;
-      expect(action.kind).toBe('UNKNOWN_EVENT');
-      expect(action.message).toContain('totally-unknown');
-    });
-  });
+  const action = handler.processEvent(transferredEvent('s', 1));
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('PROTOCOL_ERROR');
+});
 
-  describe('multiple transfer cycles', () => {
-    it('handles full then incremental transfers', () => {
-      const handler = createHandler();
+it('allows starting a new transfer cycle after reset', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'p1', 1));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
 
-      // Full transfer
-      handler.processEvent(intentEvent('xfer-full', 'p1', 52));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
-      const action1 = handler.processEvent(transferredEvent('(p:p1:52)', 52));
-      if (action1.type !== 'payload') return;
-      expect(action1.payload.type).toBe('full');
-      expect(action1.payload.updates).toHaveLength(2);
+  handler.reset();
 
-      // Incremental transfer (no new server-intent needed)
-      handler.processEvent(putEvent('flag', 'f1', 2, { on: false }));
-      handler.processEvent(deleteEvent('flag', 'f2', 2));
-      const action2 = handler.processEvent(transferredEvent('(p:p1:53)', 53));
-      if (action2.type !== 'payload') return;
-      expect(action2.payload.type).toBe('partial');
-      expect(action2.payload.updates).toHaveLength(2);
+  handler.processEvent(intentEvent('xfer-full', 'p2', 2));
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+  const action = handler.processEvent(transferredEvent('(p:p2:2)', 2));
+  if (action.type !== 'payload') return;
 
-      // Another incremental
-      handler.processEvent(putEvent('flag', 'f3', 3, { on: true }));
-      const action3 = handler.processEvent(transferredEvent('(p:p1:54)', 54));
-      if (action3.type !== 'payload') return;
-      expect(action3.payload.type).toBe('partial');
-      expect(action3.payload.updates).toHaveLength(1);
-    });
+  expect(action.payload.type).toBe('full');
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].key).toBe('f2');
+});
 
-    it('resets accumulated changes when a new server-intent arrives mid-transfer', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full', 'p1', 1));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+it('can be called multiple times safely', () => {
+  const handler = createHandler();
+  handler.reset();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.reset();
+  handler.reset();
 
-      // New server-intent before payload-transferred
-      handler.processEvent(intentEvent('xfer-full', 'p1', 2));
-      handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
-      const action = handler.processEvent(transferredEvent('(p:p1:2)', 2));
-      if (action.type !== 'payload') return;
+  const action = handler.processEvent(intentEvent('none', 'p1', 1));
+  expect(action.type).toBe('payload');
+});
 
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].key).toBe('f2');
-    });
-  });
+it('clears state after a completed transfer on reset', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'p1', 1));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(transferredEvent('s', 1));
 
-  describe('reset', () => {
-    it('clears accumulated changes and returns to inactive', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(putEvent('flag', 'f2', 1, { on: false }));
+  handler.reset();
+  expect(handler.state).toBe('inactive');
 
-      handler.reset();
-      expect(handler.state).toBe('inactive');
+  handler.processEvent(intentEvent('xfer-full', 'p2', 2));
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+  const action = handler.processEvent(transferredEvent('(p:p2:2)', 2));
+  if (action.type !== 'payload') return;
 
-      // payload-transferred should return protocol error (inactive state)
-      const action = handler.processEvent(transferredEvent('s', 1));
-      expect(action.type).toBe('error');
-      if (action.type !== 'error') return;
-      expect(action.kind).toBe('PROTOCOL_ERROR');
-    });
+  expect(action.payload.updates).toHaveLength(1);
+  expect(action.payload.updates[0].key).toBe('f2');
+});
 
-    it('allows starting a new transfer cycle', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full', 'p1', 1));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+it('clears state after an error on reset', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(errorEvent('Something went wrong'));
 
-      handler.reset();
+  handler.reset();
+  expect(handler.state).toBe('inactive');
 
-      handler.processEvent(intentEvent('xfer-full', 'p2', 2));
-      handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
-      const action = handler.processEvent(transferredEvent('(p:p2:2)', 2));
-      if (action.type !== 'payload') return;
+  const action = handler.processEvent(transferredEvent('s', 1));
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('PROTOCOL_ERROR');
+});
 
-      expect(action.payload.type).toBe('full');
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].key).toBe('f2');
-    });
+it('populates state and version from payload-transferred', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'test-id', 42));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  const action = handler.processEvent(transferredEvent('(p:test-id:42)', 42));
+  if (action.type !== 'payload') return;
 
-    it('can be called multiple times safely', () => {
-      const handler = createHandler();
-      handler.reset();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.reset();
-      handler.reset();
+  expect(action.payload.state).toBe('(p:test-id:42)');
+  expect(action.payload.version).toBe(42);
+});
 
-      const action = handler.processEvent(intentEvent('none', 'p1', 1));
-      expect(action.type).toBe('payload');
-    });
+it('does not include state in a none-type payload', () => {
+  const handler = createHandler();
+  const action = handler.processEvent(intentEvent('none', 'p1', 1));
+  if (action.type !== 'payload') return;
+  expect(action.payload.state).toBeUndefined();
+});
 
-    it('clears state after completed transfer', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full', 'p1', 1));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(transferredEvent('s', 1));
-
-      handler.reset();
-      expect(handler.state).toBe('inactive');
-
-      handler.processEvent(intentEvent('xfer-full', 'p2', 2));
-      handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
-      const action = handler.processEvent(transferredEvent('(p:p2:2)', 2));
-      if (action.type !== 'payload') return;
-
-      expect(action.payload.updates).toHaveLength(1);
-      expect(action.payload.updates[0].key).toBe('f2');
-    });
-
-    it('clears state after error', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      handler.processEvent(errorEvent('Something went wrong'));
-
-      handler.reset();
-      expect(handler.state).toBe('inactive');
-
-      const action = handler.processEvent(transferredEvent('s', 1));
-      expect(action.type).toBe('error');
-      if (action.type !== 'error') return;
-      expect(action.kind).toBe('PROTOCOL_ERROR');
-    });
-  });
-
-  describe('selector population', () => {
-    it('populates state from payload-transferred', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full', 'test-id', 42));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      const action = handler.processEvent(transferredEvent('(p:test-id:42)', 42));
-      if (action.type !== 'payload') return;
-
-      expect(action.payload.state).toBe('(p:test-id:42)');
-      expect(action.payload.version).toBe(42);
-    });
-
-    it('has no state for intent none', () => {
-      const handler = createHandler();
-      const action = handler.processEvent(intentEvent('none', 'p1', 1));
-      if (action.type !== 'payload') return;
-      expect(action.payload.state).toBeUndefined();
-    });
-
-    it('accepts empty string as a valid state', () => {
-      const handler = createHandler();
-      handler.processEvent(intentEvent('xfer-full'));
-      handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
-      const action = handler.processEvent(transferredEvent('', 1));
-      if (action.type !== 'payload') return;
-      expect(action.payload.state).toBe('');
-    });
-  });
+it('accepts an empty string as a valid state in payload-transferred', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full'));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  const action = handler.processEvent(transferredEvent('', 1));
+  if (action.type !== 'payload') return;
+  expect(action.payload.state).toBe('');
 });
