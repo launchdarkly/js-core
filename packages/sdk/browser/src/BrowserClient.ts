@@ -18,10 +18,10 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   Platform,
+  readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';

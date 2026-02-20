@@ -86,7 +86,6 @@
     "packages/store/node-server-sdk-redis": {},
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
-      "release-as": "4.0.0",
       "extra-files": [
         "src/platform/BrowserInfo.ts"
       ]
