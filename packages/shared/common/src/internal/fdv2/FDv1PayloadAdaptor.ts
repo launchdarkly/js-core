@@ -1,5 +1,5 @@
 import { PayloadProcessor } from './payloadProcessor';
-import { Event } from './proto';
+import { FDv2Event } from './protocolHandler';
 
 interface fdv1Payload {
   flags: { [name: string]: any };
@@ -52,7 +52,7 @@ export function fdv1PayloadAdaptor(processor: PayloadProcessor): FDv1PayloadAdap
       return this;
     },
     processFullTransfer(data) {
-      const events: Array<Event> = [
+      const events: Array<FDv2Event> = [
         {
           event: 'server-intent',
           data: {
