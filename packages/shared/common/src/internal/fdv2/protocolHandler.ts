@@ -118,6 +118,22 @@ export function createProtocolHandler(
     tempUpdates = [];
   }
 
+  function processIntentNone(intent: PayloadIntent): ProtocolAction {
+    if (!intent.id || !intent.target) {
+      return ACTION_NONE;
+    }
+
+    return {
+      type: 'payload',
+      payload: {
+        id: intent.id,
+        version: intent.target,
+        type: 'none',
+        updates: [],
+      },
+    };
+  }
+
   function processServerIntent(data: ServerIntentData): ProtocolAction {
     if (!data.payloads?.length) {
       return {
@@ -152,22 +168,6 @@ export function createProtocolHandler(
         logger?.warn(`Unable to process intent code '${payload?.intentCode}'.`);
         return ACTION_NONE;
     }
-  }
-
-  function processIntentNone(intent: PayloadIntent): ProtocolAction {
-    if (!intent.id || !intent.target) {
-      return ACTION_NONE;
-    }
-
-    return {
-      type: 'payload',
-      payload: {
-        id: intent.id,
-        version: intent.target,
-        type: 'none',
-        updates: [],
-      },
-    };
   }
 
   function processPutObject(data: PutObject): ProtocolAction {
