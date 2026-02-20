@@ -720,57 +720,57 @@ describe('given a mock platform for a BrowserClient', () => {
     };
 
     it('enables streaming when a generic change listener is added', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
-      expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+      expect(streamingPlatform.requests.createEventSource).not.toHaveBeenCalled();
 
       client.on('change', jest.fn());
 
-      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+      expect(streamingPlatform.requests.createEventSource).toHaveBeenCalledTimes(1);
       expect(eventSourceClose).not.toHaveBeenCalled();
     });
 
     it('enables streaming when an individual flag change listener is added', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
-      expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+      expect(streamingPlatform.requests.createEventSource).not.toHaveBeenCalled();
 
       client.on('change:my-flag', jest.fn());
 
-      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+      expect(streamingPlatform.requests.createEventSource).toHaveBeenCalledTimes(1);
       expect(eventSourceClose).not.toHaveBeenCalled();
     });
 
     it('disables streaming when the only individual flag change listener is removed', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
       const handler = jest.fn();
       client.on('change:my-flag', handler);
-      expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+      expect(streamingPlatform.requests.createEventSource).toHaveBeenCalledTimes(1);
 
       client.off('change:my-flag', handler);
 
@@ -778,13 +778,13 @@ describe('given a mock platform for a BrowserClient', () => {
     });
 
     it('keeps streaming active when one of several individual flag listeners is removed', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
@@ -803,13 +803,13 @@ describe('given a mock platform for a BrowserClient', () => {
     });
 
     it('keeps streaming active when an individual flag listener is removed but a generic change listener remains', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
@@ -824,13 +824,13 @@ describe('given a mock platform for a BrowserClient', () => {
     });
 
     it('keeps streaming active when the generic change listener is removed but individual flag listeners remain', async () => {
-      const { platform, eventSourceClose } = makeStreamingPlatform();
+      const { platform: streamingPlatform, eventSourceClose } = makeStreamingPlatform();
       const client = makeClient(
         'client-side-id',
         { key: 'user-key', kind: 'user' },
         AutoEnvAttributes.Disabled,
         clientOptions,
-        platform,
+        streamingPlatform,
       );
       await client.start();
 
