@@ -150,4 +150,18 @@ describe('LDEmitter', () => {
       'Encountered error invoking handler for "error", detail: "Error: toast"',
     );
   });
+
+  it('logs a warning when a non-string event name is provided to on', () => {
+    const handler = jest.fn();
+    emitter.on(123 as any, handler);
+    expect(logger.warn).toHaveBeenCalledWith('Only string event names are supported.');
+  });
+
+  it('does not register a listener when a non-string event name is provided to on', () => {
+    const handler = jest.fn();
+    emitter.on(123 as any, handler);
+    expect(emitter.listenerCount(123 as any)).toEqual(0);
+    emitter.emit(123 as any);
+    expect(handler).not.toHaveBeenCalled();
+  });
 });
