@@ -309,11 +309,10 @@ class BrowserClientImpl extends LDClientImpl {
 
   private _updateAutomaticStreamingState() {
     const browserDataManager = this.dataManager as BrowserDataManager;
-    const hasChangeListeners = !!this.emitter.listenerCount('change');
-    const hasIndividualFlagListeners = this.emitter
+    const hasListeners = this.emitter
       .eventNames()
-      .some((name) => name.startsWith('change:'));
-    browserDataManager.setAutomaticStreamingState(hasChangeListeners || hasIndividualFlagListeners);
+      .some((name) => name.startsWith('change:') || name === 'change');
+    browserDataManager.setAutomaticStreamingState(hasListeners);
   }
 
   override on(eventName: LDEmitterEventName, listener: Function): void {
