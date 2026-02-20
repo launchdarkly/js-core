@@ -11,6 +11,7 @@ import {
   LDIdentifyOptions,
   makeRequestor,
   Platform,
+  readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { ValidatedOptions } from './options';
@@ -63,12 +64,20 @@ export default class MobileDataManager extends BaseDataManager {
       return;
     }
     this.context = context;
+
+    // When bootstrap is provided, resolve identify immediately then fall through to connect.
+    if (identifyOptions?.bootstrap) {
+      this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
+    }
+    // Bootstrap path already called resolve so we use this to prevent duplicate resolve calls.
+    const resolvedFromBootstrap = !!identifyOptions?.bootstrap;
+
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
 
     const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !waitForNetworkResults) {
+    if (loadedFromCache && !waitForNetworkResults && !resolvedFromBootstrap) {
       this._debugLog('Identify completing with cached flags');
       identifyResolve();
     }
@@ -85,12 +94,29 @@ export default class MobileDataManager extends BaseDataManager {
         this._debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
-        identifyResolve();
+        if (!resolvedFromBootstrap) {
+          identifyResolve();
+        }
       }
     } else {
       // Context has been validated in LDClientImpl.identify
       this._setupConnection(context, identifyResolve, identifyReject);
     }
+  }
+
+  private _finishIdentifyFromBootstrap(
+    context: Context,
+    identifyOpts: LDIdentifyOptions,
+    identifyResolve: () => void,
+  ): void {
+    let { bootstrapParsed } = identifyOpts;
+    if (!bootstrapParsed) {
+      bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
+    }
+    this.flagManager.setBootstrap(context, bootstrapParsed);
+    this._debugLog('Identify - Initialization completed from bootstrap');
+
+    identifyResolve();
   }
 
   private _setupConnection(

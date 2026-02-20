@@ -14,6 +14,7 @@ import {
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
+  LDIdentifyOptions,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationResult,
@@ -21,7 +22,6 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from './ElectronDataManager';
-import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ElectronOptions, ElectronOptions as LDOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
@@ -156,7 +156,7 @@ export class ElectronClient extends LDClientImpl {
       return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
     }
 
-    const identifyOptions: ElectronIdentifyOptions = {
+    const identifyOptions: LDIdentifyOptions = {
       ...(options?.identifyOptions ?? {}),
       sheddable: false,
     };
@@ -197,7 +197,7 @@ export class ElectronClient extends LDClientImpl {
 
   override async identifyResult(
     pristineContext: LDContext,
-    identifyOptions?: ElectronIdentifyOptions,
+    identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     if (!this._startPromise) {
       this.logger.error(
@@ -276,7 +276,7 @@ export function makeClient(
     off: (key: string, callback: (...args: unknown[]) => void) =>
       impl.off(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
     flush: () => impl.flush(),
-    identify: (ctx: LDContext, identifyOptions?: ElectronIdentifyOptions) =>
+    identify: (ctx: LDContext, identifyOptions?: LDIdentifyOptions) =>
       impl.identifyResult(ctx, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),

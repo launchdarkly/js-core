@@ -338,6 +338,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
           },
           execute: async (beforeResult) => {
             const { context, checkedContext } = beforeResult!;
+
             if (!checkedContext.valid) {
               const error = new Error('Context was unspecified or had no key');
               this.emitter.emit('error', context, error);

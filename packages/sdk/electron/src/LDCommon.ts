@@ -1,10 +1,7 @@
 import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
-import { ElectronIdentifyOptions as LDIdentifyOptions } from './ElectronIdentifyOptions';
-
-export type { LDIdentifyOptions };
-
 export type {
+  LDIdentifyOptions,
   AutoEnvAttributes,
   BasicLogger,
   BasicLoggerOptions,
