@@ -5,7 +5,7 @@ import { LD_CLIENT_SIDE_ID } from './ld-config';
 
 const context: LDContext = {
   kind: 'user',
-  name: 'sally',
+  name: 'sandy',
   key: 'test-user-key',
 };
 

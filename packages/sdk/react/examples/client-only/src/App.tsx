@@ -8,26 +8,27 @@ function App() {
   const { client } = useContext(Context);
   const [flagKey, setFlagKey] = useState('sample-feature');
   const [inputValue, setInputValue] = useState(flagKey);
+  const [isOn, setIsOn] = useState(false);
 
   console.log(client.getInitializationState());
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setFlagKey(inputValue.trim() || 'sampleFeature');
+    setFlagKey(inputValue.trim() || 'sample-feature');
   };
 
   useEffect(() => {
-    const changeHandler = (context: LDContext, flags: string[]) => {
-      console.log('change from App.tsx', context, flags);
+    const changeHandler = (_context: LDContext) => {
+      const value = client.variation(flagKey, false)
+      setIsOn(value);
     };
-    client.on('change:sample-feature', changeHandler);
+    client.on(`change:${flagKey}`, changeHandler);
     client.start();
     return () => {
-      client.off('change:sample-feature', changeHandler);
+      client.off(`change:${flagKey}`, changeHandler);
     };
-  }, []);
+  }, [flagKey]);
 
-  const isOn = false;
 
   return (
     <div className="App">
