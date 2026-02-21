@@ -1,13 +1,21 @@
-import { LDIsomorphicClient } from "./LDIsomorphicClient";
-import { LDContext } from "@launchdarkly/js-client-sdk";
-import { LDIsomorphicOptions } from "./LDIsomorphicOptions";
+import { LDContext } from '@launchdarkly/js-client-sdk';
+import { createIsomorphicClient } from './createIsomorphicClient';
+import { LDIsomorphicClient } from './LDIsomorphicClient';
+import { LDIsomorphicOptions } from './LDIsomorphicOptions';
 
-export type * from "@launchdarkly/js-client-sdk";
+export type * from '@launchdarkly/js-client-sdk';
+export type { LDIsomorphicClient } from './LDIsomorphicClient';
+export type { LDIsomorphicOptions } from './LDIsomorphicOptions';
 
 /**
- * Creates a new instance of the launchdarkly client.
+ * Creates an isomorphic LaunchDarkly client that works in both Client Components
+ * and, when federated with a server client via useServerClient(), in Server Components.
+ * On the server without a federated server client, evaluation methods no-op and return defaults.
  */
-// @ts-expect-error - TODO: implement this
-export function createClient(clientSideID: string, context: LDContext, options?: LDIsomorphicOptions): LDIsomorphicClient {
-  
+export function createClient(
+  clientSideID: string,
+  context: LDContext,
+  options?: LDIsomorphicOptions,
+): LDIsomorphicClient {
+  return createIsomorphicClient(clientSideID, context, options);
 }
