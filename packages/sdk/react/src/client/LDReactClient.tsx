@@ -44,7 +44,8 @@ export function createClient(clientSideID: string, context: LDContext, options?:
 }
 
 
-// TODO: maybe make this a new file...
+// TODO: maybe make this a new file... we should make a new context creator function that will also
+// create all of the hooks that are in scope of the context.
 /**
  * Creates a new context provider from a LaunchDarkly client instance.
  * 

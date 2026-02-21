@@ -1,5 +1,5 @@
 {
-  "name": "@internal/react-sdk-example-with-rsc",
+  "name": "@internal/react-sdk-example-server-only",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/react-sdk": "workspace:^",
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3"

@@ -2,10 +2,10 @@ import React, { useState, FormEvent, useContext, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { Context } from './LDClient';
-import { LDContext } from '@launchdarkly/react-sdk';
+import { LDContext, LDReactClientContextValue } from '@launchdarkly/react-sdk/client';
 
 function App() {
-  const { client } = useContext(Context);
+  const { client } = useContext<LDReactClientContextValue>(Context) as LDReactClientContextValue;
   const [flagKey, setFlagKey] = useState('sample-feature');
   const [inputValue, setInputValue] = useState(flagKey);
   const [isOn, setIsOn] = useState(false);
@@ -27,7 +27,7 @@ function App() {
     return () => {
       client.off(`change:${flagKey}`, changeHandler);
     };
-  }, [flagKey]);
+  }, [flagKey, client]);
 
 
   return (

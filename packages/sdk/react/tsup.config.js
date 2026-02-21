@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsup';
+// TODO: maybe remove this plugin if we do not need to add directives on top of files.
 import { prependDirective } from 'tsup-plugin-prepend-directive';
 
 export default defineConfig([
@@ -13,7 +14,7 @@ export default defineConfig([
   minify: true,
   format: ['esm', 'cjs'],
   splitting: false,
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   noExternal: [
     '@launchdarkly/js-sdk-common',
@@ -32,7 +33,5 @@ export default defineConfig([
     // eslint-disable-next-line no-param-reassign
     opts.mangleProps = /^_([^m|_]|m[^e]|me[^t]|met[^a])/;
   },
-  plugins: [
-    prependDirective('"use server"', ['dist/server.js', 'dist/server.cjs']),
-  ],
+  plugins: [],
 }]);

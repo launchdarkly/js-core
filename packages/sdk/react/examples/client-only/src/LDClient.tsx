@@ -11,4 +11,4 @@ const context: LDContext = {
 
 // Perhaps there is a better way to do this so each of these values can be referenced like
 // import { Provider, Context } from './LDClient';
-export const { Provider, Context } = createClientContext(LD_CLIENT_SIDE_ID, context); 
+export const { Provider, Context } = createClientContext(LD_CLIENT_SIDE_ID, context);
