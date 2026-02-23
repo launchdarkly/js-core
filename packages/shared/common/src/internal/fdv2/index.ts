@@ -1,40 +1,33 @@
 import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from './FDv1PayloadAdaptor';
 import { PayloadProcessor } from './payloadProcessor';
 import { PayloadStreamReader } from './payloadStreamReader';
-import {
-  createProtocolHandler,
+import { createProtocolHandler } from './protocolHandler';
+import type {
+  FDv2Event,
   FDv2EventsCollection,
+  ObjProcessors,
   Payload,
   PayloadListener,
   PayloadType,
-  Update,
-} from './protocolHandler';
-import type {
-  FDv2Event,
-  ObjProcessors,
   ProtocolAction,
   ProtocolErrorKind,
   ProtocolHandler,
   ProtocolState,
+  Update,
 } from './protocolHandler';
 
-export {
-  createProtocolHandler,
-  FDv1PayloadAdaptor,
-  FDv2EventsCollection,
-  Payload,
-  PayloadListener,
-  PayloadProcessor,
-  PayloadStreamReader,
-  PayloadType,
-  Update,
-};
+export { createProtocolHandler, FDv1PayloadAdaptor, PayloadProcessor, PayloadStreamReader };
 
 export type {
   FDv2Event,
+  FDv2EventsCollection,
   ObjProcessors,
+  Payload,
+  PayloadListener,
+  PayloadType,
   ProtocolAction,
   ProtocolErrorKind,
   ProtocolHandler,
   ProtocolState,
+  Update,
 };

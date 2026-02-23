@@ -5,7 +5,18 @@ import {
   FDv2Event,
   ObjProcessors,
   PayloadListener,
+  ProtocolErrorKind,
 } from './protocolHandler';
+
+/**
+ * Errors that indicate a problem with the data or protocol flow and should
+ * be reported to the error handler. Informational errors like UNKNOWN_EVENT
+ * are intentionally excluded to preserve forward compatibility — older SDKs
+ * should silently ignore new event types added to the protocol.
+ */
+function isActionableError(kind: ProtocolErrorKind): boolean {
+  return kind === 'MISSING_PAYLOAD' || kind === 'PROTOCOL_ERROR';
+}
 
 /**
  * Parses payloads from a stream of FDv2 events by delegating to a protocol handler.
@@ -19,9 +30,9 @@ export class PayloadProcessor {
   constructor(
     objProcessors: ObjProcessors,
     private readonly _errorHandler?: (errorKind: DataSourceErrorKind, message: string) => void,
-    logger?: LDLogger,
+    private readonly _logger?: LDLogger,
   ) {
-    this._handler = createProtocolHandler(objProcessors, logger);
+    this._handler = createProtocolHandler(objProcessors, _logger);
   }
 
   addPayloadListener(listener: PayloadListener) {
@@ -43,7 +54,11 @@ export class PayloadProcessor {
           this._listeners.forEach((it) => it(action.payload));
           break;
         case 'error':
-          this._errorHandler?.(DataSourceErrorKind.InvalidData, action.message);
+          if (isActionableError(action.kind)) {
+            this._errorHandler?.(DataSourceErrorKind.InvalidData, action.message);
+          } else {
+            this._logger?.warn(action.message);
+          }
           break;
         default:
           break;
