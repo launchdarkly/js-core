@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.1.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.1.0...js-client-sdk-v4.1.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* Automatically stream when individual flag event listeners are re… ([#1114](https://github.com/launchdarkly/js-core/issues/1114)) ([c15b7a8](https://github.com/launchdarkly/js-core/commit/c15b7a8aba3712f3b077722d0df11443b58d4e0c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.18.0 to 1.18.1
+
 ## [4.1.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.0.0...js-client-sdk-v4.1.0) (2026-02-19)
 
 
