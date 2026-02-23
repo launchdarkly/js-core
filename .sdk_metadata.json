@@ -11,8 +11,12 @@
       },
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
+        "allFlags": { "introduced": "1.0" },
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "1.0.9" }
+        "experimentation": { "introduced": "2.0" },
+        "migrations": { "introduced": "1.0.9" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "2.0" }
       }
     },
     "akamai-edgekv": {
@@ -25,8 +29,12 @@
       },
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
+        "allFlags": { "introduced": "1.0" },
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "1.0.9" }
+        "experimentation": { "introduced": "1.0.8" },
+        "migrations": { "introduced": "1.0.9" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.0.8" }
       }
     },
     "browser": {
