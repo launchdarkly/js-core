@@ -33,8 +33,8 @@ describe('init tracking', () => {
     expect(client).toBeDefined();
     expect(mockLdClient.track).toHaveBeenNthCalledWith(
       1,
-      '$ld:ai:sdk-info',
-      { kind: 'user', key: 'ld-internal-tracking', anonymous: true },
+      '$ld:ai:sdk:info',
+      { kind: 'ld_ai', key: 'ld-internal-tracking', anonymous: true },
       { aiSdkName, aiSdkVersion, aiSdkLanguage },
       1,
     );

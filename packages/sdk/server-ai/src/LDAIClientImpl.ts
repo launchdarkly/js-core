@@ -28,7 +28,7 @@ import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
 /**
  * Tracking event keys for AI SDK usage metrics.
  */
-const TRACK_SDK_INFO = '$ld:ai:sdk-info';
+const TRACK_SDK_INFO = '$ld:ai:sdk:info';
 const TRACK_USAGE_COMPLETION_CONFIG = '$ld:ai:usage:completion-config';
 const TRACK_USAGE_CREATE_CHAT = '$ld:ai:usage:create-chat';
 const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
@@ -37,7 +37,7 @@ const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
 const TRACK_USAGE_AGENT_CONFIGS = '$ld:ai:usage:agent-configs';
 
 const INIT_TRACK_CONTEXT: LDContext = {
-  kind: 'user',
+  kind: 'ld_ai',
   key: 'ld-internal-tracking',
   anonymous: true,
 };
