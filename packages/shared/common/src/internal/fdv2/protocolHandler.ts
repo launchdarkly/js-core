@@ -162,6 +162,7 @@ export function createProtocolHandler(
       case 'none':
         protocolState = 'changes';
         tempUpdates = [];
+        tempType = 'partial';
         tempId = payload.id;
         return processIntentNone(payload);
       default:
@@ -245,6 +246,7 @@ export function createProtocolHandler(
     logger?.info(
       `Goodbye was received from the LaunchDarkly connection with reason: ${data.reason}.`,
     );
+    resetAll();
     return { type: 'goodbye', reason: data.reason };
   }
 

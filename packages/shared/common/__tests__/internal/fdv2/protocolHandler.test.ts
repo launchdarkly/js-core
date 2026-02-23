@@ -131,6 +131,25 @@ it('transitions to changes state after intent-none for subsequent updates', () =
   expect(action.payload.type).toBe('partial');
 });
 
+it('resets tempType after intent-none so a stale xfer-full does not leak through', () => {
+  const handler = createHandler();
+
+  // Start a full transfer that gets interrupted by an error
+  handler.processEvent(intentEvent('xfer-full', 'p1', 1));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+  handler.processEvent(errorEvent('interrupted'));
+
+  // Server responds with intent-none (SDK is up-to-date)
+  handler.processEvent(intentEvent('none', 'p2', 2));
+
+  // Subsequent changes should be partial, not full
+  handler.processEvent(putEvent('flag', 'f2', 3, { on: false }));
+  const action = handler.processEvent(transferredEvent('(p:p2:3)', 3));
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
+  expect(action.payload.type).toBe('partial');
+});
+
 it('returns a missing-payload error when server-intent has an empty payloads list', () => {
   const handler = createHandler();
   const action = handler.processEvent({
@@ -306,6 +325,22 @@ it('returns a goodbye action with reason and logs it', () => {
   if (action.type !== 'goodbye') return;
   expect(action.reason).toBe('Server is shutting down');
   expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Server is shutting down'));
+});
+
+it('resets state after goodbye so subsequent events do not produce payloads', () => {
+  const handler = createHandler();
+  handler.processEvent(intentEvent('xfer-full', 'p1', 1));
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+
+  handler.processEvent(goodbyeEvent('shutting down'));
+  expect(handler.state).toBe('inactive');
+
+  // Events arriving before the connection closes should be ignored
+  handler.processEvent(putEvent('flag', 'f2', 2, { on: false }));
+  const action = handler.processEvent(transferredEvent('s', 1));
+  expect(action.type).toBe('error');
+  if (action.type !== 'error') return;
+  expect(action.kind).toBe('PROTOCOL_ERROR');
 });
 
 it('silently ignores heartbeat events', () => {
