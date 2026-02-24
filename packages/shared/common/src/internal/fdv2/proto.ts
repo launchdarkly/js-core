@@ -8,7 +8,6 @@ export type EventType =
   | 'heart-beat';
 
 export type IntentCode = 'xfer-full' | 'xfer-changes' | 'none';
-export type ObjectKind = 'flag' | 'segment' | 'flagEval';
 
 export interface FDv2Event {
   /**
@@ -29,6 +28,13 @@ export interface FDv2Event {
     | ErrorObject
     | unknown;
 }
+
+/**
+ * The kinds of object are determined by the environment the protocol is operating in.
+ * Client-side and server-side have different possible object kinds. In this common layer code
+ * we treat the kind as opaque.
+ */
+export type ObjectKind = string;
 
 export interface FDv2EventsCollection {
   events: FDv2Event[];
