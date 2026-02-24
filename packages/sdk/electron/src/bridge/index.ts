@@ -17,6 +17,9 @@ import type {
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 
+// NOTE: This is a simple way to generate a unique ID for a callback. We should also
+// consider using the platform crypto to generate a unique ID (which would increase the
+// footprint of the bridge module).
 const generateCallbackId = () =>
   `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
 
