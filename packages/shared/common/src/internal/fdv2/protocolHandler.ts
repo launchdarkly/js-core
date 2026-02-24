@@ -1,6 +1,7 @@
 import { LDLogger } from '../../api';
 import {
   DeleteObject,
+  FDv2Event,
   PayloadIntent,
   PayloadTransferred,
   PutObject,
@@ -13,15 +14,6 @@ import {
  */
 export interface ObjProcessors {
   [kind: string]: (object: any) => any;
-}
-
-export interface FDv2Event {
-  event: string;
-  data: any;
-}
-
-export interface FDv2EventsCollection {
-  events: FDv2Event[];
 }
 
 export interface Update {
@@ -266,13 +258,13 @@ export function createProtocolHandler(
     processEvent(event: FDv2Event): ProtocolAction {
       switch (event.event) {
         case 'server-intent':
-          return processServerIntent(event.data);
+          return processServerIntent(event.data as ServerIntentData);
         case 'put-object':
-          return processPutObject(event.data);
+          return processPutObject(event.data as PutObject);
         case 'delete-object':
-          return processDeleteObject(event.data);
+          return processDeleteObject(event.data as DeleteObject);
         case 'payload-transferred':
-          return processPayloadTransferred(event.data);
+          return processPayloadTransferred(event.data as PayloadTransferred);
         case 'goodbye':
           return processGoodbye(event.data);
         case 'error':

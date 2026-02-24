@@ -1,7 +1,6 @@
 import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from '../../../src/internal/fdv2/FDv1PayloadAdaptor';
 import { PayloadProcessor } from '../../../src/internal/fdv2/payloadProcessor';
-import { PutObject } from '../../../src/internal/fdv2/proto';
-import { FDv2Event } from '../../../src/internal/fdv2/protocolHandler';
+import { FDv2Event, PutObject } from '../../../src/internal/fdv2/proto';
 
 // Mock PayloadProcessor that captures events
 class MockPayloadProcessor extends PayloadProcessor {

@@ -1,5 +1,5 @@
 import { PayloadProcessor } from './payloadProcessor';
-import { FDv2Event } from './protocolHandler';
+import { FDv2Event } from './proto';
 
 interface fdv1Payload {
   flags: { [name: string]: any };

@@ -1,5 +1,6 @@
 import { LDLogger } from '../../../src/api';
-import { createProtocolHandler, FDv2Event } from '../../../src/internal/fdv2/protocolHandler';
+import { FDv2Event } from '../../../src/internal/fdv2/proto';
+import { createProtocolHandler } from '../../../src/internal/fdv2/protocolHandler';
 
 function intentEvent(intentCode: string, id = 'test-payload', target = 1): FDv2Event {
   return {

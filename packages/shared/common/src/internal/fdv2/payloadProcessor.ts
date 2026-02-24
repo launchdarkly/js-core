@@ -1,8 +1,8 @@
 import { LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
+import { FDv2Event } from './proto';
 import {
   createProtocolHandler,
-  FDv2Event,
   ObjProcessors,
   PayloadListener,
   ProtocolErrorKind,
