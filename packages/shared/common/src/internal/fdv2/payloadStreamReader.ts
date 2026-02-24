@@ -1,7 +1,8 @@
 /* eslint-disable no-underscore-dangle */
 import { EventListener, EventName, LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
-import { ObjProcessors, PayloadListener, PayloadProcessor } from './payloadProcessor';
+import { PayloadProcessor } from './payloadProcessor';
+import { ObjProcessors, PayloadListener } from './protocolHandler';
 
 /**
  * Interface for an event stream.  Only allows listening to events.

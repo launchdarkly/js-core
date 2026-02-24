@@ -84,7 +84,7 @@ describe('given a polling processor', () => {
         environmentId: 'envKey',
       },
       payload: {
-        basis: true,
+        type: 'full',
         id: `mockId`,
         state: `mockState`,
         updates: [
@@ -122,7 +122,7 @@ describe('given a polling processor', () => {
         environmentId: 'envKey',
       },
       payload: {
-        basis: true,
+        type: 'full',
         id: `FDv1Fallback`,
         state: `FDv1Fallback`,
         updates: [
