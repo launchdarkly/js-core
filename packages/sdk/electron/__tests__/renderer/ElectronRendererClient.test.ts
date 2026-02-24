@@ -312,6 +312,24 @@ describe('given an instance of ElectronRendererClient', () => {
     );
   });
 
+  it('does not throw when the bridge invokes onClose synchronously during addEventHandler and client remains usable', () => {
+    const clientForSyncClose = new ElectronRendererClient(clientSideId);
+    const syncCloseId = 'sync-close-id';
+    (ldClientBridge.addEventHandler as jest.Mock).mockImplementation(
+      (_eventName: string, _cb: Function, onClose?: () => void) => {
+        onClose?.();
+        return syncCloseId;
+      },
+    );
+
+    const handle = clientForSyncClose.on('some-event', callback);
+    expect(handle).toEqual(syncCloseId);
+
+    (ldClientBridge.removeEventHandler as jest.Mock).mockReturnValue(true);
+    expect(() => clientForSyncClose.off(handle)).not.toThrow();
+    return expect(clientForSyncClose.close()).resolves.not.toThrow();
+  });
+
   it('can register an event callback twice to the same event with on()', () => {
     (ldClientBridge.addEventHandler as jest.Mock).mockReturnValueOnce('callback-2-id');
 

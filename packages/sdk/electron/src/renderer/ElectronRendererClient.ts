@@ -77,9 +77,16 @@ export class ElectronRendererClient implements LDRendererClient {
   }
 
   on(key: string, callback: (...args: any[]) => void): string {
-    const callbackId = this._ldClientBridge.addEventHandler(key, callback, () =>
-      this._callbacks.delete(callbackId),
-    );
+    // Use an initialized variable so onClose never reads an uninitialized binding. If the bridge
+    // invokes onClose synchronously during addEventHandler (e.g. immediate remote port close),
+    // callbackId would otherwise be in the temporal dead zone and throw ReferenceError.
+    let callbackId: string | undefined;
+    const onClose = () => {
+      if (callbackId !== undefined) {
+        this._callbacks.delete(callbackId);
+      }
+    };
+    callbackId = this._ldClientBridge.addEventHandler(key, callback, onClose);
     this._callbacks.add(callbackId);
     return callbackId;
   }
