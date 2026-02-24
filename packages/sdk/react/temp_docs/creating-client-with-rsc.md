@@ -1,88 +1,135 @@
 # Creating a LaunchDarkly client with React Server Components
 
-> **Status:** The LaunchDarkly React SDK and RSC support are experimental. The APIs described in this document are not fully implemented and may change. This doc reflects intended design and usage.
+> **Status:** The LaunchDarkly React SDK and RSC support are experimental. The APIs described in this document may change.
 
 ## Overview
 
-To use LaunchDarkly in an app that uses React Server Components (RSC), you create an **isomorphic client** via `createClient` from `@launchdarkly/react-sdk`. That client works in both Client Components and, when federated with a server client, in Server Components.
+To use LaunchDarkly in an app that uses React Server Components (RSC), the **current recommended approach** is:
 
-The isomorphic client supports two modes:
+1. **Create the browser client** with `createClient` from `@launchdarkly/react-sdk` in a **shared** module (e.g. `ld-client.ts`) that does not import any server-only code. That same module can run on server and client; on the server, `createClient` returns a noop client, so the browser SDK is never loaded in server bundles.
 
-- **Client-only (default):** If you never call `useServerClient`, the client evaluates flags only on the client. This is the default and is sufficient for apps that do not need server-side flag evaluation.
-- **Client + server:** After you call `useServerClient(serverClient)` on the isomorphic client, the same client can be used in React Server Components; server-side evaluation will use the server client you provided.
+2. **Create the server client** in **server-only** code (e.g. `ld-server.ts`) with your LaunchDarkly server SDK and `createReactServerClient` from `@launchdarkly/react-sdk/server`, providing a `contextProvider` so the server client has the LD context for each request.
 
-## Why the server client is opt-in
-
-The RSC-capable server client is kept separate, and developers must explicitly call `useServerClient` in their client creation flow, for two reasons:
-
-1. **Flexibility:** We want to remain flexible about which server SDK can be used to drive RSC (e.g. Node vs edge, or future runtimes). The React SDK does not bundle or mandate a specific server SDK; it only expects a client that conforms to the `LDReactServerClient` interface. You can use the LaunchDarkly Node SDK, an edge SDK, or another implementation that matches that interface.
-
-2. **Ownership:** Lifecycle and management of the server SDK—creation, configuration, and disposal—are left to the developer. The React SDK only consumes a server client you provide. This keeps the React SDK focused on the client/isomorphic layer and keeps server-SDK choices in your application’s hands.
+3. **Use the right client per boundary:** In Server Components, import the server client from `ld-server` and use `await ldServer.variation(key, default)`. In Client Components, import the browser client from `ld-client` and use `ldClient.variation()`, `ldClient.on()`, `ldClient.waitForInitialization()`, etc.
 
 ## Entry points and types
 
-- **Main entry:** `createClient(clientSideID, context, options?)` from `@launchdarkly/react-sdk`. Returns an `LDIsomorphicClient`. Options are `LDIsomorphicOptions` (extends client options, e.g. `useCamelCaseFlagKeys`).
+- **Main entry (`@launchdarkly/react-sdk`):** `createClient(clientSideID, context, options?)` returns an `LDReactClient`. On the server it is a noop; in the browser it is the real client. Options are `LDReactClientOptions` (e.g. streaming, bootstrap). The main entry uses `'client-only'` so it is not bundled for the server.
 
-- **Server entry:** `createReactServerClient(client, options)` from `@launchdarkly/react-sdk/server`. Accepts a standard LaunchDarkly server `LDClient` and `LDReactServerOptions` (which requires `contextProvider: LDContextProvider`). Returns an `LDReactServerClient`.
+- **Server entry (`@launchdarkly/react-sdk/server`):** `createReactServerClient(serverClient, options)` accepts a standard LaunchDarkly server `LDClient` (e.g. from the Node SDK) and `LDReactServerOptions` (which requires `contextProvider: LDContextProvider`). Returns an `LDReactServerClient`. The server entry uses `'server-only'`. When run in the browser (e.g. in code that is shared), `createReactServerClient` returns a no-op client that returns default values.
 
 ## Intended flow (step-by-step)
 
-1. **Create the isomorphic client.** Call `createClient(clientSideID, initialContext, options)` to get an `LDIsomorphicClient`. This client can be used in Client Components for variations, `allFlags`, `identify`, and other client-side APIs.
+1. **Create the browser client in a shared module.** In a file that is safe to import from both Server and Client Components (e.g. `app/lib/ld-client.ts`), call `createClient(clientSideID, context, options)` from `@launchdarkly/react-sdk`. Export the client (e.g. default export `ldClient`). Do not import `ld-server` or `@launchdarkly/react-sdk/server` here. On the server this client is a noop; in the browser it is the real client. You can call `ldClient.start()` in this module so the client starts when used in the browser.
 
-2. **Set up the server.** In your server environment, create a standard LaunchDarkly server client (using your SDK key and any server-SDK options). Implement `LDContextProvider` so that `getContext()` returns the LaunchDarkly context for the current request (e.g. from request, session, or cookies). Then call `createReactServerClient(serverClient, { contextProvider })` to get an `LDReactServerClient`.
+2. **Create the server client in server-only code.** In a file that is only ever imported by Server Components or other server-only modules (e.g. `app/lib/ld-server.ts`), create your LaunchDarkly server client (e.g. with `init()` from `@launchdarkly/node-server-sdk`). Implement a `contextProvider` whose `getContext()` returns the LaunchDarkly context for the current request (e.g. from session, headers, or cookies). Call `createReactServerClient(serverClient, { contextProvider })` from `@launchdarkly/react-sdk/server` and export the result (e.g. default export `serverClient` or `ldServer`).
 
-3. **Federate for RSC.** Call `isomorphicClient.useServerClient(reactServerClient)` (e.g. in a root layout or provider) so the same isomorphic client can be used in React Server Components. Without this step, only client-side flag evaluation is available.
-
-4. **Use the client.** Use the same isomorphic client in both Client Components (client-side evaluation) and Server Components (server-side evaluation via the federated server client). On the server, context is supplied per request by your `LDContextProvider`.
+3. **Use the client.** In **Server Components**, import the server client from the server-only module (e.g. `ldServer` from `./lib/ld-server`) and call `await ldServer.variation(flagKey, defaultValue)`. In **Client Components**, import the browser client from the shared module (e.g. `ldClient` from `./lib/ld-client`) and use `ldClient.variation()`, `ldClient.on()`, `ldClient.waitForInitialization()`, etc., as needed.
 
 ## Context provider
 
-`LDContextProvider` is the bridge between your framework (e.g. Next.js App Router) and LaunchDarkly. It has a required `getContext()` that returns the `LDContext` for the current request. Optionally, `setContext(context)` can be used to update the context associated with the request or session. Implementation is application-specific: you might read the user from session, headers, or cookies and build an `LDContext` from that.
+`LDContextProvider` is the bridge between your framework (e.g. Next.js App Router) and LaunchDarkly on the server. It has a required `getContext()` that returns the `LDContext` for the current request. Optionally, `setContext(context)` can be used to update the context. Implementation is application-specific: you might read the user from session, headers, or cookies and build an `LDContext` from that.
 
-## Code sketch (intended usage)
+## Code examples
 
-The following is conceptual; implementations are not yet complete.
+The following aligns with the server-and-client example in the repo.
+
+**Shared module: browser client (`app/lib/ld-client.ts`)**
+
+Do not import server-only modules here. Safe to import from both Server and Client Components.
 
 ```ts
-// 1. Create the isomorphic client (e.g. in a shared module or root layout)
 import { createClient } from '@launchdarkly/react-sdk';
+import { defaultContext } from './ld-context';
 
-const client = createClient(clientSideID, initialContext, options);
-// client is an LDIsomorphicClient; use in Client Components as-is.
+const ldClient = createClient(
+  process.env.LD_CLIENT_SIDE_ID || 'test-client-side-id',
+  defaultContext,
+  {
+    streaming: true,
+  },
+);
+
+ldClient.start();
+
+export default ldClient;
 ```
+
+**Server-only: server client (`app/lib/ld-server.ts`)**
+
+This module must only be imported by Server Components or other server-only code. Do not import it from any `'use client'` component.
 
 ```ts
-// 2. Server: create your server LDClient and context provider, then create the React server client
+import { init } from '@launchdarkly/node-server-sdk';
 import { createReactServerClient } from '@launchdarkly/react-sdk/server';
-// import your server SDK's createClient / LDClient as needed
+import { defaultContext } from './ld-context';
 
-const contextProvider = {
-  getContext: () => { /* return LDContext for this request, e.g. from session */ },
-};
-const reactServerClient = createReactServerClient(serverClient, { contextProvider });
+const ldClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
+
+const serverClient = createReactServerClient(ldClient, {
+  contextProvider: {
+    getContext: () => defaultContext,
+  },
+});
+
+export default serverClient;
 ```
 
+**Server Component (e.g. `app/page.tsx`)**
+
 ```tsx
-// 3. Federate the isomorphic client with the server client (e.g. in root layout or provider)
-client.useServerClient(reactServerClient);
-// Now the same client can be used in Server Components.
+import ldServer from './lib/ld-server';
+import ClientRendered from './client-rendered';
+
+const flagKey = 'sample-feature';
+
+export default async function Home() {
+  const serverFlagValue = await ldServer.variation(flagKey, false);
+  return (
+    <>
+      <p>Server: <strong>{flagKey}</strong> is {serverFlagValue ? 'on' : 'off'}</p>
+      <ClientRendered />
+    </>
+  );
+}
 ```
 
-> [!caution]
-> Everything below is wildly hypothetical
+**Client Component (e.g. `app/client-rendered.tsx`)**
+
+Import `ldClient` from the shared module so server-only code is not pulled into the client bundle.
+
 ```tsx
-// 4a. Use in a Client Component
 'use client';
-function ClientFeature() {
-  const enabled = client.boolVariation('my-flag', false);
-  return enabled ? <NewUI /> : <OldUI />;
+
+import ldClient from './lib/ld-client';
+import { useEffect, useState } from 'react';
+
+const flagKey = 'sample-feature';
+
+export default function ClientRendered() {
+  const [isOn, setIsOn] = useState(false);
+
+  useEffect(() => {
+    const updateFlag = () => {
+      const value = ldClient.variation(flagKey, false);
+      setIsOn(!!value);
+    };
+    ldClient.on(`change:${flagKey}`, updateFlag);
+    ldClient.waitForInitialization().then(() => updateFlag());
+    return () => ldClient.off(`change:${flagKey}`, updateFlag);
+  }, []);
+
+  return (
+    <p>Client: <strong>{flagKey}</strong> is {isOn ? 'on' : 'off'}</p>
+  );
 }
 ```
 
-```tsx
-// 4b. Use in a Server Component (when useServerClient was called)
-async function ServerFeature() {
-  const enabled = await client.boolVariation('my-flag', false);
-  return enabled ? <NewUI /> : <OldUI />;
-}
-```
+## Import boundaries
+
+- **Shared:** Import from `app/lib/ld-client` in Client Components. The `ld-client` module must not import any server-only code.
+- **Server only:** Import from `app/lib/ld-server` only in Server Components or server-only modules. Do not import `ld-server` in any `'use client'` file.
+
+## Entry points and tree-shaking
+
+The main entry (`@launchdarkly/react-sdk`) is built with `'client-only'`, so it is not bundled for the server. The server entry (`@launchdarkly/react-sdk/server`) is built with `'server-only'`. If you only use the main entry in client bundles, server code is not included. When `createReactServerClient` is called in the browser (e.g. in shared code), it returns a no-op client, so it is safe to use from modules that might load on both sides—but for clarity, prefer importing `ld-server` only in server code so Client Components never pull in the server module.

@@ -4,8 +4,6 @@ import {
   LDFlagsState,
   LDFlagsStateOptions,
   LDFlagValue,
-  LDMigrationStage,
-  LDMigrationVariation,
 } from '@launchdarkly/js-server-sdk-common';
 
 /**
@@ -22,7 +20,11 @@ import {
  * interface and the common server interface is that we do not have a context parameter.
  *
  * This is because the context is determined by the context provider and will be different
- * for each request.
+ * for each request. This is also way that we can "scope" an existing LD server client to
+ * serve a specific request session.
+ *
+ * TODO: I also don't know if we really need the detail variations... not sure if they would
+ * really be useful for SSR.
  *
  * @see {@link LDReactServerOptions} for the possible options
  *
@@ -83,21 +85,6 @@ export interface LDReactServerClient {
     defaultValue: LDFlagValue,
     callback?: (err: any, res: LDEvaluationDetail) => void,
   ): Promise<LDEvaluationDetail>;
-
-  /**
-   * Returns the migration stage of the migration feature flag for the given
-   * evaluation context.
-   *
-   * If the evaluated value of the flag cannot be converted to an LDMigrationStage, then the default
-   * value will be returned and error will be logged.
-   *
-   * @param key The unique key of the feature flag.
-   * @param defaultValue The default value of the flag, to be used if the value is not available
-   *   from LaunchDarkly.
-   * @returns
-   *   A Promise which will be resolved with the result (as an{@link LDMigrationVariation}).
-   */
-  migrationVariation(key: string, defaultValue: LDMigrationStage): Promise<LDMigrationVariation>;
 
   /**
    * Determines the boolean variation of a feature flag for a context.
