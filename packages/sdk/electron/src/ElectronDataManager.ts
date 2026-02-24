@@ -163,7 +163,7 @@ export default class ElectronDataManager extends BaseDataManager {
       default:
         break;
     }
-    this.updateProcessor?.start();
+    this.updateProcessor!.start();
   }
 
   setNetworkAvailability(available: boolean): void {

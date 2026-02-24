@@ -373,6 +373,26 @@ describe('given an initialized ElectronClient', () => {
     expect(event.returnValue).toEqual(false);
   });
 
+  it('does not grow state when removeEventHandler is called repeatedly for nonexistent callbackIds; later add with same id succeeds', () => {
+    const onSpy = jest.spyOn(client, 'on');
+    const portForAdd: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const eventName = 'change-reused-id';
+
+    for (let i = 0; i < 10; i += 1) {
+      const event: MockIpcEvent = {};
+      mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'reused-id');
+      expect(event.returnValue).toEqual(false);
+    }
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [portForAdd] } as MockIpcEvent,
+      { callbackId: 'reused-id', eventName },
+    );
+
+    expect(onSpy).toHaveBeenCalledTimes(1);
+    expect(portForAdd.close).not.toHaveBeenCalled();
+  });
+
   it('calls off() for removeEventHandler call', () => {
     const eventWithPort: MockIpcEvent = { ports: [mockPort] };
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(eventWithPort, {
@@ -392,9 +412,10 @@ describe('given an initialized ElectronClient', () => {
     expect(event.returnValue).toEqual(true);
   });
 
-  it('closes port and does not register when addEventHandler arrives after removeEventHandler for same callbackId (remove-before-add race)', () => {
+  it('registers when addEventHandler arrives after removeEventHandler for same callbackId (serialized: remove no-op then add succeeds)', () => {
     const onSpy = jest.spyOn(client, 'on');
     const portForRace: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const eventName = 'change-serialized-race';
 
     const removeEvent: MockIpcEvent = {};
     mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(removeEvent, 'race-callback-id');
@@ -402,11 +423,12 @@ describe('given an initialized ElectronClient', () => {
 
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
       { ports: [portForRace] } as MockIpcEvent,
-      { callbackId: 'race-callback-id', eventName: 'change' },
+      { callbackId: 'race-callback-id', eventName },
     );
 
-    expect(onSpy).not.toHaveBeenCalled();
-    expect(portForRace.close).toHaveBeenCalledTimes(1);
+    expect(onSpy).toHaveBeenCalledTimes(1);
+    expect(onSpy).toHaveBeenNthCalledWith(1, eventName, expect.any(Function));
+    expect(portForRace.close).not.toHaveBeenCalled();
   });
 
   it('broadcasts to all ports when multiple renderer subscribers listen to the same event', () => {
@@ -431,6 +453,41 @@ describe('given an initialized ElectronClient', () => {
     expect(mockPort1.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
     expect(mockPort2.postMessage).toHaveBeenCalledTimes(1);
     expect(mockPort2.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
+  });
+
+  it('continues broadcasting to remaining ports when one port throws (e.g. closed MessagePort)', () => {
+    const deadPort: MockPort = {
+      postMessage: jest.fn().mockImplementation(() => {
+        throw new Error('ERR_CLOSED_MESSAGE_PORT');
+      }),
+      close: jest.fn(),
+    };
+    const livePort: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const onSpy = jest.spyOn(client, 'on');
+    const eventName = 'change-dead-port';
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [deadPort] } as MockIpcEvent,
+      { callbackId: 'dead-sub', eventName },
+    );
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [livePort] } as MockIpcEvent,
+      { callbackId: 'live-sub', eventName },
+    );
+
+    const broadcastCallback = onSpy.mock.calls[0][1];
+    broadcastCallback('arg1', 'arg2');
+
+    expect(deadPort.postMessage).toHaveBeenCalledTimes(1);
+    expect(livePort.postMessage).toHaveBeenCalledTimes(1);
+    expect(livePort.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
+    expect(logger.warn).toHaveBeenCalledWith(`Event ${eventName} broadcast failed`);
+
+    broadcastCallback('arg3', 'arg4');
+    expect(deadPort.postMessage).toHaveBeenCalledTimes(2);
+    expect(livePort.postMessage).toHaveBeenCalledTimes(2);
+    expect(livePort.postMessage).toHaveBeenNthCalledWith(2, ['arg3', 'arg4']);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
   });
 });
 

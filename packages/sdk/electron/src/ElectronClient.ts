@@ -53,8 +53,11 @@ export class ElectronClient extends LDClientImpl {
   // reverse lookup table to make removals faster
   private _ipcCallbackIdToEventName?: Map<string, LDEmitterEventName>;
 
-  // callbackIds for which removeEventHandler was called before addEventHandler was processed (IPC ordering race)
-  private _ipcPendingRemoves?: Set<string>;
+  // queue to serialize add/remove so subscription map updates run in order
+  private _ipcSubscriptionQueue?: Array<
+    | { type: 'add'; event: IpcMainEvent; messageData: IpcEventCallback }
+    | { type: 'remove'; event: IpcMainEvent; callbackId: string }
+  >;
 
   constructor(credential: string, initialContext: LDContext, options: ElectronOptions = {}) {
     const { logger: customLogger, debug } = options;
@@ -258,67 +261,21 @@ export class ElectronClient extends LDClientImpl {
     this._ipcNamespace = credential;
     this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
     this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
-    this._ipcPendingRemoves = new Set<string>();
+    this._ipcSubscriptionQueue = [];
 
     ipcMain.on(
       getIPCChannelName(credential, 'addEventHandler'),
       (event: IpcMainEvent, messageData: IpcEventCallback) => {
-        const { callbackId, eventName } = messageData;
-        const [port] = event.ports;
-        if (this._ipcPendingRemoves!.has(callbackId)) {
-          this._ipcPendingRemoves!.delete(callbackId);
-          port.close();
-          return;
-        }
-        let entry = this._ipcEventSubscriptions!.get(eventName);
-        // If event has not been subscribed to yet, create a new entry
-        // that will subscribe to the event then broadcast the event
-        // to all renderer ports.
-        if (!entry) {
-          // renderer ports are stored in a map keyed by callbackId
-          const ports = new Map<string, MessagePortMain>();
-          const broadcastCallback = (...args: any[]) => {
-            ports.forEach((p) => p.postMessage(args));
-          };
-          this.on(eventName, broadcastCallback);
-          entry = { broadcastCallback, ports };
-          this._ipcEventSubscriptions!.set(eventName, entry);
-        }
-        // Store the renderer port in the entry so it can be closed when the event is removed.
-        entry.ports.set(callbackId, port);
-        // Store the callbackId to eventName mapping so it can be removed when the event is removed.
-        this._ipcCallbackIdToEventName!.set(callbackId, eventName);
+        this._ipcSubscriptionQueue!.push({ type: 'add', event, messageData });
+        this._processSubscriptionQueue();
       },
     );
 
     ipcMain.on(
       getIPCChannelName(credential, 'removeEventHandler'),
       (event: IpcMainEvent, callbackId: string) => {
-        const eventName = this._ipcCallbackIdToEventName!.get(callbackId);
-        if (!eventName) {
-          this._ipcPendingRemoves!.add(callbackId);
-          // eslint-disable-next-line no-param-reassign
-          event.returnValue = false;
-          return;
-        }
-        const entry = this._ipcEventSubscriptions!.get(eventName);
-        const port = entry?.ports.get(callbackId);
-        if (!entry || !port) {
-          // eslint-disable-next-line no-param-reassign
-          event.returnValue = false;
-          return;
-        }
-        entry.ports.delete(callbackId);
-        this._ipcCallbackIdToEventName!.delete(callbackId);
-        port.close();
-
-        // If there are no more renderer ports associated with the event, then remove the entry.
-        if (entry.ports.size === 0) {
-          this.off(eventName, entry.broadcastCallback);
-          this._ipcEventSubscriptions!.delete(eventName);
-        }
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = true;
+        this._ipcSubscriptionQueue!.push({ type: 'remove', event, callbackId });
+        this._processSubscriptionQueue();
       },
     );
 
@@ -420,6 +377,73 @@ export class ElectronClient extends LDClientImpl {
     });
   }
 
+  /**
+   * Runs subscription queue in order so add/remove operations updating the subscription maps
+   * are serialized and never interleaved.
+   */
+  private _processSubscriptionQueue(): void {
+    const queue = this._ipcSubscriptionQueue!;
+    while (queue.length > 0) {
+      const op = queue.shift()!;
+      if (op.type === 'add') {
+        this._applyAdd(op.event, op.messageData);
+      } else {
+        this._applyRemove(op.event, op.callbackId);
+      }
+    }
+  }
+
+  private _applyAdd(event: IpcMainEvent, messageData: IpcEventCallback): void {
+    const { callbackId, eventName } = messageData;
+    const [port] = event.ports;
+    if (!port) {
+      return;
+    }
+    let entry = this._ipcEventSubscriptions!.get(eventName);
+    if (!entry) {
+      const ports = new Map<string, MessagePortMain>();
+      const broadcastCallback = (...args: unknown[]) => {
+        ports.forEach((p) => {
+          try {
+            p.postMessage(args);
+          } catch {
+            this.logger.warn(`Event ${eventName} broadcast failed`);
+          }
+        });
+      };
+      this.on(eventName, broadcastCallback);
+      entry = { broadcastCallback, ports };
+      this._ipcEventSubscriptions!.set(eventName, entry);
+    }
+    entry.ports.set(callbackId, port);
+    this._ipcCallbackIdToEventName!.set(callbackId, eventName);
+  }
+
+  private _applyRemove(event: IpcMainEvent, callbackId: string): void {
+    const eventName = this._ipcCallbackIdToEventName!.get(callbackId);
+    if (!eventName) {
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = false;
+      return;
+    }
+    const entry = this._ipcEventSubscriptions!.get(eventName);
+    const port = entry?.ports.get(callbackId);
+    if (!entry || !port) {
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = false;
+      return;
+    }
+    entry.ports.delete(callbackId);
+    this._ipcCallbackIdToEventName!.delete(callbackId);
+    port.close();
+    if (entry.ports.size === 0) {
+      this.off(eventName, entry.broadcastCallback);
+      this._ipcEventSubscriptions!.delete(eventName);
+    }
+    // eslint-disable-next-line no-param-reassign
+    event.returnValue = true;
+  }
+
   private _closeIPCChannels(): void {
     if (!this._ipcNamespace) {
       return;
@@ -433,7 +457,7 @@ export class ElectronClient extends LDClientImpl {
       this._ipcEventSubscriptions.clear();
     }
     this._ipcCallbackIdToEventName?.clear();
-    this._ipcPendingRemoves?.clear();
+    this._ipcSubscriptionQueue = undefined;
 
     AllSyncChannels.forEach((channel) => {
       ipcMain.removeAllListeners(getIPCChannelName(this._ipcNamespace!, channel));
@@ -444,7 +468,7 @@ export class ElectronClient extends LDClientImpl {
 
     this._ipcEventSubscriptions = undefined;
     this._ipcCallbackIdToEventName = undefined;
-    this._ipcPendingRemoves = undefined;
+    this._ipcSubscriptionQueue = undefined;
     this._ipcNamespace = undefined;
   }
 
