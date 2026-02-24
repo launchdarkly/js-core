@@ -140,6 +140,21 @@ interface CommandParams {
     newEndpoint: string;
     oldEndpoint: string;
   };
+  registerFlagChangeListener?: {
+    listenerId: string;
+    flagKey: string;
+    callbackUri: string;
+  };
+  registerFlagValueChangeListener?: {
+    listenerId: string;
+    flagKey: string;
+    context: LDContext;
+    defaultValue: LDFlagValue;
+    callbackUri: string;
+  };
+  unregisterListener?: {
+    listenerId: string;
+  };
 }
 
 export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
@@ -316,9 +331,15 @@ export interface SdkClientEntity {
   doCommand: (params: CommandParams) => Promise<any>;
 }
 
+interface ListenerEntry {
+  eventName: string;
+  handler: (...args: any[]) => void;
+}
+
 export async function newSdkClientEntity(options: any): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
+  const listeners = new Map<string, ListenerEntry>();
 
   log.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
   const timeout =
@@ -341,6 +362,11 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
   }
 
   c.close = () => {
+    // Unregister all listeners before closing to avoid firing callbacks after shutdown.
+    listeners.forEach((entry) => {
+      client.off(entry.eventName, entry.handler);
+    });
+    listeners.clear();
     client.close();
     log.info('Test ended');
   };
@@ -512,6 +538,69 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
             return undefined;
           }
         }
+      }
+
+      case 'registerFlagChangeListener': {
+        const p = params.registerFlagChangeListener!;
+        // 'update:key' fires for a specific flag; 'update' (no key) fires for any flag change.
+        const eventName = p.flagKey ? `update:${p.flagKey}` : 'update';
+
+        const handler = (eventParams: { key: string }) => {
+          got
+            .post(p.callbackUri, {
+              json: {
+                listenerId: p.listenerId,
+                flagKey: eventParams.key,
+              },
+            })
+            .catch(() => {});
+        };
+
+        listeners.set(p.listenerId, { eventName, handler });
+        client.on(eventName, handler);
+        return undefined;
+      }
+
+      case 'registerFlagValueChangeListener': {
+        const p = params.registerFlagValueChangeListener!;
+        const eventName = `update:${p.flagKey}`;
+
+        // Snapshot the current evaluated value so we can detect actual value changes.
+        // On each SDK update event, re-evaluate and only notify the harness if the
+        // evaluated value differs (using JSON comparison for deep equality).
+        let oldValue = await client.variation(p.flagKey, p.context, p.defaultValue);
+
+        const handler = async () => {
+          const newValue = await client.variation(p.flagKey, p.context, p.defaultValue);
+          if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            const previousValue = oldValue;
+            oldValue = newValue;
+            got
+              .post(p.callbackUri, {
+                json: {
+                  listenerId: p.listenerId,
+                  flagKey: p.flagKey,
+                  oldValue: previousValue,
+                  newValue,
+                },
+              })
+              .catch(() => {});
+          }
+        };
+
+        listeners.set(p.listenerId, { eventName, handler });
+        client.on(eventName, handler);
+        return undefined;
+      }
+
+      case 'unregisterListener': {
+        const p = params.unregisterListener!;
+        const entry = listeners.get(p.listenerId);
+        if (entry) {
+          client.off(entry.eventName, entry.handler);
+          listeners.delete(p.listenerId);
+        }
+        return undefined;
       }
 
       default:
