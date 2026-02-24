@@ -141,6 +141,7 @@
         "appMetadata": { "introduced": "7.0" },
         "autoEnvAttrs": { "introduced": "8.0" },
         "bigSegments": { "introduced": "1.0" },
+        "bootstrapping": { "introduced": "10.13" },
         "contexts": { "introduced": "7.0" },
         "experimentation": { "introduced": "5.0" },
         "flagChanges": { "introduced": "1.0" },
