@@ -8,7 +8,7 @@ export type EventType =
   | 'heart-beat';
 
 export type IntentCode = 'xfer-full' | 'xfer-changes' | 'none';
-export type ObjectKind = 'flag' | 'segment' | 'flag_eval';
+export type ObjectKind = 'flag' | 'segment' | 'flagEval';
 
 export interface FDv2Event {
   /**
