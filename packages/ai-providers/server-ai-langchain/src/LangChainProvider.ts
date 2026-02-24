@@ -53,15 +53,6 @@ export class LangChainProvider extends AIProvider {
     esmInstrumented = true;
 
     try {
-      const otelApi = await import('@opentelemetry/api');
-      const tracerProvider = otelApi.trace.getTracerProvider();
-      const tracer = tracerProvider.getTracer('@launchdarkly/server-sdk-ai-langchain');
-
-      if (tracer.constructor.name === 'NoopTracer') {
-        logger?.debug('No active OpenTelemetry TracerProvider found, skipping instrumentation.');
-        return;
-      }
-
       const { LangChainInstrumentation } = await import('@traceloop/instrumentation-langchain');
       const callbackManagerModule = await import('@langchain/core/callbacks/manager');
       const instrumentation = new LangChainInstrumentation();
@@ -70,7 +61,7 @@ export class LangChainProvider extends AIProvider {
     } catch {
       logger?.debug(
         'OpenTelemetry instrumentation not available for LangChain provider. ' +
-          'Install @opentelemetry/api and @traceloop/instrumentation-langchain to enable automatic tracing.',
+          'Install @traceloop/instrumentation-langchain to enable automatic tracing.',
       );
     }
   }

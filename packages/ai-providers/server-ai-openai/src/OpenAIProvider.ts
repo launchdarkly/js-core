@@ -64,25 +64,14 @@ export class OpenAIProvider extends AIProvider {
     esmInstrumented = true;
 
     try {
-      const otelApi = await import('@opentelemetry/api');
-      const tracerProvider = otelApi.trace.getTracerProvider();
-      const tracer = tracerProvider.getTracer('@launchdarkly/server-sdk-ai-openai');
-
-      // A NoopTracer means no real TracerProvider was registered.
-      if (tracer.constructor.name === 'NoopTracer') {
-        logger?.debug('No active OpenTelemetry TracerProvider found, skipping instrumentation.');
-        return;
-      }
-
       const { OpenAIInstrumentation } = await import('@traceloop/instrumentation-openai');
       const instrumentation = new OpenAIInstrumentation();
       instrumentation.manuallyInstrument(OpenAI);
       logger?.info('OpenAI ESM module instrumented for OpenTelemetry tracing.');
     } catch {
-      // @opentelemetry/api or @traceloop/instrumentation-openai not installed — no-op.
       logger?.debug(
         'OpenTelemetry instrumentation not available for OpenAI provider. ' +
-          'Install @opentelemetry/api and @traceloop/instrumentation-openai to enable automatic tracing.',
+          'Install @traceloop/instrumentation-openai to enable automatic tracing.',
       );
     }
   }
