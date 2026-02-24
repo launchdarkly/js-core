@@ -11,6 +11,8 @@ import type {
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
+let esmInstrumented = false;
+
 /**
  * OpenAI implementation of AIProvider.
  * This provider integrates OpenAI's chat completions API with LaunchDarkly's tracking capabilities.
@@ -32,14 +34,13 @@ export class OpenAIProvider extends AIProvider {
     this._parameters = parameters;
   }
 
-  // =============================================================================
-  // MAIN FACTORY METHOD
-  // =============================================================================
-
   /**
    * Static factory method to create an OpenAI AIProvider from an AI configuration.
    */
   static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<OpenAIProvider> {
+    // eslint-disable-next-line no-underscore-dangle
+    await OpenAIProvider._ensureInstrumented(logger);
+
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -48,9 +49,43 @@ export class OpenAIProvider extends AIProvider {
     return new OpenAIProvider(client, modelName, parameters, logger);
   }
 
-  // =============================================================================
-  // INSTANCE METHODS (AIProvider Implementation)
-  // =============================================================================
+  /**
+   * Automatically patches the ESM openai module for OpenTelemetry tracing when
+   * a TracerProvider is active and @traceloop/instrumentation-openai is installed.
+   *
+   * OpenTelemetry instrumentations auto-patch CJS require() calls, but this
+   * provider loads openai via ESM import, which bypasses those hooks. This
+   * method bridges that gap by calling manuallyInstrument() on the ESM module.
+   */
+  private static async _ensureInstrumented(logger?: LDLogger): Promise<void> {
+    if (esmInstrumented) {
+      return;
+    }
+    esmInstrumented = true;
+
+    try {
+      const otelApi = await import('@opentelemetry/api');
+      const tracerProvider = otelApi.trace.getTracerProvider();
+      const tracer = tracerProvider.getTracer('@launchdarkly/server-sdk-ai-openai');
+
+      // A NoopTracer means no real TracerProvider was registered.
+      if (tracer.constructor.name === 'NoopTracer') {
+        logger?.debug('No active OpenTelemetry TracerProvider found, skipping instrumentation.');
+        return;
+      }
+
+      const { OpenAIInstrumentation } = await import('@traceloop/instrumentation-openai');
+      const instrumentation = new OpenAIInstrumentation();
+      instrumentation.manuallyInstrument(OpenAI);
+      logger?.info('OpenAI ESM module instrumented for OpenTelemetry tracing.');
+    } catch {
+      // @opentelemetry/api or @traceloop/instrumentation-openai not installed — no-op.
+      logger?.debug(
+        'OpenTelemetry instrumentation not available for OpenAI provider. ' +
+          'Install @opentelemetry/api and @traceloop/instrumentation-openai to enable automatic tracing.',
+      );
+    }
+  }
 
   /**
    * Invoke the OpenAI model with an array of messages.
@@ -173,10 +208,6 @@ export class OpenAIProvider extends AIProvider {
   getClient(): OpenAI {
     return this._client;
   }
-
-  // =============================================================================
-  // STATIC UTILITY METHODS
-  // =============================================================================
 
   /**
    * Get AI metrics from an OpenAI response.

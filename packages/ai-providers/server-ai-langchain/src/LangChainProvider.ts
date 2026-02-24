@@ -13,6 +13,8 @@ import type {
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
+let esmInstrumented = false;
+
 /**
  * LangChain implementation of AIProvider.
  * This provider integrates LangChain models with LaunchDarkly's tracking capabilities.
@@ -25,21 +27,53 @@ export class LangChainProvider extends AIProvider {
     this._llm = llm;
   }
 
-  // =============================================================================
-  // MAIN FACTORY METHOD
-  // =============================================================================
-
   /**
    * Static factory method to create a LangChain AIProvider from an AI configuration.
    */
   static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<LangChainProvider> {
+    // eslint-disable-next-line no-underscore-dangle
+    await LangChainProvider._ensureInstrumented(logger);
+
     const llm = await LangChainProvider.createLangChainModel(aiConfig);
     return new LangChainProvider(llm, logger);
   }
 
-  // =============================================================================
-  // INSTANCE METHODS (AIProvider Implementation)
-  // =============================================================================
+  /**
+   * Automatically patches the ESM LangChain module for OpenTelemetry tracing when
+   * a TracerProvider is active and @traceloop/instrumentation-langchain is installed.
+   *
+   * OpenTelemetry instrumentations auto-patch CJS require() calls, but this
+   * provider loads LangChain via ESM import, which bypasses those hooks. This
+   * method bridges that gap by calling manuallyInstrument() on the ESM module.
+   */
+  private static async _ensureInstrumented(logger?: LDLogger): Promise<void> {
+    if (esmInstrumented) {
+      return;
+    }
+    esmInstrumented = true;
+
+    try {
+      const otelApi = await import('@opentelemetry/api');
+      const tracerProvider = otelApi.trace.getTracerProvider();
+      const tracer = tracerProvider.getTracer('@launchdarkly/server-sdk-ai-langchain');
+
+      if (tracer.constructor.name === 'NoopTracer') {
+        logger?.debug('No active OpenTelemetry TracerProvider found, skipping instrumentation.');
+        return;
+      }
+
+      const { LangChainInstrumentation } = await import('@traceloop/instrumentation-langchain');
+      const callbackManagerModule = await import('@langchain/core/callbacks/manager');
+      const instrumentation = new LangChainInstrumentation();
+      instrumentation.manuallyInstrument({ callbackManagerModule });
+      logger?.info('LangChain ESM module instrumented for OpenTelemetry tracing.');
+    } catch {
+      logger?.debug(
+        'OpenTelemetry instrumentation not available for LangChain provider. ' +
+          'Install @opentelemetry/api and @traceloop/instrumentation-langchain to enable automatic tracing.',
+      );
+    }
+  }
 
   /**
    * Invoke the LangChain model with an array of messages.
@@ -149,10 +183,6 @@ export class LangChainProvider extends AIProvider {
   getChatModel(): BaseChatModel {
     return this._llm;
   }
-
-  // =============================================================================
-  // STATIC UTILITY METHODS
-  // =============================================================================
 
   /**
    * Map LaunchDarkly provider names to LangChain provider names.
