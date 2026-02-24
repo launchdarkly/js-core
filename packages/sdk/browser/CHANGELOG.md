@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.1.1...js-client-sdk-v4.2.0) (2026-02-24)
+
+
+### Features
+
+* move bootstrap capability to js-client-common (SDK-1874) ([#1113](https://github.com/launchdarkly/js-core/issues/1113)) ([baa8ab4](https://github.com/launchdarkly/js-core/commit/baa8ab43898be51a498c2a8238e466f5194c2698))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.18.1 to 1.19.0
+
 ## [4.1.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.1.0...js-client-sdk-v4.1.1) (2026-02-23)
 
 
