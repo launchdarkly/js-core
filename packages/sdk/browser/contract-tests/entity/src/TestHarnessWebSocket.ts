@@ -44,6 +44,7 @@ export default class TestHarnessWebSocket {
             'client-prereq-events',
             'client-per-context-summaries',
             'track-hooks',
+            'flag-change-listeners',
           ];
 
           break;

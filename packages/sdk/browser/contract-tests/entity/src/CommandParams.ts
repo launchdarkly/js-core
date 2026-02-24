@@ -11,6 +11,9 @@ export enum CommandType {
   ContextConvert = 'contextConvert',
   ContextComparison = 'contextComparison',
   SecureModeHash = 'secureModeHash',
+  RegisterFlagChangeListener = 'registerFlagChangeListener',
+  RegisterFlagValueChangeListener = 'registerFlagValueChangeListener',
+  UnregisterListener = 'unregisterListener',
 }
 
 export enum ValueType {
@@ -31,6 +34,9 @@ export interface CommandParams {
   contextConvert?: ContextConvertParams;
   contextComparison?: ContextComparisonPairParams;
   secureModeHash?: SecureModeHashParams;
+  registerFlagChangeListener?: RegisterFlagChangeListenerParams;
+  registerFlagValueChangeListener?: RegisterFlagValueChangeListenerParams;
+  unregisterListener?: UnregisterListenerParams;
 }
 
 export interface EvaluateFlagParams {
@@ -135,6 +141,23 @@ export interface SecureModeHashParams {
 
 export interface SecureModeHashResponse {
   result: string;
+}
+
+export interface RegisterFlagChangeListenerParams {
+  listenerId: string;
+  flagKey: string;
+  callbackUri: string;
+}
+
+export interface RegisterFlagValueChangeListenerParams {
+  listenerId: string;
+  flagKey: string;
+  defaultValue: unknown;
+  callbackUri: string;
+}
+
+export interface UnregisterListenerParams {
+  listenerId: string;
 }
 
 export enum HookStage {

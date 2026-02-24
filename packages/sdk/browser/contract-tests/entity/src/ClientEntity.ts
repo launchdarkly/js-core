@@ -5,6 +5,11 @@ import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
 import { makeLogger } from './makeLogger';
 import TestHook from './TestHook';
 
+interface ListenerEntry {
+  eventName: string;
+  handler: (...args: any[]) => void;
+}
+
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
 
@@ -45,6 +50,30 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
   }
 
+  if (options.dataSystem) {
+    if (options.dataSystem.initializers) {
+      options.dataSystem.initializers.forEach((initializer) => {
+        if (initializer.polling?.baseUri) {
+          cf.baseUri = initializer.polling.baseUri;
+        }
+      });
+    }
+    if (options.dataSystem.synchronizers) {
+      options.dataSystem.synchronizers.forEach((synchronizer) => {
+        if (synchronizer.streaming?.baseUri) {
+          cf.streamUri = synchronizer.streaming.baseUri;
+          cf.streaming = true;
+          cf.streamInitialReconnectDelay = maybeTime(synchronizer.streaming.initialRetryDelayMs);
+          if (!cf.baseUri) {
+            cf.baseUri = synchronizer.streaming.baseUri;
+          }
+        } else if (synchronizer.polling?.baseUri) {
+          cf.baseUri = synchronizer.polling.baseUri;
+        }
+      });
+    }
+  }
+
   if (options.events) {
     if (options.events.baseUri) {
       cf.eventsUri = options.events.baseUri;
@@ -81,12 +110,18 @@ function makeDefaultInitialContext() {
 }
 
 export class ClientEntity {
+  private readonly _listeners = new Map<string, ListenerEntry>();
+
   constructor(
     private readonly _client: LDClient,
     private readonly _logger: LDLogger,
   ) {}
 
   close() {
+    this._listeners.forEach((entry) => {
+      this._client.off(entry.eventName, entry.handler);
+    });
+    this._listeners.clear();
     this._client.close();
     this._logger.info('Test ended');
   }
@@ -185,6 +220,79 @@ export class ClientEntity {
       case CommandType.FlushEvents:
         this._client.flush();
         return undefined;
+
+      case CommandType.RegisterFlagChangeListener: {
+        const p = params.registerFlagChangeListener;
+        if (!p) {
+          throw malformedCommand;
+        }
+        const eventName = p.flagKey ? `change:${p.flagKey}` : 'change';
+
+        const handler = (...args: any[]) => {
+          if (!p.flagKey && args.length >= 2) {
+            const flagKeys = args[1] as string[];
+            flagKeys.forEach((key) => {
+              fetch(p.callbackUri, {
+                method: 'POST',
+                body: JSON.stringify({ listenerId: p.listenerId, flagKey: key }),
+              }).catch(() => {});
+            });
+            return;
+          }
+          fetch(p.callbackUri, {
+            method: 'POST',
+            body: JSON.stringify({ listenerId: p.listenerId, flagKey: p.flagKey }),
+          }).catch(() => {});
+        };
+
+        this._listeners.set(p.listenerId, { eventName, handler });
+        this._client.on(eventName, handler);
+        return undefined;
+      }
+
+      case CommandType.RegisterFlagValueChangeListener: {
+        const p = params.registerFlagValueChangeListener;
+        if (!p) {
+          throw malformedCommand;
+        }
+        const eventName = `change:${p.flagKey}`;
+
+        let oldValue = this._client.variation(p.flagKey, p.defaultValue);
+
+        const handler = () => {
+          const newValue = this._client.variation(p.flagKey, p.defaultValue);
+          if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
+            const previousValue = oldValue;
+            oldValue = newValue;
+            fetch(p.callbackUri, {
+              method: 'POST',
+              body: JSON.stringify({
+                listenerId: p.listenerId,
+                flagKey: p.flagKey,
+                oldValue: previousValue,
+                newValue,
+              }),
+            }).catch(() => {});
+          }
+        };
+
+        this._listeners.set(p.listenerId, { eventName, handler });
+        this._client.on(eventName, handler);
+        return undefined;
+      }
+
+      case CommandType.UnregisterListener: {
+        const p = params.unregisterListener;
+        if (!p) {
+          throw malformedCommand;
+        }
+        const entry = this._listeners.get(p.listenerId);
+        if (entry) {
+          this._client.off(entry.eventName, entry.handler);
+          this._listeners.delete(p.listenerId);
+        }
+        return undefined;
+      }
 
       default:
         throw badCommandError;
