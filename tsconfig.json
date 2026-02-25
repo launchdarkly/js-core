@@ -93,6 +93,9 @@
     },
     {
       "path": "./packages/sdk/electron/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/react/tsconfig.ref.json"
     }
   ]
 }

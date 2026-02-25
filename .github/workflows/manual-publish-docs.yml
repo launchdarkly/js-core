@@ -26,6 +26,7 @@ on:
           - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
+          - packages/sdk/react
 name: Publish Documentation
 jobs:
   build-publish:

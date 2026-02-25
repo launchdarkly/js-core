@@ -18,5 +18,6 @@
     "types": ["jest", "node", "react/canary"],
     "jsx": "react"
   },
+  "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "examples/**"]
 }
