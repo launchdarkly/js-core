@@ -29,6 +29,11 @@ describe('browserFdv1Endpoints', () => {
     expect(paths.pathReport(mockEncoding, ctx)).toBe(`/sdk/evalx/${clientSideId}/context`);
   });
 
+  it('throws on polling POST', () => {
+    const paths = endpoints.polling();
+    expect(() => paths.pathPost(mockEncoding, ctx)).toThrow('Post for FDv1 unsupported.');
+  });
+
   it('throws on polling PING', () => {
     const paths = endpoints.polling();
     expect(() => paths.pathPing(mockEncoding, ctx)).toThrow('Ping for polling unsupported.');
@@ -42,6 +47,11 @@ describe('browserFdv1Endpoints', () => {
   it('returns the correct streaming REPORT path', () => {
     const paths = endpoints.streaming();
     expect(paths.pathReport(mockEncoding, ctx)).toBe(`/eval/${clientSideId}`);
+  });
+
+  it('throws on streaming POST', () => {
+    const paths = endpoints.streaming();
+    expect(() => paths.pathPost(mockEncoding, ctx)).toThrow('Post for FDv1 unsupported.');
   });
 
   it('returns the correct streaming PING path', () => {
@@ -64,6 +74,11 @@ describe('mobileFdv1Endpoints', () => {
     expect(paths.pathReport(mockEncoding, ctx)).toBe('/msdk/evalx/context');
   });
 
+  it('throws on polling POST', () => {
+    const paths = endpoints.polling();
+    expect(() => paths.pathPost(mockEncoding, ctx)).toThrow('Post for FDv1 unsupported.');
+  });
+
   it('throws on polling PING', () => {
     const paths = endpoints.polling();
     expect(() => paths.pathPing(mockEncoding, ctx)).toThrow('Ping for polling unsupported.');
@@ -77,6 +92,11 @@ describe('mobileFdv1Endpoints', () => {
   it('returns the correct streaming REPORT path', () => {
     const paths = endpoints.streaming();
     expect(paths.pathReport(mockEncoding, ctx)).toBe('/meval');
+  });
+
+  it('throws on streaming POST', () => {
+    const paths = endpoints.streaming();
+    expect(() => paths.pathPost(mockEncoding, ctx)).toThrow('Post for FDv1 unsupported.');
   });
 
   it('returns the correct streaming PING path', () => {
@@ -94,9 +114,14 @@ describe('fdv2Endpoints', () => {
     expect(paths.pathGet(mockEncoding, ctx)).toBe(`/sdk/poll/eval/ENCODED:${ctx}`);
   });
 
-  it('returns the correct polling REPORT path', () => {
+  it('throws on polling REPORT', () => {
     const paths = endpoints.polling();
-    expect(paths.pathReport(mockEncoding, ctx)).toBe('/sdk/poll/eval');
+    expect(() => paths.pathReport(mockEncoding, ctx)).toThrow('Report for FDv2 unsupported.');
+  });
+
+  it('returns the correct polling POST path', () => {
+    const paths = endpoints.polling();
+    expect(paths.pathPost(mockEncoding, ctx)).toBe('/sdk/poll/eval');
   });
 
   it('throws on polling PING', () => {
@@ -109,9 +134,14 @@ describe('fdv2Endpoints', () => {
     expect(paths.pathGet(mockEncoding, ctx)).toBe(`/sdk/stream/eval/ENCODED:${ctx}`);
   });
 
-  it('returns the correct streaming REPORT path', () => {
+  it('throws on streaming REPORT', () => {
     const paths = endpoints.streaming();
-    expect(paths.pathReport(mockEncoding, ctx)).toBe('/sdk/stream/eval');
+    expect(() => paths.pathReport(mockEncoding, ctx)).toThrow('Report for FDv2 unsupported.');
+  });
+
+  it('returns the correct streaming POST path', () => {
+    const paths = endpoints.streaming();
+    expect(paths.pathPost(mockEncoding, ctx)).toBe('/sdk/stream/eval');
   });
 
   it('throws on streaming PING', () => {

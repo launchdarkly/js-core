@@ -141,6 +141,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
           // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
@@ -153,6 +156,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/meval`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;
@@ -361,6 +367,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -371,6 +380,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/meval`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;
@@ -415,6 +427,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -425,6 +440,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/meval`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;
@@ -463,6 +481,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -473,6 +494,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/meval`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;
@@ -518,6 +542,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -528,6 +555,9 @@ describe('given a MobileDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/meval`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;

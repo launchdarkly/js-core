@@ -21,6 +21,9 @@ export function browserFdv1Endpoints(clientSideId: string): DataSourceEndpoints 
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/sdk/evalx/${clientSideId}/context`;
       },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post for FDv1 unsupported.');
+      },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         throw new Error('Ping for polling unsupported.');
       },
@@ -31,6 +34,9 @@ export function browserFdv1Endpoints(clientSideId: string): DataSourceEndpoints 
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/eval/${clientSideId}`;
+      },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post for FDv1 unsupported.');
       },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         return `/ping/${clientSideId}`;
@@ -51,6 +57,9 @@ export function mobileFdv1Endpoints(): DataSourceEndpoints {
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/msdk/evalx/context`;
       },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post for FDv1 unsupported.');
+      },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         throw new Error('Ping for polling unsupported.');
       },
@@ -61,6 +70,9 @@ export function mobileFdv1Endpoints(): DataSourceEndpoints {
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return `/meval`;
+      },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post for FDv1 unsupported.');
       },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         return `/mping`;
@@ -80,6 +92,9 @@ export function fdv2Endpoints(): DataSourceEndpoints {
         return `/sdk/poll/eval/${base64UrlEncode(plainContextString, encoding)}`;
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Report for FDv2 unsupported.');
+      },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
         return `/sdk/poll/eval`;
       },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
@@ -91,6 +106,9 @@ export function fdv2Endpoints(): DataSourceEndpoints {
         return `/sdk/stream/eval/${base64UrlEncode(plainContextString, encoding)}`;
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Report for FDv2 unsupported.');
+      },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
         return `/sdk/stream/eval`;
       },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
