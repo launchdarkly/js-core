@@ -1,44 +1,10 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { createAsyncQueue } from './AsyncQueue';
 import { FDv2Requestor } from './FDv2Requestor';
 import { FDv2SourceResult, shutdown } from './FDv2SourceResult';
 import { poll } from './PollingBase';
 import { Synchronizer } from './Synchronizer';
-
-/**
- * A minimal async queue for buffering poll results between the timer
- * (producer) and `next()` calls (consumer).
- */
-interface AsyncQueue<T> {
-  put(item: T): void;
-  take(): Promise<T>;
-}
-
-function createAsyncQueue<T>(): AsyncQueue<T> {
-  const items: T[] = [];
-  let waiter: ((item: T) => void) | undefined;
-
-  return {
-    put(item: T): void {
-      if (waiter) {
-        const resolve = waiter;
-        waiter = undefined;
-        resolve(item);
-      } else {
-        items.push(item);
-      }
-    },
-
-    take(): Promise<T> {
-      if (items.length > 0) {
-        return Promise.resolve(items.shift()!);
-      }
-      return new Promise<T>((resolve) => {
-        waiter = resolve;
-      });
-    },
-  };
-}
 
 function stopTimer(handle: ReturnType<typeof setInterval> | undefined) {
   if (handle !== undefined) {
