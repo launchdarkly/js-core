@@ -119,6 +119,9 @@ export function makeTestDataManagerFactory(
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return `/msdk/evalx/context`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return `/mping`;
         },
@@ -129,6 +132,9 @@ export function makeTestDataManagerFactory(
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/stream/path/report';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/stream/path/ping';

@@ -67,6 +67,9 @@ function getStreamingDataSourceConfig(
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/report';
       },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post unsupported.');
+      },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         return '/stream/path/ping';
       },
@@ -122,6 +125,9 @@ function makeTestRequestor(options: {
       },
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/polling/path/report';
+      },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post unsupported.');
       },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         return '/polling/path/ping';

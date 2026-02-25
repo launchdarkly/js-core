@@ -57,6 +57,8 @@ export type { Flag } from './types';
 export { readFlagsFromBootstrap } from './flag-manager/bootstrap';
 
 export { DataSourcePaths } from './streaming';
+export { browserFdv1Endpoints, mobileFdv1Endpoints, fdv2Endpoints } from './datasource/Endpoints';
+export type { DataSourceEndpoints } from './datasource/Endpoints';
 export { BaseDataManager } from './DataManager';
 export { makeRequestor, Requestor };
 

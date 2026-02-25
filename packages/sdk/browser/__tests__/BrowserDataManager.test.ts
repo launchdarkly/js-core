@@ -151,6 +151,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
@@ -161,6 +164,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         },
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
@@ -190,6 +196,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
@@ -200,6 +209,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         },
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
@@ -234,6 +246,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
@@ -244,6 +259,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         },
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
@@ -281,6 +299,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;
         },
@@ -291,6 +312,9 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
         },
         pathReport(encoding: Encoding, _plainContextString: string): string {
           return `/path/report/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(encoding: Encoding, _plainContextString: string): string {
           return `/path/ping/${base64UrlEncode(_plainContextString, encoding)}`;

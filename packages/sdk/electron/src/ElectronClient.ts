@@ -3,11 +3,10 @@ import type { IpcMainEvent, MessagePortMain } from 'electron';
 
 import {
   AutoEnvAttributes,
-  base64UrlEncode,
   BasicLogger,
+  browserFdv1Endpoints,
   Configuration,
   ConnectionMode,
-  Encoding,
   FlagManager,
   internal,
   LDClientImpl,
@@ -22,6 +21,7 @@ import {
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
+  mobileFdv1Endpoints,
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -93,6 +93,7 @@ export class ElectronClient extends LDClientImpl {
     };
 
     const platform = new ElectronPlatform(logger, credential, options);
+    const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
     super(
       credential,
@@ -112,34 +113,8 @@ export class ElectronClient extends LDClientImpl {
           credential,
           configuration,
           validatedElectronOptions,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return useClientSideId
-                ? `/sdk/evalx/${credential}/contexts/${base64UrlEncode(_plainContextString, encoding)}`
-                : `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return useClientSideId ? `/sdk/evalx/${credential}/context` : `/msdk/evalx/context`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
-              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
-              throw new Error('Ping for polling unsupported.');
-            },
-          }),
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return useClientSideId
-                ? `/eval/${credential}/${base64UrlEncode(_plainContextString, encoding)}`
-                : `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return useClientSideId ? `/eval/${credential}` : `/meval`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return useClientSideId ? `/ping/${credential}` : `/mping`;
-            },
-          }),
+          endpoints.polling,
+          endpoints.streaming,
           baseHeaders,
           emitter,
           diagnosticsManager,
