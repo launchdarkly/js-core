@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/jest",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Easily unit test LaunchDarkly feature flagged components with jest",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/tooling/jest",
   "repository": {
@@ -62,7 +62,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "~10.13.0",
+    "@launchdarkly/react-native-client-sdk": "~10.13.1",
     "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^12.7.2",
     "@types/lodash": "^4.17.7",

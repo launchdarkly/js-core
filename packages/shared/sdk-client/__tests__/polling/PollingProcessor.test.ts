@@ -90,6 +90,9 @@ function makeTestRequestor(options: {
       pathReport(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/report';
       },
+      pathPost(_encoding: Encoding, _plainContextString: string): string {
+        throw new Error('Post unsupported.');
+      },
       pathPing(_encoding: Encoding, _plainContextString: string): string {
         return '/poll/path/ping';
       },
