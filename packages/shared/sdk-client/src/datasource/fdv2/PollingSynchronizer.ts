@@ -6,20 +6,17 @@ import { FDv2SourceResult, shutdown } from './FDv2SourceResult';
 import { poll } from './PollingBase';
 import { Synchronizer } from './Synchronizer';
 
-function stopTimer(handle: ReturnType<typeof setInterval> | undefined) {
-  if (handle !== undefined) {
-    clearInterval(handle);
-  }
-}
-
 /**
  * Creates a continuous polling synchronizer that periodically polls for FDv2
  * data and yields results via successive calls to `next()`.
  *
- * The polling timer starts immediately on creation. Results are buffered in
- * an async queue. On terminal errors, the timer is cancelled and the shutdown
- * future is resolved. On `close()`, the timer is cancelled and the next
- * `next()` call returns a shutdown result.
+ * The first poll fires immediately. Subsequent polls are scheduled using
+ * `setTimeout` after each poll completes, ensuring sequential execution and
+ * preventing overlapping requests on slow networks.
+ *
+ * Results are buffered in an async queue. On terminal errors, polling stops
+ * and the shutdown future is resolved. On `close()`, polling stops and the
+ * next `next()` call returns a shutdown result.
  *
  * @internal
  */
@@ -34,19 +31,28 @@ export function createPollingSynchronizer(
   const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
     shutdownResolve = resolve;
   });
-  let timerHandle: ReturnType<typeof setInterval> | undefined;
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
 
   async function doPoll(): Promise<void> {
+    if (stopped) {
+      return;
+    }
+
+    const startTime = Date.now();
     try {
       const result = await poll(requestor, selectorGetter(), false, logger);
+
+      if (stopped) {
+        return;
+      }
 
       let shouldShutdown = false;
 
       if (result.type === 'status') {
         switch (result.state) {
           case 'terminal_error':
-            stopTimer(timerHandle);
-            timerHandle = undefined;
+            stopped = true;
             shouldShutdown = true;
             break;
           case 'interrupted':
@@ -71,13 +77,19 @@ export function createPollingSynchronizer(
     } catch (err) {
       logger?.debug(`Polling error: ${err}`);
     }
+
+    // Schedule next poll after completion, accounting for elapsed time.
+    // This ensures sequential execution — no overlapping requests.
+    if (!stopped) {
+      const sleepFor = Math.max(pollIntervalMs - (Date.now() - startTime), 0);
+      timeoutHandle = setTimeout(() => {
+        doPoll();
+      }, sleepFor);
+    }
   }
 
-  // Start polling immediately and then at regular intervals
+  // Start polling immediately
   doPoll();
-  timerHandle = setInterval(() => {
-    doPoll();
-  }, pollIntervalMs);
 
   return {
     async next(): Promise<FDv2SourceResult> {
@@ -85,8 +97,11 @@ export function createPollingSynchronizer(
     },
 
     close(): void {
-      stopTimer(timerHandle);
-      timerHandle = undefined;
+      stopped = true;
+      if (timeoutHandle !== undefined) {
+        clearTimeout(timeoutHandle);
+        timeoutHandle = undefined;
+      }
       shutdownResolve?.(shutdown());
       shutdownResolve = undefined;
     },
