@@ -3,7 +3,6 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { LDFeedbackKind } from '../src/api/metrics';
 import { LDAIConfigTrackerImpl } from '../src/LDAIConfigTrackerImpl';
 import { LDClientMin } from '../src/LDClientMin';
-import { aiSdkName, aiSdkVersion } from '../src/sdkInfo';
 
 const mockTrack = jest.fn();
 const mockVariation = jest.fn();
@@ -25,8 +24,6 @@ const getExpectedTrackData = () => ({
   version,
   modelName,
   providerName,
-  aiSdkName,
-  aiSdkVersion,
 });
 
 beforeEach(() => {
