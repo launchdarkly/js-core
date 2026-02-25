@@ -93,32 +93,7 @@
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
-        "src/sdkInfo.ts",
-        {
-          "type": "json",
-          "path": "examples/bedrock/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
-        },
-        {
-          "type": "json",
-          "path": "examples/openai/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
-        },
-        {
-          "type": "json",
-          "path": "examples/tracked-chat/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
-        },
-        {
-          "type": "json",
-          "path": "examples/vercel-ai/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
-        },
-        {
-          "type": "json",
-          "path": "examples/judge-evaluation/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
-        }
+        "src/sdkInfo.ts"
       ]
     },
     "packages/tooling/jest": {

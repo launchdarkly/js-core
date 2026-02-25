@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import 'dotenv/config';
+
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
@@ -23,7 +25,7 @@ const context: LDContext = {
   name: 'Sandy',
 };
 
-async function main(): Promise<void> {
+async function main() {
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
