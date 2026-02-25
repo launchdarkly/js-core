@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.19.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.19.0...js-client-sdk-common-v1.19.1) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.20.0 to 2.21.0
+
+## [1.19.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.18.1...js-client-sdk-common-v1.19.0) (2026-02-24)
+
+
+### Features
+
+* move bootstrap capability to js-client-common (SDK-1874) ([#1113](https://github.com/launchdarkly/js-core/issues/1113)) ([baa8ab4](https://github.com/launchdarkly/js-core/commit/baa8ab43898be51a498c2a8238e466f5194c2698))
+
+## [1.18.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.18.0...js-client-sdk-common-v1.18.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* Automatically stream when individual flag event listeners are re… ([#1114](https://github.com/launchdarkly/js-core/issues/1114)) ([c15b7a8](https://github.com/launchdarkly/js-core/commit/c15b7a8aba3712f3b077722d0df11443b58d4e0c))
+
+## [1.18.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.2...js-client-sdk-common-v1.18.0) (2026-02-19)
+
+
+### Features
+
+* adding the implementation for main process client ([#1103](https://github.com/launchdarkly/js-core/issues/1103)) ([0abb86c](https://github.com/launchdarkly/js-core/commit/0abb86c6f6ed95a644e671ce967c4be5fd2ad9d4))
+
 ## [1.17.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.17.1...js-client-sdk-common-v1.17.2) (2026-01-21)
 
 

@@ -13,9 +13,6 @@ if (!sdkKey) {
   process.exit(1);
 }
 
-// The Observability plugin sets up the OpenTelemetry TracerProvider. The OpenAI
-// provider package automatically patches its ESM module for tracing when it
-// detects an active TracerProvider and @traceloop/instrumentation-openai.
 const ldClient = init(sdkKey, {
   plugins: [
     new Observability({
@@ -31,7 +28,7 @@ const context: LDContext = {
   name: 'Sandy',
 };
 
-async function main(): Promise<void> {
+async function main() {
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');

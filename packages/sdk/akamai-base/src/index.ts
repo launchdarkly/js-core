@@ -39,5 +39,5 @@ export const init = ({
     featureStoreProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-base-sdk',
-    sdkVersion: '3.0.14', // x-release-please-version
+    sdkVersion: '3.0.15', // x-release-please-version
   });

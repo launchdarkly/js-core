@@ -1,5 +1,63 @@
 # Changelog
 
+## [4.2.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.2.0...js-client-sdk-v4.2.1) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.19.0 to 1.19.1
+
+## [4.2.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.1.1...js-client-sdk-v4.2.0) (2026-02-24)
+
+
+### Features
+
+* move bootstrap capability to js-client-common (SDK-1874) ([#1113](https://github.com/launchdarkly/js-core/issues/1113)) ([baa8ab4](https://github.com/launchdarkly/js-core/commit/baa8ab43898be51a498c2a8238e466f5194c2698))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.18.1 to 1.19.0
+
+## [4.1.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.1.0...js-client-sdk-v4.1.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* Automatically stream when individual flag event listeners are re… ([#1114](https://github.com/launchdarkly/js-core/issues/1114)) ([c15b7a8](https://github.com/launchdarkly/js-core/commit/c15b7a8aba3712f3b077722d0df11443b58d4e0c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.18.0 to 1.18.1
+
+## [4.1.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.0.0...js-client-sdk-v4.1.0) (2026-02-19)
+
+
+### Features
+
+* **browser:** use shared readFlagsFromBootstrap from js-client-sdk-common ([#1107](https://github.com/launchdarkly/js-core/issues/1107)) ([68fe311](https://github.com/launchdarkly/js-core/commit/68fe311c5c655a831df69abbd8f0eb543cf9333d))
+
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.0.0...js-client-sdk-v4.0.0) (2026-02-19)
+
+
+### Features
+
+* **browser:** use shared readFlagsFromBootstrap from js-client-sdk-common ([#1107](https://github.com/launchdarkly/js-core/issues/1107)) ([68fe311](https://github.com/launchdarkly/js-core/commit/68fe311c5c655a831df69abbd8f0eb543cf9333d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.17.2 to 1.18.0
+
 ## [4.0.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v0.13.1...js-client-sdk-v4.0.0) (2026-02-04)
 
 

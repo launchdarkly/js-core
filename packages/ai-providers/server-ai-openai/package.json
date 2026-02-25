@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-openai",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "LaunchDarkly AI SDK OpenAI Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-openai",
   "repository": {
@@ -43,8 +43,8 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.17.2",
-    "@launchdarkly/server-sdk-ai": "^0.16.2",
+    "@launchdarkly/js-server-sdk-common": "2.18.0",
+    "@launchdarkly/server-sdk-ai": "^0.16.3",
     "@opentelemetry/api": "^1.9.0",
     "@traceloop/instrumentation-openai": "^0.22.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
@@ -66,7 +66,7 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
-    "@launchdarkly/server-sdk-ai": "^0.15.0",
+    "@launchdarkly/server-sdk-ai": "^0.15.0 || ^0.16.0",
     "@opentelemetry/api": "^1.0.0",
     "@traceloop/instrumentation-openai": "^0.22.0",
     "openai": ">= 4 < 6"

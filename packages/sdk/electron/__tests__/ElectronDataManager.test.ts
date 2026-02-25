@@ -16,7 +16,6 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from '../src/ElectronDataManager';
-import type { ElectronIdentifyOptions } from '../src/ElectronIdentifyOptions';
 import { ValidatedOptions } from '../src/options';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
@@ -151,6 +150,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/sdk/evalx/test-credential/context';
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
           // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
@@ -163,6 +165,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/ping/test-credential';
@@ -200,7 +205,7 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
 
     await dataManager.identify(identifyResolve, identifyReject, context, {
       bootstrap: goodBootstrapData,
-    } as ElectronIdentifyOptions);
+    } as LDIdentifyOptions);
 
     expect(flagManager.setBootstrap).toHaveBeenCalledWith(
       context,
@@ -396,6 +401,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/sdk/evalx/test-credential/context';
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -406,6 +414,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/ping/test-credential';
@@ -450,6 +461,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/sdk/evalx/test-credential/context';
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -460,6 +474,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/ping/test-credential';
@@ -498,6 +515,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/sdk/evalx/test-credential/context';
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -508,6 +528,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/ping/test-credential';
@@ -553,6 +576,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/sdk/evalx/test-credential/context';
         },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Ping for polling unsupported.');
         },
@@ -563,6 +589,9 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
           return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
           return '/ping/test-credential';

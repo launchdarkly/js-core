@@ -1,11 +1,9 @@
 /* eslint-disable max-classes-per-file */
 import {
   AutoEnvAttributes,
-  base64UrlEncode,
   BasicLogger,
   type Configuration,
   ConnectionMode,
-  Encoding,
   FlagManager,
   internal,
   LDClientImpl,
@@ -13,6 +11,7 @@ import {
   LDEmitter,
   LDHeaders,
   LDPluginEnvironmentMetadata,
+  mobileFdv1Endpoints,
 } from '@launchdarkly/js-client-sdk-common';
 
 import MobileDataManager from './MobileDataManager';
@@ -69,6 +68,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
     };
 
     const platform = createPlatform(logger, options, validatedRnOptions.storage);
+    const endpoints = mobileFdv1Endpoints();
 
     super(
       sdkKey,
@@ -88,30 +88,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
           sdkKey,
           configuration,
           validatedRnOptions,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/msdk/evalx/context`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
-              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
-              throw new Error('Ping for polling unsupported.');
-            },
-          }),
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/meval`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return `/mping`;
-            },
-          }),
+          endpoints.polling,
+          endpoints.streaming,
           baseHeaders,
           emitter,
           diagnosticsManager,

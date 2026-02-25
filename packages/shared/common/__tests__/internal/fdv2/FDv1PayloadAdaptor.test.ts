@@ -1,16 +1,16 @@
 import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from '../../../src/internal/fdv2/FDv1PayloadAdaptor';
 import { PayloadProcessor } from '../../../src/internal/fdv2/payloadProcessor';
-import { Event, PutObject } from '../../../src/internal/fdv2/proto';
+import { FDv2Event, PutObject } from '../../../src/internal/fdv2/proto';
 
 // Mock PayloadProcessor that captures events
 class MockPayloadProcessor extends PayloadProcessor {
-  public processedEvents: Event[] = [];
+  public processedEvents: FDv2Event[] = [];
 
   constructor() {
     super({}, undefined, undefined);
   }
 
-  override processEvents(events: Event[]) {
+  override processEvents(events: FDv2Event[]) {
     this.processedEvents = [...this.processedEvents, ...events];
     // Don't call super.processEvents to avoid side effects in tests
   }
@@ -21,7 +21,7 @@ it('includes server-intent as the first event and payload-transferred as the las
   const adaptor = FDv1PayloadAdaptor(processor);
   adaptor.processFullTransfer({ flags: {}, segments: {} });
 
-  const serverIntentEvent = processor.processedEvents[0] as Event;
+  const serverIntentEvent = processor.processedEvents[0] as FDv2Event;
   expect(serverIntentEvent.event).toBe('server-intent');
   expect(serverIntentEvent.data).toBeDefined();
 
@@ -35,7 +35,7 @@ it('includes server-intent as the first event and payload-transferred as the las
 
   const payloadTransferredEvent = processor.processedEvents[
     processor.processedEvents.length - 1
-  ] as Event;
+  ] as FDv2Event;
   expect(payloadTransferredEvent.event).toBe('payload-transferred');
   expect(payloadTransferredEvent.data).toBeDefined();
 

@@ -1,9 +1,8 @@
 import {
   AutoEnvAttributes,
-  base64UrlEncode,
   BasicLogger,
+  browserFdv1Endpoints,
   Configuration,
-  Encoding,
   FlagManager,
   Hook,
   internal,
@@ -18,10 +17,10 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   Platform,
+  readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -76,6 +75,7 @@ class BrowserClientImpl extends LDClientImpl {
     // The base options are in baseOptionsWithDefaults.
     const baseOptionsWithDefaults = filterToBaseOptionsWithDefaults({ ...options, logger });
     const { eventUrlTransformer } = validatedBrowserOptions;
+    const endpoints = browserFdv1Endpoints(clientSideId);
 
     super(
       clientSideId,
@@ -95,30 +95,8 @@ class BrowserClientImpl extends LDClientImpl {
           clientSideId,
           configuration,
           validatedBrowserOptions,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/sdk/evalx/${clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/sdk/evalx/${clientSideId}/context`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
-              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
-              throw new Error('Ping for polling unsupported.');
-            },
-          }),
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return `/ping/${clientSideId}`;
-            },
-          }),
+          endpoints.polling,
+          endpoints.streaming,
           baseHeaders,
           emitter,
           diagnosticsManager,
@@ -309,9 +287,10 @@ class BrowserClientImpl extends LDClientImpl {
 
   private _updateAutomaticStreamingState() {
     const browserDataManager = this.dataManager as BrowserDataManager;
-    // This will need changed if support for listening to individual flag change
-    // events it added.
-    browserDataManager.setAutomaticStreamingState(!!this.emitter.listenerCount('change'));
+    const hasListeners = this.emitter
+      .eventNames()
+      .some((name) => name.startsWith('change:') || name === 'change');
+    browserDataManager.setAutomaticStreamingState(hasListeners);
   }
 
   override on(eventName: LDEmitterEventName, listener: Function): void {
