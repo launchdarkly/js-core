@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.21.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.20.0...js-sdk-common-v2.21.0) (2026-02-25)
+
+
+### Features
+
+* Refactor FDV2 protocol handling. ([4570089](https://github.com/launchdarkly/js-core/commit/4570089cd478cc5811a9a1c207231a96fdb5b39a))
+
 ## [2.20.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.19.0...js-sdk-common-v2.20.0) (2025-12-05)
 
 
