@@ -23,5 +23,5 @@ export type { Initializer } from './Initializer';
 export type { Synchronizer } from './Synchronizer';
 
 export { poll } from './PollingBase';
-export { PollingInitializer } from './PollingInitializer';
-export { PollingSynchronizer } from './PollingSynchronizer';
+export { createPollingInitializer } from './PollingInitializer';
+export { createPollingSynchronizer } from './PollingSynchronizer';

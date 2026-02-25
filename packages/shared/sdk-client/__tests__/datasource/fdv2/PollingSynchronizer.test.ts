@@ -1,5 +1,5 @@
 import { FDv2PollResponse, FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
-import { PollingSynchronizer } from '../../../src/datasource/fdv2/PollingSynchronizer';
+import { createPollingSynchronizer } from '../../../src/datasource/fdv2/PollingSynchronizer';
 
 function makeHeaders(extra: Record<string, string> = {}): { get(name: string): string | null } {
   const headers: Record<string, string> = { ...extra };
@@ -75,7 +75,7 @@ it('returns a result from the first poll immediately', async () => {
     poll: jest.fn().mockResolvedValue(makeSuccessResponse({ flagA: { value: true } })),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => undefined, 30000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => undefined, 30000);
 
   // Flush the immediate poll
   await jest.advanceTimersByTimeAsync(0);
@@ -97,7 +97,7 @@ it('returns successive results from periodic polling', async () => {
     }),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => undefined, 1000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => undefined, 1000);
 
   // First poll (immediate)
   await jest.advanceTimersByTimeAsync(0);
@@ -123,7 +123,7 @@ it('returns shutdown on close', async () => {
     poll: jest.fn().mockResolvedValue(makeSuccessResponse({ flagA: { value: true } })),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => undefined, 30000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => undefined, 30000);
 
   // Flush the immediate poll
   await jest.advanceTimersByTimeAsync(0);
@@ -158,7 +158,7 @@ it('stops polling on terminal error', async () => {
     }),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => undefined, 1000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => undefined, 1000);
 
   // First poll (success)
   await jest.advanceTimersByTimeAsync(0);
@@ -198,7 +198,7 @@ it('continues polling on interrupted (recoverable) error', async () => {
     }),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => undefined, 1000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => undefined, 1000);
 
   // First poll (interrupted)
   await jest.advanceTimersByTimeAsync(0);
@@ -222,7 +222,7 @@ it('passes the selector from selectorGetter to each poll', async () => {
     poll: jest.fn().mockResolvedValue(makeSuccessResponse({ flag: { value: 1 } })),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => currentSelector, 1000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => currentSelector, 1000);
 
   // First poll
   await jest.advanceTimersByTimeAsync(0);
@@ -249,7 +249,7 @@ it('handles 304 responses as changeSet with type none', async () => {
     }),
   };
 
-  const synchronizer = new PollingSynchronizer(requestor, logger, () => 'some-state', 30000);
+  const synchronizer = createPollingSynchronizer(requestor, logger, () => 'some-state', 30000);
 
   await jest.advanceTimersByTimeAsync(0);
   const result = await synchronizer.next();

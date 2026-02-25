@@ -40,51 +40,47 @@ function createAsyncQueue<T>(): AsyncQueue<T> {
   };
 }
 
+function stopTimer(handle: ReturnType<typeof setInterval> | undefined) {
+  if (handle !== undefined) {
+    clearInterval(handle);
+  }
+}
+
 /**
- * A continuous polling synchronizer that periodically polls for FDv2 data
- * and yields results via successive calls to `next()`.
+ * Creates a continuous polling synchronizer that periodically polls for FDv2
+ * data and yields results via successive calls to `next()`.
  *
- * The polling timer starts immediately on construction. Results are buffered
- * in an async queue. On terminal errors, the timer is cancelled and the
- * shutdown future is resolved. On `close()`, the timer is cancelled and the
- * next `next()` call returns a shutdown result.
+ * The polling timer starts immediately on creation. Results are buffered in
+ * an async queue. On terminal errors, the timer is cancelled and the shutdown
+ * future is resolved. On `close()`, the timer is cancelled and the next
+ * `next()` call returns a shutdown result.
  *
  * @internal
  */
-export class PollingSynchronizer implements Synchronizer {
-  private _shutdownResolve?: (result: FDv2SourceResult) => void;
-  private readonly _shutdownPromise: Promise<FDv2SourceResult>;
-  private readonly _resultQueue: AsyncQueue<FDv2SourceResult>;
-  private _timerHandle: ReturnType<typeof setInterval> | undefined;
+export function createPollingSynchronizer(
+  requestor: FDv2Requestor,
+  logger: LDLogger | undefined,
+  selectorGetter: () => string | undefined,
+  pollIntervalMs: number,
+): Synchronizer {
+  const resultQueue = createAsyncQueue<FDv2SourceResult>();
+  let shutdownResolve: ((result: FDv2SourceResult) => void) | undefined;
+  const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
+    shutdownResolve = resolve;
+  });
+  let timerHandle: ReturnType<typeof setInterval> | undefined;
 
-  constructor(
-    private readonly _requestor: FDv2Requestor,
-    private readonly _logger: LDLogger | undefined,
-    private readonly _selectorGetter: () => string | undefined,
-    pollIntervalMs: number,
-  ) {
-    this._resultQueue = createAsyncQueue<FDv2SourceResult>();
-    this._shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
-      this._shutdownResolve = resolve;
-    });
-
-    // Start polling immediately and then at regular intervals
-    this._doPoll();
-    this._timerHandle = setInterval(() => {
-      this._doPoll();
-    }, pollIntervalMs);
-  }
-
-  private async _doPoll(): Promise<void> {
+  async function doPoll(): Promise<void> {
     try {
-      const result = await poll(this._requestor, this._selectorGetter(), false, this._logger);
+      const result = await poll(requestor, selectorGetter(), false, logger);
 
       let shouldShutdown = false;
 
       if (result.type === 'status') {
         switch (result.state) {
           case 'terminal_error':
-            this._stopTimer();
+            stopTimer(timerHandle);
+            timerHandle = undefined;
             shouldShutdown = true;
             break;
           case 'interrupted':
@@ -101,30 +97,32 @@ export class PollingSynchronizer implements Synchronizer {
       }
 
       if (shouldShutdown) {
-        this._shutdownResolve?.(result);
-        this._shutdownResolve = undefined;
+        shutdownResolve?.(result);
+        shutdownResolve = undefined;
       } else {
-        this._resultQueue.put(result);
+        resultQueue.put(result);
       }
     } catch (err) {
-      this._logger?.debug(`Polling error: ${err}`);
+      logger?.debug(`Polling error: ${err}`);
     }
   }
 
-  async next(): Promise<FDv2SourceResult> {
-    return Promise.race([this._shutdownPromise, this._resultQueue.take()]);
-  }
+  // Start polling immediately and then at regular intervals
+  doPoll();
+  timerHandle = setInterval(() => {
+    doPoll();
+  }, pollIntervalMs);
 
-  close(): void {
-    this._stopTimer();
-    this._shutdownResolve?.(shutdown());
-    this._shutdownResolve = undefined;
-  }
+  return {
+    async next(): Promise<FDv2SourceResult> {
+      return Promise.race([shutdownPromise, resultQueue.take()]);
+    },
 
-  private _stopTimer(): void {
-    if (this._timerHandle !== undefined) {
-      clearInterval(this._timerHandle);
-      this._timerHandle = undefined;
-    }
-  }
+    close(): void {
+      stopTimer(timerHandle);
+      timerHandle = undefined;
+      shutdownResolve?.(shutdown());
+      shutdownResolve = undefined;
+    },
+  };
 }

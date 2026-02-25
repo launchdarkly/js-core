@@ -1,5 +1,5 @@
 import { FDv2PollResponse, FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
-import { PollingInitializer } from '../../../src/datasource/fdv2/PollingInitializer';
+import { createPollingInitializer } from '../../../src/datasource/fdv2/PollingInitializer';
 
 function makeHeaders(extra: Record<string, string> = {}): { get(name: string): string | null } {
   const headers: Record<string, string> = { ...extra };
@@ -64,7 +64,7 @@ it('returns a changeSet result on successful poll', async () => {
     poll: jest.fn().mockResolvedValue(makeSuccessResponse({ flagA: { value: true } })),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => undefined);
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
   const result = await initializer.run();
 
   expect(result.type).toBe('changeSet');
@@ -79,7 +79,7 @@ it('passes the selector from selectorGetter to the poll', async () => {
     poll: jest.fn().mockResolvedValue(makeSuccessResponse({ flagA: { value: true } })),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => 'my-selector');
+  const initializer = createPollingInitializer(requestor, logger, () => 'my-selector');
   await initializer.run();
 
   expect(requestor.poll).toHaveBeenCalledWith('my-selector');
@@ -95,7 +95,7 @@ it('returns shutdown when close is called before poll completes', async () => {
     ),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => undefined);
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
   const resultPromise = initializer.run();
 
   // Close before the poll resolves
@@ -121,7 +121,7 @@ it('returns terminal error on unrecoverable HTTP error', async () => {
     }),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => undefined);
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
   const result = await initializer.run();
 
   expect(result.type).toBe('status');
@@ -135,7 +135,7 @@ it('returns terminal error on network error (oneShot mode)', async () => {
     poll: jest.fn().mockRejectedValue(new Error('network failure')),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => undefined);
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
   const result = await initializer.run();
 
   expect(result.type).toBe('status');
@@ -153,7 +153,7 @@ it('returns terminal error on recoverable HTTP error (oneShot mode)', async () =
     }),
   };
 
-  const initializer = new PollingInitializer(requestor, logger, () => undefined);
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
   const result = await initializer.run();
 
   // In oneShot mode, even recoverable errors are terminal

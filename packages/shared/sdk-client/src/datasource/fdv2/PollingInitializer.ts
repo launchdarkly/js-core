@@ -6,37 +6,35 @@ import { Initializer } from './Initializer';
 import { poll } from './PollingBase';
 
 /**
- * A one-shot polling initializer that performs a single FDv2 poll request
- * and returns the result.
+ * Creates a one-shot polling initializer that performs a single FDv2 poll
+ * request and returns the result.
  *
  * All errors are treated as terminal (oneShot=true). If `close()` is called
  * before the poll completes, the result will be a shutdown status.
  *
  * @internal
  */
-export class PollingInitializer implements Initializer {
-  private _shutdownResolve?: (result: FDv2SourceResult) => void;
-  private readonly _shutdownPromise: Promise<FDv2SourceResult>;
+export function createPollingInitializer(
+  requestor: FDv2Requestor,
+  logger: LDLogger | undefined,
+  selectorGetter: () => string | undefined,
+): Initializer {
+  let shutdownResolve: ((result: FDv2SourceResult) => void) | undefined;
+  const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
+    shutdownResolve = resolve;
+  });
 
-  constructor(
-    private readonly _requestor: FDv2Requestor,
-    private readonly _logger: LDLogger | undefined,
-    private readonly _selectorGetter: () => string | undefined,
-  ) {
-    this._shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
-      this._shutdownResolve = resolve;
-    });
-  }
+  return {
+    async run(): Promise<FDv2SourceResult> {
+      const pollResult = poll(requestor, selectorGetter(), true, logger);
 
-  async run(): Promise<FDv2SourceResult> {
-    const pollResult = poll(this._requestor, this._selectorGetter(), true, this._logger);
+      // Race the poll against the shutdown signal
+      return Promise.race([shutdownPromise, pollResult]);
+    },
 
-    // Race the poll against the shutdown signal
-    return Promise.race([this._shutdownPromise, pollResult]);
-  }
-
-  close(): void {
-    this._shutdownResolve?.(shutdown());
-    this._shutdownResolve = undefined;
-  }
+    close(): void {
+      shutdownResolve?.(shutdown());
+      shutdownResolve = undefined;
+    },
+  };
 }
