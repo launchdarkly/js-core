@@ -74,6 +74,8 @@ export function makeFDv2Requestor(
   return {
     async poll(basis?: string): Promise<FDv2PollResponse> {
       const parameters: { key: string; value: string }[] = [...(baseQueryParams ?? [])];
+      // Intentionally falsy check: an empty string basis must not be sent as
+      // a query parameter, since it does not represent a valid selector.
       if (basis) {
         parameters.push({ key: 'basis', value: basis });
       }

@@ -155,6 +155,22 @@ it('does not include basis query parameter when not provided', async () => {
   expect(url).not.toContain('basis=');
 });
 
+it('does not include basis query parameter when basis is an empty string', async () => {
+  const { requests, fetch } = makeRequests();
+
+  const requestor = makeFDv2Requestor(
+    '{"key":"user1"}',
+    serviceEndpoints,
+    paths,
+    requests,
+    encoding,
+  );
+  await requestor.poll('');
+
+  const [url] = fetch.mock.calls[0];
+  expect(url).not.toContain('basis=');
+});
+
 it('includes base query parameters on every request', async () => {
   const { requests, fetch } = makeRequests();
 
