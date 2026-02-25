@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.14.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.13.1...react-native-client-sdk-v10.14.0) (2026-02-25)
+
+
+### Features
+
+* Consolidate endpoint paths. Add FDv2 endpoints. ([#1125](https://github.com/launchdarkly/js-core/issues/1125)) ([297ef9d](https://github.com/launchdarkly/js-core/commit/297ef9d2793cdd750a9050674137257d6e18c809))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.19.1 to 1.20.0
+
 ## [10.13.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.13.0...react-native-client-sdk-v10.13.1) (2026-02-25)
 
 
