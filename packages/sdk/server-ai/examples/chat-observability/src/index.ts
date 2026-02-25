@@ -28,7 +28,7 @@ const context: LDContext = {
   name: 'Sandy',
 };
 
-async function main(): Promise<void> {
+async function main() {
   try {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
