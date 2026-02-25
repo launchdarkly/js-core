@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.3.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.3.6...node-server-sdk-otel-v1.3.7) (2026-02-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.10.6 to 9.10.7
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.7
+
 ## [1.3.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-otel-v1.3.5...node-server-sdk-otel-v1.3.6) (2026-02-03)
 
 
