@@ -88,6 +88,20 @@ const response = await aiConfig.tracker.trackMetricsOf(
 console.log('AI Response:', response.choices[0].message.content);
 ```
 
+## Observability
+
+This provider automatically instruments OpenAI API calls for [OpenTelemetry](https://opentelemetry.io/) tracing when the optional `@traceloop/instrumentation-openai` package is installed. No additional configuration is required — instrumentation is applied the first time the provider is used.
+
+To enable automatic tracing, install the instrumentation package:
+
+```shell
+npm install @traceloop/instrumentation-openai @opentelemetry/api --save
+```
+
+When these packages are available, the provider patches the OpenAI ESM module so that all chat completion calls produce OpenTelemetry spans. These spans are emitted through whatever `TracerProvider` is active in your application (for example, one configured by `@launchdarkly/observability-node` or any other OpenTelemetry setup).
+
+If the instrumentation packages are not installed, the provider operates normally without tracing.
+
 ## Contributing
 
 We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.

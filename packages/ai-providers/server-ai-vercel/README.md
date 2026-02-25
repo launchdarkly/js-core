@@ -100,6 +100,12 @@ const response = await aiConfig.tracker.trackMetricsOf(
 console.log('AI Response:', response.text);
 ```
 
+## Observability
+
+This provider automatically enables the Vercel AI SDK's built-in telemetry for all model calls. When a `TracerProvider` is active in your application (for example, one configured by `@launchdarkly/observability-node` or any other [OpenTelemetry](https://opentelemetry.io/) setup), the Vercel AI SDK will emit OpenTelemetry spans for each request.
+
+No additional instrumentation packages are required — the provider sets `experimental_telemetry: { isEnabled: true }` on every call. To take advantage of this, ensure your application has an OpenTelemetry `TracerProvider` configured and registered.
+
 ## Contributing
 
 We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.
