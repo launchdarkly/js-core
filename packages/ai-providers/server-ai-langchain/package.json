@@ -46,6 +46,8 @@
     "@langchain/community": "^0.3.0",
     "@langchain/core": "^0.3.0",
     "@launchdarkly/server-sdk-ai": "^0.16.3",
+    "@opentelemetry/api": "^1.9.0",
+    "@traceloop/instrumentation-langchain": "^0.22.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
@@ -68,6 +70,16 @@
     "@langchain/community": "^0.2.0 || ^0.3.0",
     "@langchain/core": "^0.2.0 || ^0.3.0",
     "@launchdarkly/server-sdk-ai": "^0.15.0 || ^0.16.0",
+    "@opentelemetry/api": "^1.0.0",
+    "@traceloop/instrumentation-langchain": "^0.22.0",
     "langchain": "^0.2.0 || ^0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "@traceloop/instrumentation-langchain": {
+      "optional": true
+    }
   }
 }

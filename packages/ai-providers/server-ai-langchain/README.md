@@ -101,6 +101,20 @@ console.log('AI Response:', response.content);
 ```
 
 
+## Observability
+
+This provider automatically instruments LangChain calls for [OpenTelemetry](https://opentelemetry.io/) tracing when the optional `@traceloop/instrumentation-langchain` package is installed. No additional configuration is required — instrumentation is applied the first time the provider is used.
+
+To enable automatic tracing, install the instrumentation package:
+
+```shell
+npm install @traceloop/instrumentation-langchain @opentelemetry/api --save
+```
+
+When these packages are available, the provider patches the LangChain ESM modules so that model invocations produce OpenTelemetry spans. These spans are emitted through whatever `TracerProvider` is active in your application (for example, one configured by `@launchdarkly/observability-node` or any other OpenTelemetry setup).
+
+If the instrumentation packages are not installed, the provider operates normally without tracing.
+
 ## Contributing
 
 We encourage pull requests and other contributions from the community. Check out our [contributing guidelines](CONTRIBUTING.md) for instructions on how to contribute to this SDK.

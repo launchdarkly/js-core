@@ -139,6 +139,7 @@ describe('VercelProvider', () => {
       expect(generateText).toHaveBeenCalledWith({
         model: mockModel,
         messages: [{ role: 'user', content: 'Hello!' }],
+        experimental_telemetry: { isEnabled: true },
       });
 
       expect(result).toEqual({
@@ -235,6 +236,7 @@ describe('VercelProvider', () => {
         model: mockModel,
         messages: [{ role: 'user', content: 'Generate user data' }],
         schema: responseStructure,
+        experimental_telemetry: { isEnabled: true },
       });
       expect(jsonSchema).toHaveBeenCalledWith(responseStructure);
 

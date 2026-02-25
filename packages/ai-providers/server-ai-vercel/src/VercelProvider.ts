@@ -41,10 +41,6 @@ export class VercelProvider extends AIProvider {
     this._parameters = parameters;
   }
 
-  // =============================================================================
-  // MAIN FACTORY METHODS
-  // =============================================================================
-
   /**
    * Static factory method to create a Vercel AIProvider from an AI configuration.
    * This method auto-detects the provider and creates the model.
@@ -61,20 +57,16 @@ export class VercelProvider extends AIProvider {
     return new VercelProvider(model, parameters, logger);
   }
 
-  // =============================================================================
-  // INSTANCE METHODS (AIProvider Implementation)
-  // =============================================================================
-
   /**
    * Invoke the Vercel AI model with an array of messages.
    */
   async invokeModel(messages: LDMessage[]): Promise<ChatResponse> {
     try {
-      // Call Vercel AI generateText
       const result = await generateText({
         ...this._parameters,
         model: this._model,
         messages,
+        experimental_telemetry: { isEnabled: true },
       });
 
       // Create the assistant message
@@ -118,6 +110,7 @@ export class VercelProvider extends AIProvider {
         model: this._model,
         messages,
         schema: jsonSchema(responseStructure),
+        experimental_telemetry: { isEnabled: true },
       });
 
       const metrics = VercelProvider.createAIMetrics(result);
@@ -146,10 +139,6 @@ export class VercelProvider extends AIProvider {
   getModel(): LanguageModel {
     return this._model;
   }
-
-  // =============================================================================
-  // STATIC UTILITY METHODS
-  // =============================================================================
 
   /**
    * Map LaunchDarkly provider names to LangChain provider names.

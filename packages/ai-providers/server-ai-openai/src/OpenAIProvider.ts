@@ -11,6 +11,8 @@ import type {
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
+let instrumentPromise: Promise<void> | undefined;
+
 /**
  * OpenAI implementation of AIProvider.
  * This provider integrates OpenAI's chat completions API with LaunchDarkly's tracking capabilities.
@@ -32,14 +34,13 @@ export class OpenAIProvider extends AIProvider {
     this._parameters = parameters;
   }
 
-  // =============================================================================
-  // MAIN FACTORY METHOD
-  // =============================================================================
-
   /**
    * Static factory method to create an OpenAI AIProvider from an AI configuration.
    */
   static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<OpenAIProvider> {
+    // eslint-disable-next-line no-underscore-dangle
+    await OpenAIProvider._ensureInstrumented(logger);
+
     const client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -48,9 +49,35 @@ export class OpenAIProvider extends AIProvider {
     return new OpenAIProvider(client, modelName, parameters, logger);
   }
 
-  // =============================================================================
-  // INSTANCE METHODS (AIProvider Implementation)
-  // =============================================================================
+  /**
+   * Automatically patches the ESM openai module for OpenTelemetry tracing when
+   * a TracerProvider is active and @traceloop/instrumentation-openai is installed.
+   *
+   * OpenTelemetry instrumentations auto-patch CJS require() calls, but this
+   * provider loads openai via ESM import, which bypasses those hooks. This
+   * method bridges that gap by calling manuallyInstrument() on the ESM module.
+   */
+  private static async _ensureInstrumented(logger?: LDLogger): Promise<void> {
+    if (instrumentPromise !== undefined) {
+      return instrumentPromise;
+    }
+
+    instrumentPromise = (async () => {
+      try {
+        const { OpenAIInstrumentation } = await import('@traceloop/instrumentation-openai');
+        const instrumentation = new OpenAIInstrumentation();
+        instrumentation.manuallyInstrument(OpenAI);
+        logger?.info('OpenAI ESM module instrumented for OpenTelemetry tracing.');
+      } catch {
+        logger?.debug(
+          'OpenTelemetry instrumentation not available for OpenAI provider. ' +
+            'Install @traceloop/instrumentation-openai to enable automatic tracing.',
+        );
+      }
+    })();
+
+    return instrumentPromise;
+  }
 
   /**
    * Invoke the OpenAI model with an array of messages.
@@ -173,10 +200,6 @@ export class OpenAIProvider extends AIProvider {
   getClient(): OpenAI {
     return this._client;
   }
-
-  // =============================================================================
-  // STATIC UTILITY METHODS
-  // =============================================================================
 
   /**
    * Get AI metrics from an OpenAI response.
