@@ -642,7 +642,7 @@ describe('createJudge method', () => {
       toVercelAISDK: jest.fn(),
     };
 
-    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
     judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
     const result = await client.createJudge(key, testContext, defaultValue);
@@ -681,7 +681,7 @@ describe('createJudge method', () => {
       evaluationMetricKeys: [],
     };
 
-    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
     judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
     const result = await client.createJudge(key, testContext, defaultValue);
@@ -710,7 +710,7 @@ describe('createJudge method', () => {
       toVercelAISDK: jest.fn(),
     };
 
-    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
     judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
     (AIProviderFactory.create as jest.Mock).mockResolvedValue(undefined);
@@ -731,7 +731,7 @@ describe('createJudge method', () => {
     };
 
     const error = new Error('Judge configuration error');
-    const judgeConfigSpy = jest.spyOn(client, 'judgeConfig');
+    const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
     judgeConfigSpy.mockRejectedValue(error);
 
     const result = await client.createJudge(key, testContext, defaultValue);

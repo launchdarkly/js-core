@@ -158,6 +158,16 @@ export class LDAIClientImpl implements LDAIClient {
     return judges;
   }
 
+  private async _completionConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAICompletionConfig> {
+    const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
+    return config as LDAICompletionConfig;
+  }
+
   async completionConfig(
     key: string,
     context: LDContext,
@@ -166,8 +176,7 @@ export class LDAIClientImpl implements LDAIClient {
   ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
 
-    const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
-    return config as LDAICompletionConfig;
+    return this._completionConfig(key, context, defaultValue, variables);
   }
 
   /**
@@ -182,6 +191,16 @@ export class LDAIClientImpl implements LDAIClient {
     return this.completionConfig(key, context, defaultValue, variables);
   }
 
+  private async _judgeConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAIJudgeConfig> {
+    const config = await this._evaluate(key, context, defaultValue, 'judge', variables);
+    return config as LDAIJudgeConfig;
+  }
+
   async judgeConfig(
     key: string,
     context: LDContext,
@@ -190,8 +209,7 @@ export class LDAIClientImpl implements LDAIClient {
   ): Promise<LDAIJudgeConfig> {
     this._ldClient.track(TRACK_USAGE_JUDGE_CONFIG, context, key, 1);
 
-    const config = await this._evaluate(key, context, defaultValue, 'judge', variables);
-    return config as LDAIJudgeConfig;
+    return this._judgeConfig(key, context, defaultValue, variables);
   }
 
   async agentConfig(
@@ -266,7 +284,7 @@ export class LDAIClientImpl implements LDAIClient {
   ): Promise<TrackedChat | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
 
-    const config = await this.completionConfig(key, context, defaultValue, variables);
+    const config = await this._completionConfig(key, context, defaultValue, variables);
 
     if (!config.enabled || !config.tracker) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
@@ -316,7 +334,7 @@ export class LDAIClientImpl implements LDAIClient {
         response_to_evaluate: '{{response_to_evaluate}}',
       };
 
-      const judgeConfig = await this.judgeConfig(key, context, defaultValue, extendedVariables);
+      const judgeConfig = await this._judgeConfig(key, context, defaultValue, extendedVariables);
 
       if (!judgeConfig.enabled || !judgeConfig.tracker) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
