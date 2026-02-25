@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.22.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.21.0...js-sdk-common-v2.22.0) (2026-02-25)
+
+
+### Features
+
+* Add flag eval model for FDv2. ([#1124](https://github.com/launchdarkly/js-core/issues/1124)) ([028e63f](https://github.com/launchdarkly/js-core/commit/028e63f34eb0f11c5c0d8d078baf0ec378b9e8e0))
+
 ## [2.21.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.20.0...js-sdk-common-v2.21.0) (2026-02-25)
 
 

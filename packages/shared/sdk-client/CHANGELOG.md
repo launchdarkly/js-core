@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.20.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.19.1...js-client-sdk-common-v1.20.0) (2026-02-25)
+
+
+### Features
+
+* Add flag eval model for FDv2. ([#1124](https://github.com/launchdarkly/js-core/issues/1124)) ([028e63f](https://github.com/launchdarkly/js-core/commit/028e63f34eb0f11c5c0d8d078baf0ec378b9e8e0))
+* Consolidate endpoint paths. Add FDv2 endpoints. ([#1125](https://github.com/launchdarkly/js-core/issues/1125)) ([297ef9d](https://github.com/launchdarkly/js-core/commit/297ef9d2793cdd750a9050674137257d6e18c809))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.21.0 to 2.22.0
+
 ## [1.19.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.19.0...js-client-sdk-common-v1.19.1) (2026-02-25)
 
 

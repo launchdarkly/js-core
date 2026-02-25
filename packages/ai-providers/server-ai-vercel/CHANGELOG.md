@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.4.6...server-sdk-ai-vercel-v0.5.0) (2026-02-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* Add optional OTEL LLM instrumentation to provider packages ([#1122](https://github.com/launchdarkly/js-core/issues/1122))
+
+### Features
+
+* Add optional OTEL LLM instrumentation to provider packages ([#1122](https://github.com/launchdarkly/js-core/issues/1122)) ([1ca3ce7](https://github.com/launchdarkly/js-core/commit/1ca3ce7b42e274d4f2c9e338fab6996eaf1fd1be))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.16.3 to ^0.16.4
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.15.0 || ^0.16.0 to ^0.16.4
+
 ## [0.4.6](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.4.5...server-sdk-ai-vercel-v0.4.6) (2026-02-25)
 
 
