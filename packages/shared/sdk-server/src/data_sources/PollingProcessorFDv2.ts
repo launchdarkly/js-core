@@ -141,7 +141,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           );
 
           payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.basis, { initMetadata, payload });
+            dataCallback(payload.type === 'full', { initMetadata, payload });
           });
 
           this._logger?.debug(`Got body: ${body}`);

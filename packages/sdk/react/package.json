@@ -1,0 +1,71 @@
+{
+  "name": "@launchdarkly/react-sdk",
+  "version": "0.0.1",
+  "description": "LaunchDarkly SDK for React frameworks",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "packageManager": "yarn@4.2.2",
+  "keywords": [
+    "launchdarkly",
+    "react",
+    "isomorphic",
+    "nextjs",
+    "remix"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsup",
+    "test": "npx jest --ci",
+    "lint": "eslint . --ext .ts,.tsx",
+    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs",
+      "default": "./dist/server.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/jest": "^29.5.0",
+    "@types/react": "18.3.13",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1",
+    "tsup": "^8.5.1",
+    "tsup-plugin-prepend-directive": "^0.1.2",
+    "typedoc": "0.25.0",
+    "typescript": "5.1.6"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  }
+}
