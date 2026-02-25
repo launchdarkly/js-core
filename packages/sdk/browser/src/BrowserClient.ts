@@ -18,10 +18,10 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   Platform,
+  readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { readFlagsFromBootstrap } from './bootstrap';
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
@@ -309,9 +309,10 @@ class BrowserClientImpl extends LDClientImpl {
 
   private _updateAutomaticStreamingState() {
     const browserDataManager = this.dataManager as BrowserDataManager;
-    // This will need changed if support for listening to individual flag change
-    // events it added.
-    browserDataManager.setAutomaticStreamingState(!!this.emitter.listenerCount('change'));
+    const hasListeners = this.emitter
+      .eventNames()
+      .some((name) => name.startsWith('change:') || name === 'change');
+    browserDataManager.setAutomaticStreamingState(hasListeners);
   }
 
   override on(eventName: LDEmitterEventName, listener: Function): void {

@@ -24,7 +24,7 @@ const fullTransferPayload = {
     id: 'payloadID',
     version: 99,
     state: 'initial',
-    basis: true,
+    type: 'full' as const,
     updates: [
       {
         kind: 'flag',
@@ -56,7 +56,7 @@ const changesTransferPayload = {
     id: 'payloadID',
     version: 99,
     state: 'changes',
-    basis: false,
+    type: 'partial' as const,
     updates: [
       {
         kind: 'flag',
@@ -97,7 +97,7 @@ const changesTransferNone = {
   payload: {
     id: 'payloadID',
     version: 99,
-    basis: false,
+    type: 'none' as const,
     updates: [],
   },
 };
@@ -210,7 +210,7 @@ describe('createPayloadListenerFDv2', () => {
         id: 'payloadID',
         version: 99,
         state: '',
-        basis: true,
+        type: 'full' as const,
         updates: [
           {
             kind: 'flag',

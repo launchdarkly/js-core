@@ -11,8 +11,12 @@
       },
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
+        "allFlags": { "introduced": "1.0" },
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "1.0.9" }
+        "experimentation": { "introduced": "1.0" },
+        "migrations": { "introduced": "2.0" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" }
       }
     },
     "akamai-edgekv": {
@@ -25,8 +29,12 @@
       },
       "userAgents": ["AkamaiEdgeSDK"],
       "features": {
+        "allFlags": { "introduced": "1.0" },
         "contexts": { "introduced": "1.0" },
-        "migrations": { "introduced": "1.0.9" }
+        "experimentation": { "introduced": "1.0" },
+        "migrations": { "introduced": "1.0.8" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" }
       }
     },
     "browser": {
@@ -133,6 +141,7 @@
         "appMetadata": { "introduced": "7.0" },
         "autoEnvAttrs": { "introduced": "8.0" },
         "bigSegments": { "introduced": "1.0" },
+        "bootstrapping": { "introduced": "10.13" },
         "contexts": { "introduced": "7.0" },
         "experimentation": { "introduced": "5.0" },
         "flagChanges": { "introduced": "1.0" },

@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 
-import { readFlagsFromBootstrap } from '../src/bootstrap';
+import { readFlagsFromBootstrap } from '@launchdarkly/js-client-sdk-common';
+
 import { goodBootstrapData, goodBootstrapDataWithReasons } from './testBootstrapData';
 
 it('can read valid bootstrap data', () => {
