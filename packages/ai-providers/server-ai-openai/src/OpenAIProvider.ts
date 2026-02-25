@@ -11,7 +11,7 @@ import type {
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
-let esmInstrumented = false;
+let instrumentPromise: Promise<void> | undefined;
 
 /**
  * OpenAI implementation of AIProvider.
@@ -58,22 +58,25 @@ export class OpenAIProvider extends AIProvider {
    * method bridges that gap by calling manuallyInstrument() on the ESM module.
    */
   private static async _ensureInstrumented(logger?: LDLogger): Promise<void> {
-    if (esmInstrumented) {
-      return;
+    if (instrumentPromise !== undefined) {
+      return instrumentPromise;
     }
-    esmInstrumented = true;
 
-    try {
-      const { OpenAIInstrumentation } = await import('@traceloop/instrumentation-openai');
-      const instrumentation = new OpenAIInstrumentation();
-      instrumentation.manuallyInstrument(OpenAI);
-      logger?.info('OpenAI ESM module instrumented for OpenTelemetry tracing.');
-    } catch {
-      logger?.debug(
-        'OpenTelemetry instrumentation not available for OpenAI provider. ' +
-          'Install @traceloop/instrumentation-openai to enable automatic tracing.',
-      );
-    }
+    instrumentPromise = (async () => {
+      try {
+        const { OpenAIInstrumentation } = await import('@traceloop/instrumentation-openai');
+        const instrumentation = new OpenAIInstrumentation();
+        instrumentation.manuallyInstrument(OpenAI);
+        logger?.info('OpenAI ESM module instrumented for OpenTelemetry tracing.');
+      } catch {
+        logger?.debug(
+          'OpenTelemetry instrumentation not available for OpenAI provider. ' +
+            'Install @traceloop/instrumentation-openai to enable automatic tracing.',
+        );
+      }
+    })();
+
+    return instrumentPromise;
   }
 
   /**

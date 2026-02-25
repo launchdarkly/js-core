@@ -13,7 +13,7 @@ import type {
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
 
-let esmInstrumented = false;
+let instrumentPromise: Promise<void> | undefined;
 
 /**
  * LangChain implementation of AIProvider.
@@ -47,23 +47,26 @@ export class LangChainProvider extends AIProvider {
    * method bridges that gap by calling manuallyInstrument() on the ESM module.
    */
   private static async _ensureInstrumented(logger?: LDLogger): Promise<void> {
-    if (esmInstrumented) {
-      return;
+    if (instrumentPromise !== undefined) {
+      return instrumentPromise;
     }
-    esmInstrumented = true;
 
-    try {
-      const { LangChainInstrumentation } = await import('@traceloop/instrumentation-langchain');
-      const callbackManagerModule = await import('@langchain/core/callbacks/manager');
-      const instrumentation = new LangChainInstrumentation();
-      instrumentation.manuallyInstrument({ callbackManagerModule });
-      logger?.info('LangChain ESM module instrumented for OpenTelemetry tracing.');
-    } catch {
-      logger?.debug(
-        'OpenTelemetry instrumentation not available for LangChain provider. ' +
-          'Install @traceloop/instrumentation-langchain to enable automatic tracing.',
-      );
-    }
+    instrumentPromise = (async () => {
+      try {
+        const { LangChainInstrumentation } = await import('@traceloop/instrumentation-langchain');
+        const callbackManagerModule = await import('@langchain/core/callbacks/manager');
+        const instrumentation = new LangChainInstrumentation();
+        instrumentation.manuallyInstrument({ callbackManagerModule });
+        logger?.info('LangChain ESM module instrumented for OpenTelemetry tracing.');
+      } catch {
+        logger?.debug(
+          'OpenTelemetry instrumentation not available for LangChain provider. ' +
+            'Install @traceloop/instrumentation-langchain to enable automatic tracing.',
+        );
+      }
+    })();
+
+    return instrumentPromise;
   }
 
   /**
