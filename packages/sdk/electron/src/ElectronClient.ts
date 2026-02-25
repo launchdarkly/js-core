@@ -72,9 +72,7 @@ export class ElectronClient extends LDClientImpl {
     };
 
     const platform = new ElectronPlatform(logger, credential, options);
-    const endpoints = useClientSideId
-      ? browserFdv1Endpoints(credential)
-      : mobileFdv1Endpoints();
+    const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
     super(
       credential,
