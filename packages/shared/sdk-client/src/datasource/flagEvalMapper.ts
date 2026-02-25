@@ -41,15 +41,8 @@ export function flagEvalUpdateToItemDescriptor(update: internal.Update): ItemDes
   return {
     version: update.version,
     flag: {
+      ...evalResult,
       version: update.version,
-      flagVersion: evalResult.flagVersion,
-      value: evalResult.value,
-      variation: evalResult.variation,
-      trackEvents: evalResult.trackEvents,
-      trackReason: evalResult.trackReason,
-      reason: evalResult.reason,
-      debugEventsUntilDate: evalResult.debugEventsUntilDate,
-      prerequisites: evalResult.prerequisites,
     },
   };
 }

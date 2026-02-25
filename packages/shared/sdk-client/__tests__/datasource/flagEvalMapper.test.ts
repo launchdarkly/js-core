@@ -61,6 +61,25 @@ it('converts a put update with all fields into an ItemDescriptor', () => {
   expect(descriptor.flag.reason).toEqual({ kind: 'RULE_MATCH', ruleIndex: 0, ruleId: 'rule-1' });
   expect(descriptor.flag.debugEventsUntilDate).toBe(1700000000000);
   expect(descriptor.flag.prerequisites).toEqual(['flag-a', 'flag-b']);
+  expect((descriptor.flag as any).samplingRatio).toBe(2);
+});
+
+it('preserves all FlagEvaluationResult fields on the mapped flag', () => {
+  const update: internal.Update = {
+    kind: 'flagEval',
+    key: 'all-fields',
+    version: 5,
+    object: fullEvalResult,
+  };
+
+  const descriptor = flagEvalUpdateToItemDescriptor(update);
+
+  // Every field from the eval result (except version override) should appear on the flag.
+  // Using Object.keys to guard against new fields being added to FlagEvaluationResult
+  // but silently dropped by the mapper.
+  Object.keys(fullEvalResult).forEach((field) => {
+    expect(descriptor.flag).toHaveProperty(field);
+  });
 });
 
 it('converts a put update with only required fields', () => {
