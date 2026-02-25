@@ -1,9 +1,8 @@
 import {
   AutoEnvAttributes,
-  base64UrlEncode,
   BasicLogger,
+  browserFdv1Endpoints,
   Configuration,
-  Encoding,
   FlagManager,
   Hook,
   internal,
@@ -76,6 +75,7 @@ class BrowserClientImpl extends LDClientImpl {
     // The base options are in baseOptionsWithDefaults.
     const baseOptionsWithDefaults = filterToBaseOptionsWithDefaults({ ...options, logger });
     const { eventUrlTransformer } = validatedBrowserOptions;
+    const endpoints = browserFdv1Endpoints(clientSideId);
 
     super(
       clientSideId,
@@ -95,30 +95,8 @@ class BrowserClientImpl extends LDClientImpl {
           clientSideId,
           configuration,
           validatedBrowserOptions,
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/sdk/evalx/${clientSideId}/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/sdk/evalx/${clientSideId}/context`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              // Note: if you are seeing this error, it is a coding error. This DataSourcePaths implementation is for polling endpoints. /ping is not currently
-              // used in a polling situation. It is probably the case that this was called by streaming logic erroneously.
-              throw new Error('Ping for polling unsupported.');
-            },
-          }),
-          () => ({
-            pathGet(encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}/${base64UrlEncode(_plainContextString, encoding)}`;
-            },
-            pathReport(_encoding: Encoding, _plainContextString: string): string {
-              return `/eval/${clientSideId}`;
-            },
-            pathPing(_encoding: Encoding, _plainContextString: string): string {
-              return `/ping/${clientSideId}`;
-            },
-          }),
+          endpoints.polling,
+          endpoints.streaming,
           baseHeaders,
           emitter,
           diagnosticsManager,

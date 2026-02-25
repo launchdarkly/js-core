@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-langchain",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "LaunchDarkly AI SDK LangChain Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-langchain",
   "repository": {
@@ -45,7 +45,7 @@
   "devDependencies": {
     "@langchain/community": "^0.3.0",
     "@langchain/core": "^0.3.0",
-    "@launchdarkly/server-sdk-ai": "^0.16.2",
+    "@launchdarkly/server-sdk-ai": "^0.16.3",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
@@ -67,7 +67,7 @@
   "peerDependencies": {
     "@langchain/community": "^0.2.0 || ^0.3.0",
     "@langchain/core": "^0.2.0 || ^0.3.0",
-    "@launchdarkly/server-sdk-ai": "^0.15.0",
+    "@launchdarkly/server-sdk-ai": "^0.15.0 || ^0.16.0",
     "langchain": "^0.2.0 || ^0.3.0"
   }
 }
