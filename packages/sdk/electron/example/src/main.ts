@@ -6,15 +6,29 @@ import path from 'node:path';
 import { createClient } from '@launchdarkly/electron-client-sdk';
 import type { LDContextStrict, LDOptions } from '@launchdarkly/electron-client-sdk';
 
+app.disableHardwareAcceleration();
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
 }
 
-let launchDarklyMainProcessClient;
-const launchDarklyMobileKey = process.env.LD_MOBILE_KEY ?? 'example-mobile-key';
+// Set mobileKey to your LaunchDarkly mobile key, or set the LAUNCHDARKLY_MOBILE_KEY
+// environment variable before running the app.
+const mobileKey = '';
 
-const launchDarklyUser = {
+const launchDarklyMobileKey = mobileKey || process.env.LAUNCHDARKLY_MOBILE_KEY || '';
+if (!launchDarklyMobileKey) {
+  // eslint-disable-next-line no-console
+  console.error(
+    'LaunchDarkly mobile key is required: set the LAUNCHDARKLY_MOBILE_KEY environment variable and try again.',
+  );
+  process.exit(1);
+}
+
+const flagKey = process.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
+
+const launchDarklyUser: LDContextStrict = {
   kind: 'user',
   key: 'example-user-key',
   name: 'Sandy',
@@ -48,12 +62,21 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
   // Create and start the LaunchDarkly client in the main process. The client is not ready until start() is called.
-  launchDarklyMainProcessClient = createClient(
+  const launchDarklyMainProcessClient = createClient(
     launchDarklyMobileKey,
     launchDarklyUser,
     launchDarklyOptions,
   );
   await launchDarklyMainProcessClient.start();
+
+  const flagValue = launchDarklyMainProcessClient.variation(flagKey, false);
+  // eslint-disable-next-line no-console
+  console.log(`*** The ${flagKey} feature flag evaluates to ${flagValue}.\n`);
+
+  if (process.env.CI) {
+    app.quit();
+    return;
+  }
 
   launchDarklyMainProcessClient.on(
     'change',

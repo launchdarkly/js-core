@@ -2,15 +2,19 @@ import { createRendererClient } from '@launchdarkly/electron-client-sdk/renderer
 
 import './index.css';
 
-const flagKey = 'sample-feature';
+// Injected at build time from LAUNCHDARKLY_FLAG_KEY (see vite.renderer.config.ts).
+// eslint-disable-next-line no-underscore-dangle
+const flagKey = __LD_FLAG_KEY__;
 
-// Injected at build time from LD_CLIENT_SIDE_ID, must match main process.
+// Injected at build time from LAUNCHDARKLY_MOBILE_KEY, must match main process.
 const launchDarklyBrowserClient = createRendererClient(__LD_CLIENT_SIDE_ID__);
 
 function updateFlagValues() {
-  const flagsAndValues = launchDarklyBrowserClient.allFlags();
+  const flagValue = launchDarklyBrowserClient.variation(flagKey, false);
   const el = document.getElementById('flag-value');
-  if (el) el.textContent = flagsAndValues[flagKey]?.toString() ?? 'N/A';
+  if (el) el.textContent = `The ${flagKey} feature flag evaluates to ${flagValue}.`;
+  document.body.style.backgroundColor = flagValue ? '#00844B' : '#373841';
+  document.body.style.color = '#FFFFFF';
 }
 
 (async () => {
