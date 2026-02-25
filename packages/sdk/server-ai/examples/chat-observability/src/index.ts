@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import 'dotenv/config';
 
-import { basicLogger, init, type LDContext } from '@launchdarkly/node-server-sdk';
+import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { Observability } from '@launchdarkly/observability-node';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
@@ -17,7 +17,6 @@ if (!sdkKey) {
 // provider package automatically patches its ESM module for tracing when it
 // detects an active TracerProvider and @traceloop/instrumentation-openai.
 const ldClient = init(sdkKey, {
-  logger: basicLogger({ level: 'debug', destination: console.log }),
   plugins: [
     new Observability({
       serviceName: process.env.SERVICE_NAME || 'hello-js-ai-observability',

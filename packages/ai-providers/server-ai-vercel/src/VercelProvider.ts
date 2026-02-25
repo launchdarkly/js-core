@@ -25,8 +25,6 @@ import type {
  * Vercel AI implementation of AIProvider.
  * This provider integrates Vercel AI SDK with LaunchDarkly's tracking capabilities.
  */
-let telemetryEnabled: boolean | undefined;
-
 export class VercelProvider extends AIProvider {
   private _model: LanguageModel;
   private _parameters: VercelAIModelParameters;
@@ -43,10 +41,6 @@ export class VercelProvider extends AIProvider {
     this._parameters = parameters;
   }
 
-  // =============================================================================
-  // MAIN FACTORY METHODS
-  // =============================================================================
-
   /**
    * Static factory method to create a Vercel AIProvider from an AI configuration.
    * This method auto-detects the provider and creates the model.
@@ -58,52 +52,10 @@ export class VercelProvider extends AIProvider {
    * @returns A Promise that resolves to a configured VercelProvider
    */
   static async create(aiConfig: LDAIConfig, logger?: LDLogger): Promise<VercelProvider> {
-    // eslint-disable-next-line no-underscore-dangle
-    await VercelProvider._detectTelemetry(logger);
-
     const model = await VercelProvider.createVercelModel(aiConfig);
     const parameters = VercelProvider.mapParameters(aiConfig.model?.parameters);
     return new VercelProvider(model, parameters, logger);
   }
-
-  // =============================================================================
-  // OPENTELEMETRY INSTRUMENTATION
-  // =============================================================================
-
-  /**
-   * Detects whether an active OpenTelemetry TracerProvider is registered.
-   * When active, the Vercel AI SDK's built-in experimental_telemetry is enabled
-   * on generateText() and generateObject() calls to emit OTel spans.
-   */
-  private static async _detectTelemetry(logger?: LDLogger): Promise<void> {
-    if (telemetryEnabled !== undefined) {
-      return;
-    }
-
-    try {
-      const otelApi = await import('@opentelemetry/api');
-      const tracerProvider = otelApi.trace.getTracerProvider();
-      const tracer = tracerProvider.getTracer('@launchdarkly/server-sdk-ai-vercel');
-
-      if (tracer.constructor.name === 'NoopTracer') {
-        telemetryEnabled = false;
-        return;
-      }
-
-      telemetryEnabled = true;
-      logger?.info('Vercel AI SDK telemetry enabled for OpenTelemetry tracing.');
-    } catch {
-      telemetryEnabled = false;
-      logger?.debug(
-        'OpenTelemetry not available for Vercel AI provider. ' +
-          'Install @opentelemetry/api to enable automatic tracing.',
-      );
-    }
-  }
-
-  // =============================================================================
-  // INSTANCE METHODS (AIProvider Implementation)
-  // =============================================================================
 
   /**
    * Invoke the Vercel AI model with an array of messages.
@@ -114,7 +66,7 @@ export class VercelProvider extends AIProvider {
         ...this._parameters,
         model: this._model,
         messages,
-        ...(telemetryEnabled ? { experimental_telemetry: { isEnabled: true } } : {}),
+        experimental_telemetry: { isEnabled: true },
       });
 
       // Create the assistant message
@@ -158,7 +110,7 @@ export class VercelProvider extends AIProvider {
         model: this._model,
         messages,
         schema: jsonSchema(responseStructure),
-        ...(telemetryEnabled ? { experimental_telemetry: { isEnabled: true } } : {}),
+        experimental_telemetry: { isEnabled: true },
       });
 
       const metrics = VercelProvider.createAIMetrics(result);
@@ -187,10 +139,6 @@ export class VercelProvider extends AIProvider {
   getModel(): LanguageModel {
     return this._model;
   }
-
-  // =============================================================================
-  // STATIC UTILITY METHODS
-  // =============================================================================
 
   /**
    * Map LaunchDarkly provider names to LangChain provider names.
