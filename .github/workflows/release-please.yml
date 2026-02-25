@@ -63,6 +63,7 @@ on:
           - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
+          - packages/sdk/react
       prerelease:
         description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm.'
         type: boolean
@@ -104,6 +105,7 @@ jobs:
       package-combined-browser-released: ${{ steps.release.outputs['packages/sdk/combined-browser--release_created'] }}
       package-sdk-shopify-oxygen-released: ${{ steps.release.outputs['packages/sdk/shopify-oxygen--release_created'] }}
       package-sdk-electron-released: ${{ steps.release.outputs['packages/sdk/electron--release_created'] }}
+      package-sdk-react-released: ${{ steps.release.outputs['packages/sdk/react--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -532,6 +534,24 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/electron
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-react:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-browser', 'release-sdk-server']
+    permissions:
+      id-token: write
+      contents: write
+    # if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-react-released == 'true'}}
+    # TODO: Uncomment this when the package is ready to be released.
+    if: false
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: release-react
+        name: Full release of packages/sdk/react
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/react
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   manual-publish:
