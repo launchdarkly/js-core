@@ -333,6 +333,41 @@ describe('given malformed JSON response', () => {
   });
 });
 
+describe('given valid JSON without an events array', () => {
+  it('returns InvalidData rather than NetworkError', async () => {
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders(),
+      body: '{"notEvents": true}',
+    });
+
+    const result = await poll(requestor, undefined, false, logger);
+
+    expect(result.type).toBe('status');
+    if (result.type === 'status') {
+      expect(result.state).toBe('interrupted');
+      expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
+      expect(result.errorInfo?.message).toContain('missing or invalid events array');
+    }
+  });
+
+  it('returns terminal error for initializer mode', async () => {
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders(),
+      body: '{"events": "not-an-array"}',
+    });
+
+    const result = await poll(requestor, undefined, true, logger);
+
+    expect(result.type).toBe('status');
+    if (result.type === 'status') {
+      expect(result.state).toBe('terminal_error');
+      expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
+    }
+  });
+});
+
 describe('given an empty response body', () => {
   it('returns an error result', async () => {
     const requestor = makeRequestor({

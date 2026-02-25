@@ -170,6 +170,16 @@ export async function poll(
         : interrupted(errorInfo, fdv1Fallback);
     }
 
+    if (!Array.isArray(parsed.events)) {
+      const errorInfo = errorInfoFromInvalidData(
+        'Invalid polling response: missing or invalid events array',
+      );
+      logger?.error('Polling response does not contain a valid events array');
+      return oneShot
+        ? terminalError(errorInfo, fdv1Fallback)
+        : interrupted(errorInfo, fdv1Fallback);
+    }
+
     return processEvents(parsed.events, oneShot, fdv1Fallback, environmentId, logger);
   } catch (err: any) {
     // Network or other I/O error from the fetch itself
