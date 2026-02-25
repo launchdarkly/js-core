@@ -14,7 +14,7 @@
   * devDependencies
     * @launchdarkly/server-sdk-ai bumped from ^0.16.2 to ^0.16.3
   * peerDependencies
-    * @launchdarkly/server-sdk-ai bumped from ^0.15.0 || ^0.16.0 to ^0.16.3
+    * @launchdarkly/server-sdk-ai bumped from ^0.15.0 to ^0.15.0 || ^0.16.0
 
 ## [0.4.5](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.4.4...server-sdk-ai-langchain-v0.4.5) (2026-02-13)
 
