@@ -1,8 +1,8 @@
 import { FDv2PollResponse, FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
 
-export function makeHeaders(
-  extra: Record<string, string> = {},
-): { get(name: string): string | null } {
+export function makeHeaders(extra: Record<string, string> = {}): {
+  get(name: string): string | null;
+} {
   const headers: Record<string, string> = { ...extra };
   return {
     get(name: string): string | null {

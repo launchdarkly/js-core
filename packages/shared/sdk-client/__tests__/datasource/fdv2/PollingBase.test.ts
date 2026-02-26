@@ -2,8 +2,8 @@ import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 
 import { poll } from '../../../src/datasource/fdv2/PollingBase';
 import {
-  makeFDv2Body,
   makeErrorRequestor,
+  makeFDv2Body,
   makeFullPayloadBody,
   makeHeaders,
   makeLogger,
