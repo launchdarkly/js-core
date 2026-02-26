@@ -1,6 +1,6 @@
 import { createAsyncQueue } from '../../../src/datasource/fdv2/AsyncQueue';
 
-it('returns immediately when items are already buffered', async () => {
+it('returns a previously buffered item on take', async () => {
   const queue = createAsyncQueue<string>();
 
   queue.put('item1');
@@ -88,7 +88,7 @@ it('completes multiple pending takes in FIFO order', async () => {
   expect(await promise3).toBe(3);
 });
 
-it('handles interleaved put and take operations', async () => {
+it('preserves FIFO order across interleaved put and take operations', async () => {
   const queue = createAsyncQueue<string>();
 
   // Put one, take one
@@ -109,7 +109,7 @@ it('handles interleaved put and take operations', async () => {
   expect(await queue.take()).toBe('e');
 });
 
-it('clears buffered items without affecting pending takes', async () => {
+it('discards buffered items on clear and accepts new puts', async () => {
   const queue = createAsyncQueue<number>();
 
   queue.put(1);
@@ -160,7 +160,7 @@ it('supports undefined values delivered to waiters', async () => {
   expect(await promise3).toBeUndefined();
 });
 
-it('handles many pending waiters being resolved by sequential puts', async () => {
+it('resolves many pending waiters in FIFO order', async () => {
   const queue = createAsyncQueue<number>();
   const count = 100;
 
@@ -182,7 +182,7 @@ it('handles many pending waiters being resolved by sequential puts', async () =>
   }
 });
 
-it('handles alternating take-put pattern', async () => {
+it('delivers items in order for alternating take-put pairs', async () => {
   const queue = createAsyncQueue<number>();
   const count = 50;
 
@@ -200,7 +200,7 @@ it('handles alternating take-put pattern', async () => {
   });
 });
 
-it('handles alternating put-take pattern', async () => {
+it('delivers items in order for alternating put-take pairs', async () => {
   const queue = createAsyncQueue<number>();
   const count = 50;
 
