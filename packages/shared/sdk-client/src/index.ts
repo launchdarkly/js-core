@@ -76,9 +76,11 @@ export {
 // in the api/ exports above.
 export type { default as FDv2ConnectionMode } from './datasource/FDv2ConnectionMode';
 export type {
-  DataSourceId,
+  CacheDataSourceEntry,
+  PollingDataSourceEntry,
+  StreamingDataSourceEntry,
   DataSourceEntry,
-  DataSourceEntryConfig,
+  EndpointConfig,
   ModeDefinition,
   ModeTable,
 } from './datasource/ConnectionModeConfig';

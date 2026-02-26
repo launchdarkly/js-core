@@ -1,35 +1,63 @@
 import FDv2ConnectionMode from './FDv2ConnectionMode';
 
 /**
- * Identifier for a data source component used in mode table definitions.
- *
- * These are abstract identifiers that the DataManager resolves to actual
- * factory functions based on platform-specific implementations.
+ * Base endpoint overrides that can be applied to any network data source entry.
+ * Allows routing specific sources to different infrastructure (e.g., relay proxy fallback).
  */
-type DataSourceId = 'cache' | 'polling' | 'streaming';
+interface EndpointConfig {
+  /** Override for the polling base URI. */
+  readonly pollingBaseUri?: string;
+  /** Override for the streaming base URI. */
+  readonly streamingBaseUri?: string;
+}
 
 /**
- * Configuration overrides that can be applied to a data source entry
- * within a specific connection mode.
+ * Configuration for a cache data source entry.
  */
-interface DataSourceEntryConfig {
+interface CacheDataSourceEntry {
+  readonly type: 'cache';
+
+  /**
+   * Whether a successful cache load is sufficient to report the SDK as initialized.
+   * When true, the SDK resolves its init promise upon cache load without waiting
+   * for a network initializer.
+   *
+   * Spec reference: CONNMODE Req 4.1.3
+   */
+  readonly cacheCompletesInitialization?: boolean;
+}
+
+/**
+ * Configuration for a polling data source entry.
+ */
+interface PollingDataSourceEntry {
+  readonly type: 'polling';
+
   /** Override for the polling interval, in seconds. */
   readonly pollInterval?: number;
+
+  /** Endpoint overrides for this polling source. */
+  readonly endpoints?: EndpointConfig;
 }
 
 /**
- * A data source entry in a mode table, consisting of an identifier and
- * optional configuration overrides.
+ * Configuration for a streaming data source entry.
  */
-interface DataSourceEntry {
-  /** The abstract data source identifier. */
-  readonly source: DataSourceId;
-  /**
-   * Optional configuration overrides for this data source within this mode.
-   * For example, background mode overrides the poll interval to 3600 seconds.
-   */
-  readonly config?: DataSourceEntryConfig;
+interface StreamingDataSourceEntry {
+  readonly type: 'streaming';
+
+  /** Override for the initial reconnect delay, in seconds. */
+  readonly initialReconnectDelay?: number;
+
+  /** Endpoint overrides for this streaming source. */
+  readonly endpoints?: EndpointConfig;
 }
+
+/**
+ * A data source entry in a mode table. Each entry identifies a data source type
+ * and carries type-specific configuration overrides.
+ */
+type DataSourceEntry = CacheDataSourceEntry | PollingDataSourceEntry | StreamingDataSourceEntry;
 
 /**
  * Defines the data pipeline for a connection mode: which data sources
@@ -64,11 +92,6 @@ type ModeTable = {
   readonly [K in FDv2ConnectionMode]: ModeDefinition;
 };
 
-// Helper to construct DataSourceEntry concisely.
-function source(id: DataSourceId, config?: DataSourceEntryConfig): DataSourceEntry {
-  return config ? { source: id, config } : { source: id };
-}
-
 /**
  * The default polling interval for background mode, in seconds (1 hour).
  */
@@ -88,24 +111,24 @@ const BACKGROUND_POLL_INTERVAL_SECONDS = 3600;
  */
 const MODE_TABLE: ModeTable = {
   streaming: {
-    initializers: [source('cache'), source('polling')],
-    synchronizers: [source('streaming'), source('polling')],
+    initializers: [{ type: 'cache' }, { type: 'polling' }],
+    synchronizers: [{ type: 'streaming' }, { type: 'polling' }],
   },
   polling: {
-    initializers: [source('cache')],
-    synchronizers: [source('polling')],
+    initializers: [{ type: 'cache' }],
+    synchronizers: [{ type: 'polling' }],
   },
   offline: {
-    initializers: [source('cache')],
+    initializers: [{ type: 'cache' }],
     synchronizers: [],
   },
   'one-shot': {
-    initializers: [source('cache'), source('polling'), source('streaming')],
+    initializers: [{ type: 'cache' }, { type: 'polling' }, { type: 'streaming' }],
     synchronizers: [],
   },
   background: {
-    initializers: [source('cache')],
-    synchronizers: [source('polling', { pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS })],
+    initializers: [{ type: 'cache' }],
+    synchronizers: [{ type: 'polling', pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS }],
   },
 };
 
@@ -130,7 +153,15 @@ function getFDv2ConnectionModeNames(): ReadonlyArray<FDv2ConnectionMode> {
   return Object.keys(MODE_TABLE) as FDv2ConnectionMode[];
 }
 
-export type { DataSourceId, DataSourceEntry, DataSourceEntryConfig, ModeDefinition, ModeTable };
+export type {
+  CacheDataSourceEntry,
+  PollingDataSourceEntry,
+  StreamingDataSourceEntry,
+  DataSourceEntry,
+  EndpointConfig,
+  ModeDefinition,
+  ModeTable,
+};
 export {
   MODE_TABLE,
   BACKGROUND_POLL_INTERVAL_SECONDS,

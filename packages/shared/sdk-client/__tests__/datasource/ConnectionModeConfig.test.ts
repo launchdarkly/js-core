@@ -13,37 +13,33 @@ it('defines entries for all five connection modes', () => {
 
 it('defines streaming mode with cache and polling initializers', () => {
   const def = getModeDefinition('streaming');
-  expect(def.initializers).toEqual([{ source: 'cache' }, { source: 'polling' }]);
+  expect(def.initializers).toEqual([{ type: 'cache' }, { type: 'polling' }]);
 });
 
 it('defines streaming mode with streaming and polling synchronizers', () => {
   const def = getModeDefinition('streaming');
-  expect(def.synchronizers).toEqual([{ source: 'streaming' }, { source: 'polling' }]);
+  expect(def.synchronizers).toEqual([{ type: 'streaming' }, { type: 'polling' }]);
 });
 
 it('defines polling mode with cache initializer only', () => {
   const def = getModeDefinition('polling');
-  expect(def.initializers).toEqual([{ source: 'cache' }]);
+  expect(def.initializers).toEqual([{ type: 'cache' }]);
 });
 
 it('defines polling mode with polling synchronizer only', () => {
   const def = getModeDefinition('polling');
-  expect(def.synchronizers).toEqual([{ source: 'polling' }]);
+  expect(def.synchronizers).toEqual([{ type: 'polling' }]);
 });
 
 it('defines offline mode with cache initializer and no synchronizers', () => {
   const def = getModeDefinition('offline');
-  expect(def.initializers).toEqual([{ source: 'cache' }]);
+  expect(def.initializers).toEqual([{ type: 'cache' }]);
   expect(def.synchronizers).toEqual([]);
 });
 
 it('defines one-shot mode with cache, polling, and streaming initializers', () => {
   const def = getModeDefinition('one-shot');
-  expect(def.initializers).toEqual([
-    { source: 'cache' },
-    { source: 'polling' },
-    { source: 'streaming' },
-  ]);
+  expect(def.initializers).toEqual([{ type: 'cache' }, { type: 'polling' }, { type: 'streaming' }]);
 });
 
 it('defines one-shot mode with no synchronizers', () => {
@@ -53,14 +49,17 @@ it('defines one-shot mode with no synchronizers', () => {
 
 it('defines background mode with cache initializer', () => {
   const def = getModeDefinition('background');
-  expect(def.initializers).toEqual([{ source: 'cache' }]);
+  expect(def.initializers).toEqual([{ type: 'cache' }]);
 });
 
 it('defines background mode with polling synchronizer at 1 hour interval', () => {
   const def = getModeDefinition('background');
   expect(def.synchronizers).toHaveLength(1);
-  expect(def.synchronizers[0].source).toBe('polling');
-  expect(def.synchronizers[0].config?.pollInterval).toBe(3600);
+  const sync = def.synchronizers[0];
+  expect(sync.type).toBe('polling');
+  if (sync.type === 'polling') {
+    expect(sync.pollInterval).toBe(3600);
+  }
 });
 
 it('exports BACKGROUND_POLL_INTERVAL_SECONDS as 3600', () => {
