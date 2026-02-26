@@ -1,65 +1,8 @@
-import { FDv2PollResponse, FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
+import { FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
 import { createPollingSynchronizer } from '../../../src/datasource/fdv2/PollingSynchronizer';
+import { makeHeaders, makeLogger, makeSuccessResponse } from './testHelpers';
 
-function makeHeaders(extra: Record<string, string> = {}): { get(name: string): string | null } {
-  const headers: Record<string, string> = { ...extra };
-  return {
-    get(name: string): string | null {
-      return headers[name.toLowerCase()] ?? null;
-    },
-  };
-}
-
-function makeFullPayloadBody(
-  flags: Record<string, { value: any; trackEvents?: boolean }>,
-  state: string = 'test-state',
-): string {
-  const events: any[] = [
-    {
-      event: 'server-intent',
-      data: {
-        payloads: [{ id: 'test-payload', target: 1, intentCode: 'xfer-full', reason: 'test' }],
-      },
-    },
-  ];
-
-  Object.entries(flags).forEach(([key, flag]) => {
-    events.push({
-      event: 'put-object',
-      data: {
-        kind: 'flagEval',
-        key,
-        version: 1,
-        object: { value: flag.value, trackEvents: flag.trackEvents ?? false },
-      },
-    });
-  });
-
-  events.push({
-    event: 'payload-transferred',
-    data: { state, version: 1, id: 'test-payload' },
-  });
-
-  return JSON.stringify({ events });
-}
-
-function makeSuccessResponse(
-  flags: Record<string, { value: any }>,
-  state: string = 'test-state',
-): FDv2PollResponse {
-  return {
-    status: 200,
-    headers: makeHeaders(),
-    body: makeFullPayloadBody(flags, state),
-  };
-}
-
-const logger = {
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-  debug: jest.fn(),
-};
+const logger = makeLogger();
 
 beforeEach(() => {
   jest.useFakeTimers();
