@@ -70,3 +70,31 @@ export {
   DataSourceState,
   EventName as LDEmitterEventName,
 };
+
+// FDv2 connection mode type system.
+// When FDv2 becomes the default, FDv2ConnectionMode should replace ConnectionMode
+// in the api/ exports above.
+export type { default as FDv2ConnectionMode } from './datasource/FDv2ConnectionMode';
+export type {
+  DataSourceId,
+  DataSourceEntry,
+  DataSourceEntryConfig,
+  ModeDefinition,
+  ModeTable,
+} from './datasource/ConnectionModeConfig';
+export {
+  MODE_TABLE,
+  BACKGROUND_POLL_INTERVAL_SECONDS,
+  getModeDefinition,
+  isValidFDv2ConnectionMode,
+  getFDv2ConnectionModeNames,
+} from './datasource/ConnectionModeConfig';
+export type {
+  LDClientDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from './datasource/LDClientDataSystemOptions';
+export {
+  BROWSER_DATA_SYSTEM_DEFAULTS,
+  MOBILE_DATA_SYSTEM_DEFAULTS,
+  ELECTRON_DATA_SYSTEM_DEFAULTS,
+} from './datasource/LDClientDataSystemOptions';
