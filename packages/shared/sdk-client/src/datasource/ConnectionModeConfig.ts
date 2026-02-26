@@ -53,8 +53,6 @@ type DataSourceEntry = CacheDataSourceEntry | PollingDataSourceEntry | Streaming
 /**
  * Defines the data pipeline for a connection mode: which data sources
  * are used during initialization and which are used for ongoing synchronization.
- *
- * Spec reference: Req 5.3.1 — named connection modes with initializer/synchronizer lists.
  */
 interface ModeDefinition {
   /**
@@ -94,11 +92,6 @@ const BACKGROUND_POLL_INTERVAL_SECONDS = 3600;
  *
  * When FDv2 becomes the default data system, this table drives the
  * CompositeDataSource construction for each mode.
- *
- * Spec references:
- * - Req 5.3.2: Built-in modes (streaming, polling, offline)
- * - Req 5.3.3: background mode for mobile (polling @ 1hr)
- * - Req 5.3.4: one-shot mode for browser
  */
 const MODE_TABLE: ModeTable = {
   streaming: {

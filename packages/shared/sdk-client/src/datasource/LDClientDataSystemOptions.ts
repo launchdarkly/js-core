@@ -5,9 +5,6 @@ import FDv2ConnectionMode from './FDv2ConnectionMode';
  *
  * When FDv2 becomes the default, this should be integrated into the
  * main LDOptions interface (api/LDOptions.ts).
- *
- * Spec references: Req 5.4.1-5.4.2 (browser defaults),
- *   Req 5.5.1-5.5.3 (mobile defaults and auto-switching)
  */
 interface LDClientDataSystemOptions {
   /**
@@ -32,8 +29,6 @@ interface LDClientDataSystemOptions {
    * Set to undefined or omit to disable automatic background mode switching.
    * Set to 'background' to use the built-in background mode (polling @ 1hr).
    * Set to 'offline' to stop all connections in the background.
-   *
-   * Spec references: Req 5.5.2, 5.5.3
    */
   backgroundConnectionMode?: FDv2ConnectionMode;
 
@@ -50,8 +45,6 @@ interface LDClientDataSystemOptions {
    * sources when network availability changes.
    *
    * Default is true for mobile SDKs, false/ignored for browser.
-   *
-   * Spec reference: Req 5.5.3
    */
   automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig;
 
@@ -94,8 +87,6 @@ interface PlatformDataSystemDefaults {
 
 /**
  * Default FDv2 data system configuration for browser SDKs.
- *
- * Spec reference: Req 5.4.1 — browser defaults to one-shot.
  */
 const BROWSER_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
   initialConnectionMode: 'one-shot',
@@ -105,10 +96,6 @@ const BROWSER_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
 
 /**
  * Default FDv2 data system configuration for mobile (React Native) SDKs.
- *
- * Spec references:
- * - Req 5.5.1: Mobile defaults to streaming in foreground.
- * - Req 5.5.2: Mobile auto-switches to background mode.
  */
 const MOBILE_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
   initialConnectionMode: 'streaming',

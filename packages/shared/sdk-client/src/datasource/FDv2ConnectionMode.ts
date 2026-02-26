@@ -27,9 +27,6 @@
  * background - Initializes from cache. Synchronizes via polling at a reduced
  * frequency (1 hour by default). Designed for mobile SDKs when the application
  * is in the background.
- *
- * Spec references: Req 5.3.2 (streaming, polling, offline),
- *   Req 5.3.3 (background), Req 5.3.4 (one-shot)
  */
 type FDv2ConnectionMode = 'streaming' | 'polling' | 'offline' | 'one-shot' | 'background';
 
