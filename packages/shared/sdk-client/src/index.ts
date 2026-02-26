@@ -90,6 +90,7 @@ export {
   getModeDefinition,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
+  validateModeDefinition,
 } from './datasource/ConnectionModeConfig';
 export type {
   LDClientDataSystemOptions,

@@ -1,13 +1,18 @@
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+
 import FDv2ConnectionMode from './FDv2ConnectionMode';
 
 /**
- * Base endpoint overrides that can be applied to any network data source entry.
- * Allows routing specific sources to different infrastructure (e.g., relay proxy fallback).
+ * Endpoint overrides for a network data source entry. Allows routing specific
+ * sources to different infrastructure (e.g., a relay proxy as a fallback).
+ *
+ * When not specified, the SDK uses `baseUri` for polling and `streamUri` for
+ * streaming from the base SDK configuration.
  */
 interface EndpointConfig {
-  /** Override for the polling base URI. */
+  /** Override for the polling base URI. Defaults to `baseUri` from SDK configuration. */
   readonly pollingBaseUri?: string;
-  /** Override for the streaming base URI. */
+  /** Override for the streaming base URI. Defaults to `streamUri` from SDK configuration. */
   readonly streamingBaseUri?: string;
 }
 
@@ -86,6 +91,8 @@ type ModeTable = {
  */
 const BACKGROUND_POLL_INTERVAL_SECONDS = 3600;
 
+const VALID_DATA_SOURCE_TYPES = new Set(['cache', 'polling', 'streaming']);
+
 /**
  * The built-in mode table defining initializer/synchronizer pipelines
  * for each FDv2 connection mode.
@@ -137,6 +144,193 @@ function getFDv2ConnectionModeNames(): ReadonlyArray<FDv2ConnectionMode> {
   return Object.keys(MODE_TABLE) as FDv2ConnectionMode[];
 }
 
+// ----------------------------- Validation --------------------------------
+
+function validateEndpointConfig(
+  endpoints: unknown,
+  path: string,
+  logger?: LDLogger,
+): EndpointConfig | undefined {
+  if (endpoints === undefined || endpoints === null) {
+    return undefined;
+  }
+
+  if (typeof endpoints !== 'object') {
+    logger?.warn(
+      `Config option "${path}.endpoints" should be of type object, got ${typeof endpoints}, discarding`,
+    );
+    return undefined;
+  }
+
+  const result: { pollingBaseUri?: string; streamingBaseUri?: string } = {};
+  const obj = endpoints as Record<string, unknown>;
+
+  if (obj.pollingBaseUri !== undefined && obj.pollingBaseUri !== null) {
+    if (typeof obj.pollingBaseUri === 'string') {
+      result.pollingBaseUri = obj.pollingBaseUri;
+    } else {
+      logger?.warn(
+        `Config option "${path}.endpoints.pollingBaseUri" should be of type string, got ${typeof obj.pollingBaseUri}, discarding`,
+      );
+    }
+  }
+
+  if (obj.streamingBaseUri !== undefined && obj.streamingBaseUri !== null) {
+    if (typeof obj.streamingBaseUri === 'string') {
+      result.streamingBaseUri = obj.streamingBaseUri;
+    } else {
+      logger?.warn(
+        `Config option "${path}.endpoints.streamingBaseUri" should be of type string, got ${typeof obj.streamingBaseUri}, discarding`,
+      );
+    }
+  }
+
+  if (result.pollingBaseUri === undefined && result.streamingBaseUri === undefined) {
+    return undefined;
+  }
+
+  return result;
+}
+
+function validateDataSourceEntry(
+  entry: unknown,
+  path: string,
+  logger?: LDLogger,
+): DataSourceEntry | undefined {
+  if (entry === undefined || entry === null || typeof entry !== 'object') {
+    logger?.warn(
+      `Config option "${path}" should be of type object, got ${typeof entry}, discarding entry`,
+    );
+    return undefined;
+  }
+
+  const obj = entry as Record<string, unknown>;
+
+  if (typeof obj.type !== 'string') {
+    logger?.warn(
+      `Config option "${path}.type" should be of type string, got ${typeof obj.type}, discarding entry`,
+    );
+    return undefined;
+  }
+
+  if (!VALID_DATA_SOURCE_TYPES.has(obj.type)) {
+    logger?.warn(
+      `Config option "${path}.type" has unknown value "${obj.type}", must be one of: cache, polling, streaming. Discarding entry`,
+    );
+    return undefined;
+  }
+
+  if (obj.type === 'cache') {
+    return { type: 'cache' };
+  }
+
+  if (obj.type === 'polling') {
+    const result: { type: 'polling'; pollInterval?: number; endpoints?: EndpointConfig } = {
+      type: 'polling',
+    };
+
+    if (obj.pollInterval !== undefined && obj.pollInterval !== null) {
+      if (typeof obj.pollInterval === 'number' && obj.pollInterval > 0) {
+        result.pollInterval = obj.pollInterval;
+      } else {
+        logger?.warn(
+          `Config option "${path}.pollInterval" should be a positive number, got ${JSON.stringify(obj.pollInterval)}, using default`,
+        );
+      }
+    }
+
+    const endpoints = validateEndpointConfig(obj.endpoints, path, logger);
+    if (endpoints) {
+      result.endpoints = endpoints;
+    }
+
+    return result;
+  }
+
+  // streaming
+  const result: {
+    type: 'streaming';
+    initialReconnectDelay?: number;
+    endpoints?: EndpointConfig;
+  } = { type: 'streaming' };
+
+  if (obj.initialReconnectDelay !== undefined && obj.initialReconnectDelay !== null) {
+    if (typeof obj.initialReconnectDelay === 'number' && obj.initialReconnectDelay > 0) {
+      result.initialReconnectDelay = obj.initialReconnectDelay;
+    } else {
+      logger?.warn(
+        `Config option "${path}.initialReconnectDelay" should be a positive number, got ${JSON.stringify(obj.initialReconnectDelay)}, using default`,
+      );
+    }
+  }
+
+  const endpoints = validateEndpointConfig(obj.endpoints, path, logger);
+  if (endpoints) {
+    result.endpoints = endpoints;
+  }
+
+  return result;
+}
+
+function validateDataSourceEntryList(
+  list: unknown,
+  path: string,
+  logger?: LDLogger,
+): DataSourceEntry[] {
+  if (list === undefined || list === null) {
+    return [];
+  }
+
+  if (!Array.isArray(list)) {
+    logger?.warn(
+      `Config option "${path}" should be of type array, got ${typeof list}, using empty list`,
+    );
+    return [];
+  }
+
+  const result: DataSourceEntry[] = [];
+  for (let i = 0; i < list.length; i++) {
+    const validated = validateDataSourceEntry(list[i], `${path}[${i}]`, logger);
+    if (validated) {
+      result.push(validated);
+    }
+  }
+  return result;
+}
+
+/**
+ * Validates a user-provided ModeDefinition, logging warnings for any invalid
+ * values and replacing them with safe defaults. Invalid data source entries
+ * are discarded.
+ *
+ * This is intended for validating user-provided configuration. The built-in
+ * MODE_TABLE does not need validation.
+ *
+ * @param input The unvalidated mode definition (may have incorrect types).
+ * @param name A descriptive name for the mode, used in warning messages.
+ * @param logger Logger for validation warnings.
+ * @returns A validated ModeDefinition with only valid entries.
+ */
+function validateModeDefinition(
+  input: unknown,
+  name: string,
+  logger?: LDLogger,
+): ModeDefinition | undefined {
+  if (input === undefined || input === null || typeof input !== 'object') {
+    logger?.warn(
+      `Config option "${name}" should be of type object, got ${typeof input}, using default value`,
+    );
+    return undefined;
+  }
+
+  const obj = input as Record<string, unknown>;
+
+  return {
+    initializers: validateDataSourceEntryList(obj.initializers, `${name}.initializers`, logger),
+    synchronizers: validateDataSourceEntryList(obj.synchronizers, `${name}.synchronizers`, logger),
+  };
+}
+
 export type {
   CacheDataSourceEntry,
   PollingDataSourceEntry,
@@ -152,4 +346,5 @@ export {
   getModeDefinition,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
+  validateModeDefinition,
 };
