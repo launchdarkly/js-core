@@ -93,10 +93,11 @@ export {
 } from './datasource/ConnectionModeConfig';
 export type {
   LDClientDataSystemOptions,
+  AutomaticModeSwitchingConfig,
   PlatformDataSystemDefaults,
 } from './datasource/LDClientDataSystemOptions';
 export {
   BROWSER_DATA_SYSTEM_DEFAULTS,
   MOBILE_DATA_SYSTEM_DEFAULTS,
-  ELECTRON_DATA_SYSTEM_DEFAULTS,
+  DESKTOP_DATA_SYSTEM_DEFAULTS,
 } from './datasource/LDClientDataSystemOptions';

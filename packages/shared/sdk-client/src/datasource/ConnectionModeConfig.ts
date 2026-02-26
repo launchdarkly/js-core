@@ -16,15 +16,6 @@ interface EndpointConfig {
  */
 interface CacheDataSourceEntry {
   readonly type: 'cache';
-
-  /**
-   * Whether a successful cache load is sufficient to report the SDK as initialized.
-   * When true, the SDK resolves its init promise upon cache load without waiting
-   * for a network initializer.
-   *
-   * Spec reference: CONNMODE Req 4.1.3
-   */
-  readonly cacheCompletesInitialization?: boolean;
 }
 
 /**
