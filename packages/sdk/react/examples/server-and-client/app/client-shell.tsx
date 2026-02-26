@@ -11,9 +11,10 @@
  */
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
-import ldClient from './lib/ld-client';
+
 import ComponentBox from './component-box';
 import FlagBadge from './flag-badge';
+import ldClient from './lib/ld-client';
 
 const FLAG_KEY = 'sample-feature';
 

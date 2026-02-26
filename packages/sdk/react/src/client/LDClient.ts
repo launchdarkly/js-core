@@ -3,9 +3,6 @@ import React from 'react';
 import {
   LDClient,
   LDContextStrict,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDFlagValue,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
 
@@ -13,7 +10,7 @@ import {
  * Initialization state of the client. This type should be consistent with
  * the `status` field of the `LDWaitForInitializationResult` type.
  */
-export type IntializedState = LDWaitForInitializationResult['status'] | 'initializing' | 'unknown';
+export type InitializedState = LDWaitForInitializationResult['status'] | 'initializing' | 'unknown';
 
 /**
  * The LaunchDarkly client interface for React.
@@ -21,13 +18,22 @@ export type IntializedState = LDWaitForInitializationResult['status'] | 'initial
 export interface LDReactClient extends LDClient {
   /**
    * Returns the initialization state of the client. This function is helpful to determine
-   * whether LDClient can be used to evaluate flags on intial component render.
+   * whether LDClient can be used to evaluate flags on initial component render.
    *
    * @see {@link LDWaitForInitializationResult} for the possible values and their meaning
    *
-   * @returns {IntializedState} The initialization state of the client.
+   * @returns {InitializedState} The initialization state of the client.
    */
-  getInitializationState(): IntializedState;
+  getInitializationState(): InitializedState;
+
+  /**
+   * Subscribes to context changes triggered by `identify()`. The callback is invoked
+   * after each successful `identify()` call with the new resolved context.
+   *
+   * @param callback Function called with the new context after each successful identify.
+   * @returns An unsubscribe function. Call it to stop receiving notifications.
+   */
+  onContextChange(callback: (context: LDContextStrict) => void): () => void;
 }
 
 /**
@@ -48,7 +54,7 @@ export interface LDReactClientContextValue {
   /**
    * The initialization state of the client.
    */
-  intializedState: IntializedState;
+  initializedState: InitializedState;
 }
 
 /**

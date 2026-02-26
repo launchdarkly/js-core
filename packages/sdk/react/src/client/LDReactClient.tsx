@@ -1,13 +1,14 @@
 import {
   createClient as createBaseClient,
   LDContext,
+  LDContextStrict,
   type LDEvaluationDetailTyped,
   LDEvaluationReason,
   type LDFlagValue,
   LDStartOptions,
 } from '@launchdarkly/js-client-sdk';
 
-import { IntializedState, LDReactClient } from './LDClient';
+import { InitializedState, LDReactClient } from './LDClient';
 import { LDReactClientOptions } from './LDOptions';
 
 function isServerSide() {
@@ -39,7 +40,7 @@ function createNoopReactClient(): LDReactClient {
     close: () => Promise.resolve(),
     flush: () => Promise.resolve({ result: true }),
     getContext: () => undefined,
-    getInitializationState: (): IntializedState => 'unknown',
+    getInitializationState: (): InitializedState => 'unknown',
     identify: () => Promise.resolve({ status: 'completed' as const }),
     jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
     jsonVariationDetail: (key: string, defaultValue: unknown) =>
@@ -55,6 +56,7 @@ function createNoopReactClient(): LDReactClient {
       noopDetail(defaultValue) as LDEvaluationDetailTyped<number>,
     off: () => {},
     on: () => {},
+    onContextChange: () => () => {},
     setStreaming: () => {},
     start: () =>
       Promise.resolve({
@@ -80,7 +82,7 @@ function createNoopReactClient(): LDReactClient {
 }
 
 /**
- * Creates a new instance of the LaunchDarkly client for Reactj.
+ * Creates a new instance of the LaunchDarkly client for React.
  *
  * @remarks
  * When called on the server, returns a noop client that never instantiates the browser SDK.
@@ -111,7 +113,8 @@ export function createClient(
   }
 
   const baseClient = createBaseClient(clientSideID, context, options);
-  let initializationState: IntializedState = 'unknown';
+  let initializationState: InitializedState = 'unknown';
+  const subscribers = new Set<(context: LDContextStrict) => void>();
 
   return {
     ...baseClient,
@@ -122,6 +125,20 @@ export function createClient(
         return result;
       });
     },
+    identify: (...args) =>
+      baseClient.identify(...args).then((result) => {
+        const newContext = baseClient.getContext();
+        if (newContext) {
+          subscribers.forEach((cb) => cb(newContext));
+        }
+        return result;
+      }),
     getInitializationState: () => initializationState,
+    onContextChange: (callback: (context: LDContextStrict) => void) => {
+      subscribers.add(callback);
+      return () => {
+        subscribers.delete(callback);
+      };
+    },
   };
 }

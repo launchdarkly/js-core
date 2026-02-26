@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import type { LDReactClient, LDReactClientContextValue } from "../LDClient";
+import type { LDReactClient, LDReactClientContextValue } from '../LDClient';
 import { LDReactContext } from './LDReactContext';
 
 /**
@@ -25,29 +25,60 @@ import { LDReactContext } from './LDReactContext';
  * to have multiple clients in the same application. This means all hooks that we
  * provide will need to be scoped to the context itself.
  *
- * @privateRemarks TODO
- * Currently the implementation is in this form for simplicity. I think we will actually
- * make this a React function component once we add lifecycle management to the context.
+ * when the client initializes or when `client.identify()` is called to switch contexts.
  *
  * @param client launchdarkly client instance @see {@link createClient}
- * @param ReactContext launchdarkly react context @see {@link initLDReactContext}
+ * @param ReactContext optional launchdarkly react context @see {@link initLDReactContext}
  * @returns {React.FC<{ children: React.ReactNode }>} The LaunchDarkly React Client provider.
  */
 export function createLDReactProvider(
   client: LDReactClient,
-  ReactContext: React.Context<LDReactClientContextValue>,
+  ReactContext?: React.Context<LDReactClientContextValue>,
 ): React.FC<{ children: React.ReactNode }> {
-  const contextValue: LDReactClientContextValue = {
-    client,
-    intializedState: 'unknown',
-  };
-
   const ContextProvider = ReactContext?.Provider ?? LDReactContext.Provider;
 
-  // TODO: this will become its own function once we have more state handling
-  const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <ContextProvider value={contextValue}>{children}</ContextProvider>
-  );
+  const Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [state, setState] = useState<LDReactClientContextValue>({
+      client,
+      context: client.getContext() ?? undefined,
+      initializedState: client.getInitializationState(),
+    });
+
+    useEffect(() => {
+      let mounted = true;
+
+      // TODO: support a 'deferred start' option so consumers can opt out of auto-start
+      client.start().then((result) => {
+        if (mounted) {
+          setState((prev) => ({
+            ...prev,
+            initializedState: result.status,
+            context: client.getContext() ?? undefined,
+          }));
+        }
+      });
+
+      // TODO: we haven't completed this implementation yet so we do expect a couple more
+      // initial state updates that will propagate from the react context. This should be
+      // better once we handle the initialization state changes. When that happens, users
+      // can hold off their rendering until the client is in a stable intialized state.
+      const unsubscribeContextChange = client.onContextChange((newContext) => {
+        if (mounted) {
+          setState((prev) => ({
+            ...prev,
+            context: newContext,
+          }));
+        }
+      });
+
+      return () => {
+        mounted = false;
+        unsubscribeContextChange();
+      };
+    }, []);
+
+    return <ContextProvider value={state}>{children}</ContextProvider>;
+  };
 
   return Provider;
 }

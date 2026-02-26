@@ -14,12 +14,12 @@
  *     client component. The server children are rendered on the server and
  *     slotted into the client component without re-rendering on the client.
  */
-import ldServer from './lib/ld-server';
+import ClientShell from './client-shell';
 import ComponentBox from './component-box';
 import FlagBadge from './flag-badge';
-import ServerSection from './server-section';
-import ClientShell from './client-shell';
+import ldServer from './lib/ld-server';
 import ServerContent from './server-content';
+import ServerSection from './server-section';
 
 const FLAG_KEY = 'sample-feature';
 

@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext } from "react";
-import type { LDReactClientContext, LDReactClientContextValue } from "../LDClient";
+import { createContext } from 'react';
+
+import type { LDReactClientContext, LDReactClientContextValue } from '../LDClient';
 
 // initializes a new context for the LaunchDarkly client. The sole usage of this function
 // is to create a new context so that it could be referenced and managed by the

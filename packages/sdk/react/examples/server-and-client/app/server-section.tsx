@@ -4,10 +4,10 @@
  * as children — the client component becomes an interactive "island" inside static
  * server-rendered markup.
  */
-import ldServer from './lib/ld-server';
+import ClientIsland from './client-island';
 import ComponentBox from './component-box';
 import FlagBadge from './flag-badge';
-import ClientIsland from './client-island';
+import ldServer from './lib/ld-server';
 
 const FLAG_KEY = 'sample-feature';
 

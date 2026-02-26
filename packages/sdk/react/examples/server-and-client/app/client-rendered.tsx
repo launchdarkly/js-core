@@ -3,8 +3,9 @@
 // CLIENT: same LDIsomorphicClient as the server (page.tsx). Import from ld-client so we
 // do not pull server-only code into the client bundle; ld-server federates this client
 // for Server Components.
-import ldClient from './lib/ld-client';
 import { useEffect, useState } from 'react';
+
+import ldClient from './lib/ld-client';
 
 const flagKey = 'sample-feature';
 
@@ -13,7 +14,7 @@ export default function ClientRendered() {
 
   useEffect(() => {
     const updateFlag = () => {
-      const value = ldClient.variation(flagKey, false)
+      const value = ldClient.variation(flagKey, false);
       console.log('value', value);
       setIsOn(!!value);
     };

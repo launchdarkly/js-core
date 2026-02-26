@@ -4,9 +4,9 @@
  * resulting React tree as the `children` prop to ClientShell. This lets server-evaluated
  * flag values appear inside a client component boundary without re-running on the client.
  */
-import ldServer from './lib/ld-server';
 import ComponentBox from './component-box';
 import FlagBadge from './flag-badge';
+import ldServer from './lib/ld-server';
 
 const FLAG_KEY = 'sample-feature';
 

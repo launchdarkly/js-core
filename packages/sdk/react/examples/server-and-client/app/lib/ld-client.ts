@@ -5,8 +5,9 @@
  * Single isomorphic client instance. Server-only code (ld-server.ts) federates this
  * client with useServerClient() so the same API works in RSC and the browser.
  */
+import { createClient } from '@launchdarkly/react-sdk';
+
 import { defaultContext } from './ld-context';
-import {createClient} from '@launchdarkly/react-sdk';
 
 const ldClient = createClient(
   process.env.LD_CLIENT_SIDE_ID || 'test-client-side-id',
