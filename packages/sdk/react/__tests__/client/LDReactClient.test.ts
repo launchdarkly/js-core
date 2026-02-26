@@ -19,8 +19,8 @@ afterAll(() => {
 
 // Build a minimal mock of the base LDClient returned by createBaseClient
 function makeMockBaseClient(overrides: Record<string, any> = {}) {
-  let resolveStart: (result: { status: 'completed' | 'failed' }) => void;
-  const startPromise = new Promise<{ status: 'completed' | 'failed' }>((resolve) => {
+  let resolveStart: (result: { status: 'complete' | 'failed' }) => void;
+  const startPromise = new Promise<{ status: 'complete' | 'failed' }>((resolve) => {
     resolveStart = resolve;
   });
 
@@ -52,14 +52,14 @@ function makeMockBaseClient(overrides: Record<string, any> = {}) {
     track: jest.fn(),
     variation: jest.fn(),
     variationDetail: jest.fn(),
-    waitForInitialization: jest.fn(() => Promise.resolve({ status: 'completed' as const })),
+    waitForInitialization: jest.fn(() => Promise.resolve({ status: 'complete' as const })),
     addHook: jest.fn(),
     ...overrides,
   };
 
   return {
     mock,
-    resolveStart: (status: 'completed' | 'failed' = 'completed') => resolveStart({ status }),
+    resolveStart: (status: 'complete' | 'failed' = 'complete') => resolveStart({ status }),
     setContext: (ctx: LDContextStrict) => {
       currentContext = ctx;
     },
@@ -91,21 +91,21 @@ it('returns "initializing" while start() is in-flight', async () => {
   const startPromise = client.start();
   expect(client.getInitializationState()).toBe('initializing');
 
-  resolveStart('completed');
+  resolveStart('complete');
   await startPromise;
-  expect(client.getInitializationState()).toBe('completed');
+  expect(client.getInitializationState()).toBe('complete');
 });
 
-it('sets initializedState to "completed" after start() resolves', async () => {
+it('sets initializedState to "complete" after start() resolves', async () => {
   const { mock, resolveStart } = makeMockBaseClient();
   (createBaseClient as jest.Mock).mockReturnValue(mock);
 
   const client = createClient('test-id', { kind: 'user', key: 'u1' });
   const startPromise = client.start();
-  resolveStart('completed');
+  resolveStart('complete');
   await startPromise;
 
-  expect(client.getInitializationState()).toBe('completed');
+  expect(client.getInitializationState()).toBe('complete');
 });
 
 it('invokes onContextChange callback after identify() resolves with the new context', async () => {
@@ -161,6 +161,21 @@ it('stops notifying after the unsubscribe function is called', async () => {
   setContext(newContext);
   resolveIdentify();
   await identifyPromise;
+
+  expect(received).toHaveLength(0);
+});
+
+it('does not invoke onContextChange when identify resolves with status error', async () => {
+  const errorResult = { status: 'error' as const, error: new Error('test') };
+  const { mock } = makeMockBaseClient();
+  (mock.identify as jest.Mock).mockResolvedValueOnce(errorResult);
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const received: LDContextStrict[] = [];
+  client.onContextChange((ctx) => received.push(ctx));
+
+  await client.identify({ kind: 'user', key: 'user-fail' });
 
   expect(received).toHaveLength(0);
 });

@@ -127,9 +127,11 @@ export function createClient(
     },
     identify: (...args) =>
       baseClient.identify(...args).then((result) => {
-        const newContext = baseClient.getContext();
-        if (newContext) {
-          subscribers.forEach((cb) => cb(newContext));
+        if (result.status === 'completed') {
+          const newContext = baseClient.getContext();
+          if (newContext) {
+            subscribers.forEach((cb) => cb(newContext));
+          }
         }
         return result;
       }),

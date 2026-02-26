@@ -3,8 +3,11 @@ import logo from './logo.svg';
 import './App.css';
 import { LDContext, LDContextStrict, LDReactClientContextValue, LDReactContext } from '@launchdarkly/react-sdk';
 
+// Set FLAG_KEY to the feature flag key you want to evaluate.
+const FLAG_KEY = 'sample-feature';
+
 const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
-  { kind: 'user', key: 'user-sandy', name: 'Sandy' },
+  { kind: 'user', key: 'example-user-key', name: 'Sandy' },
   { kind: 'user', key: 'user-jamie', name: 'Jamie' },
   { kind: 'user', key: 'user-alex', name: 'Alex' },
 ] as const;
@@ -12,17 +15,14 @@ const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
 function App() {
   // NOTE: we will change this later to use the useLDClient hook instead.
   const { client, context, initializedState } = useContext<LDReactClientContextValue>(LDReactContext);
-  const [flagKey, setFlagKey] = useState('sample-feature');
+  const [flagKey, setFlagKey] = useState(FLAG_KEY);
   const [inputValue, setInputValue] = useState(flagKey);
-  const [isOn, setIsOn] = useState(false);
+  const [flagValue, setFlagValue] = useState(false);
   const [identifyPending, setIdentifyPending] = useState(false);
-
-  console.log('Initialization state:', initializedState);
-  console.log('Current context:', context);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setFlagKey(inputValue.trim() || 'sample-feature');
+    setFlagKey(inputValue.trim() || FLAG_KEY);
   };
 
   const handleSelectContext = async (preset: LDContextStrict) => {
@@ -33,27 +33,32 @@ function App() {
 
   useEffect(() => {
     const changeHandler = (_context: LDContext) => {
-      const value = client.variation(flagKey, false)
-      setIsOn(value);
+      setFlagValue(client.variation(flagKey, false));
     };
     client.on(`change:${flagKey}`, changeHandler);
-    // NOTE: client.start() is no longer called here — the Provider handles it automatically.
+    setFlagValue(client.variation(flagKey, false));
     return () => {
       client.off(`change:${flagKey}`, changeHandler);
     };
   }, [flagKey, client]);
 
+  let statusMessage: string;
+  if (initializedState === 'complete') {
+    statusMessage = 'SDK successfully initialized!';
+  } else if (initializedState === 'failed') {
+    statusMessage = 'SDK failed to initialize. Please check your internet connection and SDK credential for any typo.';
+  } else {
+    statusMessage = 'Initializing…';
+  }
+
+  const headerBgColor = flagValue ? '#00844B' : '#373841';
 
   return (
     <div className="App">
-      <header className="App-header">
+      <header className="App-header" style={{ backgroundColor: headerBgColor }}>
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Status: <strong>{initializedState}</strong>
-        </p>
-        <p>
-          Context: <strong>{context ? JSON.stringify(context) : 'none'}</strong>
-        </p>
+        <p>{statusMessage}</p>
+        <p>{`The ${flagKey} feature flag evaluates to ${flagValue ? 'true' : 'false'}.`}</p>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -64,9 +69,6 @@ function App() {
           />
           <button type="submit">Update flag</button>
         </form>
-        <p>
-          <strong>{flagKey}</strong> is {isOn ? <b>on</b> : <b>off</b>}
-        </p>
         <div style={{ display: 'flex', gap: '8px' }}>
           {PRESET_CONTEXTS.map((preset) => {
             const isActive = context?.key === preset.key;
@@ -82,9 +84,6 @@ function App() {
             );
           })}
         </div>
-        <a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-          Learn React
-        </a>
       </header>
     </div>
   );

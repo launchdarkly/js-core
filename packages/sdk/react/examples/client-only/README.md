@@ -1,69 +1,49 @@
-# LaunchDarkly SDK for React - Example typescript app
+# LaunchDarkly React SDK — Hello LaunchDarkly
 
-This is an example application using React 18 to demonstrate a
-simple usage of the Launchdarkly React SDK.
+This is a minimal React application that demonstrates the LaunchDarkly React SDK. It evaluates a feature flag and displays the result, updating in real time without a browser refresh when the flag value changes.
 
-## Running the typescript example
+## Requirements
 
-Follow these steps to run the app:
+- Node.js (v18 or later)
+- yarn
 
-* Set your LaunchDarkly client-side ID via the `LD_CLIENT_SIDE_ID` environment variable when running start or build (e.g. `LD_CLIENT_SIDE_ID=xxx yarn start` or `LD_CLIENT_SIDE_ID=xxx yarn build`).
+## Setup
 
-* Create a flag called `dev-test-flag` in your project. Make sure you
-  make the flag available to the client-side SDK.
+1. **Set your LaunchDarkly client-side ID**
 
-* You should now be able to start the app by doing:
+   ```sh
+   export LAUNCHDARKLY_CLIENT_SIDE_ID=your-client-side-id-here
+   ```
 
-    ```sh
-    yarn && yarn start
-    ```
+   Or prefix the start command:
 
-* Toggle the killswitch for `dev-test-flag` in the dashboard and the
-  app should respond without a browser refresh.
+   ```sh
+   LAUNCHDARKLY_CLIENT_SIDE_ID=your-client-side-id-here yarn start
+   ```
 
-# Getting Started with Create React App
+2. **Create a feature flag**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+   In your LaunchDarkly project, create a boolean feature flag with the key `sample-feature`. Make sure **client-side SDK access** is enabled for this flag.
 
-## Available Scripts
+   To use a different flag key, update `FLAG_KEY` in `src/App.tsx`.
 
-In the project directory, you can run:
+3. **Install dependencies and start the app**
 
-### `npm start`
+   ```sh
+   yarn && yarn start
+   ```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## Expected output
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+Once the app loads, you should see:
 
-### `npm test`
+> SDK successfully initialized!
+> The sample-feature feature flag evaluates to false.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The header background will be **dark gray** (`#373841`) when the flag is `false` and **green** (`#00844B`) when it is `true`.
 
-### `npm run build`
+Toggle the flag in your LaunchDarkly dashboard and the UI will update automatically — no browser refresh required.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Context switching
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Use the **Sandy**, **Jamie**, and **Alex** buttons to switch between preset evaluation contexts. The app calls `identify()` and re-evaluates the flag for the selected context. The default context on first load is Sandy (`example-user-key`).

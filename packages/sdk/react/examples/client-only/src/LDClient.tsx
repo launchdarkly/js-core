@@ -1,18 +1,18 @@
 import { createClient, LDContext, createLDReactProvider, LDReactClientOptions } from '@launchdarkly/react-sdk';
-import { LD_CLIENT_SIDE_ID } from './ld-config';
+import { LAUNCHDARKLY_CLIENT_SIDE_ID } from './ld-config';
 
-
+// Set LAUNCHDARKLY_CLIENT_SIDE_ID to your LaunchDarkly client-side ID.
 const context: LDContext = {
+  // Set up the evaluation context. This context should appear on your LaunchDarkly contexts dashboard soon after you run the demo.
   kind: 'user',
-  name: 'sandy',
-  key: 'test-user-key',
+  key: 'example-user-key',
+  name: 'Sandy',
 };
 
 const options: LDReactClientOptions = {
-  // NOTE: I haven't rebased with the fix to this yet.
   streaming: true,
 };
 
-const client = createClient(LD_CLIENT_SIDE_ID, context, options);
+const client = createClient(LAUNCHDARKLY_CLIENT_SIDE_ID, context, options);
 
 export const LDReactProvider = createLDReactProvider(client);
