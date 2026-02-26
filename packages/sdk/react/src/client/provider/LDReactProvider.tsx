@@ -54,6 +54,7 @@ export function createLDReactProvider(
             ...prev,
             initializedState: result.status,
             context: client.getContext() ?? undefined,
+            error: result.status === 'failed' ? result.error : undefined,
           }));
         }
       });

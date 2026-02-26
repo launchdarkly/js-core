@@ -10,27 +10,18 @@
  *   </ClientShell>
  */
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+
+import { useFlag, useInitializationStatus } from '@launchdarkly/react-sdk';
 
 import ComponentBox from './component-box';
 import FlagBadge from './flag-badge';
-import ldClient from './lib/ld-client';
 
 const FLAG_KEY = 'sample-feature';
 
 export default function ClientShell({ children }: { children: ReactNode }) {
-  const [flagValue, setFlagValue] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const update = () => setFlagValue(!!ldClient.variation(FLAG_KEY, false));
-    ldClient.waitForInitialization().then(() => {
-      setReady(true);
-      update();
-    });
-    ldClient.on(`change:${FLAG_KEY}`, update);
-    return () => ldClient.off(`change:${FLAG_KEY}`, update);
-  }, []);
+  const flagValue = useFlag<boolean>(FLAG_KEY, false);
+  const { status } = useInitializationStatus();
+  const ready = status === 'complete';
 
   return (
     <ComponentBox

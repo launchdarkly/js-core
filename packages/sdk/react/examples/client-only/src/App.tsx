@@ -1,7 +1,9 @@
-import React, { useState, FormEvent, useContext, useEffect } from 'react';
+import React, { useState, FormEvent, useContext } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { LDContext, LDContextStrict, LDReactClientContextValue, LDReactContext } from '@launchdarkly/react-sdk';
+import { LDContextStrict, LDReactContext, useFlag, useLDClient, useInitializationStatus } from '@launchdarkly/react-sdk';
+
+// TODO: color no longer changes... sad
 
 const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
   { kind: 'user', key: 'user-sandy', name: 'Sandy' },
@@ -10,12 +12,13 @@ const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
 ] as const;
 
 function App() {
-  // NOTE: we will change this later to use the useLDClient hook instead.
-  const { client, context, initializedState } = useContext<LDReactClientContextValue>(LDReactContext);
+  const client = useLDClient();
+  const { context } = useContext(LDReactContext);
+  const { status: initializedState } = useInitializationStatus();
   const [flagKey, setFlagKey] = useState('sample-feature');
   const [inputValue, setInputValue] = useState(flagKey);
-  const [isOn, setIsOn] = useState(false);
   const [identifyPending, setIdentifyPending] = useState(false);
+  const isOn = useFlag<boolean>(flagKey, false);
 
   console.log('Initialization state:', initializedState);
   console.log('Current context:', context);
@@ -30,18 +33,6 @@ function App() {
     await client.identify(preset);
     setIdentifyPending(false);
   };
-
-  useEffect(() => {
-    const changeHandler = (_context: LDContext) => {
-      const value = client.variation(flagKey, false)
-      setIsOn(value);
-    };
-    client.on(`change:${flagKey}`, changeHandler);
-    // NOTE: client.start() is no longer called here — the Provider handles it automatically.
-    return () => {
-      client.off(`change:${flagKey}`, changeHandler);
-    };
-  }, [flagKey, client]);
 
 
   return (

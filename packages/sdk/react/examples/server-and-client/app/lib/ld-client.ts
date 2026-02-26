@@ -17,6 +17,4 @@ const ldClient = createClient(
   },
 );
 
-ldClient.start();
-
 export default ldClient;
