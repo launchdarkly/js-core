@@ -15,8 +15,6 @@ export interface AsyncQueue<T> {
   put(item: T): void;
   /** Dequeue the next item, or wait for one if the queue is empty. */
   take(): Promise<T>;
-  /** Discard all buffered items. Pending {@link take} calls are NOT resolved. */
-  clear(): void;
 }
 
 /**
@@ -45,10 +43,6 @@ export function createAsyncQueue<T>(): AsyncQueue<T> {
       return new Promise<T>((resolve) => {
         waiters.push(resolve);
       });
-    },
-
-    clear(): void {
-      items.length = 0;
     },
   };
 }

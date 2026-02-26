@@ -109,29 +109,6 @@ it('preserves FIFO order across interleaved put and take operations', async () =
   expect(await queue.take()).toBe('e');
 });
 
-it('discards buffered items on clear and accepts new puts', async () => {
-  const queue = createAsyncQueue<number>();
-
-  queue.put(1);
-  queue.put(2);
-  queue.put(3);
-
-  queue.clear();
-
-  // The buffered items should be gone — take should now wait
-  let resolved = false;
-  const promise = queue.take();
-  promise.then(() => {
-    resolved = true;
-  });
-  await Promise.resolve();
-  expect(resolved).toBe(false);
-
-  // New put should resolve the waiting take
-  queue.put(4);
-  expect(await promise).toBe(4);
-});
-
 it('supports undefined values in buffered items', async () => {
   const queue = createAsyncQueue<string | undefined>();
 
