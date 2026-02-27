@@ -35,7 +35,7 @@ export default class NodeStorage implements Storage {
 
   private async _initialize(): Promise<boolean> {
     try {
-      await fs.mkdir(this._storageDir, { recursive: true });
+      await this._ensureStorageDir();
 
       try {
         await fs.unlink(this._tempFile);
@@ -65,6 +65,26 @@ export default class NodeStorage implements Storage {
     } catch (error) {
       this._initError = error instanceof Error ? error : new Error(String(error));
       return false;
+    }
+  }
+
+  // A pre-existing installation may have written a plain file at this exact path (older SDK
+  // versions used the same location for a single-file cache). mkdir then fails with EEXIST
+  // because the path exists but is not a directory. Discard that stale file and retry once,
+  // consistent with this class's approach of discarding corrupt/unexpected on-disk state.
+  private async _ensureStorageDir(): Promise<void> {
+    try {
+      await fs.mkdir(this._storageDir, { recursive: true });
+    } catch (error) {
+      const stat = await fs.stat(this._storageDir).catch(() => undefined);
+      if ((error as NodeJS.ErrnoException)?.code !== 'EEXIST' || !stat || stat.isDirectory()) {
+        throw error;
+      }
+      this._logger?.warn(
+        `A file already exists at the storage directory path ${this._storageDir}; replacing it with a directory.`,
+      );
+      await fs.unlink(this._storageDir);
+      await fs.mkdir(this._storageDir, { recursive: true });
     }
   }
 

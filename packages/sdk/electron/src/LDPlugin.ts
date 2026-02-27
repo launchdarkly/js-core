@@ -1,6 +1,6 @@
-import { Hook, LDPluginBase } from '@launchdarkly/js-client-sdk-common';
+import type { Hook, LDPluginBase } from '@launchdarkly/node-client-sdk';
 
-import { LDClient } from './LDClient';
+import type { LDClient } from './LDClient';
 
 /**
  * Interface for plugins to the LaunchDarkly SDK.

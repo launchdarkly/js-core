@@ -51,9 +51,7 @@
     "electron": ">=34.5.6"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^",
-    "https-proxy-agent": "^7.0.6",
-    "launchdarkly-eventsource": "2.2.0"
+    "@launchdarkly/node-client-sdk": "0.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

@@ -1,159 +1,116 @@
-import { ElectronOptions } from '../src/ElectronOptions';
-import validateOptions, { filterToBaseOptions } from '../src/options';
+import { validateAndMapOptions } from '../src/options';
 import { createMockLogger } from './testHelpers';
 
-it('logs no warnings when all configuration is valid', () => {
+it('logs no warnings when all electron-only configuration is valid', () => {
   const logger = createMockLogger();
 
-  validateOptions(
+  validateAndMapOptions(
     {
-      proxyOptions: {},
       tlsParams: {},
       enableEventCompression: true,
       initialConnectionMode: 'streaming',
       enableIPC: true,
       plugins: [],
       namespace: 'test-ns',
+      useClientSideId: true,
     },
     logger,
   );
 
-  expect(logger.debug).not.toHaveBeenCalled();
-  expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).not.toHaveBeenCalled();
   expect(logger.error).not.toHaveBeenCalled();
 });
 
-it('warns for invalid configuration', () => {
+it('applies electron defaults and maps to mobile key by default', () => {
   const logger = createMockLogger();
+  const { nodeOptions, electron } = validateAndMapOptions({}, logger);
 
-  validateOptions(
-    {
-      // @ts-ignore
-      proxyOptions: false,
-      // @ts-ignore
-      tlsParams: true,
-      // @ts-ignore
-      enableEventCompression: 'toast',
-      // @ts-ignore
-      initialConnectionMode: 42,
-      // @ts-ignore
-      plugins: 'potato',
-      // @ts-ignore
-      enableIPC: {},
-    },
+  expect(electron.enableIPC).toBe(true);
+  expect(electron.namespace).toBeUndefined();
+  // Default useClientSideId is false -> useMobileKey true.
+  expect(nodeOptions.useMobileKey).toBe(true);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('maps useClientSideId=true to useMobileKey=false', () => {
+  const logger = createMockLogger();
+  const { nodeOptions } = validateAndMapOptions({ useClientSideId: true }, logger);
+  expect(nodeOptions.useMobileKey).toBe(false);
+});
+
+it('strips electron-only keys from the node options it produces', () => {
+  const logger = createMockLogger();
+  const { nodeOptions } = validateAndMapOptions(
+    { enableIPC: false, useClientSideId: true, namespace: 'ns' },
     logger,
   );
+  expect((nodeOptions as any).enableIPC).toBeUndefined();
+  expect((nodeOptions as any).useClientSideId).toBeUndefined();
+  expect((nodeOptions as any).namespace).toBeUndefined();
+});
 
-  expect(logger.warn).toHaveBeenCalledTimes(6);
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "proxyOptions" should be of type object, got boolean, using default value',
+it('passes through node-facing options unchanged', () => {
+  const logger = createMockLogger();
+  const { nodeOptions } = validateAndMapOptions(
+    { tlsParams: { rejectUnauthorized: true }, initialConnectionMode: 'polling', debug: true },
+    logger,
   );
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "tlsParams" should be of type object, got boolean, using default value',
-  );
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "enableEventCompression" should be of type boolean, got string, using default value',
-  );
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "initialConnectionMode" should be of type ConnectionMode (offline | streaming | polling), got number, using default value',
-  );
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "plugins" should be of type LDPlugin[], got string, using default value',
-  );
+  expect(nodeOptions.tlsParams).toEqual({ rejectUnauthorized: true });
+  expect(nodeOptions.initialConnectionMode).toBe('polling');
+  expect((nodeOptions as any).debug).toBe(true);
+});
+
+it('applies namespace when set', () => {
+  const logger = createMockLogger();
+  const { electron } = validateAndMapOptions({ namespace: 'my-ns' }, logger);
+  expect(electron.namespace).toBe('my-ns');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('warns and falls back for invalid enableIPC type', () => {
+  const logger = createMockLogger();
+  // @ts-ignore intentionally invalid
+  const { electron } = validateAndMapOptions({ enableIPC: {} }, logger);
+  expect(electron.enableIPC).toBe(true);
   expect(logger.warn).toHaveBeenCalledWith(
     'Config option "enableIPC" should be of type boolean, got object, using default value',
   );
 });
 
-it('applies default options', () => {
+it('warns and falls back for invalid useClientSideId type', () => {
   const logger = createMockLogger();
-  const opts = validateOptions({}, logger);
-
-  expect(opts.proxyOptions).toBeUndefined();
-  expect(opts.tlsParams).toBeUndefined();
-  expect(opts.enableEventCompression).toBeUndefined();
-  expect(opts.initialConnectionMode).toEqual('streaming');
-  expect(opts.plugins).toEqual([]);
-  expect(opts.enableIPC).toEqual(true);
-  expect(opts.useClientSideId).toEqual(false);
-  expect(opts.namespace).toBeUndefined();
-
-  expect(logger.debug).not.toHaveBeenCalled();
-  expect(logger.info).not.toHaveBeenCalled();
-  expect(logger.warn).not.toHaveBeenCalled();
-  expect(logger.error).not.toHaveBeenCalled();
-});
-
-it('applies namespace when set', () => {
-  const logger = createMockLogger();
-  const opts = validateOptions({ namespace: 'my-ns' }, logger);
-
-  expect(opts.namespace).toEqual('my-ns');
-  expect(logger.warn).not.toHaveBeenCalled();
-});
-
-it('warns for invalid namespace type', () => {
-  const logger = createMockLogger();
-
-  validateOptions(
-    {
-      // @ts-ignore
-      namespace: 42,
-    },
-    logger,
-  );
-
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "namespace" should be of type string, got number, using default value',
-  );
-});
-
-it('applies useClientSideId when set to true', () => {
-  const logger = createMockLogger();
-  const opts = validateOptions({ useClientSideId: true }, logger);
-
-  expect(opts.useClientSideId).toEqual(true);
-});
-
-it('warns for invalid useClientSideId type', () => {
-  const logger = createMockLogger();
-
-  validateOptions(
-    {
-      // @ts-ignore
-      useClientSideId: 'true',
-    },
-    logger,
-  );
-
+  // @ts-ignore intentionally invalid
+  const { nodeOptions } = validateAndMapOptions({ useClientSideId: 'true' }, logger);
+  // Falls back to default false -> useMobileKey true.
+  expect(nodeOptions.useMobileKey).toBe(true);
   expect(logger.warn).toHaveBeenCalledWith(
     'Config option "useClientSideId" should be of type boolean, got string, using default value',
   );
 });
 
-it('filters to base options', () => {
+it('warns and falls back for invalid namespace type', () => {
   const logger = createMockLogger();
+  // @ts-ignore intentionally invalid
+  const { electron } = validateAndMapOptions({ namespace: 42 }, logger);
+  expect(electron.namespace).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "namespace" should be of type string, got number, using default value',
+  );
+});
 
-  const opts: ElectronOptions = {
-    debug: false,
-    proxyOptions: {},
-    tlsParams: {},
-    enableEventCompression: true,
-    initialConnectionMode: 'streaming',
-    enableIPC: true,
-    plugins: [],
-    useClientSideId: true,
-    namespace: 'test-ns',
-  };
+it('defaults wrapperName and wrapperVersion when not provided', () => {
+  const logger = createMockLogger();
+  const { nodeOptions } = validateAndMapOptions({}, logger);
+  expect(nodeOptions.wrapperName).toBe('@launchdarkly/electron-client-sdk');
+  expect(nodeOptions.wrapperVersion).toBe('0.0.1');
+});
 
-  const baseOpts = filterToBaseOptions(opts);
-  expect(baseOpts.debug).toBe(false);
-  expect(Object.keys(baseOpts).length).toEqual(1);
-  expect((baseOpts as any).useClientSideId).toBeUndefined();
-
-  expect(logger.debug).not.toHaveBeenCalled();
-  expect(logger.info).not.toHaveBeenCalled();
-  expect(logger.warn).not.toHaveBeenCalled();
-  expect(logger.error).not.toHaveBeenCalled();
+it('does not override an explicitly provided wrapperName/wrapperVersion', () => {
+  const logger = createMockLogger();
+  const { nodeOptions } = validateAndMapOptions(
+    { wrapperName: 'my-wrapper', wrapperVersion: '9.9.9' },
+    logger,
+  );
+  expect(nodeOptions.wrapperName).toBe('my-wrapper');
+  expect(nodeOptions.wrapperVersion).toBe('9.9.9');
 });

@@ -1,7 +1,5 @@
 import type { MessagePortMain } from 'electron';
 
-import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
-
 /**
  * Synchronous IPC channel names and helpers for type-safe main/renderer communication.
  */
@@ -77,7 +75,7 @@ export interface IpcEventSubscription {
 
 export interface IpcEventCallback {
   callbackId: string;
-  eventName: LDEmitterEventName;
+  eventName: string;
 }
 
 /**

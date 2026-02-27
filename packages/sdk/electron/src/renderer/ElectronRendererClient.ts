@@ -1,5 +1,4 @@
 import type {
-  ConnectionMode,
   LDContext,
   LDContextStrict,
   LDEvaluationDetail,
@@ -10,8 +9,9 @@ import type {
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
-} from '@launchdarkly/js-client-sdk-common';
+} from '@launchdarkly/node-client-sdk';
 
+import type { ConnectionMode } from '../LDCommon';
 import type { LDClientBridge } from '../bridge/LDClientBridge';
 import { deriveNamespace } from '../ElectronIPC';
 import type { LDRendererClient } from './LDRendererClient';

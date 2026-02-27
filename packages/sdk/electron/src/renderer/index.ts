@@ -1,15 +1,16 @@
 import { ElectronRendererClient } from './ElectronRendererClient';
 import type { LDRendererClient } from './LDRendererClient';
 
+export type { ConnectionMode } from '../LDCommon';
+
 export type {
-  ConnectionMode,
   LDContext,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
   LDIdentifyOptions,
-} from '@launchdarkly/js-client-sdk-common';
+} from '@launchdarkly/node-client-sdk';
 
 export type { LDRendererClient };
 

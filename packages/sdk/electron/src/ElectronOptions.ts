@@ -1,98 +1,16 @@
-import { ConnectionMode, LDOptions as LDOptionsBase } from '@launchdarkly/js-client-sdk-common';
+import type { LDOptions as NodeOptions } from '@launchdarkly/node-client-sdk';
 
 import type { LDPlugin } from './LDPlugin';
 
 /**
- * Options for configuring the HTTP proxy.
+ * Configuration options for the Electron main-process LaunchDarkly client.
  *
- * @privateRemarks
- * This is a copy of the LDProxyOptions interface from the js-server-sdk-common package.
- * We may want to create the proxy options in the shared client package for mobile/desktop
- * platforms.
+ * Inherits the full option surface of `@launchdarkly/node-client-sdk` (including `tlsParams`,
+ * `enableEventCompression`, `initialConnectionMode`, `hash`, `storage`, and `localStoragePath`),
+ * except `useMobileKey` (derived from {@link ElectronOptions.useClientSideId}) and `plugins`
+ * (re-declared below with the Electron plugin type).
  */
-export interface LDProxyOptions {
-  /**
-   * Allows you to specify a host for an optional HTTP proxy.
-   */
-  host?: string;
-
-  /**
-   * Allows you to specify a port for an optional HTTP proxy.
-   *
-   * Both the host and port must be specified to enable proxy support.
-   */
-  port?: number;
-
-  /**
-   * When using an HTTP proxy, specifies whether it is accessed via `http` or `https`.
-   */
-  scheme?: string;
-
-  /**
-   * Allows you to specify basic authentication parameters for an optional HTTP proxy.
-   * Usually of the form `username:password`.
-   */
-  auth?: string;
-}
-
-/**
- * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
- * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
- *
- * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
- *
- * @privateRemarks
- * This is a copy of the LDTLSOptions interface from the js-server-sdk-common package.
- * We may want to create the TLS options in the shared client package for mobile/desktop
- * platforms.
- */
-export interface LDTLSOptions {
-  ca?: string | string[] | Buffer | Buffer[];
-  cert?: string | string[] | Buffer | Buffer[];
-  checkServerIdentity?: (servername: string, cert: any) => Error | undefined;
-  ciphers?: string;
-  pfx?: string | string[] | Buffer | Buffer[] | object[];
-  key?: string | string[] | Buffer | Buffer[] | object[];
-  passphrase?: string;
-  rejectUnauthorized?: boolean;
-  secureProtocol?: string;
-  servername?: string;
-}
-
-export interface ElectronOptions extends LDOptionsBase {
-  /**
-   * Allows you to specify configuration for an optional HTTP proxy.
-   */
-  proxyOptions?: LDProxyOptions;
-
-  /**
-   * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
-   * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
-   *
-   * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
-   */
-  tlsParams?: LDTLSOptions;
-
-  /**
-   * Set to true to opt in to compressing event payloads if the SDK supports it, since the
-   * compression library may not be supported in the underlying SDK framework.  If the compression
-   * library is not supported then event payloads will not be compressed even if this option
-   * is enabled.
-   *
-   * Defaults to false.
-   */
-  enableEventCompression?: boolean;
-
-  /**
-   * Sets the mode to use for connections when the SDK is initialized.
-   *
-   * @remarks
-   * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
-   *
-   * Defaults to streaming.
-   */
-  initialConnectionMode?: ConnectionMode;
-
+export interface ElectronOptions extends Omit<NodeOptions, 'useMobileKey' | 'plugins'> {
   /**
    * A list of plugins to be used with the SDK.
    *
@@ -101,27 +19,27 @@ export interface ElectronOptions extends LDOptionsBase {
   plugins?: LDPlugin[];
 
   /**
-   * When true (the default), registers the Electron IpcMain event handlers so a
-   * LaunchDarkly client in renderer processes can communicate with the main process.
+   * When true, registers the Electron IpcMain event handlers so a LaunchDarkly client in
+   * renderer processes can communicate with the main process.
    *
-   * Defaults to true.
+   * @default true
    */
   enableIPC?: boolean;
 
   /**
-   * Will use the client side id as the sdk key instead of the mobile key
-   * this is here to support legacy usage of the sdk.
+   * Will use the client-side ID as the SDK key instead of the mobile key. This is here to
+   * support legacy usage of the SDK.
    *
    * @default false
    *
-   * @deprecated using client side id as the sdk key is deprecated and will be removed
-   * in future versions of this sdk. Please use mobile key instead.
+   * @deprecated Using the client-side ID as the SDK key is deprecated and will be removed in a
+   * future version of this SDK. Please use a mobile key instead.
    */
   useClientSideId?: boolean;
 
   /**
-   * An optional namespace to isolate this client's IPC channels
-   * from other clients using the same credential in the same process.
+   * An optional namespace to isolate this client's IPC channels from other clients using the
+   * same credential in the same process.
    */
   namespace?: string;
 }

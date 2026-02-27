@@ -1,15 +1,7 @@
-import { app } from 'electron';
 import fs from 'node:fs';
-import path from 'node:path';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {
-  createClient,
-  LDClient,
-  LDLogger,
-  LDOptions,
-  resetElectronStorage,
-} from '@launchdarkly/electron-client-sdk';
+import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/electron-client-sdk';
 import {
   CommandParams,
   CommandType,
@@ -53,9 +45,8 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     }
   }
 
-  // Can contain streaming and polling, if streaming is set override the initial connection
-  // mode. This can be removed when we add JS specific initialization that uses polling
-  // and then streaming.
+  // Config can specify both streaming and polling; streaming wins for the initial mode. Drop
+  // this once we add JS-specific initialization that starts on polling and upgrades to streaming.
   if (options.streaming) {
     if (options.streaming.baseUri) {
       cf.streamUri = options.streaming.baseUri;
@@ -116,6 +107,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   //   }
   // }
 
+  // Multiple test entities can share the same clientSideId (the harness falls back to
+  // 'unknown-env-id' when none is given), and IPC channel names are keyed by credential. Enabling
+  // IPC here would throw trying to register a second listener on the same channel.
   cf.enableIPC = false;
 
   // TODO: we might need this
@@ -132,21 +126,11 @@ export class ClientEntity {
   constructor(
     private readonly _client: LDClient,
     private readonly _logger: LDLogger,
-    private readonly _storagePath: string,
   ) {}
 
   async close() {
     try {
       await this._client.close();
-      if (fs.existsSync(this._storagePath)) {
-        fs.rmSync(this._storagePath, { recursive: true });
-      }
-      if (fs.existsSync(`${this._storagePath}.tmp`)) {
-        fs.rmSync(`${this._storagePath}.tmp`, { recursive: true });
-      }
-      // Reset the singleton so the next client gets a fresh storage instance
-      // that reads from disk instead of returning stale in-memory data.
-      resetElectronStorage();
       this._logger.info('Test ended');
     } catch (error) {
       this._logger.error(`Error closing client: ${error}`);
@@ -260,8 +244,6 @@ export async function createEntity(options: CreateInstanceParams) {
   const clientSideId = options.configuration.credential || 'unknown-env-id';
   logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
 
-  const storagePath = path.join(app.getPath('userData'), 'ldcache');
-
   const timeoutMs =
     options.configuration.startWaitTimeMs !== null &&
     options.configuration.startWaitTimeMs !== undefined
@@ -280,5 +262,5 @@ export async function createEntity(options: CreateInstanceParams) {
     throw new Error('client initialization failed');
   }
 
-  return new ClientEntity(client, logger, storagePath);
+  return new ClientEntity(client, logger);
 }

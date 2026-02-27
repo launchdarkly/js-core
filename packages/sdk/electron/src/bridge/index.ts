@@ -1,7 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type {
-  ConnectionMode,
   LDContext,
   LDContextStrict,
   LDEvaluationDetail,
@@ -12,15 +11,15 @@ import type {
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
-} from '@launchdarkly/js-client-sdk-common';
+} from '@launchdarkly/node-client-sdk';
 
+import type { ConnectionMode } from '../LDCommon';
 import type { IPCChannel } from '../ElectronIPC';
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 
-// NOTE: This is a simple way to generate a unique ID for a callback. We should also
-// consider using the platform crypto to generate a unique ID (which would increase the
-// footprint of the bridge module).
+// NOTE: this is a good-enough callback ID generator. Platform crypto would be more robust, but
+// pulling it in would grow the bridge module's footprint.
 const generateCallbackId = () =>
   `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
 
@@ -52,7 +51,7 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
   boolVariationDetail: (key: string, defaultValue: boolean): LDEvaluationDetailTyped<boolean> =>
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'boolVariationDetail'), key, defaultValue),
 
-  // Flush is exposed so the renderer can request a flush; the main process performs the actual flush.
+  // The renderer only requests a flush here; the main process client performs it.
   flush: (): Promise<{ error?: Error; result: boolean }> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'flush')),
 
@@ -125,7 +124,6 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     callback: (...args: any[]) => void,
     onClose?: () => void,
   ): string => {
-    // Creates an ID for the callback so we can keep track of it.
     const callbackId = generateCallbackId();
     const { port1, port2 } = new MessageChannel();
     ipcRenderer.postMessage(

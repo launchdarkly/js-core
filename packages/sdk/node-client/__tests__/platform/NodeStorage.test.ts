@@ -129,12 +129,51 @@ it('does not follow a symlink planted at the temp file path', async () => {
   await expect(storage.get('alpha')).resolves.toBe('one');
 });
 
-it('logs and returns sentinel values when initialization fails', async () => {
-  const filePath = path.join(tmpRoot, 'not-a-dir');
-  await fs.writeFile(filePath, 'sentinel', 'utf8');
+it('self-heals when a file already exists at the storage directory path', async () => {
+  // A prior SDK version may have written a single-file cache at exactly this path.
+  const storagePath = path.join(tmpRoot, 'ldcache');
+  await fs.writeFile(storagePath, 'legacy single-file cache', 'utf8');
 
   const logger = createMockLogger();
-  const storage = new NodeStorage(filePath, logger);
+  const storage = new NodeStorage(storagePath, logger);
+
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+  expect(logger.error).not.toHaveBeenCalled();
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('A file already exists at the storage directory path'),
+  );
+  expect((await fs.stat(storagePath)).isDirectory()).toBe(true);
+});
+
+it('does not re-migrate or lose data on a later restart against an already-migrated directory', async () => {
+  const storagePath = path.join(tmpRoot, 'ldcache');
+  await fs.writeFile(storagePath, 'legacy single-file cache', 'utf8');
+
+  // First construction performs the one-time file-to-directory migration.
+  const first = new NodeStorage(storagePath, createMockLogger());
+  await first.set('alpha', 'one');
+
+  // A restart constructs a brand new instance (a real app restart gets a fresh process and a
+  // fresh singleton) against the now-existing directory. This must not warn, unlink, or lose
+  // the value written above.
+  const restartLogger = createMockLogger();
+  const second = new NodeStorage(storagePath, restartLogger);
+  await expect(second.get('alpha')).resolves.toBe('one');
+  expect(restartLogger.warn).not.toHaveBeenCalled();
+  expect(restartLogger.error).not.toHaveBeenCalled();
+});
+
+it('logs and returns sentinel values when initialization fails', async () => {
+  // An intermediate path segment that is a file (rather than the storage directory itself)
+  // is not a recoverable collision -- mkdir cannot traverse through it, so this must still
+  // surface as a genuine, permanent initialization failure.
+  const fileInThePath = path.join(tmpRoot, 'not-a-dir');
+  await fs.writeFile(fileInThePath, 'sentinel', 'utf8');
+  const storagePath = path.join(fileInThePath, 'subdir');
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(storagePath, logger);
 
   await expect(storage.get('alpha')).resolves.toBeNull();
   await expect(storage.set('alpha', 'one')).resolves.toBeUndefined();

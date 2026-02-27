@@ -4,5 +4,5 @@
   "testEnvironment": "node",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "collectCoverageFrom": ["src/**/*.ts"],
-  "testPathIgnorePatterns": ["node_modules", "example", "dist"]
+  "testPathIgnorePatterns": ["node_modules", "examples", "dist"]
 }
