@@ -1,7 +1,7 @@
 {
-  "name": "@launchdarkly/server-sdk-ai-judge",
+  "name": "@launchdarkly/server-sdk-ai-direct-judge",
   "version": "1.0.0",
-  "description": "Example demonstrating LaunchDarkly AI SDK judge functionality for evaluating AI responses",
+  "description": "Example demonstrating LaunchDarkly AI SDK direct judge functionality for evaluating arbitrary input and output",
   "type": "module",
   "scripts": {
     "build": "tsc",

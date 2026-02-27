@@ -9,7 +9,6 @@ dotenv.config({ override: true });
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
-const judgeKey = process.env.LAUNCHDARKLY_JUDGE_KEY || 'ld-ai-judge-accuracy';
 
 // Validate required environment variables
 if (!sdkKey) {
@@ -40,7 +39,6 @@ async function main() {
   const aiClient = initAi(ldClient);
 
   try {
-    // Example using the chat functionality which automates the judge evaluation
     const defaultValue = {
       enabled: false,
     };
@@ -54,42 +52,20 @@ async function main() {
       process.exit(0);
     }
 
-    console.log('\n*** Starting chat:');
+    console.log('\n*** Starting chat with automatic judge evaluation:');
     const userInput = 'How can LaunchDarkly help me?';
     console.log('User Input:', userInput);
 
-    // The invoke method will automatically evaluate the chat response with any judges defined in the AI config
+    // The invoke method will automatically evaluate the chat response with any judges defined
+    // in the AI config.
     const chatResponse = await chat.invoke(userInput);
     console.log('Chat Response:', chatResponse.message.content);
 
-    // Log judge evaluation results with full detail
+    // Judge evaluations run asynchronously and do not block your application.
+    // Results are automatically sent to LaunchDarkly for AI config metrics.
+    // You only need to await if you want to access the evaluation results in your code.
     const evalResults = await chatResponse.evaluations;
     console.log('Judge results:', JSON.stringify(evalResults, null, 2));
-
-    // Example of using the judge functionality with direct input and output
-    // Get AI judge configuration from LaunchDarkly
-    const judge = await aiClient.createJudge(judgeKey, context, { enabled: false });
-
-    if (!judge) {
-      console.log('*** AI judge configuration is not enabled');
-      process.exit(0);
-    }
-
-    console.log('\n*** Starting judge evaluation of direct input and output:');
-    const input = 'You are a helpful assistant for the company LaunchDarkly. How can you help me?';
-    const output =
-      'I can answer any question you have except for questions about the company LaunchDarkly.';
-
-    console.log('Input:', input);
-    console.log('Output:', output);
-
-    const judgeResponse = await judge.evaluate(input, output);
-
-    // Track the judge evaluation scores on the tracker for the aiConfig you are evaluating
-    // Example:
-    // aiConfig.tracker.trackEvalScores(judgeResponse?.evals);
-
-    console.log('Judge Response:', judgeResponse);
 
     console.log('Success.');
   } catch (err) {
