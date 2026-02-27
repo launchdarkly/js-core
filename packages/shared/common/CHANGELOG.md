@@ -2,6 +2,14 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.23.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.22.0...js-sdk-common-v2.23.0) (2026-02-27)
+
+
+### Features
+
+* Add isNullish utility to validators. ([#1137](https://github.com/launchdarkly/js-core/issues/1137)) ([0064365](https://github.com/launchdarkly/js-core/commit/0064365ba575e743c90370a9a48e56e0f232b973))
+* Add oneOf validator to common validators. ([#1139](https://github.com/launchdarkly/js-core/issues/1139)) ([606fcf1](https://github.com/launchdarkly/js-core/commit/606fcf1919df8ad2aad35773c53df96a750a6c7d))
+
 ## [2.22.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.21.0...js-sdk-common-v2.22.0) (2026-02-25)
 
 

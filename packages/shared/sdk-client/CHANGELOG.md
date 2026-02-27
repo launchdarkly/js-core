@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.21.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.20.0...js-client-sdk-common-v1.21.0) (2026-02-27)
+
+
+### Features
+
+* Add FDv2 polling initializer/synchronizer ([#1130](https://github.com/launchdarkly/js-core/issues/1130)) ([6777fc6](https://github.com/launchdarkly/js-core/commit/6777fc6f7b501dd0547f6eb7cd8e0f26c72aad9d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.22.0 to 2.23.0
+
 ## [1.20.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.19.1...js-client-sdk-common-v1.20.0) (2026-02-25)
 
 
