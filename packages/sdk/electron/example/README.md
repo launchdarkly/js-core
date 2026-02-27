@@ -13,13 +13,9 @@ This example was scaffolded with [Electron Forge](https://www.electronforge.io/)
 
 ## Build instructions
 
-1. Set the value of the `mobileKey` variable in `src/main.ts` to your mobile key:
-   ```typescript
-   const mobileKey = 'mob-your-mobile-key-here';
-   ```
-   Alternatively, set the `LAUNCHDARKLY_MOBILE_KEY` environment variable.
+1. Set the `LAUNCHDARKLY_MOBILE_KEY` environment variable to your LaunchDarkly mobile key.
 
-2. If there is an existing boolean feature flag in your LaunchDarkly project you want to use, set the `flagKey` variable in `src/main.ts` to that flag's key. Alternatively, set the `LAUNCHDARKLY_FLAG_KEY` environment variable. If there is not an existing flag you can use, create a new boolean flag in your project and use that flag's key.
+2. If there is an existing boolean feature flag in your LaunchDarkly project you want to use, set the `LAUNCHDARKLY_FLAG_KEY` environment variable to that flag's key. If there is not an existing flag you can use, create a new boolean flag in your project and use that flag's key.
 
 3. Run the app from the repository root:
    ```bash

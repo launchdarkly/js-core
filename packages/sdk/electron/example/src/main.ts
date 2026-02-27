@@ -4,7 +4,7 @@ import started from 'electron-squirrel-startup';
 import path from 'node:path';
 
 import { createClient } from '@launchdarkly/electron-client-sdk';
-import type { LDContextStrict, LDOptions } from '@launchdarkly/electron-client-sdk';
+import type { LDContext, LDOptions } from '@launchdarkly/electron-client-sdk';
 
 app.disableHardwareAcceleration();
 
@@ -13,11 +13,9 @@ if (started) {
   app.quit();
 }
 
-// Set mobileKey to your LaunchDarkly mobile key, or set the LAUNCHDARKLY_MOBILE_KEY
-// environment variable before running the app.
-const mobileKey = '';
-
-const launchDarklyMobileKey = mobileKey || process.env.LAUNCHDARKLY_MOBILE_KEY || '';
+// Set the LAUNCHDARKLY_MOBILE_KEY environment variable to your LaunchDarkly mobile key
+// before running the app.
+const launchDarklyMobileKey = process.env.LAUNCHDARKLY_MOBILE_KEY || '';
 if (!launchDarklyMobileKey) {
   // eslint-disable-next-line no-console
   console.error(
@@ -28,7 +26,7 @@ if (!launchDarklyMobileKey) {
 
 const flagKey = process.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
 
-const launchDarklyUser: LDContextStrict = {
+const launchDarklyUser: LDContext = {
   kind: 'user',
   key: 'example-user-key',
   name: 'Sandy',
@@ -67,7 +65,18 @@ app.on('ready', async () => {
     launchDarklyUser,
     launchDarklyOptions,
   );
-  await launchDarklyMainProcessClient.start();
+  const { status } = await launchDarklyMainProcessClient.start();
+
+  if (status === 'failed') {
+    // eslint-disable-next-line no-console
+    console.error('Failed to start LaunchDarkly client');
+  } else if (status === 'timeout') {
+    // eslint-disable-next-line no-console
+    console.error('Timeout starting LaunchDarkly client');
+  } else if (status === 'complete') {
+    // eslint-disable-next-line no-console
+    console.log('LaunchDarkly client started successfully');
+  }
 
   const flagValue = launchDarklyMainProcessClient.variation(flagKey, false);
   // eslint-disable-next-line no-console
@@ -78,17 +87,14 @@ app.on('ready', async () => {
     return;
   }
 
-  launchDarklyMainProcessClient.on(
-    'change',
-    (context: LDContextStrict, changedFlagKeys: string[]) => {
-      // eslint-disable-next-line no-console
-      console.log('change event received');
-      // eslint-disable-next-line no-console
-      console.log('context', context);
-      // eslint-disable-next-line no-console
-      console.log('changedFlagKeys', changedFlagKeys);
-    },
-  );
+  launchDarklyMainProcessClient.on('change', (context: LDContext, changedFlagKeys: string[]) => {
+    // eslint-disable-next-line no-console
+    console.log('change event received');
+    // eslint-disable-next-line no-console
+    console.log('context', context);
+    // eslint-disable-next-line no-console
+    console.log('changedFlagKeys', changedFlagKeys);
+  });
 
   launchDarklyMainProcessClient.on('error', (error: Error) => {
     // eslint-disable-next-line no-console
