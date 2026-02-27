@@ -173,7 +173,7 @@ describe('given entries with invalid type field', () => {
     );
 
     expect(result?.initializers).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown value "cace"'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got cace'));
   });
 
   it('discards an entry where type is a number', () => {
@@ -477,7 +477,7 @@ describe('given unknown mode names', () => {
     );
 
     expect(result).toEqual(MODE_TABLE);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown mode "turbo"'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got turbo'));
   });
 
   it('keeps valid overrides and discards unknown modes', () => {
@@ -496,7 +496,7 @@ describe('given unknown mode names', () => {
     });
     expect(result.streaming).toEqual(MODE_TABLE.streaming);
     expect(logger.warn).toHaveBeenCalledTimes(1);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown mode "invalid"'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got invalid'));
   });
 });
 

@@ -1,4 +1,4 @@
-import { LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type {
   AutomaticModeSwitchingConfig,
@@ -42,7 +42,7 @@ function validateConnectionMode(
   name: string,
   logger?: LDLogger,
 ): FDv2ConnectionMode | undefined {
-  if (value === undefined || value === null) {
+  if (isNullish(value)) {
     return undefined;
   }
 
@@ -53,7 +53,7 @@ function validateConnectionMode(
 
   if (!isValidFDv2ConnectionMode(value)) {
     logger?.warn(
-      `Config option "${name}" has unknown value "${value}", must be one of: streaming, polling, offline, one-shot, background. Using default value`,
+      OptionMessages.wrongOptionType(name, 'streaming | polling | offline | one-shot | background', String(value)),
     );
     return undefined;
   }
@@ -66,7 +66,7 @@ function validateAutomaticModeSwitching(
   name: string,
   logger?: LDLogger,
 ): boolean | AutomaticModeSwitchingConfig | undefined {
-  if (value === undefined || value === null) {
+  if (isNullish(value)) {
     return undefined;
   }
 
@@ -78,19 +78,23 @@ function validateAutomaticModeSwitching(
     const obj = value as Record<string, unknown>;
     const result: { lifecycle?: boolean; network?: boolean } = {};
 
-    if (obj.lifecycle !== undefined && obj.lifecycle !== null) {
+    if (!isNullish(obj.lifecycle)) {
       if (TypeValidators.Boolean.is(obj.lifecycle)) {
         result.lifecycle = obj.lifecycle;
       } else {
-        logger?.warn(OptionMessages.wrongOptionType(`${name}.lifecycle`, 'boolean', typeof obj.lifecycle));
+        logger?.warn(
+          OptionMessages.wrongOptionType(`${name}.lifecycle`, 'boolean', typeof obj.lifecycle),
+        );
       }
     }
 
-    if (obj.network !== undefined && obj.network !== null) {
+    if (!isNullish(obj.network)) {
       if (TypeValidators.Boolean.is(obj.network)) {
         result.network = obj.network;
       } else {
-        logger?.warn(OptionMessages.wrongOptionType(`${name}.network`, 'boolean', typeof obj.network));
+        logger?.warn(
+          OptionMessages.wrongOptionType(`${name}.network`, 'boolean', typeof obj.network),
+        );
       }
     }
 
@@ -116,7 +120,7 @@ function validateDataSystemOptions(
   defaults: PlatformDataSystemDefaults,
   logger?: LDLogger,
 ): LDClientDataSystemOptions {
-  if (input === undefined || input === null) {
+  if (isNullish(input)) {
     return { ...defaults };
   }
 

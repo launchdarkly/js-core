@@ -1,4 +1,4 @@
-import { LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type {
   DataSourceEntry,
@@ -76,21 +76,19 @@ function validateEndpointConfig(
   path: string,
   logger?: LDLogger,
 ): EndpointConfig | undefined {
-  if (endpoints === undefined || endpoints === null) {
+  if (isNullish(endpoints)) {
     return undefined;
   }
 
   if (!TypeValidators.Object.is(endpoints)) {
-    logger?.warn(
-      OptionMessages.wrongOptionType(`${path}.endpoints`, 'object', typeof endpoints),
-    );
+    logger?.warn(OptionMessages.wrongOptionType(`${path}.endpoints`, 'object', typeof endpoints));
     return undefined;
   }
 
   const result: { pollingBaseUri?: string; streamingBaseUri?: string } = {};
   const obj = endpoints as Record<string, unknown>;
 
-  if (obj.pollingBaseUri !== undefined && obj.pollingBaseUri !== null) {
+  if (!isNullish(obj.pollingBaseUri)) {
     if (TypeValidators.String.is(obj.pollingBaseUri)) {
       result.pollingBaseUri = obj.pollingBaseUri;
     } else {
@@ -104,7 +102,7 @@ function validateEndpointConfig(
     }
   }
 
-  if (obj.streamingBaseUri !== undefined && obj.streamingBaseUri !== null) {
+  if (!isNullish(obj.streamingBaseUri)) {
     if (TypeValidators.String.is(obj.streamingBaseUri)) {
       result.streamingBaseUri = obj.streamingBaseUri;
     } else {
@@ -130,7 +128,7 @@ function validateDataSourceEntry(
   path: string,
   logger?: LDLogger,
 ): DataSourceEntry | undefined {
-  if (entry === undefined || entry === null || !TypeValidators.Object.is(entry)) {
+  if (isNullish(entry) || !TypeValidators.Object.is(entry)) {
     logger?.warn(OptionMessages.wrongOptionType(path, 'object', typeof entry));
     return undefined;
   }
@@ -144,7 +142,7 @@ function validateDataSourceEntry(
 
   if (!VALID_DATA_SOURCE_TYPES.has(obj.type)) {
     logger?.warn(
-      `Config option "${path}.type" has unknown value "${obj.type}", must be one of: cache, polling, streaming. Discarding entry`,
+      OptionMessages.wrongOptionType(`${path}.type`, 'cache | polling | streaming', String(obj.type)),
     );
     return undefined;
   }
@@ -158,7 +156,7 @@ function validateDataSourceEntry(
       type: 'polling',
     };
 
-    if (obj.pollInterval !== undefined && obj.pollInterval !== null) {
+    if (!isNullish(obj.pollInterval)) {
       if (positiveNumber.is(obj.pollInterval)) {
         result.pollInterval = obj.pollInterval;
       } else {
@@ -187,7 +185,7 @@ function validateDataSourceEntry(
     endpoints?: EndpointConfig;
   } = { type: 'streaming' };
 
-  if (obj.initialReconnectDelay !== undefined && obj.initialReconnectDelay !== null) {
+  if (!isNullish(obj.initialReconnectDelay)) {
     if (positiveNumber.is(obj.initialReconnectDelay)) {
       result.initialReconnectDelay = obj.initialReconnectDelay;
     } else {
@@ -214,7 +212,7 @@ function validateDataSourceEntryList(
   path: string,
   logger?: LDLogger,
 ): DataSourceEntry[] {
-  if (list === undefined || list === null) {
+  if (isNullish(list)) {
     return [];
   }
 
@@ -251,7 +249,7 @@ function validateModeDefinition(
   name: string,
   logger?: LDLogger,
 ): ModeDefinition | undefined {
-  if (input === undefined || input === null || !TypeValidators.Object.is(input)) {
+  if (isNullish(input) || !TypeValidators.Object.is(input)) {
     logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof input));
     return undefined;
   }
@@ -284,7 +282,7 @@ function validateModeTable(
   defaults: ModeTable = MODE_TABLE,
   logger?: LDLogger,
 ): ModeTable {
-  if (input === undefined || input === null) {
+  if (isNullish(input)) {
     return defaults;
   }
 
@@ -299,7 +297,7 @@ function validateModeTable(
   Object.keys(obj).forEach((key) => {
     if (!isValidFDv2ConnectionMode(key)) {
       logger?.warn(
-        `Config option "connectionModes" has unknown mode "${key}", must be one of: ${getFDv2ConnectionModeNames().join(', ')}. Discarding`,
+        OptionMessages.wrongOptionType('connectionModes', getFDv2ConnectionModeNames().join(' | '), key),
       );
       return;
     }

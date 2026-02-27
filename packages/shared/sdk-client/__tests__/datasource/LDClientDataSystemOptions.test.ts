@@ -107,7 +107,7 @@ describe('given invalid initialConnectionMode', () => {
     );
 
     expect(result.initialConnectionMode).toBe('one-shot');
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown value "turbo"'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got turbo'));
   });
 
   it('falls back to platform default when mode is a number', () => {
@@ -142,7 +142,7 @@ describe('given invalid backgroundConnectionMode', () => {
     );
 
     expect(result.backgroundConnectionMode).toBe('background');
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown value "sleep"'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got sleep'));
   });
 
   it('falls back to platform default when mode is an object', () => {
@@ -166,9 +166,7 @@ describe('given invalid automaticModeSwitching', () => {
     );
 
     expect(result.automaticModeSwitching).toBe(true);
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('boolean or object'),
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('boolean or object'));
   });
 
   it('falls back to platform default when value is a number', () => {
