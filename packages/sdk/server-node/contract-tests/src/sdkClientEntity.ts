@@ -142,14 +142,6 @@ interface CommandParams {
   };
   registerFlagChangeListener?: {
     listenerId: string;
-    flagKey: string;
-    callbackUri: string;
-  };
-  registerFlagValueChangeListener?: {
-    listenerId: string;
-    flagKey: string;
-    context: LDContext;
-    defaultValue: LDFlagValue;
     callbackUri: string;
   };
   unregisterListener?: {
@@ -542,8 +534,7 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
 
       case 'registerFlagChangeListener': {
         const p = params.registerFlagChangeListener!;
-        // 'update:key' fires for a specific flag; 'update' (no key) fires for any flag change.
-        const eventName = p.flagKey ? `update:${p.flagKey}` : 'update';
+        const eventName = 'update';
 
         const handler = (eventParams: { key: string }) => {
           got
@@ -556,38 +547,10 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
             .catch(() => {});
         };
 
-        listeners.set(p.listenerId, { eventName, handler });
-        client.on(eventName, handler);
-        return undefined;
-      }
-
-      case 'registerFlagValueChangeListener': {
-        const p = params.registerFlagValueChangeListener!;
-        const eventName = `update:${p.flagKey}`;
-
-        // Snapshot the current evaluated value so we can detect actual value changes.
-        // On each SDK update event, re-evaluate and only notify the harness if the
-        // evaluated value differs (using JSON comparison for deep equality).
-        let oldValue = await client.variation(p.flagKey, p.context, p.defaultValue);
-
-        const handler = async () => {
-          const newValue = await client.variation(p.flagKey, p.context, p.defaultValue);
-          if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-            const previousValue = oldValue;
-            oldValue = newValue;
-            got
-              .post(p.callbackUri, {
-                json: {
-                  listenerId: p.listenerId,
-                  flagKey: p.flagKey,
-                  oldValue: previousValue,
-                  newValue,
-                },
-              })
-              .catch(() => {});
-          }
-        };
-
+        const existing = listeners.get(p.listenerId);
+        if (existing) {
+          client.off(existing.eventName, existing.handler);
+        }
         listeners.set(p.listenerId, { eventName, handler });
         client.on(eventName, handler);
         return undefined;
