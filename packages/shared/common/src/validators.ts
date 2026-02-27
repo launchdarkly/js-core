@@ -184,7 +184,6 @@ export class KindValidator extends StringMatchingRegex {
   }
 }
 
-// TODO: Remove this duplicate when rlamb/one-of-validator PR merges to main.
 /**
  * Validate a value is a string matching one of the allowed values.
  */
