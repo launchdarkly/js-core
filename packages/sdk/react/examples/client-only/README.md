@@ -1,6 +1,6 @@
 # LaunchDarkly React SDK — Hello LaunchDarkly
 
-This is a minimal React application that demonstrates the LaunchDarkly React SDK. It evaluates a feature flag and displays the result, updating in real time without a browser refresh when the flag value changes.
+This is a minimal React application built with [Vite](https://vite.dev) that demonstrates the LaunchDarkly React SDK. It evaluates a feature flag and displays the result, updating in real time without a browser refresh when the flag value changes.
 
 ## Requirements
 
@@ -32,6 +32,8 @@ This is a minimal React application that demonstrates the LaunchDarkly React SDK
    ```sh
    yarn && yarn start
    ```
+
+   This starts the Vite dev server (default port 5173). To create a production build, run `yarn build` — output goes to `dist/`.
 
 ## Expected output
 

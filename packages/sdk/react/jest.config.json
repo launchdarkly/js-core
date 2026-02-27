@@ -1,5 +1,5 @@
 {
-  "transform": {"^.+\\.tsx?$": ["ts-jest", {"tsconfig": {"esModuleInterop": true}}]},
+  "transform": { "^.+\\.tsx?$": ["ts-jest", { "tsconfig": { "esModuleInterop": true } }] },
   "testMatch": ["**/*.test.ts?(x)"],
   "testPathIgnorePatterns": ["node_modules", "example", "dist"],
   "modulePathIgnorePatterns": ["dist"],

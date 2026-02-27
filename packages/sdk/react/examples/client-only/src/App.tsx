@@ -1,12 +1,13 @@
-import React, { useState, FormEvent, useContext, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { FormEvent, useContext, useEffect, useState } from 'react';
+
+import { LDContext, LDReactClientContextValue, LDReactContext } from '@launchdarkly/react-sdk';
+
 import './App.css';
-import { LDContext, LDContextStrict, LDReactClientContextValue, LDReactContext } from '@launchdarkly/react-sdk';
 
 // Set FLAG_KEY to the feature flag key you want to evaluate.
 const FLAG_KEY = 'sample-feature';
 
-const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
+const PRESET_CONTEXTS: ReadonlyArray<LDContext> = [
   { kind: 'user', key: 'example-user-key', name: 'Sandy' },
   { kind: 'user', key: 'user-jamie', name: 'Jamie' },
   { kind: 'user', key: 'user-alex', name: 'Alex' },
@@ -14,7 +15,8 @@ const PRESET_CONTEXTS: ReadonlyArray<LDContextStrict> = [
 
 function App() {
   // NOTE: we will change this later to use the useLDClient hook instead.
-  const { client, context, initializedState } = useContext<LDReactClientContextValue>(LDReactContext);
+  const { client, context, initializedState } =
+    useContext<LDReactClientContextValue>(LDReactContext);
   const [flagKey, setFlagKey] = useState(FLAG_KEY);
   const [inputValue, setInputValue] = useState(flagKey);
   const [flagValue, setFlagValue] = useState(false);
@@ -25,7 +27,7 @@ function App() {
     setFlagKey(inputValue.trim() || FLAG_KEY);
   };
 
-  const handleSelectContext = async (preset: LDContextStrict) => {
+  const handleSelectContext = async (preset: LDContext) => {
     setIdentifyPending(true);
     await client.identify(preset);
     setIdentifyPending(false);
@@ -46,7 +48,8 @@ function App() {
   if (initializedState === 'complete') {
     statusMessage = 'SDK successfully initialized!';
   } else if (initializedState === 'failed') {
-    statusMessage = 'SDK failed to initialize. Please check your internet connection and SDK credential for any typo.';
+    statusMessage =
+      'SDK failed to initialize. Please check your internet connection and SDK credential for any typo.';
   } else {
     statusMessage = 'Initializing…';
   }
@@ -56,7 +59,6 @@ function App() {
   return (
     <div className="App">
       <header className="App-header" style={{ backgroundColor: headerBgColor }}>
-        <img src={logo} className="App-logo" alt="logo" />
         <p>{statusMessage}</p>
         <p>{`The ${flagKey} feature flag evaluates to ${flagValue ? 'true' : 'false'}.`}</p>
         <form onSubmit={handleSubmit}>
@@ -74,12 +76,15 @@ function App() {
             const isActive = context?.key === preset.key;
             return (
               <button
-                key={preset.key}
+                key={preset.key as string}
                 onClick={() => handleSelectContext(preset)}
                 disabled={identifyPending}
-                style={{ fontWeight: isActive ? 'bold' : 'normal', outline: isActive ? '2px solid white' : 'none' }}
+                style={{
+                  fontWeight: isActive ? 'bold' : 'normal',
+                  outline: isActive ? '2px solid white' : 'none',
+                }}
               >
-                {preset.name}
+                {preset.name as string}
               </button>
             );
           })}

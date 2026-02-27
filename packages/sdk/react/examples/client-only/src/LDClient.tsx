@@ -1,5 +1,11 @@
-import { createClient, LDContext, createLDReactProvider, LDReactClientOptions } from '@launchdarkly/react-sdk';
-import { LAUNCHDARKLY_CLIENT_SIDE_ID } from './ld-config';
+import {
+  createClient,
+  createLDReactProvider,
+  LDContext,
+  LDReactClientOptions,
+} from '@launchdarkly/react-sdk';
+
+const LAUNCHDARKLY_CLIENT_SIDE_ID = import.meta.env.LAUNCHDARKLY_CLIENT_SIDE_ID ?? '';
 
 // Set LAUNCHDARKLY_CLIENT_SIDE_ID to your LaunchDarkly client-side ID.
 const context: LDContext = {
