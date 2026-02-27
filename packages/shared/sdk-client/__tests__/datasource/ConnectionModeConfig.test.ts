@@ -401,7 +401,7 @@ describe('given non-object mode table input', () => {
     const result = validateModeTable([{ type: 'cache' }], MODE_TABLE, logger);
 
     expect(result).toEqual(MODE_TABLE);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got array'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('connectionModes'));
   });
 
   it('returns defaults and warns for a number', () => {

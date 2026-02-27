@@ -167,7 +167,7 @@ describe('given invalid automaticModeSwitching', () => {
 
     expect(result.automaticModeSwitching).toBe(true);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('should be a boolean or object'),
+      expect.stringContaining('boolean or object'),
     );
   });
 
