@@ -185,6 +185,13 @@ export class KindValidator extends StringMatchingRegex {
 }
 
 /**
+ * Returns true if the value is null or undefined.
+ */
+export function isNullish(value: unknown): value is null | undefined {
+  return value === null || value === undefined;
+}
+
+/**
  * A set of standard type validators.
  */
 export class TypeValidators {
