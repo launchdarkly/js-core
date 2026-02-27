@@ -3,7 +3,7 @@
  *
  * This defines the full set of named connection modes available in FDv2.
  * Each mode maps to a specific initializer/synchronizer pipeline via the
- * mode table in ConnectionModeConfig.ts.
+ * mode table.
  *
  * When FDv2 becomes the default data system, this type should replace
  * the existing ConnectionMode type in api/ConnectionMode.ts.

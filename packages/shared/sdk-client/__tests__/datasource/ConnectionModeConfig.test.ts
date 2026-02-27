@@ -1,6 +1,10 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { validateModeDefinition } from '../../src/datasource/ConnectionModeConfig';
+import {
+  MODE_TABLE,
+  validateModeDefinition,
+  validateModeTable,
+} from '../../src/datasource/ConnectionModeConfig';
 
 let logger: LDLogger;
 
@@ -169,9 +173,7 @@ describe('given entries with invalid type field', () => {
     );
 
     expect(result?.initializers).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('unknown value "cace"'),
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown value "cace"'));
   });
 
   it('discards an entry where type is a number', () => {
@@ -242,9 +244,7 @@ describe('given polling entries with invalid config', () => {
     );
 
     expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('pollInterval'),
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 
   it('drops pollInterval when it is zero', () => {
@@ -368,5 +368,213 @@ describe('given no logger', () => {
 
     expect(result?.initializers).toEqual([]);
     expect(result?.synchronizers).toEqual([]);
+  });
+});
+
+// ----------------------------- validateModeTable --------------------------------
+
+describe('given undefined or null mode table input', () => {
+  it('returns the built-in MODE_TABLE for undefined', () => {
+    const result = validateModeTable(undefined, MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('returns the built-in MODE_TABLE for null', () => {
+    const result = validateModeTable(null, MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('given non-object mode table input', () => {
+  it('returns defaults and warns for a string', () => {
+    const result = validateModeTable('streaming', MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got string'));
+  });
+
+  it('returns defaults and warns for an array', () => {
+    const result = validateModeTable([{ type: 'cache' }], MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got array'));
+  });
+
+  it('returns defaults and warns for a number', () => {
+    const result = validateModeTable(42, MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got number'));
+  });
+});
+
+describe('given an empty object', () => {
+  it('returns the built-in MODE_TABLE unchanged', () => {
+    const result = validateModeTable({}, MODE_TABLE, logger);
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('given a partial override', () => {
+  it('merges a single mode override with built-in defaults', () => {
+    const result = validateModeTable(
+      {
+        streaming: {
+          initializers: [{ type: 'polling' }],
+          synchronizers: [{ type: 'streaming' }],
+        },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result.streaming).toEqual({
+      initializers: [{ type: 'polling' }],
+      synchronizers: [{ type: 'streaming' }],
+    });
+    // Other modes retain their defaults.
+    expect(result.polling).toEqual(MODE_TABLE.polling);
+    expect(result.offline).toEqual(MODE_TABLE.offline);
+    expect(result['one-shot']).toEqual(MODE_TABLE['one-shot']);
+    expect(result.background).toEqual(MODE_TABLE.background);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('merges multiple mode overrides with built-in defaults', () => {
+    const result = validateModeTable(
+      {
+        offline: { initializers: [], synchronizers: [] },
+        background: {
+          initializers: [{ type: 'cache' }],
+          synchronizers: [{ type: 'polling', pollInterval: 7200 }],
+        },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result.offline).toEqual({ initializers: [], synchronizers: [] });
+    expect(result.background.synchronizers).toEqual([{ type: 'polling', pollInterval: 7200 }]);
+    expect(result.streaming).toEqual(MODE_TABLE.streaming);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('given unknown mode names', () => {
+  it('discards unknown modes and warns', () => {
+    const result = validateModeTable(
+      {
+        turbo: { initializers: [{ type: 'cache' }], synchronizers: [] },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result).toEqual(MODE_TABLE);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown mode "turbo"'));
+  });
+
+  it('keeps valid overrides and discards unknown modes', () => {
+    const result = validateModeTable(
+      {
+        polling: { initializers: [], synchronizers: [{ type: 'polling', pollInterval: 60 }] },
+        invalid: { initializers: [], synchronizers: [] },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result.polling).toEqual({
+      initializers: [],
+      synchronizers: [{ type: 'polling', pollInterval: 60 }],
+    });
+    expect(result.streaming).toEqual(MODE_TABLE.streaming);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('unknown mode "invalid"'));
+  });
+});
+
+describe('given an invalid mode definition within a known mode', () => {
+  it('keeps the built-in default for that mode and warns', () => {
+    const result = validateModeTable(
+      {
+        streaming: 'not-an-object',
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result.streaming).toEqual(MODE_TABLE.streaming);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('keeps the built-in default when mode value is null', () => {
+    const result = validateModeTable(
+      {
+        polling: null,
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect(result.polling).toEqual(MODE_TABLE.polling);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+});
+
+describe('given a custom defaults table', () => {
+  it('merges user overrides into the custom defaults instead of MODE_TABLE', () => {
+    const customDefaults = {
+      ...MODE_TABLE,
+      streaming: {
+        initializers: [{ type: 'cache' as const }],
+        synchronizers: [{ type: 'streaming' as const, initialReconnectDelay: 10 }],
+      },
+    };
+
+    const result = validateModeTable(
+      { polling: { initializers: [], synchronizers: [{ type: 'polling', pollInterval: 120 }] } },
+      customDefaults,
+      logger,
+    );
+
+    // User override applied.
+    expect(result.polling).toEqual({
+      initializers: [],
+      synchronizers: [{ type: 'polling', pollInterval: 120 }],
+    });
+    // Custom default retained for streaming (not the built-in MODE_TABLE default).
+    expect(result.streaming).toEqual(customDefaults.streaming);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('returns custom defaults when input is undefined', () => {
+    const customDefaults = {
+      ...MODE_TABLE,
+      background: {
+        initializers: [{ type: 'cache' as const }],
+        synchronizers: [{ type: 'polling' as const, pollInterval: 1800 }],
+      },
+    };
+
+    const result = validateModeTable(undefined, customDefaults, logger);
+
+    expect(result.background).toEqual(customDefaults.background);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('given no logger for validateModeTable', () => {
+  it('validates without throwing when logger is undefined', () => {
+    const result = validateModeTable({ streaming: 'bad', unknown: {} }, MODE_TABLE);
+
+    expect(result.streaming).toEqual(MODE_TABLE.streaming);
+    expect(result.polling).toEqual(MODE_TABLE.polling);
   });
 });

@@ -1,89 +1,12 @@
-import FDv2ConnectionMode from './FDv2ConnectionMode';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-/**
- * Configuration for the FDv2 client-side data system.
- *
- * When FDv2 becomes the default, this should be integrated into the
- * main LDOptions interface (api/LDOptions.ts).
- */
-interface LDClientDataSystemOptions {
-  /**
-   * The initial connection mode the SDK should use.
-   *
-   * If not specified, the platform SDK provides a default:
-   * - Browser: 'one-shot'
-   * - React Native: 'streaming'
-   * - Electron: 'streaming'
-   *
-   * See {@link FDv2ConnectionMode} for the available modes.
-   */
-  initialConnectionMode?: FDv2ConnectionMode;
-
-  /**
-   * The connection mode to use when the application transitions to the background.
-   *
-   * This is primarily used by mobile SDKs (React Native). When the application
-   * enters the background, the SDK switches to this mode. When returning to
-   * the foreground, it switches back to the foreground mode.
-   *
-   * Set to undefined or omit to disable automatic background mode switching.
-   * Set to 'background' to use the built-in background mode (polling @ 1hr).
-   * Set to 'offline' to stop all connections in the background.
-   */
-  backgroundConnectionMode?: FDv2ConnectionMode;
-
-  /**
-   * Controls automatic mode switching in response to platform events.
-   *
-   * - `true` — enable all automatic switching (lifecycle + network)
-   * - `false` — disable all automatic switching; the user manages modes manually
-   * - `{ lifecycle?: boolean, network?: boolean }` — granular control over
-   *   which platform events trigger automatic mode switches
-   *
-   * `lifecycle` controls foreground/background transitions (mobile) and
-   * visibility changes (browser). `network` controls pause/resume of data
-   * sources when network availability changes.
-   *
-   * Default is true for mobile SDKs, false/ignored for browser.
-   */
-  automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig;
-
-  // Req 5.3.5 TBD — custom named modes reserved for future use.
-  // customModes?: Record<string, { initializers: ..., synchronizers: ... }>;
-}
-
-/**
- * Granular control over which platform events trigger automatic mode switches.
- */
-interface AutomaticModeSwitchingConfig {
-  /**
-   * Whether to automatically switch modes in response to application lifecycle
-   * events (foreground/background on mobile, visibility changes on browser).
-   *
-   * @defaultValue true on mobile, false on browser/desktop
-   */
-  readonly lifecycle?: boolean;
-
-  /**
-   * Whether to automatically pause/resume data sources in response to
-   * network availability changes.
-   *
-   * @defaultValue true on mobile, false on desktop
-   */
-  readonly network?: boolean;
-}
-
-/**
- * Platform-specific default configuration for the FDv2 data system.
- */
-interface PlatformDataSystemDefaults {
-  /** The default initial connection mode for this platform. */
-  readonly initialConnectionMode: FDv2ConnectionMode;
-  /** The default background connection mode, if any. */
-  readonly backgroundConnectionMode?: FDv2ConnectionMode;
-  /** Whether automatic mode switching is enabled by default. */
-  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig;
-}
+import type {
+  AutomaticModeSwitchingConfig,
+  FDv2ConnectionMode,
+  LDClientDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from '../api/datasource';
+import { isValidFDv2ConnectionMode } from './ConnectionModeConfig';
 
 /**
  * Default FDv2 data system configuration for browser SDKs.
@@ -112,5 +35,136 @@ const DESKTOP_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
   automaticModeSwitching: false,
 };
 
-export type { LDClientDataSystemOptions, AutomaticModeSwitchingConfig, PlatformDataSystemDefaults };
-export { BROWSER_DATA_SYSTEM_DEFAULTS, MOBILE_DATA_SYSTEM_DEFAULTS, DESKTOP_DATA_SYSTEM_DEFAULTS };
+// ----------------------------- Validation --------------------------------
+
+function validateConnectionMode(
+  value: unknown,
+  name: string,
+  logger?: LDLogger,
+): FDv2ConnectionMode | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value !== 'string') {
+    logger?.warn(
+      `Config option "${name}" should be of type string, got ${typeof value}, using default value`,
+    );
+    return undefined;
+  }
+
+  if (!isValidFDv2ConnectionMode(value)) {
+    logger?.warn(
+      `Config option "${name}" has unknown value "${value}", must be one of: streaming, polling, offline, one-shot, background. Using default value`,
+    );
+    return undefined;
+  }
+
+  return value;
+}
+
+function validateAutomaticModeSwitching(
+  value: unknown,
+  name: string,
+  logger?: LDLogger,
+): boolean | AutomaticModeSwitchingConfig | undefined {
+  if (value === undefined || value === null) {
+    return undefined;
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    const result: { lifecycle?: boolean; network?: boolean } = {};
+
+    if (obj.lifecycle !== undefined && obj.lifecycle !== null) {
+      if (typeof obj.lifecycle === 'boolean') {
+        result.lifecycle = obj.lifecycle;
+      } else {
+        logger?.warn(
+          `Config option "${name}.lifecycle" should be of type boolean, got ${typeof obj.lifecycle}, using default value`,
+        );
+      }
+    }
+
+    if (obj.network !== undefined && obj.network !== null) {
+      if (typeof obj.network === 'boolean') {
+        result.network = obj.network;
+      } else {
+        logger?.warn(
+          `Config option "${name}.network" should be of type boolean, got ${typeof obj.network}, using default value`,
+        );
+      }
+    }
+
+    return result;
+  }
+
+  logger?.warn(
+    `Config option "${name}" should be a boolean or object, got ${typeof value}, using default value`,
+  );
+  return undefined;
+}
+
+/**
+ * Validates a user-provided LDClientDataSystemOptions, logging warnings for
+ * any invalid values and replacing them with defaults from the given platform
+ * defaults.
+ *
+ * @param input The unvalidated options (may have incorrect types).
+ * @param defaults Platform-specific defaults to fall back to.
+ * @param logger Logger for validation warnings.
+ * @returns A validated LDClientDataSystemOptions merged with platform defaults.
+ */
+function validateDataSystemOptions(
+  input: unknown,
+  defaults: PlatformDataSystemDefaults,
+  logger?: LDLogger,
+): LDClientDataSystemOptions {
+  if (input === undefined || input === null) {
+    return { ...defaults };
+  }
+
+  if (typeof input !== 'object') {
+    logger?.warn(
+      `Config option "dataSystem" should be of type object, got ${typeof input}, using default value`,
+    );
+    return { ...defaults };
+  }
+
+  const obj = input as Record<string, unknown>;
+
+  const initialConnectionMode =
+    validateConnectionMode(obj.initialConnectionMode, 'dataSystem.initialConnectionMode', logger) ??
+    defaults.initialConnectionMode;
+
+  const backgroundConnectionMode =
+    validateConnectionMode(
+      obj.backgroundConnectionMode,
+      'dataSystem.backgroundConnectionMode',
+      logger,
+    ) ?? defaults.backgroundConnectionMode;
+
+  const automaticModeSwitching =
+    validateAutomaticModeSwitching(
+      obj.automaticModeSwitching,
+      'dataSystem.automaticModeSwitching',
+      logger,
+    ) ?? defaults.automaticModeSwitching;
+
+  return {
+    initialConnectionMode,
+    backgroundConnectionMode,
+    automaticModeSwitching,
+  };
+}
+
+export {
+  BROWSER_DATA_SYSTEM_DEFAULTS,
+  MOBILE_DATA_SYSTEM_DEFAULTS,
+  DESKTOP_DATA_SYSTEM_DEFAULTS,
+  validateDataSystemOptions,
+};

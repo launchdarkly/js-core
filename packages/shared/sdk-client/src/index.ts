@@ -71,19 +71,24 @@ export {
   EventName as LDEmitterEventName,
 };
 
-// FDv2 connection mode type system.
+// FDv2 connection mode type system — public types.
 // When FDv2 becomes the default, FDv2ConnectionMode should replace ConnectionMode
 // in the api/ exports above.
-export type { default as FDv2ConnectionMode } from './datasource/FDv2ConnectionMode';
 export type {
+  FDv2ConnectionMode,
+  EndpointConfig,
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
   DataSourceEntry,
-  EndpointConfig,
   ModeDefinition,
-  ModeTable,
-} from './datasource/ConnectionModeConfig';
+  LDClientDataSystemOptions,
+  AutomaticModeSwitchingConfig,
+  PlatformDataSystemDefaults,
+} from './api/datasource';
+
+// FDv2 connection mode type system — internal implementation.
+export type { ModeTable } from './datasource/ConnectionModeConfig';
 export {
   MODE_TABLE,
   BACKGROUND_POLL_INTERVAL_SECONDS,
@@ -91,14 +96,11 @@ export {
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
   validateModeDefinition,
+  validateModeTable,
 } from './datasource/ConnectionModeConfig';
-export type {
-  LDClientDataSystemOptions,
-  AutomaticModeSwitchingConfig,
-  PlatformDataSystemDefaults,
-} from './datasource/LDClientDataSystemOptions';
 export {
   BROWSER_DATA_SYSTEM_DEFAULTS,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   DESKTOP_DATA_SYSTEM_DEFAULTS,
+  validateDataSystemOptions,
 } from './datasource/LDClientDataSystemOptions';

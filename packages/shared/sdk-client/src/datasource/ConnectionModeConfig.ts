@@ -1,80 +1,11 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import FDv2ConnectionMode from './FDv2ConnectionMode';
-
-/**
- * Endpoint overrides for a network data source entry. Allows routing specific
- * sources to different infrastructure (e.g., a relay proxy as a fallback).
- *
- * When not specified, the SDK uses `baseUri` for polling and `streamUri` for
- * streaming from the base SDK configuration.
- */
-interface EndpointConfig {
-  /** Override for the polling base URI. Defaults to `baseUri` from SDK configuration. */
-  readonly pollingBaseUri?: string;
-  /** Override for the streaming base URI. Defaults to `streamUri` from SDK configuration. */
-  readonly streamingBaseUri?: string;
-}
-
-/**
- * Configuration for a cache data source entry.
- */
-interface CacheDataSourceEntry {
-  readonly type: 'cache';
-}
-
-/**
- * Configuration for a polling data source entry.
- */
-interface PollingDataSourceEntry {
-  readonly type: 'polling';
-
-  /** Override for the polling interval, in seconds. */
-  readonly pollInterval?: number;
-
-  /** Endpoint overrides for this polling source. */
-  readonly endpoints?: EndpointConfig;
-}
-
-/**
- * Configuration for a streaming data source entry.
- */
-interface StreamingDataSourceEntry {
-  readonly type: 'streaming';
-
-  /** Override for the initial reconnect delay, in seconds. */
-  readonly initialReconnectDelay?: number;
-
-  /** Endpoint overrides for this streaming source. */
-  readonly endpoints?: EndpointConfig;
-}
-
-/**
- * A data source entry in a mode table. Each entry identifies a data source type
- * and carries type-specific configuration overrides.
- */
-type DataSourceEntry = CacheDataSourceEntry | PollingDataSourceEntry | StreamingDataSourceEntry;
-
-/**
- * Defines the data pipeline for a connection mode: which data sources
- * are used during initialization and which are used for ongoing synchronization.
- */
-interface ModeDefinition {
-  /**
-   * Ordered list of data sources to attempt during initialization.
-   * Sources are tried in order; the first that successfully provides a full
-   * data set transitions the SDK out of the initialization phase.
-   */
-  readonly initializers: ReadonlyArray<DataSourceEntry>;
-
-  /**
-   * Ordered list of data sources for ongoing synchronization after
-   * initialization completes. Sources are in priority order with automatic
-   * failover to the next source if the primary fails.
-   * An empty array means no synchronization occurs (e.g., offline, one-shot).
-   */
-  readonly synchronizers: ReadonlyArray<DataSourceEntry>;
-}
+import type {
+  DataSourceEntry,
+  EndpointConfig,
+  FDv2ConnectionMode,
+  ModeDefinition,
+} from '../api/datasource';
 
 /**
  * A read-only mapping from each FDv2ConnectionMode to its ModeDefinition.
@@ -289,7 +220,7 @@ function validateDataSourceEntryList(
   }
 
   const result: DataSourceEntry[] = [];
-  for (let i = 0; i < list.length; i++) {
+  for (let i = 0; i < list.length; i += 1) {
     const validated = validateDataSourceEntry(list[i], `${path}[${i}]`, logger);
     if (validated) {
       result.push(validated);
@@ -331,15 +262,59 @@ function validateModeDefinition(
   };
 }
 
-export type {
-  CacheDataSourceEntry,
-  PollingDataSourceEntry,
-  StreamingDataSourceEntry,
-  DataSourceEntry,
-  EndpointConfig,
-  ModeDefinition,
-  ModeTable,
-};
+/**
+ * Validates a user-provided mode table and merges it with the built-in
+ * MODE_TABLE. User overrides replace the default definition for a given mode;
+ * modes not present in the input retain their built-in defaults.
+ *
+ * Unknown mode names (not in FDv2ConnectionMode) are logged as warnings and
+ * discarded. Invalid mode definitions within known modes are also logged and
+ * the built-in default for that mode is kept.
+ *
+ * @param input The unvalidated partial mode table (may have incorrect types).
+ * @param defaults The base mode table to merge user overrides into. Platform SDKs
+ *   can pass a customized base table; defaults to the built-in MODE_TABLE.
+ * @param logger Logger for validation warnings.
+ * @returns A complete ModeTable with validated user overrides merged over defaults.
+ */
+function validateModeTable(
+  input: unknown,
+  defaults: ModeTable = MODE_TABLE,
+  logger?: LDLogger,
+): ModeTable {
+  if (input === undefined || input === null) {
+    return defaults;
+  }
+
+  if (typeof input !== 'object' || Array.isArray(input)) {
+    logger?.warn(
+      `Config option "connectionModes" should be of type object, got ${Array.isArray(input) ? 'array' : typeof input}, using defaults`,
+    );
+    return defaults;
+  }
+
+  const obj = input as Record<string, unknown>;
+  const result = { ...defaults } as { [K in FDv2ConnectionMode]: ModeDefinition };
+
+  Object.keys(obj).forEach((key) => {
+    if (!isValidFDv2ConnectionMode(key)) {
+      logger?.warn(
+        `Config option "connectionModes" has unknown mode "${key}", must be one of: ${getFDv2ConnectionModeNames().join(', ')}. Discarding`,
+      );
+      return;
+    }
+
+    const validated = validateModeDefinition(obj[key], `connectionModes.${key}`, logger);
+    if (validated) {
+      result[key] = validated;
+    }
+    // If validation returns undefined, the default for this mode is kept.
+  });
+
+  return result;
+}
+
+export type { ModeTable };
 export {
   MODE_TABLE,
   BACKGROUND_POLL_INTERVAL_SECONDS,
@@ -347,4 +322,5 @@ export {
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
   validateModeDefinition,
+  validateModeTable,
 };
