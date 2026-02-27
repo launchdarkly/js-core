@@ -14,6 +14,7 @@
     "packages/sdk/cloudflare",
     "packages/sdk/cloudflare/example",
     "packages/sdk/electron",
+    "packages/sdk/electron/example",
     "packages/sdk/fastly",
     "packages/sdk/fastly/example",
     "packages/sdk/react",
