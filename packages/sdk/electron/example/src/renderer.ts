@@ -21,7 +21,7 @@ function updateFlagValues() {
   // eslint-disable-next-line no-console
   console.log('👋 This message is being logged by "renderer.ts", included via Vite');
 
-  await launchDarklyBrowserClient.waitForInitialization({ timeout: 5000 });
+  await launchDarklyBrowserClient.waitForInitialization({ timeout: 5 });
 
   // eslint-disable-next-line no-console
   console.log('waitForInitialization complete');
