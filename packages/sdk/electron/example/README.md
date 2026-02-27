@@ -1,4 +1,11 @@
 # LaunchDarkly sample Electron application
+# ⛔️⛔️⛔️⛔️
+
+> [!CAUTION]
+> This example is created against a non-production SDK which means things may change and this example might
+> not work while this message is visible.
+
+# ☝️☝️☝️☝️☝️☝️
 
 We've built a simple Electron application that demonstrates how the LaunchDarkly Electron SDK works. The app uses a main/renderer process setup: the main process connects to LaunchDarkly and manages flag state; the renderer uses the same client via IPC to evaluate flags and listen for changes.
 
