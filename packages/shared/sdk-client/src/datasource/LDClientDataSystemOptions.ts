@@ -53,7 +53,11 @@ function validateConnectionMode(
 
   if (!isValidFDv2ConnectionMode(value)) {
     logger?.warn(
-      OptionMessages.wrongOptionType(name, 'streaming | polling | offline | one-shot | background', String(value)),
+      OptionMessages.wrongOptionType(
+        name,
+        'streaming | polling | offline | one-shot | background',
+        String(value),
+      ),
     );
     return undefined;
   }

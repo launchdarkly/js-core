@@ -142,7 +142,11 @@ function validateDataSourceEntry(
 
   if (!VALID_DATA_SOURCE_TYPES.has(obj.type)) {
     logger?.warn(
-      OptionMessages.wrongOptionType(`${path}.type`, 'cache | polling | streaming', String(obj.type)),
+      OptionMessages.wrongOptionType(
+        `${path}.type`,
+        'cache | polling | streaming',
+        String(obj.type),
+      ),
     );
     return undefined;
   }
@@ -297,7 +301,11 @@ function validateModeTable(
   Object.keys(obj).forEach((key) => {
     if (!isValidFDv2ConnectionMode(key)) {
       logger?.warn(
-        OptionMessages.wrongOptionType('connectionModes', getFDv2ConnectionModeNames().join(' | '), key),
+        OptionMessages.wrongOptionType(
+          'connectionModes',
+          getFDv2ConnectionModeNames().join(' | '),
+          key,
+        ),
       );
       return;
     }
