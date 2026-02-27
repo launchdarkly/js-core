@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import {
   isNullish,
   LDLogger,
@@ -8,101 +7,19 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
-/**
- * A validator that accepts objects and recursively validates their properties
- * against a nested validator map. Use {@link validatorOf} to create one.
- */
-export class NestedValidator implements TypeValidator {
-  constructor(readonly validators: Record<string, TypeValidator>) {}
-
-  is(u: unknown): boolean {
-    return TypeValidators.Object.is(u);
-  }
-
-  getType(): string {
-    return 'object';
-  }
+interface NestedValidator extends TypeValidator {
+  kind: 'nested';
+  validators: Record<string, TypeValidator>;
 }
 
-/**
- * A validator for arrays of objects. Each item is validated individually;
- * invalid items are filtered out rather than causing the whole array to fail.
- *
- * When `discriminant` and `validatorsByType` are provided, the validator map
- * for each item is selected based on the value of the discriminant field.
- */
-export class ArrayValidator implements TypeValidator {
-  constructor(
-    private readonly _itemValidators: Record<string, TypeValidator>,
-    private readonly _discriminant?: string,
-    private readonly _validatorsByType?: Record<string, Record<string, TypeValidator>>,
-  ) {}
-
-  is(u: unknown): boolean {
-    return Array.isArray(u);
-  }
-
-  getType(): string {
-    return 'array';
-  }
-
-  validate(value: unknown[], prefix: string, logger?: LDLogger): Record<string, unknown>[] {
-    const results: Record<string, unknown>[] = [];
-
-    value.forEach((item, i) => {
-      const itemPath = `${prefix}[${i}]`;
-
-      if (isNullish(item) || !TypeValidators.Object.is(item)) {
-        logger?.warn(OptionMessages.wrongOptionType(itemPath, 'object', typeof item));
-        return;
-      }
-
-      const obj = item as Record<string, unknown>;
-
-      // Select validators based on discriminant if configured.
-      let validators = this._itemValidators;
-      if (this._discriminant && this._validatorsByType) {
-        const discriminantValidator = validators[this._discriminant];
-        const typeValue = obj[this._discriminant];
-
-        if (!discriminantValidator || !discriminantValidator.is(typeValue)) {
-          const received = typeof typeValue === 'string' ? (typeValue as string) : typeof typeValue;
-          logger?.warn(
-            OptionMessages.wrongOptionType(
-              `${itemPath}.${this._discriminant}`,
-              discriminantValidator?.getType() ?? 'string',
-              received,
-            ),
-          );
-          return;
-        }
-
-        validators = this._validatorsByType[typeValue as string] ?? this._itemValidators;
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      results.push(validateOptions(obj, validators, {}, logger, itemPath));
-    });
-
-    return results;
-  }
+interface ArrayValidator extends TypeValidator {
+  kind: 'array';
+  validate(value: unknown[], prefix: string, logger?: LDLogger): Record<string, unknown>[];
 }
 
-/**
- * A validator that accepts either a boolean or a nested object.
- * When the value is an object, its properties are validated against the
- * provided validator map.
- */
-export class BooleanOrNestedValidator implements TypeValidator {
-  constructor(readonly validators: Record<string, TypeValidator>) {}
-
-  is(u: unknown): boolean {
-    return TypeValidators.Boolean.is(u) || TypeValidators.Object.is(u);
-  }
-
-  getType(): string {
-    return 'boolean or object';
-  }
+interface BooleanOrNestedValidator extends TypeValidator {
+  kind: 'booleanOrNested';
+  validators: Record<string, TypeValidator>;
 }
 
 /**
@@ -110,7 +27,12 @@ export class BooleanOrNestedValidator implements TypeValidator {
  * `validateOptions` will recursively validate the nested object's properties.
  */
 export function validatorOf(validators: Record<string, TypeValidator>): NestedValidator {
-  return new NestedValidator(validators);
+  return {
+    kind: 'nested',
+    validators,
+    is: (u: unknown) => TypeValidators.Object.is(u),
+    getType: () => 'object',
+  };
 }
 
 /**
@@ -123,7 +45,51 @@ export function arrayOf(
   discriminant?: string,
   validatorsByType?: Record<string, Record<string, TypeValidator>>,
 ): ArrayValidator {
-  return new ArrayValidator(itemValidators, discriminant, validatorsByType);
+  return {
+    kind: 'array',
+    is: (u: unknown) => Array.isArray(u),
+    getType: () => 'array',
+    validate(value: unknown[], prefix: string, logger?: LDLogger): Record<string, unknown>[] {
+      const results: Record<string, unknown>[] = [];
+
+      value.forEach((item, i) => {
+        const itemPath = `${prefix}[${i}]`;
+
+        if (isNullish(item) || !TypeValidators.Object.is(item)) {
+          logger?.warn(OptionMessages.wrongOptionType(itemPath, 'object', typeof item));
+          return;
+        }
+
+        const obj = item as Record<string, unknown>;
+
+        let validators = itemValidators;
+        if (discriminant && validatorsByType) {
+          const discriminantValidator = validators[discriminant];
+          const typeValue = obj[discriminant];
+
+          if (!discriminantValidator || !discriminantValidator.is(typeValue)) {
+            const received =
+              typeof typeValue === 'string' ? (typeValue as string) : typeof typeValue;
+            logger?.warn(
+              OptionMessages.wrongOptionType(
+                `${itemPath}.${discriminant}`,
+                discriminantValidator?.getType() ?? 'string',
+                received,
+              ),
+            );
+            return;
+          }
+
+          validators = validatorsByType[typeValue as string] ?? itemValidators;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        results.push(validateOptions(obj, validators, {}, logger, itemPath));
+      });
+
+      return results;
+    },
+  };
 }
 
 /**
@@ -132,16 +98,33 @@ export function arrayOf(
 export function booleanOrObjectOf(
   validators: Record<string, TypeValidator>,
 ): BooleanOrNestedValidator {
-  return new BooleanOrNestedValidator(validators);
+  return {
+    kind: 'booleanOrNested',
+    validators,
+    is: (u: unknown) => TypeValidators.Boolean.is(u) || TypeValidators.Object.is(u),
+    getType: () => 'boolean or object',
+  };
+}
+
+function isNestedValidator(v: TypeValidator): v is NestedValidator {
+  return (v as any).kind === 'nested';
+}
+
+function isArrayValidator(v: TypeValidator): v is ArrayValidator {
+  return (v as any).kind === 'array';
+}
+
+function isBooleanOrNestedValidator(v: TypeValidator): v is BooleanOrNestedValidator {
+  return (v as any).kind === 'booleanOrNested';
 }
 
 /**
  * Validates an options object against a map of validators and defaults.
  *
- * Supports special validator types:
- * - {@link NestedValidator}: recursively validates nested objects
- * - {@link ArrayValidator}: validates arrays with per-item validation
- * - {@link BooleanOrNestedValidator}: accepts boolean or recursively validates objects
+ * Supports special validator types created by:
+ * - {@link validatorOf}: recursively validates nested objects
+ * - {@link arrayOf}: validates arrays with per-item validation
+ * - {@link booleanOrObjectOf}: accepts boolean or recursively validates objects
  */
 export default function validateOptions(
   input: Record<string, unknown>,
@@ -165,8 +148,7 @@ export default function validateOptions(
       return;
     }
 
-    // Nested object validators.
-    if (validator instanceof NestedValidator) {
+    if (isNestedValidator(validator)) {
       if (TypeValidators.Object.is(value)) {
         const nested = validateOptions(
           value as Record<string, unknown>,
@@ -184,8 +166,7 @@ export default function validateOptions(
       return;
     }
 
-    // Array validators.
-    if (validator instanceof ArrayValidator) {
+    if (isArrayValidator(validator)) {
       if (Array.isArray(value)) {
         const items = validator.validate(value, name, logger);
         if (items.length > 0) {
@@ -197,8 +178,7 @@ export default function validateOptions(
       return;
     }
 
-    // Boolean-or-object validators.
-    if (validator instanceof BooleanOrNestedValidator) {
+    if (isBooleanOrNestedValidator(validator)) {
       if (TypeValidators.Boolean.is(value)) {
         result[key] = value;
       } else if (TypeValidators.Object.is(value)) {
@@ -215,7 +195,6 @@ export default function validateOptions(
       return;
     }
 
-    // Standard validators.
     if (validator.is(value)) {
       result[key] = value;
       return;
