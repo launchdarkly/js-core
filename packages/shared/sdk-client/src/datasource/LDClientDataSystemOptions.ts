@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type {
   AutomaticModeSwitchingConfig,
@@ -46,10 +46,8 @@ function validateConnectionMode(
     return undefined;
   }
 
-  if (typeof value !== 'string') {
-    logger?.warn(
-      `Config option "${name}" should be of type string, got ${typeof value}, using default value`,
-    );
+  if (!TypeValidators.String.is(value)) {
+    logger?.warn(OptionMessages.wrongOptionType(name, 'string', typeof value));
     return undefined;
   }
 
@@ -72,40 +70,34 @@ function validateAutomaticModeSwitching(
     return undefined;
   }
 
-  if (typeof value === 'boolean') {
+  if (TypeValidators.Boolean.is(value)) {
     return value;
   }
 
-  if (typeof value === 'object') {
+  if (TypeValidators.Object.is(value)) {
     const obj = value as Record<string, unknown>;
     const result: { lifecycle?: boolean; network?: boolean } = {};
 
     if (obj.lifecycle !== undefined && obj.lifecycle !== null) {
-      if (typeof obj.lifecycle === 'boolean') {
+      if (TypeValidators.Boolean.is(obj.lifecycle)) {
         result.lifecycle = obj.lifecycle;
       } else {
-        logger?.warn(
-          `Config option "${name}.lifecycle" should be of type boolean, got ${typeof obj.lifecycle}, using default value`,
-        );
+        logger?.warn(OptionMessages.wrongOptionType(`${name}.lifecycle`, 'boolean', typeof obj.lifecycle));
       }
     }
 
     if (obj.network !== undefined && obj.network !== null) {
-      if (typeof obj.network === 'boolean') {
+      if (TypeValidators.Boolean.is(obj.network)) {
         result.network = obj.network;
       } else {
-        logger?.warn(
-          `Config option "${name}.network" should be of type boolean, got ${typeof obj.network}, using default value`,
-        );
+        logger?.warn(OptionMessages.wrongOptionType(`${name}.network`, 'boolean', typeof obj.network));
       }
     }
 
     return result;
   }
 
-  logger?.warn(
-    `Config option "${name}" should be a boolean or object, got ${typeof value}, using default value`,
-  );
+  logger?.warn(OptionMessages.wrongOptionType(name, 'boolean or object', typeof value));
   return undefined;
 }
 
@@ -128,10 +120,8 @@ function validateDataSystemOptions(
     return { ...defaults };
   }
 
-  if (typeof input !== 'object') {
-    logger?.warn(
-      `Config option "dataSystem" should be of type object, got ${typeof input}, using default value`,
-    );
+  if (!TypeValidators.Object.is(input)) {
+    logger?.warn(OptionMessages.wrongOptionType('dataSystem', 'object', typeof input));
     return { ...defaults };
   }
 

@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type {
   DataSourceEntry,
@@ -23,6 +23,7 @@ type ModeTable = {
 const BACKGROUND_POLL_INTERVAL_SECONDS = 3600;
 
 const VALID_DATA_SOURCE_TYPES = new Set(['cache', 'polling', 'streaming']);
+const positiveNumber = TypeValidators.numberWithMin(1);
 
 /**
  * The built-in mode table defining initializer/synchronizer pipelines
@@ -55,13 +56,6 @@ const MODE_TABLE: ModeTable = {
 };
 
 /**
- * Returns the mode definition for the given FDv2 connection mode.
- */
-function getModeDefinition(mode: FDv2ConnectionMode): ModeDefinition {
-  return MODE_TABLE[mode];
-}
-
-/**
  * Returns true if the given string is a valid FDv2ConnectionMode.
  */
 function isValidFDv2ConnectionMode(value: string): value is FDv2ConnectionMode {
@@ -86,9 +80,9 @@ function validateEndpointConfig(
     return undefined;
   }
 
-  if (typeof endpoints !== 'object') {
+  if (!TypeValidators.Object.is(endpoints)) {
     logger?.warn(
-      `Config option "${path}.endpoints" should be of type object, got ${typeof endpoints}, discarding`,
+      OptionMessages.wrongOptionType(`${path}.endpoints`, 'object', typeof endpoints),
     );
     return undefined;
   }
@@ -97,21 +91,29 @@ function validateEndpointConfig(
   const obj = endpoints as Record<string, unknown>;
 
   if (obj.pollingBaseUri !== undefined && obj.pollingBaseUri !== null) {
-    if (typeof obj.pollingBaseUri === 'string') {
+    if (TypeValidators.String.is(obj.pollingBaseUri)) {
       result.pollingBaseUri = obj.pollingBaseUri;
     } else {
       logger?.warn(
-        `Config option "${path}.endpoints.pollingBaseUri" should be of type string, got ${typeof obj.pollingBaseUri}, discarding`,
+        OptionMessages.wrongOptionType(
+          `${path}.endpoints.pollingBaseUri`,
+          'string',
+          typeof obj.pollingBaseUri,
+        ),
       );
     }
   }
 
   if (obj.streamingBaseUri !== undefined && obj.streamingBaseUri !== null) {
-    if (typeof obj.streamingBaseUri === 'string') {
+    if (TypeValidators.String.is(obj.streamingBaseUri)) {
       result.streamingBaseUri = obj.streamingBaseUri;
     } else {
       logger?.warn(
-        `Config option "${path}.endpoints.streamingBaseUri" should be of type string, got ${typeof obj.streamingBaseUri}, discarding`,
+        OptionMessages.wrongOptionType(
+          `${path}.endpoints.streamingBaseUri`,
+          'string',
+          typeof obj.streamingBaseUri,
+        ),
       );
     }
   }
@@ -128,19 +130,15 @@ function validateDataSourceEntry(
   path: string,
   logger?: LDLogger,
 ): DataSourceEntry | undefined {
-  if (entry === undefined || entry === null || typeof entry !== 'object') {
-    logger?.warn(
-      `Config option "${path}" should be of type object, got ${typeof entry}, discarding entry`,
-    );
+  if (entry === undefined || entry === null || !TypeValidators.Object.is(entry)) {
+    logger?.warn(OptionMessages.wrongOptionType(path, 'object', typeof entry));
     return undefined;
   }
 
   const obj = entry as Record<string, unknown>;
 
-  if (typeof obj.type !== 'string') {
-    logger?.warn(
-      `Config option "${path}.type" should be of type string, got ${typeof obj.type}, discarding entry`,
-    );
+  if (!TypeValidators.String.is(obj.type)) {
+    logger?.warn(OptionMessages.wrongOptionType(`${path}.type`, 'string', typeof obj.type));
     return undefined;
   }
 
@@ -161,11 +159,15 @@ function validateDataSourceEntry(
     };
 
     if (obj.pollInterval !== undefined && obj.pollInterval !== null) {
-      if (typeof obj.pollInterval === 'number' && obj.pollInterval > 0) {
+      if (positiveNumber.is(obj.pollInterval)) {
         result.pollInterval = obj.pollInterval;
       } else {
         logger?.warn(
-          `Config option "${path}.pollInterval" should be a positive number, got ${JSON.stringify(obj.pollInterval)}, using default`,
+          OptionMessages.wrongOptionType(
+            `${path}.pollInterval`,
+            'positive number',
+            JSON.stringify(obj.pollInterval),
+          ),
         );
       }
     }
@@ -186,11 +188,15 @@ function validateDataSourceEntry(
   } = { type: 'streaming' };
 
   if (obj.initialReconnectDelay !== undefined && obj.initialReconnectDelay !== null) {
-    if (typeof obj.initialReconnectDelay === 'number' && obj.initialReconnectDelay > 0) {
+    if (positiveNumber.is(obj.initialReconnectDelay)) {
       result.initialReconnectDelay = obj.initialReconnectDelay;
     } else {
       logger?.warn(
-        `Config option "${path}.initialReconnectDelay" should be a positive number, got ${JSON.stringify(obj.initialReconnectDelay)}, using default`,
+        OptionMessages.wrongOptionType(
+          `${path}.initialReconnectDelay`,
+          'positive number',
+          JSON.stringify(obj.initialReconnectDelay),
+        ),
       );
     }
   }
@@ -213,9 +219,7 @@ function validateDataSourceEntryList(
   }
 
   if (!Array.isArray(list)) {
-    logger?.warn(
-      `Config option "${path}" should be of type array, got ${typeof list}, using empty list`,
-    );
+    logger?.warn(OptionMessages.wrongOptionType(path, 'array', typeof list));
     return [];
   }
 
@@ -247,10 +251,8 @@ function validateModeDefinition(
   name: string,
   logger?: LDLogger,
 ): ModeDefinition | undefined {
-  if (input === undefined || input === null || typeof input !== 'object') {
-    logger?.warn(
-      `Config option "${name}" should be of type object, got ${typeof input}, using default value`,
-    );
+  if (input === undefined || input === null || !TypeValidators.Object.is(input)) {
+    logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof input));
     return undefined;
   }
 
@@ -263,13 +265,13 @@ function validateModeDefinition(
 }
 
 /**
- * Validates a user-provided mode table and merges it with the built-in
- * MODE_TABLE. User overrides replace the default definition for a given mode;
- * modes not present in the input retain their built-in defaults.
+ * Validates a user-provided mode table and merges it with defaults.
+ * User overrides replace the default definition for a given mode;
+ * modes not present in the input retain their defaults.
  *
  * Unknown mode names (not in FDv2ConnectionMode) are logged as warnings and
  * discarded. Invalid mode definitions within known modes are also logged and
- * the built-in default for that mode is kept.
+ * the default for that mode is kept.
  *
  * @param input The unvalidated partial mode table (may have incorrect types).
  * @param defaults The base mode table to merge user overrides into. Platform SDKs
@@ -286,10 +288,8 @@ function validateModeTable(
     return defaults;
   }
 
-  if (typeof input !== 'object' || Array.isArray(input)) {
-    logger?.warn(
-      `Config option "connectionModes" should be of type object, got ${Array.isArray(input) ? 'array' : typeof input}, using defaults`,
-    );
+  if (!TypeValidators.Object.is(input)) {
+    logger?.warn(OptionMessages.wrongOptionType('connectionModes', 'object', typeof input));
     return defaults;
   }
 
@@ -318,7 +318,6 @@ export type { ModeTable };
 export {
   MODE_TABLE,
   BACKGROUND_POLL_INTERVAL_SECONDS,
-  getModeDefinition,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
   validateModeDefinition,

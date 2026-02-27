@@ -92,7 +92,6 @@ export type { ModeTable } from './datasource/ConnectionModeConfig';
 export {
   MODE_TABLE,
   BACKGROUND_POLL_INTERVAL_SECONDS,
-  getModeDefinition,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
   validateModeDefinition,

@@ -1,10 +1,10 @@
 import FDv2ConnectionMode from './FDv2ConnectionMode';
 
+// When FDv2 becomes the default, this should be integrated into the
+// main LDOptions interface (api/LDOptions.ts).
+
 /**
  * Configuration for the FDv2 client-side data system.
- *
- * When FDv2 becomes the default, this should be integrated into the
- * main LDOptions interface (api/LDOptions.ts).
  */
 export interface LDClientDataSystemOptions {
   /**
