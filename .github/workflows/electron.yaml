@@ -41,10 +41,10 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: '1'
         run: |
-            yarn workspaces focus @internal/electron-contract-tests-entity
-            yarn workspace @internal/electron-contract-tests-entity build
-            sudo apt-get install -y xvfb
-            Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+          yarn workspaces focus @internal/electron-contract-tests-entity
+          yarn workspace @internal/electron-contract-tests-entity build
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
 
       - name: run contract test entity
         env:
@@ -74,6 +74,9 @@ jobs:
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/electron/contract-tests/suppressions.txt --stop-service-at-end'
 
   # Example app verification
+  # Looks like the example verfication is not built for applications like this?
+  # Will need to look into how to enhance that check OR create a different kind of
+  # verification test for client sdks.
   # run-example:
   #   runs-on: ubuntu-latest
   #   permissions:
@@ -89,11 +92,10 @@ jobs:
   #       run: yarn workspaces focus @internal/electron-example
   #     - name: Build SDK dependencies
   #       run: yarn workspaces foreach -pR --topological-dev --from '@internal/electron-example' run build
-  #     - name: Install Xvfb
+  #     - name: Setup Xvfb
   #       run: sudo apt-get install -y xvfb
   #     - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v1.0.0
   #       with:
   #         use_mobile_key: true
   #         role_arn: ${{ vars.AWS_ROLE_ARN }}
   #         command: xvfb-run -a yarn workspace @internal/electron-example start -- --no-sandbox
-
