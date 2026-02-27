@@ -2,11 +2,38 @@ import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdark
 
 import type {
   AutomaticModeSwitchingConfig,
-  FDv2ConnectionMode,
   LDClientDataSystemOptions,
   PlatformDataSystemDefaults,
 } from '../api/datasource';
-import { isValidFDv2ConnectionMode } from './ConnectionModeConfig';
+import validateOptions from '../configuration/validateOptions';
+
+const connectionModeValidator = TypeValidators.oneOf(
+  'streaming',
+  'polling',
+  'offline',
+  'one-shot',
+  'background',
+);
+
+// automaticModeSwitching accepts boolean | object — use a permissive validator
+// so validateOptions doesn't report it as unknown; the real validation is done
+// separately in validateAutomaticModeSwitching.
+const booleanOrObject = {
+  is: (u: unknown) =>
+    typeof u === 'boolean' || (typeof u === 'object' && u !== null && !Array.isArray(u)),
+  getType: () => 'boolean or object',
+};
+
+const dataSystemValidators = {
+  initialConnectionMode: connectionModeValidator,
+  backgroundConnectionMode: connectionModeValidator,
+  automaticModeSwitching: booleanOrObject,
+};
+
+const modeSwitchingValidators = {
+  lifecycle: TypeValidators.Boolean,
+  network: TypeValidators.Boolean,
+};
 
 /**
  * Default FDv2 data system configuration for browser SDKs.
@@ -37,41 +64,14 @@ const DESKTOP_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
 
 // ----------------------------- Validation --------------------------------
 
-function validateConnectionMode(
-  value: unknown,
-  name: string,
-  logger?: LDLogger,
-): FDv2ConnectionMode | undefined {
-  if (isNullish(value)) {
-    return undefined;
-  }
-
-  if (!TypeValidators.String.is(value)) {
-    logger?.warn(OptionMessages.wrongOptionType(name, 'string', typeof value));
-    return undefined;
-  }
-
-  if (!isValidFDv2ConnectionMode(value)) {
-    logger?.warn(
-      OptionMessages.wrongOptionType(
-        name,
-        'streaming | polling | offline | one-shot | background',
-        String(value),
-      ),
-    );
-    return undefined;
-  }
-
-  return value;
-}
-
 function validateAutomaticModeSwitching(
   value: unknown,
   name: string,
+  defaultValue: boolean | AutomaticModeSwitchingConfig,
   logger?: LDLogger,
-): boolean | AutomaticModeSwitchingConfig | undefined {
+): boolean | AutomaticModeSwitchingConfig {
   if (isNullish(value)) {
-    return undefined;
+    return defaultValue;
   }
 
   if (TypeValidators.Boolean.is(value)) {
@@ -79,45 +79,23 @@ function validateAutomaticModeSwitching(
   }
 
   if (TypeValidators.Object.is(value)) {
-    const obj = value as Record<string, unknown>;
-    const result: { lifecycle?: boolean; network?: boolean } = {};
-
-    if (!isNullish(obj.lifecycle)) {
-      if (TypeValidators.Boolean.is(obj.lifecycle)) {
-        result.lifecycle = obj.lifecycle;
-      } else {
-        logger?.warn(
-          OptionMessages.wrongOptionType(`${name}.lifecycle`, 'boolean', typeof obj.lifecycle),
-        );
-      }
-    }
-
-    if (!isNullish(obj.network)) {
-      if (TypeValidators.Boolean.is(obj.network)) {
-        result.network = obj.network;
-      } else {
-        logger?.warn(
-          OptionMessages.wrongOptionType(`${name}.network`, 'boolean', typeof obj.network),
-        );
-      }
-    }
-
-    return result;
+    return validateOptions(
+      value as Record<string, unknown>,
+      modeSwitchingValidators,
+      {},
+      logger,
+      name,
+    ) as AutomaticModeSwitchingConfig;
   }
 
   logger?.warn(OptionMessages.wrongOptionType(name, 'boolean or object', typeof value));
-  return undefined;
+  return defaultValue;
 }
 
 /**
  * Validates a user-provided LDClientDataSystemOptions, logging warnings for
  * any invalid values and replacing them with defaults from the given platform
  * defaults.
- *
- * @param input The unvalidated options (may have incorrect types).
- * @param defaults Platform-specific defaults to fall back to.
- * @param logger Logger for validation warnings.
- * @returns A validated LDClientDataSystemOptions merged with platform defaults.
  */
 function validateDataSystemOptions(
   input: unknown,
@@ -134,30 +112,22 @@ function validateDataSystemOptions(
   }
 
   const obj = input as Record<string, unknown>;
+  const validated = validateOptions(
+    obj,
+    dataSystemValidators,
+    { ...defaults },
+    logger,
+    'dataSystem',
+  );
 
-  const initialConnectionMode =
-    validateConnectionMode(obj.initialConnectionMode, 'dataSystem.initialConnectionMode', logger) ??
-    defaults.initialConnectionMode;
+  validated.automaticModeSwitching = validateAutomaticModeSwitching(
+    obj.automaticModeSwitching,
+    'dataSystem.automaticModeSwitching',
+    defaults.automaticModeSwitching,
+    logger,
+  );
 
-  const backgroundConnectionMode =
-    validateConnectionMode(
-      obj.backgroundConnectionMode,
-      'dataSystem.backgroundConnectionMode',
-      logger,
-    ) ?? defaults.backgroundConnectionMode;
-
-  const automaticModeSwitching =
-    validateAutomaticModeSwitching(
-      obj.automaticModeSwitching,
-      'dataSystem.automaticModeSwitching',
-      logger,
-    ) ?? defaults.automaticModeSwitching;
-
-  return {
-    initialConnectionMode,
-    backgroundConnectionMode,
-    automaticModeSwitching,
-  };
+  return validated as unknown as LDClientDataSystemOptions;
 }
 
 export {

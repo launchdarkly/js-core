@@ -107,7 +107,7 @@ describe('given invalid initialConnectionMode', () => {
     );
 
     expect(result.initialConnectionMode).toBe('one-shot');
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got turbo'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
   });
 
   it('falls back to platform default when mode is a number', () => {
@@ -142,7 +142,7 @@ describe('given invalid backgroundConnectionMode', () => {
     );
 
     expect(result.backgroundConnectionMode).toBe('background');
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got sleep'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('backgroundConnectionMode'));
   });
 
   it('falls back to platform default when mode is an object', () => {
@@ -180,25 +180,25 @@ describe('given invalid automaticModeSwitching', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
-  it('drops invalid lifecycle field in granular config and warns', () => {
+  it('coerces invalid lifecycle field to boolean in granular config and warns', () => {
     const result = validateDataSystemOptions(
       { automaticModeSwitching: { lifecycle: 'yes', network: true } },
       BROWSER_DATA_SYSTEM_DEFAULTS,
       logger,
     );
 
-    expect(result.automaticModeSwitching).toEqual({ network: true });
+    expect(result.automaticModeSwitching).toEqual({ lifecycle: true, network: true });
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('lifecycle'));
   });
 
-  it('drops invalid network field in granular config and warns', () => {
+  it('coerces invalid network field to boolean in granular config and warns', () => {
     const result = validateDataSystemOptions(
       { automaticModeSwitching: { lifecycle: false, network: 0 } },
       BROWSER_DATA_SYSTEM_DEFAULTS,
       logger,
     );
 
-    expect(result.automaticModeSwitching).toEqual({ lifecycle: false });
+    expect(result.automaticModeSwitching).toEqual({ lifecycle: false, network: false });
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('network'));
   });
 });

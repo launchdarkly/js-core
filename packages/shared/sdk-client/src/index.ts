@@ -50,6 +50,7 @@ export type { DataManager, DataManagerFactory, ConnectionParams } from './DataMa
 export type { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 export { safeRegisterDebugOverridePlugins } from './plugins/safeRegisterDebugOverridePlugins';
 export type { Configuration } from './configuration/Configuration';
+export { default as validateOptions } from './configuration/validateOptions';
 
 export type { LDEmitter };
 export type { ItemDescriptor } from './flag-manager/ItemDescriptor';

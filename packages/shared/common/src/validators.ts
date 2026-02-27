@@ -184,6 +184,26 @@ export class KindValidator extends StringMatchingRegex {
   }
 }
 
+// TODO: Remove this duplicate when rlamb/one-of-validator PR merges to main.
+/**
+ * Validate a value is a string matching one of the allowed values.
+ */
+export class OneOf implements TypeValidator {
+  private readonly _values: ReadonlyArray<string>;
+
+  constructor(values: ReadonlyArray<string>) {
+    this._values = values;
+  }
+
+  is(u: unknown): u is string {
+    return typeof u === 'string' && this._values.includes(u);
+  }
+
+  getType(): string {
+    return this._values.join(' | ');
+  }
+}
+
 /**
  * Returns true if the value is null or undefined.
  */
@@ -222,6 +242,10 @@ export class TypeValidators {
   }
 
   static readonly Date = new DateValidator();
+
+  static oneOf(...values: string[]): OneOf {
+    return new OneOf(values);
+  }
 
   static readonly Kind = new KindValidator();
   static readonly NullableBoolean = new NullableBoolean();

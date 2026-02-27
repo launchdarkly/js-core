@@ -184,7 +184,7 @@ describe('given entries with invalid type field', () => {
     );
 
     expect(result?.initializers).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('should be of type string'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('type'));
   });
 
   it('discards an entry where type is missing', () => {
@@ -195,7 +195,7 @@ describe('given entries with invalid type field', () => {
     );
 
     expect(result?.initializers).toEqual([]);
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('should be of type string'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('type'));
   });
 
   it('discards null entries', () => {
@@ -247,25 +247,25 @@ describe('given polling entries with invalid config', () => {
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 
-  it('drops pollInterval when it is zero', () => {
+  it('clamps pollInterval to minimum when it is zero', () => {
     const result = validateModeDefinition(
       { initializers: [], synchronizers: [{ type: 'polling', pollInterval: 0 }] },
       'testMode',
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
+    expect(result?.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 
-  it('drops pollInterval when it is negative', () => {
+  it('clamps pollInterval to minimum when it is negative', () => {
     const result = validateModeDefinition(
       { initializers: [], synchronizers: [{ type: 'polling', pollInterval: -10 }] },
       'testMode',
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
+    expect(result?.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 });
@@ -282,14 +282,14 @@ describe('given streaming entries with invalid config', () => {
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialReconnectDelay'));
   });
 
-  it('drops initialReconnectDelay when it is negative', () => {
+  it('clamps initialReconnectDelay to minimum when it is negative', () => {
     const result = validateModeDefinition(
       { initializers: [], synchronizers: [{ type: 'streaming', initialReconnectDelay: -1 }] },
       'testMode',
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'streaming' }]);
+    expect(result?.synchronizers).toEqual([{ type: 'streaming', initialReconnectDelay: 1 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialReconnectDelay'));
   });
 });
