@@ -18,6 +18,7 @@ import {
   errorInfoFromHttpError,
   errorInfoFromInvalidData,
   errorInfoFromNetworkError,
+  errorInfoFromUnknown,
   FDv2SourceResult,
   goodbye,
   interrupted,
@@ -133,7 +134,7 @@ export function createStreamingBase(config: {
         break;
 
       case 'serverError':
-        resultQueue.put(interrupted(errorInfoFromNetworkError(action.reason), fdv1Fallback));
+        resultQueue.put(interrupted(errorInfoFromUnknown(action.reason), fdv1Fallback));
         break;
 
       case 'error':

@@ -1,135 +1,28 @@
-import { LDLogger, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { createStreamingBase, PingHandler } from '../../../src/datasource/fdv2/StreamingFDv2Base';
+import { PingHandler } from '../../../src/datasource/fdv2/StreamingFDv2Base';
+import {
+  createBase,
+  createMockEventSource,
+  createMockLogger,
+  createMockRequests,
+  sendFullTransfer,
+  serviceEndpoints,
+  simulateErrorFilter,
+  simulateEvent,
+} from './streamingTestHelpers';
 
 let logger: LDLogger;
 
-const serviceEndpoints: ServiceEndpoints = {
-  events: '',
-  polling: '',
-  streaming: 'https://mockstream.ld.com',
-  diagnosticEventPath: '/diagnostic',
-  analyticsEventPath: '/bulk',
-  includeAuthorizationHeader: true,
-  payloadFilterKey: undefined,
-};
-
-const baseHeaders = {
-  authorization: 'test-sdk-key',
-  'user-agent': 'TestUserAgent/2.0.2',
-};
-
-function createMockEventSource() {
-  return {
-    addEventListener: jest.fn(),
-    close: jest.fn(),
-    onclose: jest.fn() as any,
-    onerror: jest.fn() as any,
-    onopen: jest.fn() as any,
-    onretrying: jest.fn() as any,
-  };
-}
-
-function createMockRequests(mockEventSource: ReturnType<typeof createMockEventSource>) {
-  return {
-    createEventSource: jest.fn((_uri: string, _options: any) => mockEventSource),
-    getEventSourceCapabilities: jest.fn(() => ({
-      readTimeout: true,
-      headers: true,
-      customMethod: true,
-    })),
-    fetch: jest.fn(),
-  };
-}
-
-function createBase(
-  mockRequests: ReturnType<typeof createMockRequests>,
-  options: {
-    pingHandler?: PingHandler;
-    streamUriPath?: string;
-    parameters?: { key: string; value: string }[];
-  } = {},
-) {
-  return createStreamingBase({
-    requests: mockRequests as any,
-    serviceEndpoints,
-    streamUriPath: options.streamUriPath ?? '/sdk/stream/eval/test-context',
-    parameters: options.parameters ?? [],
-    headers: baseHeaders,
-    initialRetryDelayMillis: 1000,
-    logger,
-    pingHandler: options.pingHandler,
-  });
-}
-
-/**
- * Simulate an FDv2 event on the mock event source.
- */
-function simulateEvent(
-  mockEventSource: ReturnType<typeof createMockEventSource>,
-  eventName: string,
-  data: any,
-) {
-  const { calls } = mockEventSource.addEventListener.mock;
-  const listener = calls.find((c: any[]) => c[0] === eventName)?.[1];
-  if (!listener) {
-    throw new Error(`No listener registered for event "${eventName}"`);
-  }
-  listener({ data: JSON.stringify(data) });
-}
-
-function simulateErrorFilter(
-  mockRequests: ReturnType<typeof createMockRequests>,
-  error: { status: number; message: string; headers?: Record<string, string> },
-): boolean {
-  const createCall = mockRequests.createEventSource.mock.calls[0];
-  const options = createCall[1];
-  return options.errorFilter(error);
-}
-
-/**
- * Send a complete FDv2 full transfer sequence (server-intent + put-objects + payload-transferred).
- */
-function sendFullTransfer(
-  mockEventSource: ReturnType<typeof createMockEventSource>,
-  flags: Array<{ key: string; version: number; value: any }>,
-  payloadId = 'test-payload',
-  payloadVersion = 1,
-  state = '(p:test:1)',
-) {
-  simulateEvent(mockEventSource, 'server-intent', {
-    payloads: [{ intentCode: 'xfer-full', id: payloadId, target: payloadVersion, reason: 'test' }],
-  });
-
-  flags.forEach((flag) => {
-    simulateEvent(mockEventSource, 'put-object', {
-      kind: 'flagEval',
-      key: flag.key,
-      version: flag.version,
-      object: { value: flag.value, trackEvents: false },
-    });
-  });
-
-  simulateEvent(mockEventSource, 'payload-transferred', {
-    state,
-    version: payloadVersion,
-  });
-}
-
 beforeEach(() => {
-  logger = {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
+  logger = createMockLogger();
 });
 
 it('creates EventSource with correct URI and options', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
 
-  const base = createBase(mockRequests, {
+  const base = createBase(mockRequests, logger, {
     streamUriPath: '/sdk/stream/eval/ctx',
     parameters: [{ key: 'withReasons', value: 'true' }],
   });
@@ -138,7 +31,6 @@ it('creates EventSource with correct URI and options', () => {
   expect(mockRequests.createEventSource).toHaveBeenCalledWith(
     `${serviceEndpoints.streaming}/sdk/stream/eval/ctx?withReasons=true`,
     expect.objectContaining({
-      headers: baseHeaders,
       initialRetryDelayMillis: 1000,
       readTimeoutMillis: 300000,
       retryResetIntervalMillis: 60000,
@@ -150,7 +42,7 @@ it('creates EventSource with correct URI and options', () => {
 it('produces a changeSet result for a full transfer', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   sendFullTransfer(mockEventSource, [{ key: 'my-flag', version: 5, value: 'green' }]);
@@ -171,14 +63,12 @@ it('produces a changeSet result for a full transfer', async () => {
 it('produces a partial changeSet for incremental updates', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
-  // First do a full transfer to establish state.
   sendFullTransfer(mockEventSource, [{ key: 'flag-a', version: 1, value: true }]);
   await base.takeResult();
 
-  // Now send incremental changes.
   simulateEvent(mockEventSource, 'put-object', {
     kind: 'flagEval',
     key: 'flag-a',
@@ -210,7 +100,7 @@ it('produces a partial changeSet for incremental updates', async () => {
 it('produces a changeSet with type none for intent code none', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   simulateEvent(mockEventSource, 'server-intent', {
@@ -230,7 +120,7 @@ it('produces a changeSet with type none for intent code none', async () => {
 it('produces a goodbye status result', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   simulateEvent(mockEventSource, 'goodbye', {
@@ -252,12 +142,11 @@ it('produces a goodbye status result', async () => {
 it('ignores heart-beat events without queuing results', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   simulateEvent(mockEventSource, 'heart-beat', {});
 
-  // Send a real event to verify the heartbeat didn't block the queue.
   sendFullTransfer(mockEventSource, [{ key: 'flag', version: 1, value: true }]);
 
   const result = await base.takeResult();
@@ -269,7 +158,7 @@ it('ignores heart-beat events without queuing results', async () => {
 it('silently ignores unrecognized object kinds', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   simulateEvent(mockEventSource, 'server-intent', {
@@ -293,7 +182,6 @@ it('silently ignores unrecognized object kinds', async () => {
   expect(result.type).toBe('changeSet');
   if (result.type !== 'changeSet') return;
 
-  // Only the known flagEval should be present.
   expect(result.payload.updates).toHaveLength(1);
   expect(result.payload.updates[0].key).toBe('known');
 
@@ -303,10 +191,9 @@ it('silently ignores unrecognized object kinds', async () => {
 it('produces interrupted status for malformed JSON in event data', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
-  // Simulate a raw event with invalid JSON.
   const { calls } = mockEventSource.addEventListener.mock;
   const listener = calls.find((c: any[]) => c[0] === 'server-intent')?.[1];
   listener({ data: 'not-valid-json{{{' });
@@ -325,7 +212,7 @@ describe.each([408, 429, 500, 503])('given recoverable HTTP error %d', (status) 
   it('retries and produces interrupted status', async () => {
     const mockEventSource = createMockEventSource();
     const mockRequests = createMockRequests(mockEventSource);
-    const base = createBase(mockRequests);
+    const base = createBase(mockRequests, logger);
     base.start();
 
     const willRetry = simulateErrorFilter(mockRequests, {
@@ -349,7 +236,7 @@ describe.each([401, 403])('given irrecoverable HTTP error %d', (status) => {
   it('stops and produces terminal_error status', async () => {
     const mockEventSource = createMockEventSource();
     const mockRequests = createMockRequests(mockEventSource);
-    const base = createBase(mockRequests);
+    const base = createBase(mockRequests, logger);
     base.start();
 
     const willRetry = simulateErrorFilter(mockRequests, {
@@ -373,7 +260,7 @@ describe.each([401, 403])('given irrecoverable HTTP error %d', (status) => {
 it('detects x-ld-fd-fallback header and sets fdv1Fallback', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   const willRetry = simulateErrorFilter(mockRequests, {
@@ -397,10 +284,9 @@ it('detects x-ld-fd-fallback header and sets fdv1Fallback', async () => {
 it('resets protocol handler on reconnection (onopen)', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
-  // Start a transfer but don't finish it.
   simulateEvent(mockEventSource, 'server-intent', {
     payloads: [{ intentCode: 'xfer-full', id: 'p1', target: 1, reason: 'test' }],
   });
@@ -411,10 +297,8 @@ it('resets protocol handler on reconnection (onopen)', async () => {
     object: { value: true, trackEvents: false },
   });
 
-  // Simulate reconnection.
   mockEventSource.onopen();
 
-  // After reset, a new full transfer should work from scratch.
   sendFullTransfer(mockEventSource, [{ key: 'flag-b', version: 2, value: 'blue' }]);
 
   const result = await base.takeResult();
@@ -447,10 +331,9 @@ it('handles ping events by calling ping handler and queuing the result', async (
     handlePing: jest.fn().mockResolvedValue(pingResult),
   };
 
-  const base = createBase(mockRequests, { pingHandler });
+  const base = createBase(mockRequests, logger, { pingHandler });
   base.start();
 
-  // Simulate the ping event.
   const { calls } = mockEventSource.addEventListener.mock;
   const pingListener = calls.find((c: any[]) => c[0] === 'ping')?.[1];
   expect(pingListener).toBeDefined();
@@ -470,7 +353,7 @@ it('produces interrupted status when ping handler throws', async () => {
     handlePing: jest.fn().mockRejectedValue(new Error('network error')),
   };
 
-  const base = createBase(mockRequests, { pingHandler });
+  const base = createBase(mockRequests, logger, { pingHandler });
   base.start();
 
   const { calls } = mockEventSource.addEventListener.mock;
@@ -490,7 +373,7 @@ it('produces interrupted status when ping handler throws', async () => {
 it('warns when ping event received without handler', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests); // no pingHandler
+  const base = createBase(mockRequests, logger);
   base.start();
 
   const { calls } = mockEventSource.addEventListener.mock;
@@ -505,17 +388,15 @@ it('warns when ping event received without handler', () => {
 it('skips events received after close', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
   base.close();
 
-  // The close itself puts a shutdown result.
   const result = await base.takeResult();
   expect(result.type).toBe('status');
   if (result.type !== 'status') return;
   expect(result.state).toBe('shutdown');
 
-  // Now simulate an event arriving after close.
   simulateEvent(mockEventSource, 'server-intent', {
     payloads: [{ intentCode: 'xfer-full', id: 'p1', target: 1, reason: 'test' }],
   });
@@ -526,19 +407,11 @@ it('skips events received after close', async () => {
 it('produces results in order', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
-  // First: a full transfer.
-  sendFullTransfer(
-    mockEventSource,
-    [{ key: 'flag-1', version: 1, value: 'first' }],
-    'p1',
-    1,
-    '(p:p1:1)',
-  );
+  sendFullTransfer(mockEventSource, [{ key: 'flag-1', version: 1, value: 'first' }]);
 
-  // Second: a goodbye.
   simulateEvent(mockEventSource, 'goodbye', {
     reason: 'bye',
     silent: false,
@@ -560,11 +433,11 @@ it('produces results in order', async () => {
 it('close is idempotent', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.start();
 
   base.close();
-  base.close(); // should not throw
+  base.close();
 
   expect(mockEventSource.close).toHaveBeenCalledTimes(1);
 });
@@ -572,7 +445,7 @@ it('close is idempotent', () => {
 it('start after close is a no-op', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
   base.close();
   base.start();
 
@@ -582,7 +455,7 @@ it('start after close is a no-op', () => {
 it('calling start twice does not create a second EventSource', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
-  const base = createBase(mockRequests);
+  const base = createBase(mockRequests, logger);
 
   base.start();
   base.start();

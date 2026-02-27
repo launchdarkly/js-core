@@ -1,83 +1,25 @@
-import { LDLogger, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { createStreamingBase } from '../../../src/datasource/fdv2/StreamingFDv2Base';
 import { createStreamingSynchronizer } from '../../../src/datasource/fdv2/StreamingSynchronizerFDv2';
+import {
+  createMockEventSource,
+  createMockLogger,
+  createMockRequests,
+  sendFullTransfer,
+  serviceEndpoints,
+  simulateEvent,
+} from './streamingTestHelpers';
 
 let logger: LDLogger;
 
-const serviceEndpoints: ServiceEndpoints = {
-  events: '',
-  polling: '',
-  streaming: 'https://mockstream.ld.com',
-  diagnosticEventPath: '/diagnostic',
-  analyticsEventPath: '/bulk',
-  includeAuthorizationHeader: true,
-  payloadFilterKey: undefined,
-};
-
-function createMockEventSource() {
-  return {
-    addEventListener: jest.fn(),
-    close: jest.fn(),
-    onclose: jest.fn() as any,
-    onerror: jest.fn() as any,
-    onopen: jest.fn() as any,
-    onretrying: jest.fn() as any,
-  };
-}
-
-function simulateEvent(
-  mockEventSource: ReturnType<typeof createMockEventSource>,
-  eventName: string,
-  data: any,
-) {
-  const { calls } = mockEventSource.addEventListener.mock;
-  const listener = calls.find((c: any[]) => c[0] === eventName)?.[1];
-  if (listener) {
-    listener({ data: JSON.stringify(data) });
-  }
-}
-
-function sendFullTransfer(
-  mockEventSource: ReturnType<typeof createMockEventSource>,
-  flagKey = 'flag',
-  flagValue: any = true,
-) {
-  simulateEvent(mockEventSource, 'server-intent', {
-    payloads: [{ intentCode: 'xfer-full', id: 'p1', target: 1, reason: 'test' }],
-  });
-  simulateEvent(mockEventSource, 'put-object', {
-    kind: 'flagEval',
-    key: flagKey,
-    version: 1,
-    object: { value: flagValue, trackEvents: false },
-  });
-  simulateEvent(mockEventSource, 'payload-transferred', {
-    state: '(p:p1:1)',
-    version: 1,
-  });
-}
-
 beforeEach(() => {
-  logger = {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
+  logger = createMockLogger();
 });
 
 function createSynchronizer() {
   const mockEventSource = createMockEventSource();
-  const mockRequests = {
-    createEventSource: jest.fn(() => mockEventSource),
-    getEventSourceCapabilities: jest.fn(() => ({
-      readTimeout: true,
-      headers: true,
-      customMethod: true,
-    })),
-    fetch: jest.fn(),
-  };
+  const mockRequests = createMockRequests(mockEventSource);
 
   const base = createStreamingBase({
     requests: mockRequests as any,
@@ -96,10 +38,8 @@ function createSynchronizer() {
 it('lazily starts connection on first next() call', () => {
   const { synchronizer, mockRequests } = createSynchronizer();
 
-  // Not started yet.
   expect(mockRequests.createEventSource).not.toHaveBeenCalled();
 
-  // Trigger lazy start.
   synchronizer.next();
   expect(mockRequests.createEventSource).toHaveBeenCalledTimes(1);
 
@@ -110,11 +50,11 @@ it('does not create EventSource again on subsequent next() calls', () => {
   const { synchronizer, mockRequests, mockEventSource } = createSynchronizer();
 
   synchronizer.next();
-  synchronizer.next(); // should not start again
+  synchronizer.next();
 
   expect(mockRequests.createEventSource).toHaveBeenCalledTimes(1);
 
-  sendFullTransfer(mockEventSource);
+  sendFullTransfer(mockEventSource, [{ key: 'flag', version: 1, value: true }]);
 
   synchronizer.close();
 });
@@ -123,7 +63,7 @@ it('returns successive changeSet results', async () => {
   const { synchronizer, mockEventSource } = createSynchronizer();
 
   const p1 = synchronizer.next();
-  sendFullTransfer(mockEventSource, 'flag-1', 'first');
+  sendFullTransfer(mockEventSource, [{ key: 'flag-1', version: 1, value: 'first' }]);
   const r1 = await p1;
 
   expect(r1.type).toBe('changeSet');
@@ -131,7 +71,6 @@ it('returns successive changeSet results', async () => {
     expect(r1.payload.updates[0].key).toBe('flag-1');
   }
 
-  // After a full transfer, incremental updates come on partial payloads.
   const p2 = synchronizer.next();
   simulateEvent(mockEventSource, 'put-object', {
     kind: 'flagEval',
@@ -183,9 +122,9 @@ it('next after close returns shutdown immediately', async () => {
 it('close is idempotent', () => {
   const { synchronizer, mockEventSource } = createSynchronizer();
 
-  synchronizer.next(); // start
+  synchronizer.next();
   synchronizer.close();
-  synchronizer.close(); // should not throw
+  synchronizer.close();
 
   expect(mockEventSource.close).toHaveBeenCalledTimes(1);
 });
@@ -194,7 +133,6 @@ it('propagates fdv1Fallback flag on results', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = {
     createEventSource: jest.fn((_uri: string, options: any) => {
-      // Simulate fallback header error after connection.
       setTimeout(() => {
         options.errorFilter({
           status: 200,
