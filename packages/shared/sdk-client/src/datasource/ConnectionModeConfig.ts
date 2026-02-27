@@ -42,7 +42,7 @@ const streamingEntryValidators = {
   endpoints: validatorOf(endpointValidators),
 };
 
-const dataSourceEntryArrayValidator = arrayOf(cacheEntryValidators, 'type', {
+const dataSourceEntryArrayValidator = arrayOf('type', {
   cache: cacheEntryValidators,
   polling: pollingEntryValidators,
   streaming: streamingEntryValidators,

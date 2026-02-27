@@ -111,14 +111,33 @@ export function validatorOf(validators: Record<string, TypeValidator>): Compound
 }
 
 /**
- * Creates a validator for arrays of objects with per-item validation.
- * Invalid items are filtered out. Use `discriminant` and `validatorsByType`
- * to select different validators based on a field value (e.g. `type`).
+ * Creates a validator for arrays of discriminated objects. Each item in the
+ * array must be an object containing a `discriminant` field whose value
+ * selects which validator map to apply. The valid discriminant values are
+ * the keys of `validatorsByType`. Items that are not objects, or whose
+ * discriminant value is missing or unrecognized, are filtered out with a
+ * warning.
+ *
+ * @param discriminant - The field name used to determine each item's type.
+ * @param validatorsByType - A mapping from discriminant values to the
+ *   validator maps used to validate items of that type. Each validator map
+ *   should include a validator for the discriminant field itself.
+ *
+ * @example
+ * ```ts
+ * // Validates an array like:
+ * //   [{ type: 'polling', pollInterval: 60 }, { type: 'cache' }]
+ *
+ * const validator = arrayOf('type', {
+ *   cache: { type: TypeValidators.String },
+ *   polling: { type: TypeValidators.String, pollInterval: TypeValidators.numberWithMin(30) },
+ *   streaming: { type: TypeValidators.String, initialReconnectDelay: TypeValidators.numberWithMin(1) },
+ * });
+ * ```
  */
 export function arrayOf(
-  itemValidators: Record<string, TypeValidator>,
-  discriminant?: string,
-  validatorsByType?: Record<string, Record<string, TypeValidator>>,
+  discriminant: string,
+  validatorsByType: Record<string, Record<string, TypeValidator>>,
 ): CompoundValidator {
   return {
     is: (u: unknown) => Array.isArray(u),
@@ -140,26 +159,16 @@ export function arrayOf(
         }
 
         const obj = item as Record<string, unknown>;
+        const typeValue = obj[discriminant];
+        const validators = typeof typeValue === 'string' ? validatorsByType[typeValue] : undefined;
 
-        let validators = itemValidators;
-        if (discriminant && validatorsByType) {
-          const discriminantValidator = validators[discriminant];
-          const typeValue = obj[discriminant];
-
-          if (!discriminantValidator || !discriminantValidator.is(typeValue)) {
-            const received =
-              typeof typeValue === 'string' ? (typeValue as string) : typeof typeValue;
-            logger?.warn(
-              OptionMessages.wrongOptionType(
-                `${itemPath}.${discriminant}`,
-                discriminantValidator?.getType() ?? 'string',
-                received,
-              ),
-            );
-            return;
-          }
-
-          validators = validatorsByType[typeValue as string] ?? itemValidators;
+        if (!validators) {
+          const expected = Object.keys(validatorsByType).join(' | ');
+          const received = typeof typeValue === 'string' ? typeValue : typeof typeValue;
+          logger?.warn(
+            OptionMessages.wrongOptionType(`${itemPath}.${discriminant}`, expected, received),
+          );
+          return;
         }
 
         results.push(validateOptions(obj, validators, {}, logger, itemPath));
