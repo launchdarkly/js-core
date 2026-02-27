@@ -109,3 +109,31 @@ describe.each([
     expect(validator.is(min - 1)).toBeFalsy();
   });
 });
+
+describe('given a oneOf validator', () => {
+  const validator = TypeValidators.oneOf('streaming', 'polling', 'offline');
+
+  it('accepts values in the allowed set', () => {
+    expect(validator.is('streaming')).toBeTruthy();
+    expect(validator.is('polling')).toBeTruthy();
+    expect(validator.is('offline')).toBeTruthy();
+  });
+
+  it('rejects values not in the allowed set', () => {
+    expect(validator.is('turbo')).toBeFalsy();
+    expect(validator.is('')).toBeFalsy();
+    expect(validator.is('STREAMING')).toBeFalsy();
+  });
+
+  it('rejects non-string values', () => {
+    expect(validator.is(42)).toBeFalsy();
+    expect(validator.is(true)).toBeFalsy();
+    expect(validator.is(null)).toBeFalsy();
+    expect(validator.is(undefined)).toBeFalsy();
+    expect(validator.is({})).toBeFalsy();
+  });
+
+  it('reports the type as the allowed values joined by pipes', () => {
+    expect(validator.getType()).toBe('streaming | polling | offline');
+  });
+});
