@@ -167,6 +167,11 @@
           "type": "json",
           "path": "examples/hello-node-client/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/electron/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-client-sdk']"
         }
       ]
     },

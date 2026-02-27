@@ -1,4 +1,5 @@
 export type {
+  ConnectionMode,
   InitializerEntry,
   ModeDefinition,
   SynchronizerEntry,

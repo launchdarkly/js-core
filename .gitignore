@@ -22,6 +22,7 @@ yarn-error.log
 dump.rdb
 .wrangler
 stats.html
+ldclient-user-cache/
 
 # Environment files
 .env

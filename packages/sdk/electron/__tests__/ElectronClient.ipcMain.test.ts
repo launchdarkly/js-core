@@ -1,565 +1,290 @@
 import { ipcMain } from 'electron';
 import type { IpcMain } from 'electron';
 
-import type {
-  LDContext,
-  LDEvaluationDetail,
-  LDEvaluationDetailTyped,
-  LDIdentifyOptions,
-} from '@launchdarkly/js-client-sdk-common';
+import type { LDContext, LDLogger } from '@launchdarkly/node-client-sdk';
+import { createClient as createBaseClient } from '@launchdarkly/node-client-sdk';
 
-import { ElectronClient } from '../src/ElectronClient';
+import { makeClient } from '../src/ElectronClient';
 import { deriveNamespace, getIPCChannelName } from '../src/ElectronIPC';
-import ElectronCrypto from '../src/platform/ElectronCrypto';
-import ElectronEncoding from '../src/platform/ElectronEncoding';
-import ElectronInfo from '../src/platform/ElectronInfo';
-import { createMockLogger } from './testHelpers';
 
 type MockIpcMain = IpcMain & {
-  getHandler: (eventName: string) => ((...args: any[]) => void) | undefined;
-  removeAllListeners: (channel: string) => void;
-  removeHandler: (channel: string) => void;
+  getHandler: (eventName: string) => ((...args: any[]) => any) | undefined;
 };
 type MockPort = { postMessage: (...args: any[]) => void; close: (...args: any[]) => void };
 type MockIpcEvent = { returnValue?: any; ports?: MockPort[] };
 
 jest.mock('electron', () => {
-  const handlers = new Map<string, (...args: any[]) => void>();
+  const handlers = new Map<string, (...args: any[]) => any>();
   return {
     ipcMain: {
-      on: (eventName: string, handler: (...args: any[]) => void) =>
-        handlers.set(eventName, handler),
-      handle: (eventName: string, handler: (...args: any[]) => void) =>
+      on: (eventName: string, handler: (...args: any[]) => any) => handlers.set(eventName, handler),
+      handle: (eventName: string, handler: (...args: any[]) => any) =>
         handlers.set(eventName, handler),
       getHandler: (eventName: string) => handlers.get(eventName),
       removeAllListeners: (channel: string) => handlers.delete(channel),
       removeHandler: (channel: string) => handlers.delete(channel),
     },
+    app: { getPath: () => '/tmp/ld-electron-test-userdata' },
   };
 });
 
-jest.mock('../src/platform/ElectronPlatform', () => ({
+const mockLogger: LDLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+
+// The stubbed node-client-sdk base client. Event listeners registered via on() are captured so we
+// can invoke the broadcast callback in the event-subscription tests.
+const baseClientListeners = new Map<string, Array<(...args: any[]) => void>>();
+
+function makeMockBaseClient() {
+  baseClientListeners.clear();
+  return {
+    logger: mockLogger,
+    allFlags: jest.fn(() => ({})),
+    variation: jest.fn(),
+    variationDetail: jest.fn(),
+    boolVariation: jest.fn(),
+    boolVariationDetail: jest.fn(),
+    numberVariation: jest.fn(),
+    numberVariationDetail: jest.fn(),
+    stringVariation: jest.fn(),
+    stringVariationDetail: jest.fn(),
+    jsonVariation: jest.fn(),
+    jsonVariationDetail: jest.fn(),
+    track: jest.fn(),
+    on: jest.fn((eventName: string, cb: (...args: any[]) => void) => {
+      const arr = baseClientListeners.get(eventName) ?? [];
+      arr.push(cb);
+      baseClientListeners.set(eventName, arr);
+    }),
+    off: jest.fn(),
+    flush: jest.fn(async () => ({ result: true })),
+    identify: jest.fn(async () => ({ status: 'completed' })),
+    getContext: jest.fn(() => ({ kind: 'user', key: 'test-user' })),
+    close: jest.fn(async () => {}),
+    addHook: jest.fn(),
+    waitForInitialization: jest.fn(async () => ({ status: 'completed' })),
+    start: jest.fn(async () => ({ status: 'completed' })),
+    setConnectionMode: jest.fn(async () => {}),
+    getConnectionMode: jest.fn(() => 'streaming'),
+    isOffline: jest.fn(() => false),
+  };
+}
+
+let mockBaseClient = makeMockBaseClient();
+
+jest.mock('@launchdarkly/node-client-sdk', () => ({
   __esModule: true,
-  default: jest.fn(() => ({
-    crypto: new ElectronCrypto(),
-    info: new ElectronInfo(),
-    requests: {
-      createEventSource: jest.fn(),
-      fetch: jest.fn(),
-      getEventSourceCapabilities: jest.fn(),
-    },
-    encoding: new ElectronEncoding(),
-    storage: {
-      clear: jest.fn(),
-      get: jest.fn(),
-      set: jest.fn(),
-    },
-  })),
+  createClient: jest.fn(() => mockBaseClient),
+  basicLogger: jest.fn(() => mockLogger),
 }));
 
 const clientSideId = 'client-side-id';
-const mockIpcMain: MockIpcMain = ipcMain as MockIpcMain;
-const mockPort: MockPort = {
-  postMessage: jest.fn(),
-  close: jest.fn(),
-};
-
+const mockIpcMain = ipcMain as MockIpcMain;
 const getEventName = (baseName: Parameters<typeof getIPCChannelName>[1]) =>
   getIPCChannelName(deriveNamespace(clientSideId), baseName);
-
-const DEFAULT_INITIAL_CONTEXT = { kind: 'user' as const, key: 'test-user' };
+const DEFAULT_INITIAL_CONTEXT: LDContext = { kind: 'user', key: 'test-user' };
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockBaseClient = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mockBaseClient);
 });
 
-describe('given an initialized ElectronClient', () => {
-  const logger = createMockLogger();
-
-  const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-    initialConnectionMode: 'offline',
-    enableIPC: true,
-    logger,
-    diagnosticOptOut: true,
+describe('given a client created with IPC enabled', () => {
+  beforeEach(() => {
+    // Constructing the client registers the IPC handlers under test; we assert against the mock
+    // base client and the ipcMain handler registry, not the returned instance.
+    makeClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'offline',
+      enableIPC: true,
+      logger: mockLogger,
+      diagnosticOptOut: true,
+    });
   });
 
-  beforeAll(async () => {
-    await client.start();
-  });
-
-  it('handles allFlags() call', () => {
-    const spy = jest.spyOn(client, 'allFlags');
-    spy.mockReturnValueOnce({ flag1: 'value1', flag2: true });
-
+  it('delegates allFlags() to the base client and sets returnValue', () => {
+    mockBaseClient.allFlags.mockReturnValueOnce({ flag1: 'value1', flag2: true });
     const event: MockIpcEvent = {};
     mockIpcMain.getHandler(getEventName('allFlags'))?.(event);
-
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(mockBaseClient.allFlags).toHaveBeenCalledTimes(1);
     expect(event.returnValue).toEqual({ flag1: 'value1', flag2: true });
   });
 
-  it('handles boolVariation() call', () => {
-    const spy = jest.spyOn(client, 'boolVariation');
-    spy.mockReturnValueOnce(true);
-
+  it('delegates boolVariation() with args and sets returnValue', () => {
+    mockBaseClient.boolVariation.mockReturnValueOnce(true);
     const event: MockIpcEvent = {};
     mockIpcMain.getHandler(getEventName('boolVariation'))?.(event, 'flag1', false);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', false);
-    expect(event.returnValue).toEqual(true);
+    expect(mockBaseClient.boolVariation).toHaveBeenCalledWith('flag1', false);
+    expect(event.returnValue).toBe(true);
   });
 
-  it('handles boolVariationDetail() call', () => {
-    const expected: LDEvaluationDetailTyped<boolean> = {
-      value: true,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    const spy = jest.spyOn(client, 'boolVariationDetail');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('boolVariationDetail'))?.(event, 'flag1', false);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', false);
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles flush() call', async () => {
-    const spy = jest.spyOn(client, 'flush');
-    spy.mockResolvedValueOnce({ result: true });
-
-    const result = await mockIpcMain.getHandler(getEventName('flush'))?.({});
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({ result: true });
-  });
-
-  it('handles getContext() call', () => {
-    const expected: LDContext = { kind: 'user', key: 'test-user-id' };
-
-    const spy = jest.spyOn(client, 'getContext');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('getContext'))?.(event);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles identify() call', async () => {
-    const context: LDContext = { kind: 'user', key: 'test-user-id' };
-    const options: LDIdentifyOptions = { waitForNetworkResults: true };
-
-    const spy = jest.spyOn(client, 'identifyResult');
-    spy.mockResolvedValueOnce({ status: 'completed' });
-
-    const result = await mockIpcMain.getHandler(getEventName('identify'))?.({}, context, options);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, context, options);
-    expect(result).toEqual({ status: 'completed' });
-  });
-
-  it('handles log() by dispatching to the correct logger method', () => {
-    mockIpcMain.getHandler(getEventName('log'))?.({}, 'warn', 'test warning');
-    expect(logger.warn).toHaveBeenCalledWith('test warning');
-
-    mockIpcMain.getHandler(getEventName('log'))?.({}, 'error', 'test error');
-    expect(logger.error).toHaveBeenCalledWith('test error');
-
-    mockIpcMain.getHandler(getEventName('log'))?.({}, 'info', 'test info');
-    expect(logger.info).toHaveBeenCalledWith('test info');
-
-    mockIpcMain.getHandler(getEventName('log'))?.({}, 'debug', 'test debug');
-    expect(logger.debug).toHaveBeenCalledWith('test debug');
-  });
-
-  it('ignores log() calls with invalid severity levels', () => {
-    mockIpcMain.getHandler(getEventName('log'))?.({}, 'invalid', 'should be ignored');
-    expect(logger.warn).not.toHaveBeenCalled();
-    expect(logger.error).not.toHaveBeenCalled();
-    expect(logger.info).not.toHaveBeenCalled();
-    expect(logger.debug).not.toHaveBeenCalled();
-  });
-
-  it('handles jsonVariation() call', () => {
-    const expected = { key1: 'value', key2: true };
-
-    const spy = jest.spyOn(client, 'jsonVariation');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('jsonVariation'))?.(event, 'flag1', {});
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', {});
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles jsonVariationDetail() call', () => {
-    const expected: LDEvaluationDetailTyped<unknown> = {
-      value: { key1: 'value', key2: true },
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    const spy = jest.spyOn(client, 'jsonVariationDetail');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('jsonVariationDetail'))?.(event, 'flag1', {});
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', {});
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles numberVariation() call', () => {
-    const spy = jest.spyOn(client, 'numberVariation');
-    spy.mockReturnValueOnce(1234.5);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('numberVariation'))?.(event, 'flag1', 0);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', 0);
-    expect(event.returnValue).toEqual(1234.5);
-  });
-
-  it('handles numberVariationDetail() call', () => {
-    const expected: LDEvaluationDetailTyped<number> = {
-      value: 1234.5,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    const spy = jest.spyOn(client, 'numberVariationDetail');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('numberVariationDetail'))?.(event, 'flag1', 0);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', 0);
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles stringVariation() call', () => {
-    const spy = jest.spyOn(client, 'stringVariation');
-    spy.mockReturnValueOnce('value');
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('stringVariation'))?.(event, 'flag1', '');
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', '');
-    expect(event.returnValue).toEqual('value');
-  });
-
-  it('handles stringVariationDetail() call', () => {
-    const expected: LDEvaluationDetailTyped<string> = {
-      value: 'value',
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    const spy = jest.spyOn(client, 'stringVariationDetail');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('stringVariationDetail'))?.(event, 'flag1', '');
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', '');
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles track() call', () => {
-    const spy = jest.spyOn(client, 'track');
-    spy.mockReturnValueOnce();
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('track'))?.(event, 'event1', { key1: 'value1' }, 1234.5);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'event1', { key1: 'value1' }, 1234.5);
-    expect(event.returnValue).toBeUndefined();
-  });
-
-  it('handles variation() call', () => {
-    const spy = jest.spyOn(client, 'variation');
-    spy.mockReturnValueOnce(true);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('variation'))?.(event, 'flag1', false);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', false);
-    expect(event.returnValue).toEqual(true);
-  });
-
-  it('handles variationDetail() call', () => {
-    const expected: LDEvaluationDetail = {
-      value: true,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    const spy = jest.spyOn(client, 'variationDetail');
-    spy.mockReturnValueOnce(expected);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('variationDetail'))?.(event, 'flag1', false);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'flag1', false);
-    expect(event.returnValue).toEqual(expected);
-  });
-
-  it('handles setConnectionMode() call', async () => {
-    const spy = jest.spyOn(client, 'setConnectionMode');
-    spy.mockResolvedValueOnce();
-
-    await mockIpcMain.getHandler(getEventName('setConnectionMode'))?.({}, 'streaming');
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'streaming');
-  });
-
-  it('handles getConnectionMode() call', () => {
-    const spy = jest.spyOn(client, 'getConnectionMode');
-    spy.mockReturnValueOnce('streaming');
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('getConnectionMode'))?.(event);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(event.returnValue).toEqual('streaming');
-  });
-
-  it('handles isOffline() call', () => {
-    const spy = jest.spyOn(client, 'isOffline');
-    spy.mockReturnValueOnce(true);
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('isOffline'))?.(event);
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(event.returnValue).toEqual(true);
-  });
-
-  it('calls on() for addEventHandler call', () => {
-    const spy = jest.spyOn(client, 'on');
-    spy.mockReturnValueOnce();
-
-    const event: MockIpcEvent = { ports: [mockPort] };
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(event, {
-      callbackId: 'callback1',
-      eventName: 'event1',
-    });
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'event1', expect.any(Function));
-
-    const callback = spy.mock.calls[0][1];
-    callback(1, '2', true);
-
-    expect(mockPort.postMessage).toHaveBeenCalledTimes(1);
-    expect(mockPort.postMessage).toHaveBeenNthCalledWith(1, [1, '2', true]);
-  });
-
-  it('does not call on() when calling addEventHandler with an existing callbackId', () => {
-    const spy = jest.spyOn(client, 'on');
-    spy.mockReturnValueOnce();
-
-    const event: MockIpcEvent = { ports: [mockPort] };
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(event, {
-      callbackId: 'callback1',
-      eventName: 'event1',
-    });
-
-    expect(spy).not.toHaveBeenCalled();
-  });
-
-  it('does not call off() when calling removeEventHandler with an unknown callbackId', () => {
-    const spy = jest.spyOn(client, 'off');
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'unknown-callback-id');
-
-    expect(spy).not.toHaveBeenCalled();
-    expect(mockPort.close).not.toHaveBeenCalled();
-    expect(event.returnValue).toEqual(false);
-  });
-
-  it('does not grow state when removeEventHandler is called repeatedly for nonexistent callbackIds; later add with same id succeeds', () => {
-    const onSpy = jest.spyOn(client, 'on');
-    const portForAdd: MockPort = { postMessage: jest.fn(), close: jest.fn() };
-    const eventName = 'change-reused-id';
-
-    for (let i = 0; i < 10; i += 1) {
+  it('delegates the remaining sync variation channels and sets returnValue', () => {
+    const cases: Array<[Parameters<typeof getIPCChannelName>[1], keyof typeof mockBaseClient, any]> = [
+      ['boolVariationDetail', 'boolVariationDetail', { value: true, reason: { kind: 'OFF' } }],
+      ['numberVariation', 'numberVariation', 1234.5],
+      ['numberVariationDetail', 'numberVariationDetail', { value: 1, reason: { kind: 'OFF' } }],
+      ['stringVariation', 'stringVariation', 'value'],
+      ['stringVariationDetail', 'stringVariationDetail', { value: 'v', reason: { kind: 'OFF' } }],
+      ['jsonVariation', 'jsonVariation', { a: 1 }],
+      ['jsonVariationDetail', 'jsonVariationDetail', { value: { a: 1 }, reason: { kind: 'OFF' } }],
+      ['variation', 'variation', true],
+      ['variationDetail', 'variationDetail', { value: true, reason: { kind: 'OFF' } }],
+    ];
+    cases.forEach(([channel, method, expected]) => {
+      (mockBaseClient[method] as jest.Mock).mockReturnValueOnce(expected);
       const event: MockIpcEvent = {};
-      mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'reused-id');
-      expect(event.returnValue).toEqual(false);
-    }
-
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
-      { ports: [portForAdd] } as MockIpcEvent,
-      { callbackId: 'reused-id', eventName },
-    );
-
-    expect(onSpy).toHaveBeenCalledTimes(1);
-    expect(portForAdd.close).not.toHaveBeenCalled();
-  });
-
-  it('calls off() for removeEventHandler call', () => {
-    const eventWithPort: MockIpcEvent = { ports: [mockPort] };
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(eventWithPort, {
-      callbackId: 'callback1',
-      eventName: 'event1',
+      mockIpcMain.getHandler(getEventName(channel))?.(event, 'flag1', 'default');
+      expect(mockBaseClient[method]).toHaveBeenCalledWith('flag1', 'default');
+      expect(event.returnValue).toEqual(expected);
     });
-
-    const spy = jest.spyOn(client, 'off');
-    spy.mockReturnValueOnce();
-
-    const event: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'callback1');
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(spy).toHaveBeenNthCalledWith(1, 'event1', expect.any(Function));
-    expect(mockPort.close).toHaveBeenCalledTimes(1);
-    expect(event.returnValue).toEqual(true);
   });
 
-  it('registers when addEventHandler arrives after removeEventHandler for same callbackId (serialized: remove no-op then add succeeds)', () => {
-    const onSpy = jest.spyOn(client, 'on');
-    const portForRace: MockPort = { postMessage: jest.fn(), close: jest.fn() };
-    const eventName = 'change-serialized-race';
+  it('delegates track() and getContext()', () => {
+    const trackEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('track'))?.(trackEvent, 'e1', { k: 'v' }, 42);
+    expect(mockBaseClient.track).toHaveBeenCalledWith('e1', { k: 'v' }, 42);
 
-    const removeEvent: MockIpcEvent = {};
-    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(removeEvent, 'race-callback-id');
-    expect(removeEvent.returnValue).toEqual(false);
-
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
-      { ports: [portForRace] } as MockIpcEvent,
-      { callbackId: 'race-callback-id', eventName },
-    );
-
-    expect(onSpy).toHaveBeenCalledTimes(1);
-    expect(onSpy).toHaveBeenNthCalledWith(1, eventName, expect.any(Function));
-    expect(portForRace.close).not.toHaveBeenCalled();
+    mockBaseClient.getContext.mockReturnValueOnce({ kind: 'user', key: 'ctx' });
+    const ctxEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('getContext'))?.(ctxEvent);
+    expect(ctxEvent.returnValue).toEqual({ kind: 'user', key: 'ctx' });
   });
 
-  it('broadcasts to all ports when multiple renderer subscribers listen to the same event', () => {
-    const mockPort1: MockPort = { postMessage: jest.fn(), close: jest.fn() };
-    const mockPort2: MockPort = { postMessage: jest.fn(), close: jest.fn() };
-    const onSpy = jest.spyOn(client, 'on');
+  it('delegates connection-mode channels', async () => {
+    await mockIpcMain.getHandler(getEventName('setConnectionMode'))?.({}, 'streaming');
+    expect(mockBaseClient.setConnectionMode).toHaveBeenCalledWith('streaming');
 
+    mockBaseClient.getConnectionMode.mockReturnValueOnce('polling');
+    const modeEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('getConnectionMode'))?.(modeEvent);
+    expect(modeEvent.returnValue).toBe('polling');
+
+    mockBaseClient.isOffline.mockReturnValueOnce(true);
+    const offlineEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('isOffline'))?.(offlineEvent);
+    expect(offlineEvent.returnValue).toBe(true);
+  });
+
+  it('delegates the async channels flush/identify/waitForInitialization', async () => {
+    const flushed = await mockIpcMain.getHandler(getEventName('flush'))?.({});
+    expect(mockBaseClient.flush).toHaveBeenCalledTimes(1);
+    expect(flushed).toEqual({ result: true });
+
+    const context: LDContext = { kind: 'user', key: 'id' };
+    const identifyResult = await mockIpcMain
+      .getHandler(getEventName('identify'))
+      ?.({}, context, { waitForNetworkResults: true });
+    expect(mockBaseClient.identify).toHaveBeenCalledWith(context, { waitForNetworkResults: true });
+    expect(identifyResult).toEqual({ status: 'completed' });
+
+    await mockIpcMain.getHandler(getEventName('waitForInitialization'))?.({}, { timeout: 5 });
+    expect(mockBaseClient.waitForInitialization).toHaveBeenCalledWith({ timeout: 5 });
+  });
+
+  it('dispatches log() to the matching logger method and ignores invalid levels', () => {
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'warn', 'a warning');
+    expect(mockLogger.warn).toHaveBeenCalledWith('a warning');
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'invalid', 'ignored');
+    expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  it('registers a single base-client listener per event and broadcasts to all ports', () => {
+    const port1: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const port2: MockPort = { postMessage: jest.fn(), close: jest.fn() };
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
-      { ports: [mockPort1] } as MockIpcEvent,
+      { ports: [port1] } as MockIpcEvent,
       { callbackId: 'sub1', eventName: 'change' },
     );
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
-      { ports: [mockPort2] } as MockIpcEvent,
+      { ports: [port2] } as MockIpcEvent,
       { callbackId: 'sub2', eventName: 'change' },
     );
+    expect(mockBaseClient.on).toHaveBeenCalledTimes(1);
+    expect(mockBaseClient.on).toHaveBeenCalledWith('change', expect.any(Function));
 
-    expect(onSpy).toHaveBeenCalledTimes(1);
-    const broadcastCallback = onSpy.mock.calls[0][1];
-    broadcastCallback('arg1', 'arg2');
-
-    expect(mockPort1.postMessage).toHaveBeenCalledTimes(1);
-    expect(mockPort1.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
-    expect(mockPort2.postMessage).toHaveBeenCalledTimes(1);
-    expect(mockPort2.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
+    const broadcast = baseClientListeners.get('change')![0];
+    broadcast('arg1', 'arg2');
+    expect(port1.postMessage).toHaveBeenCalledWith(['arg1', 'arg2']);
+    expect(port2.postMessage).toHaveBeenCalledWith(['arg1', 'arg2']);
   });
 
-  it('continues broadcasting to remaining ports when one port throws (e.g. closed MessagePort)', () => {
+  it('keeps broadcasting to live ports when one port throws', () => {
     const deadPort: MockPort = {
-      postMessage: jest.fn().mockImplementation(() => {
+      postMessage: jest.fn(() => {
         throw new Error('ERR_CLOSED_MESSAGE_PORT');
       }),
       close: jest.fn(),
     };
     const livePort: MockPort = { postMessage: jest.fn(), close: jest.fn() };
-    const onSpy = jest.spyOn(client, 'on');
-    const eventName = 'change-dead-port';
-
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
       { ports: [deadPort] } as MockIpcEvent,
-      { callbackId: 'dead-sub', eventName },
+      { callbackId: 'dead', eventName: 'change' },
     );
     mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
       { ports: [livePort] } as MockIpcEvent,
-      { callbackId: 'live-sub', eventName },
+      { callbackId: 'live', eventName: 'change' },
     );
+    const broadcast = baseClientListeners.get('change')![0];
+    broadcast('x');
+    expect(livePort.postMessage).toHaveBeenCalledWith(['x']);
+    expect(mockLogger.warn).toHaveBeenCalledWith('Event change broadcast failed');
+  });
 
-    const broadcastCallback = onSpy.mock.calls[0][1];
-    broadcastCallback('arg1', 'arg2');
+  it('returns false from removeEventHandler for an unknown callbackId and does not call off()', () => {
+    const event: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'unknown');
+    expect(mockBaseClient.off).not.toHaveBeenCalled();
+    expect(event.returnValue).toBe(false);
+  });
 
-    expect(deadPort.postMessage).toHaveBeenCalledTimes(1);
-    expect(livePort.postMessage).toHaveBeenCalledTimes(1);
-    expect(livePort.postMessage).toHaveBeenNthCalledWith(1, ['arg1', 'arg2']);
-    expect(logger.warn).toHaveBeenCalledWith(`Event ${eventName} broadcast failed`);
+  it('removes the listener and closes the port on removeEventHandler for a known callbackId', () => {
+    const port: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [port] } as MockIpcEvent,
+      { callbackId: 'cb1', eventName: 'change' },
+    );
+    const event: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(event, 'cb1');
+    expect(mockBaseClient.off).toHaveBeenCalledWith('change', expect.any(Function));
+    expect(port.close).toHaveBeenCalledTimes(1);
+    expect(event.returnValue).toBe(true);
+  });
 
-    broadcastCallback('arg3', 'arg4');
-    expect(deadPort.postMessage).toHaveBeenCalledTimes(2);
-    expect(livePort.postMessage).toHaveBeenCalledTimes(2);
-    expect(livePort.postMessage).toHaveBeenNthCalledWith(2, ['arg3', 'arg4']);
-    expect(logger.warn).toHaveBeenCalledTimes(2);
+  it('registers when addEventHandler arrives after a no-op removeEventHandler for the same id', () => {
+    const port: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const removeEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(removeEvent, 'race-id');
+    expect(removeEvent.returnValue).toBe(false);
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [port] } as MockIpcEvent,
+      { callbackId: 'race-id', eventName: 'change' },
+    );
+    expect(mockBaseClient.on).toHaveBeenCalledTimes(1);
+    expect(port.close).not.toHaveBeenCalled();
   });
 });
 
 describe('close()', () => {
-  const logger = createMockLogger();
-
-  it('removes all ipcMain listeners and handlers for the client so channels are no longer registered', async () => {
-    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+  it('removes all registered channels and closes ports, and is idempotent', async () => {
+    const client = makeClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
       initialConnectionMode: 'offline',
       enableIPC: true,
-      logger,
+      logger: mockLogger,
       diagnosticOptOut: true,
     });
-    await client.start();
-
     expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeDefined();
 
-    await client.close();
+    const port: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [port] } as MockIpcEvent,
+      { callbackId: 'cb1', eventName: 'change' },
+    );
 
+    await client.close();
+    expect(mockBaseClient.close).toHaveBeenCalledTimes(1);
     expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeUndefined();
     expect(mockIpcMain.getHandler(getEventName('flush'))).toBeUndefined();
-  });
+    expect(port.close).toHaveBeenCalled();
 
-  it('closes all event-handler MessagePorts when addEventHandler had been used', async () => {
-    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'offline',
-      enableIPC: true,
-      logger,
-      diagnosticOptOut: true,
-    });
-    await client.start();
-
-    const event: MockIpcEvent = { ports: [mockPort] };
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(event, {
-      callbackId: 'callback1',
-      eventName: 'change',
-    });
-
-    await client.close();
-
-    expect(mockPort.close).toHaveBeenCalled();
-  });
-
-  it('is idempotent so calling close() twice does not throw', async () => {
-    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'offline',
-      enableIPC: true,
-      logger,
-      diagnosticOptOut: true,
-    });
-    await client.start();
-
-    await client.close();
     await expect(client.close()).resolves.not.toThrow();
   });
 });

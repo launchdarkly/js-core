@@ -4,32 +4,10 @@ import {
   LDContext,
   LDLogger,
   LDOptions,
-} from '@launchdarkly/js-client-sdk-common';
+} from '@launchdarkly/node-client-sdk';
 
 import { createClient } from '../src/index';
 import { LDPlugin } from '../src/LDPlugin';
-import ElectronCrypto from '../src/platform/ElectronCrypto';
-import ElectronEncoding from '../src/platform/ElectronEncoding';
-import ElectronInfo from '../src/platform/ElectronInfo';
-
-jest.mock('../src/platform/ElectronPlatform', () => ({
-  __esModule: true,
-  default: jest.fn(() => ({
-    crypto: new ElectronCrypto(),
-    info: new ElectronInfo(),
-    requests: {
-      createEventSource: jest.fn(),
-      fetch: jest.fn(),
-      getEventSourceCapabilities: jest.fn(),
-    },
-    encoding: new ElectronEncoding(),
-    storage: {
-      clear: jest.fn(),
-      get: jest.fn(),
-      set: jest.fn(),
-    },
-  })),
-}));
 
 beforeAll(() => {
   jest.useFakeTimers();
@@ -71,10 +49,9 @@ it('registers plugins and executes hooks during initialization', async () => {
     plugins: [mockPlugin],
   });
 
-  // Verify the plugin was registered
   expect(mockPlugin.register).toHaveBeenCalled();
 
-  // Now test that hooks work by calling start (which runs identify) and variation
+  // start() runs identify, which is what fires the hooks asserted below.
   await client.start();
 
   expect(mockHook.beforeIdentify).toHaveBeenCalledWith({ context, timeout: undefined }, {});
@@ -158,11 +135,9 @@ it('registers multiple plugins and executes all hooks', async () => {
     },
   );
 
-  // Verify plugins were registered
   expect(mockPlugin1.register).toHaveBeenCalled();
   expect(mockPlugin2.register).toHaveBeenCalled();
 
-  // Test that both hooks work
   await client.start();
   client.variation('flag-key', false);
   client.track('event-key', { data: true }, 42);
@@ -225,11 +200,13 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
   expect(envMeta.sdk.name).toBeDefined();
   expect(envMeta.sdk.version).toBeDefined();
 
-  // Verify getHooks was called with correct environmentMetadata (mobile key by default)
+  // useClientSideId isn't set, so environmentMetadata carries mobileKey rather than clientSideId.
   expect(mockPlugin.getHooks).toHaveBeenCalledWith({
     sdk: {
       name: envMeta.sdk.name,
       version: envMeta.sdk.version,
+      wrapperName: envMeta.sdk.wrapperName,
+      wrapperVersion: envMeta.sdk.wrapperVersion,
     },
     application: {
       id: options.applicationInfo?.id,
@@ -240,13 +217,14 @@ it('passes correct environmentMetadata to plugin getHooks and register functions
     mobileKey: 'client-side-id',
   });
 
-  // Verify register was called with correct environmentMetadata (mobile key by default)
   expect(mockPlugin.register).toHaveBeenCalledWith(
     expect.any(Object), // client
     {
       sdk: {
         name: envMeta.sdk.name,
         version: envMeta.sdk.version,
+        wrapperName: envMeta.sdk.wrapperName,
+        wrapperVersion: envMeta.sdk.wrapperVersion,
       },
       application: {
         id: options.applicationInfo?.id,
@@ -299,22 +277,25 @@ it('passes correct environmentMetadata without optional fields', async () => {
   expect(envMeta.sdk.name).toBeDefined();
   expect(envMeta.sdk.version).toBeDefined();
 
-  // Verify getHooks was called with correct environmentMetadata (mobile key by default)
+  // useClientSideId isn't set, so environmentMetadata carries mobileKey rather than clientSideId.
   expect(mockPlugin.getHooks).toHaveBeenCalledWith({
     sdk: {
       name: envMeta.sdk.name,
       version: envMeta.sdk.version,
+      wrapperName: envMeta.sdk.wrapperName,
+      wrapperVersion: envMeta.sdk.wrapperVersion,
     },
     mobileKey: 'client-side-id',
   });
 
-  // Verify register was called with correct environmentMetadata (mobile key by default)
   expect(mockPlugin.register).toHaveBeenCalledWith(
     expect.any(Object), // client
     {
       sdk: {
         name: envMeta.sdk.name,
         version: envMeta.sdk.version,
+        wrapperName: envMeta.sdk.wrapperName,
+        wrapperVersion: envMeta.sdk.wrapperVersion,
       },
       mobileKey: 'client-side-id',
     },
@@ -354,6 +335,8 @@ it('passes clientSideId in environmentMetadata when useClientSideId is true', as
     sdk: {
       name: envMeta.sdk.name,
       version: envMeta.sdk.version,
+      wrapperName: envMeta.sdk.wrapperName,
+      wrapperVersion: envMeta.sdk.wrapperVersion,
     },
     clientSideId: 'my-client-side-id',
   });
@@ -362,6 +345,8 @@ it('passes clientSideId in environmentMetadata when useClientSideId is true', as
     sdk: {
       name: envMeta.sdk.name,
       version: envMeta.sdk.version,
+      wrapperName: envMeta.sdk.wrapperName,
+      wrapperVersion: envMeta.sdk.wrapperVersion,
     },
     clientSideId: 'my-client-side-id',
   });

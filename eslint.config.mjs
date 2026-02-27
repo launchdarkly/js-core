@@ -27,7 +27,7 @@ export default tseslint.config(
       '**/react/contract-tests/**',
       '**/react/examples/**',
       '**/jest/example/**',
-      '**/electron/example/**',
+      '**/electron/examples/**',
       '**/svelte/.svelte-kit/**',
       '**/svelte/example/**',
       '**/fastly/example/build/**',

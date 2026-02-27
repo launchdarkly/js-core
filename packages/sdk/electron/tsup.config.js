@@ -12,15 +12,11 @@ export default defineConfig([
   splitting: false,
   sourcemap: true,
   clean: true,
-  noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,
   metafile: true,
   esbuildOptions(opts) {
-    // This would normally be `^_(?!meta|_)`, but go doesn't support negative look-ahead assertions,
-    // so we need to craft something that works without it.
-    // So start of line followed by a character that isn't followed by m or underscore, but we
-    // want other things that do start with m, so we need to progressively handle more characters
-    // of meta with exclusions.
+    // Equivalent to `^_(?!meta|_)`, but esbuild's regex engine (Go's RE2) has no negative
+    // lookahead. This excludes each prefix of "meta" one character at a time instead.
     opts.mangleProps = /^_([^m|_]|m[^e]|me[^t]|met[^a])/;
   },
 }]);
