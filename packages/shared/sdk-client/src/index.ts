@@ -50,6 +50,7 @@ export type { DataManager, DataManagerFactory, ConnectionParams } from './DataMa
 export type { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 export { safeRegisterDebugOverridePlugins } from './plugins/safeRegisterDebugOverridePlugins';
 export type { Configuration } from './configuration/Configuration';
+export { default as validateOptions } from './configuration/validateOptions';
 
 export type { LDEmitter };
 export type { ItemDescriptor } from './flag-manager/ItemDescriptor';
@@ -70,3 +71,22 @@ export {
   DataSourceState,
   EventName as LDEmitterEventName,
 };
+
+// FDv2 connection mode type system — public types.
+// When FDv2 becomes the default, FDv2ConnectionMode should replace ConnectionMode
+// in the api/ exports above.
+export type {
+  FDv2ConnectionMode,
+  EndpointConfig,
+  CacheDataSourceEntry,
+  PollingDataSourceEntry,
+  StreamingDataSourceEntry,
+  DataSourceEntry,
+  ModeDefinition,
+  LDClientDataSystemOptions,
+  AutomaticModeSwitchingConfig,
+  PlatformDataSystemDefaults,
+} from './api/datasource';
+
+// FDv2 connection mode type system — internal implementation.
+export type { ModeTable } from './datasource/ConnectionModeConfig';
