@@ -26,7 +26,7 @@ function isCompoundValidator(v: TypeValidator): v is CompoundValidator {
  * Supports special validator types created by:
  * - {@link validatorOf}: recursively validates nested objects
  * - {@link arrayOf}: validates arrays with per-item validation
- * - {@link booleanOrObjectOf}: accepts boolean or recursively validates objects
+ * - {@link anyOf}: accepts the first matching validator from a list
  */
 export default function validateOptions(
   input: Record<string, unknown>,
@@ -180,22 +180,28 @@ export function arrayOf(
 }
 
 /**
- * Creates a validator that accepts either a boolean or a nested object.
+ * Creates a validator that tries each provided validator in order and uses the
+ * first one whose `is()` check passes. For compound validators the value is
+ * processed through `validate()`; for simple validators the value is accepted
+ * as-is. If no validator matches, a warning is logged and the default is
+ * preserved.
+ *
+ * @example
+ * ```ts
+ * // Accepts either a boolean or a nested object with specific fields:
+ * anyOf(TypeValidators.Boolean, validatorOf({ lifecycle: TypeValidators.Boolean }))
+ * ```
  */
-export function booleanOrObjectOf(validators: Record<string, TypeValidator>): CompoundValidator {
+export function anyOf(...validators: TypeValidator[]): CompoundValidator {
   return {
-    is: (u: unknown) => TypeValidators.Boolean.is(u) || TypeValidators.Object.is(u),
-    getType: () => 'boolean or object',
+    is: (u: unknown) => validators.some((v) => v.is(u)),
+    getType: () => validators.map((v) => v.getType()).join(' | '),
     validate(value: unknown, name: string, logger?: LDLogger) {
-      if (TypeValidators.Boolean.is(value)) {
-        return { value };
+      const match = validators.find((v) => v.is(value));
+      if (match) {
+        return isCompoundValidator(match) ? match.validate(value, name, logger) : { value };
       }
-      if (TypeValidators.Object.is(value)) {
-        return {
-          value: validateOptions(value as Record<string, unknown>, validators, {}, logger, name),
-        };
-      }
-      logger?.warn(OptionMessages.wrongOptionType(name, 'boolean or object', typeof value));
+      logger?.warn(OptionMessages.wrongOptionType(name, this.getType(), typeof value));
       return undefined;
     },
   };

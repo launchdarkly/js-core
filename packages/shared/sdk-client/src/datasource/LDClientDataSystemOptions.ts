@@ -1,7 +1,7 @@
 import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type { LDClientDataSystemOptions, PlatformDataSystemDefaults } from '../api/datasource';
-import validateOptions, { booleanOrObjectOf } from '../configuration/validateOptions';
+import validateOptions, { anyOf, validatorOf } from '../configuration/validateOptions';
 
 const connectionModeValidator = TypeValidators.oneOf(
   'streaming',
@@ -19,7 +19,7 @@ const modeSwitchingValidators = {
 const dataSystemValidators = {
   initialConnectionMode: connectionModeValidator,
   backgroundConnectionMode: connectionModeValidator,
-  automaticModeSwitching: booleanOrObjectOf(modeSwitchingValidators),
+  automaticModeSwitching: anyOf(TypeValidators.Boolean, validatorOf(modeSwitchingValidators)),
 };
 
 /**
