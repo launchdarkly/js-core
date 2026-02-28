@@ -15,7 +15,7 @@ import {
  * @param defaults - The current default value for this field, passed from
  *   `validateOptions` so nested defaults propagate without hand-written wrappers.
  */
-interface CompoundValidator extends TypeValidator {
+export interface CompoundValidator extends TypeValidator {
   validate(
     value: unknown,
     name: string,

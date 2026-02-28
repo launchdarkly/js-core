@@ -90,18 +90,3 @@ export type {
 
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
-export {
-  MODE_TABLE,
-  MODE_DEFINITION_DEFAULTS,
-  BACKGROUND_POLL_INTERVAL_SECONDS,
-  modeDefinitionValidators,
-  connectionModesValidator,
-  isValidFDv2ConnectionMode,
-  getFDv2ConnectionModeNames,
-} from './datasource/ConnectionModeConfig';
-export {
-  BROWSER_DATA_SYSTEM_DEFAULTS,
-  MOBILE_DATA_SYSTEM_DEFAULTS,
-  DESKTOP_DATA_SYSTEM_DEFAULTS,
-  validateDataSystemOptions,
-} from './datasource/LDClientDataSystemOptions';

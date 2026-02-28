@@ -1,9 +1,11 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
+import type { PlatformDataSystemDefaults } from '../../src/api/datasource';
+import validateOptions from '../../src/configuration/validateOptions';
 import {
   BROWSER_DATA_SYSTEM_DEFAULTS,
+  dataSystemValidators,
   MOBILE_DATA_SYSTEM_DEFAULTS,
-  validateDataSystemOptions,
 } from '../../src/datasource/LDClientDataSystemOptions';
 
 let logger: LDLogger;
@@ -16,6 +18,20 @@ beforeEach(() => {
     error: jest.fn(),
   };
 });
+
+function validateDataSystemOptions(
+  input: unknown,
+  defaults: PlatformDataSystemDefaults,
+  testLogger?: LDLogger,
+) {
+  return validateOptions(
+    input,
+    dataSystemValidators,
+    defaults as unknown as Record<string, unknown>,
+    testLogger,
+    'dataSystem',
+  );
+}
 
 describe('given valid options', () => {
   it('passes through valid connection modes unchanged', () => {

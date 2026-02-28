@@ -86,14 +86,6 @@ const MODE_TABLE: ModeTable = {
   },
 };
 
-function isValidFDv2ConnectionMode(value: string): value is FDv2ConnectionMode {
-  return connectionModeValidator.is(value);
-}
-
-function getFDv2ConnectionModeNames(): ReadonlyArray<FDv2ConnectionMode> {
-  return Object.keys(MODE_TABLE) as FDv2ConnectionMode[];
-}
-
 export type { ModeTable };
 export {
   MODE_TABLE,
@@ -102,6 +94,4 @@ export {
   connectionModeValidator,
   modeDefinitionValidators,
   connectionModesValidator,
-  isValidFDv2ConnectionMode,
-  getFDv2ConnectionModeNames,
 };

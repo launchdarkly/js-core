@@ -1,7 +1,7 @@
-import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { TypeValidators } from '@launchdarkly/js-sdk-common';
 
-import type { LDClientDataSystemOptions, PlatformDataSystemDefaults } from '../api/datasource';
-import validateOptions, { anyOf, validatorOf } from '../configuration/validateOptions';
+import type { PlatformDataSystemDefaults } from '../api/datasource';
+import { anyOf, validatorOf } from '../configuration/validateOptions';
 import { connectionModeValidator } from './ConnectionModeConfig';
 
 const modeSwitchingValidators = {
@@ -42,37 +42,9 @@ const DESKTOP_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
   automaticModeSwitching: false,
 };
 
-/**
- * Validates a user-provided LDClientDataSystemOptions, logging warnings for
- * any invalid values and replacing them with defaults from the given platform
- * defaults.
- */
-function validateDataSystemOptions(
-  input: unknown,
-  defaults: PlatformDataSystemDefaults,
-  logger?: LDLogger,
-): LDClientDataSystemOptions {
-  if (isNullish(input)) {
-    return { ...defaults };
-  }
-
-  if (!TypeValidators.Object.is(input)) {
-    logger?.warn(OptionMessages.wrongOptionType('dataSystem', 'object', typeof input));
-    return { ...defaults };
-  }
-
-  return validateOptions(
-    input as Record<string, unknown>,
-    dataSystemValidators,
-    { ...defaults },
-    logger,
-    'dataSystem',
-  ) as unknown as LDClientDataSystemOptions;
-}
-
 export {
+  dataSystemValidators,
   BROWSER_DATA_SYSTEM_DEFAULTS,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   DESKTOP_DATA_SYSTEM_DEFAULTS,
-  validateDataSystemOptions,
 };
