@@ -1,9 +1,12 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
+import validateOptions from '../../src/configuration/validateOptions';
 import {
+  connectionModesValidator,
+  MODE_DEFINITION_DEFAULTS,
   MODE_TABLE,
-  validateModeDefinition,
-  validateModeTable,
+  modeDefinitionValidators,
+  ModeTable,
 } from '../../src/datasource/ConnectionModeConfig';
 
 let logger: LDLogger;
@@ -16,6 +19,25 @@ beforeEach(() => {
     error: jest.fn(),
   };
 });
+
+function validateModeDefinition(input: unknown, name: string, testLogger?: LDLogger) {
+  return validateOptions(
+    input,
+    modeDefinitionValidators,
+    MODE_DEFINITION_DEFAULTS,
+    testLogger,
+    name,
+  );
+}
+
+function validateModeTable(
+  input: unknown,
+  defaults: ModeTable,
+  testLogger?: LDLogger,
+): Record<string, unknown> {
+  const result = connectionModesValidator.validate(input, 'connectionModes', testLogger, defaults);
+  return (result?.value ?? { ...defaults }) as Record<string, unknown>;
+}
 
 describe('given a valid mode definition', () => {
   it('passes through a valid streaming-like mode definition unchanged', () => {
@@ -93,32 +115,32 @@ describe('given a valid mode definition', () => {
 });
 
 describe('given a non-object mode definition', () => {
-  it('returns undefined and warns for null', () => {
+  it('returns defaults for null', () => {
     const result = validateModeDefinition(null, 'testMode', logger);
 
-    expect(result).toBeUndefined();
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('"testMode"'));
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('object'));
+    expect(result).toEqual(MODE_DEFINITION_DEFAULTS);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('returns undefined and warns for a string', () => {
+  it('returns defaults and warns for a string', () => {
     const result = validateModeDefinition('streaming', 'testMode', logger);
 
-    expect(result).toBeUndefined();
+    expect(result).toEqual(MODE_DEFINITION_DEFAULTS);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got string'));
   });
 
-  it('returns undefined and warns for a number', () => {
+  it('returns defaults and warns for a number', () => {
     const result = validateModeDefinition(42, 'testMode', logger);
 
-    expect(result).toBeUndefined();
+    expect(result).toEqual(MODE_DEFINITION_DEFAULTS);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got number'));
   });
 
-  it('returns undefined for undefined', () => {
+  it('returns defaults for undefined', () => {
     const result = validateModeDefinition(undefined, 'testMode', logger);
 
-    expect(result).toBeUndefined();
+    expect(result).toEqual(MODE_DEFINITION_DEFAULTS);
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });
 
@@ -130,7 +152,7 @@ describe('given non-array initializers or synchronizers', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('"testMode.initializers" should be of type array'),
     );
@@ -143,7 +165,7 @@ describe('given non-array initializers or synchronizers', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([]);
+    expect(result.synchronizers).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('"testMode.synchronizers" should be of type array'),
     );
@@ -152,14 +174,14 @@ describe('given non-array initializers or synchronizers', () => {
   it('defaults missing initializers to empty array', () => {
     const result = validateModeDefinition({ synchronizers: [] }, 'testMode', logger);
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('defaults missing synchronizers to empty array', () => {
     const result = validateModeDefinition({ initializers: [] }, 'testMode', logger);
 
-    expect(result?.synchronizers).toEqual([]);
+    expect(result.synchronizers).toEqual([]);
     expect(logger.warn).not.toHaveBeenCalled();
   });
 });
@@ -172,7 +194,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got cace'));
   });
 
@@ -183,7 +205,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('type'));
   });
 
@@ -194,7 +216,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('type'));
   });
 
@@ -205,7 +227,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -216,7 +238,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([]);
+    expect(result.initializers).toEqual([]);
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -230,7 +252,7 @@ describe('given entries with invalid type field', () => {
       logger,
     );
 
-    expect(result?.initializers).toEqual([{ type: 'cache' }, { type: 'polling' }]);
+    expect(result.initializers).toEqual([{ type: 'cache' }, { type: 'polling' }]);
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 });
@@ -243,7 +265,7 @@ describe('given polling entries with invalid config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
+    expect(result.synchronizers).toEqual([{ type: 'polling' }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 
@@ -254,7 +276,7 @@ describe('given polling entries with invalid config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
+    expect(result.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 
@@ -265,7 +287,7 @@ describe('given polling entries with invalid config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
+    expect(result.synchronizers).toEqual([{ type: 'polling', pollInterval: 30 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 });
@@ -278,7 +300,7 @@ describe('given streaming entries with invalid config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'streaming' }]);
+    expect(result.synchronizers).toEqual([{ type: 'streaming' }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialReconnectDelay'));
   });
 
@@ -289,7 +311,7 @@ describe('given streaming entries with invalid config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'streaming', initialReconnectDelay: 1 }]);
+    expect(result.synchronizers).toEqual([{ type: 'streaming', initialReconnectDelay: 1 }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialReconnectDelay'));
   });
 });
@@ -302,7 +324,7 @@ describe('given entries with invalid endpoint config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
+    expect(result.synchronizers).toEqual([{ type: 'polling' }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('endpoints'));
   });
 
@@ -316,7 +338,7 @@ describe('given entries with invalid endpoint config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'polling' }]);
+    expect(result.synchronizers).toEqual([{ type: 'polling' }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollingBaseUri'));
   });
 
@@ -330,7 +352,7 @@ describe('given entries with invalid endpoint config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([{ type: 'streaming' }]);
+    expect(result.synchronizers).toEqual([{ type: 'streaming' }]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('streamingBaseUri'));
   });
 
@@ -352,7 +374,7 @@ describe('given entries with invalid endpoint config', () => {
       logger,
     );
 
-    expect(result?.synchronizers).toEqual([
+    expect(result.synchronizers).toEqual([
       { type: 'polling', endpoints: { pollingBaseUri: 'https://relay.example.com' } },
     ]);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('streamingBaseUri'));
@@ -366,12 +388,12 @@ describe('given no logger', () => {
       'testMode',
     );
 
-    expect(result?.initializers).toEqual([]);
-    expect(result?.synchronizers).toEqual([]);
+    expect(result.initializers).toEqual([]);
+    expect(result.synchronizers).toEqual([]);
   });
 });
 
-// ----------------------------- validateModeTable --------------------------------
+// ----------------------------- connectionModesValidator --------------------------------
 
 describe('given undefined or null mode table input', () => {
   it('returns the built-in MODE_TABLE for undefined', () => {
@@ -460,7 +482,9 @@ describe('given a partial override', () => {
     );
 
     expect(result.offline).toEqual({ initializers: [], synchronizers: [] });
-    expect(result.background.synchronizers).toEqual([{ type: 'polling', pollInterval: 7200 }]);
+    expect((result.background as any).synchronizers).toEqual([
+      { type: 'polling', pollInterval: 7200 },
+    ]);
     expect(result.streaming).toEqual(MODE_TABLE.streaming);
     expect(logger.warn).not.toHaveBeenCalled();
   });
@@ -524,7 +548,7 @@ describe('given an invalid mode definition within a known mode', () => {
     );
 
     expect(result.polling).toEqual(MODE_TABLE.polling);
-    expect(logger.warn).toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });
 

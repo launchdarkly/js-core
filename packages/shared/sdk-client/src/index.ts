@@ -92,11 +92,12 @@ export type {
 export type { ModeTable } from './datasource/ConnectionModeConfig';
 export {
   MODE_TABLE,
+  MODE_DEFINITION_DEFAULTS,
   BACKGROUND_POLL_INTERVAL_SECONDS,
+  modeDefinitionValidators,
+  connectionModesValidator,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
-  validateModeDefinition,
-  validateModeTable,
 } from './datasource/ConnectionModeConfig';
 export {
   BROWSER_DATA_SYSTEM_DEFAULTS,

@@ -2,14 +2,7 @@ import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdark
 
 import type { LDClientDataSystemOptions, PlatformDataSystemDefaults } from '../api/datasource';
 import validateOptions, { anyOf, validatorOf } from '../configuration/validateOptions';
-
-const connectionModeValidator = TypeValidators.oneOf(
-  'streaming',
-  'polling',
-  'offline',
-  'one-shot',
-  'background',
-);
+import { connectionModeValidator } from './ConnectionModeConfig';
 
 const modeSwitchingValidators = {
   lifecycle: TypeValidators.Boolean,

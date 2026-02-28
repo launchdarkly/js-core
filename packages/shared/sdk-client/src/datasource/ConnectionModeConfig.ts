@@ -1,7 +1,7 @@
-import { isNullish, LDLogger, OptionMessages, TypeValidators } from '@launchdarkly/js-sdk-common';
+import { TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type { FDv2ConnectionMode, ModeDefinition } from '../api/datasource';
-import validateOptions, { arrayOf, validatorOf } from '../configuration/validateOptions';
+import { arrayOf, recordOf, validatorOf } from '../configuration/validateOptions';
 
 /**
  * A read-only mapping from each FDv2ConnectionMode to its ModeDefinition.
@@ -53,6 +53,16 @@ const modeDefinitionValidators = {
   synchronizers: dataSourceEntryArrayValidator,
 };
 
+const MODE_DEFINITION_DEFAULTS: Record<string, unknown> = {
+  initializers: [],
+  synchronizers: [],
+};
+
+const connectionModesValidator = recordOf(
+  connectionModeValidator,
+  validatorOf(modeDefinitionValidators),
+);
+
 const MODE_TABLE: ModeTable = {
   streaming: {
     initializers: [{ type: 'cache' }, { type: 'polling' }],
@@ -84,65 +94,14 @@ function getFDv2ConnectionModeNames(): ReadonlyArray<FDv2ConnectionMode> {
   return Object.keys(MODE_TABLE) as FDv2ConnectionMode[];
 }
 
-function validateModeDefinition(
-  input: unknown,
-  name: string,
-  logger?: LDLogger,
-): ModeDefinition | undefined {
-  if (isNullish(input) || !TypeValidators.Object.is(input)) {
-    logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof input));
-    return undefined;
-  }
-
-  return validateOptions(
-    input as Record<string, unknown>,
-    modeDefinitionValidators,
-    { initializers: [], synchronizers: [] },
-    logger,
-    name,
-  ) as unknown as ModeDefinition;
-}
-
-function validateModeTable(
-  input: unknown,
-  defaults: ModeTable = MODE_TABLE,
-  logger?: LDLogger,
-): ModeTable {
-  if (isNullish(input)) {
-    return defaults;
-  }
-
-  if (!TypeValidators.Object.is(input)) {
-    logger?.warn(OptionMessages.wrongOptionType('connectionModes', 'object', typeof input));
-    return defaults;
-  }
-
-  const obj = input as Record<string, unknown>;
-  const result = { ...defaults } as { [K in FDv2ConnectionMode]: ModeDefinition };
-
-  Object.keys(obj).forEach((key) => {
-    if (!isValidFDv2ConnectionMode(key)) {
-      logger?.warn(
-        OptionMessages.wrongOptionType('connectionModes', connectionModeValidator.getType(), key),
-      );
-      return;
-    }
-
-    const validated = validateModeDefinition(obj[key], `connectionModes.${key}`, logger);
-    if (validated) {
-      result[key] = validated;
-    }
-  });
-
-  return result;
-}
-
 export type { ModeTable };
 export {
   MODE_TABLE,
+  MODE_DEFINITION_DEFAULTS,
   BACKGROUND_POLL_INTERVAL_SECONDS,
+  connectionModeValidator,
+  modeDefinitionValidators,
+  connectionModesValidator,
   isValidFDv2ConnectionMode,
   getFDv2ConnectionModeNames,
-  validateModeDefinition,
-  validateModeTable,
 };

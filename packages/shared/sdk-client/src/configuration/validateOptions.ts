@@ -9,11 +9,19 @@ import {
 
 /**
  * A validator that performs structured validation on compound values
- * (objects, arrays, or union types like boolean|object). Returns
- * the validated value on success, or undefined to preserve the default.
+ * (objects, arrays, records, or union types). Returns the validated value
+ * on success, or undefined to preserve the default.
+ *
+ * @param defaults - The current default value for this field, passed from
+ *   `validateOptions` so nested defaults propagate without hand-written wrappers.
  */
 interface CompoundValidator extends TypeValidator {
-  validate(value: unknown, name: string, logger?: LDLogger): { value: unknown } | undefined;
+  validate(
+    value: unknown,
+    name: string,
+    logger?: LDLogger,
+    defaults?: unknown,
+  ): { value: unknown } | undefined;
 }
 
 function isCompoundValidator(v: TypeValidator): v is CompoundValidator {
@@ -23,13 +31,17 @@ function isCompoundValidator(v: TypeValidator): v is CompoundValidator {
 /**
  * Validates an options object against a map of validators and defaults.
  *
+ * If `input` is null, undefined, or not an object the defaults are returned
+ * (with a warning for non-nullish non-objects).
+ *
  * Supports special validator types created by:
  * - {@link validatorOf}: recursively validates nested objects
  * - {@link arrayOf}: validates arrays with per-item validation
  * - {@link anyOf}: accepts the first matching validator from a list
+ * - {@link recordOf}: validates objects with dynamic keys
  */
 export default function validateOptions(
-  input: Record<string, unknown>,
+  input: unknown,
   validatorMap: Record<string, TypeValidator>,
   defaults: Record<string, unknown>,
   logger?: LDLogger,
@@ -37,7 +49,16 @@ export default function validateOptions(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = { ...defaults };
 
-  Object.entries(input).forEach(([key, value]) => {
+  if (isNullish(input)) {
+    return result;
+  }
+
+  if (!TypeValidators.Object.is(input)) {
+    logger?.warn(OptionMessages.wrongOptionType(prefix ?? 'config', 'object', typeof input));
+    return result;
+  }
+
+  Object.entries(input as Record<string, unknown>).forEach(([key, value]) => {
     const validator = validatorMap[key];
     const name = prefix ? `${prefix}.${key}` : key;
 
@@ -51,7 +72,7 @@ export default function validateOptions(
     }
 
     if (isCompoundValidator(validator)) {
-      const validated = validator.validate(value, name, logger);
+      const validated = validator.validate(value, name, logger, defaults[key]);
       if (validated !== undefined) {
         result[key] = validated.value;
       }
@@ -88,20 +109,24 @@ export default function validateOptions(
 /**
  * Creates a validator for nested objects. When used in a validator map,
  * `validateOptions` will recursively validate the nested object's properties.
+ * Defaults for nested fields are passed through from the parent.
  */
 export function validatorOf(validators: Record<string, TypeValidator>): CompoundValidator {
   return {
     is: (u: unknown) => TypeValidators.Object.is(u),
     getType: () => 'object',
-    validate(value: unknown, name: string, logger?: LDLogger) {
+    validate(value: unknown, name: string, logger?: LDLogger, defaults?: unknown) {
       if (!TypeValidators.Object.is(value)) {
         logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof value));
         return undefined;
       }
+      const nestedDefaults = TypeValidators.Object.is(defaults)
+        ? (defaults as Record<string, unknown>)
+        : {};
       const nested = validateOptions(
         value as Record<string, unknown>,
         validators,
-        {},
+        nestedDefaults,
         logger,
         name,
       );
@@ -174,7 +199,7 @@ export function arrayOf(
         results.push(validateOptions(obj, validators, {}, logger, itemPath));
       });
 
-      return results.length > 0 ? { value: results } : undefined;
+      return { value: results };
     },
   };
 }
@@ -196,13 +221,74 @@ export function anyOf(...validators: TypeValidator[]): CompoundValidator {
   return {
     is: (u: unknown) => validators.some((v) => v.is(u)),
     getType: () => validators.map((v) => v.getType()).join(' | '),
-    validate(value: unknown, name: string, logger?: LDLogger) {
+    validate(value: unknown, name: string, logger?: LDLogger, defaults?: unknown) {
       const match = validators.find((v) => v.is(value));
       if (match) {
-        return isCompoundValidator(match) ? match.validate(value, name, logger) : { value };
+        return isCompoundValidator(match)
+          ? match.validate(value, name, logger, defaults)
+          : { value };
       }
       logger?.warn(OptionMessages.wrongOptionType(name, this.getType(), typeof value));
       return undefined;
+    },
+  };
+}
+
+/**
+ * Creates a validator for objects with dynamic keys. Each key in the input
+ * object is checked against `keyValidator`; unrecognized keys produce a
+ * warning. Each value is validated by `valueValidator`. Defaults for
+ * individual entries are passed through from the parent so partial overrides
+ * preserve non-overridden entries.
+ *
+ * @param keyValidator - Validates that each key is an allowed value.
+ * @param valueValidator - Validates each value in the record.
+ *
+ * @example
+ * ```ts
+ * // Validates a record like { streaming: { ... }, polling: { ... } }
+ * // where keys must be valid connection modes:
+ * recordOf(
+ *   TypeValidators.oneOf('streaming', 'polling', 'offline'),
+ *   validatorOf({ initializers: arrayValidator, synchronizers: arrayValidator }),
+ * )
+ * ```
+ */
+export function recordOf(
+  keyValidator: TypeValidator,
+  valueValidator: TypeValidator,
+): CompoundValidator {
+  return {
+    is: (u: unknown) => TypeValidators.Object.is(u),
+    getType: () => 'object',
+    validate(value: unknown, name: string, logger?: LDLogger, defaults?: unknown) {
+      if (isNullish(value)) {
+        return undefined;
+      }
+
+      if (!TypeValidators.Object.is(value)) {
+        logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof value));
+        return undefined;
+      }
+
+      // Filter invalid keys, then delegate to validateOptions.
+      const obj = value as Record<string, unknown>;
+      const filtered: Record<string, unknown> = {};
+      const validatorMap: Record<string, TypeValidator> = {};
+
+      Object.keys(obj).forEach((key) => {
+        if (keyValidator.is(key)) {
+          filtered[key] = obj[key];
+          validatorMap[key] = valueValidator;
+        } else {
+          logger?.warn(OptionMessages.wrongOptionType(name, keyValidator.getType(), key));
+        }
+      });
+
+      const recordDefaults = TypeValidators.Object.is(defaults)
+        ? (defaults as Record<string, unknown>)
+        : {};
+      return { value: validateOptions(filtered, validatorMap, recordDefaults, logger, name) };
     },
   };
 }
