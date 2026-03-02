@@ -57,6 +57,21 @@ describe('Configuration', () => {
     );
   });
 
+  it('preserves default when a boolean option is null', () => {
+    // @ts-ignore
+    const config = new ConfigurationImpl({ sendEvents: null });
+
+    expect(config.sendEvents).toBe(true);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('preserves default when a boolean option is undefined', () => {
+    const config = new ConfigurationImpl({ sendEvents: undefined });
+
+    expect(config.sendEvents).toBe(true);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
   it('ignores wrong type for number and logs appropriately', () => {
     // @ts-ignore
     const config = new ConfigurationImpl({ capacity: true });

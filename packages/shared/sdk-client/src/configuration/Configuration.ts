@@ -5,15 +5,13 @@ import {
   LDFlagSet,
   LDLogger,
   LDPluginEnvironmentMetadata,
-  NumberWithMinimum,
-  OptionMessages,
   SafeLogger,
   ServiceEndpoints,
-  TypeValidators,
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
 import { LDInspection } from '../api/LDInspection';
+import validateOptions from './validateOptions';
 import validators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
@@ -152,8 +150,17 @@ export default class ConfigurationImpl implements Configuration {
     },
   ) {
     this.logger = ensureSafeLogger(pristineOptions.logger);
-    const errors = this._validateTypesAndNames(pristineOptions);
-    errors.forEach((e: string) => this.logger.warn(e));
+    const validated = validateOptions(
+      pristineOptions as Record<string, unknown>,
+      validators,
+      {},
+      this.logger,
+    );
+    Object.entries(validated).forEach(([k, v]) => {
+      if (k !== 'logger') {
+        this[k] = v;
+      }
+    });
 
     this.serviceEndpoints = new ServiceEndpoints(
       this.streamUri,
@@ -172,45 +179,5 @@ export default class ConfigurationImpl implements Configuration {
 
     this.credentialType = internalOptions.credentialType;
     this.getImplementationHooks = internalOptions.getImplementationHooks;
-  }
-
-  private _validateTypesAndNames(pristineOptions: LDOptions): string[] {
-    const errors: string[] = [];
-
-    Object.entries(pristineOptions).forEach(([k, v]) => {
-      const validator = validators[k as keyof LDOptions];
-
-      if (validator) {
-        if (!validator.is(v)) {
-          const validatorType = validator.getType();
-
-          if (validatorType === 'boolean') {
-            errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-            this[k] = !!v;
-          } else if (validatorType === 'boolean | undefined | null') {
-            errors.push(OptionMessages.wrongOptionTypeBoolean(k, typeof v));
-
-            if (typeof v !== 'boolean' && typeof v !== 'undefined' && v !== null) {
-              this[k] = !!v;
-            }
-          } else if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(v)) {
-            const { min } = validator as NumberWithMinimum;
-            errors.push(OptionMessages.optionBelowMinimum(k, v, min));
-            this[k] = min;
-          } else {
-            errors.push(OptionMessages.wrongOptionType(k, validator.getType(), typeof v));
-          }
-        } else if (k === 'logger') {
-          // Logger already assigned.
-        } else {
-          // if an option is explicitly null, coerce to undefined
-          this[k] = v ?? undefined;
-        }
-      } else {
-        errors.push(OptionMessages.unknownOption(k));
-      }
-    });
-
-    return errors;
   }
 }

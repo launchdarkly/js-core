@@ -12,3 +12,4 @@ export * from './LDIdentifyResult';
 export * from './LDPlugin';
 export * from './LDWaitForInitialization';
 export * from './LDContext';
+export * from './datasource';
