@@ -9,15 +9,13 @@ on:
     branches: [main, 'feat/**']
     paths-ignore:
       - '**.md'
-  # TODO: re-enable this when we set up the example tests.
-  # schedule:
-  #   - cron: '0 0 * * *'
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   build-test-electron:
     # Skip this job on scheduled runs to avoid redundant runs.
-    # TODO: re-enable this when we set up the example tests.
-    # if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -73,29 +71,34 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/electron/contract-tests/suppressions.txt --stop-service-at-end'
 
-  # Example app verification
-  # Looks like the example verfication is not built for applications like this?
-  # Will need to look into how to enhance that check OR create a different kind of
-  # verification test for client sdks.
-  # run-example:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     id-token: write
-  #   steps:
-  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-  #     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-  #       with:
-  #         node-version: 24
-  #     - name: Setup Yarn
-  #       run: yarn set version 3.4.1
-  #     - name: Install dependencies
-  #       run: yarn workspaces focus @internal/electron-example
-  #     - name: Build SDK dependencies
-  #       run: yarn workspaces foreach -pR --topological-dev --from '@internal/electron-example' run build
-  #     - name: Setup Xvfb
-  #       run: sudo apt-get install -y xvfb
-  #     - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v1.0.0
-  #       with:
-  #         use_mobile_key: true
-  #         role_arn: ${{ vars.AWS_ROLE_ARN }}
-  #         command: xvfb-run -a yarn workspace @internal/electron-example start -- --no-sandbox
+  run-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: yarn workspaces focus @internal/electron-example
+      - name: Build SDK dependencies
+        run: yarn workspaces foreach -pR --topological-dev --from '@internal/electron-example' run build
+      - name: Build example app
+        env:
+          ELECTRON_DISABLE_SANDBOX: '1'
+        run: yarn workspace @internal/electron-example build
+      - name: Setup Xvfb
+        run: |
+          sudo apt-get install -y xvfb
+          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+      - name: Install Playwright dependencies
+        run: yarn workspace @internal/electron-example playwright install --with-deps chromium
+      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v1.0.0
+        with:
+          use_mobile_key: true
+          role_arn: ${{ vars.AWS_ROLE_ARN }}
+          command: >-
+            ELECTRON_DISABLE_SANDBOX=1
+            DISPLAY=:99
+            yarn workspace @internal/electron-example test
