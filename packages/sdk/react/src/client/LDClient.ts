@@ -55,6 +55,11 @@ export interface LDReactClientContextValue {
    * The initialization state of the client.
    */
   initializedState: InitializedState;
+
+  /**
+   * The error that caused the client to fail to initialize. Only set when `initializedState` is `'failed'`.
+   */
+  error?: Error;
 }
 
 /**

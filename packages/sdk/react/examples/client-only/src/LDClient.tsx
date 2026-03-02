@@ -21,4 +21,8 @@ const options: LDReactClientOptions = {
 
 const client = createClient(LAUNCHDARKLY_CLIENT_SIDE_ID, context, options);
 
+// manually start the client for now until we implement a way to
+// set defer initialization sdk-1815
+client.start();
+
 export const LDReactProvider = createLDReactProvider(client);

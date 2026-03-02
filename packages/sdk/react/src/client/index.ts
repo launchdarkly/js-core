@@ -5,3 +5,4 @@ export * from './LDOptions';
 export * from './provider/LDReactContext';
 export { createLDReactProvider } from './provider/LDReactProvider';
 export { createClient } from './LDReactClient';
+export * from './hooks';
