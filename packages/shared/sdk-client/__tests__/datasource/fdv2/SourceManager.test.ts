@@ -1,0 +1,372 @@
+import { FDv2SourceResult } from '../../../src/datasource/fdv2/FDv2SourceResult';
+import { Initializer } from '../../../src/datasource/fdv2/Initializer';
+import {
+  createSourceManager,
+  createSynchronizerSlot,
+  InitializerFactory,
+  SynchronizerFactory,
+  SynchronizerSlot,
+} from '../../../src/datasource/fdv2/SourceManager';
+import { Synchronizer } from '../../../src/datasource/fdv2/Synchronizer';
+
+function makeMockInitializer(): Initializer & { closed: boolean } {
+  return {
+    closed: false,
+    run: jest.fn<Promise<FDv2SourceResult>, []>().mockResolvedValue({
+      type: 'status',
+      state: 'shutdown',
+      fdv1Fallback: false,
+    }),
+    close() {
+      this.closed = true;
+    },
+  };
+}
+
+function makeMockSynchronizer(): Synchronizer & { closed: boolean } {
+  return {
+    closed: false,
+    next: jest.fn<Promise<FDv2SourceResult>, []>().mockResolvedValue({
+      type: 'status',
+      state: 'shutdown',
+      fdv1Fallback: false,
+    }),
+    close() {
+      this.closed = true;
+    },
+  };
+}
+
+function makeInitFactory(init: Initializer): InitializerFactory {
+  return jest.fn(() => init);
+}
+
+function makeSyncFactory(sync: Synchronizer): SynchronizerFactory {
+  return jest.fn(() => sync);
+}
+
+describe('createSynchronizerSlot', () => {
+  it('creates an available slot by default', () => {
+    const factory: SynchronizerFactory = jest.fn();
+    const slot = createSynchronizerSlot(factory);
+
+    expect(slot.state).toBe('available');
+    expect(slot.isFDv1Fallback).toBe(false);
+  });
+
+  it('creates a blocked slot for FDv1 fallback', () => {
+    const factory: SynchronizerFactory = jest.fn();
+    const slot = createSynchronizerSlot(factory, { isFDv1Fallback: true });
+
+    expect(slot.state).toBe('blocked');
+    expect(slot.isFDv1Fallback).toBe(true);
+  });
+
+  it('allows overriding initial state', () => {
+    const factory: SynchronizerFactory = jest.fn();
+    const slot = createSynchronizerSlot(factory, {
+      isFDv1Fallback: true,
+      initialState: 'available',
+    });
+
+    expect(slot.state).toBe('available');
+    expect(slot.isFDv1Fallback).toBe(true);
+  });
+});
+
+describe('SourceManager - initializers', () => {
+  it('iterates initializers in order', () => {
+    const init1 = makeMockInitializer();
+    const init2 = makeMockInitializer();
+    const factory1 = makeInitFactory(init1);
+    const factory2 = makeInitFactory(init2);
+
+    const manager = createSourceManager([factory1, factory2], [], () => undefined);
+
+    expect(manager.getNextInitializerAndSetActive()).toBe(init1);
+    expect(factory1).toHaveBeenCalledWith(expect.any(Function));
+
+    expect(manager.getNextInitializerAndSetActive()).toBe(init2);
+    expect(factory2).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it('returns undefined when all initializers are exhausted', () => {
+    const init1 = makeMockInitializer();
+    const manager = createSourceManager([makeInitFactory(init1)], [], () => undefined);
+
+    manager.getNextInitializerAndSetActive();
+    expect(manager.getNextInitializerAndSetActive()).toBeUndefined();
+  });
+
+  it('returns undefined immediately for empty initializer list', () => {
+    const manager = createSourceManager([], [], () => undefined);
+    expect(manager.getNextInitializerAndSetActive()).toBeUndefined();
+  });
+
+  it('closes the previous active source when getting next initializer', () => {
+    const init1 = makeMockInitializer();
+    const init2 = makeMockInitializer();
+    const manager = createSourceManager(
+      [makeInitFactory(init1), makeInitFactory(init2)],
+      [],
+      () => undefined,
+    );
+
+    manager.getNextInitializerAndSetActive();
+    expect(init1.closed).toBe(false);
+
+    manager.getNextInitializerAndSetActive();
+    expect(init1.closed).toBe(true);
+    expect(init2.closed).toBe(false);
+  });
+
+  it('passes selectorGetter to factories', () => {
+    const selectorGetter = () => 'test-selector';
+    const factory = jest.fn(() => makeMockInitializer());
+    const manager = createSourceManager([factory], [], selectorGetter);
+
+    manager.getNextInitializerAndSetActive();
+    expect(factory).toHaveBeenCalledWith(selectorGetter);
+  });
+});
+
+describe('SourceManager - synchronizers', () => {
+  it('iterates available synchronizers in order', () => {
+    const sync1 = makeMockSynchronizer();
+    const sync2 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(sync1)),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1);
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
+  });
+
+  it('skips blocked synchronizers', () => {
+    const sync1 = makeMockSynchronizer();
+    const sync2 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(sync1)),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+    slots[0].state = 'blocked';
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
+  });
+
+  it('returns undefined when all synchronizers are exhausted', () => {
+    const sync1 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync1))];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    manager.getNextAvailableSynchronizerAndSetActive();
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+  });
+
+  it('returns undefined for empty synchronizer list', () => {
+    const manager = createSourceManager([], [], () => undefined);
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+  });
+
+  it('closes the previous active source when getting next synchronizer', () => {
+    const sync1 = makeMockSynchronizer();
+    const sync2 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(sync1)),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    manager.getNextAvailableSynchronizerAndSetActive();
+    expect(sync1.closed).toBe(false);
+
+    manager.getNextAvailableSynchronizerAndSetActive();
+    expect(sync1.closed).toBe(true);
+  });
+
+  it('closes previous initializer when switching to synchronizer', () => {
+    const init = makeMockInitializer();
+    const sync = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync))];
+
+    const manager = createSourceManager([makeInitFactory(init)], slots, () => undefined);
+
+    manager.getNextInitializerAndSetActive();
+    expect(init.closed).toBe(false);
+
+    manager.getNextAvailableSynchronizerAndSetActive();
+    expect(init.closed).toBe(true);
+  });
+});
+
+describe('SourceManager - blocking', () => {
+  it('blocks the current synchronizer', () => {
+    const sync1 = makeMockSynchronizer();
+    const sync2 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(sync1)),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    manager.getNextAvailableSynchronizerAndSetActive();
+    manager.blockCurrentSynchronizer();
+
+    expect(slots[0].state).toBe('blocked');
+    expect(slots[1].state).toBe('available');
+  });
+});
+
+describe('SourceManager - resetSourceIndex', () => {
+  it('allows re-iteration from the beginning', () => {
+    const sync1a = makeMockSynchronizer();
+    const sync1b = makeMockSynchronizer();
+    const factory1 = jest.fn<Synchronizer, [() => string | undefined]>();
+    factory1.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+    const sync2 = makeMockSynchronizer();
+
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(factory1),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    // Get first synchronizer
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1a);
+    // Move to second
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
+    // Exhaust
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+
+    // Reset and start over
+    manager.resetSourceIndex();
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1b);
+  });
+});
+
+describe('SourceManager - fdv1Fallback', () => {
+  it('blocks all non-FDv1 and unblocks FDv1 synchronizers', () => {
+    const syncNormal = makeMockSynchronizer();
+    const syncFdv1 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(syncNormal)),
+      createSynchronizerSlot(makeSyncFactory(syncFdv1), { isFDv1Fallback: true }),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    manager.fdv1Fallback();
+
+    expect(slots[0].state).toBe('blocked');
+    expect(slots[1].state).toBe('available');
+  });
+
+  it('hasFDv1Fallback returns true when FDv1 slot exists', () => {
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(jest.fn(), { isFDv1Fallback: true })];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    expect(manager.hasFDv1Fallback()).toBe(true);
+  });
+
+  it('hasFDv1Fallback returns false when no FDv1 slot exists', () => {
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(jest.fn())];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    expect(manager.hasFDv1Fallback()).toBe(false);
+  });
+});
+
+describe('SourceManager - isPrimeSynchronizer', () => {
+  it('returns true for the first available synchronizer', () => {
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    manager.getNextAvailableSynchronizerAndSetActive();
+
+    expect(manager.isPrimeSynchronizer()).toBe(true);
+  });
+
+  it('returns false for non-first synchronizer', () => {
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    manager.getNextAvailableSynchronizerAndSetActive();
+    manager.getNextAvailableSynchronizerAndSetActive();
+
+    expect(manager.isPrimeSynchronizer()).toBe(false);
+  });
+
+  it('returns true when first slot is blocked and second is the first available', () => {
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+    ];
+    slots[0].state = 'blocked';
+
+    const manager = createSourceManager([], slots, () => undefined);
+    manager.getNextAvailableSynchronizerAndSetActive();
+
+    expect(manager.isPrimeSynchronizer()).toBe(true);
+  });
+});
+
+describe('SourceManager - getAvailableSynchronizerCount', () => {
+  it('counts available synchronizers', () => {
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(jest.fn()),
+      createSynchronizerSlot(jest.fn()),
+      createSynchronizerSlot(jest.fn(), { isFDv1Fallback: true }),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    expect(manager.getAvailableSynchronizerCount()).toBe(2);
+  });
+});
+
+describe('SourceManager - close', () => {
+  it('closes the active source', () => {
+    const sync = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync))];
+
+    const manager = createSourceManager([], slots, () => undefined);
+    manager.getNextAvailableSynchronizerAndSetActive();
+
+    manager.close();
+    expect(sync.closed).toBe(true);
+  });
+
+  it('sets isShutdown to true', () => {
+    const manager = createSourceManager([], [], () => undefined);
+    expect(manager.isShutdown).toBe(false);
+
+    manager.close();
+    expect(manager.isShutdown).toBe(true);
+  });
+
+  it('prevents further gets after shutdown', () => {
+    const init = makeMockInitializer();
+    const sync = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync))];
+
+    const manager = createSourceManager([makeInitFactory(init)], slots, () => undefined);
+    manager.close();
+
+    expect(manager.getNextInitializerAndSetActive()).toBeUndefined();
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+  });
+});
