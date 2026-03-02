@@ -94,11 +94,18 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
       - name: Install Playwright dependencies
         run: yarn workspace @internal/electron-example playwright install --with-deps chromium
-      - uses: launchdarkly/gh-actions/actions/verify-hello-app@verify-hello-app-v1.0.0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        name: 'Get the mobile SDK key'
         with:
-          use_mobile_key: true
-          role_arn: ${{ vars.AWS_ROLE_ARN }}
-          command: >-
-            ELECTRON_DISABLE_SANDBOX=1
-            DISPLAY=:99
-            yarn workspace @internal/electron-example test
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
+      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+        name: 'Get the test feature flag key'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN  }}
+          ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
+      - name: Run e2e tests
+        env:
+          ELECTRON_DISABLE_SANDBOX: '1'
+          DISPLAY: ':99'
+        run: yarn workspace @internal/electron-example test

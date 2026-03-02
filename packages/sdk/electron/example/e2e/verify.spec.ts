@@ -1,7 +1,8 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { expect, test } from '@playwright/test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { test, expect } from '@playwright/test';
 import { _electron as electron } from 'playwright';
 
 test('feature flag evaluates to true', async () => {
@@ -14,10 +15,7 @@ test('feature flag evaluates to true', async () => {
 
   try {
     const electronApp = await electron.launch({
-      args: [
-        path.join(__dirname, '../.vite/build/main.js'),
-        `--user-data-dir=${userDataDir}`,
-      ],
+      args: [path.join(__dirname, '../.vite/build/main.js'), `--user-data-dir=${userDataDir}`],
       env: {
         ...process.env,
         CI: 'true',

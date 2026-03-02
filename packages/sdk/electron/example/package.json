@@ -26,6 +26,7 @@
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
     "@electron/fuses": "^1.8.0",
+    "@playwright/test": "^1.58.2",
     "@types/electron-squirrel-startup": "^1.0.2",
     "@typescript-eslint/parser": "^5.62.0",
     "electron": "^40.4.1",
