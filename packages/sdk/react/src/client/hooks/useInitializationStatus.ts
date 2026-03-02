@@ -26,6 +26,10 @@ export type InitializationStatus =
 /**
  * Returns the initialization status of the LaunchDarkly client.
  *
+ * @privateRemarks
+ * I think this could be simplified and does not need to be in the react context. Since we have a
+ * way for the client to report it's current initialization status, we can just call waitForInitialization.
+ *
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns An {@link InitializationStatus} object with the current state (and error, if failed).
  */
