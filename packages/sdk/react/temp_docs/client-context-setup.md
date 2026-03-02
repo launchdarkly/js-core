@@ -72,7 +72,7 @@ import { LDReactContext } from './LDClient';  // or '@/lib/launchdarkly'
 import type { LDReactClientContextValue } from '@launchdarkly/react-sdk';
 
 function MyComponent() {
-  const { client } = useContext<LDReactClientContextValue>(LDReactContext);
+  const { client, context, initializedState } = useContext<LDReactClientContextValue>(LDReactContext);
   const isOn = client.boolVariation('my-flag', false);
   return <div>Flag is {isOn ? 'on' : 'off'}</div>;
 }
@@ -80,22 +80,48 @@ function MyComponent() {
 
 Alternatively, use `useLDClient()` from the same module to get the client directly.
 
+## Re-identifying (switching contexts)
+
+Call `client.identify(newContext)` to switch the LaunchDarkly context (e.g. when a user logs in or out). The Provider automatically updates and re-renders the subtree with the new context — no manual state management required.
+
+```tsx
+import { useContext } from 'react';
+import { LDReactContext } from './LDClient';
+
+function UserSwitcher() {
+  const { client, context } = useContext(LDReactContext);
+
+  const handleLogin = () => {
+    client.identify({ kind: 'user', key: 'logged-in-user', name: 'Alex' });
+  };
+
+  return (
+    <div>
+      <p>Current context: {context ? JSON.stringify(context) : 'anonymous'}</p>
+      <button onClick={handleLogin}>Log in as Alex</button>
+    </div>
+  );
+}
+```
+
+After `identify()` resolves, the `context` value in `useContext(LDReactContext)` updates automatically, causing all subscribed components to re-render with the new context and freshly evaluated flags.
+
 ## API reference (from `@launchdarkly/react-sdk`)
 
-- **`createClient(clientSideID, context, options?)`**  
+- **`createClient(clientSideID, context, options?)`**
   Creates a LaunchDarkly client instance (`LDReactClient`). When run on the server, returns a noop client; in the browser, returns a real client. Use this client with `createLDReactProvider`. Call once per "app client" and pass the result to the provider.
 
-- **`initLDReactContext()`**  
+- **`initLDReactContext()`**
   Creates a React context and a `useLDClient` hook for the LaunchDarkly client. Returns `{ context, useLDClient }`. Call once per app and pass the `context` to `createLDReactProvider`.
 
-- **`createLDReactProvider(client, context)`**  
-  Builds a React Provider component that supplies the client (and initialization state) to the tree. Pass the client from `createClient` and the `context` from `initLDReactContext`. Returns a component; wrap your app (or a subtree) with it.
+- **`createLDReactProvider(client, context?)`**
+  Builds a React Provider component that supplies the client (and initialization state) to the tree. Pass the client from `createClient` and optionally the `context` from `initLDReactContext` (defaults to the built-in `LDReactContext`). Returns a component; wrap your app (or a subtree) with it. **The Provider automatically calls `client.start()` on mount** and re-renders when `client.identify()` is called.
 
-- **`Provider`**  
+- **`Provider`**
   The component returned by `createLDReactProvider`. Wrap your app with it so descendants can read the client via the context or `useLDClient`.
 
-- **`context`**  
-  The React context from `initLDReactContext`. Its value is `{ client, context?, intializedState }`. Use `useContext(context)` in components under the Provider to read the client and state. (Note: the type uses `intializedState` in the value.)
+- **`context`**
+  The React context from `initLDReactContext`. Its value is `{ client, context?, initializedState }`. Use `useContext(context)` in components under the Provider to read the client and state.
 
-- **`useLDClient()`**  
+- **`useLDClient()`**
   Hook returned by `initLDReactContext`. Returns the `LDReactClient` from the nearest Provider. Use in components under the Provider instead of `useContext(context).client` when you only need the client.

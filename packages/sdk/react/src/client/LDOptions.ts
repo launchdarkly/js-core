@@ -1,5 +1,7 @@
 import { LDContext, LDOptions as LDOptionsBase, LDStartOptions } from '@launchdarkly/js-client-sdk';
 
+import { LDReactClientContext } from './LDClient';
+
 /**
  * Initialization options for the LaunchDarkly React SDK.
  */
@@ -64,4 +66,15 @@ export interface LDReactProviderOptions {
    * by calling the `start` function.
    */
   deferInitialization?: boolean;
+
+  /**
+   * This option allow developers to provide their own named react context for
+   * the launchdarkly client. This is useful for cases where you want to have multiple
+   * clients in the same application. If not provided, the default context will be used.
+   *
+   * @see {@link LDReactClientContext} for the possible values and their meaning
+   *
+   * @returns {LDReactClientContext} The react context for the LaunchDarkly client.
+   */
+  reactContext?: LDReactClientContext;
 }

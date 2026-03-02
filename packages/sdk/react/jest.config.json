@@ -1,0 +1,13 @@
+{
+  "transform": { "^.+\\.tsx?$": ["ts-jest", { "tsconfig": { "esModuleInterop": true } }] },
+  "testMatch": ["**/*.test.ts?(x)"],
+  "testPathIgnorePatterns": ["node_modules", "example", "dist"],
+  "modulePathIgnorePatterns": ["dist"],
+  "moduleNameMapper": {
+    "^@launchdarkly/react-sdk/server$": "<rootDir>/src/server/index.ts",
+    "^@launchdarkly/react-sdk$": "<rootDir>/src/client/index.ts"
+  },
+  "testEnvironment": "node",
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+  "collectCoverageFrom": ["src/**/*.ts?(x)"]
+}
