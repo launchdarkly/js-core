@@ -28,3 +28,8 @@ export type { Synchronizer } from './Synchronizer';
 export { poll } from './PollingBase';
 export { createPollingInitializer } from './PollingInitializer';
 export { createPollingSynchronizer } from './PollingSynchronizer';
+
+export type { PingHandler, StreamingFDv2Base } from './StreamingFDv2Base';
+export { createStreamingBase } from './StreamingFDv2Base';
+export { createStreamingInitializer } from './StreamingInitializerFDv2';
+export { createStreamingSynchronizer } from './StreamingSynchronizerFDv2';
