@@ -1,49 +1,16 @@
-import { FDv2SourceResult } from '../../../src/datasource/fdv2/FDv2SourceResult';
-import { Initializer } from '../../../src/datasource/fdv2/Initializer';
 import {
   createSourceManager,
   createSynchronizerSlot,
-  InitializerFactory,
   SynchronizerFactory,
   SynchronizerSlot,
 } from '../../../src/datasource/fdv2/SourceManager';
 import { Synchronizer } from '../../../src/datasource/fdv2/Synchronizer';
-
-function makeMockInitializer(): Initializer & { closed: boolean } {
-  return {
-    closed: false,
-    run: jest.fn<Promise<FDv2SourceResult>, []>().mockResolvedValue({
-      type: 'status',
-      state: 'shutdown',
-      fdv1Fallback: false,
-    }),
-    close() {
-      this.closed = true;
-    },
-  };
-}
-
-function makeMockSynchronizer(): Synchronizer & { closed: boolean } {
-  return {
-    closed: false,
-    next: jest.fn<Promise<FDv2SourceResult>, []>().mockResolvedValue({
-      type: 'status',
-      state: 'shutdown',
-      fdv1Fallback: false,
-    }),
-    close() {
-      this.closed = true;
-    },
-  };
-}
-
-function makeInitFactory(init: Initializer): InitializerFactory {
-  return jest.fn(() => init);
-}
-
-function makeSyncFactory(sync: Synchronizer): SynchronizerFactory {
-  return jest.fn(() => sync);
-}
+import {
+  makeInitFactory,
+  makeMockInitializer,
+  makeMockSynchronizer,
+  makeSyncFactory,
+} from './orchestrationTestHelpers';
 
 // -- createSynchronizerSlot --
 

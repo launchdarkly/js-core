@@ -1,5 +1,3 @@
-import { DataSourceErrorKind, internal } from '@launchdarkly/js-sdk-common';
-
 import { createFDv2DataSource } from '../../../src/datasource/fdv2/FDv2DataSource';
 import {
   changeSet,
@@ -12,117 +10,19 @@ import {
 import { Initializer } from '../../../src/datasource/fdv2/Initializer';
 import {
   createSynchronizerSlot,
-  InitializerFactory,
   SynchronizerSlot,
 } from '../../../src/datasource/fdv2/SourceManager';
 import { Synchronizer } from '../../../src/datasource/fdv2/Synchronizer';
-
-function makeLogger() {
-  return {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
-}
-
-function makeStatusManager() {
-  return {
-    status: { state: 'CLOSED' as const, stateSince: 0 },
-    requestStateUpdate: jest.fn(),
-    reportError: jest.fn(),
-  };
-}
-
-function makeErrorInfo() {
-  return {
-    kind: DataSourceErrorKind.NetworkError,
-    message: 'test error',
-    time: Date.now(),
-  };
-}
-
-function makePayload(opts: { state?: string; type?: internal.PayloadType } = {}): internal.Payload {
-  return {
-    id: 'test-payload',
-    version: 1,
-    state: opts.state ?? 'test-selector',
-    type: opts.type ?? 'full',
-    updates: [],
-  };
-}
-
-/**
- * Creates a mock initializer that resolves with the given result when run()
- * is called. Supports close() which resolves with shutdown.
- */
-function makeMockInitializer(result: FDv2SourceResult): Initializer {
-  let resolveRun: ((r: FDv2SourceResult) => void) | undefined;
-  let closed = false;
-
-  return {
-    run() {
-      if (closed) {
-        return Promise.resolve(shutdown());
-      }
-      return new Promise<FDv2SourceResult>((resolve) => {
-        resolveRun = resolve;
-        // Auto-resolve if result is available
-        resolve(result);
-      });
-    },
-    close() {
-      closed = true;
-      resolveRun?.(shutdown());
-    },
-  };
-}
-
-/**
- * Creates a mock synchronizer that yields results from a sequence.
- * Each call to next() returns the next result in the sequence.
- * If the sequence is exhausted, next() blocks until close() is called.
- */
-function makeMockSynchronizer(results: FDv2SourceResult[]): Synchronizer {
-  let index = 0;
-  let closed = false;
-  let pendingResolve: ((r: FDv2SourceResult) => void) | undefined;
-
-  return {
-    next() {
-      if (closed) {
-        return Promise.resolve(shutdown());
-      }
-      if (index < results.length) {
-        const result = results[index];
-        index += 1;
-        return Promise.resolve(result);
-      }
-      // Block until close
-      return new Promise<FDv2SourceResult>((resolve) => {
-        pendingResolve = resolve;
-      });
-    },
-    close() {
-      closed = true;
-      pendingResolve?.(shutdown());
-    },
-  };
-}
-
-function makeInitFactory(init: Initializer): InitializerFactory {
-  return () => init;
-}
-
-const noSelector = () => undefined;
-
-beforeEach(() => {
-  jest.useFakeTimers();
-});
-
-afterEach(() => {
-  jest.useRealTimers();
-});
+import {
+  makeErrorInfo,
+  makeInitFactory,
+  makeLogger,
+  makeMockInitializer,
+  makeMockSynchronizer,
+  makePayload,
+  makeStatusManager,
+  noSelector,
+} from './orchestrationTestHelpers';
 
 // -- initialization phase --
 
@@ -409,16 +309,11 @@ it('triggers fdv1 fallback when synchronizer changeSet has fdv1Fallback flag', a
     selectorGetter: noSelector,
   });
 
-  const startPromise = ds.start();
+  await ds.start();
 
-  // Allow orchestration loop to process fdv2 changeSet, trigger fallback,
-  // and then process fdv1 changeSet
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
+  // Wait for the fdv1 synchronizer to deliver its changeSet (second VALID).
+  await statusManager.waitForState('VALID', 2);
 
-  await startPromise;
-
-  // Both changeSets should be delivered
   expect(dataCallback).toHaveBeenCalledTimes(2);
   expect(dataCallback).toHaveBeenCalledWith(fdv2Payload);
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
@@ -449,15 +344,8 @@ it('triggers fdv1 fallback on terminal error with fdv1Fallback flag', async () =
     logger,
   });
 
-  const startPromise = ds.start();
-
-  // Allow orchestration loop to process terminal error, trigger fallback,
-  // and then process fdv1 changeSet
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-
-  await startPromise;
+  // Start resolves when the fdv1 synchronizer delivers its changeSet.
+  await ds.start();
 
   expect(logger.error).toHaveBeenCalled();
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
@@ -502,18 +390,12 @@ it('falls back to next synchronizer when fallback condition fires', async () => 
     statusManager,
     selectorGetter: noSelector,
     logger,
-    fallbackTimeoutMs: 1000,
+    fallbackTimeoutMs: 10,
   });
 
-  const startPromise = ds.start();
-
-  // Allow the first sync's interrupted result to be processed
-  await jest.advanceTimersByTimeAsync(0);
-
-  // Now advance past the fallback timeout
-  await jest.advanceTimersByTimeAsync(1000);
-
-  await startPromise;
+  // start() resolves when the fallback condition fires (after 10ms),
+  // the orchestrator moves to sync2, and sync2 delivers the changeSet.
+  await ds.start();
 
   expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Fallback condition fired'));
   expect(dataCallback).toHaveBeenCalledWith(payload);
@@ -526,8 +408,8 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
   const logger = makeLogger();
   const payload = makePayload({ state: 'selector' });
 
-  // Scenario: sync1 (primary) gets interrupted, fallback fires after 500ms
-  // moving to sync2 (secondary). Recovery fires after 1000ms, resetting
+  // Scenario: sync1 (primary) gets interrupted, fallback fires after 10ms
+  // moving to sync2 (secondary). Recovery fires after 20ms, resetting
   // back to sync1 which now produces data.
 
   // sync1: first time sends interrupted then blocks. Second time sends data.
@@ -580,34 +462,13 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
     statusManager,
     selectorGetter: noSelector,
     logger,
-    fallbackTimeoutMs: 500,
-    recoveryTimeoutMs: 1000,
+    fallbackTimeoutMs: 10,
+    recoveryTimeoutMs: 20,
   });
 
-  const startPromise = ds.start();
-
-  // Process sync1's interrupted result
-  await jest.advanceTimersByTimeAsync(0);
-
-  // Fallback fires at 500ms → moves to sync2
-  await jest.advanceTimersByTimeAsync(500);
-  // Let orchestration process the fallback
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-
-  // Recovery fires at 1000ms from when sync2 started → resets to primary
-  await jest.advanceTimersByTimeAsync(1000);
-  // Let orchestration process recovery and sync1's second invocation
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-
-  await startPromise;
+  // start() resolves after: sync1 interrupted → fallback (10ms) → sync2 blocks →
+  // recovery (20ms) → sync1 second invocation delivers changeSet.
+  await ds.start();
 
   expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Recovery condition fired'));
   expect(dataCallback).toHaveBeenCalledWith(payload);
@@ -640,17 +501,10 @@ it('close during initialization causes start to reject', async () => {
     selectorGetter: noSelector,
   });
 
-  // Capture the rejection so it doesn't become unhandled
   const startPromise = ds.start().catch((e) => e);
 
-  // Let the orchestration start
-  await jest.advanceTimersByTimeAsync(0);
-
+  // close resolves the blocked init with shutdown, causing orchestration to exit.
   ds.close();
-
-  // Allow the shutdown result to propagate through the orchestration loop
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
 
   const error = await startPromise;
   expect(error).toBeInstanceOf(Error);
@@ -689,16 +543,13 @@ it('close during synchronization causes exit', async () => {
     selectorGetter: noSelector,
   });
 
-  const startPromise = ds.start();
-  await startPromise;
+  await ds.start();
 
-  // Now the sync loop is running in the background, waiting on next()
+  // Now the sync loop is running in the background, waiting on next().
+  // close() resolves the pending next() with shutdown.
   ds.close();
 
-  // Give the shutdown result time to propagate
-  await Promise.resolve();
-  await Promise.resolve();
-
+  // Only the first changeSet was delivered; shutdown does not produce data.
   expect(dataCallback).toHaveBeenCalledTimes(1);
 });
 
@@ -790,6 +641,8 @@ it('shutdown result from synchronizer exits without moving to next', async () =>
 
   await ds.start();
 
+  // Wait for the shutdown to be processed — the second synchronizer should not be created.
+  await statusManager.waitForState('VALID', 1);
   expect(dataCallback).toHaveBeenCalledTimes(1);
   expect(secondSyncFactory).not.toHaveBeenCalled();
   ds.close();
@@ -821,9 +674,8 @@ it('delivers multiple changeSets from synchronizer in order', async () => {
 
   await ds.start();
 
-  // Let remaining changeSets be processed
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
+  // Wait for all three changeSets to be processed.
+  await statusManager.waitForState('VALID', 3);
 
   expect(dataCallback).toHaveBeenCalledTimes(3);
   expect(dataCallback).toHaveBeenNthCalledWith(1, payload1);
@@ -922,14 +774,10 @@ it('close during condition waiting exits cleanly', async () => {
     fallbackTimeoutMs: 60000,
   });
 
-  const startPromise = ds.start();
-  await startPromise;
+  await ds.start();
 
-  // Sync loop is running, condition timer is active — close should not hang
+  // Sync loop is running, condition timer is active — close should not hang.
   ds.close();
-
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
 });
 
 // -- fdv1 fallback additional coverage --
@@ -985,10 +833,10 @@ it('fdv1 fallback blocks other synchronizers', async () => {
     selectorGetter: noSelector,
   });
 
-  const startPromise = ds.start();
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await startPromise;
+  await ds.start();
+
+  // Wait for fdv1 synchronizer to deliver its changeSet (second VALID).
+  await statusManager.waitForState('VALID', 2);
 
   // FDv1 fallback should block non-FDv1 synchronizers — second sync should not be called
   expect(secondSyncFactory).not.toHaveBeenCalled();
@@ -1041,11 +889,8 @@ it('fdv1 fallback triggered on interrupted result with fdv1Fallback flag', async
     selectorGetter: noSelector,
   });
 
-  const startPromise = ds.start();
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await jest.advanceTimersByTimeAsync(0);
-  await startPromise;
+  // Start resolves when the fdv1 synchronizer delivers its changeSet.
+  await ds.start();
 
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
   ds.close();
