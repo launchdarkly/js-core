@@ -130,9 +130,9 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     return false;
   }
 
-  /* eslint-disable no-await-in-loop, no-continue */
-  // The orchestration loops intentionally use await-in-loop (sequential state
-  // machine processing one result at a time) and continue (control flow).
+  /* eslint-disable no-await-in-loop */
+  // The orchestration loops intentionally use await-in-loop for sequential
+  // state machine processing — one result at a time.
   async function runInitializers(): Promise<void> {
     while (!closed) {
       const initializer = sourceManager.getNextInitializerAndSetActive();
@@ -149,7 +149,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         applyChangeSet(result);
 
         if (handleFdv1Fallback(result)) {
-          // FDv1 fallback triggered during initialization - data was received
+          // FDv1 fallback triggered during initialization — data was received
           // but we should move to synchronizers where the FDv1 adapter will run.
           dataReceived = true;
           break;
@@ -162,13 +162,9 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         }
 
         // Got data but no selector (e.g., cache). Record that data was
-        // received but continue to the next initializer.
+        // received and continue to the next initializer.
         dataReceived = true;
-        continue;
-      }
-
-      // Status result
-      if (result.type === 'status') {
+      } else if (result.type === 'status') {
         switch (result.state) {
           case 'interrupted':
           case 'terminal_error':
@@ -212,97 +208,86 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         recoveryTimeoutMs,
       );
 
-      let breakInner = false;
-      while (!closed && !breakInner) {
-        const syncPromise: Promise<RaceResult> = synchronizer
-          .next()
-          .then((value) => ({ source: 'sync' as const, value }));
+      // try/finally ensures conditions are closed on all code paths.
+      let synchronizerRunning = true;
+      try {
+        while (!closed && synchronizerRunning) {
+          const syncPromise: Promise<RaceResult> = synchronizer
+            .next()
+            .then((value) => ({ source: 'sync' as const, value }));
 
-        const racers: Promise<RaceResult>[] = [syncPromise];
-        if (conditions.promise !== undefined) {
-          racers.push(
-            conditions.promise.then((value) => ({ source: 'condition' as const, value })),
-          );
-        }
-
-        const winner = await Promise.race(racers);
-        if (closed) {
-          conditions.close();
-          return;
-        }
-
-        if (winner.source === 'condition') {
-          conditions.close();
-          const conditionType = winner.value as ConditionType;
-
-          if (conditionType === 'fallback') {
-            logger?.warn('Fallback condition fired, moving to next synchronizer.');
-            break;
+          const racers: Promise<RaceResult>[] = [syncPromise];
+          if (conditions.promise !== undefined) {
+            racers.push(
+              conditions.promise.then((value) => ({ source: 'condition' as const, value })),
+            );
           }
 
-          if (conditionType === 'recovery') {
-            logger?.info('Recovery condition fired, resetting to primary synchronizer.');
-            sourceManager.resetSourceIndex();
-            break;
-          }
-        }
-
-        // Synchronizer produced a result.
-        const syncResult = winner.value as FDv2SourceResult;
-        conditions.inform(syncResult);
-
-        if (syncResult.type === 'changeSet') {
-          applyChangeSet(syncResult);
-          if (!initialized) {
-            markInitialized();
+          const winner = await Promise.race(racers);
+          if (closed) {
+            return;
           }
 
-          if (handleFdv1Fallback(syncResult)) {
-            conditions.close();
-            breakInner = true;
-          }
-          continue;
-        }
+          if (winner.source === 'condition') {
+            const conditionType = winner.value as ConditionType;
 
-        // Status result from synchronizer.
-        if (syncResult.type === 'status') {
-          switch (syncResult.state) {
-            case 'interrupted':
-              logger?.warn(
-                `Synchronizer interrupted: ${syncResult.errorInfo?.message ?? 'unknown error'}`,
-              );
-              reportStatusError(syncResult);
-              // The synchronizer handles its own retry; continue pulling.
-              break;
-            case 'terminal_error':
-              logger?.error(
-                `Synchronizer terminal error: ${syncResult.errorInfo?.message ?? 'unknown error'}`,
-              );
-              reportStatusError(syncResult);
-              sourceManager.blockCurrentSynchronizer();
-              conditions.close();
-              breakInner = true;
-              break;
-            case 'shutdown':
-              conditions.close();
-              return;
-            case 'goodbye':
-              // The synchronizer will handle reconnection internally.
-              break;
-            default:
-              break;
-          }
+            if (conditionType === 'fallback') {
+              logger?.warn('Fallback condition fired, moving to next synchronizer.');
+            } else if (conditionType === 'recovery') {
+              logger?.info('Recovery condition fired, resetting to primary synchronizer.');
+              sourceManager.resetSourceIndex();
+            }
 
-          if (!breakInner && handleFdv1Fallback(syncResult)) {
-            conditions.close();
-            breakInner = true;
+            synchronizerRunning = false;
+          } else {
+            // Synchronizer produced a result.
+            const syncResult = winner.value as FDv2SourceResult;
+            conditions.inform(syncResult);
+
+            if (syncResult.type === 'changeSet') {
+              applyChangeSet(syncResult);
+              if (!initialized) {
+                markInitialized();
+              }
+            } else if (syncResult.type === 'status') {
+              switch (syncResult.state) {
+                case 'interrupted':
+                  logger?.warn(
+                    `Synchronizer interrupted: ${syncResult.errorInfo?.message ?? 'unknown error'}`,
+                  );
+                  reportStatusError(syncResult);
+                  break;
+                case 'terminal_error':
+                  logger?.error(
+                    `Synchronizer terminal error: ${syncResult.errorInfo?.message ?? 'unknown error'}`,
+                  );
+                  reportStatusError(syncResult);
+                  sourceManager.blockCurrentSynchronizer();
+                  synchronizerRunning = false;
+                  break;
+                case 'shutdown':
+                  return;
+                case 'goodbye':
+                  // The synchronizer will handle reconnection internally.
+                  break;
+                default:
+                  break;
+              }
+            }
+
+            // Check for FDv1 fallback after all result handling — single location.
+            if (handleFdv1Fallback(syncResult)) {
+              synchronizerRunning = false;
+            }
           }
         }
+      } finally {
+        conditions.close();
       }
     }
   }
 
-  /* eslint-enable no-await-in-loop, no-continue */
+  /* eslint-enable no-await-in-loop */
 
   async function runOrchestration(): Promise<void> {
     await runInitializers();

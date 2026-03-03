@@ -423,6 +423,45 @@ describe('FDv2DataSource - fdv1 fallback', () => {
     expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
     ds.close();
   });
+
+  it('triggers fdv1 fallback on terminal error with fdv1Fallback flag', async () => {
+    const dataCallback = jest.fn();
+    const statusManager = makeStatusManager();
+    const logger = makeLogger();
+
+    const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+    const fdv2Sync = makeMockSynchronizer([terminalError(makeErrorInfo(), true)]);
+    const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(() => fdv2Sync),
+      createSynchronizerSlot(() => fdv1Sync, { isFDv1Fallback: true }),
+    ];
+
+    const ds = createFDv2DataSource({
+      initializerFactories: [],
+      synchronizerSlots: slots,
+      dataCallback,
+      statusManager,
+      selectorGetter: noSelector,
+      logger,
+    });
+
+    const startPromise = ds.start();
+
+    // Allow orchestration loop to process terminal error, trigger fallback,
+    // and then process fdv1 changeSet
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(0);
+
+    await startPromise;
+
+    expect(logger.error).toHaveBeenCalled();
+    expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+    ds.close();
+  });
 });
 
 describe('FDv2DataSource - conditions', () => {
