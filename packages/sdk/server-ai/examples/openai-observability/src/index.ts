@@ -6,7 +6,6 @@ import 'dotenv/config';
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { Observability } from '@launchdarkly/observability-node';
 import { initAi } from '@launchdarkly/server-sdk-ai';
-import { OpenAIProvider } from '@launchdarkly/server-sdk-ai-openai';
 
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
@@ -49,7 +48,8 @@ async function main() {
 
   const aiClient = initAi(ldClient);
 
-  // ── 2. Create your own OpenAI client (after instrumentations so OpenLLMetry can patch it) ──
+  // ── 2. Import provider and OpenAI after instrumentation so OpenLLMetry can patch the client ──
+  const { OpenAIProvider } = await import('@launchdarkly/server-sdk-ai-openai');
   const { OpenAI } = await import('openai');
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
