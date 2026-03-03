@@ -112,11 +112,6 @@ export function createSourceManager(
   synchronizerSlots: SynchronizerSlot[],
   selectorGetter: () => string | undefined,
 ): SourceManager {
-  function setSlotState(slot: SynchronizerSlot, state: SynchronizerSlotState) {
-    // eslint-disable-next-line no-param-reassign
-    slot.state = state;
-  }
-
   let activeSource: { close(): void } | undefined;
   let initializerIndex = -1;
   let synchronizerIndex = -1;
@@ -184,7 +179,8 @@ export function createSourceManager(
 
     blockCurrentSynchronizer() {
       if (synchronizerIndex >= 0 && synchronizerIndex < synchronizerSlots.length) {
-        setSlotState(synchronizerSlots[synchronizerIndex], 'blocked');
+        // eslint-disable-next-line no-param-reassign
+        synchronizerSlots[synchronizerIndex].state = 'blocked';
       }
     },
 
@@ -194,7 +190,8 @@ export function createSourceManager(
 
     fdv1Fallback() {
       synchronizerSlots.forEach((slot) => {
-        setSlotState(slot, slot.isFDv1Fallback ? 'available' : 'blocked');
+        // eslint-disable-next-line no-param-reassign
+        slot.state = slot.isFDv1Fallback ? 'available' : 'blocked';
       });
       synchronizerIndex = -1;
     },
