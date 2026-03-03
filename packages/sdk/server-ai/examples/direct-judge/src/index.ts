@@ -39,7 +39,18 @@ async function main() {
   const aiClient = initAi(ldClient);
 
   try {
-    const judge = await aiClient.createJudge(judgeKey, context, { enabled: false });
+    // Example using the judge functionality with direct input and output.
+    //
+    // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
+    // Example:
+    //   const defaultValue = {
+    //     enabled: true,
+    //     model: { name: 'gpt-4' },
+    //     provider: { name: 'openai' },
+    //     messages: [...]
+    //   };
+    //   const judge = await aiClient.createJudge(judgeKey, context, defaultValue, { companyName: 'LaunchDarkly' })
+    const judge = await aiClient.createJudge(judgeKey, context);
 
     if (!judge) {
       console.log('*** AI judge configuration is not enabled');

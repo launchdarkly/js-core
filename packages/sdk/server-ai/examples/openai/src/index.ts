@@ -47,17 +47,18 @@ async function main() {
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.completionConfig(
-    aiConfigKey,
-    context,
-    {
-      model: {
-        name: 'gpt-4',
-      },
-      enabled: false,
-    },
-    { myVariable: 'My User Defined Variable' },
-  );
+  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
+  // Example:
+  //   const defaultValue = {
+  //     enabled: true,
+  //     model: { name: 'gpt-4' },
+  //     provider: { name: 'openai' },
+  //     messages: [...]
+  //   };
+  //   const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue, { myVariable: '...' });
+  const aiConfig = await aiClient.completionConfig(aiConfigKey, context, undefined, {
+    myVariable: 'My User Defined Variable',
+  });
 
   if (!aiConfig.enabled || !aiConfig.tracker) {
     console.log('*** AI configuration is not enabled');

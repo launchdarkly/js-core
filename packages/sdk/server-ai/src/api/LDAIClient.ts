@@ -41,7 +41,7 @@ export interface LDAIClient {
    * const context = {...};
    * const variables = {username: 'john'};
    * const defaultValue = {
-   *  enabled: false,
+   *  enabled: true,
    *  model: { name: 'gpt-4' },
    *  provider: { name: 'openai' },
    * };
@@ -250,7 +250,7 @@ export interface LDAIClient {
    * const key = "customer_support_chat";
    * const context = {...};
    * const defaultValue = {
-   *   enabled: false,
+   *   enabled: true,
    *   model: { name: "gpt-4" },
    *   provider: { name: "openai" },
    *   messages: [

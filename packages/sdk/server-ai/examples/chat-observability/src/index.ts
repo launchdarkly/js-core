@@ -38,14 +38,19 @@ async function main() {
   }
 
   const aiClient = initAi(ldClient);
-  const chat = await aiClient.createChat(
-    aiConfigKey,
-    context,
-    { enabled: false },
-    {
-      example_type: 'observability_demo',
-    },
-  );
+
+  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
+  // Example:
+  //   const defaultValue = {
+  //     enabled: true,
+  //     model: { name: 'gpt-4' },
+  //     provider: { name: 'openai' },
+  //     messages: [...]
+  //   };
+  //   const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, { example_type: 'observability_demo' });
+  const chat = await aiClient.createChat(aiConfigKey, context, undefined, {
+    example_type: 'observability_demo',
+  });
 
   if (!chat) {
     console.log('*** AI chat configuration is not enabled');
