@@ -32,6 +32,13 @@ export interface FDv2DataSourceConfig {
   /** Status manager for reporting data source state transitions. */
   statusManager: DataSourceStatusManager;
 
+  /**
+   * Getter for the current selector (basis) string. The selector is managed
+   * externally by the consuming layer — the orchestrator reads it via this
+   * getter and passes it through to source factories.
+   */
+  selectorGetter: () => string | undefined;
+
   /** Optional logger. */
   logger?: LDLogger;
 
@@ -72,19 +79,18 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     synchronizerSlots,
     dataCallback,
     statusManager,
+    selectorGetter,
     logger,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
   } = config;
 
-  let selector: string | undefined;
   let initialized = false;
   let closed = false;
   let dataReceived = false;
   let initResolve: (() => void) | undefined;
   let initReject: ((err: Error) => void) | undefined;
 
-  const selectorGetter = () => selector;
   const sourceManager = createSourceManager(
     initializerFactories,
     synchronizerSlots,
@@ -101,9 +107,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   }
 
   function applyChangeSet(result: ChangeSetResult) {
-    if (result.payload.state) {
-      selector = result.payload.state;
-    }
     dataCallback(result.payload);
     statusManager.requestStateUpdate('VALID');
   }

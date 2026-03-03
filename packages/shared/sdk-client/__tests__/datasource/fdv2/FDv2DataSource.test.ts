@@ -114,6 +114,8 @@ function makeInitFactory(init: Initializer): InitializerFactory {
   return () => init;
 }
 
+const noSelector = () => undefined;
+
 beforeEach(() => {
   jest.useFakeTimers();
 });
@@ -133,6 +135,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -157,6 +160,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -177,6 +181,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -200,6 +205,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
       logger,
     });
 
@@ -224,6 +230,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -244,6 +251,7 @@ describe('FDv2DataSource - initialization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -267,6 +275,7 @@ describe('FDv2DataSource - synchronization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -295,6 +304,7 @@ describe('FDv2DataSource - synchronization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
       logger,
     });
 
@@ -322,6 +332,7 @@ describe('FDv2DataSource - synchronization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -344,6 +355,7 @@ describe('FDv2DataSource - synchronization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
@@ -364,6 +376,7 @@ describe('FDv2DataSource - synchronization phase', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await expect(ds.start()).rejects.toThrow('All data sources exhausted');
@@ -392,6 +405,7 @@ describe('FDv2DataSource - fdv1 fallback', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     const startPromise = ds.start();
@@ -446,6 +460,7 @@ describe('FDv2DataSource - conditions', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
       logger,
       fallbackTimeoutMs: 1000,
     });
@@ -523,6 +538,7 @@ describe('FDv2DataSource - conditions', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
       logger,
       fallbackTimeoutMs: 500,
       recoveryTimeoutMs: 1000,
@@ -581,6 +597,7 @@ describe('FDv2DataSource - close', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     // Capture the rejection so it doesn't become unhandled
@@ -629,6 +646,7 @@ describe('FDv2DataSource - close', () => {
       synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     const startPromise = ds.start();
@@ -645,29 +663,27 @@ describe('FDv2DataSource - close', () => {
   });
 });
 
-describe('FDv2DataSource - selector tracking', () => {
-  it('tracks selector across initializer and synchronizer phases', async () => {
+describe('FDv2DataSource - selectorGetter', () => {
+  it('passes selectorGetter from config through to source factories', async () => {
     const dataCallback = jest.fn();
     const statusManager = makeStatusManager();
+    const selectorGetter = jest.fn(() => 'test-selector');
+    const payload = makePayload({ state: 'selector' });
 
-    // Initializer provides cache data without selector
-    const cachePayload = makePayload({ state: '' });
-    const cacheInit = makeMockInitializer(changeSet(cachePayload, false));
-
-    // Second initializer provides data with selector
-    const pollPayload = makePayload({ state: 'poll-selector' });
-    const pollInit = makeMockInitializer(changeSet(pollPayload, false));
+    const syncFactory = jest.fn(() => makeMockSynchronizer([changeSet(payload, false)]));
+    const slots: SynchronizerSlot[] = [createSynchronizerSlot(syncFactory)];
 
     const ds = createFDv2DataSource({
-      initializerFactories: [makeInitFactory(cacheInit), makeInitFactory(pollInit)],
-      synchronizerSlots: [],
+      initializerFactories: [],
+      synchronizerSlots: slots,
       dataCallback,
       statusManager,
+      selectorGetter,
     });
 
     await ds.start();
 
-    expect(dataCallback).toHaveBeenCalledTimes(2);
+    expect(syncFactory).toHaveBeenCalledWith(selectorGetter);
     ds.close();
   });
 });
@@ -682,6 +698,7 @@ describe('FDv2DataSource - empty configurations', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     // No sources, no data, init promise should reject
@@ -699,6 +716,7 @@ describe('FDv2DataSource - empty configurations', () => {
       synchronizerSlots: [],
       dataCallback,
       statusManager,
+      selectorGetter: noSelector,
     });
 
     await ds.start();
