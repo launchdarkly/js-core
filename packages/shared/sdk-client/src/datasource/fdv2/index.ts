@@ -1,6 +1,9 @@
 export type { AsyncQueue } from './AsyncQueue';
 export { createAsyncQueue } from './AsyncQueue';
 
+export type { CacheInitializerConfig } from './CacheInitializer';
+export { createCacheInitializerFactory } from './CacheInitializer';
+
 export type { FDv2PollResponse, FDv2Requestor } from './FDv2Requestor';
 export { makeFDv2Requestor } from './FDv2Requestor';
 
