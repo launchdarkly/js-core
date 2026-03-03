@@ -1,7 +1,7 @@
 import {
   createStateDebounceManager,
   DEFAULT_DEBOUNCE_MS,
-  DesiredState,
+  PendingState,
   StateDebounceManager,
 } from '../../src/datasource/StateDebounceManager';
 
@@ -13,7 +13,7 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-const defaultInitialState: DesiredState = {
+const defaultInitialState: PendingState = {
   networkState: 'available',
   lifecycleState: 'foreground',
   requestedMode: 'streaming',
@@ -21,7 +21,7 @@ const defaultInitialState: DesiredState = {
 
 function makeManager(
   onReconcile: jest.Mock = jest.fn(),
-  initialState: DesiredState = defaultInitialState,
+  initialState: PendingState = defaultInitialState,
   debounceMs?: number,
 ): { manager: StateDebounceManager; onReconcile: jest.Mock } {
   const manager = createStateDebounceManager({
@@ -170,20 +170,20 @@ it('treats set* methods as no-ops after close()', () => {
   expect(onReconcile).not.toHaveBeenCalled();
 });
 
-it('reflects current accumulated state in desiredState immediately', () => {
+it('reflects current accumulated state in pendingState immediately', () => {
   const { manager } = makeManager();
 
-  expect(manager.desiredState).toEqual(defaultInitialState);
+  expect(manager.pendingState).toEqual(defaultInitialState);
 
   manager.setNetworkState('unavailable');
-  expect(manager.desiredState).toEqual({
+  expect(manager.pendingState).toEqual({
     networkState: 'unavailable',
     lifecycleState: 'foreground',
     requestedMode: 'streaming',
   });
 
   manager.setLifecycleState('background');
-  expect(manager.desiredState).toEqual({
+  expect(manager.pendingState).toEqual({
     networkState: 'unavailable',
     lifecycleState: 'background',
     requestedMode: 'streaming',

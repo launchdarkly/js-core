@@ -15,11 +15,12 @@ export type NetworkState = 'available' | 'unavailable';
 export type LifecycleState = 'foreground' | 'background';
 
 /**
- * The composite desired state tracked by the debounce manager.
+ * The composite pending state tracked by the debounce manager.
  * Each field represents one dimension of state that can change
- * independently.
+ * independently. This state accumulates during the debounce window
+ * and is delivered to the reconciliation callback when the timer fires.
  */
-export interface DesiredState {
+export interface PendingState {
   readonly networkState: NetworkState;
   readonly lifecycleState: LifecycleState;
   readonly requestedMode: FDv2ConnectionMode;
@@ -27,9 +28,9 @@ export interface DesiredState {
 
 /**
  * Callback invoked when the debounce timer fires. Receives the
- * final accumulated desired state after the debounce window closes.
+ * final accumulated pending state after the debounce window closes.
  */
-export type ReconciliationCallback = (desiredState: DesiredState) => void;
+export type ReconciliationCallback = (pendingState: PendingState) => void;
 
 /** Default debounce window duration in milliseconds. */
 export const DEFAULT_DEBOUNCE_MS = 1000;
@@ -37,37 +38,37 @@ export const DEFAULT_DEBOUNCE_MS = 1000;
 /**
  * Manages debouncing of network availability, lifecycle, and
  * connection mode change events. Each event updates the relevant
- * component of the desired state and resets the debounce timer.
+ * component of the pending state and resets the debounce timer.
  * When the timer fires, the reconciliation callback is invoked
- * with the final combined desired state.
+ * with the final combined pending state.
  *
  * `identify()` does NOT participate in the debounce window
  * (CONNMODE spec 3.5.6). Consumers must handle identify separately.
  */
 export interface StateDebounceManager {
   /**
-   * Update the desired network state. Resets the debounce timer.
+   * Update the pending network state. Resets the debounce timer.
    */
   setNetworkState(state: NetworkState): void;
 
   /**
-   * Update the desired lifecycle state. Resets the debounce timer.
+   * Update the pending lifecycle state. Resets the debounce timer.
    */
   setLifecycleState(state: LifecycleState): void;
 
   /**
-   * Update the desired connection mode. Resets the debounce timer.
+   * Update the pending connection mode. Resets the debounce timer.
    * This is how `setConnectionMode()` participates in debouncing
    * (CONNMODE spec 3.5.5).
    */
   setRequestedMode(mode: FDv2ConnectionMode): void;
 
   /**
-   * Returns the current accumulated desired state (the state that
+   * Returns the current accumulated pending state (the state that
    * will be delivered to the reconciliation callback when the
    * debounce timer fires).
    */
-  readonly desiredState: DesiredState;
+  readonly pendingState: PendingState;
 
   /**
    * Cancel any pending debounce timer and release resources.
@@ -80,12 +81,12 @@ export interface StateDebounceManager {
  * Configuration for creating a {@link StateDebounceManager}.
  */
 export interface StateDebounceManagerConfig {
-  /** The initial desired state at construction time. */
-  initialState: DesiredState;
+  /** The initial pending state at construction time. */
+  initialState: PendingState;
 
   /**
    * Callback invoked when the debounce timer fires with the
-   * final resolved desired state.
+   * final resolved pending state.
    */
   onReconcile: ReconciliationCallback;
 
@@ -101,7 +102,7 @@ export interface StateDebounceManagerConfig {
  *
  * The manager accumulates state changes from network, lifecycle, and
  * connection mode events. Each event updates the relevant component
- * of the desired state and resets the debounce timer. When the timer
+ * of the pending state and resets the debounce timer. When the timer
  * fires, the reconciliation callback receives the final combined state.
  *
  * @param config Configuration for the debounce manager.
@@ -116,7 +117,7 @@ export function createStateDebounceManager(
   let timer: ReturnType<typeof setTimeout> | undefined;
   let closed = false;
 
-  function getDesiredState(): DesiredState {
+  function getPendingState(): PendingState {
     return { networkState, lifecycleState, requestedMode };
   }
 
@@ -132,7 +133,7 @@ export function createStateDebounceManager(
     timer = setTimeout(() => {
       timer = undefined;
       if (!closed) {
-        onReconcile(getDesiredState());
+        onReconcile(getPendingState());
       }
     }, debounceMs);
   }
@@ -162,8 +163,8 @@ export function createStateDebounceManager(
       resetTimer();
     },
 
-    get desiredState(): DesiredState {
-      return getDesiredState();
+    get pendingState(): PendingState {
+      return getPendingState();
     },
 
     close(): void {
