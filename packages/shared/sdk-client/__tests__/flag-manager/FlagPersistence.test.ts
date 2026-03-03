@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdarkly/js-sdk-common';
 
+import { FRESHNESS_KEY_SUFFIX } from '../../src/datasource/FreshnessTracker';
 import FlagPersistence from '../../src/flag-manager/FlagPersistence';
 import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
 import createFlagUpdater from '../../src/flag-manager/FlagUpdater';
@@ -196,6 +197,48 @@ describe('FlagPersistence tests', () => {
     expect(indexData).toContain(context2DataKey);
     expect(await memoryStorage.get(context1DataKey)).toBeNull();
     expect(await memoryStorage.get(context2DataKey)).toContain('flagA');
+  });
+
+  test('init prunes freshness keys alongside cached contexts', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      1, // max of 1
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+
+    const context1 = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const context2 = Context.fromLDContext({ kind: 'user', key: 'TestyUser' });
+    const flags = {
+      flagA: {
+        version: 1,
+        flag: makeMockFlag(),
+      },
+    };
+
+    // Simulate freshness data stored for context1
+    const context1DataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context1,
+    );
+    const context1FreshnessKey = `${context1DataKey}${FRESHNESS_KEY_SUFFIX}`;
+    await memoryStorage.set(context1FreshnessKey, '1000');
+
+    await fpUnderTest.init(context1, flags);
+    await fpUnderTest.init(context2, flags);
+
+    // context1 was pruned — both flag data and freshness key should be cleared
+    expect(await memoryStorage.get(context1DataKey)).toBeNull();
+    expect(await memoryStorage.get(context1FreshnessKey)).toBeNull();
   });
 
   test('init kicks timestamp', async () => {

@@ -3,6 +3,13 @@ import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
 import { namespaceForContextData } from '../storage/namespaceUtils';
 
 /**
+ * Suffix appended to context storage keys to form the freshness storage key.
+ * Used by both {@link FreshnessTracker} and {@link FlagPersistence} (for
+ * cleanup during context eviction).
+ */
+export const FRESHNESS_KEY_SUFFIX = '_freshness';
+
+/**
  * Tracks when flag data was last received for a given context.
  *
  * Freshness is persisted to storage alongside cached flag data using a
@@ -47,7 +54,7 @@ async function freshnessKey(
   context: Context,
 ): Promise<string> {
   const contextKey = await namespaceForContextData(crypto, environmentNamespace, context);
-  return `${contextKey}_freshness`;
+  return `${contextKey}${FRESHNESS_KEY_SUFFIX}`;
 }
 
 /**

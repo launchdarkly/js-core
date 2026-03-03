@@ -1,5 +1,6 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
+import { FRESHNESS_KEY_SUFFIX } from '../datasource/FreshnessTracker';
 import { namespaceForContextData, namespaceForContextIndex } from '../storage/namespaceUtils';
 import { Flags } from '../types';
 import ContextIndex from './ContextIndex';
@@ -130,7 +131,12 @@ export default class FlagPersistence {
     index.notice(storageKey, this._timeStamper());
 
     const pruned = index.prune(this._maxCachedContexts);
-    await Promise.all(pruned.map(async (it) => this._platform.storage?.clear(it.id)));
+    await Promise.all(
+      pruned.flatMap((it) => [
+        this._platform.storage?.clear(it.id),
+        this._platform.storage?.clear(`${it.id}${FRESHNESS_KEY_SUFFIX}`),
+      ]),
+    );
 
     // store index
     await this._platform.storage?.set(await this._indexKeyPromise, index.toJson());
