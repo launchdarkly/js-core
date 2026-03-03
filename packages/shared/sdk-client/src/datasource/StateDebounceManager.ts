@@ -133,25 +133,16 @@ export function createStateDebounceManager(
 
   return {
     setNetworkState(state: NetworkState): void {
-      if (closed) {
-        return;
-      }
       networkState = state;
       resetTimer();
     },
 
     setLifecycleState(state: LifecycleState): void {
-      if (closed) {
-        return;
-      }
       lifecycleState = state;
       resetTimer();
     },
 
     setRequestedMode(mode: FDv2ConnectionMode): void {
-      if (closed) {
-        return;
-      }
       requestedMode = mode;
       resetTimer();
     },
