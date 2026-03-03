@@ -86,7 +86,19 @@ export type {
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
   PlatformDataSystemDefaults,
+  LifecycleState,
+  ModeState,
+  ConfiguredMode,
+  ModeResolution,
+  ModeResolutionEntry,
+  ModeResolutionTable,
 } from './api/datasource';
 
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
+export {
+  resolveConnectionMode,
+  MOBILE_TRANSITION_TABLE,
+  BROWSER_TRANSITION_TABLE,
+  DESKTOP_TRANSITION_TABLE,
+} from './datasource/ModeResolver';
