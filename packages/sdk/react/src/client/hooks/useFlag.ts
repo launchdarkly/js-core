@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import type { LDReactClient, LDReactClientContextValue } from '../LDClient';
 import { LDReactContext } from '../provider/LDReactContext';
@@ -34,18 +34,22 @@ export function useFlag<T extends LDFlagType>(
   defaultValue: T,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): T {
-  const { client } = useContext(reactContext ?? LDReactContext);
+  const { client, context } = useContext(reactContext ?? LDReactContext);
+  // Using a ref here to capture the latest defaultValue without
+  // making it a depencency of the effect.
+  const defaultValueRef = useRef(defaultValue);
+  defaultValueRef.current = defaultValue;
   const [value, setValue] = useState<T>(() => getVariation(client, key, defaultValue));
 
   useEffect(() => {
     // Captures the initial value if the flag key changes for this hook.
     // This state change should be batched with the initial default state
     // setting when the hooks is mounted.
-    setValue(getVariation(client, key, defaultValue));
-    const handler = () => setValue(getVariation(client, key, defaultValue));
+    setValue(getVariation(client, key, defaultValueRef.current));
+    const handler = () => setValue(getVariation(client, key, defaultValueRef.current));
     client.on(`change:${key}`, handler);
     return () => client.off(`change:${key}`, handler);
-  }, [client, key, defaultValue]);
+  }, [client, key, context]);
 
   return value;
 }

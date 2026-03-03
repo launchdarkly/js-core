@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
@@ -36,17 +36,19 @@ export function useFlagDetail<T extends LDFlagType>(
   defaultValue: T,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<T> {
-  const { client } = useContext(reactContext ?? LDReactContext);
+  const { client, context } = useContext(reactContext ?? LDReactContext);
+  const defaultValueRef = useRef(defaultValue);
+  defaultValueRef.current = defaultValue;
   const [detail, setDetail] = useState<LDEvaluationDetailTyped<T>>(() =>
     getVariationDetail(client, key, defaultValue),
   );
 
   useEffect(() => {
-    setDetail(getVariationDetail(client, key, defaultValue));
-    const handler = () => setDetail(getVariationDetail(client, key, defaultValue));
+    setDetail(getVariationDetail(client, key, defaultValueRef.current));
+    const handler = () => setDetail(getVariationDetail(client, key, defaultValueRef.current));
     client.on(`change:${key}`, handler);
     return () => client.off(`change:${key}`, handler);
-  }, [client, key, defaultValue]);
+  }, [client, key, context]);
 
   return detail;
 }

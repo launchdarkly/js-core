@@ -206,6 +206,79 @@ it('re-renders with updated detail when change:<key> fires', async () => {
   expect(captured[captured.length - 1]).toEqual(updatedDetail);
 });
 
+it('does not loop infinitely when defaultValue is an inline object', async () => {
+  const mockClient = makeMockClient();
+  (mockClient.jsonVariationDetail as jest.Mock).mockReturnValue({
+    value: { x: 1 },
+    variationIndex: 0,
+    reason: { kind: 'OFF' },
+  });
+
+  let renderCount = 0;
+
+  function FlagConsumer() {
+    useFlagDetail<object>('my-flag', {});
+    renderCount += 1;
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient);
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  await act(async () => {});
+
+  expect(renderCount).toBeLessThanOrEqual(3);
+});
+
+it('calls variation detail again when context changes after identify', () => {
+  const mockClient = makeMockClient();
+  (mockClient.boolVariationDetail as jest.Mock).mockReturnValue({
+    value: true,
+    variationIndex: 0,
+    reason: { kind: 'OFF' },
+  });
+
+  let setContextValue!: React.Dispatch<React.SetStateAction<LDReactClientContextValue>>;
+
+  function StatefulWrapper({ children }: { children: React.ReactNode }) {
+    const [ctxValue, setCtx] = React.useState<LDReactClientContextValue>({
+      client: mockClient,
+      initializedState: 'complete',
+    });
+    setContextValue = setCtx;
+    return <LDReactContext.Provider value={ctxValue}>{children}</LDReactContext.Provider>;
+  }
+
+  function FlagConsumer() {
+    useFlagDetail<boolean>('my-flag', false);
+    return null;
+  }
+
+  render(
+    <StatefulWrapper>
+      <FlagConsumer />
+    </StatefulWrapper>,
+  );
+
+  const callsBefore = (mockClient.boolVariationDetail as jest.Mock).mock.calls.length;
+
+  act(() => {
+    setContextValue({
+      client: mockClient,
+      context: { kind: 'user', key: 'new-user' },
+      initializedState: 'complete',
+    });
+  });
+
+  expect((mockClient.boolVariationDetail as jest.Mock).mock.calls.length).toBeGreaterThan(
+    callsBefore,
+  );
+});
+
 it('updates detail immediately when key changes without waiting for change event', () => {
   const mockClient = makeMockClient();
   const detailA: LDEvaluationDetailTyped<boolean> = {

@@ -198,6 +198,82 @@ it('does not re-render when a different flag key changes', async () => {
   expect(renderCount).toBe(initialRenders);
 });
 
+it('does not re-subscribe when parent re-renders with an inline object defaultValue', () => {
+  const mockClient = makeMockClient();
+  (mockClient.jsonVariation as jest.Mock).mockReturnValue({ enabled: false });
+
+  let setParentState!: (n: number) => void;
+
+  const Wrapper = makeWrapper(mockClient);
+
+  function FlagConsumer({ n: _ }: { n: number }) {
+    useFlag<object>('my-flag', {});
+    return null;
+  }
+
+  function Parent() {
+    const [n, setN] = React.useState(0);
+    setParentState = setN;
+    return (
+      <Wrapper>
+        <FlagConsumer n={n} />
+      </Wrapper>
+    );
+  }
+
+  render(<Parent />);
+
+  const onCallsBefore = (mockClient.on as jest.Mock).mock.calls.length;
+
+  act(() => {
+    setParentState(1);
+  });
+  act(() => {
+    setParentState(2);
+  });
+
+  expect((mockClient.on as jest.Mock).mock.calls.length).toBe(onCallsBefore);
+});
+
+it('calls variation again when context changes after identify', () => {
+  const mockClient = makeMockClient();
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
+
+  let setContextValue!: React.Dispatch<React.SetStateAction<LDReactClientContextValue>>;
+
+  function StatefulWrapper({ children }: { children: React.ReactNode }) {
+    const [ctxValue, setCtx] = React.useState<LDReactClientContextValue>({
+      client: mockClient,
+      initializedState: 'complete',
+    });
+    setContextValue = setCtx;
+    return <LDReactContext.Provider value={ctxValue}>{children}</LDReactContext.Provider>;
+  }
+
+  function FlagConsumer() {
+    useFlag<boolean>('my-flag', false);
+    return null;
+  }
+
+  render(
+    <StatefulWrapper>
+      <FlagConsumer />
+    </StatefulWrapper>,
+  );
+
+  const callsBefore = (mockClient.boolVariation as jest.Mock).mock.calls.length;
+
+  act(() => {
+    setContextValue({
+      client: mockClient,
+      context: { kind: 'user', key: 'new-user' },
+      initializedState: 'complete',
+    });
+  });
+
+  expect((mockClient.boolVariation as jest.Mock).mock.calls.length).toBeGreaterThan(callsBefore);
+});
+
 it('updates value immediately when key changes without waiting for change event', () => {
   const mockClient = makeMockClient();
   (mockClient.boolVariation as jest.Mock).mockImplementation((key: string, def: boolean) => {
