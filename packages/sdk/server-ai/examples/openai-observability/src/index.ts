@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
-
-import 'dotenv/config';
-
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { OpenAIInstrumentation } from '@traceloop/instrumentation-openai';
+import 'dotenv/config';
 
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { Observability } from '@launchdarkly/observability-node';
