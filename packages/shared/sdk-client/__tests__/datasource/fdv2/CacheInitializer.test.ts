@@ -1,61 +1,15 @@
-import { Context, Crypto, Hasher, Storage } from '@launchdarkly/js-sdk-common';
+import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
 
 import { createCacheInitializerFactory } from '../../../src/datasource/fdv2/CacheInitializer';
 import { Initializer } from '../../../src/datasource/fdv2/Initializer';
 import { namespaceForContextData } from '../../../src/storage/namespaceUtils';
 import { Flag, Flags } from '../../../src/types';
-
-function makeMemoryStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? value : null;
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
-
-function makeMockCrypto(): Crypto {
-  let lastInput = '';
-  const hasher: Hasher = {
-    update: jest.fn((input) => {
-      lastInput = input;
-      return hasher;
-    }),
-    digest: jest.fn(() => `${lastInput}Hashed`),
-  };
-
-  return {
-    createHash: jest.fn(() => hasher),
-    createHmac: jest.fn(),
-    randomUUID: jest.fn(() => 'test-uuid'),
-  };
-}
-
-function makeLogger() {
-  return {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
-}
-
-function makeMockFlag(version: number = 1, value: any = true): Flag {
-  return {
-    version,
-    flagVersion: version,
-    value,
-    variation: 0,
-    trackEvents: false,
-  };
-}
+import {
+  makeMemoryStorage,
+  makeMockCrypto,
+  makeMockFlag,
+  makeMockLogger,
+} from '../../flag-manager/flagManagerTestHelpers';
 
 const TEST_NAMESPACE = 'TestNamespace';
 const noSelector = () => undefined;
@@ -74,7 +28,7 @@ function createInitializer(
   storage: Storage | undefined,
   crypto: Crypto,
   context: Context,
-  logger?: ReturnType<typeof makeLogger>,
+  logger?: ReturnType<typeof makeMockLogger>,
 ): Initializer {
   const factory = createCacheInitializerFactory({
     storage,
@@ -192,7 +146,7 @@ describe('CacheInitializer', () => {
   });
 
   it('returns interrupted when storage is undefined', async () => {
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     const initializer = createInitializer(undefined, crypto, context, logger);
     const result = await initializer.run();
 
@@ -208,7 +162,7 @@ describe('CacheInitializer', () => {
     const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
     await storage.set(storageKey, 'not valid json!!!');
 
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     const initializer = createInitializer(storage, crypto, context, logger);
     const result = await initializer.run();
 

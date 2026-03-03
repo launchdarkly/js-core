@@ -1,39 +1,7 @@
-import { Context, Crypto, Hasher, Storage } from '@launchdarkly/js-sdk-common';
+import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
 
 import { createFreshnessTracker } from '../../src/datasource/FreshnessTracker';
-
-function makeMemoryStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? value : null;
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
-
-function makeMockCrypto(): Crypto {
-  let lastInput = '';
-  const hasher: Hasher = {
-    update: jest.fn((input) => {
-      lastInput = input;
-      return hasher;
-    }),
-    digest: jest.fn(() => `${lastInput}Hashed`),
-  };
-
-  return {
-    createHash: jest.fn(() => hasher),
-    createHmac: jest.fn(),
-    randomUUID: jest.fn(() => 'test-uuid'),
-  };
-}
+import { makeMemoryStorage, makeMockCrypto } from '../flag-manager/flagManagerTestHelpers';
 
 const TEST_NAMESPACE = 'TestNamespace';
 
@@ -124,9 +92,9 @@ describe('FreshnessTracker', () => {
   });
 
   it('handles corrupt freshness data gracefully', async () => {
-    // Storage that always returns a non-numeric string
+    // Storage that always returns non-JSON data
     const corruptStorage: Storage = {
-      get: async () => 'not-a-number',
+      get: async () => 'not valid json!!!',
       set: async () => {},
       clear: async () => {},
     };
@@ -161,7 +129,7 @@ describe('FreshnessTracker', () => {
     expect(delay).toBe(700);
   });
 
-  it('tracks freshness per context independently', async () => {
+  it('tracks freshness per context key independently', async () => {
     const storage = makeMemoryStorage();
     let time = 1000;
     const tracker = createFreshnessTracker(storage, crypto, TEST_NAMESPACE, () => time);
@@ -184,6 +152,74 @@ describe('FreshnessTracker', () => {
     const tracker = createFreshnessTracker(undefined, crypto, TEST_NAMESPACE);
 
     const delay = await tracker.getNextPollDelayMs(context, 60000);
+    expect(delay).toBe(0);
+  });
+
+  it('returns undefined when context attributes change for same key', async () => {
+    const storage = makeMemoryStorage();
+    const tracker = createFreshnessTracker(storage, crypto, TEST_NAMESPACE, () => 1000);
+
+    // Record freshness for a context with specific attributes
+    const contextV1 = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      name: 'Alice',
+      email: 'alice@example.com',
+    });
+    await tracker.recordFreshness(contextV1);
+
+    // Same key, different attributes — should be treated as stale
+    const contextV2 = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      name: 'Alice Updated',
+      email: 'alice-new@example.com',
+    });
+    const freshness = await tracker.getFreshness(contextV2);
+    expect(freshness).toBeUndefined();
+  });
+
+  it('returns freshness when context attributes match exactly', async () => {
+    const storage = makeMemoryStorage();
+    const tracker = createFreshnessTracker(storage, crypto, TEST_NAMESPACE, () => 5000);
+
+    const contextA = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      name: 'Alice',
+    });
+    await tracker.recordFreshness(contextA);
+
+    // Identical context — freshness should be valid
+    const contextB = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      name: 'Alice',
+    });
+    const freshness = await tracker.getFreshness(contextB);
+    expect(freshness).toBe(5000);
+  });
+
+  it('returns 0 delay when attributes change (poll immediately)', async () => {
+    const storage = makeMemoryStorage();
+    let time = 1000;
+    const tracker = createFreshnessTracker(storage, crypto, TEST_NAMESPACE, () => time);
+
+    const contextV1 = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      country: 'US',
+    });
+    await tracker.recordFreshness(contextV1);
+
+    time = 1100;
+    const contextV2 = Context.fromLDContext({
+      kind: 'user',
+      key: 'test-user',
+      country: 'UK',
+    });
+    // Attributes changed → stale → poll immediately
+    const delay = await tracker.getNextPollDelayMs(contextV2, 60000);
     expect(delay).toBe(0);
   });
 });

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
-import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdarkly/js-sdk-common';
+import { Context } from '@launchdarkly/js-sdk-common';
 
 import { FRESHNESS_KEY_SUFFIX } from '../../src/datasource/FreshnessTracker';
 import FlagPersistence from '../../src/flag-manager/FlagPersistence';
@@ -9,7 +8,16 @@ import {
   namespaceForContextData,
   namespaceForContextIndex,
 } from '../../src/storage/namespaceUtils';
-import { Flag, Flags } from '../../src/types';
+import { Flags } from '../../src/types';
+import {
+  makeCorruptStorage,
+  makeIncrementingStamper,
+  makeMemoryStorage,
+  makeMockCrypto,
+  makeMockFlag,
+  makeMockLogger,
+  makeMockPlatform,
+} from './flagManagerTestHelpers';
 
 const TEST_NAMESPACE = 'TestNamespace';
 
@@ -360,103 +368,3 @@ describe('FlagPersistence tests', () => {
     expect(await memoryStorage.get(inactiveContextDataKey)).toBeNull();
   });
 });
-
-function makeMockPlatform(storage: Storage, crypto: Crypto): Platform {
-  return {
-    storage,
-    crypto,
-    info: {
-      platformData: jest.fn(),
-      sdkData: jest.fn(),
-    },
-    requests: {
-      fetch: jest.fn(),
-      createEventSource: jest.fn(),
-      getEventSourceCapabilities: jest.fn(),
-    },
-  };
-}
-
-function makeMemoryStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? value : null; // mapping undefined to null to satisfy interface
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
-
-function makeCorruptStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? 'corruption!!!!!' : null; // mapping undefined to null to satisfy interface
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
-
-function makeMockCrypto() {
-  let counter = 0;
-  let lastInput = '';
-  const hasher: Hasher = {
-    update: jest.fn((input) => {
-      lastInput = input;
-      return hasher;
-    }),
-    digest: jest.fn(() => `${lastInput}Hashed`),
-  };
-
-  return {
-    createHash: jest.fn(() => hasher),
-    createHmac: jest.fn(),
-    randomUUID: jest.fn(() => {
-      counter += 1;
-      // Will provide a unique value for tests.
-      // Very much not a UUID of course.
-      return `${counter}`;
-    }),
-  };
-}
-
-function makeMockLogger(): LDLogger {
-  return {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
-}
-
-function makeMockFlag(version: number = 1): Flag {
-  // the values of the flag object itself are not relevant for these tests, the
-  // version on the item descriptor is what matters
-  return {
-    version,
-    flagVersion: version,
-    value: undefined,
-    variation: 0,
-    trackEvents: false,
-  };
-}
-
-function makeIncrementingStamper(): () => number {
-  let count = 0;
-  return () => {
-    count += 1;
-    return count;
-  };
-}
