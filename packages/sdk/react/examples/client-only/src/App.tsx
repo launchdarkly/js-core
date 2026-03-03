@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 
 import { LDContext, useFlag, useInitializationStatus, useLDClient } from '@launchdarkly/react-sdk';
 
@@ -19,8 +19,17 @@ function App() {
   const [flagKey, setFlagKey] = useState(FLAG_KEY);
   const [inputValue, setInputValue] = useState(flagKey);
   const flagValue = useFlag(flagKey, false);
-  const [activeContextKey, setActiveContextKey] = useState<string | undefined>(undefined);
+  const [activeContextKey, setActiveContextKey] = useState<string | undefined>(
+    () => client?.getContext()?.key as string | undefined,
+  );
   const [identifyPending, setIdentifyPending] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = client.onContextChange((ctx) => {
+      setActiveContextKey(ctx?.key as string | undefined);
+    });
+    return unsubscribe;
+  }, [client]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
