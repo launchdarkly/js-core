@@ -72,14 +72,35 @@ export interface ConditionGroup {
 }
 
 /**
- * Creates a fallback condition. The condition starts a timer when an
- * `interrupted` status is received and cancels it when a `changeSet` is
- * received. If the timer fires, the condition resolves with `'fallback'`.
+ * Controls exposed to an {@link InformHandler} to start or cancel the timer.
+ */
+interface TimerControls {
+  start: () => void;
+  cancel: () => void;
+}
+
+/**
+ * Callback invoked on each {@link Condition.inform} call.
+ * Use the provided {@link TimerControls} to start or cancel the timer
+ * in response to synchronizer results.
+ */
+type InformHandler = (result: FDv2SourceResult, controls: TimerControls) => void;
+
+/**
+ * Creates a timed {@link Condition}.
  *
  * @param timeoutMs Time in milliseconds before the condition fires.
+ * @param type The {@link ConditionType} to resolve with when the timer fires.
+ * @param informHandler Optional callback invoked on each `inform()` call.
+ *   When omitted, the timer starts immediately and `inform()` is a no-op.
+ *   When provided, the timer must be started explicitly via `controls.start()`.
  */
-export function createFallbackCondition(timeoutMs: number): Condition {
-  let resolve: ((type: ConditionType) => void) | undefined;
+function createCondition(
+  timeoutMs: number,
+  type: ConditionType,
+  informHandler?: InformHandler,
+): Condition {
+  let resolve: ((t: ConditionType) => void) | undefined;
   let timer: ConditionTimer | undefined;
   let closed = false;
 
@@ -87,9 +108,24 @@ export function createFallbackCondition(timeoutMs: number): Condition {
     resolve = res;
   });
 
+  function startTimer() {
+    if (!timer && !closed) {
+      timer = conditionTimer(timeoutMs, type, `${type} condition`);
+      timer.promise.then((t) => {
+        timer = undefined;
+        resolve?.(t);
+      });
+    }
+  }
+
   function cancelTimer() {
     timer?.cancel();
     timer = undefined;
+  }
+
+  // No inform handler — start immediately (recovery behavior).
+  if (!informHandler) {
+    startTimer();
   }
 
   return {
@@ -99,21 +135,7 @@ export function createFallbackCondition(timeoutMs: number): Condition {
       if (closed) {
         return;
       }
-
-      if (result.type === 'changeSet') {
-        cancelTimer();
-        return;
-      }
-
-      if (result.type === 'status' && result.state === 'interrupted') {
-        if (!timer) {
-          timer = conditionTimer(timeoutMs, 'fallback', 'fallback condition');
-          timer.promise.then((type) => {
-            timer = undefined;
-            resolve?.(type);
-          });
-        }
-      }
+      informHandler?.(result, { start: startTimer, cancel: cancelTimer });
     },
 
     close() {
@@ -124,22 +146,27 @@ export function createFallbackCondition(timeoutMs: number): Condition {
 }
 
 /**
+ * Creates a fallback condition. The condition starts a timer when an
+ * `interrupted` status is received and cancels it when a `changeSet` is
+ * received. If the timer fires, the condition resolves with `'fallback'`.
+ */
+export function createFallbackCondition(timeoutMs: number): Condition {
+  return createCondition(timeoutMs, 'fallback', (result, { start, cancel }) => {
+    if (result.type === 'changeSet') {
+      cancel();
+    } else if (result.type === 'status' && result.state === 'interrupted') {
+      start();
+    }
+  });
+}
+
+/**
  * Creates a recovery condition. The condition starts a timer immediately
  * and resolves with `'recovery'` when it fires. It ignores all `inform()`
  * calls.
- *
- * @param timeoutMs Time in milliseconds before the condition fires.
  */
 export function createRecoveryCondition(timeoutMs: number): Condition {
-  const timer = conditionTimer(timeoutMs, 'recovery', 'recovery condition');
-
-  return {
-    promise: timer.promise,
-    inform() {},
-    close() {
-      timer.cancel();
-    },
-  };
+  return createCondition(timeoutMs, 'recovery');
 }
 
 /**
