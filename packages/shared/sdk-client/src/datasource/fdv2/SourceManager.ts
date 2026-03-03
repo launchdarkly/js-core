@@ -196,6 +196,7 @@ export function createSourceManager(
       synchronizerSlots.forEach((slot) => {
         setSlotState(slot, slot.isFDv1Fallback ? 'available' : 'blocked');
       });
+      synchronizerIndex = -1;
     },
 
     isPrimeSynchronizer(): boolean {

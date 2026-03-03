@@ -309,6 +309,28 @@ describe('SourceManager - fdv1Fallback', () => {
     expect(slots[1].state).toBe('available');
   });
 
+  it('resets synchronizer index so FDv1 slot is found after fallback', () => {
+    const syncNormal = makeMockSynchronizer();
+    const syncFdv1 = makeMockSynchronizer();
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(syncFdv1), { isFDv1Fallback: true }),
+      createSynchronizerSlot(makeSyncFactory(syncNormal)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    // Get normal synchronizer (skips blocked FDv1)
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(syncNormal);
+
+    // Trigger fdv1 fallback
+    manager.fdv1Fallback();
+    expect(slots[0].state).toBe('available');
+    expect(slots[1].state).toBe('blocked');
+
+    // Should find FDv1 slot at index 0 thanks to index reset
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(syncFdv1);
+  });
+
   it('hasFDv1Fallback returns true when FDv1 slot exists', () => {
     const slots: SynchronizerSlot[] = [createSynchronizerSlot(jest.fn(), { isFDv1Fallback: true })];
 
