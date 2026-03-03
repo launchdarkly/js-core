@@ -159,14 +159,58 @@ describe('SourceManager - synchronizers', () => {
     expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
   });
 
-  it('returns undefined when all synchronizers are exhausted', () => {
+  it('returns undefined when all synchronizers are blocked', () => {
     const sync1 = makeMockSynchronizer();
     const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync1))];
+    slots[0].state = 'blocked';
 
     const manager = createSourceManager([], slots, () => undefined);
 
-    manager.getNextAvailableSynchronizerAndSetActive();
     expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+  });
+
+  it('wraps around to find available synchronizers', () => {
+    const sync1a = makeMockSynchronizer();
+    const sync1b = makeMockSynchronizer();
+    const factory1 = jest.fn<Synchronizer, [() => string | undefined]>();
+    factory1.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+    const sync2 = makeMockSynchronizer();
+
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(factory1),
+      createSynchronizerSlot(makeSyncFactory(sync2)),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    // Visit both
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1a);
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
+
+    // Wraps back to sync1 (new instance from factory)
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1b);
+  });
+
+  it('wraps around and skips blocked synchronizers', () => {
+    const sync1 = makeMockSynchronizer();
+    const sync2a = makeMockSynchronizer();
+    const sync2b = makeMockSynchronizer();
+    const factory2 = jest.fn<Synchronizer, [() => string | undefined]>();
+    factory2.mockReturnValueOnce(sync2a).mockReturnValueOnce(sync2b);
+
+    const slots: SynchronizerSlot[] = [
+      createSynchronizerSlot(makeSyncFactory(sync1)),
+      createSynchronizerSlot(factory2),
+    ];
+
+    const manager = createSourceManager([], slots, () => undefined);
+
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1);
+    // Block sync1
+    manager.blockCurrentSynchronizer();
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2a);
+    // Wrapping: sync1 is blocked, wraps to sync2 again
+    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2b);
   });
 
   it('returns undefined for empty synchronizer list', () => {
@@ -231,23 +275,18 @@ describe('SourceManager - resetSourceIndex', () => {
     const sync1b = makeMockSynchronizer();
     const factory1 = jest.fn<Synchronizer, [() => string | undefined]>();
     factory1.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
-    const sync2 = makeMockSynchronizer();
 
     const slots: SynchronizerSlot[] = [
       createSynchronizerSlot(factory1),
-      createSynchronizerSlot(makeSyncFactory(sync2)),
+      createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
     ];
 
     const manager = createSourceManager([], slots, () => undefined);
 
     // Get first synchronizer
     expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1a);
-    // Move to second
-    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync2);
-    // Exhaust
-    expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
 
-    // Reset and start over
+    // Reset and start over — should go back to slot 0
     manager.resetSourceIndex();
     expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1b);
   });

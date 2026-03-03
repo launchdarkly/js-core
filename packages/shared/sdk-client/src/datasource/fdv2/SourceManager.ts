@@ -155,25 +155,31 @@ export function createSourceManager(
     },
 
     getNextAvailableSynchronizerAndSetActive(): Synchronizer | undefined {
-      if (isShutdown) {
+      if (isShutdown || synchronizerSlots.length === 0) {
         return undefined;
       }
 
-      // Scan forward from current position for the next available slot.
-      const startIndex = synchronizerIndex + 1;
-      const foundIndex = synchronizerSlots.findIndex(
-        (slot, i) => i >= startIndex && slot.state === 'available',
-      );
+      // Scan all slots starting from the position after the current one,
+      // wrapping around to the beginning if needed. This matches the Java
+      // SourceManager behavior where synchronizers cycle rather than exhausting.
+      let visited = 0;
+      while (visited < synchronizerSlots.length) {
+        synchronizerIndex += 1;
+        if (synchronizerIndex >= synchronizerSlots.length) {
+          synchronizerIndex = 0;
+        }
 
-      if (foundIndex === -1) {
-        return undefined;
+        const candidate = synchronizerSlots[synchronizerIndex];
+        if (candidate.state === 'available') {
+          closeActiveSource();
+          const synchronizer = candidate.factory(selectorGetter);
+          activeSource = synchronizer;
+          return synchronizer;
+        }
+        visited += 1;
       }
 
-      closeActiveSource();
-      synchronizerIndex = foundIndex;
-      const synchronizer = synchronizerSlots[foundIndex].factory(selectorGetter);
-      activeSource = synchronizer;
-      return synchronizer;
+      return undefined;
     },
 
     blockCurrentSynchronizer() {
