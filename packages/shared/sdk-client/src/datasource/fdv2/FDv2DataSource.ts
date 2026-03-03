@@ -290,6 +290,13 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   /* eslint-enable no-await-in-loop */
 
   async function runOrchestration(): Promise<void> {
+    // No sources configured at all — nothing to wait for, immediately valid.
+    if (initializerFactories.length === 0 && synchronizerSlots.length === 0) {
+      statusManager.requestStateUpdate('VALID');
+      markInitialized();
+      return;
+    }
+
     await runInitializers();
     if (!closed) {
       await runSynchronizers();

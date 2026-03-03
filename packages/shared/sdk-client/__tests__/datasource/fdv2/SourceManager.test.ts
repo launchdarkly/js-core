@@ -348,6 +348,16 @@ it('hasFDv1Fallback returns false when no FDv1 slot exists', () => {
 
 // -- isPrimeSynchronizer --
 
+it('isPrimeSynchronizer returns false when no synchronizer has been selected', () => {
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+  ];
+
+  const manager = createSourceManager([], slots, () => undefined);
+
+  expect(manager.isPrimeSynchronizer()).toBe(false);
+});
+
 it('isPrimeSynchronizer returns true for the first available synchronizer', () => {
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
@@ -399,6 +409,29 @@ it('counts available synchronizers excluding blocked ones', () => {
   expect(manager.getAvailableSynchronizerCount()).toBe(2);
 });
 
+it('getAvailableSynchronizerCount updates when slots are blocked', () => {
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+    createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+    createSynchronizerSlot(makeSyncFactory(makeMockSynchronizer())),
+  ];
+
+  const manager = createSourceManager([], slots, () => undefined);
+  expect(manager.getAvailableSynchronizerCount()).toBe(3);
+
+  manager.getNextAvailableSynchronizerAndSetActive();
+  manager.blockCurrentSynchronizer();
+  expect(manager.getAvailableSynchronizerCount()).toBe(2);
+
+  manager.getNextAvailableSynchronizerAndSetActive();
+  manager.blockCurrentSynchronizer();
+  expect(manager.getAvailableSynchronizerCount()).toBe(1);
+
+  manager.getNextAvailableSynchronizerAndSetActive();
+  manager.blockCurrentSynchronizer();
+  expect(manager.getAvailableSynchronizerCount()).toBe(0);
+});
+
 // -- close --
 
 it('close closes the active source', () => {
@@ -418,6 +451,21 @@ it('close sets isShutdown to true', () => {
 
   manager.close();
   expect(manager.isShutdown).toBe(true);
+});
+
+it('close can be called multiple times without error', () => {
+  const sync = makeMockSynchronizer();
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot(makeSyncFactory(sync))];
+
+  const manager = createSourceManager([], slots, () => undefined);
+  manager.getNextAvailableSynchronizerAndSetActive();
+
+  manager.close();
+  manager.close();
+  manager.close();
+
+  // Should not throw, and source should only be closed once
+  expect(sync.closed).toBe(true);
 });
 
 it('close prevents further gets', () => {

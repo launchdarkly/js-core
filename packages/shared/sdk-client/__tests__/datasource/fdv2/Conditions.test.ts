@@ -9,8 +9,10 @@ import {
 import {
   changeSet,
   FDv2SourceResult,
+  goodbye,
   interrupted,
   shutdown,
+  terminalError,
 } from '../../../src/datasource/fdv2/FDv2SourceResult';
 
 const DID_NOT_RESOLVE = Symbol('did-not-resolve');
@@ -97,6 +99,49 @@ it('fallback condition ignores inform after close', () => {
   condition.inform(makeChangeSet());
 });
 
+it('fallback condition does not start timer on terminal error', async () => {
+  const condition = createFallbackCondition(10);
+  condition.inform(
+    terminalError(
+      { kind: DataSourceErrorKind.ErrorResponse, message: 'unauthorized', time: Date.now() },
+      false,
+    ),
+  );
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+  condition.close();
+});
+
+it('fallback condition does not start timer on shutdown', async () => {
+  const condition = createFallbackCondition(10);
+  condition.inform(shutdown());
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+  condition.close();
+});
+
+it('fallback condition does not start timer on goodbye', async () => {
+  const condition = createFallbackCondition(10);
+  condition.inform(goodbye('server-requested', false));
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+  condition.close();
+});
+
+it('fallback condition changeSet without active timer does not cause issues', async () => {
+  const condition = createFallbackCondition(10);
+  // changeSet without a prior interrupted — should be safe
+  condition.inform(makeChangeSet());
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+  condition.close();
+});
+
+it('fallback condition close can be called multiple times', () => {
+  const condition = createFallbackCondition(10);
+  condition.inform(makeInterrupted());
+  condition.close();
+  condition.close();
+  condition.close();
+  // Should not throw
+});
+
 // -- recovery condition --
 
 it('recovery condition fires after timeout', async () => {
@@ -118,6 +163,21 @@ it('recovery condition does not fire after close', async () => {
   const condition = createRecoveryCondition(10);
   condition.close();
   expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+});
+
+it('recovery condition close after timer fires does not cause error', async () => {
+  const condition = createRecoveryCondition(10);
+  expect(await condition.promise).toBe('recovery');
+  // Close after timer already fired — should not throw
+  condition.close();
+});
+
+it('recovery condition close can be called multiple times', () => {
+  const condition = createRecoveryCondition(10);
+  condition.close();
+  condition.close();
+  condition.close();
+  // Should not throw
 });
 
 // -- condition group --
