@@ -3,6 +3,7 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import {
   LDAIAgentConfigDefault,
   LDAICompletionConfigDefault,
+  LDAIConfigDefault,
   LDAIJudgeConfigDefault,
 } from '../src/api/config/types';
 import { Judge } from '../src/api/judge/Judge';
@@ -738,5 +739,89 @@ describe('createJudge method', () => {
 
     expect(result).toBeUndefined();
     judgeConfigSpy.mockRestore();
+  });
+});
+
+describe('optional default values', () => {
+  it('uses a disabled completion config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.completionConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+
+  it('uses a disabled agent config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'agent' },
+      instructions: '',
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.agentConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+
+  it('uses a disabled judge config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'judge' },
+      messages: [],
+      evaluationMetricKeys: [],
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.judgeConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+});
+
+describe('LDAIConfigDefault.disabled()', () => {
+  it('returns a config with enabled false', () => {
+    const d = LDAIConfigDefault.disabled();
+    expect(d.enabled).toBe(false);
+    expect(d.model).toBeUndefined();
+    expect(d.provider).toBeUndefined();
+  });
+
+  it('return value is assignable to agent, completion, and judge default types', () => {
+    const d = LDAIConfigDefault.disabled();
+    const asAgent: LDAIAgentConfigDefault = d;
+    const asCompletion: LDAICompletionConfigDefault = d;
+    const asJudge: LDAIJudgeConfigDefault = d;
+    expect(asAgent.enabled).toBe(false);
+    expect(asCompletion.enabled).toBe(false);
+    expect(asJudge.enabled).toBe(false);
+  });
+
+  it('each call returns a new object', () => {
+    const a = LDAIConfigDefault.disabled();
+    const b = LDAIConfigDefault.disabled();
+    expect(a).not.toBe(b);
   });
 });

@@ -71,8 +71,10 @@ export interface LDJudgeConfiguration {
 // Base AI Config Types
 // ============================================================================
 
+const DISABLED_DEFAULT = { enabled: false } as const;
+
 /**
- * Base AI Config interface for default implementations with optional enabled property.
+ * Base AI Config for default implementations with optional enabled property.
  */
 export interface LDAIConfigDefault {
   /**
@@ -89,6 +91,15 @@ export interface LDAIConfigDefault {
    * Whether the configuration is enabled. Defaults to false when not provided.
    */
   enabled?: boolean;
+}
+
+export namespace LDAIConfigDefault {
+  /**
+   * Returns a disabled AI Config default with enabled set to false.
+   */
+  export function disabled(): LDAIConfigDefault {
+    return { ...DISABLED_DEFAULT };
+  }
 }
 
 /**
@@ -252,9 +263,9 @@ export interface LDAIAgentRequestConfig {
   key: string;
 
   /**
-   * Default configuration for the agent.
+   * Default configuration for the agent. When not provided, a disabled config is used.
    */
-  defaultValue: LDAIAgentConfigDefault;
+  defaultValue?: LDAIAgentConfigDefault;
 
   /**
    * Variables for instructions interpolation.

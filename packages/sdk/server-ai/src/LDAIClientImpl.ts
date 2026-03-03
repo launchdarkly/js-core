@@ -9,6 +9,7 @@ import {
   LDAIAgentRequestConfig,
   LDAICompletionConfig,
   LDAICompletionConfigDefault,
+  LDAIConfigDefault,
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
@@ -141,7 +142,7 @@ export class LDAIClientImpl implements LDAIClient {
       const judge = await this.createJudge(
         judgeConfig.key,
         context,
-        { enabled: false },
+        undefined,
         variables,
         defaultAiProvider,
       );
@@ -171,12 +172,17 @@ export class LDAIClientImpl implements LDAIClient {
   async completionConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
 
-    return this._completionConfig(key, context, defaultValue, variables);
+    return this._completionConfig(
+      key,
+      context,
+      defaultValue ?? LDAIConfigDefault.disabled(),
+      variables,
+    );
   }
 
   /**
@@ -185,7 +191,7 @@ export class LDAIClientImpl implements LDAIClient {
   async config(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig> {
     return this.completionConfig(key, context, defaultValue, variables);
@@ -204,23 +210,29 @@ export class LDAIClientImpl implements LDAIClient {
   async judgeConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfigDefault,
+    defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig> {
     this._ldClient.track(TRACK_USAGE_JUDGE_CONFIG, context, key, 1);
 
-    return this._judgeConfig(key, context, defaultValue, variables);
+    return this._judgeConfig(key, context, defaultValue ?? LDAIConfigDefault.disabled(), variables);
   }
 
   async agentConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfigDefault,
+    defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
 
-    const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
+    const config = await this._evaluate(
+      key,
+      context,
+      defaultValue ?? LDAIConfigDefault.disabled(),
+      'agent',
+      variables,
+    );
     return config as LDAIAgentConfig;
   }
 
@@ -230,7 +242,7 @@ export class LDAIClientImpl implements LDAIClient {
   async agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfigDefault,
+    defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     return this.agentConfig(key, context, defaultValue, variables);
@@ -254,7 +266,7 @@ export class LDAIClientImpl implements LDAIClient {
         const agent = await this._evaluate(
           config.key,
           context,
-          config.defaultValue,
+          config.defaultValue ?? LDAIConfigDefault.disabled(),
           'agent',
           config.variables,
         );
@@ -278,13 +290,18 @@ export class LDAIClientImpl implements LDAIClient {
   async createChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
 
-    const config = await this._completionConfig(key, context, defaultValue, variables);
+    const config = await this._completionConfig(
+      key,
+      context,
+      defaultValue ?? LDAIConfigDefault.disabled(),
+      variables,
+    );
 
     if (!config.enabled || !config.tracker) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
@@ -309,7 +326,7 @@ export class LDAIClientImpl implements LDAIClient {
   async createJudge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfigDefault,
+    defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined> {
@@ -334,7 +351,12 @@ export class LDAIClientImpl implements LDAIClient {
         response_to_evaluate: '{{response_to_evaluate}}',
       };
 
-      const judgeConfig = await this._judgeConfig(key, context, defaultValue, extendedVariables);
+      const judgeConfig = await this._judgeConfig(
+        key,
+        context,
+        defaultValue ?? LDAIConfigDefault.disabled(),
+        extendedVariables,
+      );
 
       if (!judgeConfig.enabled || !judgeConfig.tracker) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
@@ -359,7 +381,7 @@ export class LDAIClientImpl implements LDAIClient {
   async initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
