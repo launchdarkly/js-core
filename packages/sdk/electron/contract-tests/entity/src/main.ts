@@ -62,7 +62,7 @@ app.on('ready', () => {
       res.set('Location', resourceUrl);
     } catch (error) {
       res.status(500);
-      res.json({ error: error.message });
+      res.write(JSON.stringify({ error: error.message }));
     }
 
     res.send();
@@ -71,8 +71,13 @@ app.on('ready', () => {
   server.post('/clients/:id', async (req, res) => {
     try {
       const result = await clientFactory.runCommand(req.params.id, req.body);
-      res.status(200);
-      res.json(result);
+      if (result !== undefined) {
+        res.status(200);
+        res.json(result);
+      } else {
+        res.status(204);
+        res.send();
+      }
     } catch (error) {
       res.status(500);
       res.json({ error: error.message });
