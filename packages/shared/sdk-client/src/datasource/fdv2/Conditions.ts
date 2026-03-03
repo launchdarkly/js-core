@@ -1,7 +1,34 @@
+import { cancelableTimedPromise } from '@launchdarkly/js-sdk-common';
+
 import { FDv2SourceResult } from './FDv2SourceResult';
 
 export const DEFAULT_FALLBACK_TIMEOUT_MS = 2 * 60 * 1000; // 120 seconds
 export const DEFAULT_RECOVERY_TIMEOUT_MS = 5 * 60 * 1000; // 300 seconds
+
+/**
+ * A timer that resolves with a {@link ConditionType} when it fires.
+ * If cancelled, the promise never settles.
+ */
+interface ConditionTimer {
+  promise: Promise<ConditionType>;
+  cancel: () => void;
+}
+
+/**
+ * Creates a cancelable timer that resolves with the given {@link ConditionType}
+ * when it fires. Wraps {@link cancelableTimedPromise} to convert its
+ * reject-on-timeout semantics into resolve-with-type semantics.
+ */
+function conditionTimer(timeoutMs: number, type: ConditionType, taskName: string): ConditionTimer {
+  const timed = cancelableTimedPromise(timeoutMs / 1000, taskName);
+  return {
+    promise: timed.promise.then(
+      () => new Promise<ConditionType>(() => {}), // cancelled — never settle
+      () => type, // timeout fired
+    ),
+    cancel: timed.cancel,
+  };
+}
 
 /**
  * The type of condition that fired, determining the orchestrator's response.
@@ -53,7 +80,7 @@ export interface ConditionGroup {
  */
 export function createFallbackCondition(timeoutMs: number): Condition {
   let resolve: ((type: ConditionType) => void) | undefined;
-  let timerHandle: ReturnType<typeof setTimeout> | undefined;
+  let timer: ConditionTimer | undefined;
   let closed = false;
 
   const promise = new Promise<ConditionType>((res) => {
@@ -61,10 +88,8 @@ export function createFallbackCondition(timeoutMs: number): Condition {
   });
 
   function cancelTimer() {
-    if (timerHandle !== undefined) {
-      clearTimeout(timerHandle);
-      timerHandle = undefined;
-    }
+    timer?.cancel();
+    timer = undefined;
   }
 
   return {
@@ -81,11 +106,12 @@ export function createFallbackCondition(timeoutMs: number): Condition {
       }
 
       if (result.type === 'status' && result.state === 'interrupted') {
-        if (timerHandle === undefined) {
-          timerHandle = setTimeout(() => {
-            timerHandle = undefined;
-            resolve?.('fallback');
-          }, timeoutMs);
+        if (!timer) {
+          timer = conditionTimer(timeoutMs, 'fallback', 'fallback condition');
+          timer.promise.then((type) => {
+            timer = undefined;
+            resolve?.(type);
+          });
         }
       }
     },
@@ -105,23 +131,13 @@ export function createFallbackCondition(timeoutMs: number): Condition {
  * @param timeoutMs Time in milliseconds before the condition fires.
  */
 export function createRecoveryCondition(timeoutMs: number): Condition {
-  let timerHandle: ReturnType<typeof setTimeout> | undefined;
-
-  const promise = new Promise<ConditionType>((resolve) => {
-    timerHandle = setTimeout(() => {
-      timerHandle = undefined;
-      resolve('recovery');
-    }, timeoutMs);
-  });
+  const timer = conditionTimer(timeoutMs, 'recovery', 'recovery condition');
 
   return {
-    promise,
+    promise: timer.promise,
     inform() {},
     close() {
-      if (timerHandle !== undefined) {
-        clearTimeout(timerHandle);
-        timerHandle = undefined;
-      }
+      timer.cancel();
     },
   };
 }

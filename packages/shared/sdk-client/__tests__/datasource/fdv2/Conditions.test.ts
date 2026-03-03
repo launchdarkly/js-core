@@ -21,6 +21,17 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
+/**
+ * Flush deeply-chained microtasks. cancelableTimedPromise introduces extra
+ * promise layers compared to raw setTimeout, so we need multiple ticks.
+ */
+async function flushMicrotasks() {
+  for (let i = 0; i < 10; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.resolve();
+  }
+}
+
 function makeInterrupted(): FDv2SourceResult {
   return interrupted(
     { kind: DataSourceErrorKind.NetworkError, message: 'test error', time: Date.now() },
@@ -45,7 +56,7 @@ describe('createFallbackCondition', () => {
     });
 
     jest.advanceTimersByTime(2000);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(resolved).toBe(false);
     condition.close();
@@ -57,19 +68,18 @@ describe('createFallbackCondition', () => {
     condition.inform(makeInterrupted());
 
     jest.advanceTimersByTime(999);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     let result: string | undefined;
     condition.promise.then((r) => {
       result = r;
     });
-    await Promise.resolve();
+    await flushMicrotasks();
     expect(result).toBeUndefined();
 
     jest.advanceTimersByTime(1);
     // Flush microtask queue
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('fallback');
     condition.close();
@@ -90,7 +100,7 @@ describe('createFallbackCondition', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(resolved).toBe(false);
     condition.close();
@@ -115,12 +125,11 @@ describe('createFallbackCondition', () => {
     });
 
     jest.advanceTimersByTime(999);
-    await Promise.resolve();
+    await flushMicrotasks();
     expect(result).toBeUndefined();
 
     jest.advanceTimersByTime(1);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('fallback');
     condition.close();
@@ -141,8 +150,7 @@ describe('createFallbackCondition', () => {
     });
 
     jest.advanceTimersByTime(500);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     // Should fire at 1000ms from first interrupted, not 1500ms
     expect(result).toBe('fallback');
@@ -161,7 +169,7 @@ describe('createFallbackCondition', () => {
     });
 
     jest.advanceTimersByTime(2000);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(resolved).toBe(false);
   });
@@ -186,12 +194,11 @@ describe('createRecoveryCondition', () => {
     });
 
     jest.advanceTimersByTime(4999);
-    await Promise.resolve();
+    await flushMicrotasks();
     expect(result).toBeUndefined();
 
     jest.advanceTimersByTime(1);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('recovery');
     condition.close();
@@ -211,8 +218,7 @@ describe('createRecoveryCondition', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('recovery');
     condition.close();
@@ -228,7 +234,7 @@ describe('createRecoveryCondition', () => {
     });
 
     jest.advanceTimersByTime(2000);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(resolved).toBe(false);
   });
@@ -256,8 +262,7 @@ describe('createConditionGroup', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('fallback');
     group.close();
@@ -274,8 +279,7 @@ describe('createConditionGroup', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('recovery');
     group.close();
@@ -297,8 +301,7 @@ describe('createConditionGroup', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('fallback');
     group.close();
@@ -318,7 +321,7 @@ describe('createConditionGroup', () => {
     });
 
     jest.advanceTimersByTime(2000);
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(resolved).toBe(false);
   });
@@ -347,8 +350,7 @@ describe('getConditions', () => {
 
     // Fallback should fire at 1000ms
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('fallback');
     group.close();
@@ -364,8 +366,7 @@ describe('getConditions', () => {
     });
 
     jest.advanceTimersByTime(1000);
-    await Promise.resolve();
-    await Promise.resolve();
+    await flushMicrotasks();
 
     expect(result).toBe('recovery');
     group.close();
