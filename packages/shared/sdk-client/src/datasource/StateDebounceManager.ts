@@ -64,13 +64,6 @@ export interface StateDebounceManager {
   setRequestedMode(mode: FDv2ConnectionMode): void;
 
   /**
-   * Returns the current accumulated pending state (the state that
-   * will be delivered to the reconciliation callback when the
-   * debounce timer fires).
-   */
-  readonly pendingState: PendingState;
-
-  /**
    * Cancel any pending debounce timer and release resources.
    * After close(), further calls to set* methods are no-ops.
    */
@@ -161,10 +154,6 @@ export function createStateDebounceManager(
       }
       requestedMode = mode;
       resetTimer();
-    },
-
-    get pendingState(): PendingState {
-      return getPendingState();
     },
 
     close(): void {

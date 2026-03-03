@@ -2,7 +2,6 @@ import {
   createStateDebounceManager,
   DEFAULT_DEBOUNCE_MS,
   PendingState,
-  StateDebounceManager,
 } from '../../src/datasource/StateDebounceManager';
 
 beforeEach(() => {
@@ -23,7 +22,7 @@ function makeManager(
   onReconcile: jest.Mock = jest.fn(),
   initialState: PendingState = defaultInitialState,
   debounceMs?: number,
-): { manager: StateDebounceManager; onReconcile: jest.Mock } {
+) {
   const manager = createStateDebounceManager({
     initialState,
     onReconcile,
@@ -168,28 +167,6 @@ it('treats set* methods as no-ops after close()', () => {
   jest.advanceTimersByTime(DEFAULT_DEBOUNCE_MS * 2);
 
   expect(onReconcile).not.toHaveBeenCalled();
-});
-
-it('reflects current accumulated state in pendingState immediately', () => {
-  const { manager } = makeManager();
-
-  expect(manager.pendingState).toEqual(defaultInitialState);
-
-  manager.setNetworkState('unavailable');
-  expect(manager.pendingState).toEqual({
-    networkState: 'unavailable',
-    lifecycleState: 'foreground',
-    requestedMode: 'streaming',
-  });
-
-  manager.setLifecycleState('background');
-  expect(manager.pendingState).toEqual({
-    networkState: 'unavailable',
-    lifecycleState: 'background',
-    requestedMode: 'streaming',
-  });
-
-  manager.close();
 });
 
 it('respects a custom debounce duration', () => {
