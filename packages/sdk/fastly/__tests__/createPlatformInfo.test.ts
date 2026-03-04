@@ -1,6 +1,6 @@
 import createPlatformInfo from '../src/createPlatformInfo';
 
-const version = '0.2.7'; // x-release-please-version
+const version = '0.2.8'; // x-release-please-version
 
 describe('Fastly Platform Info', () => {
   it('platformData shows correct information', () => {

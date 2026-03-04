@@ -13,6 +13,13 @@ if (started) {
   app.quit();
 }
 
+// This is a workaround so we can use electron-forge to "build" the application without
+// actually launching it. This is necessary because electron-forge v7 does not have a
+// build command.
+if (process.argv.includes('--build')) {
+  process.exit(0);
+}
+
 // Set the LAUNCHDARKLY_MOBILE_KEY environment variable to your LaunchDarkly mobile key
 // before running the app.
 const launchDarklyMobileKey = process.env.LAUNCHDARKLY_MOBILE_KEY || '';
