@@ -6,7 +6,6 @@ import path from 'node:path';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/electron-client-sdk';
-
 import {
   CommandParams,
   CommandType,
