@@ -1,18 +1,13 @@
 {
-  "name": "@internal/electron-example",
-  "productName": "example-application",
+  "name": "@internal/electron-contract-tests-entity",
   "version": "0.0.1",
-  "description": "My Electron application description",
+  "description": "Contract test entity for the LaunchDarkly Electron SDK",
   "main": ".vite/build/main.js",
   "private": true,
   "scripts": {
+    "open-electron": "node open-electron.mjs",
     "start": "electron-forge start",
-    "build": "electron-forge start -- --build",
-    "test": "playwright test",
-    "clean": "electron-forge clean",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "lint": "eslint --ext .ts,.tsx ."
+    "build": "electron-forge start -- --build"
   },
   "keywords": [],
   "license": "MIT",
@@ -26,17 +21,19 @@
     "@electron-forge/plugin-fuses": "^7.11.1",
     "@electron-forge/plugin-vite": "^7.11.1",
     "@electron/fuses": "^1.8.0",
-    "@playwright/test": "^1.58.2",
+    "@launchdarkly/electron-client-sdk": "workspace:^",
     "@types/electron-squirrel-startup": "^1.0.2",
+    "@types/express": "^5.0.6",
     "@typescript-eslint/parser": "^5.62.0",
-    "electron": "^40.4.1",
+    "electron": "^40.2.1",
     "eslint": "^8.57.1",
     "playwright": "^1.49.1",
     "typescript": "~4.5.4",
     "vite": "^5.4.21"
   },
   "dependencies": {
-    "@launchdarkly/electron-client-sdk": "workspace:^",
-    "electron-squirrel-startup": "^1.0.1"
+    "body-parser": "^2.2.2",
+    "electron-squirrel-startup": "^1.0.1",
+    "express": "^5.2.1"
   }
 }
