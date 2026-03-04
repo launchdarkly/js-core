@@ -44,9 +44,14 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+
+      - name: Cache yarn packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          cache: 'yarn'
-          cache-dependency-path: '**/yarn.lock'
+          path: .yarn/cache
+          key: yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-
 
       - name: Install deps
         run: yarn workspaces focus
