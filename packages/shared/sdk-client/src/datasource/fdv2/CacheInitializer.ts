@@ -1,5 +1,6 @@
 import { Context, Crypto, internal, LDLogger, Storage } from '@launchdarkly/js-sdk-common';
 
+import { readFreshness } from '../../storage/freshness';
 import { namespaceForContextData } from '../../storage/namespaceUtils';
 import { Flag, Flags } from '../../types';
 import {
@@ -41,8 +42,8 @@ function flagToEvaluationResult(flag: Flag): Omit<Flag, 'version'> {
 }
 
 /**
- * Reads cached flag data from platform storage and returns it as an
- * {@link FDv2SourceResult}.
+ * Reads cached flag data and freshness from platform storage and returns
+ * them as an {@link FDv2SourceResult}.
  */
 async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2SourceResult> {
   const { storage, crypto, environmentNamespace, context, logger } = config;
@@ -87,8 +88,10 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
       updates,
     };
 
+    const freshness = await readFreshness(storage, crypto, environmentNamespace, context);
+
     logger?.debug('Loaded cached flag evaluations via cache initializer');
-    return changeSet(payload, false);
+    return changeSet(payload, false, undefined, freshness);
   } catch (e: any) {
     logger?.warn(`Could not parse cached flag evaluations: ${e.message}`);
     return interrupted(errorInfoFromUnknown(`Cache parse error: ${e.message}`), false);
@@ -98,9 +101,9 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
 /**
  * Creates an {@link InitializerFactory} that produces cache initializers.
  *
- * The cache initializer reads flag data from persistent storage for the
- * given context and returns it as a changeSet without a selector. This
- * allows the orchestrator to provide cached data immediately while
+ * The cache initializer reads flag data and freshness from persistent storage
+ * for the given context and returns them as a changeSet without a selector.
+ * This allows the orchestrator to provide cached data immediately while
  * continuing to the next initializer for network-verified data.
  *
  * Per spec Requirement 4.1.2, the payload has `persist=false` semantics

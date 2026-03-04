@@ -1,7 +1,9 @@
 import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
 
 import { createCacheInitializerFactory } from '../../../src/datasource/fdv2/CacheInitializer';
+import { ChangeSetResult } from '../../../src/datasource/fdv2/FDv2SourceResult';
 import { Initializer } from '../../../src/datasource/fdv2/Initializer';
+import { FRESHNESS_SUFFIX, hashContext } from '../../../src/storage/freshness';
 import { namespaceForContextData } from '../../../src/storage/namespaceUtils';
 import { Flag, Flags } from '../../../src/types';
 import {
@@ -283,5 +285,57 @@ describe('CacheInitializer', () => {
     expect(obj.debugEventsUntilDate).toBe(999);
     expect(obj.prerequisites).toEqual(['other-flag']);
     expect(obj).not.toHaveProperty('version');
+  });
+
+  it('includes freshness timestamp when freshness record exists', async () => {
+    const storage = makeMemoryStorage();
+    await storeFlagsForContext(storage, crypto, context, { flag1: makeMockFlag() });
+
+    // Write a freshness record
+    const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
+    const contextHash = await hashContext(crypto, context);
+    await storage.set(
+      `${storageKey}${FRESHNESS_SUFFIX}`,
+      JSON.stringify({ timestamp: 88000, contextHash }),
+    );
+
+    const initializer = createInitializer(storage, crypto, context);
+    const result = (await initializer.run()) as ChangeSetResult;
+
+    expect(result.type).toBe('changeSet');
+    expect(result.freshness).toBe(88000);
+  });
+
+  it('returns undefined freshness when no freshness record exists', async () => {
+    const storage = makeMemoryStorage();
+    await storeFlagsForContext(storage, crypto, context, { flag1: makeMockFlag() });
+
+    const initializer = createInitializer(storage, crypto, context);
+    const result = (await initializer.run()) as ChangeSetResult;
+
+    expect(result.type).toBe('changeSet');
+    expect(result.freshness).toBeUndefined();
+  });
+
+  it('returns undefined freshness when context attributes changed', async () => {
+    const storage = makeMemoryStorage();
+    const contextV1 = Context.fromLDContext({ kind: 'user', key: 'test-user', name: 'Alice' });
+    await storeFlagsForContext(storage, crypto, contextV1, { flag1: makeMockFlag() });
+
+    // Write freshness for contextV1
+    const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, contextV1);
+    const v1Hash = await hashContext(crypto, contextV1);
+    await storage.set(
+      `${storageKey}${FRESHNESS_SUFFIX}`,
+      JSON.stringify({ timestamp: 88000, contextHash: v1Hash }),
+    );
+
+    // Load with same key but different attributes
+    const contextV2 = Context.fromLDContext({ kind: 'user', key: 'test-user', name: 'Bob' });
+    const initializer = createInitializer(storage, crypto, contextV2);
+    const result = (await initializer.run()) as ChangeSetResult;
+
+    expect(result.type).toBe('changeSet');
+    expect(result.freshness).toBeUndefined();
   });
 });

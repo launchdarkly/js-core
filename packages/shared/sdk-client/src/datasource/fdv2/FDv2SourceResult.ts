@@ -20,6 +20,8 @@ export interface ChangeSetResult {
   payload: internal.Payload;
   fdv1Fallback: boolean;
   environmentId?: string;
+  /** Freshness timestamp from cache, if this result originated from cached data. */
+  freshness?: number;
 }
 
 /**
@@ -50,8 +52,9 @@ export function changeSet(
   payload: internal.Payload,
   fdv1Fallback: boolean,
   environmentId?: string,
+  freshness?: number,
 ): FDv2SourceResult {
-  return { type: 'changeSet', payload, fdv1Fallback, environmentId };
+  return { type: 'changeSet', payload, fdv1Fallback, environmentId, freshness };
 }
 
 /**

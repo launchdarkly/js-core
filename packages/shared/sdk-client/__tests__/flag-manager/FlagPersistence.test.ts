@@ -88,7 +88,7 @@ describe('FlagPersistence tests', () => {
     await fpUnderTest.init(context, flags);
     const didLoadCache = await fpUnderTest.loadCached(context);
     expect(didLoadCache).toEqual(true);
-    expect(flagUpdaterSpy).toHaveBeenCalledWith(context, flags, expect.any(Number));
+    expect(flagUpdaterSpy).toHaveBeenCalledWith(context, flags);
   });
 
   test('loadCached migrates pre 10.3.1 cached flags', async () => {
@@ -353,106 +353,6 @@ describe('FlagPersistence tests', () => {
 });
 
 describe('FlagPersistence freshness', () => {
-  test('loadCached passes freshness timestamp to initCached', async () => {
-    const memoryStorage = makeMemoryStorage();
-    const crypto = makeMockCrypto();
-    const flagStore = createDefaultFlagStore();
-    const mockLogger = makeMockLogger();
-    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
-
-    // First instance writes data + freshness
-    const writer = new FlagPersistence(
-      makeMockPlatform(memoryStorage, crypto),
-      TEST_NAMESPACE,
-      5,
-      flagStore,
-      flagUpdater,
-      mockLogger,
-      () => 55000,
-    );
-    const context = Context.fromLDContext({ kind: 'user', key: 'test' });
-    await writer.init(context, { flagA: { version: 1, flag: makeMockFlag() } });
-
-    // Second instance loads from cache
-    const flagStore2 = createDefaultFlagStore();
-    const flagUpdater2 = createFlagUpdater(flagStore2, mockLogger);
-    const initCachedSpy2 = jest.spyOn(flagUpdater2, 'initCached');
-    const reader = new FlagPersistence(
-      makeMockPlatform(memoryStorage, crypto),
-      TEST_NAMESPACE,
-      5,
-      flagStore2,
-      flagUpdater2,
-      mockLogger,
-    );
-
-    await reader.loadCached(context);
-    expect(initCachedSpy2).toHaveBeenCalledWith(context, expect.any(Object), 55000);
-  });
-
-  test('loadCached passes undefined freshness when context attributes differ', async () => {
-    const memoryStorage = makeMemoryStorage();
-    const crypto = makeMockCrypto();
-    const flagStore = createDefaultFlagStore();
-    const mockLogger = makeMockLogger();
-    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
-
-    const writer = new FlagPersistence(
-      makeMockPlatform(memoryStorage, crypto),
-      TEST_NAMESPACE,
-      5,
-      flagStore,
-      flagUpdater,
-      mockLogger,
-      () => 55000,
-    );
-    const contextV1 = Context.fromLDContext({ kind: 'user', key: 'test', name: 'Alice' });
-    await writer.init(contextV1, { flagA: { version: 1, flag: makeMockFlag() } });
-
-    const flagStore2 = createDefaultFlagStore();
-    const flagUpdater2 = createFlagUpdater(flagStore2, mockLogger);
-    const initCachedSpy = jest.spyOn(flagUpdater2, 'initCached');
-    const reader = new FlagPersistence(
-      makeMockPlatform(memoryStorage, crypto),
-      TEST_NAMESPACE,
-      5,
-      flagStore2,
-      flagUpdater2,
-      mockLogger,
-    );
-
-    const contextV2 = Context.fromLDContext({ kind: 'user', key: 'test', name: 'Bob' });
-    await reader.loadCached(contextV2);
-
-    expect(initCachedSpy).toHaveBeenCalledWith(contextV2, expect.any(Object), undefined);
-  });
-
-  test('loadCached passes undefined freshness when no freshness record exists', async () => {
-    const memoryStorage = makeMemoryStorage();
-    const crypto = makeMockCrypto();
-    const flagStore = createDefaultFlagStore();
-    const mockLogger = makeMockLogger();
-    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
-    const initCachedSpy = jest.spyOn(flagUpdater, 'initCached');
-
-    // Store flags directly (no freshness key)
-    const context = Context.fromLDContext({ kind: 'user', key: 'test' });
-    const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
-    await memoryStorage.set(storageKey, JSON.stringify({ flagA: makeMockFlag() }));
-
-    const fpUnderTest = new FlagPersistence(
-      makeMockPlatform(memoryStorage, crypto),
-      TEST_NAMESPACE,
-      5,
-      flagStore,
-      flagUpdater,
-      mockLogger,
-    );
-
-    await fpUnderTest.loadCached(context);
-    expect(initCachedSpy).toHaveBeenCalledWith(context, expect.any(Object), undefined);
-  });
-
   test('init stores freshness record to storage', async () => {
     const memoryStorage = makeMemoryStorage();
     const crypto = makeMockCrypto();
