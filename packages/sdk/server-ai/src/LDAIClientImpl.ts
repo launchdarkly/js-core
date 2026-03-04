@@ -4,12 +4,12 @@ import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { TrackedChat } from './api/chat';
 import {
-  disabledAIConfig,
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
   LDAICompletionConfig,
   LDAICompletionConfigDefault,
+  LDAIConfigDefault,
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
@@ -42,6 +42,8 @@ const INIT_TRACK_CONTEXT: LDContext = {
   key: 'ld-internal-tracking',
   anonymous: true,
 };
+
+const disabledAIConfig: LDAIConfigDefault = { enabled: false };
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;

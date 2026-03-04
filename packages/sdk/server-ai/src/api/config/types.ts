@@ -92,13 +92,6 @@ export interface LDAIConfigDefault {
 }
 
 /**
- * Disabled AI Config default (enabled: false).
- */
-export const disabledAIConfig: LDAIConfigDefault = Object.freeze({
-  enabled: false,
-});
-
-/**
  * Base AI Config interface without mode-specific fields.
  */
 export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {

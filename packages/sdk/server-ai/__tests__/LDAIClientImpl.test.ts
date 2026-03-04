@@ -1,7 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import {
-  disabledAIConfig,
   LDAIAgentConfigDefault,
   LDAICompletionConfigDefault,
   LDAIJudgeConfigDefault,
@@ -801,23 +800,3 @@ describe('optional default values', () => {
   });
 });
 
-describe('disabledAIConfig', () => {
-  it('is a config with enabled false', () => {
-    expect(disabledAIConfig.enabled).toBe(false);
-    expect(disabledAIConfig.model).toBeUndefined();
-    expect(disabledAIConfig.provider).toBeUndefined();
-  });
-
-  it('is assignable to agent, completion, and judge default types', () => {
-    const asAgent: LDAIAgentConfigDefault = disabledAIConfig;
-    const asCompletion: LDAICompletionConfigDefault = disabledAIConfig;
-    const asJudge: LDAIJudgeConfigDefault = disabledAIConfig;
-    expect(asAgent.enabled).toBe(false);
-    expect(asCompletion.enabled).toBe(false);
-    expect(asJudge.enabled).toBe(false);
-  });
-
-  it('is immutable', () => {
-    expect(Object.isFrozen(disabledAIConfig)).toBe(true);
-  });
-});
