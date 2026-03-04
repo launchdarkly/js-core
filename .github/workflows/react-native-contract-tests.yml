@@ -57,7 +57,7 @@ jobs:
 
       - name: Build APK (x86_64 only for emulator)
         working-directory: packages/sdk/react-native/contract-tests/entity/android
-        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
 
       - name: Make space for the emulator
         # https://github.com/jlumbroso/free-disk-space/releases/tag/main
