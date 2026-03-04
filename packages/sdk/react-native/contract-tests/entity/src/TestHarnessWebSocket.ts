@@ -61,17 +61,15 @@ export default class TestHarnessWebSocket {
 
           break;
         case 'createClient':
-          {
-            try {
-              resData.resourceUrl = `/clients/${this._clientCounter}`;
-              resData.status = 201;
-              const entity = await newSdkClientEntity(data.body);
-              this._entities[this._clientCounter] = entity;
-              this._clientCounter += 1;
-            } catch (e: any) {
-              this._logger.error(`Failed to create client: ${e?.message ?? e}`);
-              resData.status = 500;
-            }
+          try {
+            resData.resourceUrl = `/clients/${this._clientCounter}`;
+            resData.status = 201;
+            const entity = await newSdkClientEntity(data.body);
+            this._entities[this._clientCounter] = entity;
+            this._clientCounter += 1;
+          } catch (e: any) {
+            this._logger.error(`Failed to create client: ${e?.message ?? e}`);
+            resData.status = 500;
           }
           break;
         case 'runCommand':
