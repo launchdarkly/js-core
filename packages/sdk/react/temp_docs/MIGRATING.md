@@ -7,22 +7,6 @@ and the new `@launchdarkly/react-sdk` package.
 
 ## Hooks
 
-### `useFlags` — unchanged
-
-```ts
-// Before
-import { useFlags } from 'launchdarkly-react-client-sdk';
-const flags = useFlags();
-
-// After
-import { useFlags } from '@launchdarkly/react-sdk';
-const flags = useFlags();
-```
-
-Both return all current flag values as a plain object. The hook re-renders whenever any flag value changes.
-
----
-
 ### `useLDClient` — unchanged
 
 ```ts

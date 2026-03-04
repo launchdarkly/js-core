@@ -52,12 +52,16 @@ export function createLDReactProviderWithClient(
 
       const unsubscribeInitStatus = client.onInitializationStatusChange((result) => {
         if (mounted) {
-          setState((prev) => ({
-            ...prev,
-            initializedState: result.status,
-            context: client.getContext() ?? undefined,
-            error: result.status === 'failed' ? result.error : undefined,
-          }));
+          setState((prev) => {
+            if (prev.initializedState === result.status) {
+              return prev;
+            }
+            return {
+              ...prev,
+              initializedState: result.status,
+              error: result.status === 'failed' ? result.error : undefined,
+            };
+          });
         }
       });
 
