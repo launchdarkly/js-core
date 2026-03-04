@@ -17,10 +17,12 @@ jobs:
   contract-tests-android:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      # https://github.com/actions/checkout/releases/tag/v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        # https://github.com/actions/setup-node/releases/tag/v6.2.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: 18
 
@@ -45,7 +47,8 @@ jobs:
 
       # Java setup is after expo prebuild so that it can locate the gradle configuration.
       - name: Setup Java
-        uses: actions/setup-java@v4
+        # https://github.com/actions/setup-java/releases/tag/v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: temurin
           java-version: 17
@@ -56,7 +59,8 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Make space for the emulator
-        uses: jlumbroso/free-disk-space@v1.3.1
+        # https://github.com/jlumbroso/free-disk-space/releases/tag/main
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
         with:
           android: false
           large-packages: false
@@ -89,7 +93,8 @@ jobs:
           chmod +x sdk-test-harness
 
       - name: Run contract tests on Android emulator
-        uses: reactivecircus/android-emulator-runner@v2
+        # https://github.com/ReactiveCircus/android-emulator-runner/releases/tag/v2.34.0
+        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915 # v2
         with:
           api-level: 31
           arch: x86_64
