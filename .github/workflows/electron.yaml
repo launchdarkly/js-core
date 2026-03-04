@@ -99,7 +99,7 @@ jobs:
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
-      - uses: launchdarkly/gh-actions/actions/release-secrets@release-secrets-v1.2.0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@b53d0aff96502313ccadc2ca5a35fb4c7d027fee # release-secrets-v1.2.0
         name: 'Get the test feature flag key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN  }}
