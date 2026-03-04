@@ -159,22 +159,18 @@ describe('CacheInitializer', () => {
     expect(logger.debug).toHaveBeenCalledWith('No storage available for cache initializer');
   });
 
-  it('returns interrupted on corrupt JSON and logs warning', async () => {
+  it('returns interrupted on corrupt JSON (treated as cache miss)', async () => {
     const storage = makeMemoryStorage();
     const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
     await storage.set(storageKey, 'not valid json!!!');
 
-    const logger = makeMockLogger();
-    const initializer = createInitializer(storage, crypto, context, logger);
+    const initializer = createInitializer(storage, crypto, context);
     const result = await initializer.run();
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
       expect(result.state).toBe('interrupted');
     }
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not parse cached flag evaluations'),
-    );
   });
 
   it('returns shutdown when close is called before cache loads', async () => {

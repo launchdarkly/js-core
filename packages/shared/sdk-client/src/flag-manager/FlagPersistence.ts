@@ -1,6 +1,7 @@
 import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { FRESHNESS_SUFFIX, FreshnessRecord, hashContext } from '../storage/freshness';
+import { loadCachedFlags } from '../storage/loadCachedFlags';
 import { namespaceForContextData, namespaceForContextIndex } from '../storage/namespaceUtils';
 import { Flags } from '../types';
 import ContextIndex from './ContextIndex';
@@ -62,47 +63,38 @@ export default class FlagPersistence {
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
    */
   async loadCached(context: Context): Promise<boolean> {
-    const storageKey = await namespaceForContextData(
+    if (!this._platform.storage) {
+      return false;
+    }
+
+    const cached = await loadCachedFlags(
+      this._platform.storage,
       this._platform.crypto,
       this._environmentNamespace,
       context,
     );
-    let flagsJson = await this._platform.storage?.get(storageKey);
-    if (flagsJson === null || flagsJson === undefined) {
-      // Fallback: in version <10.3.1 flag data was stored under the canonical key, check
-      // to see if data is present and migrate the data if present.
-      flagsJson = await this._platform.storage?.get(context.canonicalKey);
-      if (flagsJson === null || flagsJson === undefined) {
-        // return false indicating cache did not load if flag json is still absent
-        return false;
-      }
-
-      // migrate data from version <10.3.1 and cleanup data that was under canonical key
-      await this._platform.storage?.set(storageKey, flagsJson);
-      await this._platform.storage?.clear(context.canonicalKey);
-    }
-
-    try {
-      const flags: Flags = JSON.parse(flagsJson);
-
-      // mapping flags to item descriptors
-      const descriptors = Object.entries(flags).reduce(
-        (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
-          acc[key] = { version: flag.version, flag };
-          return acc;
-        },
-        {},
-      );
-
-      this._flagUpdater.initCached(context, descriptors);
-      this._logger.debug('Loaded cached flag evaluations from persistent storage');
-      return true;
-    } catch (e: any) {
-      this._logger.warn(
-        `Could not load cached flag evaluations from persistent storage: ${e.message}`,
-      );
+    if (!cached) {
       return false;
     }
+
+    // Migrate data from version <10.3.1 stored under the canonical key
+    if (cached.fromLegacyKey) {
+      await this._platform.storage.set(cached.storageKey, JSON.stringify(cached.flags));
+      await this._platform.storage.clear(context.canonicalKey);
+    }
+
+    // mapping flags to item descriptors
+    const descriptors = Object.entries(cached.flags).reduce(
+      (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
+        acc[key] = { version: flag.version, flag };
+        return acc;
+      },
+      {},
+    );
+
+    this._flagUpdater.initCached(context, descriptors);
+    this._logger.debug('Loaded cached flag evaluations from persistent storage');
+    return true;
   }
 
   private async _storeFreshness(

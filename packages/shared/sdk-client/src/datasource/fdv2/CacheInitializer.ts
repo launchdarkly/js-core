@@ -1,8 +1,8 @@
 import { Context, Crypto, internal, LDLogger, Storage } from '@launchdarkly/js-sdk-common';
 
 import { readFreshness } from '../../storage/freshness';
-import { namespaceForContextData } from '../../storage/namespaceUtils';
-import { Flag, Flags } from '../../types';
+import { loadCachedFlags } from '../../storage/loadCachedFlags';
+import { Flag } from '../../types';
 import {
   changeSet,
   errorInfoFromUnknown,
@@ -53,49 +53,34 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
     return interrupted(errorInfoFromUnknown('No storage available'), false);
   }
 
-  const storageKey = await namespaceForContextData(crypto, environmentNamespace, context);
-  let flagsJson = await storage.get(storageKey);
-
-  // Fallback: in version <10.3.1 flag data was stored under the canonical key.
-  // Read-only check — migration happens when network data is persisted via the
-  // normal FlagPersistence path.
-  if (flagsJson === null || flagsJson === undefined) {
-    flagsJson = await storage.get(context.canonicalKey);
-  }
-
-  if (flagsJson === null || flagsJson === undefined) {
+  const cached = await loadCachedFlags(storage, crypto, environmentNamespace, context);
+  if (!cached) {
     logger?.debug('Cache miss for context');
     return interrupted(errorInfoFromUnknown('Cache miss'), false);
   }
 
-  try {
-    const flags: Flags = JSON.parse(flagsJson);
-    const updates: internal.Update[] = Object.entries(flags).map(
-      ([key, flag]): internal.Update => ({
-        kind: 'flagEval',
-        key,
-        version: flag.version,
-        object: flagToEvaluationResult(flag),
-      }),
-    );
+  const updates: internal.Update[] = Object.entries(cached.flags).map(
+    ([key, flag]): internal.Update => ({
+      kind: 'flagEval',
+      key,
+      version: flag.version,
+      object: flagToEvaluationResult(flag),
+    }),
+  );
 
-    const payload: internal.Payload = {
-      id: 'cache',
-      version: 0,
-      // No `state` field. The orchestrator sees a changeSet without a selector,
-      // records dataReceived=true, and continues to the next initializer.
-      type: 'full',
-      updates,
-    };
+  const payload: internal.Payload = {
+    id: 'cache',
+    version: 0,
+    // No `state` field. The orchestrator sees a changeSet without a selector,
+    // records dataReceived=true, and continues to the next initializer.
+    type: 'full',
+    updates,
+  };
 
-    const freshness = await readFreshness(storage, crypto, environmentNamespace, context);
+  const freshness = await readFreshness(storage, crypto, environmentNamespace, context);
 
-    logger?.debug('Loaded cached flag evaluations via cache initializer');
-    return changeSet(payload, false, undefined, freshness);
-  } catch (e: any) {
-    logger?.warn(`Could not parse cached flag evaluations: ${e.message}`);
-    return interrupted(errorInfoFromUnknown(`Cache parse error: ${e.message}`), false);
-  }
+  logger?.debug('Loaded cached flag evaluations via cache initializer');
+  return changeSet(payload, false, undefined, freshness);
 }
 
 /**
