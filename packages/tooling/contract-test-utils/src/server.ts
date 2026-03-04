@@ -1,4 +1,4 @@
-// Re-export universal exports
+// Re-export universal exports (includes ClientPool)
 export * from './index.js';
 
 // Server-side exports
@@ -7,4 +7,3 @@ export type {
   HookData as ServerSideHookData,
   HookErrors as ServerSideHookErrors,
 } from './server-side/TestHook.js';
-export { ClientPool } from './server-side/ClientPool.js';
