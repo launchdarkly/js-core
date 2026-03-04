@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES6",
+    "lib": ["ES6"],
     "module": "commonjs",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
@@ -10,6 +11,5 @@
     "sourceMap": true,
     "skipLibCheck": true
   },
-  "lib": ["ES6"],
   "exclude": ["**/*.test.ts", "dist", "node_modules"]
 }
