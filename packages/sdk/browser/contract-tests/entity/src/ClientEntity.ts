@@ -7,7 +7,7 @@ import {
   SDKConfigParams,
   ClientSideTestHook as TestHook,
   ValueType,
-} from '@launchdarkly/js-contract-test-utils';
+} from '@launchdarkly/js-contract-test-utils/client';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');

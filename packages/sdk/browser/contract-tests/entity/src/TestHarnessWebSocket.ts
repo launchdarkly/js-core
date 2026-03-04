@@ -1,4 +1,4 @@
-import { TestHarnessWebSocket as SharedTestHarnessWebSocket } from '@launchdarkly/js-contract-test-utils';
+import { TestHarnessWebSocket as SharedTestHarnessWebSocket } from '@launchdarkly/js-contract-test-utils/client';
 
 import { newSdkClientEntity } from './ClientEntity';
 

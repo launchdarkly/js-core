@@ -10,6 +10,22 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./src/client.ts",
+      "import": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./server": {
+      "types": "./src/server.ts",
+      "import": "./src/server.ts",
+      "default": "./src/server.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "client": ["./src/client.ts"],
+      "server": ["./src/server.ts"]
     }
   },
   "scripts": {

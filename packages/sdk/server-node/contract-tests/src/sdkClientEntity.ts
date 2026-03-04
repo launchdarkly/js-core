@@ -1,6 +1,6 @@
 import got from 'got';
 
-import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils';
+import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
