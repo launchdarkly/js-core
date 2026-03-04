@@ -3,7 +3,12 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
-TEST_HARNESS_PATH="${SDK_TEST_HARNESS_PATH:-/home/rlamb/code/launchdarkly/sdk-test-harness}"
+if [ -z "$SDK_TEST_HARNESS_PATH" ]; then
+  echo "ERROR: SDK_TEST_HARNESS_PATH is not set. Point it to your sdk-test-harness checkout."
+  echo "  export SDK_TEST_HARNESS_PATH=/path/to/sdk-test-harness"
+  exit 1
+fi
+TEST_HARNESS_PATH="$SDK_TEST_HARNESS_PATH"
 
 echo "=== React Native Contract Tests ==="
 echo "Repo root: $REPO_ROOT"
