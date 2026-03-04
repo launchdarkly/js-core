@@ -1,6 +1,6 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 
-import { LDContext, useFlag, useInitializationStatus, useLDClient } from '@launchdarkly/react-sdk';
+import { LDContext, useBoolVariation, useInitializationStatus, useLDClient } from '@launchdarkly/react-sdk';
 
 import './App.css';
 
@@ -18,7 +18,7 @@ function App() {
   const { status } = useInitializationStatus();
   const [flagKey, setFlagKey] = useState(FLAG_KEY);
   const [inputValue, setInputValue] = useState(flagKey);
-  const flagValue = useFlag(flagKey, false);
+  const flagValue = useBoolVariation(flagKey, false);
   const [activeContextKey, setActiveContextKey] = useState<string | undefined>(
     () => client?.getContext()?.key as string | undefined,
   );

@@ -6,6 +6,7 @@ import {
   LDEvaluationReason,
   type LDFlagValue,
   LDStartOptions,
+  LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
 
 import { InitializedState, LDReactClient } from './LDClient';
@@ -41,6 +42,7 @@ function createNoopReactClient(): LDReactClient {
     flush: () => Promise.resolve({ result: true }),
     getContext: () => undefined,
     getInitializationState: (): InitializedState => 'unknown',
+    getInitializationError: (): Error | undefined => undefined,
     identify: () => Promise.resolve({ status: 'completed' as const }),
     jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
     jsonVariationDetail: (key: string, defaultValue: unknown) =>
@@ -57,6 +59,7 @@ function createNoopReactClient(): LDReactClient {
     off: () => {},
     on: () => {},
     onContextChange: () => () => {},
+    onInitializationStatusChange: () => () => {},
     setStreaming: () => {},
     start: () =>
       Promise.resolve({
@@ -115,6 +118,8 @@ export function createClient(
   const baseClient = createBaseClient(clientSideID, context, options);
   let initializationState: InitializedState = 'unknown';
   const subscribers = new Set<(context: LDContextStrict) => void>();
+  const initStatusSubscribers = new Set<(result: LDWaitForInitializationResult) => void>();
+  let lastInitResult: LDWaitForInitializationResult | undefined;
 
   return {
     ...baseClient,
@@ -122,6 +127,8 @@ export function createClient(
       initializationState = 'initializing';
       return baseClient.start(startOptions).then((result) => {
         initializationState = result.status;
+        lastInitResult = result;
+        initStatusSubscribers.forEach((cb) => cb(result));
         return result;
       });
     },
@@ -136,10 +143,21 @@ export function createClient(
         return result;
       }),
     getInitializationState: () => initializationState,
+    getInitializationError: () =>
+      lastInitResult?.status === 'failed' ? lastInitResult.error : undefined,
     onContextChange: (callback: (context: LDContextStrict) => void) => {
       subscribers.add(callback);
       return () => {
         subscribers.delete(callback);
+      };
+    },
+    onInitializationStatusChange: (callback: (result: LDWaitForInitializationResult) => void) => {
+      if (lastInitResult) {
+        callback(lastInitResult);
+      }
+      initStatusSubscribers.add(callback);
+      return () => {
+        initStatusSubscribers.delete(callback);
       };
     },
   };

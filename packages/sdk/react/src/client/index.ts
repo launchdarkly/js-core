@@ -3,6 +3,7 @@ export * from './LDClient';
 export * from './LDOptions';
 
 export * from './provider/LDReactContext';
-export { createLDReactProvider } from './provider/LDReactProvider';
+export { createLDReactProvider, createLDReactProviderWithClient } from './provider/LDReactProvider';
 export { createClient } from './LDReactClient';
+
 export * from './hooks';
