@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/akamai-edgeworker-sdk-common",
-  "version": "2.0.15",
+  "version": "2.0.16",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/akamai-edge-sdk",
   "repository": {
     "type": "git",
@@ -55,7 +55,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "^2.18.1",
+    "@launchdarkly/js-server-sdk-common": "^2.18.2",
     "crypto-js": "^4.1.1"
   }
 }
