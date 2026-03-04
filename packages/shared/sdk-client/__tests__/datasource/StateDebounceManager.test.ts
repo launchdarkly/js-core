@@ -234,15 +234,15 @@ it('settles on the final value after rapid network flapping', () => {
 it('handles multiple dimensions changing within the same debounce window', () => {
   const { manager, onReconcile } = makeManager();
 
-  // Simulate spec example 2: network restore + background transition
-  manager.setNetworkState('available');
+  // Simulate spec example 3: background + network loss
   manager.setLifecycleState('background');
+  manager.setNetworkState('unavailable');
 
   jest.advanceTimersByTime(DEFAULT_DEBOUNCE_MS);
 
   expect(onReconcile).toHaveBeenCalledTimes(1);
   expect(onReconcile).toHaveBeenCalledWith({
-    networkState: 'available',
+    networkState: 'unavailable',
     lifecycleState: 'background',
     requestedMode: 'streaming',
   });

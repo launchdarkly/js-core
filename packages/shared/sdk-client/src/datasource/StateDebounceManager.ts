@@ -65,7 +65,8 @@ export interface StateDebounceManager {
 
   /**
    * Cancel any pending debounce timer and release resources.
-   * After close(), further calls to set* methods are no-ops.
+   * After close(), further calls to set* methods will not
+   * trigger reconciliation.
    */
   close(): void;
 }
