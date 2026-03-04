@@ -100,43 +100,7 @@ jobs:
           api-level: 31
           arch: x86_64
           avd-name: contract_test_emulator
-          script: |
-            # Set up port forwarding
-            adb reverse tcp:8001 tcp:8001
-            adb reverse tcp:8111 tcp:8111
-            adb reverse tcp:8112 tcp:8112
-
-            # Install and launch the APK
-            adb install packages/sdk/react-native/contract-tests/entity/android/app/build/outputs/apk/release/app-release.apk
-            adb shell am start -n com.launchdarkly.rncontracttestentity/.MainActivity
-
-            # Wait for the app to connect to WebSocket
-            echo "Waiting for app to connect..."
-            for i in $(seq 1 30); do
-              if curl -s http://localhost:8000 > /dev/null 2>&1; then
-                echo "Test service ready"
-                break
-              fi
-              if [ "$i" -eq 30 ]; then
-                echo "Timeout waiting for test service"
-                cat /tmp/adapter.log
-                adb logcat -d -s ReactNativeJS:* | tail -100
-                exit 1
-              fi
-              sleep 2
-            done
-
-            # Run the contract test harness
-            SUPPRESSIONS_FILE="${{ github.workspace }}/packages/sdk/react-native/contract-tests/suppressions.txt"
-            EXTRA_ARGS=""
-            if [ -s "$SUPPRESSIONS_FILE" ]; then
-              EXTRA_ARGS="--skip-from=$SUPPRESSIONS_FILE"
-            fi
-
-            ./sdk-test-harness \
-              -url http://localhost:8000 \
-              -debug \
-              $EXTRA_ARGS
+          script: packages/sdk/react-native/contract-tests/run-ci-contract-tests.sh
 
       - name: Print logs on failure
         if: failure()
