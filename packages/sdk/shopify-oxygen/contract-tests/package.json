@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "node --inspect dist/index.js",
-    "build": "tsup",
+    "build": "yarn workspace @launchdarkly/js-contract-test-utils build && tsup",
     "dev": "tsc --watch"
   },
   "type": "module",
