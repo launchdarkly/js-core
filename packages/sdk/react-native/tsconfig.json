@@ -23,6 +23,7 @@
   },
   "exclude": [
     "__tests__",
+    "contract-tests",
     "dist",
     "docs",
     "example",

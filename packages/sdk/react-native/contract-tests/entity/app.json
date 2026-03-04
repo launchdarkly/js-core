@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "rn-contract-test-entity",
+    "slug": "rn-contract-test-entity",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "android": {
+      "package": "com.launchdarkly.rncontracttestentity"
+    },
+    "plugins": [
+      "./plugins/withCleartextTraffic"
+    ]
+  }
+}

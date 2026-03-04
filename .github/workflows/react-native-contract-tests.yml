@@ -1,0 +1,109 @@
+name: sdk/react-native/contract-tests
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [main, 'feat/**']
+    paths:
+      - 'packages/shared/common/**'
+      - 'packages/shared/sdk-client/**'
+      - 'packages/sdk/react-native/**'
+      - '.github/workflows/react-native-contract-tests.yml'
+
+jobs:
+  contract-tests-android:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      # https://github.com/actions/checkout/releases/tag/v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Node.js
+        # https://github.com/actions/setup-node/releases/tag/v6.2.0
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: yarn workspaces focus react-native-contract-test-adapter react-native-contract-test-entity
+
+      - name: Build SDK and dependencies
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-client-sdk' run build
+
+      - name: Build contract test adapter
+        run: yarn workspace react-native-contract-test-adapter run build
+
+      - name: Enable KVM group perms (for emulator performance)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Expo Prebuild
+        working-directory: packages/sdk/react-native/contract-tests/entity
+        run: npx expo prebuild --platform android
+
+      # Java setup is after expo prebuild so that it can locate the gradle configuration.
+      - name: Setup Java
+        # https://github.com/actions/setup-java/releases/tag/v5.2.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Build APK (x86_64 only for emulator)
+        working-directory: packages/sdk/react-native/contract-tests/entity/android
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 -x lintVitalRelease -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+
+      - name: Make space for the emulator
+        # https://github.com/jlumbroso/free-disk-space/releases/tag/main
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          android: false
+          large-packages: false
+
+      - name: Start adapter in background
+        run: |
+          yarn workspace react-native-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          echo $! > /tmp/adapter.pid
+
+      - name: Wait for adapter to be ready
+        run: |
+          echo "Waiting for adapter on port 8001..."
+          for i in $(seq 1 30); do
+            if nc -z localhost 8001; then
+              echo "Adapter WebSocket ready"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "Timeout waiting for adapter"
+              cat /tmp/adapter.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Download contract test harness
+        run: |
+          # https://github.com/launchdarkly/sdk-test-harness/releases/tag/v2.34.0
+          curl -sL -o sdk-test-harness.tar.gz "https://github.com/launchdarkly/sdk-test-harness/releases/download/v2.34.0/sdk-test-harness_Linux_x86_64.tar.gz"
+          tar -xzf sdk-test-harness.tar.gz sdk-test-harness
+          chmod +x sdk-test-harness
+
+      - name: Run contract tests on Android emulator
+        # https://github.com/ReactiveCircus/android-emulator-runner/releases/tag/v2.34.0
+        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915 # v2
+        with:
+          api-level: 31
+          arch: x86_64
+          avd-name: contract_test_emulator
+          script: packages/sdk/react-native/contract-tests/run-ci-contract-tests.sh
+
+      - name: Cleanup
+        if: always()
+        run: |
+          [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true
