@@ -1,8 +1,26 @@
 #!/bin/sh
-set -e
+# This script runs inside the android-emulator-runner action, where the
+# emulator is alive. All adb commands must happen here — once this script
+# exits the emulator is terminated.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+
+# Capture logs on any failure (while emulator is still alive)
+dump_logs() {
+  echo ""
+  echo "=== Adapter Log ==="
+  cat /tmp/adapter.log 2>/dev/null || echo "No adapter log"
+  echo ""
+  echo "=== Logcat (ReactNativeJS) ==="
+  adb logcat -d -s ReactNativeJS:* 2>/dev/null | tail -200 || echo "No logcat available"
+  echo ""
+  echo "=== Logcat (recent errors) ==="
+  adb logcat -d '*:E' 2>/dev/null | tail -50 || echo "No logcat available"
+}
+trap dump_logs EXIT
+
+set -e
 
 # Set up port forwarding
 adb reverse tcp:8001 tcp:8001
@@ -11,12 +29,13 @@ adb reverse tcp:8112 tcp:8112
 
 # Install and launch the APK
 APK_DIR="$REPO_ROOT/packages/sdk/react-native/contract-tests/entity/android/app/build/outputs/apk"
-if [ -f "$APK_DIR/debug/app-debug.apk" ]; then
-  adb install "$APK_DIR/debug/app-debug.apk"
-elif [ -f "$APK_DIR/release/app-release.apk" ]; then
+if [ -f "$APK_DIR/release/app-release.apk" ]; then
   adb install "$APK_DIR/release/app-release.apk"
+elif [ -f "$APK_DIR/debug/app-debug.apk" ]; then
+  adb install "$APK_DIR/debug/app-debug.apk"
 else
   echo "ERROR: No APK found in $APK_DIR"
+  ls -R "$APK_DIR" 2>/dev/null || true
   exit 1
 fi
 adb shell am start -n com.launchdarkly.rncontracttestentity/.MainActivity
@@ -32,8 +51,6 @@ while [ "$i" -lt 30 ]; do
   fi
   if [ "$i" -eq 30 ]; then
     echo "Timeout waiting for test service"
-    cat /tmp/adapter.log || true
-    adb logcat -d -s ReactNativeJS:* | tail -100 || true
     exit 1
   fi
   sleep 2

@@ -55,9 +55,9 @@ jobs:
           java-version: 17
           cache: 'gradle'
 
-      - name: Build debug APK (x86_64 only for emulator)
+      - name: Build APK (x86_64 only for emulator)
         working-directory: packages/sdk/react-native/contract-tests/entity/android
-        run: ./gradlew assembleDebug -PreactNativeArchitectures=x86_64
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 -x lintVitalAnalyzeRelease -x lintVitalReportRelease
 
       - name: Make space for the emulator
         # https://github.com/jlumbroso/free-disk-space/releases/tag/main
@@ -101,14 +101,6 @@ jobs:
           arch: x86_64
           avd-name: contract_test_emulator
           script: packages/sdk/react-native/contract-tests/run-ci-contract-tests.sh
-
-      - name: Print logs on failure
-        if: failure()
-        run: |
-          echo "=== Adapter Log ==="
-          cat /tmp/adapter.log || echo "No adapter log"
-          echo "=== Logcat ==="
-          adb logcat -d -s ReactNativeJS:* 2>/dev/null | tail -200 || echo "No logcat available"
 
       - name: Cleanup
         if: always()
