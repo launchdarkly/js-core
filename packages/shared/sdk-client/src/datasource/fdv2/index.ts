@@ -28,6 +28,7 @@ export {
 export type { Initializer } from './Initializer';
 export type { Synchronizer } from './Synchronizer';
 
+export { calculatePollDelay } from './calculatePollDelay';
 export { poll } from './PollingBase';
 export { createPollingInitializer } from './PollingInitializer';
 export { createPollingSynchronizer } from './PollingSynchronizer';

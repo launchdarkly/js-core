@@ -66,6 +66,13 @@ export interface FlagManager {
   off(callback: FlagsChangeCallback): void;
 
   /**
+   * Returns the freshness timestamp for the given context, or `undefined`
+   * if no freshness data exists or the context attributes have changed
+   * since freshness was last recorded.
+   */
+  getFreshness(context: Context): Promise<number | undefined>;
+
+  /**
    * Obtain debug override functions that allows plugins
    * to manipulate the outcome of the flags managed by
    * this manager
@@ -210,6 +217,10 @@ export default class DefaultFlagManager implements FlagManager {
 
   async loadCached(context: Context): Promise<boolean> {
     return (await this._flagPersistencePromise).loadCached(context);
+  }
+
+  async getFreshness(context: Context): Promise<number | undefined> {
+    return (await this._flagPersistencePromise).getFreshness(context);
   }
 
   on(callback: FlagsChangeCallback): void {
