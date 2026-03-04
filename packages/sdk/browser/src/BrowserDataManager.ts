@@ -29,7 +29,6 @@ export default class BrowserDataManager extends BaseDataManager {
   private _forcedStreaming?: boolean = undefined;
   private _automaticStreamingState: boolean = false;
   private _secureModeHash?: string;
-  private _streamingContextKey?: string;
 
   // +-----------+-----------+---------------+
   // |  forced   | automatic |     state     |
@@ -103,6 +102,7 @@ export default class BrowserDataManager extends BaseDataManager {
 
       await this._finishIdentifyFromPoll(context, identifyResolve, identifyReject);
     }
+    this._stopDataSource();
     this._updateStreamingState();
   }
 
@@ -232,11 +232,10 @@ export default class BrowserDataManager extends BaseDataManager {
     }
     this.updateProcessor?.close();
     this.updateProcessor = undefined;
-    this._streamingContextKey = undefined;
   }
 
   private _startDataSource() {
-    if (this.updateProcessor && this._streamingContextKey === this.context?.canonicalKey) {
+    if (this.updateProcessor) {
       this._debugLog('Update processor already active. Not changing state.');
       return;
     }
@@ -247,7 +246,6 @@ export default class BrowserDataManager extends BaseDataManager {
     }
 
     this._debugLog('Starting update processor.');
-    this._streamingContextKey = this.context.canonicalKey;
     this._setupConnection(this.context);
   }
 
