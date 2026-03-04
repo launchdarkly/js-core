@@ -1,0 +1,146 @@
+name: sdk/react-native/contract-tests
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches: [main, 'feat/**']
+    paths:
+      - 'packages/shared/common/**'
+      - 'packages/shared/sdk-client/**'
+      - 'packages/sdk/react-native/**'
+      - '.github/workflows/react-native-contract-tests.yml'
+
+jobs:
+  contract-tests-android:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: yarn workspaces focus react-native-contract-test-adapter react-native-contract-test-entity
+
+      - name: Build SDK and dependencies
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-client-sdk' run build
+
+      - name: Build contract test adapter
+        run: yarn workspace react-native-contract-test-adapter run build
+
+      - name: Enable KVM group perms (for emulator performance)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Expo Prebuild
+        working-directory: packages/sdk/react-native/contract-tests/entity
+        run: npx expo prebuild --platform android
+
+      # Java setup is after expo prebuild so that it can locate the gradle configuration.
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: 'gradle'
+
+      - name: Build release APK
+        working-directory: packages/sdk/react-native/contract-tests/entity/android
+        run: ./gradlew assembleRelease
+
+      - name: Make space for the emulator
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: false
+          large-packages: false
+
+      - name: Start adapter in background
+        run: |
+          yarn workspace react-native-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          echo $! > /tmp/adapter.pid
+
+      - name: Wait for adapter to be ready
+        run: |
+          echo "Waiting for adapter on port 8001..."
+          for i in {1..30}; do
+            if nc -z localhost 8001; then
+              echo "Adapter WebSocket ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for adapter"
+              cat /tmp/adapter.log
+              exit 1
+            fi
+            sleep 1
+          done
+
+      - name: Download contract test harness
+        run: |
+          curl -sL -o sdk-test-harness.tar.gz "https://github.com/launchdarkly/sdk-test-harness/releases/latest/download/sdk-test-harness_Linux_x86_64.tar.gz"
+          tar -xzf sdk-test-harness.tar.gz sdk-test-harness
+          chmod +x sdk-test-harness
+
+      - name: Run contract tests on Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          arch: x86_64
+          avd-name: contract_test_emulator
+          script: |
+            # Set up port forwarding
+            adb reverse tcp:8001 tcp:8001
+            adb reverse tcp:8111 tcp:8111
+            adb reverse tcp:8112 tcp:8112
+
+            # Install and launch the APK
+            adb install packages/sdk/react-native/contract-tests/entity/android/app/build/outputs/apk/release/app-release.apk
+            adb shell am start -n com.launchdarkly.rncontracttestentity/.MainActivity
+
+            # Wait for the app to connect to WebSocket
+            echo "Waiting for app to connect..."
+            for i in {1..30}; do
+              if curl -s http://localhost:8000 > /dev/null 2>&1; then
+                echo "Test service ready"
+                break
+              fi
+              if [ $i -eq 30 ]; then
+                echo "Timeout waiting for test service"
+                cat /tmp/adapter.log
+                adb logcat -d -s ReactNativeJS:* | tail -100
+                exit 1
+              fi
+              sleep 2
+            done
+
+            # Run the contract test harness
+            SUPPRESSIONS_FILE="${{ github.workspace }}/packages/sdk/react-native/contract-tests/suppressions.txt"
+            EXTRA_ARGS=""
+            if [ -s "$SUPPRESSIONS_FILE" ]; then
+              EXTRA_ARGS="--skip-from=$SUPPRESSIONS_FILE"
+            fi
+
+            ./sdk-test-harness \
+              -url http://localhost:8000 \
+              -debug \
+              $EXTRA_ARGS
+
+      - name: Print logs on failure
+        if: failure()
+        run: |
+          echo "=== Adapter Log ==="
+          cat /tmp/adapter.log || echo "No adapter log"
+          echo "=== Logcat ==="
+          adb logcat -d -s ReactNativeJS:* 2>/dev/null | tail -200 || echo "No logcat available"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true
