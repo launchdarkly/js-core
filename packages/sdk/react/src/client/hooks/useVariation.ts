@@ -5,12 +5,12 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import type { LDReactClient, LDReactClientContextValue } from '../LDClient';
 import { LDReactContext } from '../provider/LDReactContext';
 
-function useVariationCore<T>(
+export function useVariationCore<T, R = T>(
   key: string,
   defaultValue: T,
-  evaluate: (client: LDReactClient, key: string, defaultValue: T) => T,
+  evaluate: (client: LDReactClient, key: string, defaultValue: T) => R,
   reactContext?: React.Context<LDReactClientContextValue>,
-): T {
+): R {
   const { client, context } = useContext(reactContext ?? LDReactContext);
 
   // Using refs here to capture the latest defaultValue and evaluate function
@@ -20,7 +20,7 @@ function useVariationCore<T>(
   const evaluateRef = useRef(evaluate);
   evaluateRef.current = evaluate;
 
-  const [value, setValue] = useState<T>(() => evaluate(client, key, defaultValue));
+  const [value, setValue] = useState<R>(() => evaluate(client, key, defaultValue));
 
   useEffect(() => {
     // Captures the initial value if the flag key or context changes.

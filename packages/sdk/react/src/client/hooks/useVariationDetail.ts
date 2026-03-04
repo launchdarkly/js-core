@@ -1,41 +1,9 @@
 'use client';
 
-import { useContext, useEffect, useRef, useState } from 'react';
-
 import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
-import type { LDReactClient, LDReactClientContextValue } from '../LDClient';
-import { LDReactContext } from '../provider/LDReactContext';
-
-function useVariationDetailCore<T>(
-  key: string,
-  defaultValue: T,
-  evaluate: (client: LDReactClient, key: string, defaultValue: T) => LDEvaluationDetailTyped<T>,
-  reactContext?: React.Context<LDReactClientContextValue>,
-): LDEvaluationDetailTyped<T> {
-  const { client, context } = useContext(reactContext ?? LDReactContext);
-
-  // Using refs here to capture the latest defaultValue and evaluate function
-  // without making them dependencies of the effect.
-  const defaultValueRef = useRef(defaultValue);
-  defaultValueRef.current = defaultValue;
-  const evaluateRef = useRef(evaluate);
-  evaluateRef.current = evaluate;
-
-  const [detail, setDetail] = useState<LDEvaluationDetailTyped<T>>(() =>
-    evaluate(client, key, defaultValue),
-  );
-
-  useEffect(() => {
-    // Captures the initial value if the flag key or context changes.
-    setDetail(evaluateRef.current(client, key, defaultValueRef.current));
-    const handler = () => setDetail(evaluateRef.current(client, key, defaultValueRef.current));
-    client.on(`change:${key}`, handler);
-    return () => client.off(`change:${key}`, handler);
-  }, [client, key, context]);
-
-  return detail;
-}
+import type { LDReactClientContextValue } from '../LDClient';
+import { useVariationCore } from './useVariation';
 
 /**
  * Returns the boolean variation and evaluation detail of a feature flag, re-rendering only when
@@ -51,7 +19,7 @@ export function useBoolVariationDetail(
   defaultValue: boolean,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<boolean> {
-  return useVariationDetailCore(
+  return useVariationCore<boolean, LDEvaluationDetailTyped<boolean>>(
     key,
     defaultValue,
     (client, k, def) => client.boolVariationDetail(k, def),
@@ -73,7 +41,7 @@ export function useStringVariationDetail(
   defaultValue: string,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<string> {
-  return useVariationDetailCore(
+  return useVariationCore<string, LDEvaluationDetailTyped<string>>(
     key,
     defaultValue,
     (client, k, def) => client.stringVariationDetail(k, def),
@@ -95,7 +63,7 @@ export function useNumberVariationDetail(
   defaultValue: number,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<number> {
-  return useVariationDetailCore(
+  return useVariationCore<number, LDEvaluationDetailTyped<number>>(
     key,
     defaultValue,
     (client, k, def) => client.numberVariationDetail(k, def),
@@ -117,7 +85,7 @@ export function useJsonVariationDetail<T = unknown>(
   defaultValue: T,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): LDEvaluationDetailTyped<T> {
-  return useVariationDetailCore(
+  return useVariationCore<T, LDEvaluationDetailTyped<T>>(
     key,
     defaultValue,
     (client, k, def) => client.jsonVariationDetail(k, def) as LDEvaluationDetailTyped<T>,
