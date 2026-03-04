@@ -49,7 +49,7 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .yarn/cache
-          key: yarn-${{ hashFiles('yarn.lock') }}
+          key: yarn-${{ hashFiles('**/package.json') }}
           restore-keys: |
             yarn-
 
@@ -68,9 +68,9 @@ jobs:
       - name: Create .env file.
         run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
 
-      - name: Cache Expo Prebuild
+      - name: Restore Expo Prebuild cache
         id: expo-prebuild-cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: packages/sdk/react-native/example/android
           key: expo-prebuild-android-${{ hashFiles('packages/sdk/react-native/example/app.json', 'packages/sdk/react-native/example/package.json') }}
@@ -90,12 +90,14 @@ jobs:
 
       - name: Optimize Gradle build
         run: |
-          echo "" >> android/gradle.properties
-          echo "# CI build optimizations" >> android/gradle.properties
-          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" >> android/gradle.properties
-          echo "org.gradle.parallel=true" >> android/gradle.properties
-          echo "org.gradle.caching=true" >> android/gradle.properties
-          echo "org.gradle.configureondemand=true" >> android/gradle.properties
+          if ! grep -q '# CI build optimizations' android/gradle.properties 2>/dev/null; then
+            echo "" >> android/gradle.properties
+            echo "# CI build optimizations" >> android/gradle.properties
+            echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" >> android/gradle.properties
+            echo "org.gradle.parallel=true" >> android/gradle.properties
+            echo "org.gradle.caching=true" >> android/gradle.properties
+            echo "org.gradle.configureondemand=true" >> android/gradle.properties
+          fi
 
       - name: Detox build
         run: yarn detox build --configuration android.emu.release
@@ -112,6 +114,13 @@ jobs:
           avd-name: ${{ steps.device.outputs.AVD_NAME }}
           working-directory: packages/sdk/react-native/example
           script: yarn detox test --configuration android.emu.release --headless --record-logs all
+
+      - name: Save Expo Prebuild cache
+        if: always() && steps.expo-prebuild-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: packages/sdk/react-native/example/android
+          key: expo-prebuild-android-${{ hashFiles('packages/sdk/react-native/example/app.json', 'packages/sdk/react-native/example/package.json') }}
 
       - name: Upload artifacts
         if: always()
