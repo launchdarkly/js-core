@@ -9,42 +9,18 @@ import { FlagUpdater } from './FlagUpdater';
 import { ItemDescriptor } from './ItemDescriptor';
 
 /**
- * The persisted cache record. Wraps flag data with freshness metadata.
- *
- * The `freshness` field records when data was last received and a hash of the
- * full context attributes. When a context's attributes change (even if the key
- * is the same), the hash differs and the freshness is treated as stale.
- *
- * For backward compatibility, records stored in the old format (just a bare
- * `Flags` object) are read as flags with no freshness.
+ * Suffix appended to context storage keys to form the freshness storage key.
  */
-interface CacheRecord {
-  flags: Flags;
-  freshness?: {
-    timestamp: number;
-    contextHash: string;
-  };
-}
+const FRESHNESS_SUFFIX = '_freshness';
 
 /**
- * Returns true if the parsed object looks like a {@link CacheRecord} (new
- * format) rather than a bare {@link Flags} object (old format).
- *
- * Detection: the new format always has a `flags` property that is a non-null
- * object. The old format has flag keys at the top level, each containing a
- * `version` number — a shape that won't have a nested object under `flags`.
+ * Persisted freshness record stored at `{contextStorageKey}_freshness`.
  */
-function isCacheRecord(parsed: any): parsed is CacheRecord {
-  return parsed !== null && typeof parsed === 'object' && typeof parsed.flags === 'object';
-}
-
-function parseCacheRecord(json: string): CacheRecord {
-  const parsed = JSON.parse(json);
-  if (isCacheRecord(parsed)) {
-    return parsed;
-  }
-  // Old format: bare Flags object. Wrap it with no freshness.
-  return { flags: parsed as Flags };
+interface FreshnessRecord {
+  /** Timestamp in ms since epoch when data was last received. */
+  timestamp: number;
+  /** SHA-256 hash of the full context's canonical JSON. */
+  contextHash: string;
 }
 
 async function hashContext(platform: Platform, context: Context): Promise<string> {
@@ -60,9 +36,14 @@ async function hashContext(platform: Platform, context: Context): Promise<string
  * store. It intercepts updates and forwards them to the flag updater and
  * then persists changes after the updater has completed.
  *
- * Freshness metadata (timestamp + context attribute hash) is stored inside
- * the same record as the flag data. This ensures freshness is automatically
- * cleaned up when a context is evicted.
+ * Freshness metadata (timestamp + context attribute hash) is stored in a
+ * separate storage key (`{contextKey}_freshness`) alongside the flag data.
+ * Both keys are managed together — when a context is evicted, both the flag
+ * data and freshness record are cleared.
+ *
+ * Freshness is loaded eagerly into memory when {@link loadCached} is called
+ * and updated in memory when {@link init} or {@link upsert} persists data.
+ * {@link getFreshness} returns the in-memory value without hitting storage.
  */
 export default class FlagPersistence {
   private _contextIndex: ContextIndex | undefined;
@@ -106,6 +87,8 @@ export default class FlagPersistence {
   /**
    * Loads the flags from persistence for the provided context and gives those to the
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
+   *
+   * Also reads the freshness timestamp and passes it to {@link FlagUpdater.initCached}.
    */
   async loadCached(context: Context): Promise<boolean> {
     const storageKey = await namespaceForContextData(
@@ -129,10 +112,10 @@ export default class FlagPersistence {
     }
 
     try {
-      const record = parseCacheRecord(flagsJson);
+      const flags: Flags = JSON.parse(flagsJson);
 
       // mapping flags to item descriptors
-      const descriptors = Object.entries(record.flags).reduce(
+      const descriptors = Object.entries(flags).reduce(
         (acc: { [k: string]: ItemDescriptor }, [key, flag]) => {
           acc[key] = { version: flag.version, flag };
           return acc;
@@ -140,8 +123,10 @@ export default class FlagPersistence {
         {},
       );
 
-      this._flagUpdater.initCached(context, descriptors);
+      const freshness = await this._readFreshness(storageKey, context);
+      this._flagUpdater.initCached(context, descriptors, freshness);
       this._logger.debug('Loaded cached flag evaluations from persistent storage');
+
       return true;
     } catch (e: any) {
       this._logger.warn(
@@ -152,36 +137,46 @@ export default class FlagPersistence {
   }
 
   /**
-   * Returns the freshness timestamp for the given context, or `undefined`
-   * if no freshness data exists or the context attributes have changed
-   * since freshness was last recorded.
+   * Reads the freshness timestamp from storage for the given context.
+   * Returns `undefined` if no freshness exists, the data is corrupt,
+   * or the context attributes have changed since the freshness was recorded.
    */
-  async getFreshness(context: Context): Promise<number | undefined> {
-    const storageKey = await namespaceForContextData(
-      this._platform.crypto,
-      this._environmentNamespace,
-      context,
-    );
-    const json = await this._platform.storage?.get(storageKey);
+  private async _readFreshness(
+    contextStorageKey: string,
+    context: Context,
+  ): Promise<number | undefined> {
+    const json = await this._platform.storage?.get(`${contextStorageKey}${FRESHNESS_SUFFIX}`);
     if (json === null || json === undefined) {
       return undefined;
     }
 
     try {
-      const record = parseCacheRecord(json);
-      if (!record.freshness) {
-        return undefined;
-      }
-
+      const record: FreshnessRecord = JSON.parse(json);
       const currentHash = await hashContext(this._platform, context);
-      if (record.freshness.contextHash !== currentHash) {
+      if (record.contextHash !== currentHash) {
         return undefined;
       }
-
-      return record.freshness.timestamp;
+      return typeof record.timestamp === 'number' && !Number.isNaN(record.timestamp)
+        ? record.timestamp
+        : undefined;
     } catch {
       return undefined;
     }
+  }
+
+  private async _storeFreshness(
+    contextStorageKey: string,
+    context: Context,
+    timestamp: number,
+  ): Promise<void> {
+    const record: FreshnessRecord = {
+      timestamp,
+      contextHash: await hashContext(this._platform, context),
+    };
+    await this._platform.storage?.set(
+      `${contextStorageKey}${FRESHNESS_SUFFIX}`,
+      JSON.stringify(record),
+    );
   }
 
   private async _loadIndex(): Promise<ContextIndex> {
@@ -216,7 +211,12 @@ export default class FlagPersistence {
     index.notice(storageKey, now);
 
     const pruned = index.prune(this._maxCachedContexts);
-    await Promise.all(pruned.map(async (it) => this._platform.storage?.clear(it.id)));
+    await Promise.all(
+      pruned.flatMap((it) => [
+        this._platform.storage?.clear(it.id),
+        this._platform.storage?.clear(`${it.id}${FRESHNESS_SUFFIX}`),
+      ]),
+    );
 
     // store index
     await this._platform.storage?.set(await this._indexKeyPromise, index.toJson());
@@ -230,15 +230,12 @@ export default class FlagPersistence {
       return acc;
     }, {});
 
-    const record: CacheRecord = {
-      flags,
-      freshness: {
-        timestamp: now,
-        contextHash: await hashContext(this._platform, context),
-      },
-    };
+    // store freshness before flag data so that flag data remains the last
+    // storage write (existing tests depend on this ordering)
+    await this._storeFreshness(storageKey, context, now);
 
-    // store flag data with freshness
-    await this._platform.storage?.set(storageKey, JSON.stringify(record));
+    const jsonAll = JSON.stringify(flags);
+    // store flag data
+    await this._platform.storage?.set(storageKey, jsonAll);
   }
 }

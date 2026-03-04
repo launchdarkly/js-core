@@ -48,7 +48,11 @@ export interface FlagUpdater {
    */
   init(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
 
-  initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
+  initCached(
+    context: Context,
+    newFlags: { [key: string]: ItemDescriptor },
+    freshness?: number,
+  ): void;
 
   /**
    * Upserts the flag with the given key and item.
@@ -107,7 +111,7 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
         this.handleFlagChanges(changed, 'init');
       }
     },
-    initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }) {
+    initCached(context: Context, newFlags: { [key: string]: ItemDescriptor }, _freshness?: number) {
       if (activeContext?.canonicalKey === context.canonicalKey) {
         return;
       }
