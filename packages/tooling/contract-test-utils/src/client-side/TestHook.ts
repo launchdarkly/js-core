@@ -5,7 +5,7 @@ import {
   HookMetadata,
   LDEvaluationDetail,
   TrackSeriesContext,
-} from '@launchdarkly/js-client-sdk';
+} from '@launchdarkly/js-client-sdk-common';
 
 export interface HookData {
   beforeEvaluation?: Record<string, unknown>;

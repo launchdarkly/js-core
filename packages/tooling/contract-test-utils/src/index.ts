@@ -13,6 +13,7 @@ export {
   type SDKConfigEvaluationHookData,
   type SDKConfigHookInstance,
   type SDKConfigHooksParams,
+  type SDKConfigProxyParams,
   type SDKConfigWrapper,
   type HookStage as ConfigHookStage,
 } from './types/ConfigParams.js';

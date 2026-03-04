@@ -1,6 +1,6 @@
+import { CommandParams, CreateInstanceParams } from '@launchdarkly/js-contract-test-utils';
+
 import { ClientEntity, createEntity } from './ClientEntity';
-import { CommandParams } from './CommandParams';
-import { CreateInstanceParams } from './ConfigParams';
 
 export default class ClientFactory {
   private _clientCounter = 0;
