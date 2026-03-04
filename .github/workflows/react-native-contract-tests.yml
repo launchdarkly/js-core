@@ -16,6 +16,7 @@ on:
 jobs:
   contract-tests-android:
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     steps:
       # https://github.com/actions/checkout/releases/tag/v6.0.2
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -73,12 +74,12 @@ jobs:
       - name: Wait for adapter to be ready
         run: |
           echo "Waiting for adapter on port 8001..."
-          for i in {1..30}; do
+          for i in $(seq 1 30); do
             if nc -z localhost 8001; then
               echo "Adapter WebSocket ready"
               break
             fi
-            if [ $i -eq 30 ]; then
+            if [ "$i" -eq 30 ]; then
               echo "Timeout waiting for adapter"
               cat /tmp/adapter.log
               exit 1
@@ -111,12 +112,12 @@ jobs:
 
             # Wait for the app to connect to WebSocket
             echo "Waiting for app to connect..."
-            for i in {1..30}; do
+            for i in $(seq 1 30); do
               if curl -s http://localhost:8000 > /dev/null 2>&1; then
                 echo "Test service ready"
                 break
               fi
-              if [ $i -eq 30 ]; then
+              if [ "$i" -eq 30 ]; then
                 echo "Timeout waiting for test service"
                 cat /tmp/adapter.log
                 adb logcat -d -s ReactNativeJS:* | tail -100
