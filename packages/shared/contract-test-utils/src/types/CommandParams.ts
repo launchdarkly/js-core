@@ -1,4 +1,4 @@
-import { LDContext, LDEvaluationReason } from '@launchdarkly/js-client-sdk';
+import { LDContext, LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 export enum CommandType {
   EvaluateFlag = 'evaluate',

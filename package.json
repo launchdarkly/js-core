@@ -52,7 +52,8 @@
     "packages/sdk/shopify-oxygen",
     "packages/sdk/shopify-oxygen/contract-tests",
     "packages/sdk/shopify-oxygen/example",
-    "packages/sdk/browser/example"
+    "packages/sdk/browser/example",
+    "packages/shared/contract-test-utils"
   ],
   "private": true,
   "scripts": {

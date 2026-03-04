@@ -11,6 +11,7 @@
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
+    "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/js-server-sdk-common": "workspace:^",
     "@launchdarkly/shopify-oxygen-sdk": "workspace:^",
     "express": "^5.0.1"
