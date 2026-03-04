@@ -94,12 +94,12 @@ jobs:
           Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
       - name: Install Playwright dependencies
         run: yarn workspace @internal/electron-example playwright install --with-deps chromium
-      - uses: launchdarkly/gh-actions/actions/release-secrets@e60b23a1bae78ec7c4b1886c41767bb64183aaec # release-secrets-v1.2.0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c # release-secrets-v1.2.0
         name: 'Get the mobile SDK key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
-      - uses: launchdarkly/gh-actions/actions/release-secrets@b53d0aff96502313ccadc2ca5a35fb4c7d027fee # release-secrets-v1.2.0
+      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c # release-secrets-v1.2.0
         name: 'Get the test feature flag key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN  }}
