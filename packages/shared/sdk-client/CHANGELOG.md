@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.21.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.20.0...js-client-sdk-common-v1.21.0) (2026-03-04)
+
+
+### Features
+
+* Add fdv2 mode configuration types and validation. ([#1135](https://github.com/launchdarkly/js-core/issues/1135)) ([6ee156c](https://github.com/launchdarkly/js-core/commit/6ee156c4e7055266d5e9d81afb43f4dd7d85f02d))
+* Add FDv2 polling initializer/synchronizer ([#1130](https://github.com/launchdarkly/js-core/issues/1130)) ([6777fc6](https://github.com/launchdarkly/js-core/commit/6777fc6f7b501dd0547f6eb7cd8e0f26c72aad9d))
+* Add FDv2 State Debouncer ([#1148](https://github.com/launchdarkly/js-core/issues/1148)) ([da3f72e](https://github.com/launchdarkly/js-core/commit/da3f72e2da800953582311fa640b7a63f166a35d))
+* Add FDv2 streaming initializer/synchronizer ([#1131](https://github.com/launchdarkly/js-core/issues/1131)) ([6602bbc](https://github.com/launchdarkly/js-core/commit/6602bbc54ddb40ce9a2a3af7722a204d813144ed))
+* Add FDv2DataSource composite data source orchestrator ([#1141](https://github.com/launchdarkly/js-core/issues/1141)) ([f02ae5a](https://github.com/launchdarkly/js-core/commit/f02ae5a3189d73022fb81221d532e95659da9f01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.22.0 to 2.23.0
+
 ## [1.20.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.19.1...js-client-sdk-common-v1.20.0) (2026-02-25)
 
 

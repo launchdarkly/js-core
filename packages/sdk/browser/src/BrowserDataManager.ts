@@ -102,6 +102,7 @@ export default class BrowserDataManager extends BaseDataManager {
 
       await this._finishIdentifyFromPoll(context, identifyResolve, identifyReject);
     }
+    this._stopDataSource();
     this._updateStreamingState();
   }
 

@@ -460,6 +460,24 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     );
   });
 
+  it('restarts the stream when identify is called with a new context', async () => {
+    const context1 = Context.fromLDContext({ kind: 'user', key: 'user-1' });
+    const context2 = Context.fromLDContext({ kind: 'user', key: 'user-2' });
+    const identifyOptions: BrowserIdentifyOptions = {};
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    dataManager.setAutomaticStreamingState(true);
+
+    await dataManager.identify(identifyResolve, identifyReject, context1, identifyOptions);
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+
+    await dataManager.identify(identifyResolve, identifyReject, context2, identifyOptions);
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(2);
+  });
+
   it('does not start a stream if identify has not been called', async () => {
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
     dataManager.setForcedStreaming(true);

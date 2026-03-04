@@ -12,3 +12,11 @@ export type {
   AutomaticModeSwitchingConfig,
   PlatformDataSystemDefaults,
 } from './LDClientDataSystemOptions';
+export type {
+  LifecycleState,
+  ModeState,
+  ConfiguredMode,
+  ModeResolution,
+  ModeResolutionEntry,
+  ModeResolutionTable,
+} from './ModeResolution';
