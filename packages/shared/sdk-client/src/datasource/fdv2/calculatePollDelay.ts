@@ -23,5 +23,7 @@ export function calculatePollDelay(
     return 0;
   }
   const elapsed = now - freshness;
-  return Math.max(0, pollIntervalMs - elapsed);
+  // Clamp to [0, pollIntervalMs] to guard against future timestamps
+  // (e.g., clock skew or corrupt data).
+  return Math.max(0, Math.min(pollIntervalMs, pollIntervalMs - elapsed));
 }

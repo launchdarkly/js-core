@@ -22,4 +22,14 @@ describe('calculatePollDelay', () => {
   it('returns full interval when freshness equals now', () => {
     expect(calculatePollDelay(5000, 60000, 5000)).toBe(60000);
   });
+
+  it('clamps to poll interval when freshness is in the future', () => {
+    // Freshness at 10000, now at 5000 (clock skew) → clamp to interval
+    expect(calculatePollDelay(10000, 2000, 5000)).toBe(2000);
+  });
+
+  it('clamps to poll interval when freshness is slightly in the future', () => {
+    // Freshness 1ms ahead of now
+    expect(calculatePollDelay(5001, 60000, 5000)).toBe(60000);
+  });
 });
