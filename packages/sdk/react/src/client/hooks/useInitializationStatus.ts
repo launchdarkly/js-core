@@ -26,12 +26,6 @@ export type InitializationStatus =
 /**
  * Returns the initialization status of the LaunchDarkly client.
  *
- * @privateRemarks
- * This hooks is not completed yet. Right now it will work because context updates will cause a re-evaluation
- * of the initialization status. However, I think we should still add a way to subscribe to initialization status changes.
- * This could cause some marginal performance overhead, but state updates should be batched so should not be a problem.
- * Any feedback on this is welcome.
- *
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns An {@link InitializationStatus} object with the current state (and error, if failed).
  */

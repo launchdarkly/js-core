@@ -1,6 +1,11 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 
-import { LDContext, useBoolVariation, useInitializationStatus, useLDClient } from '@launchdarkly/react-sdk';
+import {
+  LDContext,
+  useBoolVariation,
+  useInitializationStatus,
+  useLDClient,
+} from '@launchdarkly/react-sdk';
 
 import './App.css';
 

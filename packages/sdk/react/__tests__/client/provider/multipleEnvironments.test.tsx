@@ -5,8 +5,8 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 
 import { useInitializationStatus } from '../../../src/client/hooks/useInitializationStatus';
-import { useBoolVariation } from '../../../src/client/hooks/useVariation';
 import { useLDClient } from '../../../src/client/hooks/useLDClient';
+import { useBoolVariation } from '../../../src/client/hooks/useVariation';
 import { LDReactClient } from '../../../src/client/LDClient';
 import { initLDReactContext } from '../../../src/client/provider/LDReactContext';
 import { createLDReactProviderWithClient } from '../../../src/client/provider/LDReactProvider';

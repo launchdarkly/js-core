@@ -69,8 +69,7 @@ const LDProvider = await asyncWithLDProvider({ clientSideID: 'your-id' });
 root.render(<LDProvider><App /></LDProvider>);
 
 // After — provider renders immediately; gate your UI with useInitializationStatus
-const client = createClient('your-client-side-id', { kind: 'user', key: 'user-key' });
-const LDProvider = createLDReactProvider(client);
+const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', key: 'user-key' });
 
 function App() {
   const { status, error } = useInitializationStatus();
@@ -84,9 +83,52 @@ root.render(<LDProvider><App /></LDProvider>);
 
 ---
 
-### `useFlag` — new hook (no equivalent in v3)
+### `useBoolVariation` / `useStringVariation` / `useNumberVariation` / `useJsonVariation`
 
-A new typed single-flag hook that re-renders only when that specific flag changes:
+Typed single-flag hooks that re-render only when that specific flag changes. These are the
+recommended hooks for evaluating individual flags — explicitly typed, with no generic type
+parameter needed. The naming convention aligns with the LaunchDarkly React Native SDK and other
+LaunchDarkly SDKs, making the API consistent across platforms.
+
+```ts
+import {
+  useBoolVariation,
+  useStringVariation,
+  useNumberVariation,
+  useJsonVariation,
+} from '@launchdarkly/react-sdk';
+
+const showNewFeature = useBoolVariation('show-new-feature', false);
+const theme          = useStringVariation('ui-theme', 'light');
+const maxItems       = useNumberVariation('max-items', 10);
+const config         = useJsonVariation('my-config', {});
+```
+
+Each hook is more efficient than `useFlags()` when you only care about one flag, because it
+subscribes to `change:<key>` instead of the broad `change` event.
+
+---
+
+### `useBoolVariationDetail` / `useStringVariationDetail` / `useNumberVariationDetail` / `useJsonVariationDetail`
+
+Typed single-flag hooks that return the full evaluation detail (`value`, `variationIndex`,
+`reason`), re-rendering only when that specific flag changes:
+
+```ts
+import { useBoolVariationDetail } from '@launchdarkly/react-sdk';
+
+const { value, variationIndex, reason } = useBoolVariationDetail('show-new-feature', false);
+```
+
+Use these when you need the evaluation reason (e.g. to understand why a flag returned a particular
+value) without subscribing to every flag change.
+
+---
+
+### `useFlag` — deprecated
+
+> **Deprecated.** Use `useBoolVariation`, `useStringVariation`, `useNumberVariation`, or
+> `useJsonVariation` instead. This hook will be removed in a future major version.
 
 ```ts
 import { useFlag } from '@launchdarkly/react-sdk';
@@ -95,15 +137,13 @@ const showNewFeature = useFlag<boolean>('show-new-feature', false);
 const maxItems = useFlag<number>('max-items', 10);
 ```
 
-This is more efficient than `useFlags()` when you only care about one flag, because it subscribes
-to `change:<key>` instead of the broad `change` event.
-
 ---
 
-### `useFlagDetail` — new hook (no equivalent in v3)
+### `useFlagDetail` — deprecated
 
-Returns the full evaluation detail (`value`, `variationIndex`, `reason`) for a single flag, also
-re-rendering only when that specific flag changes:
+> **Deprecated.** Use `useBoolVariationDetail`, `useStringVariationDetail`,
+> `useNumberVariationDetail`, or `useJsonVariationDetail` instead. This hook will be removed in a
+> future major version.
 
 ```ts
 import { useFlagDetail } from '@launchdarkly/react-sdk';
@@ -111,8 +151,12 @@ import { useFlagDetail } from '@launchdarkly/react-sdk';
 const { value, variationIndex, reason } = useFlagDetail<boolean>('show-new-feature', false);
 ```
 
-Use this when you need the evaluation reason (e.g. to understand why a flag returned a particular
-value) without subscribing to every flag change.
+---
+
+### `useFlags` — deprecated
+
+> **Deprecated.** Use individual typed variation hooks (`useBoolVariation`, etc.) or `useLDClient`
+> instead. This hook will be removed in a future major version.
 
 ---
 
@@ -122,20 +166,20 @@ value) without subscribing to every flag change.
 
 The old SDK provided Higher-Order Components (HOCs) to wrap your app.
 
-### New SDK: `createLDReactProvider`
+### New SDK: `createLDReactProvider` / `createLDReactProviderWithClient`
 
-The new SDK uses a factory function that returns a React component. There are no HOCs.
+The new SDK uses factory functions that return a React component. There are no HOCs.
+
+**Convenience factory (recommended):**
 
 ```tsx
 // Before
 import { withLDProvider } from 'launchdarkly-react-client-sdk';
-export default withLDProvider({ clientSideID: 'your-id' })(App);
+export default withLDProvider({ clientSideID: 'your-id', context: { kind: 'user', key: 'user-key' } })(App);
 
-// After
-import { createClient, createLDReactProvider } from '@launchdarkly/react-sdk';
-
-const client = createClient('your-client-side-id', { kind: 'user', key: 'user-key' });
-const LDProvider = createLDReactProvider(client);
+// After — convenience factory (creates the client internally, auto-starts by default)
+import { createLDReactProvider } from '@launchdarkly/react-sdk';
+const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', key: 'user-key' });
 
 function Root() {
   return (
@@ -146,8 +190,34 @@ function Root() {
 }
 ```
 
-The provider automatically calls `client.start()` on mount and updates React state when
-initialization completes or when `client.identify()` is called.
+**Low-level API (when you need the client instance directly):**
+
+```tsx
+// If you need to hold a reference to the client before mounting:
+import { createClient, createLDReactProviderWithClient } from '@launchdarkly/react-sdk';
+
+const client = createClient('your-client-side-id', { kind: 'user', key: 'user-key' });
+client.start(); // you are responsible for calling start()
+const LDProvider = createLDReactProviderWithClient(client);
+```
+
+`createLDReactProvider` calls `client.start()` before the provider mounts and updates React
+state when initialization completes or when `client.identify()` is called.
+`createLDReactProviderWithClient` does NOT auto-start — the caller owns the client lifecycle.
+
+---
+
+## `deferInitialization`
+
+| | Old SDK (`launchdarkly-react-client-sdk` v3) | New SDK (`@launchdarkly/react-sdk`) |
+|---|---|---|
+| Option location | `withLDProvider({ deferInitialization })` | `createLDReactProvider(id, ctx, { deferInitialization })` |
+| Default | `false` (auto-initialize on mount) | `false` (auto-start before provider mounts) |
+| When `true` | Provider does not call `initialize()`; user calls `ldClient.identify(context)` to start | Factory does not call `start()`; user must call `client.start()` manually |
+| How to start manually | `ldClient.identify(context)` — identify doubled as init in the old SDK | `client.start()` — explicit start required; `identify()` switches context only after `start()` |
+
+`createLDReactProviderWithClient` (the low-level API) always behaves as if
+`deferInitialization: true` — it never calls `start()` automatically.
 
 ---
 
@@ -163,19 +233,93 @@ initialization completes or when `client.identify()` is called.
 
 ---
 
-## Multiple client instances
+## Multiple environments
 
-The new SDK supports multiple LaunchDarkly clients in the same React tree via React context.
-Pass a custom context to hooks and providers:
+The new SDK supports multiple LaunchDarkly environments in the same React tree. Each environment
+gets its own React context, provider, and client — hooks then read from whichever context you pass.
 
 ```tsx
-import { initLDReactContext, createLDReactProvider, useFlags } from '@launchdarkly/react-sdk';
+// environments.ts — single module, import anywhere in your app
+import {
+  initLDReactContext,
+  createClient,
+  createLDReactProviderWithClient,
+} from '@launchdarkly/react-sdk';
 
-const MyLDContext = initLDReactContext();
-const LDProvider = createLDReactProvider(client, MyLDContext);
+export const ProdLDContext    = initLDReactContext();
+export const StagingLDContext = initLDReactContext();
+
+const prodClient    = createClient('prod-client-side-id',    { kind: 'user', key: 'user-key' });
+const stagingClient = createClient('staging-client-side-id', { kind: 'user', key: 'user-key' });
+prodClient.start();
+stagingClient.start();
+
+export const ProdLDProvider    = createLDReactProviderWithClient(prodClient,    ProdLDContext);
+export const StagingLDProvider = createLDReactProviderWithClient(stagingClient, StagingLDContext);
+```
+
+```tsx
+// Root.tsx
+function Root() {
+  return (
+    <ProdLDProvider>
+      <StagingLDProvider>
+        <App />
+      </StagingLDProvider>
+    </ProdLDProvider>
+  );
+}
+```
+
+```tsx
+// In any component
+import { useBoolVariation } from '@launchdarkly/react-sdk';
+import { ProdLDContext, StagingLDContext } from './environments';
 
 function MyComponent() {
-  const flags = useFlags(MyLDContext);
+  const showInProd    = useBoolVariation('my-feature', false, ProdLDContext);
+  const showInStaging = useBoolVariation('my-feature', false, StagingLDContext);
   // ...
+}
+```
+
+Each client's lifecycle (including `identify()`) is independent — call it on each client when
+the user context changes.
+
+---
+
+## Named contexts
+
+The old SDK supported custom React contexts via `withLDProvider({ reactContext })` and
+`withLDConsumer({ reactContext })`. The new SDK exposes the same capability through the
+`reactContext` option on `createLDReactProvider` and through the optional argument on every hook.
+
+```tsx
+// Before
+import { withLDProvider, withLDConsumer } from 'launchdarkly-react-client-sdk';
+const MyContext = React.createContext(null);
+
+export default withLDProvider({
+  clientSideID: 'your-id',
+  reactContext: MyContext,
+})(App);
+
+const MyComponent = withLDConsumer({ reactContext: MyContext })(({ flags, ldClient }) => (
+  <div>{flags.myFlag ? 'on' : 'off'}</div>
+));
+
+// After
+import { initLDReactContext, createLDReactProvider, useFlags, useBoolVariation, useLDClient } from '@launchdarkly/react-sdk';
+
+const MyContext = initLDReactContext();
+const LDProvider = createLDReactProvider('your-id', { kind: 'user', key: 'user-key' }, {
+  reactContext: MyContext,
+});
+
+function MyComponent() {
+  const flags    = useFlags(MyContext);
+  const myFlag   = useBoolVariation('my-flag', false, MyContext);
+  const ldClient = useLDClient(MyContext);
+  return <div>{myFlag ? 'on' : 'off'}</div>;
 }
 ```
