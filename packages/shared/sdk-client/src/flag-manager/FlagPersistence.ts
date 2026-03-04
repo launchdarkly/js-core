@@ -23,10 +23,10 @@ interface FreshnessRecord {
   contextHash: string;
 }
 
-async function hashContext(platform: Platform, context: Context): Promise<string> {
+async function hashContext(platform: Platform, context: Context): Promise<string | undefined> {
   const json = context.canonicalUnfilteredJson();
   if (!json) {
-    return '';
+    return undefined;
   }
   return digest(platform.crypto.createHash('sha256').update(json), 'base64');
 }
@@ -41,9 +41,8 @@ async function hashContext(platform: Platform, context: Context): Promise<string
  * Both keys are managed together — when a context is evicted, both the flag
  * data and freshness record are cleared.
  *
- * Freshness is loaded eagerly into memory when {@link loadCached} is called
- * and updated in memory when {@link init} or {@link upsert} persists data.
- * {@link getFreshness} returns the in-memory value without hitting storage.
+ * When {@link loadCached} is called, the freshness timestamp is read from
+ * storage and passed to {@link FlagUpdater.initCached} alongside the flags.
  */
 export default class FlagPersistence {
   private _contextIndex: ContextIndex | undefined;
@@ -153,7 +152,7 @@ export default class FlagPersistence {
     try {
       const record: FreshnessRecord = JSON.parse(json);
       const currentHash = await hashContext(this._platform, context);
-      if (record.contextHash !== currentHash) {
+      if (currentHash === undefined || record.contextHash !== currentHash) {
         return undefined;
       }
       return typeof record.timestamp === 'number' && !Number.isNaN(record.timestamp)
@@ -169,10 +168,12 @@ export default class FlagPersistence {
     context: Context,
     timestamp: number,
   ): Promise<void> {
-    const record: FreshnessRecord = {
-      timestamp,
-      contextHash: await hashContext(this._platform, context),
-    };
+    const contextHash = await hashContext(this._platform, context);
+    if (contextHash === undefined) {
+      this._logger.error('Could not serialize context for freshness tracking');
+      return;
+    }
+    const record: FreshnessRecord = { timestamp, contextHash };
     await this._platform.storage?.set(
       `${contextStorageKey}${FRESHNESS_SUFFIX}`,
       JSON.stringify(record),
