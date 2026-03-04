@@ -71,8 +71,6 @@ export interface LDJudgeConfiguration {
 // Base AI Config Types
 // ============================================================================
 
-const DISABLED_DEFAULT = { enabled: false } as const;
-
 /**
  * Base AI Config for default implementations with optional enabled property.
  */
@@ -93,14 +91,12 @@ export interface LDAIConfigDefault {
   enabled?: boolean;
 }
 
-export namespace LDAIConfigDefault {
-  /**
-   * Returns a disabled AI Config default with enabled set to false.
-   */
-  export function disabled(): LDAIConfigDefault {
-    return { ...DISABLED_DEFAULT };
-  }
-}
+/**
+ * Disabled AI Config default (enabled: false).
+ */
+export const disabledAIConfig: LDAIConfigDefault = Object.freeze({
+  enabled: false,
+});
 
 /**
  * Base AI Config interface without mode-specific fields.

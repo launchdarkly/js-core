@@ -4,12 +4,12 @@ import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { TrackedChat } from './api/chat';
 import {
+  disabledAIConfig,
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
   LDAIAgentRequestConfig,
   LDAICompletionConfig,
   LDAICompletionConfigDefault,
-  LDAIConfigDefault,
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
@@ -172,17 +172,12 @@ export class LDAIClientImpl implements LDAIClient {
   async completionConfig(
     key: string,
     context: LDContext,
-    defaultValue?: LDAICompletionConfigDefault,
+    defaultValue: LDAICompletionConfigDefault = disabledAIConfig,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
 
-    return this._completionConfig(
-      key,
-      context,
-      defaultValue ?? LDAIConfigDefault.disabled(),
-      variables,
-    );
+    return this._completionConfig(key, context, defaultValue, variables);
   }
 
   /**
@@ -210,29 +205,23 @@ export class LDAIClientImpl implements LDAIClient {
   async judgeConfig(
     key: string,
     context: LDContext,
-    defaultValue?: LDAIJudgeConfigDefault,
+    defaultValue: LDAIJudgeConfigDefault = disabledAIConfig,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig> {
     this._ldClient.track(TRACK_USAGE_JUDGE_CONFIG, context, key, 1);
 
-    return this._judgeConfig(key, context, defaultValue ?? LDAIConfigDefault.disabled(), variables);
+    return this._judgeConfig(key, context, defaultValue, variables);
   }
 
   async agentConfig(
     key: string,
     context: LDContext,
-    defaultValue?: LDAIAgentConfigDefault,
+    defaultValue: LDAIAgentConfigDefault = disabledAIConfig,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
 
-    const config = await this._evaluate(
-      key,
-      context,
-      defaultValue ?? LDAIConfigDefault.disabled(),
-      'agent',
-      variables,
-    );
+    const config = await this._evaluate(key, context, defaultValue, 'agent', variables);
     return config as LDAIAgentConfig;
   }
 
@@ -266,7 +255,7 @@ export class LDAIClientImpl implements LDAIClient {
         const agent = await this._evaluate(
           config.key,
           context,
-          config.defaultValue ?? LDAIConfigDefault.disabled(),
+          config.defaultValue ?? disabledAIConfig,
           'agent',
           config.variables,
         );
@@ -290,18 +279,13 @@ export class LDAIClientImpl implements LDAIClient {
   async createChat(
     key: string,
     context: LDContext,
-    defaultValue?: LDAICompletionConfigDefault,
+    defaultValue: LDAICompletionConfigDefault = disabledAIConfig,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
 
-    const config = await this._completionConfig(
-      key,
-      context,
-      defaultValue ?? LDAIConfigDefault.disabled(),
-      variables,
-    );
+    const config = await this._completionConfig(key, context, defaultValue, variables);
 
     if (!config.enabled || !config.tracker) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
@@ -326,7 +310,7 @@ export class LDAIClientImpl implements LDAIClient {
   async createJudge(
     key: string,
     context: LDContext,
-    defaultValue?: LDAIJudgeConfigDefault,
+    defaultValue: LDAIJudgeConfigDefault = disabledAIConfig,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined> {
@@ -351,12 +335,7 @@ export class LDAIClientImpl implements LDAIClient {
         response_to_evaluate: '{{response_to_evaluate}}',
       };
 
-      const judgeConfig = await this._judgeConfig(
-        key,
-        context,
-        defaultValue ?? LDAIConfigDefault.disabled(),
-        extendedVariables,
-      );
+      const judgeConfig = await this._judgeConfig(key, context, defaultValue, extendedVariables);
 
       if (!judgeConfig.enabled || !judgeConfig.tracker) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
