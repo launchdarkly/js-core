@@ -29,8 +29,24 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      # Free disk space early so all subsequent steps benefit from available space.
+      - name: Make space for the emulator.
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          android: false # We need android.
+          large-packages: false # Need this for packages that emulator depends on (specifically libx11-xcb1)
+
+      - name: Enable KVM group perms (for performance)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
       - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          cache: 'yarn'
+          cache-dependency-path: yarn.lock
 
       - name: Install deps
         run: yarn workspaces focus
@@ -47,13 +63,15 @@ jobs:
       - name: Create .env file.
         run: echo "MOBILE_KEY=$MOBILE_KEY" > .env
 
-      - name: Enable KVM group perms (for performance)
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
+      - name: Cache Expo Prebuild
+        id: expo-prebuild-cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: packages/sdk/react-native/example/android
+          key: expo-prebuild-android-${{ hashFiles('packages/sdk/react-native/example/app.json', 'packages/sdk/react-native/example/package.json') }}
 
       - name: Expo Prebuild
+        if: steps.expo-prebuild-cache.outputs.cache-hit != 'true'
         run: npx expo prebuild
 
       # Java setup is after checkout and expo prebuild so that it can locate the
@@ -65,18 +83,21 @@ jobs:
           java-version: 17
           cache: 'gradle'
 
+      - name: Optimize Gradle build
+        run: |
+          echo "" >> android/gradle.properties
+          echo "# CI build optimizations" >> android/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=512m" >> android/gradle.properties
+          echo "org.gradle.parallel=true" >> android/gradle.properties
+          echo "org.gradle.caching=true" >> android/gradle.properties
+          echo "org.gradle.configureondemand=true" >> android/gradle.properties
+
       - name: Detox build
         run: yarn detox build --configuration android.emu.release
 
       - name: Get android emulator device name
         id: device
         run: node -e "console.log('AVD_NAME=' + require('./.detoxrc').devices.emulator.device.avdName)" >> $GITHUB_OUTPUT
-
-      - name: Make space for the emulator.
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
-        with:
-          android: false # We need android.
-          large-packages: false # Need this for packages that emulator depends on (specifically libx11-xcb1)
 
       - name: Detox test
         uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915 # v2
