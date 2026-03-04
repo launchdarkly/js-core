@@ -1,4 +1,4 @@
-import { LDContext } from '@launchdarkly/js-sdk-common';
+import { LDContext } from '@launchdarkly/js-client-sdk';
 
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
