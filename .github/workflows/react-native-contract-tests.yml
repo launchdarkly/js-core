@@ -89,7 +89,8 @@ jobs:
 
       - name: Download contract test harness
         run: |
-          curl -sL -o sdk-test-harness.tar.gz "https://github.com/launchdarkly/sdk-test-harness/releases/latest/download/sdk-test-harness_Linux_x86_64.tar.gz"
+          # https://github.com/launchdarkly/sdk-test-harness/releases/tag/v2.34.0
+          curl -sL -o sdk-test-harness.tar.gz "https://github.com/launchdarkly/sdk-test-harness/releases/download/v2.34.0/sdk-test-harness_Linux_x86_64.tar.gz"
           tar -xzf sdk-test-harness.tar.gz sdk-test-harness
           chmod +x sdk-test-harness
 

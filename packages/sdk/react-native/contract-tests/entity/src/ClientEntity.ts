@@ -188,7 +188,7 @@ export class ClientEntity {
       }
 
       case CommandType.FlushEvents:
-        this._client.flush();
+        await this._client.flush();
         return undefined;
 
       default:
