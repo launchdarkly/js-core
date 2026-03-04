@@ -10,7 +10,15 @@ adb reverse tcp:8111 tcp:8111
 adb reverse tcp:8112 tcp:8112
 
 # Install and launch the APK
-adb install "$REPO_ROOT/packages/sdk/react-native/contract-tests/entity/android/app/build/outputs/apk/release/app-release.apk"
+APK_DIR="$REPO_ROOT/packages/sdk/react-native/contract-tests/entity/android/app/build/outputs/apk"
+if [ -f "$APK_DIR/debug/app-debug.apk" ]; then
+  adb install "$APK_DIR/debug/app-debug.apk"
+elif [ -f "$APK_DIR/release/app-release.apk" ]; then
+  adb install "$APK_DIR/release/app-release.apk"
+else
+  echo "ERROR: No APK found in $APK_DIR"
+  exit 1
+fi
 adb shell am start -n com.launchdarkly.rncontracttestentity/.MainActivity
 
 # Wait for the app to connect to WebSocket

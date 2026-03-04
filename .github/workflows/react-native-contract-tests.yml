@@ -55,9 +55,9 @@ jobs:
           java-version: 17
           cache: 'gradle'
 
-      - name: Build release APK
+      - name: Build debug APK (x86_64 only for emulator)
         working-directory: packages/sdk/react-native/contract-tests/entity/android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleDebug -PreactNativeArchitectures=x86_64
 
       - name: Make space for the emulator
         # https://github.com/jlumbroso/free-disk-space/releases/tag/main
