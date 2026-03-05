@@ -9,6 +9,7 @@ import {
   Requests,
   ServiceEndpoints,
   shouldRetry,
+  DataSourceErrorKind,
 } from '@launchdarkly/js-sdk-common';
 
 import { processFlagEval } from '../flagEvalMapper';
@@ -275,8 +276,16 @@ export function createStreamingBase(config: {
         config.logger?.info('Closed LaunchDarkly stream connection');
       };
 
-      es.onerror = () => {
-        // Error handling is done by errorFilter.
+      es.onerror = (err?: HttpErrorResponse) => {
+        if(err && typeof err.status === 'number') {
+          // This condition will be handled by the error filter.
+          return;
+        }
+        resultQueue.put(interrupted({
+          kind: DataSourceErrorKind.NetworkError,
+          message: err?.message ?? 'IO Error',
+          time: Date.now(),
+        }, fdv1Fallback));
       };
 
       es.onopen = () => {
