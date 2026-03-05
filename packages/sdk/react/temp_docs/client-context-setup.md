@@ -23,7 +23,7 @@ import {
   createClient,
   LDContext,
   initLDReactContext,
-  createLDReactProvider,
+  createLDReactProviderWithClient,
   LDReactClientOptions,
 } from '@launchdarkly/react-sdk';
 
@@ -38,8 +38,9 @@ const context: LDContext = {
 const options: LDReactClientOptions = {}; // optional
 
 const client = createClient(clientSideID, context, options);
+client.start();
 const { context: LDReactContext, useLDClient } = initLDReactContext();
-const LDReactProvider = createLDReactProvider(client, LDReactContext);
+const LDReactProvider = createLDReactProviderWithClient(client, LDReactContext);
 
 export { LDReactProvider, LDReactContext, useLDClient };
 ```
@@ -114,8 +115,11 @@ After `identify()` resolves, the `context` value in `useContext(LDReactContext)`
 - **`initLDReactContext()`**
   Creates a React context and a `useLDClient` hook for the LaunchDarkly client. Returns `{ context, useLDClient }`. Call once per app and pass the `context` to `createLDReactProvider`.
 
-- **`createLDReactProvider(client, context?)`**
-  Builds a React Provider component that supplies the client (and initialization state) to the tree. Pass the client from `createClient` and optionally the `context` from `initLDReactContext` (defaults to the built-in `LDReactContext`). Returns a component; wrap your app (or a subtree) with it. **The Provider automatically calls `client.start()` on mount** and re-renders when `client.identify()` is called.
+- **`createLDReactProvider(clientSideID, context, options?)`**
+  Builds a React Provider component that creates the client internally and starts it immediately (unless `options.deferInitialization` is set). Pass `options.ldOptions` to forward client options (e.g. `streaming`) to the underlying client. Returns a component; wrap your app (or a subtree) with it. Re-renders when `client.identify()` is called.
+
+- **`createLDReactProviderWithClient(client, context?)`**
+  Builds a React Provider component from an existing client instance. The caller is responsible for calling `client.start()`. Pass the client from `createClient` and optionally the `context` from `initLDReactContext` (defaults to the built-in `LDReactContext`). Returns a component; wrap your app (or a subtree) with it.
 
 - **`Provider`**
   The component returned by `createLDReactProvider`. Wrap your app with it so descendants can read the client via the context or `useLDClient`.

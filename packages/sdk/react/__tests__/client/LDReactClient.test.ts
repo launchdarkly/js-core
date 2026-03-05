@@ -2,6 +2,7 @@ import {
   createClient as createBaseClient,
   LDContextStrict,
   LDStartOptions,
+  LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
 
 import { createClient } from '../../src/client/LDReactClient';
@@ -190,6 +191,131 @@ it('noop client onContextChange returns a no-op unsubscribe', () => {
   const unsubscribe = client.onContextChange(() => {});
   expect(typeof unsubscribe).toBe('function');
   // Should not throw
+  expect(() => unsubscribe()).not.toThrow();
+
+  // @ts-ignore
+  global.window = originalWindow;
+});
+
+it('invokes onInitializationStatusChange callback after start() resolves', async () => {
+  const { mock, resolveStart } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const received: LDWaitForInitializationResult[] = [];
+  client.onInitializationStatusChange((result) => received.push(result));
+
+  const startPromise = client.start();
+  resolveStart('complete');
+  await startPromise;
+
+  expect(received).toHaveLength(1);
+  expect(received[0].status).toBe('complete');
+});
+
+it('notifies multiple subscribers on start()', async () => {
+  const { mock, resolveStart } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const calls1: LDWaitForInitializationResult[] = [];
+  const calls2: LDWaitForInitializationResult[] = [];
+  client.onInitializationStatusChange((r) => calls1.push(r));
+  client.onInitializationStatusChange((r) => calls2.push(r));
+
+  const startPromise = client.start();
+  resolveStart('complete');
+  await startPromise;
+
+  expect(calls1).toHaveLength(1);
+  expect(calls2).toHaveLength(1);
+});
+
+it('stops notifying after the unsubscribe function is called (onInitializationStatusChange)', async () => {
+  const { mock, resolveStart } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const received: LDWaitForInitializationResult[] = [];
+  const unsubscribe = client.onInitializationStatusChange((r) => received.push(r));
+
+  unsubscribe();
+
+  const startPromise = client.start();
+  resolveStart('complete');
+  await startPromise;
+
+  expect(received).toHaveLength(0);
+});
+
+it('calls callback immediately if start() already resolved (late subscriber)', async () => {
+  const { mock, resolveStart } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const startPromise = client.start();
+  resolveStart('complete');
+  await startPromise;
+
+  const received: LDWaitForInitializationResult[] = [];
+  client.onInitializationStatusChange((r) => received.push(r));
+
+  expect(received).toHaveLength(1);
+  expect(received[0].status).toBe('complete');
+});
+
+it('getInitializationError() returns undefined before start()', () => {
+  const { mock } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  expect(client.getInitializationError()).toBeUndefined();
+});
+
+it('getInitializationError() returns undefined after successful start()', async () => {
+  const { mock, resolveStart } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const startPromise = client.start();
+  resolveStart('complete');
+  await startPromise;
+
+  expect(client.getInitializationError()).toBeUndefined();
+});
+
+it('getInitializationError() returns the error after a failed start()', async () => {
+  const { mock } = makeMockBaseClient();
+  const failError = new Error('network failure');
+  (mock.start as jest.Mock).mockResolvedValueOnce({ status: 'failed', error: failError });
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  await client.start();
+
+  expect(client.getInitializationError()).toBe(failError);
+});
+
+it('noop client getInitializationError() returns undefined', () => {
+  const originalWindow = global.window;
+  // @ts-ignore
+  delete global.window;
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  expect(client.getInitializationError()).toBeUndefined();
+
+  // @ts-ignore
+  global.window = originalWindow;
+});
+
+it('noop client onInitializationStatusChange returns a no-op unsubscribe', () => {
+  const originalWindow = global.window;
+  // @ts-ignore
+  delete global.window;
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const unsubscribe = client.onInitializationStatusChange(() => {});
+  expect(typeof unsubscribe).toBe('function');
   expect(() => unsubscribe()).not.toThrow();
 
   // @ts-ignore

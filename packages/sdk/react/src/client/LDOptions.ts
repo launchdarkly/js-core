@@ -1,4 +1,4 @@
-import { LDContext, LDOptions as LDOptionsBase, LDStartOptions } from '@launchdarkly/js-client-sdk';
+import { LDOptions as LDOptionsBase, LDStartOptions } from '@launchdarkly/js-client-sdk';
 
 import { LDReactClientContext } from './LDClient';
 
@@ -28,23 +28,14 @@ export interface LDReactClientOptions extends LDOptionsBase {
  */
 export interface LDReactProviderOptions {
   /**
-   * LaunchDarkly initialization options. These options are common between LaunchDarkly's JavaScript and React SDKs.
+   * Options for the LaunchDarkly client.
+   *
+   * @remarks
+   * This option is used to pass options to the LaunchDarkly client.
    *
    * @see {@link LDReactClientOptions} for the possible options
    */
-  options?: LDReactClientOptions;
-
-  /**
-   * Your project and environment specific client side ID. You can find
-   * this in your LaunchDarkly portal under Account settings.
-   */
-  clientSideID: string;
-
-  /**
-   * A LaunchDarkly context object. This will be used as the initial
-   * context for the client.
-   */
-  context: LDContext;
+  ldOptions?: LDReactClientOptions;
 
   /**
    * Options for starting the LaunchDarkly client.
@@ -58,11 +49,11 @@ export interface LDReactProviderOptions {
   startOptions?: LDStartOptions;
 
   /**
-   * If set to false, the LDClient will initialize immediately.
+   * If set to true, the LDClient will not start automatically.
    *
-   * @default true
+   * @default false
    *
-   * If intiailization is deferred, then the LDClient can be initialized manually
+   * If initialization is deferred, then the LDClient can be started manually
    * by calling the `start` function.
    */
   deferInitialization?: boolean;

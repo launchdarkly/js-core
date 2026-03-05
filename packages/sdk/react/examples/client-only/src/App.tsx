@@ -1,6 +1,11 @@
-import React, { FormEvent, useContext, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 
-import { LDContext, LDReactClientContextValue, LDReactContext } from '@launchdarkly/react-sdk';
+import {
+  LDContext,
+  useBoolVariation,
+  useInitializationStatus,
+  useLDClient,
+} from '@launchdarkly/react-sdk';
 
 import './App.css';
 
@@ -14,13 +19,22 @@ const PRESET_CONTEXTS: ReadonlyArray<LDContext> = [
 ] as const;
 
 function App() {
-  // NOTE: we will change this later to use the useLDClient hook instead.
-  const { client, context, initializedState } =
-    useContext<LDReactClientContextValue>(LDReactContext);
+  const client = useLDClient();
+  const { status } = useInitializationStatus();
   const [flagKey, setFlagKey] = useState(FLAG_KEY);
   const [inputValue, setInputValue] = useState(flagKey);
-  const [flagValue, setFlagValue] = useState(false);
+  const flagValue = useBoolVariation(flagKey, false);
+  const [activeContextKey, setActiveContextKey] = useState<string | undefined>(
+    () => client?.getContext()?.key as string | undefined,
+  );
   const [identifyPending, setIdentifyPending] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = client.onContextChange((ctx) => {
+      setActiveContextKey(ctx?.key as string | undefined);
+    });
+    return unsubscribe;
+  }, [client]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -30,24 +44,14 @@ function App() {
   const handleSelectContext = async (preset: LDContext) => {
     setIdentifyPending(true);
     await client.identify(preset);
+    setActiveContextKey(preset.key as string);
     setIdentifyPending(false);
   };
 
-  useEffect(() => {
-    const changeHandler = (_context: LDContext) => {
-      setFlagValue(client.variation(flagKey, false));
-    };
-    client.on(`change:${flagKey}`, changeHandler);
-    setFlagValue(client.variation(flagKey, false));
-    return () => {
-      client.off(`change:${flagKey}`, changeHandler);
-    };
-  }, [flagKey, client]);
-
   let statusMessage: string;
-  if (initializedState === 'complete') {
+  if (status === 'complete') {
     statusMessage = 'SDK successfully initialized!';
-  } else if (initializedState === 'failed') {
+  } else if (status === 'failed') {
     statusMessage =
       'SDK failed to initialize. Please check your internet connection and SDK credential for any typo.';
   } else {
@@ -73,7 +77,7 @@ function App() {
         </form>
         <div style={{ display: 'flex', gap: '8px' }}>
           {PRESET_CONTEXTS.map((preset) => {
-            const isActive = context?.key === preset.key;
+            const isActive = activeContextKey === (preset.key as string);
             return (
               <button
                 key={preset.key as string}

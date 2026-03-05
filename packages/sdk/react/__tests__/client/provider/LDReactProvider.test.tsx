@@ -6,80 +6,24 @@ import React, { useContext } from 'react';
 
 import { LDContextStrict } from '@launchdarkly/js-client-sdk';
 
+import { LDReactClientContextValue } from '../../../src/client/LDClient';
+import { createClient } from '../../../src/client/LDReactClient';
+import { initLDReactContext, LDReactContext } from '../../../src/client/provider/LDReactContext';
 import {
-  InitializedState,
-  LDReactClient,
-  LDReactClientContextValue,
-} from '../../../src/client/LDClient';
-import { LDReactContext } from '../../../src/client/provider/LDReactContext';
-import { createLDReactProvider } from '../../../src/client/provider/LDReactProvider';
+  createLDReactProvider,
+  createLDReactProviderWithClient,
+} from '../../../src/client/provider/LDReactProvider';
+import { makeMockClient } from '../mockClient';
 
-function makeMockClient(): LDReactClient & {
-  resolveStart: (status?: 'complete' | 'failed') => void;
-  fireContextChange: (ctx: LDContextStrict) => void;
-} {
-  let resolveStart: (result: { status: 'complete' | 'failed' }) => void;
-  const startPromise = new Promise<{ status: 'complete' | 'failed' }>((resolve) => {
-    resolveStart = resolve;
-  });
+jest.mock('../../../src/client/LDReactClient', () => ({
+  createClient: jest.fn(),
+}));
 
-  const contextChangeSubscribers = new Set<(ctx: LDContextStrict) => void>();
-  let initState: InitializedState = 'unknown';
-  let currentContext: LDContextStrict | undefined;
-
-  const client = {
-    allFlags: jest.fn(() => ({})),
-    // @ts-ignore
-    boolVariation: jest.fn((_key, def) => def),
-    boolVariationDetail: jest.fn(),
-    close: jest.fn(() => Promise.resolve()),
-    flush: jest.fn(() => Promise.resolve({ result: true })),
-    getContext: jest.fn(() => currentContext),
-    getInitializationState: jest.fn((): InitializedState => initState),
-    identify: jest.fn(() => Promise.resolve({ status: 'completed' as const })),
-    jsonVariation: jest.fn((_key: string, def: unknown) => def),
-    jsonVariationDetail: jest.fn(),
-    logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
-    // @ts-ignore
-    numberVariation: jest.fn((_key, def) => def),
-    numberVariationDetail: jest.fn(),
-    off: jest.fn(),
-    on: jest.fn(),
-    onContextChange: jest.fn((cb: (ctx: LDContextStrict) => void) => {
-      contextChangeSubscribers.add(cb);
-      return () => contextChangeSubscribers.delete(cb);
-    }),
-    setStreaming: jest.fn(),
-    // @ts-ignore
-    start: jest.fn(() => startPromise),
-    // @ts-ignore
-    stringVariation: jest.fn((_key, def) => def),
-    stringVariationDetail: jest.fn(),
-    track: jest.fn(),
-    variation: jest.fn((_key: string, def?: unknown) => def ?? null),
-    variationDetail: jest.fn(),
-    // @ts-ignore
-    waitForInitialization: jest.fn(() => Promise.resolve({ status: 'complete' as const })),
-    addHook: jest.fn(),
-  } as unknown as LDReactClient;
-
-  return {
-    ...client,
-    resolveStart: (status: 'complete' | 'failed' = 'complete') => {
-      initState = status;
-      // @ts-ignore
-      resolveStart({ status });
-    },
-    fireContextChange: (ctx: LDContextStrict) => {
-      currentContext = ctx;
-      contextChangeSubscribers.forEach((cb) => cb(ctx));
-    },
-  };
-}
+// ─── createLDReactProviderWithClient ────────────────────────────────────────
 
 it('renders children', () => {
   const client = makeMockClient();
-  const Provider = createLDReactProvider(client);
+  const Provider = createLDReactProviderWithClient(client);
 
   render(
     <Provider>
@@ -90,9 +34,9 @@ it('renders children', () => {
   expect(screen.getByText('hello')).toBeTruthy();
 });
 
-it('calls client.start() on mount', () => {
+it('does not call client.start() on mount', () => {
   const client = makeMockClient();
-  const Provider = createLDReactProvider(client);
+  const Provider = createLDReactProviderWithClient(client);
 
   render(
     <Provider>
@@ -100,10 +44,23 @@ it('calls client.start() on mount', () => {
     </Provider>,
   );
 
-  expect(client.start).toHaveBeenCalledTimes(1);
+  expect(client.start).not.toHaveBeenCalled();
 });
 
-it('updates initializedState and context when start() resolves', async () => {
+it('calls client.onInitializationStatusChange() on mount', () => {
+  const client = makeMockClient();
+  const Provider = createLDReactProviderWithClient(client);
+
+  render(
+    <Provider>
+      <span />
+    </Provider>,
+  );
+
+  expect(client.onInitializationStatusChange).toHaveBeenCalledTimes(1);
+});
+
+it('updates initializedState and context when onInitializationStatusChange fires', async () => {
   const initialCtx: LDContextStrict = { kind: 'user', key: 'u1' };
   const client = makeMockClient();
   (client.getContext as jest.Mock).mockReturnValue(initialCtx);
@@ -116,7 +73,7 @@ it('updates initializedState and context when start() resolves', async () => {
     return null;
   }
 
-  const Provider = createLDReactProvider(client);
+  const Provider = createLDReactProviderWithClient(client);
 
   render(
     <Provider>
@@ -127,7 +84,7 @@ it('updates initializedState and context when start() resolves', async () => {
   expect(contextValues[contextValues.length - 1]?.initializedState).toBe('unknown');
 
   await act(async () => {
-    client.resolveStart('complete');
+    client.fireInitStatusChange('complete');
   });
 
   await waitFor(() => {
@@ -136,7 +93,7 @@ it('updates initializedState and context when start() resolves', async () => {
   expect(contextValues[contextValues.length - 1]?.context).toEqual(initialCtx);
 });
 
-it('updates context when onContextChange fires', async () => {
+it('still subscribes to onContextChange', async () => {
   const client = makeMockClient();
   const newCtx: LDContextStrict = { kind: 'user', key: 'user-2', name: 'Jamie' };
   const contextValues: LDReactClientContextValue[] = [];
@@ -147,7 +104,7 @@ it('updates context when onContextChange fires', async () => {
     return null;
   }
 
-  const Provider = createLDReactProvider(client);
+  const Provider = createLDReactProviderWithClient(client);
 
   render(
     <Provider>
@@ -166,7 +123,7 @@ it('updates context when onContextChange fires', async () => {
 
 it('does not call setState after unmount (cleanup)', async () => {
   const client = makeMockClient();
-  const Provider = createLDReactProvider(client);
+  const Provider = createLDReactProviderWithClient(client);
 
   const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -176,16 +133,139 @@ it('does not call setState after unmount (cleanup)', async () => {
     </Provider>,
   );
 
-  // Unmount before start resolves
   unmount();
 
-  // Now resolve start — the mounted guard should prevent any setState calls
   await act(async () => {
-    client.resolveStart('complete');
+    client.fireInitStatusChange('complete');
   });
 
-  // React 18 does not warn on setState after unmount for function components,
-  // but we verify no error was thrown and start was called exactly once
   consoleSpy.mockRestore();
-  expect(client.start).toHaveBeenCalledTimes(1);
+  expect(client.onInitializationStatusChange).toHaveBeenCalledTimes(1);
+  expect(client.start).not.toHaveBeenCalled();
+});
+
+it('includes error in initial state when client was already failed before mount', () => {
+  const preFailedError = new Error('pre-failed init');
+  const client = makeMockClient({ preFailedError });
+  const contextValues: LDReactClientContextValue[] = [];
+
+  function Consumer() {
+    const value = useContext(LDReactContext);
+    contextValues.push(value);
+    return null;
+  }
+
+  const Provider = createLDReactProviderWithClient(client);
+
+  render(
+    <Provider>
+      <Consumer />
+    </Provider>,
+  );
+
+  const firstRender = contextValues[0];
+  expect(firstRender?.initializedState).toBe('failed');
+  expect(firstRender?.error).toBe(preFailedError);
+});
+
+// ─── createLDReactProvider (convenience factory) ─────────────────────────────
+
+describe('createLDReactProvider (convenience factory)', () => {
+  let mockClient: ReturnType<typeof makeMockClient>;
+
+  beforeEach(() => {
+    mockClient = makeMockClient();
+    (createClient as jest.Mock).mockReturnValue(mockClient);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('renders children', () => {
+    const Provider = createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' });
+
+    render(
+      <Provider>
+        <span>hello</span>
+      </Provider>,
+    );
+
+    expect(screen.getByText('hello')).toBeTruthy();
+  });
+
+  it('calls client.start() by default (deferInitialization not set)', () => {
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' });
+
+    expect(mockClient.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls client.start() when deferInitialization is false', () => {
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { deferInitialization: false });
+
+    expect(mockClient.start).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call client.start() when deferInitialization is true', () => {
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { deferInitialization: true });
+
+    expect(mockClient.start).not.toHaveBeenCalled();
+  });
+
+  it('passes startOptions to client.start()', () => {
+    const startOptions = { timeout: 5 };
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { startOptions });
+
+    expect(mockClient.start).toHaveBeenCalledWith(startOptions);
+  });
+
+  it('uses provided reactContext option', () => {
+    const CustomContext = initLDReactContext();
+    const contextValues: LDReactClientContextValue[] = [];
+
+    function Consumer() {
+      const value = useContext(CustomContext);
+      contextValues.push(value);
+      return null;
+    }
+
+    const Provider = createLDReactProvider(
+      'sdk-key',
+      { kind: 'user', key: 'u1' },
+      { reactContext: CustomContext },
+    );
+
+    render(
+      <Provider>
+        <Consumer />
+      </Provider>,
+    );
+
+    expect(contextValues[contextValues.length - 1]?.client).toBe(mockClient);
+  });
+
+  it('passes ldOptions as client options to createClient', () => {
+    const clientOptions = { streaming: true };
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { ldOptions: clientOptions });
+
+    expect(createClient).toHaveBeenCalledWith(
+      'sdk-key',
+      { kind: 'user', key: 'u1' },
+      clientOptions,
+    );
+  });
+
+  it('does not forward deferInitialization/startOptions/reactContext to createClient', () => {
+    const reactContext = initLDReactContext();
+    const startOptions = { timeout: 3 };
+    createLDReactProvider(
+      'sdk-key',
+      { kind: 'user', key: 'u1' },
+      { deferInitialization: false, startOptions, reactContext },
+    );
+
+    // No ldOptions provided, so createClient receives undefined for client options.
+    const clientOptions = (createClient as jest.Mock).mock.calls[0][2];
+    expect(clientOptions).toBeUndefined();
+  });
 });

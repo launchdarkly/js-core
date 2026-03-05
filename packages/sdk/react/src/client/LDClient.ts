@@ -27,6 +27,12 @@ export interface LDReactClient extends LDClient {
   getInitializationState(): InitializedState;
 
   /**
+   * Returns the error that caused initialization to fail, if any.
+   * Only set when `getInitializationState()` returns `'failed'`.
+   */
+  getInitializationError(): Error | undefined;
+
+  /**
    * Subscribes to context changes triggered by `identify()`. The callback is invoked
    * after each successful `identify()` call with the new resolved context.
    *
@@ -34,6 +40,18 @@ export interface LDReactClient extends LDClient {
    * @returns An unsubscribe function. Call it to stop receiving notifications.
    */
   onContextChange(callback: (context: LDContextStrict) => void): () => void;
+
+  /**
+   * Subscribes to initialization status changes triggered by `start()`. The callback is
+   * invoked once `start()` resolves. If `start()` has already resolved when this is called,
+   * the callback is invoked immediately with the last result.
+   *
+   * @param callback Function called with the initialization result.
+   * @returns An unsubscribe function. Call it to stop receiving notifications.
+   */
+  onInitializationStatusChange(
+    callback: (result: LDWaitForInitializationResult) => void,
+  ): () => void;
 }
 
 /**
@@ -55,6 +73,11 @@ export interface LDReactClientContextValue {
    * The initialization state of the client.
    */
   initializedState: InitializedState;
+
+  /**
+   * The error that caused the client to fail to initialize. Only set when `initializedState` is `'failed'`.
+   */
+  error?: Error;
 }
 
 /**
