@@ -18,11 +18,19 @@ export default function useVariationCore<T, R = T>(
   const evaluateRef = useRef(evaluate);
   evaluateRef.current = evaluate;
 
+  const didMountRef = useRef(false);
+
   const [value, setValue] = useState<R>(() => evaluate(client, key, defaultValue));
 
   useEffect(() => {
-    // Captures the initial value if the flag key or context changes.
-    setValue(evaluateRef.current(client, key, defaultValueRef.current));
+    if (didMountRef.current) {
+      // Re-evaluate when key, client, or context changes (not on initial mount).
+      // This is to avoid an initial double render that will happen when this hook is
+      // first mounted.
+      setValue(evaluateRef.current(client, key, defaultValueRef.current));
+    }
+    didMountRef.current = true;
+
     const handler = () => setValue(evaluateRef.current(client, key, defaultValueRef.current));
     client.on(`change:${key}`, handler);
     return () => client.off(`change:${key}`, handler);
