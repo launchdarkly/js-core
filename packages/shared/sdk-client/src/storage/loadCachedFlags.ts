@@ -1,7 +1,11 @@
 import { Context, Crypto, LDLogger, Storage } from '@launchdarkly/js-sdk-common';
 
-import { Flags } from '../types';
+import { Flag, Flags } from '../types';
 import { namespaceForContextData } from './namespaceUtils';
+
+function isValidFlag(value: unknown): value is Flag {
+  return value !== null && typeof value === 'object' && typeof (value as Flag).version === 'number';
+}
 
 /**
  * Result of loading cached flags from storage.
@@ -46,7 +50,24 @@ export async function loadCachedFlags(
   }
 
   try {
-    const flags: Flags = JSON.parse(flagsJson);
+    const parsed = JSON.parse(flagsJson);
+    if (parsed === null || typeof parsed !== 'object') {
+      logger?.warn('Cached flag data is not a valid object');
+      return undefined;
+    }
+
+    const entries = Object.entries(parsed);
+    const invalidKey = entries.find(([, value]) => !isValidFlag(value));
+    if (invalidKey) {
+      logger?.warn(`Discarding cached flags due to invalid entry: ${invalidKey[0]}`);
+      return undefined;
+    }
+
+    const flags: Flags = entries.reduce((acc: Flags, [key, value]) => {
+      acc[key] = value as Flag;
+      return acc;
+    }, {});
+
     return { flags, storageKey, fromLegacyKey };
   } catch (e: any) {
     logger?.warn(`Could not parse cached flag evaluations from persistent storage: ${e.message}`);
