@@ -1,31 +1,46 @@
-import { LDContextStrict } from '@launchdarkly/js-client-sdk';
+import { LDContextStrict, LDWaitForInitializationResult } from '@launchdarkly/js-client-sdk';
 
-import { InitializedState, LDReactClient } from '../../../src/client/LDClient';
+import { InitializedState, LDReactClient } from '../../src/client/LDClient';
 
 type EventHandler = (...args: any[]) => void;
 
 export type MockClient = LDReactClient & {
+  // provider helpers
+  fireInitStatusChange: (status?: 'complete' | 'failed') => void;
+  // hooks helpers
   resolveStart: (status?: 'complete' | 'failed' | 'timeout', error?: Error) => void;
-  fireContextChange: (ctx: LDContextStrict) => void;
   emitChange: (flags?: Record<string, unknown>) => void;
   emitFlagChange: (key: string) => void;
+  // shared
+  fireContextChange: (ctx: LDContextStrict) => void;
 };
 
-export function makeMockClient(initialState: InitializedState = 'unknown'): MockClient {
-  let resolveStart: (
+export interface MockClientOptions {
+  flagOverrides?: Record<string, unknown>;
+  /** Simulate a client that already failed initialization before mounting. */
+  preFailedError?: Error;
+  initialState?: InitializedState;
+}
+
+export function makeMockClient(options: MockClientOptions = {}): MockClient {
+  const { flagOverrides = {}, preFailedError, initialState } = options;
+
+  let resolveStartFn: (
     result: { status: 'complete' } | { status: 'timeout' } | { status: 'failed'; error: Error },
   ) => void;
   const startPromise = new Promise<
     { status: 'complete' } | { status: 'timeout' } | { status: 'failed'; error: Error }
   >((resolve) => {
-    resolveStart = resolve;
+    resolveStartFn = resolve;
   });
 
+  const initStatusSubscribers = new Set<(result: LDWaitForInitializationResult) => void>();
   const contextChangeSubscribers = new Set<(ctx: LDContextStrict) => void>();
-  let initState: InitializedState = initialState;
+  let initState: InitializedState = initialState ?? (preFailedError ? 'failed' : 'unknown');
+  let initError: Error | undefined = preFailedError;
   let currentContext: LDContextStrict | undefined;
   const eventHandlers = new Map<string, Set<EventHandler>>();
-  const flags: Record<string, unknown> = {};
+  const flags: Record<string, unknown> = { ...flagOverrides };
 
   const client = {
     allFlags: jest.fn(() => ({ ...flags })),
@@ -36,6 +51,7 @@ export function makeMockClient(initialState: InitializedState = 'unknown'): Mock
     flush: jest.fn(() => Promise.resolve({ result: true })),
     getContext: jest.fn(() => currentContext),
     getInitializationState: jest.fn((): InitializedState => initState),
+    getInitializationError: jest.fn((): Error | undefined => initError),
     identify: jest.fn(() => Promise.resolve({ status: 'completed' as const })),
     jsonVariation: jest.fn((_key: string, def: unknown) => def),
     jsonVariationDetail: jest.fn(),
@@ -56,6 +72,10 @@ export function makeMockClient(initialState: InitializedState = 'unknown'): Mock
       contextChangeSubscribers.add(cb);
       return () => contextChangeSubscribers.delete(cb);
     }),
+    onInitializationStatusChange: jest.fn((cb: (result: LDWaitForInitializationResult) => void) => {
+      initStatusSubscribers.add(cb);
+      return () => initStatusSubscribers.delete(cb);
+    }),
     setStreaming: jest.fn(),
     // @ts-ignore
     start: jest.fn(() => startPromise),
@@ -72,14 +92,21 @@ export function makeMockClient(initialState: InitializedState = 'unknown'): Mock
 
   return {
     ...client,
+    fireInitStatusChange: (status: 'complete' | 'failed' = 'complete') => {
+      initState = status;
+      const result: LDWaitForInitializationResult =
+        status === 'complete' ? { status } : { status, error: new Error('init failed') };
+      initError = result.status === 'failed' ? result.error : undefined;
+      initStatusSubscribers.forEach((cb) => cb(result));
+    },
     resolveStart: (status: 'complete' | 'failed' | 'timeout' = 'complete', error?: Error) => {
       initState = status;
       if (status === 'failed') {
         // @ts-ignore
-        resolveStart({ status, error: error ?? new Error('initialization failed') });
+        resolveStartFn({ status, error: error ?? new Error('initialization failed') });
       } else {
         // @ts-ignore
-        resolveStart({ status });
+        resolveStartFn({ status });
       }
     },
     fireContextChange: (ctx: LDContextStrict) => {

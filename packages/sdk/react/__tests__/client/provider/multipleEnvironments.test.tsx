@@ -10,7 +10,7 @@ import { useBoolVariation } from '../../../src/client/hooks/useVariation';
 import { LDReactClient } from '../../../src/client/LDClient';
 import { initLDReactContext } from '../../../src/client/provider/LDReactContext';
 import { createLDReactProviderWithClient } from '../../../src/client/provider/LDReactProvider';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 it('useBoolVariation reads from each respective client when using separate contexts', () => {
   const ContextA = initLDReactContext();

@@ -7,7 +7,7 @@ import React from 'react';
 import { useLDClient } from '../../../src/client/hooks/useLDClient';
 import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 function ClientConsumer({ onClient }: { onClient: (client: any) => void }) {
   const client = useLDClient();

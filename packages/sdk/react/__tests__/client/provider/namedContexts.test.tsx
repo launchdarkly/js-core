@@ -9,7 +9,7 @@ import { useBoolVariation } from '../../../src/client/hooks/useVariation';
 import { LDReactClient, LDReactClientContextValue } from '../../../src/client/LDClient';
 import { initLDReactContext, LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { createLDReactProviderWithClient } from '../../../src/client/provider/LDReactProvider';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 it('hook using a named context reads from the named client, not the global one', () => {
   const NamedContext = initLDReactContext();

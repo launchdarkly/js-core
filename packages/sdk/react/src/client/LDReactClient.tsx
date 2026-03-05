@@ -124,7 +124,11 @@ export function createClient(
   return {
     ...baseClient,
     start: (startOptions?: LDStartOptions) => {
-      if (initializationState !== 'unknown') return baseClient.start(startOptions);
+      // The base client start method is idempotent, so we can just return
+      // the result if it has already been called.
+      if (initializationState !== 'unknown') {
+        return baseClient.start(startOptions);
+      }
       initializationState = 'initializing';
       return baseClient.start(startOptions).then((result) => {
         initializationState = result.status;

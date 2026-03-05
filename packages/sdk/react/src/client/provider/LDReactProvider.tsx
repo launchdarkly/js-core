@@ -116,9 +116,9 @@ export function createLDReactProvider(
   context: LDContext,
   options?: LDReactProviderOptions,
 ): React.FC<{ children: React.ReactNode }> {
-  const { deferInitialization, startOptions, reactContext, ...clientOptions } = options ?? {};
+  const { deferInitialization, startOptions, reactContext, ldOptions } = options ?? {};
 
-  const client = createClient(clientSideID, context, clientOptions);
+  const client = createClient(clientSideID, context, ldOptions);
 
   if (!deferInitialization) {
     client.start(startOptions);

@@ -13,7 +13,7 @@ import {
   createLDReactProvider,
   createLDReactProviderWithClient,
 } from '../../../src/client/provider/LDReactProvider';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 jest.mock('../../../src/client/LDReactClient', () => ({
   createClient: jest.fn(),
@@ -244,7 +244,18 @@ describe('createLDReactProvider (convenience factory)', () => {
     expect(contextValues[contextValues.length - 1]?.client).toBe(mockClient);
   });
 
-  it('does not include deferInitialization/startOptions/reactContext in client options', () => {
+  it('passes ldOptions as client options to createClient', () => {
+    const clientOptions = { streaming: true };
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { ldOptions: clientOptions });
+
+    expect(createClient).toHaveBeenCalledWith(
+      'sdk-key',
+      { kind: 'user', key: 'u1' },
+      clientOptions,
+    );
+  });
+
+  it('does not forward deferInitialization/startOptions/reactContext to createClient', () => {
     const reactContext = initLDReactContext();
     const startOptions = { timeout: 3 };
     createLDReactProvider(
@@ -253,9 +264,8 @@ describe('createLDReactProvider (convenience factory)', () => {
       { deferInitialization: false, startOptions, reactContext },
     );
 
+    // No ldOptions provided, so createClient receives undefined for client options.
     const clientOptions = (createClient as jest.Mock).mock.calls[0][2];
-    expect(clientOptions).not.toHaveProperty('deferInitialization');
-    expect(clientOptions).not.toHaveProperty('startOptions');
-    expect(clientOptions).not.toHaveProperty('reactContext');
+    expect(clientOptions).toBeUndefined();
   });
 });

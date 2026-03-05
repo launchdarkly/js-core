@@ -10,7 +10,7 @@ const context: LDContext = {
 };
 
 const options: LDReactProviderOptions = {
-  streaming: true,
+  ldOptions: { streaming: true },
 };
 
 export const LDReactProvider = createLDReactProvider(LAUNCHDARKLY_CLIENT_SIDE_ID, context, options);

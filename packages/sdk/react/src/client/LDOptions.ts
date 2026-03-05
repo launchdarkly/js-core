@@ -26,7 +26,17 @@ export interface LDReactClientOptions extends LDOptionsBase {
 /**
  * Options for creating a React Provider.
  */
-export interface LDReactProviderOptions extends LDReactClientOptions {
+export interface LDReactProviderOptions {
+  /**
+   * Options for the LaunchDarkly client.
+   *
+   * @remarks
+   * This option is used to pass options to the LaunchDarkly client.
+   *
+   * @see {@link LDReactClientOptions} for the possible options
+   */
+  ldOptions?: LDReactClientOptions;
+
   /**
    * Options for starting the LaunchDarkly client.
    *

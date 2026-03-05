@@ -10,10 +10,10 @@ import {
 } from '../../../src/client/hooks/useInitializationStatus';
 import { InitializedState, LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 function makeContextValue(state: InitializedState, error?: Error): LDReactClientContextValue {
-  const mockClient = makeMockClient(state);
+  const mockClient = makeMockClient({ initialState: state });
   return { client: mockClient, initializedState: state, error };
 }
 

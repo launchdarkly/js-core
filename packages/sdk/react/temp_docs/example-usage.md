@@ -26,7 +26,7 @@ import {
   createClient,
   LDContext,
   initLDReactContext,
-  createLDReactProvider,
+  createLDReactProviderWithClient,
   LDReactClientOptions,
 } from '@launchdarkly/react-sdk';
 import { LD_CLIENT_SIDE_ID } from './ld-config';
@@ -42,8 +42,9 @@ const options: LDReactClientOptions = {
 };
 
 const client = createClient(LD_CLIENT_SIDE_ID, context, options);
+client.start();
 export const { context: LDReactContext } = initLDReactContext();
-export const LDReactProvider = createLDReactProvider(client, LDReactContext);
+export const LDReactProvider = createLDReactProviderWithClient(client, LDReactContext);
 ```
 
 ### Wrap the app with the provider

@@ -14,7 +14,7 @@ import {
 } from '../../../src/client/hooks/useVariationDetail';
 import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
-import { makeMockClient } from './mockClient';
+import { makeMockClient } from '../mockClient';
 
 function makeWrapper(mockClient: ReturnType<typeof makeMockClient>) {
   const contextValue: LDReactClientContextValue = {
