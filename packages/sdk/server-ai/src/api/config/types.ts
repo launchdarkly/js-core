@@ -252,7 +252,7 @@ export interface LDAIAgentRequestConfig {
   key: string;
 
   /**
-   * Default configuration for the agent. When not provided, a disabled config is used.
+   * Default configuration for the agent. When omitted or null, a disabled default is used.
    */
   defaultValue?: LDAIAgentConfigDefault;
 

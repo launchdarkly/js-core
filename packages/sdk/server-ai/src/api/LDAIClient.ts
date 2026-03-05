@@ -26,7 +26,7 @@ export interface LDAIClient {
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
-   * When omitted, a disabled default is used.
+   * When omitted or null, a disabled default is used.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -96,7 +96,7 @@ export interface LDAIClient {
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
-   * When omitted, a disabled default is used.
+   * When omitted or null, a disabled default is used.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the instructions. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -147,7 +147,7 @@ export interface LDAIClient {
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
-   * When omitted, a disabled default is used.
+   * When omitted or null, a disabled default is used.
    * @param variables Optional variables for template interpolation in messages and instructions.
    * @returns A promise that resolves to a tracked judge configuration.
    *
@@ -177,7 +177,7 @@ export interface LDAIClient {
    * and LaunchDarkly context. This includes the model configuration and the customized instructions.
    *
    * @param agentConfigs An array of agent configurations, each containing the agent key, optional default
-   * configuration (a disabled default is used when omitted), and variables for instructions interpolation.
+   * configuration (when omitted or null, a disabled default is used), and variables for instructions interpolation.
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
@@ -238,7 +238,7 @@ export interface LDAIClient {
    * @param key The key identifying the AI chat configuration to use.
    * @param context The standard LDContext used when evaluating flags.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
-   * When omitted, a disabled default is used.
+   * When omitted or null, a disabled default is used.
    * @param variables Dictionary of values for instruction interpolation.
    * The variables will also be used for judge evaluation. For the judge only, the variables
    * `message_history` and `response_to_evaluate` are reserved and will be ignored.
@@ -291,7 +291,7 @@ export interface LDAIClient {
    * @param key The key identifying the AI judge configuration to use
    * @param context Standard LDContext used when evaluating flags
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
-   * When omitted, a disabled default is used.
+   * When omitted or null, a disabled default is used.
    * @param variables Dictionary of values for instruction interpolation.
    * The variables `message_history` and `response_to_evaluate` are reserved for the judge and will be ignored.
    * @param defaultAiProvider Optional default AI provider to use.
