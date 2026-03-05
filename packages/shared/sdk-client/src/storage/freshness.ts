@@ -1,4 +1,4 @@
-import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
+import { Context, Crypto, LDLogger, Storage } from '@launchdarkly/js-sdk-common';
 
 import digest from '../crypto/digest';
 import { namespaceForContextData } from './namespaceUtils';
@@ -41,6 +41,7 @@ export async function readFreshness(
   crypto: Crypto,
   environmentNamespace: string,
   context: Context,
+  logger?: LDLogger,
 ): Promise<number | undefined> {
   const contextStorageKey = await namespaceForContextData(crypto, environmentNamespace, context);
   const json = await storage.get(`${contextStorageKey}${FRESHNESS_SUFFIX}`);
@@ -57,7 +58,8 @@ export async function readFreshness(
     return typeof record.timestamp === 'number' && !Number.isNaN(record.timestamp)
       ? record.timestamp
       : undefined;
-  } catch {
+  } catch (e: any) {
+    logger?.warn(`Could not read freshness data from persistent storage: ${e.message}`);
     return undefined;
   }
 }

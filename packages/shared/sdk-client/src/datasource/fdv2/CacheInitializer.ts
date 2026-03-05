@@ -77,7 +77,7 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
     updates,
   };
 
-  const freshness = await readFreshness(storage, crypto, environmentNamespace, context);
+  const freshness = await readFreshness(storage, crypto, environmentNamespace, context, logger);
 
   logger?.debug('Loaded cached flag evaluations via cache initializer');
   return changeSet(payload, false, undefined, freshness);

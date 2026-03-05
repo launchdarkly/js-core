@@ -166,9 +166,12 @@ export default class FlagPersistence {
       return acc;
     }, {});
 
-    // store freshness before flag data so that flag data remains the last
-    // storage write (existing tests depend on this ordering)
-    await this._storeFreshness(storageKey, context, now);
+    // store freshness — best-effort, must not block flag persistence
+    try {
+      await this._storeFreshness(storageKey, context, now);
+    } catch (e: any) {
+      this._logger.warn(`Failed to store freshness data: ${e.message}`);
+    }
 
     const jsonAll = JSON.stringify(flags);
     // store flag data
