@@ -166,15 +166,15 @@ export default class FlagPersistence {
       return acc;
     }, {});
 
+    const jsonAll = JSON.stringify(flags);
+    // store flag data first, so freshness is never newer than the flags it describes
+    await this._platform.storage?.set(storageKey, jsonAll);
+
     // store freshness — best-effort, must not block flag persistence
     try {
       await this._storeFreshness(storageKey, context, now);
     } catch (e: any) {
       this._logger.warn(`Failed to store freshness data: ${e.message}`);
     }
-
-    const jsonAll = JSON.stringify(flags);
-    // store flag data
-    await this._platform.storage?.set(storageKey, jsonAll);
   }
 }

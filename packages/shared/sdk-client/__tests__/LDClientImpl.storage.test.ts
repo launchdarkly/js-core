@@ -211,7 +211,7 @@ describe('sdk-client storage', () => {
     );
 
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      3,
+      2,
       flagStorageKey,
       JSON.stringify(defaultPutResponse),
     );
@@ -257,7 +257,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining('index'),
     );
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      3,
+      2,
       flagStorageKey,
       JSON.stringify(putResponse),
     );
@@ -298,7 +298,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining('index'),
     );
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      3,
+      2,
       flagStorageKey,
       JSON.stringify(putResponse),
     );
@@ -380,7 +380,7 @@ describe('sdk-client storage', () => {
       expect.stringContaining('index'),
     );
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      3,
+      2,
       flagStorageKey,
       JSON.stringify(defaultPutResponse),
     );
@@ -421,7 +421,11 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
       kind: 'RULE_MATCH',
@@ -455,7 +459,11 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(6);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
@@ -482,13 +490,12 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toHaveProperty('another-dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      6,
-      flagStorageKey,
-      expect.stringContaining(JSON.stringify(patchResponse)),
-    );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['another-dev-test-flag']);
   });
@@ -556,13 +563,12 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      6,
-      flagStorageKey,
-      expect.stringContaining('dev-test-flag'),
-    );
     expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
@@ -645,7 +651,11 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
 
     expect(mockPlatform.storage.set).toHaveBeenCalledTimes(6); // two index saves and two flag saves
     expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
