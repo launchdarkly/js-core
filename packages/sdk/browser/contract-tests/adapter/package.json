@@ -2,6 +2,7 @@
   "name": "browser-contract-test-adapter",
   "version": "1.0.0",
   "description": "Adapts REST interface to a websocket for use in browsers.",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "yarn workspace @launchdarkly/js-contract-test-utils build:adapter && tsc",
