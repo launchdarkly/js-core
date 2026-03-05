@@ -24,7 +24,9 @@ div.appendChild(document.createTextNode('No flag evaluations yet'));
 statusBox.appendChild(document.createTextNode('Initializing...'));
 
 const main = async () => {
-  const ldclient = createClient(clientSideID, context);
+  const ldclient = createClient(clientSideID, context, {
+    useFDv2: true,
+  });
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);
     const label = `The ${flagKey} feature flag evaluates to ${flagValue}.`;

@@ -94,6 +94,28 @@ export type {
   ModeResolutionTable,
 } from './api/datasource';
 
+// FDv2 data source orchestration — exported for platform SDK integration.
+export type {
+  FDv2DataSource,
+  FDv2DataSourceConfig,
+  DataCallback,
+} from './datasource/fdv2/FDv2DataSource';
+export { createFDv2DataSource } from './datasource/fdv2/FDv2DataSource';
+export type { InitializerFactory, SynchronizerSlot } from './datasource/fdv2/SourceManager';
+export { createSynchronizerSlot } from './datasource/fdv2/SourceManager';
+export { makeFDv2Requestor } from './datasource/fdv2/FDv2Requestor';
+export type { FDv2Requestor } from './datasource/fdv2/FDv2Requestor';
+export { createPollingInitializer } from './datasource/fdv2/PollingInitializer';
+export { createPollingSynchronizer } from './datasource/fdv2/PollingSynchronizer';
+export type { PingHandler, StreamingFDv2Base } from './datasource/fdv2/StreamingFDv2Base';
+export { createStreamingBase } from './datasource/fdv2/StreamingFDv2Base';
+export { createStreamingInitializer } from './datasource/fdv2/StreamingInitializerFDv2';
+export { createStreamingSynchronizer } from './datasource/fdv2/StreamingSynchronizerFDv2';
+export { poll as fdv2Poll } from './datasource/fdv2/PollingBase';
+export { flagEvalPayloadToItemDescriptors } from './datasource/flagEvalMapper';
+export { createDataSourceStatusManager } from './datasource/DataSourceStatusManager';
+export type { DataSourceStatusManager } from './datasource/DataSourceStatusManager';
+
 // FDv2 data system validators and platform defaults.
 export {
   dataSystemValidators,

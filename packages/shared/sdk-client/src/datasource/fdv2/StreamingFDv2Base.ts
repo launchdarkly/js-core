@@ -91,7 +91,7 @@ export function createStreamingBase(config: {
 }): StreamingFDv2Base {
   const resultQueue = createAsyncQueue<FDv2SourceResult>();
   const protocolHandler = internal.createProtocolHandler(
-    { flagEval: processFlagEval },
+    { 'flag-eval': processFlagEval, flag_eval: processFlagEval },
     config.logger,
   );
 
@@ -188,7 +188,10 @@ export function createStreamingBase(config: {
         }
 
         if (!event?.data) {
-          config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          // Some events (e.g. 'error') may legitimately arrive without a body.
+          if (eventName !== 'error') {
+            config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          }
           return;
         }
 

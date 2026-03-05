@@ -24,6 +24,7 @@ import {
 
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
+import BrowserFDv2DataManager from './BrowserFDv2DataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
@@ -78,54 +79,65 @@ class BrowserClientImpl extends LDClientImpl {
     const { eventUrlTransformer } = validatedBrowserOptions;
     const endpoints = browserFdv1Endpoints(clientSideId);
 
-    super(
-      clientSideId,
-      autoEnvAttributes,
-      platform,
-      baseOptionsWithDefaults,
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        emitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new BrowserDataManager(
-          platform,
-          flagManager,
-          clientSideId,
-          configuration,
-          validatedBrowserOptions,
-          endpoints.polling,
-          endpoints.streaming,
-          baseHeaders,
-          emitter,
-          diagnosticsManager,
+    const dataManagerFactory = validatedBrowserOptions.useFDv2
+      ? (
+          flagManager: FlagManager,
+          configuration: Configuration,
+          baseHeaders: LDHeaders,
+          emitter: LDEmitter,
+          _diagnosticsManager?: internal.DiagnosticsManager,
+        ) =>
+          new BrowserFDv2DataManager(
+            platform,
+            flagManager,
+            clientSideId,
+            configuration,
+            baseHeaders,
+            emitter,
+          )
+      : (
+          flagManager: FlagManager,
+          configuration: Configuration,
+          baseHeaders: LDHeaders,
+          emitter: LDEmitter,
+          diagnosticsManager?: internal.DiagnosticsManager,
+        ) =>
+          new BrowserDataManager(
+            platform,
+            flagManager,
+            clientSideId,
+            configuration,
+            validatedBrowserOptions,
+            endpoints.polling,
+            endpoints.streaming,
+            baseHeaders,
+            emitter,
+            diagnosticsManager,
+          );
+
+    super(clientSideId, autoEnvAttributes, platform, baseOptionsWithDefaults, dataManagerFactory, {
+      // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
+      getLegacyStorageKeys: () =>
+        getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
+      analyticsEventPath: `/events/bulk/${clientSideId}`,
+      diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
+      includeAuthorizationHeader: false,
+      highTimeoutThreshold: 5,
+      userAgentHeaderName: 'x-launchdarkly-user-agent',
+      dataSystemDefaults: BROWSER_DATA_SYSTEM_DEFAULTS,
+      trackEventModifier: (event: internal.InputCustomEvent) =>
+        new internal.InputCustomEvent(
+          event.context,
+          event.key,
+          event.data,
+          event.metricValue,
+          event.samplingRatio,
+          eventUrlTransformer(getHref()),
         ),
-      {
-        // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
-        getLegacyStorageKeys: () =>
-          getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
-        analyticsEventPath: `/events/bulk/${clientSideId}`,
-        diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
-        includeAuthorizationHeader: false,
-        highTimeoutThreshold: 5,
-        userAgentHeaderName: 'x-launchdarkly-user-agent',
-        dataSystemDefaults: BROWSER_DATA_SYSTEM_DEFAULTS,
-        trackEventModifier: (event: internal.InputCustomEvent) =>
-          new internal.InputCustomEvent(
-            event.context,
-            event.key,
-            event.data,
-            event.metricValue,
-            event.samplingRatio,
-            eventUrlTransformer(getHref()),
-          ),
-        getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
-          internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
-        credentialType: 'clientSideId',
-      },
-    );
+      getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
+        internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
+      credentialType: 'clientSideId',
+    });
 
     this.setEventSendingEnabled(true, false);
 
@@ -283,16 +295,18 @@ class BrowserClientImpl extends LDClientImpl {
   setStreaming(streaming?: boolean): void {
     // With FDv2 we may want to consider if we support connection mode directly.
     // Maybe with an extension to connection mode for 'automatic'.
-    const browserDataManager = this.dataManager as BrowserDataManager;
-    browserDataManager.setForcedStreaming(streaming);
+    if (this.dataManager instanceof BrowserDataManager) {
+      this.dataManager.setForcedStreaming(streaming);
+    }
   }
 
   private _updateAutomaticStreamingState() {
-    const browserDataManager = this.dataManager as BrowserDataManager;
-    const hasListeners = this.emitter
-      .eventNames()
-      .some((name) => name.startsWith('change:') || name === 'change');
-    browserDataManager.setAutomaticStreamingState(hasListeners);
+    if (this.dataManager instanceof BrowserDataManager) {
+      const hasListeners = this.emitter
+        .eventNames()
+        .some((name) => name.startsWith('change:') || name === 'change');
+      this.dataManager.setAutomaticStreamingState(hasListeners);
+    }
   }
 
   override on(eventName: LDEmitterEventName, listener: Function): void {
