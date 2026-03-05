@@ -3,7 +3,7 @@
 import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
 import type { LDReactClientContextValue } from '../LDClient';
-import { useVariationCore } from './useVariation';
+import useVariationCore from './useVariationCore';
 
 /**
  * Returns the boolean variation and evaluation detail of a feature flag, re-rendering only when
