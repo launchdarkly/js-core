@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-use-before-define */
-import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdarkly/js-sdk-common';
+import { Context } from '@launchdarkly/js-sdk-common';
 
 import FlagPersistence from '../../src/flag-manager/FlagPersistence';
 import { createDefaultFlagStore } from '../../src/flag-manager/FlagStore';
@@ -8,7 +7,16 @@ import {
   namespaceForContextData,
   namespaceForContextIndex,
 } from '../../src/storage/namespaceUtils';
-import { Flag, Flags } from '../../src/types';
+import { Flags } from '../../src/types';
+import {
+  makeCorruptStorage,
+  makeIncrementingStamper,
+  makeMemoryStorage,
+  makeMockCrypto,
+  makeMockFlag,
+  makeMockLogger,
+  makeMockPlatform,
+} from './flagManagerTestHelpers';
 
 const TEST_NAMESPACE = 'TestNamespace';
 
@@ -34,10 +42,7 @@ describe('FlagPersistence tests', () => {
     const flagStore = createDefaultFlagStore();
     const mockLogger = makeMockLogger();
     const fpUnderTest = new FlagPersistence(
-      makeMockPlatform(
-        makeCorruptStorage(), // storage that corrupts data
-        makeMockCrypto(),
-      ),
+      makeMockPlatform(makeCorruptStorage(), makeMockCrypto()),
       TEST_NAMESPACE,
       5,
       flagStore,
@@ -102,7 +107,6 @@ describe('FlagPersistence tests', () => {
 
     const context = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
 
-    // put mock old flags into the storage
     const mockOldFlags: Flags = {
       flagA: makeMockFlag(),
     };
@@ -111,7 +115,6 @@ describe('FlagPersistence tests', () => {
     const didLoadCache = await fpUnderTest.loadCached(context);
     expect(didLoadCache).toEqual(true);
 
-    // expect migration to have deleted data at old location
     expect(await memoryStorage.get(context.canonicalKey)).toBeNull();
   });
 
@@ -161,7 +164,7 @@ describe('FlagPersistence tests', () => {
     const fpUnderTest = new FlagPersistence(
       mockPlatform,
       TEST_NAMESPACE,
-      1, // max of 1 for this test
+      1,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -196,6 +199,38 @@ describe('FlagPersistence tests', () => {
     expect(indexData).toContain(context2DataKey);
     expect(await memoryStorage.get(context1DataKey)).toBeNull();
     expect(await memoryStorage.get(context2DataKey)).toContain('flagA');
+  });
+
+  test('init prunes freshness keys alongside cached contexts', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const crypto = makeMockCrypto();
+    const mockPlatform = makeMockPlatform(memoryStorage, crypto);
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      1,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+
+    const context1 = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const context2 = Context.fromLDContext({ kind: 'user', key: 'TestyUser' });
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+
+    await fpUnderTest.init(context1, flags);
+
+    const context1DataKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context1);
+    expect(await memoryStorage.get(`${context1DataKey}_freshness`)).not.toBeNull();
+
+    await fpUnderTest.init(context2, flags);
+
+    expect(await memoryStorage.get(context1DataKey)).toBeNull();
+    expect(await memoryStorage.get(`${context1DataKey}_freshness`)).toBeNull();
   });
 
   test('init kicks timestamp', async () => {
@@ -266,7 +301,6 @@ describe('FlagPersistence tests', () => {
       context,
     );
 
-    // check memory flag store and persistence
     expect(flagStore.get('flagA')?.version).toEqual(2);
     expect(await memoryStorage.get(contextDataKey)).toContain('"version":2');
   });
@@ -318,102 +352,31 @@ describe('FlagPersistence tests', () => {
   });
 });
 
-function makeMockPlatform(storage: Storage, crypto: Crypto): Platform {
-  return {
-    storage,
-    crypto,
-    info: {
-      platformData: jest.fn(),
-      sdkData: jest.fn(),
-    },
-    requests: {
-      fetch: jest.fn(),
-      createEventSource: jest.fn(),
-      getEventSourceCapabilities: jest.fn(),
-    },
-  };
-}
+describe('FlagPersistence freshness', () => {
+  test('init stores freshness record to storage', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const crypto = makeMockCrypto();
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
 
-function makeMemoryStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? value : null; // mapping undefined to null to satisfy interface
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
+    const fpUnderTest = new FlagPersistence(
+      makeMockPlatform(memoryStorage, crypto),
+      TEST_NAMESPACE,
+      5,
+      flagStore,
+      createFlagUpdater(flagStore, mockLogger),
+      mockLogger,
+      () => 42000,
+    );
 
-function makeCorruptStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? 'corruption!!!!!' : null; // mapping undefined to null to satisfy interface
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
+    const context = Context.fromLDContext({ kind: 'user', key: 'test' });
+    await fpUnderTest.init(context, { flagA: { version: 1, flag: makeMockFlag() } });
 
-function makeMockCrypto() {
-  let counter = 0;
-  let lastInput = '';
-  const hasher: Hasher = {
-    update: jest.fn((input) => {
-      lastInput = input;
-      return hasher;
-    }),
-    digest: jest.fn(() => `${lastInput}Hashed`),
-  };
-
-  return {
-    createHash: jest.fn(() => hasher),
-    createHmac: jest.fn(),
-    randomUUID: jest.fn(() => {
-      counter += 1;
-      // Will provide a unique value for tests.
-      // Very much not a UUID of course.
-      return `${counter}`;
-    }),
-  };
-}
-
-function makeMockLogger(): LDLogger {
-  return {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
-}
-
-function makeMockFlag(version: number = 1): Flag {
-  // the values of the flag object itself are not relevant for these tests, the
-  // version on the item descriptor is what matters
-  return {
-    version,
-    flagVersion: version,
-    value: undefined,
-    variation: 0,
-    trackEvents: false,
-  };
-}
-
-function makeIncrementingStamper(): () => number {
-  let count = 0;
-  return () => {
-    count += 1;
-    return count;
-  };
-}
+    const contextDataKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
+    const freshnessJson = await memoryStorage.get(`${contextDataKey}_freshness`);
+    expect(freshnessJson).not.toBeNull();
+    const record = JSON.parse(freshnessJson!);
+    expect(record.timestamp).toBe(42000);
+    expect(record.contextHash).toBeDefined();
+  });
+});

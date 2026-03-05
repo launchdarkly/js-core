@@ -250,7 +250,7 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
@@ -291,7 +291,7 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     expect(ldc.allFlags()).toMatchObject({ 'another-dev-test-flag': false });
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
@@ -373,7 +373,7 @@ describe('sdk-client storage', () => {
     await ldc.identify(context);
     await jest.runAllTimersAsync();
 
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
       1,
       indexStorageKey,
@@ -421,7 +421,11 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': true });
     expect(flagsInStorage['dev-test-flag'].reason).toEqual({
       kind: 'RULE_MATCH',
@@ -455,9 +459,13 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toMatchObject({ 'dev-test-flag': false });
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(6);
     expect(flagsInStorage['dev-test-flag'].version).toEqual(patchResponse.version);
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
@@ -482,13 +490,12 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).toHaveProperty('another-dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      4,
-      flagStorageKey,
-      expect.stringContaining(JSON.stringify(patchResponse)),
-    );
     expect(flagsInStorage).toHaveProperty('another-dev-test-flag');
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['another-dev-test-flag']);
   });
@@ -516,7 +523,7 @@ describe('sdk-client storage', () => {
     await jest.runAllTimersAsync();
 
     // the initial put is resulting in two sets, one for the index and one for the flag data
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
 
     // this is defaultPutResponse
@@ -556,13 +563,12 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
     expect(ldc.allFlags()).not.toHaveProperty('dev-test-flag');
-    expect(mockPlatform.storage.set).toHaveBeenNthCalledWith(
-      4,
-      flagStorageKey,
-      expect.stringContaining('dev-test-flag'),
-    );
     expect(flagsInStorage['dev-test-flag']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['dev-test-flag']);
   });
@@ -591,7 +597,7 @@ describe('sdk-client storage', () => {
 
     expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
     // the initial put is resulting in two sets, one for the index and one for the flag data
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -619,7 +625,7 @@ describe('sdk-client storage', () => {
 
     expect(ldc.allFlags()).toHaveProperty('dev-test-flag');
     // the initial put is resulting in two sets, one for the index and one for the flag data
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(2);
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(3);
     expect(emitter.emit).not.toHaveBeenCalledWith('change');
   });
 
@@ -645,9 +651,13 @@ describe('sdk-client storage', () => {
     await changePromise;
     await jest.runAllTimersAsync();
 
-    const flagsInStorage = JSON.parse(mockPlatform.storage.set.mock.lastCall[1]) as Flags;
+    const flagsInStorage = JSON.parse(
+      mockPlatform.storage.set.mock.calls
+        .filter(([key]: [string]) => key === flagStorageKey)
+        .pop()![1],
+    ) as Flags;
 
-    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(4); // two index saves and two flag saves
+    expect(mockPlatform.storage.set).toHaveBeenCalledTimes(6); // two index saves and two flag saves
     expect(flagsInStorage['does-not-exist']).toMatchObject({ ...deleteResponse, deleted: true });
     expect(emitter.emit).toHaveBeenCalledWith('change', context, ['does-not-exist']);
   });

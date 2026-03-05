@@ -1,91 +1,17 @@
-import { Context, Crypto, Hasher, LDLogger, Platform, Storage } from '@launchdarkly/js-sdk-common';
+import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import DefaultFlagManager from '../../src/flag-manager/FlagManager';
 import { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
-import { ItemDescriptor } from '../../src/flag-manager/ItemDescriptor';
-import { Flag } from '../../src/types';
+import {
+  makeMemoryStorage,
+  makeMockCrypto,
+  makeMockItemDescriptor,
+  makeMockLogger,
+  makeMockPlatform,
+} from './flagManagerTestHelpers';
 
 const TEST_SDK_KEY = 'test-sdk-key';
 const TEST_MAX_CACHED_CONTEXTS = 5;
-
-function makeMockPlatform(storage: Storage, crypto: Crypto): Platform {
-  return {
-    storage,
-    crypto,
-    info: {
-      platformData: jest.fn(),
-      sdkData: jest.fn(),
-    },
-    requests: {
-      fetch: jest.fn(),
-      createEventSource: jest.fn(),
-      getEventSourceCapabilities: jest.fn(),
-    },
-  };
-}
-
-function makeMemoryStorage(): Storage {
-  const data = new Map<string, string>();
-  return {
-    get: async (key: string) => {
-      const value = data.get(key);
-      return value !== undefined ? value : null;
-    },
-    set: async (key: string, value: string) => {
-      data.set(key, value);
-    },
-    clear: async (key: string) => {
-      data.delete(key);
-    },
-  };
-}
-
-function makeMockCrypto() {
-  let counter = 0;
-  let lastInput = '';
-  const hasher: Hasher = {
-    update: jest.fn((input) => {
-      lastInput = input;
-      return hasher;
-    }),
-    digest: jest.fn(() => `${lastInput}Hashed`),
-  };
-
-  return {
-    createHash: jest.fn(() => hasher),
-    createHmac: jest.fn(),
-    randomUUID: jest.fn(() => {
-      counter += 1;
-      return `${counter}`;
-    }),
-  };
-}
-
-function makeMockLogger(): LDLogger {
-  return {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
-}
-
-function makeMockFlag(version: number = 1, value: any = 'test-value'): Flag {
-  return {
-    version,
-    flagVersion: version,
-    value,
-    variation: 0,
-    trackEvents: false,
-  };
-}
-
-function makeMockItemDescriptor(version: number = 1, value: any = 'test-value'): ItemDescriptor {
-  return {
-    version,
-    flag: makeMockFlag(version, value),
-  };
-}
 
 describe('FlagManager override tests', () => {
   let flagManager: DefaultFlagManager;
