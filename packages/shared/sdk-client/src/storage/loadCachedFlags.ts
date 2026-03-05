@@ -1,4 +1,4 @@
-import { Context, Crypto, Storage } from '@launchdarkly/js-sdk-common';
+import { Context, Crypto, LDLogger, Storage } from '@launchdarkly/js-sdk-common';
 
 import { Flags } from '../types';
 import { namespaceForContextData } from './namespaceUtils';
@@ -30,6 +30,7 @@ export async function loadCachedFlags(
   crypto: Crypto,
   environmentNamespace: string,
   context: Context,
+  logger?: LDLogger,
 ): Promise<CachedFlagData | undefined> {
   const storageKey = await namespaceForContextData(crypto, environmentNamespace, context);
   let flagsJson = await storage.get(storageKey);
@@ -47,7 +48,8 @@ export async function loadCachedFlags(
   try {
     const flags: Flags = JSON.parse(flagsJson);
     return { flags, storageKey, fromLegacyKey };
-  } catch {
+  } catch (e: any) {
+    logger?.warn(`Could not parse cached flag evaluations from persistent storage: ${e.message}`);
     return undefined;
   }
 }

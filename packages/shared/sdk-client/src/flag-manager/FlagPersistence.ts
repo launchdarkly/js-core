@@ -72,6 +72,7 @@ export default class FlagPersistence {
       this._platform.crypto,
       this._environmentNamespace,
       context,
+      this._logger,
     );
     if (!cached) {
       return false;

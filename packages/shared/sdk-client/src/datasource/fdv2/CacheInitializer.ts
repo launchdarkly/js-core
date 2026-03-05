@@ -53,7 +53,7 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
     return interrupted(errorInfoFromUnknown('No storage available'), false);
   }
 
-  const cached = await loadCachedFlags(storage, crypto, environmentNamespace, context);
+  const cached = await loadCachedFlags(storage, crypto, environmentNamespace, context, logger);
   if (!cached) {
     logger?.debug('Cache miss for context');
     return interrupted(errorInfoFromUnknown('Cache miss'), false);
