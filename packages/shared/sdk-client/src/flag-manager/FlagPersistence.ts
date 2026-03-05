@@ -52,6 +52,26 @@ export default class FlagPersistence {
   }
 
   /**
+   * Applies a changeset to the flag store. If {@link basis} is true, replaces all
+   * flags via {@link FlagUpdater.init}. If false, upserts individual flags via
+   * {@link FlagUpdater.upsert}. Persists changes after applying.
+   */
+  async applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    basis: boolean,
+  ): Promise<void> {
+    if (basis) {
+      this._flagUpdater.init(context, updates);
+    } else {
+      Object.entries(updates).forEach(([key, descriptor]) => {
+        this._flagUpdater.upsert(context, key, descriptor);
+      });
+    }
+    await this._storeCache(context);
+  }
+
+  /**
    * Loads the flags from persistence for the provided context and gives those to the
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
    */

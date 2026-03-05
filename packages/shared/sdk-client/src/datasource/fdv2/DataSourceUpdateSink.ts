@@ -22,12 +22,11 @@ export interface DataSourceUpdateSinkConfig {
 }
 
 /**
- * Processes FDv2 {@link ChangeSetResult} payloads and applies them to
- * {@link FlagManager}. Manages the selector (basis state) for delta sync
- * and tracks the environmentId from response headers.
+ * Thin adapter between the FDv2 protocol layer and {@link FlagManager}.
+ * Converts FDv2 protocol types (payload updates) to {@link ItemDescriptor}
+ * format and delegates to {@link FlagManager.applyChanges}.
  *
- * This is the client-side equivalent of the server SDK's payload listener,
- * adapted for the Initializer/Synchronizer/FDv2DataSource architecture.
+ * Selector and environmentId are managed by FlagManager, not the sink.
  */
 export interface DataSourceUpdateSink {
   /**
@@ -35,21 +34,6 @@ export interface DataSourceUpdateSink {
    * FlagManager. Pass this as the `dataCallback` to {@link FDv2DataSource}.
    */
   handleChangeSet(result: ChangeSetResult): void;
-
-  /**
-   * Returns the current selector string for use as the `basis` query
-   * parameter. Returns undefined if no selector has been received yet.
-   * Pass this as the `selectorGetter` to {@link FDv2DataSource}.
-   *
-   * The selector is stored in memory only and is NOT persisted with cache
-   * (Requirement 6.2.1).
-   */
-  getSelector(): string | undefined;
-
-  /**
-   * Returns the environment ID from the most recent response headers.
-   */
-  getEnvironmentId(): string | undefined;
 }
 
 /**
@@ -60,55 +44,27 @@ export function createDataSourceUpdateSink(
 ): DataSourceUpdateSink {
   const { flagManager, contextGetter, logger } = config;
 
-  let selector: string | undefined;
-  let environmentId: string | undefined;
-
   return {
     handleChangeSet(result: ChangeSetResult): void {
       const { payload } = result;
-
-      // Update selector if present in payload (Requirement 6.2.1: in-memory only).
-      if (payload.state) {
-        selector = payload.state;
-      }
-
-      // Track environmentId from response headers (Requirement 4.2.1).
-      if (result.environmentId) {
-        environmentId = result.environmentId;
-      }
-
       const context = contextGetter();
+      const selector = payload.state || undefined;
+      const { environmentId } = result;
 
-      switch (payload.type) {
-        case 'full': {
-          const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
-          logger?.debug(`FDv2 full payload: initializing ${Object.keys(descriptors).length} flags`);
-          flagManager.init(context, descriptors);
-          break;
-        }
-        case 'partial': {
-          const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
-          logger?.debug(`FDv2 partial payload: upserting ${Object.keys(descriptors).length} flags`);
-          Object.entries(descriptors).forEach(([key, descriptor]) => {
-            flagManager.upsert(context, key, descriptor);
-          });
-          break;
-        }
-        case 'none':
-          logger?.debug('FDv2 payload type "none": no flag updates needed');
-          break;
-        default:
-          logger?.warn(`Unknown FDv2 payload type: ${payload.type}`);
-          break;
+      if (payload.type === 'none') {
+        logger?.debug('FDv2 payload type "none": no flag updates needed');
+        flagManager.applyChanges(context, {}, false, selector, environmentId);
+        return;
       }
-    },
 
-    getSelector(): string | undefined {
-      return selector;
-    },
+      const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
+      const basis = payload.type === 'full';
 
-    getEnvironmentId(): string | undefined {
-      return environmentId;
+      logger?.debug(
+        `FDv2 ${payload.type} payload: ${basis ? 'initializing' : 'upserting'} ${Object.keys(descriptors).length} flags`,
+      );
+
+      flagManager.applyChanges(context, descriptors, basis, selector, environmentId);
     },
   };
 }

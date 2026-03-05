@@ -87,6 +87,128 @@ function makeMockItemDescriptor(version: number = 1, value: any = 'test-value'):
   };
 }
 
+describe('given a flag manager', () => {
+  let flagManager: DefaultFlagManager;
+  let mockPlatform: Platform;
+  let mockLogger: LDLogger;
+
+  beforeEach(() => {
+    mockLogger = makeMockLogger();
+    mockPlatform = makeMockPlatform(makeMemoryStorage(), makeMockCrypto());
+    flagManager = new DefaultFlagManager(
+      mockPlatform,
+      TEST_SDK_KEY,
+      TEST_MAX_CACHED_CONTEXTS,
+      mockLogger,
+    );
+  });
+
+  it('applies a full changeset replacing all flags', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+
+    await flagManager.applyChanges(
+      context,
+      {
+        'flag-a': makeMockItemDescriptor(1, 'a'),
+        'flag-b': makeMockItemDescriptor(2, 'b'),
+      },
+      true,
+    );
+
+    expect(flagManager.get('flag-a')?.flag.value).toBe('a');
+    expect(flagManager.get('flag-b')?.flag.value).toBe('b');
+  });
+
+  it('applies a full changeset that replaces previous flags', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+
+    await flagManager.applyChanges(context, { old: makeMockItemDescriptor(1, 'old') }, true);
+    await flagManager.applyChanges(context, { new: makeMockItemDescriptor(2, 'new') }, true);
+
+    expect(flagManager.get('old')).toBeUndefined();
+    expect(flagManager.get('new')?.flag.value).toBe('new');
+  });
+
+  it('applies a partial changeset upserting individual flags', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+
+    await flagManager.applyChanges(
+      context,
+      {
+        'flag-a': makeMockItemDescriptor(1, 'a'),
+        'flag-b': makeMockItemDescriptor(1, 'b'),
+      },
+      true,
+    );
+
+    await flagManager.applyChanges(context, { 'flag-b': makeMockItemDescriptor(2, 'b2') }, false);
+
+    expect(flagManager.get('flag-a')?.flag.value).toBe('a');
+    expect(flagManager.get('flag-b')?.flag.value).toBe('b2');
+  });
+
+  it('applies a partial changeset that adds new flags', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+
+    await flagManager.applyChanges(context, { existing: makeMockItemDescriptor(1, 'e') }, true);
+    await flagManager.applyChanges(context, { added: makeMockItemDescriptor(1, 'new') }, false);
+
+    expect(flagManager.get('existing')?.flag.value).toBe('e');
+    expect(flagManager.get('added')?.flag.value).toBe('new');
+  });
+
+  it('applies empty changeset without error', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, false);
+    expect(Object.keys(flagManager.getAll())).toHaveLength(0);
+  });
+
+  it('returns undefined for selector and environmentId initially', () => {
+    expect(flagManager.getSelector()).toBeUndefined();
+    expect(flagManager.getEnvironmentId()).toBeUndefined();
+  });
+
+  it('stores selector from applyChanges', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, 'sel-1');
+    expect(flagManager.getSelector()).toBe('sel-1');
+  });
+
+  it('updates selector on subsequent applyChanges', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, 'sel-1');
+    await flagManager.applyChanges(context, {}, false, 'sel-2');
+    expect(flagManager.getSelector()).toBe('sel-2');
+  });
+
+  it('does not clear selector when not provided', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, 'sel-1');
+    await flagManager.applyChanges(context, {}, false);
+    expect(flagManager.getSelector()).toBe('sel-1');
+  });
+
+  it('stores environmentId from applyChanges', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, undefined, 'env-123');
+    expect(flagManager.getEnvironmentId()).toBe('env-123');
+  });
+
+  it('updates environmentId on subsequent applyChanges', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, undefined, 'env-1');
+    await flagManager.applyChanges(context, {}, false, undefined, 'env-2');
+    expect(flagManager.getEnvironmentId()).toBe('env-2');
+  });
+
+  it('does not clear environmentId when not provided', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.applyChanges(context, {}, true, undefined, 'env-1');
+    await flagManager.applyChanges(context, {}, false);
+    expect(flagManager.getEnvironmentId()).toBe('env-1');
+  });
+});
+
 describe('FlagManager override tests', () => {
   let flagManager: DefaultFlagManager;
   let mockPlatform: Platform;

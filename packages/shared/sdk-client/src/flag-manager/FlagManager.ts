@@ -56,6 +56,39 @@ export interface FlagManager {
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
 
   /**
+   * Applies a changeset to the flag store. If {@link basis} is true, replaces
+   * all flags (like {@link init}). If false, upserts individual flags (like
+   * calling {@link upsert} for each entry).
+   *
+   * Stores the {@link selector} in memory for use as the `basis` query
+   * parameter on subsequent requests. The selector is NOT persisted with
+   * cache (Requirement 6.2.1). Tracks {@link environmentId} from response
+   * headers (Requirement 4.2.1).
+   *
+   * This follows the same pattern as the server SDK's
+   * `LDTransactionalFeatureStore.applyChanges`.
+   */
+  applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    basis: boolean,
+    selector?: string,
+    environmentId?: string,
+  ): Promise<void>;
+
+  /**
+   * Returns the current selector string for use as the `basis` query
+   * parameter. Returns undefined if no selector has been received yet.
+   * The selector is stored in memory only (Requirement 6.2.1).
+   */
+  getSelector(): string | undefined;
+
+  /**
+   * Returns the environment ID from the most recent changeset.
+   */
+  getEnvironmentId(): string | undefined;
+
+  /**
    * Register a flag change callback.
    */
   on(callback: FlagsChangeCallback): void;
@@ -121,6 +154,8 @@ export default class DefaultFlagManager implements FlagManager {
   private _flagUpdater: FlagUpdater;
   private _flagPersistencePromise: Promise<FlagPersistence>;
   private _overrides?: { [key: string]: LDFlagValue };
+  private _selector?: string;
+  private _environmentId?: string;
 
   /**
    * @param platform implementation of various platform provided functionality
@@ -210,6 +245,30 @@ export default class DefaultFlagManager implements FlagManager {
 
   async loadCached(context: Context): Promise<boolean> {
     return (await this._flagPersistencePromise).loadCached(context);
+  }
+
+  async applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    basis: boolean,
+    selector?: string,
+    environmentId?: string,
+  ): Promise<void> {
+    if (selector) {
+      this._selector = selector;
+    }
+    if (environmentId) {
+      this._environmentId = environmentId;
+    }
+    return (await this._flagPersistencePromise).applyChanges(context, updates, basis);
+  }
+
+  getSelector(): string | undefined {
+    return this._selector;
+  }
+
+  getEnvironmentId(): string | undefined {
+    return this._environmentId;
   }
 
   on(callback: FlagsChangeCallback): void {

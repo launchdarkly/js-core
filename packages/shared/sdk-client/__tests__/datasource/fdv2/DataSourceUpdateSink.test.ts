@@ -9,12 +9,9 @@ function makeContext(key: string = 'user-key'): Context {
   return Context.fromLDContext({ kind: 'user', key });
 }
 
-function makeFlagManager(): jest.Mocked<Pick<FlagManager, 'init' | 'upsert' | 'get' | 'getAll'>> {
+function makeFlagManager(): jest.Mocked<Pick<FlagManager, 'applyChanges'>> {
   return {
-    init: jest.fn().mockResolvedValue(undefined),
-    upsert: jest.fn().mockResolvedValue(true),
-    get: jest.fn(),
-    getAll: jest.fn(),
+    applyChanges: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -58,9 +55,9 @@ function makeFlagEvalUpdate(
   };
 }
 
-// -- full payload --
+// -- full payload delegation --
 
-it('calls flagManager.init with converted descriptors on full payload', () => {
+it('delegates full payload to flagManager.applyChanges with basis=true', () => {
   const flagManager = makeFlagManager();
   const context = makeContext();
 
@@ -71,28 +68,27 @@ it('calls flagManager.init with converted descriptors on full payload', () => {
 
   const payload = makePayload({
     type: 'full',
+    state: 'sel-1',
     updates: [makeFlagEvalUpdate('flag-1', 10, true), makeFlagEvalUpdate('flag-2', 20, 'hello')],
   });
 
-  sink.handleChangeSet(makeResult(payload));
+  sink.handleChangeSet(makeResult(payload, { environmentId: 'env-1' }));
 
-  expect(flagManager.init).toHaveBeenCalledTimes(1);
-  expect(flagManager.init).toHaveBeenCalledWith(context, {
-    'flag-1': {
-      version: 10,
-      flag: { value: true, trackEvents: false, version: 10 },
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    context,
+    {
+      'flag-1': { version: 10, flag: { value: true, trackEvents: false, version: 10 } },
+      'flag-2': { version: 20, flag: { value: 'hello', trackEvents: false, version: 20 } },
     },
-    'flag-2': {
-      version: 20,
-      flag: { value: 'hello', trackEvents: false, version: 20 },
-    },
-  });
-  expect(flagManager.upsert).not.toHaveBeenCalled();
+    true,
+    'sel-1',
+    'env-1',
+  );
 });
 
-// -- partial payload --
+// -- partial payload delegation --
 
-it('calls flagManager.upsert for each flag on partial payload', () => {
+it('delegates partial payload to flagManager.applyChanges with basis=false', () => {
   const flagManager = makeFlagManager();
   const context = makeContext();
 
@@ -103,85 +99,44 @@ it('calls flagManager.upsert for each flag on partial payload', () => {
 
   const payload = makePayload({
     type: 'partial',
-    updates: [makeFlagEvalUpdate('flag-a', 5, 42), makeFlagEvalUpdate('flag-b', 6, false)],
+    state: 'sel-2',
+    updates: [makeFlagEvalUpdate('flag-a', 5, 42)],
   });
 
   sink.handleChangeSet(makeResult(payload));
 
-  expect(flagManager.upsert).toHaveBeenCalledTimes(2);
-  expect(flagManager.upsert).toHaveBeenCalledWith(context, 'flag-a', {
-    version: 5,
-    flag: { value: 42, trackEvents: false, version: 5 },
-  });
-  expect(flagManager.upsert).toHaveBeenCalledWith(context, 'flag-b', {
-    version: 6,
-    flag: { value: false, trackEvents: false, version: 6 },
-  });
-  expect(flagManager.init).not.toHaveBeenCalled();
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    context,
+    { 'flag-a': { version: 5, flag: { value: 42, trackEvents: false, version: 5 } } },
+    false,
+    'sel-2',
+    undefined,
+  );
 });
 
-// -- none payload --
+// -- none payload delegation --
 
-it('does not call flagManager on none payload', () => {
+it('delegates none payload to flagManager.applyChanges with empty updates', () => {
   const flagManager = makeFlagManager();
+  const context = makeContext();
 
   const sink = createDataSourceUpdateSink({
     flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => makeContext(),
+    contextGetter: () => context,
   });
 
-  sink.handleChangeSet(makeResult(makePayload({ type: 'none', updates: [] })));
+  sink.handleChangeSet(
+    makeResult(makePayload({ type: 'none', state: 'sel-3', updates: [] }), {
+      environmentId: 'env-2',
+    }),
+  );
 
-  expect(flagManager.init).not.toHaveBeenCalled();
-  expect(flagManager.upsert).not.toHaveBeenCalled();
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(context, {}, false, 'sel-3', 'env-2');
 });
 
-// -- selector management --
+// -- selector passthrough --
 
-it('stores selector from payload state', () => {
-  const flagManager = makeFlagManager();
-
-  const sink = createDataSourceUpdateSink({
-    flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => makeContext(),
-  });
-
-  expect(sink.getSelector()).toBeUndefined();
-
-  sink.handleChangeSet(makeResult(makePayload({ state: 'selector-1' })));
-
-  expect(sink.getSelector()).toBe('selector-1');
-});
-
-it('updates selector on subsequent payloads', () => {
-  const flagManager = makeFlagManager();
-
-  const sink = createDataSourceUpdateSink({
-    flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => makeContext(),
-  });
-
-  sink.handleChangeSet(makeResult(makePayload({ state: 'a' })));
-  sink.handleChangeSet(makeResult(makePayload({ state: 'b' })));
-
-  expect(sink.getSelector()).toBe('b');
-});
-
-it('does not clear selector when payload has no state', () => {
-  const flagManager = makeFlagManager();
-
-  const sink = createDataSourceUpdateSink({
-    flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => makeContext(),
-  });
-
-  sink.handleChangeSet(makeResult(makePayload({ state: 'a' })));
-  sink.handleChangeSet(makeResult(makePayload({ state: undefined })));
-
-  expect(sink.getSelector()).toBe('a');
-});
-
-it('does not set selector from empty string state', () => {
+it('passes undefined selector when payload state is empty string', () => {
   const flagManager = makeFlagManager();
 
   const sink = createDataSourceUpdateSink({
@@ -191,12 +146,16 @@ it('does not set selector from empty string state', () => {
 
   sink.handleChangeSet(makeResult(makePayload({ state: '' })));
 
-  expect(sink.getSelector()).toBeUndefined();
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    true,
+    undefined,
+    undefined,
+  );
 });
 
-// -- environmentId tracking --
-
-it('tracks environmentId from ChangeSetResult', () => {
+it('passes undefined selector when payload state is undefined', () => {
   const flagManager = makeFlagManager();
 
   const sink = createDataSourceUpdateSink({
@@ -204,30 +163,20 @@ it('tracks environmentId from ChangeSetResult', () => {
     contextGetter: () => makeContext(),
   });
 
-  expect(sink.getEnvironmentId()).toBeUndefined();
+  sink.handleChangeSet(makeResult(makePayload({ state: undefined })));
 
-  sink.handleChangeSet(makeResult(makePayload(), { environmentId: 'env-123' }));
-
-  expect(sink.getEnvironmentId()).toBe('env-123');
-});
-
-it('updates environmentId on subsequent results', () => {
-  const flagManager = makeFlagManager();
-
-  const sink = createDataSourceUpdateSink({
-    flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => makeContext(),
-  });
-
-  sink.handleChangeSet(makeResult(makePayload(), { environmentId: 'env-1' }));
-  sink.handleChangeSet(makeResult(makePayload(), { environmentId: 'env-2' }));
-
-  expect(sink.getEnvironmentId()).toBe('env-2');
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    true,
+    undefined,
+    undefined,
+  );
 });
 
 // -- non-flagEval kinds --
 
-it('ignores non-flagEval update kinds', () => {
+it('ignores non-flagEval update kinds in conversion', () => {
   const flagManager = makeFlagManager();
 
   const sink = createDataSourceUpdateSink({
@@ -245,12 +194,18 @@ it('ignores non-flagEval update kinds', () => {
 
   sink.handleChangeSet(makeResult(payload));
 
-  expect(flagManager.init).toHaveBeenCalledWith(expect.anything(), {});
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    expect.anything(),
+    {},
+    true,
+    expect.anything(),
+    undefined,
+  );
 });
 
 // -- delete handling --
 
-it('handles delete updates in full payload', () => {
+it('converts delete updates to tombstone descriptors', () => {
   const flagManager = makeFlagManager();
   const context = makeContext();
 
@@ -266,44 +221,18 @@ it('handles delete updates in full payload', () => {
 
   sink.handleChangeSet(makeResult(payload));
 
-  expect(flagManager.init).toHaveBeenCalledWith(context, {
-    'deleted-flag': {
-      version: 7,
-      flag: {
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    context,
+    {
+      'deleted-flag': {
         version: 7,
-        deleted: true,
-        value: undefined,
-        trackEvents: false,
+        flag: { version: 7, deleted: true, value: undefined, trackEvents: false },
       },
     },
-  });
-});
-
-it('handles delete updates in partial payload', () => {
-  const flagManager = makeFlagManager();
-  const context = makeContext();
-
-  const sink = createDataSourceUpdateSink({
-    flagManager: flagManager as unknown as FlagManager,
-    contextGetter: () => context,
-  });
-
-  const payload = makePayload({
-    type: 'partial',
-    updates: [makeFlagEvalUpdate('deleted-flag', 7, undefined, { deleted: true })],
-  });
-
-  sink.handleChangeSet(makeResult(payload));
-
-  expect(flagManager.upsert).toHaveBeenCalledWith(context, 'deleted-flag', {
-    version: 7,
-    flag: {
-      version: 7,
-      deleted: true,
-      value: undefined,
-      trackEvents: false,
-    },
-  });
+    true,
+    expect.anything(),
+    undefined,
+  );
 });
 
 // -- context getter --
@@ -320,11 +249,23 @@ it('uses current context from getter on each call', () => {
   });
 
   sink.handleChangeSet(makeResult(makePayload({ type: 'full', updates: [] })));
-  expect(flagManager.init).toHaveBeenLastCalledWith(contextA, {});
+  expect(flagManager.applyChanges).toHaveBeenLastCalledWith(
+    contextA,
+    {},
+    true,
+    expect.anything(),
+    undefined,
+  );
 
   currentContext = contextB;
   sink.handleChangeSet(makeResult(makePayload({ type: 'full', updates: [] })));
-  expect(flagManager.init).toHaveBeenLastCalledWith(contextB, {});
+  expect(flagManager.applyChanges).toHaveBeenLastCalledWith(
+    contextB,
+    {},
+    true,
+    expect.anything(),
+    undefined,
+  );
 });
 
 // -- logging --
@@ -340,10 +281,10 @@ it('logs debug messages for each payload type', () => {
   });
 
   sink.handleChangeSet(makeResult(makePayload({ type: 'full', updates: [] })));
-  expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('full payload'));
+  expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('full'));
 
   sink.handleChangeSet(makeResult(makePayload({ type: 'partial', updates: [] })));
-  expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('partial payload'));
+  expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('partial'));
 
   sink.handleChangeSet(makeResult(makePayload({ type: 'none', updates: [] })));
   expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('none'));
