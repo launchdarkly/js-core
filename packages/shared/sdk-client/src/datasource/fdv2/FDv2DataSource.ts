@@ -1,4 +1,4 @@
-import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceStatusManager } from '../DataSourceStatusManager';
 import {
@@ -12,9 +12,11 @@ import { ChangeSetResult, FDv2SourceResult, StatusResult } from './FDv2SourceRes
 import { createSourceManager, InitializerFactory, SynchronizerSlot } from './SourceManager';
 
 /**
- * Callback invoked when the orchestrator produces a changeSet payload.
+ * Callback invoked when the orchestrator produces a changeSet result.
+ * Receives the full {@link ChangeSetResult} so consumers have access to both
+ * the payload and metadata (environmentId, fdv1Fallback).
  */
-export type DataCallback = (payload: internal.Payload) => void;
+export type DataCallback = (result: ChangeSetResult) => void;
 
 /**
  * Configuration for the {@link FDv2DataSource} orchestrator.
@@ -107,7 +109,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   }
 
   function applyChangeSet(result: ChangeSetResult) {
-    dataCallback(result.payload);
+    dataCallback(result);
     statusManager.requestStateUpdate('VALID');
   }
 

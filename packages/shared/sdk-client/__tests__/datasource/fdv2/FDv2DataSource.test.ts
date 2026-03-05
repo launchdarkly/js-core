@@ -41,7 +41,7 @@ it('resolves start() when initializer returns changeSet with selector', async ()
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   expect(statusManager.requestStateUpdate).toHaveBeenCalledWith('INITIALIZING');
   expect(statusManager.requestStateUpdate).toHaveBeenCalledWith('VALID');
   ds.close();
@@ -114,7 +114,7 @@ it('continues past initializer errors', async () => {
 
   expect(logger.warn).toHaveBeenCalled();
   expect(statusManager.reportError).toHaveBeenCalled();
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -135,7 +135,7 @@ it('continues past terminal errors in initializers', async () => {
   });
 
   await ds.start();
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -157,7 +157,7 @@ it('skips to synchronizers when no initializers are configured', async () => {
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -181,7 +181,7 @@ it('delivers changeSet from synchronizer to callback', async () => {
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   expect(statusManager.requestStateUpdate).toHaveBeenCalledWith('VALID');
   ds.close();
 });
@@ -213,7 +213,7 @@ it('blocks synchronizer on terminal error and moves to next', async () => {
 
   expect(logger.error).toHaveBeenCalled();
   expect(statusManager.reportError).toHaveBeenCalled();
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -239,7 +239,7 @@ it('continues on interrupted results from synchronizer', async () => {
   await ds.start();
 
   expect(statusManager.reportError).toHaveBeenCalled();
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -261,7 +261,7 @@ it('continues on goodbye results from synchronizer', async () => {
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -315,8 +315,8 @@ it('triggers fdv1 fallback when synchronizer changeSet has fdv1Fallback flag', a
   await statusManager.waitForState('VALID', 2);
 
   expect(dataCallback).toHaveBeenCalledTimes(2);
-  expect(dataCallback).toHaveBeenCalledWith(fdv2Payload);
-  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload: fdv2Payload }));
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload: fdv1Payload }));
   ds.close();
 });
 
@@ -348,7 +348,7 @@ it('triggers fdv1 fallback on terminal error with fdv1Fallback flag', async () =
   await ds.start();
 
   expect(logger.error).toHaveBeenCalled();
-  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload: fdv1Payload }));
   ds.close();
 });
 
@@ -398,7 +398,7 @@ it('falls back to next synchronizer when fallback condition fires', async () => 
   await ds.start();
 
   expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Fallback condition fired'));
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -471,7 +471,7 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
   await ds.start();
 
   expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Recovery condition fired'));
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -614,7 +614,7 @@ it('resolves with initializer data even when no synchronizers exist', async () =
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -678,9 +678,9 @@ it('delivers multiple changeSets from synchronizer in order', async () => {
   await statusManager.waitForState('VALID', 3);
 
   expect(dataCallback).toHaveBeenCalledTimes(3);
-  expect(dataCallback).toHaveBeenNthCalledWith(1, payload1);
-  expect(dataCallback).toHaveBeenNthCalledWith(2, payload2);
-  expect(dataCallback).toHaveBeenNthCalledWith(3, payload3);
+  expect(dataCallback).toHaveBeenNthCalledWith(1, expect.objectContaining({ payload: payload1 }));
+  expect(dataCallback).toHaveBeenNthCalledWith(2, expect.objectContaining({ payload: payload2 }));
+  expect(dataCallback).toHaveBeenNthCalledWith(3, expect.objectContaining({ payload: payload3 }));
   ds.close();
 });
 
@@ -709,7 +709,7 @@ it('first initializer with selector prevents second initializer from running', a
   await ds.start();
 
   expect(dataCallback).toHaveBeenCalledTimes(1);
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   expect(secondInitFactory).not.toHaveBeenCalled();
   ds.close();
 });
@@ -804,7 +804,7 @@ it('fdv1 fallback not triggered when fdv1Fallback flag is absent', async () => {
 
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   expect(fdv1Factory).not.toHaveBeenCalled();
   ds.close();
 });
@@ -840,7 +840,7 @@ it('fdv1 fallback blocks other synchronizers', async () => {
 
   // FDv1 fallback should block non-FDv1 synchronizers — second sync should not be called
   expect(secondSyncFactory).not.toHaveBeenCalled();
-  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload: fdv1Payload }));
   ds.close();
 });
 
@@ -864,7 +864,7 @@ it('fdv1 fallback ignored when no FDv1 synchronizer is configured', async () => 
   await ds.start();
 
   // Should process the changeSet normally without error
-  expect(dataCallback).toHaveBeenCalledWith(payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
   ds.close();
 });
 
@@ -892,6 +892,6 @@ it('fdv1 fallback triggered on interrupted result with fdv1Fallback flag', async
   // Start resolves when the fdv1 synchronizer delivers its changeSet.
   await ds.start();
 
-  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  expect(dataCallback).toHaveBeenCalledWith(expect.objectContaining({ payload: fdv1Payload }));
   ds.close();
 });
