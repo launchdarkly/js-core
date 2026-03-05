@@ -72,7 +72,7 @@ export interface LDJudgeConfiguration {
 // ============================================================================
 
 /**
- * Base AI Config interface for default implementations with optional enabled property.
+ * Base AI Config for default implementations with optional enabled property.
  */
 export interface LDAIConfigDefault {
   /**
@@ -252,9 +252,9 @@ export interface LDAIAgentRequestConfig {
   key: string;
 
   /**
-   * Default configuration for the agent.
+   * Default configuration for the agent. When omitted or null, a disabled default is used.
    */
-  defaultValue: LDAIAgentConfigDefault;
+  defaultValue?: LDAIAgentConfigDefault;
 
   /**
    * Variables for instructions interpolation.

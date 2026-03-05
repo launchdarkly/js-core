@@ -56,13 +56,9 @@ const defaultConfig = {
 };
 ```
 
-### Disabled Default
+### Default value
 
-```typescript
-const defaultConfig = {
-  enabled: false
-};
-```
+The `defaultValue` parameter is optional. When omitted, a disabled default is used.
 
 ## Retrieving AI Configurations
 

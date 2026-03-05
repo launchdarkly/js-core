@@ -25,8 +25,8 @@ export interface LDAIClient {
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
-   * @param defaultValue A fallback value containing model configuration and messages. This will
-   * be used if the configuration is not available from LaunchDarkly.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -41,7 +41,7 @@ export interface LDAIClient {
    * const context = {...};
    * const variables = {username: 'john'};
    * const defaultValue = {
-   *  enabled: false,
+   *  enabled: true,
    *  model: { name: 'gpt-4' },
    *  provider: { name: 'openai' },
    * };
@@ -73,7 +73,7 @@ export interface LDAIClient {
   completionConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig>;
 
@@ -83,7 +83,7 @@ export interface LDAIClient {
   config(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAICompletionConfig>;
 
@@ -95,7 +95,8 @@ export interface LDAIClient {
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
-   * @param defaultValue A fallback value containing model configuration and instructions.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
    * @param variables A map of key-value pairs representing dynamic variables to be injected into
    * the instructions. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
@@ -123,7 +124,7 @@ export interface LDAIClient {
   agentConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfigDefault,
+    defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig>;
 
@@ -133,7 +134,7 @@ export interface LDAIClient {
   agent(
     key: string,
     context: LDContext,
-    defaultValue: LDAIAgentConfigDefault,
+    defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig>;
 
@@ -145,8 +146,8 @@ export interface LDAIClient {
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
-   * @param defaultValue A fallback value containing model configuration and messages. This will
-   * be used if the configuration is not available from LaunchDarkly.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
    * @param variables Optional variables for template interpolation in messages and instructions.
    * @returns A promise that resolves to a tracked judge configuration.
    *
@@ -167,7 +168,7 @@ export interface LDAIClient {
   judgeConfig(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfigDefault,
+    defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig>;
 
@@ -175,8 +176,8 @@ export interface LDAIClient {
    * Retrieves and processes multiple AI Config agents based on the provided agent configurations
    * and LaunchDarkly context. This includes the model configuration and the customized instructions.
    *
-   * @param agentConfigs An array of agent configurations, each containing the agent key, default configuration,
-   * and variables for instructions interpolation.
+   * @param agentConfigs An array of agent configurations, each containing the agent key, optional default
+   * configuration (when omitted or null, a disabled default is used), and variables for instructions interpolation.
    * @param context The LaunchDarkly context object that contains relevant information about the
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
@@ -236,7 +237,8 @@ export interface LDAIClient {
    *
    * @param key The key identifying the AI chat configuration to use.
    * @param context The standard LDContext used when evaluating flags.
-   * @param defaultValue A default value representing a standard AI chat config result.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
    * @param variables Dictionary of values for instruction interpolation.
    * The variables will also be used for judge evaluation. For the judge only, the variables
    * `message_history` and `response_to_evaluate` are reserved and will be ignored.
@@ -248,7 +250,7 @@ export interface LDAIClient {
    * const key = "customer_support_chat";
    * const context = {...};
    * const defaultValue = {
-   *   enabled: false,
+   *   enabled: true,
    *   model: { name: "gpt-4" },
    *   provider: { name: "openai" },
    *   messages: [
@@ -267,7 +269,7 @@ export interface LDAIClient {
   createChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;
@@ -278,7 +280,7 @@ export interface LDAIClient {
   initChat(
     key: string,
     context: LDContext,
-    defaultValue: LDAICompletionConfigDefault,
+    defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;
@@ -288,7 +290,8 @@ export interface LDAIClient {
    *
    * @param key The key identifying the AI judge configuration to use
    * @param context Standard LDContext used when evaluating flags
-   * @param defaultValue A default value representing a standard AI config result
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
    * @param variables Dictionary of values for instruction interpolation.
    * The variables `message_history` and `response_to_evaluate` are reserved for the judge and will be ignored.
    * @param defaultAiProvider Optional default AI provider to use.
@@ -318,7 +321,7 @@ export interface LDAIClient {
   createJudge(
     key: string,
     context: LDContext,
-    defaultValue: LDAIJudgeConfigDefault,
+    defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined>;

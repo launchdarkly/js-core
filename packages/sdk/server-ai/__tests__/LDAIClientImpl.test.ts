@@ -740,3 +740,62 @@ describe('createJudge method', () => {
     judgeConfigSpy.mockRestore();
   });
 });
+
+describe('optional default values', () => {
+  it('uses a disabled completion config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.completionConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+
+  it('uses a disabled agent config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'agent' },
+      instructions: '',
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.agentConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+
+  it('uses a disabled judge config when no default is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const disabledFlagValue = {
+      _ldMeta: { variationKey: '', enabled: false, version: 1, mode: 'judge' },
+      messages: [],
+      evaluationMetricKeys: [],
+    };
+    mockLdClient.variation.mockResolvedValue(disabledFlagValue);
+
+    const result = await client.judgeConfig(key, testContext);
+
+    expect(mockLdClient.variation).toHaveBeenCalledWith(
+      key,
+      testContext,
+      expect.objectContaining({ _ldMeta: expect.objectContaining({ enabled: false }) }),
+    );
+    expect(result.enabled).toBe(false);
+  });
+});

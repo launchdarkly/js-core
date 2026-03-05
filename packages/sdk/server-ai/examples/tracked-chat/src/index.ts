@@ -35,20 +35,19 @@ async function main() {
   }
 
   const aiClient = initAi(ldClient);
-  const defaultValue = {
-    enabled: true,
-    model: { name: 'gpt-3.5-turbo' },
-    messages: [{ role: 'system' as const, content: 'You are a helpful assistant.' }],
-    provider: { name: 'openai' },
-  };
 
-  // You provide a disabled default value
-  // const defaultValue = {
-  //   enabled: false,
-  // };
-
-  // Get AI chat configuration from LaunchDarkly
-  const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, {
+  // Get AI chat configuration from LaunchDarkly.
+  //
+  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
+  // Example:
+  //   const defaultValue = {
+  //     enabled: true,
+  //     model: { name: 'gpt-4' },
+  //     provider: { name: 'openai' },
+  //     messages: [...]
+  //   };
+  //   const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, { companyName: 'LaunchDarkly' });
+  const chat = await aiClient.createChat(aiConfigKey, context, undefined, {
     companyName: 'LaunchDarkly',
   });
 
