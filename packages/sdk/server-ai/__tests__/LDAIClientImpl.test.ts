@@ -799,4 +799,3 @@ describe('optional default values', () => {
     expect(result.enabled).toBe(false);
   });
 });
-

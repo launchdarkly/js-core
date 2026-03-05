@@ -220,7 +220,13 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
-    const config = await this._evaluate(key, context, defaultValue ?? disabledAIConfig, 'agent', variables);
+    const config = await this._evaluate(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      'agent',
+      variables,
+    );
     return config as LDAIAgentConfig;
   }
 
@@ -283,7 +289,12 @@ export class LDAIClientImpl implements LDAIClient {
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
-    const config = await this._completionConfig(key, context, defaultValue ?? disabledAIConfig, variables);
+    const config = await this._completionConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+    );
 
     if (!config.enabled || !config.tracker) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
