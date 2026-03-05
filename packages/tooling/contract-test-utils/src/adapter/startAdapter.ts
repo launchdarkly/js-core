@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
 import cors from 'cors';
