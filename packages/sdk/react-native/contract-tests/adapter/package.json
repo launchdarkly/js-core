@@ -4,7 +4,7 @@
   "description": "Adapts REST interface to a websocket for use in React Native.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "yarn workspace @launchdarkly/js-contract-test-utils build:server && tsc",
     "start": "yarn build && node dist/index.js"
   },
   "author": "",
