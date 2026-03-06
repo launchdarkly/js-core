@@ -9,9 +9,12 @@ on:
     branches: [main, 'feat/**']
     paths-ignore:
       - '**.md'
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
   build-test-browser:
+    if: github.event_name != 'schedule'
     permissions:
       pull-requests: write
     runs-on: ubuntu-latest
@@ -128,3 +131,33 @@ jobs:
           pkill -f "playwright" || true
           pkill -f "http-server" || true
           pkill -f "browser-contract-test-adapter" || true
+
+  run-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+      - uses: ./actions/release-secrets
+        name: 'Get the client-side SDK key'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LD_CLIENT_SIDE_ID'
+      - uses: ./actions/release-secrets
+        name: 'Get the test feature flag key'
+        with:
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LD_FLAG_KEY'
+      - name: Install dependencies
+        run: yarn workspaces focus @launchdarkly/browser-example
+      - name: Build SDK dependencies
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/browser-example' run build
+      - name: Build example app
+        run: yarn workspace @launchdarkly/browser-example build
+      - name: Install Playwright dependencies
+        run: yarn workspace @launchdarkly/browser-example playwright install --with-deps chromium
+      - name: Run e2e tests
+        run: yarn workspace @launchdarkly/browser-example test
