@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "sdk-testharness-server": "./dist/bin/sdk-testharness-server.js",
+    "sts": "./dist/bin/sdk-testharness-server.js"
+  },
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -43,7 +47,7 @@
   "scripts": {
     "build": "tsc",
     "build:server": "tsc -p tsconfig.server.json",
-    "build:adapter": "tsc -p tsconfig.adapter.json",
+    "build:adapter": "tsc -p tsconfig.adapter.json && chmod +x dist/bin/sdk-testharness-server.js",
     "clean": "rimraf dist"
   },
   "dependencies": {

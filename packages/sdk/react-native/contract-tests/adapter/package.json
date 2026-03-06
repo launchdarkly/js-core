@@ -2,18 +2,13 @@
   "name": "react-native-contract-test-adapter",
   "version": "1.0.0",
   "description": "Adapts REST interface to a websocket for use in React Native.",
-  "type": "module",
-  "main": "dist/index.js",
   "scripts": {
-    "build": "yarn workspace @launchdarkly/js-contract-test-utils build:adapter && tsc",
-    "start": "yarn build && node dist/index.js"
+    "build": "yarn workspace @launchdarkly/js-contract-test-utils build:adapter",
+    "start": "yarn build && sdk-testharness-server adapter"
   },
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
     "@launchdarkly/js-contract-test-utils": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "^5.6.2"
   }
 }
