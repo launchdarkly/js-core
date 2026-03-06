@@ -70,13 +70,13 @@ it('produces a partial changeSet for incremental updates', async () => {
   await base.takeResult();
 
   simulateEvent(mockEventSource, 'put-object', {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-a',
     version: 2,
     object: { value: false, trackEvents: true },
   });
   simulateEvent(mockEventSource, 'delete-object', {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-b',
     version: 3,
   });
@@ -165,7 +165,7 @@ it('silently ignores unrecognized object kinds', async () => {
     payloads: [{ intentCode: 'xfer-full', id: 'p1', target: 1, reason: 'test' }],
   });
   simulateEvent(mockEventSource, 'put-object', {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'known',
     version: 1,
     object: { value: true, trackEvents: false },
@@ -291,7 +291,7 @@ it('resets protocol handler on reconnection (onopen)', async () => {
     payloads: [{ intentCode: 'xfer-full', id: 'p1', target: 1, reason: 'test' }],
   });
   simulateEvent(mockEventSource, 'put-object', {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-a',
     version: 1,
     object: { value: true, trackEvents: false },
@@ -322,7 +322,7 @@ it('handles ping events by calling ping handler and queuing the result', async (
       version: 1,
       state: '(p:p1:1)',
       type: 'full' as const,
-      updates: [{ kind: 'flagEval', key: 'ping-flag', version: 1, object: { value: 'from-ping' } }],
+      updates: [{ kind: 'flag-eval', key: 'ping-flag', version: 1, object: { value: 'from-ping' } }],
     },
     fdv1Fallback: false,
   };
