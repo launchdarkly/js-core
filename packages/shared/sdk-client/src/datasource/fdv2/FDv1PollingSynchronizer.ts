@@ -33,9 +33,6 @@ function flagsToPayload(flags: Flags): internal.Payload {
   return {
     id: PAYLOAD_ID,
     version: 1,
-    // The selector MUST be empty — a non-empty selector would cause FDv2
-    // synchronizers to try to resume from a bogus state.
-    state: '',
     type: 'full',
     updates,
   };

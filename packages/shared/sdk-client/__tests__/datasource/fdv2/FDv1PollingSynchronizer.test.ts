@@ -82,7 +82,7 @@ it('produces a changeSet with full payload from a successful poll', async () => 
   sync.close();
 });
 
-it('produces payloads with an empty selector', async () => {
+it('produces payloads without a selector', async () => {
   const requestor = makeFDv1Requestor(makeFDv1Flags({ flag: { value: true } }));
   const sync = createFDv1PollingSynchronizer(requestor, 30000, logger);
 
@@ -92,7 +92,7 @@ it('produces payloads with an empty selector', async () => {
   const result = await nextPromise;
   expect(result.type).toBe('changeSet');
   if (result.type === 'changeSet') {
-    expect(result.payload.state).toBe('');
+    expect(result.payload.state).toBeUndefined();
   }
 
   sync.close();
