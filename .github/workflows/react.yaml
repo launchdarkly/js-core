@@ -32,42 +32,42 @@ jobs:
 
       # Contract Tests
       - name: Install contract test dependencies
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
         run: |
-          yarn workspaces focus @launchdarkly/react-sdk @launchdarkly/react-sdk-contract-tests browser-contract-test-adapter
-          yarn workspace @launchdarkly/react-sdk-contract-tests build
+          yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' install
+          yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" install
+          yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' run build
+          yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" run build
       - name: Install Playwright browsers
         run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
-      - name: Launch contract test services
+      - name: Run test adapter
         run: |
-          yarn workspace @launchdarkly/react-sdk-contract-tests run start:adapter &> /tmp/adapter.log &
-          yarn workspace @launchdarkly/react-sdk-contract-tests run start:entity &> /tmp/entity.log &
-          echo "Waiting for adapter on port 8000..."
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:adapter > /tmp/adapter.log 2>&1 &
+          echo $! > /tmp/adapter.pid
+      - name: Run test entity
+        run: |
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:entity > /tmp/entity.log 2>&1 &
+          echo $! > /tmp/entity.pid
+      - name: Run test browser
+        run: |
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:browser > /tmp/browser.log 2>&1 &
+          echo $! > /tmp/browser.pid
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for entity on port 8000..."
           for i in {1..30}; do
             if curl -s http://localhost:8000 > /dev/null; then
-              echo "Adapter ready"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "Timeout waiting for adapter"
-              cat /tmp/adapter.log
-              exit 1
-            fi
-            sleep 1
-          done
-          echo "Waiting for entity on port 8002..."
-          for i in {1..30}; do
-            if curl -s http://localhost:8002 > /dev/null; then
               echo "Entity ready"
               break
             fi
             if [ $i -eq 30 ]; then
               echo "Timeout waiting for entity"
-              cat /tmp/entity.log
+              cat /tmp/test-service.log
               exit 1
             fi
             sleep 1
           done
-          yarn workspace @launchdarkly/react-sdk-contract-tests run start:browser &> /tmp/browser.log &
           sleep 5
       - name: Run contract tests
         uses: launchdarkly/gh-actions/actions/contract-tests@5adb11fd6953e1bc35d9cf1fc1b4374c464e3a8b
@@ -75,3 +75,9 @@ jobs:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/react/contract-tests/suppressions.txt --stop-service-at-end'
+      - name: Cleanup contract test services
+        if: always()
+        run: |
+          [ -f /tmp/browser.pid ] && kill $(cat /tmp/browser.pid) || true
+          [ -f /tmp/entity.pid ] && kill $(cat /tmp/entity.pid) || true
+          [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true

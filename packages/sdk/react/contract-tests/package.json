@@ -8,7 +8,7 @@
     "start:adapter": "yarn workspace browser-contract-test-adapter run start",
     "dev": "next dev -p 8002",
     "build": "next build",
-    "start:entity": "next start -p 8002",
+    "start:entity": "next dev -p 8002",
     "start:browser": "node open-browser.mjs http://localhost:8002",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
@@ -19,7 +19,6 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "@swc/helpers": "^0.5.15",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

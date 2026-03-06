@@ -14,6 +14,12 @@ const url = process.argv[2] || 'http://localhost:8002';
 
 console.log(`Opening headless browser at ${url}...`);
 
+let close = null;
+
+const lifetimePromise = new Promise((resolve) => {
+  close = resolve;
+});
+
 const browser = await chromium.launch({
   headless: true,
   args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -36,7 +42,13 @@ await page.goto(url);
 
 console.log('Browser is open and running. Press Ctrl+C to close.');
 
+// Handle termination signals - close browser gracefully
+const shutdown = async () => {
+  await browser.close();
+  close();
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
 // Keep the process alive
-await new Promise(() => {
-  // Intentionally never resolve - keeps browser open until process is killed
-});
+await lifetimePromise;

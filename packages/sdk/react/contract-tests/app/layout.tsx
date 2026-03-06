@@ -29,6 +29,7 @@ export default function App({ children }: { children: React.ReactNode }) {
       'ws://localhost:8001',
       commandHandlers.current,
 
+      // On create client
       async (params: CreateInstanceParams) => {
         const id = String(clientCounterRef.current);
         clientCounterRef.current += 1;
@@ -81,6 +82,7 @@ export default function App({ children }: { children: React.ReactNode }) {
         return id;
       },
 
+      // On delete client
       (id: string) => {
         setClients((prev) => {
           const record = prev.find((r) => r.id === id);
