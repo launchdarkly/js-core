@@ -81,7 +81,8 @@ export function createPollingSynchronizer(
     // Schedule next poll after completion, accounting for elapsed time.
     // This ensures sequential execution — no overlapping requests.
     if (!stopped) {
-      const sleepFor = Math.max(pollIntervalMs - (Date.now() - startTime), 0);
+      const elapsed = Date.now() - startTime;
+      const sleepFor = Math.min(Math.max(pollIntervalMs - elapsed, 0), pollIntervalMs);
       timeoutHandle = setTimeout(() => {
         doPoll();
       }, sleepFor);
