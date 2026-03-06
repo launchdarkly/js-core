@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.22.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.21.0...js-client-sdk-common-v1.22.0) (2026-03-06)
+
+
+### Features
+
+* Add mode resolution table for FDv2. ([#1146](https://github.com/launchdarkly/js-core/issues/1146)) ([ab2436d](https://github.com/launchdarkly/js-core/commit/ab2436dc677cfc923fba051aab649a2a7e959a3e))
+* FDv2 Cache Initializer ([#1147](https://github.com/launchdarkly/js-core/issues/1147)) ([7d6299f](https://github.com/launchdarkly/js-core/commit/7d6299fc20dac864487b1f07f283c41e07bf73de))
+
 ## [1.21.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.20.0...js-client-sdk-common-v1.21.0) (2026-03-04)
 
 
