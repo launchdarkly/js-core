@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -9,10 +8,32 @@ import http from 'node:http';
 import util from 'node:util';
 import { WebSocketServer } from 'ws';
 
-let server: http.Server | undefined;
+export interface AdapterOptions {
+  /** Port for the WebSocket server that connects to the entity. Defaults to 8001. */
+  wsPort?: number;
+  /** Port for the HTTP REST server that the test harness connects to. Defaults to 8000. */
+  httpPort?: number;
+}
 
-async function main() {
-  const wss = new WebSocketServer({ port: 8001 });
+/**
+ * Starts the contract test adapter that bridges the REST-based test harness
+ * protocol to a WebSocket connection for browser-like environments (browser,
+ * React Native, etc.).
+ *
+ * The adapter runs two servers:
+ * 1. A WebSocket server that the entity (browser/RN app) connects to
+ * 2. An Express HTTP server that the test harness sends REST commands to
+ *
+ * Commands from the test harness are forwarded over the WebSocket to the entity,
+ * and responses are relayed back.
+ */
+export function startAdapter(options?: AdapterOptions): void {
+  const wsPort = options?.wsPort ?? 8001;
+  const httpPort = options?.httpPort ?? 8000;
+
+  let server: http.Server | undefined;
+
+  const wss = new WebSocketServer({ port: wsPort });
   const waiters: Record<string, (data: unknown) => void> = {};
 
   console.log('Running contract test harness adapter.');
@@ -46,8 +67,6 @@ async function main() {
     }
 
     const app = express();
-
-    const port = 8000;
 
     app.use(
       cors({
@@ -104,9 +123,8 @@ async function main() {
       res.send();
     });
 
-    server = app.listen(port, () => {
-      console.log('Listening on port %d', port);
+    server = app.listen(httpPort, () => {
+      console.log('Listening on port %d', httpPort);
     });
   });
 }
-main();

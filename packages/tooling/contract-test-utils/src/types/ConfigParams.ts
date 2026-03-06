@@ -1,4 +1,4 @@
-import { LDContext } from '@launchdarkly/js-client-sdk';
+import { LDContext } from './compat.js';
 
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
@@ -18,6 +18,7 @@ export interface SDKConfigParams {
   clientSide?: SDKConfigClientSideParams;
   hooks?: SDKConfigHooksParams;
   wrapper?: SDKConfigWrapper;
+  proxy?: SDKConfigProxyParams;
 }
 
 export interface SDKConfigTLSParams {
@@ -80,6 +81,10 @@ export interface SDKConfigHookInstance {
 
 export interface SDKConfigHooksParams {
   hooks: SDKConfigHookInstance[];
+}
+
+export interface SDKConfigProxyParams {
+  httpProxy?: string;
 }
 
 export interface SDKConfigWrapper {

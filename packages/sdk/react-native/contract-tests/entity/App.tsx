@@ -1,7 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import TestHarnessWebSocket from './src/TestHarnessWebSocket';
+import { TestHarnessWebSocket } from '@launchdarkly/js-contract-test-utils/client';
+
+import { newSdkClientEntity } from './src/ClientEntity';
+
+const capabilities = [
+  'client-side',
+  'mobile',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-per-context-summaries',
+  'track-hooks',
+];
 
 const styles = StyleSheet.create({
   container: {
@@ -24,7 +40,12 @@ export default function App() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const ws = new TestHarnessWebSocket('ws://localhost:8001', setConnected);
+    const ws = new TestHarnessWebSocket(
+      'ws://localhost:8001',
+      capabilities,
+      newSdkClientEntity,
+      setConnected,
+    );
     ws.connect();
     return () => ws.disconnect();
   }, []);

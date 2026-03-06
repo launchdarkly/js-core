@@ -1,13 +1,17 @@
 import {
+  CommandParams,
+  CommandType,
+  CreateInstanceParams,
+  makeLogger,
+  SDKConfigParams,
+  ValueType,
+} from '@launchdarkly/js-contract-test-utils';
+import { ClientSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/client';
+import {
   AutoEnvAttributes,
   LDOptions,
   ReactNativeLDClient,
 } from '@launchdarkly/react-native-client-sdk';
-
-import { CommandParams, CommandType, ValueType } from './CommandParams';
-import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
-import { makeLogger } from './makeLogger';
-import TestHook from './TestHook';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');

@@ -1,27 +1,39 @@
-import { LDLogger } from '@launchdarkly/react-native-client-sdk';
+import { LDLogger } from '../types/compat.js';
 
-import { ClientEntity, newSdkClientEntity } from './ClientEntity';
-import { makeLogger } from './makeLogger';
+import { makeLogger } from '../logging/makeLogger.js';
+
+export interface ClientEntity {
+  close: () => void;
+  doCommand: (params: any) => Promise<any>;
+}
+
+export type CreateClientEntityFn = (options: any) => Promise<ClientEntity>;
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;
   private readonly _entities: Record<string, ClientEntity> = {};
   private _clientCounter = 0;
   private _logger: LDLogger = makeLogger('TestHarnessWebSocket');
+  private _capabilities: string[];
+  private _createClientEntity: CreateClientEntityFn;
   private _intentionalClose = false;
   private _onConnectionChange?: (connected: boolean) => void;
 
   constructor(
     private readonly _url: string,
+    capabilities: string[],
+    createClientEntity: CreateClientEntityFn,
     onConnectionChange?: (connected: boolean) => void,
   ) {
+    this._capabilities = capabilities;
+    this._createClientEntity = createClientEntity;
     this._onConnectionChange = onConnectionChange;
   }
 
   connect() {
     this._intentionalClose = false;
     this._logger.info(`Connecting to web socket.`);
-    this._ws = new WebSocket(this._url, 'v1');
+    this._ws = new WebSocket(this._url, ['v1']);
     this._ws.onopen = () => {
       this._logger.info('Connected to websocket.');
       this._onConnectionChange?.(true);
@@ -45,26 +57,14 @@ export default class TestHarnessWebSocket {
       const resData: any = { reqId: data.reqId };
       switch (data.command) {
         case 'getCapabilities':
-          resData.capabilities = [
-            'client-side',
-            'mobile',
-            'service-endpoints',
-            'tags',
-            'user-type',
-            'inline-context-all',
-            'anonymous-redaction',
-            'strongly-typed',
-            'client-prereq-events',
-            'client-per-context-summaries',
-            'track-hooks',
-          ];
+          resData.capabilities = this._capabilities;
 
           break;
         case 'createClient':
           try {
             resData.resourceUrl = `/clients/${this._clientCounter}`;
             resData.status = 201;
-            const entity = await newSdkClientEntity(data.body);
+            const entity = await this._createClientEntity(data.body);
             this._entities[this._clientCounter] = entity;
             this._clientCounter += 1;
           } catch (e: any) {

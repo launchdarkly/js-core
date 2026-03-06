@@ -4,7 +4,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "start": "node --inspect dist/src/index.js",
-    "build": "tsc",
+    "build": "yarn workspace @launchdarkly/js-contract-test-utils build:server && tsc",
     "dev": "tsc --watch"
   },
   "type": "module",
@@ -12,6 +12,7 @@
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
+    "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/node-server-sdk": "workspace:^",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
