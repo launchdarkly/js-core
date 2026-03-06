@@ -2,7 +2,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { createClient, createLDReactProviderWithClient, LDReactClient } from '@launchdarkly/react-sdk';
+import {
+  createClient,
+  createLDReactProviderWithClient,
+  LDReactClient,
+} from '@launchdarkly/react-sdk';
 
 import { ClientInner, CommandHandler, makeSdkConfig } from './ClientEntity';
 import { CreateInstanceParams } from './ConfigParams';
@@ -26,7 +30,8 @@ export default function App({ children }: { children: React.ReactNode }) {
       commandHandlers.current,
 
       async (params: CreateInstanceParams) => {
-        const id = String(clientCounterRef.current++);
+        const id = String(clientCounterRef.current);
+        clientCounterRef.current += 1;
         const sdkConfig = makeSdkConfig(params.configuration, params.tag);
         const initialContext = params.configuration.clientSide?.initialContext ||
           params.configuration.clientSide?.initialUser || {

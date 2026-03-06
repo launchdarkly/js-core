@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { LDOptions, LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
 
