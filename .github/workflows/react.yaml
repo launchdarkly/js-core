@@ -30,4 +30,30 @@ jobs:
           workspace_name: '@launchdarkly/react-sdk'
           workspace_path: packages/sdk/react
 
-# TODO: Add contract tests
+      # Contract Tests
+      - name: Install contract test dependencies
+        run: |
+          yarn workspaces focus @launchdarkly/react-sdk-contract-tests
+          yarn workspace @launchdarkly/react-sdk-contract-tests build
+      - name: Launch the contract test entity in the background
+        run: |
+          yarn workspace @launchdarkly/react-sdk-contract-tests start &> /tmp/http-server.log &
+          echo "Waiting for contract test entity on port 8000..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000 > /dev/null; then
+              echo "Contract test service ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for contract test service"
+              cat /tmp/http-server.log
+              exit 1
+            fi
+            sleep 1
+          done
+      - name: Run contract tests
+        uses: launchdarkly/gh-actions/actions/contract-tests@5adb11fd6953e1bc35d9cf1fc1b4374c464e3a8b
+        with:
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/react/contract-tests/suppressions.txt --stop-service-at-end'
