@@ -229,6 +229,38 @@ it('produces interrupted on invalid JSON and continues polling', async () => {
   sync.close();
 });
 
+it('produces interrupted on non-object JSON and continues polling', async () => {
+  let callCount = 0;
+  const requestor: Requestor = {
+    requestPayload: jest.fn().mockImplementation(() => {
+      callCount += 1;
+      if (callCount === 1) {
+        return Promise.resolve('null');
+      }
+      return Promise.resolve(makeFDv1Flags({ flag: { value: true } }));
+    }),
+  };
+
+  const sync = createFDv1PollingSynchronizer(requestor, 1000, logger);
+
+  // First poll — valid JSON but not an object
+  const firstPromise = sync.next();
+  await jest.advanceTimersByTimeAsync(0);
+  const result1 = await firstPromise;
+  expect(result1.type).toBe('status');
+  if (result1.type === 'status') {
+    expect(result1.state).toBe('interrupted');
+    expect(result1.errorInfo?.kind).toBe('INVALID_DATA');
+  }
+
+  // Second poll — valid response
+  await jest.advanceTimersByTimeAsync(1000);
+  const result2 = await sync.next();
+  expect(result2.type).toBe('changeSet');
+
+  sync.close();
+});
+
 it('polls at the configured interval', async () => {
   let callCount = 0;
   const requestor: Requestor = {

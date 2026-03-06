@@ -94,22 +94,23 @@ export function createFDv1PollingSynchronizer(
         return;
       }
 
-      let flags: Flags;
+      let payload: internal.Payload;
       try {
-        flags = JSON.parse(body);
+        const flags: Flags = JSON.parse(body);
+        payload = flagsToPayload(flags);
       } catch {
-        logger?.error('FDv1 polling received invalid JSON data');
+        logger?.error('FDv1 polling received malformed data');
         resultQueue.put({
           type: 'status',
           state: 'interrupted',
-          errorInfo: errorInfoFromInvalidData('Malformed JSON data in FDv1 polling response'),
+          errorInfo: errorInfoFromInvalidData('Malformed data in FDv1 polling response'),
           fdv1Fallback: false,
         });
         scheduleNextPoll(startTime);
         return;
       }
 
-      resultQueue.put(changeSet(flagsToPayload(flags), false));
+      resultQueue.put(changeSet(payload, false));
     } catch (err) {
       if (stopped) {
         return;
