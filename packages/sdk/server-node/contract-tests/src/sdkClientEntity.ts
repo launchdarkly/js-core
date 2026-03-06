@@ -140,6 +140,13 @@ interface CommandParams {
     newEndpoint: string;
     oldEndpoint: string;
   };
+  registerFlagChangeListener?: {
+    listenerId: string;
+    callbackUri: string;
+  };
+  unregisterListener?: {
+    listenerId: string;
+  };
 }
 
 export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
@@ -316,9 +323,15 @@ export interface SdkClientEntity {
   doCommand: (params: CommandParams) => Promise<any>;
 }
 
+interface ListenerEntry {
+  eventName: string;
+  handler: (...args: any[]) => void;
+}
+
 export async function newSdkClientEntity(options: any): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
+  const listeners = new Map<string, ListenerEntry>();
 
   log.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
   const timeout =
@@ -341,6 +354,11 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
   }
 
   c.close = () => {
+    // Unregister all listeners before closing to avoid firing callbacks after shutdown.
+    listeners.forEach((entry) => {
+      client.off(entry.eventName, entry.handler);
+    });
+    listeners.clear();
     client.close();
     log.info('Test ended');
   };
@@ -512,6 +530,40 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
             return undefined;
           }
         }
+      }
+
+      case 'registerFlagChangeListener': {
+        const p = params.registerFlagChangeListener!;
+        const eventName = 'update';
+
+        const handler = (eventParams: { key: string }) => {
+          got
+            .post(p.callbackUri, {
+              json: {
+                listenerId: p.listenerId,
+                flagKey: eventParams.key,
+              },
+            })
+            .catch(() => {});
+        };
+
+        const existing = listeners.get(p.listenerId);
+        if (existing) {
+          client.off(existing.eventName, existing.handler);
+        }
+        listeners.set(p.listenerId, { eventName, handler });
+        client.on(eventName, handler);
+        return undefined;
+      }
+
+      case 'unregisterListener': {
+        const p = params.unregisterListener!;
+        const entry = listeners.get(p.listenerId);
+        if (entry) {
+          client.off(entry.eventName, entry.handler);
+          listeners.delete(p.listenerId);
+        }
+        return undefined;
       }
 
       default:
