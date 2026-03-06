@@ -33,8 +33,8 @@ export default function App({ children }: { children: React.ReactNode }) {
         const id = String(clientCounterRef.current);
         clientCounterRef.current += 1;
         const sdkConfig = makeSdkConfig(params.configuration, params.tag);
-        const initialContext = params.configuration.clientSide?.initialContext ||
-          params.configuration.clientSide?.initialUser || {
+        const initialContext = params.configuration.clientSide?.initialUser ||
+          params.configuration.clientSide?.initialContext || {
             kind: 'user',
             key: 'key-not-specified',
           };

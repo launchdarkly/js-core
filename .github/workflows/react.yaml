@@ -33,24 +33,42 @@ jobs:
       # Contract Tests
       - name: Install contract test dependencies
         run: |
-          yarn workspaces focus @launchdarkly/react-sdk-contract-tests
+          yarn workspaces focus @launchdarkly/react-sdk @launchdarkly/react-sdk-contract-tests browser-contract-test-adapter
           yarn workspace @launchdarkly/react-sdk-contract-tests build
-      - name: Launch the contract test entity in the background
+      - name: Install Playwright browsers
+        run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
+      - name: Launch contract test services
         run: |
-          yarn workspace @launchdarkly/react-sdk-contract-tests start &> /tmp/http-server.log &
-          echo "Waiting for contract test entity on port 8000..."
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:adapter &> /tmp/adapter.log &
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:entity &> /tmp/entity.log &
+          echo "Waiting for adapter on port 8000..."
           for i in {1..30}; do
             if curl -s http://localhost:8000 > /dev/null; then
-              echo "Contract test service ready"
+              echo "Adapter ready"
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "Timeout waiting for contract test service"
-              cat /tmp/http-server.log
+              echo "Timeout waiting for adapter"
+              cat /tmp/adapter.log
               exit 1
             fi
             sleep 1
           done
+          echo "Waiting for entity on port 8002..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8002 > /dev/null; then
+              echo "Entity ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Timeout waiting for entity"
+              cat /tmp/entity.log
+              exit 1
+            fi
+            sleep 1
+          done
+          yarn workspace @launchdarkly/react-sdk-contract-tests run start:browser &> /tmp/browser.log &
+          sleep 5
       - name: Run contract tests
         uses: launchdarkly/gh-actions/actions/contract-tests@5adb11fd6953e1bc35d9cf1fc1b4374c464e3a8b
         with:

@@ -1,25 +1,41 @@
 import { LDContext, LDEvaluationReason } from '@launchdarkly/react-sdk';
 
-export enum CommandType {
-  EvaluateFlag = 'evaluate',
-  EvaluateAllFlags = 'evaluateAll',
-  IdentifyEvent = 'identifyEvent',
-  CustomEvent = 'customEvent',
-  AliasEvent = 'aliasEvent',
-  FlushEvents = 'flushEvents',
-  ContextBuild = 'contextBuild',
-  ContextConvert = 'contextConvert',
-  ContextComparison = 'contextComparison',
-  SecureModeHash = 'secureModeHash',
-}
+export type CommandType =
+  | 'evaluate'
+  | 'evaluateAll'
+  | 'identifyEvent'
+  | 'customEvent'
+  | 'aliasEvent'
+  | 'flushEvents'
+  | 'contextBuild'
+  | 'contextConvert'
+  | 'contextComparison'
+  | 'secureModeHash';
 
-export enum ValueType {
-  Bool = 'bool',
-  Int = 'int',
-  Double = 'double',
-  String = 'string',
-  Any = 'any',
-}
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const CommandType = {
+  EvaluateFlag: 'evaluate',
+  EvaluateAllFlags: 'evaluateAll',
+  IdentifyEvent: 'identifyEvent',
+  CustomEvent: 'customEvent',
+  AliasEvent: 'aliasEvent',
+  FlushEvents: 'flushEvents',
+  ContextBuild: 'contextBuild',
+  ContextConvert: 'contextConvert',
+  ContextComparison: 'contextComparison',
+  SecureModeHash: 'secureModeHash',
+} as const;
+
+export type ValueType = 'bool' | 'int' | 'double' | 'string' | 'any';
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const ValueType = {
+  Bool: 'bool',
+  Int: 'int',
+  Double: 'double',
+  String: 'string',
+  Any: 'any',
+} as const;
 
 export interface CommandParams {
   command: CommandType;
@@ -137,10 +153,13 @@ export interface SecureModeHashResponse {
   result: string;
 }
 
-export enum HookStage {
-  BeforeEvaluation = 'beforeEvaluation',
-  AfterEvaluation = 'afterEvaluation',
-}
+export type HookStage = 'beforeEvaluation' | 'afterEvaluation';
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const HookStage = {
+  BeforeEvaluation: 'beforeEvaluation',
+  AfterEvaluation: 'afterEvaluation',
+} as const;
 
 export interface EvaluationSeriesContext {
   flagKey: string;
