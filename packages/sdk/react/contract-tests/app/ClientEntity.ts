@@ -2,12 +2,15 @@
 
 import { useEffect } from 'react';
 
+import {
+  CommandParams,
+  CommandType,
+  makeLogger,
+  SDKConfigParams,
+  ClientSideTestHook as TestHook,
+  ValueType,
+} from '@launchdarkly/js-contract-test-utils/client';
 import { LDOptions, LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
-
-import { CommandParams, CommandType, ValueType } from './CommandParams';
-import { SDKConfigParams } from './ConfigParams';
-import { makeLogger } from './makeLogger';
-import TestHook from './TestHook';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');

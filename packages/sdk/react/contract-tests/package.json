@@ -13,6 +13,7 @@
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
   "dependencies": {
+    "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/react-sdk": "workspace:^",
     "next": "16.1.4",
     "react": "19.2.3",
