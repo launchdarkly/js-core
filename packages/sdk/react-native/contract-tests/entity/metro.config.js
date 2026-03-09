@@ -22,5 +22,8 @@ config.resolver.nodeModulesPaths = [
 ];
 // 3. Force Metro to resolve (sub)dependencies only from the `nodeModulesPaths`
 config.resolver.disableHierarchicalLookup = true;
+// 4. Enable package.json "exports" field resolution (needed for subpath imports
+//    like @launchdarkly/js-contract-test-utils/client)
+config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;
