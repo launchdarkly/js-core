@@ -14,8 +14,9 @@ export class ClientPool<T> {
    * @returns A new unique string ID for the client.
    */
   nextId(): string {
+    const id = this._clientCounter.toString();
     this._clientCounter += 1;
-    return this._clientCounter.toString();
+    return id;
   }
 
   /**
