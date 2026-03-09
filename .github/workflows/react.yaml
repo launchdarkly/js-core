@@ -63,7 +63,7 @@ jobs:
             fi
             if [ $i -eq 30 ]; then
               echo "Timeout waiting for entity"
-              cat /tmp/test-service.log
+              cat /tmp/adapter.log /tmp/entity.log /tmp/browser.log
               exit 1
             fi
             sleep 1

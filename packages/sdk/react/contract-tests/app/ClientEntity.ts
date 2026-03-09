@@ -177,7 +177,7 @@ export async function doCommand(client: LDReactClient, params: CommandParams): P
 
 export type CommandHandler = (params: CommandParams) => Promise<unknown>;
 
-export function ClientInner({
+export function ClientInstance({
   clientId,
   handlers,
   onReady,

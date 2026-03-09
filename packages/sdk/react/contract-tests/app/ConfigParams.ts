@@ -1,5 +1,7 @@
 import { LDContext } from '@launchdarkly/react-sdk';
 
+import { HookStage } from './CommandParams';
+
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
   tag: string;
@@ -86,5 +88,3 @@ export interface SDKConfigWrapper {
   name: string;
   version: string;
 }
-
-export type HookStage = 'beforeEvaluation' | 'afterEvaluation';
