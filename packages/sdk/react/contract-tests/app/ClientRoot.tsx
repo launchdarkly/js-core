@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
   createClient,
@@ -25,6 +25,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   const commandHandlers = useRef(new Map<string, CommandHandler>());
   const handlerReadyMap = useRef(new Map<string, () => void>());
   const clientCounterRef = useRef(0);
+  const clientsRef = useRef<ClientRecord[]>([]);
 
   useEffect(() => {
     const ws = new TestHarnessWebSocket(
@@ -71,6 +72,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
           handlerReadyMap.current.set(id, resolve);
         });
 
+        clientsRef.current = [...clientsRef.current, { id, client, Provider }];
         setClients((prev) => [...prev, { id, client, Provider }]);
 
         await handlerReady;
@@ -80,13 +82,9 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
 
       // On delete client
       (id: string) => {
-        setClients((prev) => {
-          const record = prev.find((r) => r.id === id);
-          if (record) {
-            record.client.close();
-          }
-          return prev.filter((r) => r.id !== id);
-        });
+        clientsRef.current.find((r) => r.id === id)?.client.close();
+        clientsRef.current = clientsRef.current.filter((r) => r.id !== id);
+        setClients((prev) => prev.filter((r) => r.id !== id));
       },
     );
 
@@ -94,16 +92,16 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     return () => ws.disconnect();
   }, []);
 
+  const onReady = useCallback((readyId: string) => {
+    handlerReadyMap.current.get(readyId)?.();
+  }, []);
+
   return (
     <>
       {children}
       {clients.map(({ id, Provider }) => (
         <Provider key={id}>
-          <ClientInstance
-            clientId={id}
-            handlers={commandHandlers.current}
-            onReady={(readyId) => handlerReadyMap.current.get(readyId)?.()}
-          />
+          <ClientInstance clientId={id} handlers={commandHandlers.current} onReady={onReady} />
         </Provider>
       ))}
     </>
