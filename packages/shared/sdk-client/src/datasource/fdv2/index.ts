@@ -31,6 +31,7 @@ export type { Synchronizer } from './Synchronizer';
 export { calculatePollDelay } from './calculatePollDelay';
 export { poll } from './PollingBase';
 export { createPollingInitializer } from './PollingInitializer';
+export { createFDv1PollingSynchronizer } from './FDv1PollingSynchronizer';
 export { createPollingSynchronizer } from './PollingSynchronizer';
 
 export type { PingHandler, StreamingFDv2Base } from './StreamingFDv2Base';
