@@ -130,7 +130,7 @@ export default class BrowserFDv2DataManager implements DataManager {
 
     // Streaming synchronizer — primary, for live updates.
     const streamingEndpoints = endpoints.streaming();
-    const streamingSyncFactory = (_sg: () => string | undefined) => {
+    const streamingSyncFactory = (sg: () => string | undefined) => {
       const streamUriPath = streamingEndpoints.pathGet(
         this._platform.encoding!,
         plainContextString,
@@ -140,6 +140,7 @@ export default class BrowserFDv2DataManager implements DataManager {
         serviceEndpoints: this._config.serviceEndpoints,
         streamUriPath,
         parameters: queryParams,
+        selectorGetter: sg,
         headers: this._baseHeaders,
         initialRetryDelayMillis: this._config.streamInitialReconnectDelay * 1000,
         logger: this._logger,
