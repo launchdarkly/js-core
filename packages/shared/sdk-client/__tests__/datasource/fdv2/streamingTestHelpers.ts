@@ -114,6 +114,7 @@ export function createBase(
     pingHandler?: PingHandler;
     streamUriPath?: string;
     parameters?: { key: string; value: string }[];
+    selectorGetter?: () => string | undefined;
   } = {},
 ) {
   return createStreamingBase({
@@ -121,6 +122,7 @@ export function createBase(
     serviceEndpoints,
     streamUriPath: options.streamUriPath ?? '/sdk/stream/eval/test-context',
     parameters: options.parameters ?? [],
+    selectorGetter: options.selectorGetter,
     headers: baseHeaders,
     initialRetryDelayMillis: 1000,
     logger,

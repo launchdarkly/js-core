@@ -82,6 +82,7 @@ export function createStreamingBase(config: {
   serviceEndpoints: ServiceEndpoints;
   streamUriPath: string;
   parameters: { key: string; value: string }[];
+  selectorGetter?: () => string | undefined;
   headers: LDHeaders;
   initialRetryDelayMillis: number;
   logger?: LDLogger;
@@ -94,12 +95,16 @@ export function createStreamingBase(config: {
     config.logger,
   );
 
-  const streamUri = getStreamingUri(
-    config.serviceEndpoints,
-    config.streamUriPath,
-    config.parameters,
-  );
   const headers: { [key: string]: string | string[] } = { ...config.headers };
+
+  function buildStreamUri(): string {
+    const params = [...config.parameters];
+    const basis = config.selectorGetter?.();
+    if (basis) {
+      params.push({ key: 'basis', value: encodeURIComponent(basis) });
+    }
+    return getStreamingUri(config.serviceEndpoints, config.streamUriPath, params);
+  }
 
   let eventSource: EventSource | undefined;
   let connectionAttemptStartTime: number | undefined;
@@ -256,7 +261,7 @@ export function createStreamingBase(config: {
 
       logConnectionAttempt();
 
-      const es = config.requests.createEventSource(streamUri, {
+      const es = config.requests.createEventSource(buildStreamUri(), {
         headers,
         errorFilter: (error: HttpErrorResponse) => handleError(error),
         initialRetryDelayMillis: config.initialRetryDelayMillis,

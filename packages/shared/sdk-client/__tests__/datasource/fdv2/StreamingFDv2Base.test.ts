@@ -430,6 +430,58 @@ it('produces results in order', async () => {
   base.close();
 });
 
+it('includes basis parameter in stream URI when selectorGetter returns a value', () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+
+  const base = createBase(mockRequests, logger, {
+    streamUriPath: '/sdk/stream/eval/ctx',
+    parameters: [{ key: 'auth', value: 'my-key' }],
+    selectorGetter: () => '(p:test:1)',
+  });
+  base.start();
+
+  const uri = mockRequests.createEventSource.mock.calls[0][0];
+  expect(uri).toContain(`basis=${encodeURIComponent('(p:test:1)')}`);
+  expect(uri).toContain('auth=my-key');
+
+  base.close();
+});
+
+it('does not include basis parameter when selectorGetter returns undefined', () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+
+  const base = createBase(mockRequests, logger, {
+    streamUriPath: '/sdk/stream/eval/ctx',
+    parameters: [{ key: 'auth', value: 'my-key' }],
+    selectorGetter: () => undefined,
+  });
+  base.start();
+
+  const uri = mockRequests.createEventSource.mock.calls[0][0];
+  expect(uri).not.toContain('basis');
+  expect(uri).toContain('auth=my-key');
+
+  base.close();
+});
+
+it('does not include basis parameter when no selectorGetter is provided', () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+
+  const base = createBase(mockRequests, logger, {
+    streamUriPath: '/sdk/stream/eval/ctx',
+    parameters: [{ key: 'auth', value: 'my-key' }],
+  });
+  base.start();
+
+  const uri = mockRequests.createEventSource.mock.calls[0][0];
+  expect(uri).not.toContain('basis');
+
+  base.close();
+});
+
 it('close is idempotent', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
