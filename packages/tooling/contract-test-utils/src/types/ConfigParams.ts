@@ -1,6 +1,6 @@
 import { LDContext } from '@launchdarkly/js-client-sdk-common';
 
-import { HookStage } from './CommandParams.js';
+import { HookStage } from './CommandParams';
 
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
