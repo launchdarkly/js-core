@@ -1,10 +1,4 @@
 import {
-  AutoEnvAttributes,
-  LDOptions,
-  ReactNativeLDClient,
-} from '@launchdarkly/react-native-client-sdk';
-
-import {
   CommandParams,
   CommandType,
   CreateInstanceParams,
@@ -13,6 +7,11 @@ import {
   ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
+import {
+  AutoEnvAttributes,
+  LDOptions,
+  ReactNativeLDClient,
+} from '@launchdarkly/react-native-client-sdk';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');

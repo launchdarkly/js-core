@@ -1,5 +1,5 @@
-import { LDLogger } from '@launchdarkly/react-native-client-sdk';
 import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
+import { LDLogger } from '@launchdarkly/react-native-client-sdk';
 
 import { ClientEntity, newSdkClientEntity } from './ClientEntity';
 
