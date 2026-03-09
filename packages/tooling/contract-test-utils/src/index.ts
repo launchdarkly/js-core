@@ -15,7 +15,6 @@ export {
   type SDKConfigHooksParams,
   type SDKConfigProxyParams,
   type SDKConfigWrapper,
-  type HookStage as ConfigHookStage,
 } from './types/ConfigParams.js';
 export { makeLogger } from './logging/makeLogger.js';
 export { ClientPool } from './server-side/ClientPool.js';

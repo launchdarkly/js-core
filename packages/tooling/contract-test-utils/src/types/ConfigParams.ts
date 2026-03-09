@@ -1,5 +1,7 @@
 import { LDContext } from '@launchdarkly/js-client-sdk-common';
 
+import { HookStage } from './CommandParams.js';
+
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
   tag: string;
@@ -91,5 +93,3 @@ export interface SDKConfigWrapper {
   name: string;
   version: string;
 }
-
-export type HookStage = 'beforeEvaluation' | 'afterEvaluation';
