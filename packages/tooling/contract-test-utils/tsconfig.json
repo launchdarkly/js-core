@@ -14,11 +14,7 @@
     "declarationMap": true,
     "stripInternal": true,
     "esModuleInterop": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "got": ["../../../node_modules/got/dist/source"]
-    }
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
