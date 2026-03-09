@@ -1,11 +1,11 @@
 import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
 import {
-  ClientSideTestHook as TestHook,
   CommandParams,
   CommandType,
   CreateInstanceParams,
   makeLogger,
   SDKConfigParams,
+  ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
 
