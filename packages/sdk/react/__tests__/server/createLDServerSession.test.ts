@@ -123,7 +123,6 @@ describe('given a browser environment (window defined)', () => {
 
   beforeEach(() => {
     originalWindow = globalThis.window;
-    // Simulate browser environment
     // @ts-ignore
     globalThis.window = {};
   });
@@ -133,48 +132,10 @@ describe('given a browser environment (window defined)', () => {
     globalThis.window = originalWindow;
   });
 
-  it('returns a no-op session that does not call the base client', async () => {
+  it('throws an error instead of returning a no-op session', () => {
     const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    await session.boolVariation('flag', false);
-    expect(client.boolVariation).not.toHaveBeenCalled();
-  });
-
-  it('no-op session returns default values for bool', async () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    expect(await session.boolVariation('flag', true)).toBe(true);
-    expect(await session.boolVariation('flag', false)).toBe(false);
-  });
-
-  it('no-op session returns default values for number', async () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    expect(await session.numberVariation('flag', 42)).toBe(42);
-  });
-
-  it('no-op session returns default values for string', async () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    expect(await session.stringVariation('flag', 'hello')).toBe('hello');
-  });
-
-  it('no-op session getContext() returns the bound context', () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    expect(session.getContext()).toEqual(context);
-  });
-
-  it('no-op session initialized() returns false', () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    expect(session.initialized()).toBe(false);
-  });
-
-  it('no-op allFlagsState() returns invalid flags state', async () => {
-    const client = makeMockBaseClient();
-    const session = createLDServerSession(client, context);
-    const state = await session.allFlagsState();
-    expect(state.valid).toBe(false);
+    expect(() => createLDServerSession(client, context)).toThrow(
+      'createLDServerSession must only be called on the server.',
+    );
   });
 });

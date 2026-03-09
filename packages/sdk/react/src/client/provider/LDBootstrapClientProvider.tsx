@@ -4,8 +4,33 @@ import React, { useState } from 'react';
 
 import { LDContext } from '@launchdarkly/js-client-sdk';
 
+import type { LDReactClient } from '../LDClient';
 import { createClient } from '../LDReactClient';
 import { createLDReactProviderWithClient } from './LDReactProvider';
+
+// Minimal stand-in used only during server-side rendering of this 'use client' component.
+// Only covers methods that execute during SSR (useState initializers); useEffect callbacks
+// never run server-side so on/off/onContextChange/onInitializationStatusChange are omitted.
+const ssrDetail = (def: unknown) => ({
+  value: def,
+  variationIndex: null,
+  reason: { kind: 'ERROR' as const, errorKind: 'CLIENT_NOT_READY' as const },
+});
+
+const SSR_NOOP = {
+  allFlags: () => ({}),
+  getContext: () => undefined,
+  getInitializationState: () => 'unknown',
+  getInitializationError: () => undefined,
+  boolVariation: (_k: string, def: boolean) => def,
+  numberVariation: (_k: string, def: number) => def,
+  stringVariation: (_k: string, def: string) => def,
+  jsonVariation: (_k: string, def: unknown) => def,
+  boolVariationDetail: (_k: string, def: boolean) => ssrDetail(def),
+  numberVariationDetail: (_k: string, def: number) => ssrDetail(def),
+  stringVariationDetail: (_k: string, def: string) => ssrDetail(def),
+  jsonVariationDetail: (_k: string, def: unknown) => ssrDetail(def),
+} as unknown as LDReactClient;
 
 /**
  * Props for {@link LDBootstrapClientProvider}.
@@ -58,6 +83,9 @@ export function LDBootstrapClientProvider({
   children,
 }: LDBootstrapClientProviderProps) {
   const [LDProvider] = useState(() => {
+    if (typeof window === 'undefined') {
+      return createLDReactProviderWithClient(SSR_NOOP);
+    }
     const client = createClient(clientSideId, context);
     client.start({ bootstrap });
     return createLDReactProviderWithClient(client);

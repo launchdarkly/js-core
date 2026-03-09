@@ -13,6 +13,8 @@ import { defaultContext } from './ld-context';
 
 const ldBaseClient = await init(process.env.LAUNCHDARKLY_SDK_KEY || '');
 
+await ldBaseClient.waitForInitialization();
+
 // Session can be created per-request or shared when context is static.
 // Here we share a single session for the static default context.
 export const serverSession = createLDServerSession(ldBaseClient, defaultContext);

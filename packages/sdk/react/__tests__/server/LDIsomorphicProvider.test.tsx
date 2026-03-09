@@ -82,7 +82,7 @@ it('passes clientSideId to LDBootstrapClientProvider', async () => {
   });
   render(jsx as React.ReactElement);
 
-  const calls = (LDBootstrapClientProvider as jest.Mock).mock.calls;
+  const { calls } = (LDBootstrapClientProvider as jest.Mock).mock;
   expect(calls[0][0]).toMatchObject({ clientSideId: 'my-client-id' });
 });
 
@@ -95,7 +95,7 @@ it('passes session context to LDBootstrapClientProvider', async () => {
   });
   render(jsx as React.ReactElement);
 
-  const calls = (LDBootstrapClientProvider as jest.Mock).mock.calls;
+  const { calls } = (LDBootstrapClientProvider as jest.Mock).mock;
   expect(calls[0][0]).toMatchObject({ context });
 });
 
@@ -108,6 +108,6 @@ it('passes bootstrap from flagsState.toJSON() to LDBootstrapClientProvider', asy
   });
   render(jsx as React.ReactElement);
 
-  const calls = (LDBootstrapClientProvider as jest.Mock).mock.calls;
+  const { calls } = (LDBootstrapClientProvider as jest.Mock).mock;
   expect(calls[0][0]).toMatchObject({ bootstrap: bootstrapData });
 });

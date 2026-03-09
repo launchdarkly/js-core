@@ -1,36 +1,11 @@
-import {
-  LDContext,
-  type LDEvaluationDetailTyped,
-  type LDFlagsState,
-  type LDFlagsStateOptions,
-} from '@launchdarkly/js-server-sdk-common';
+import { LDContext, type LDFlagsStateOptions } from '@launchdarkly/js-server-sdk-common';
+
+import { LDServerSession } from './LDClient';
+import { LDServerBaseClient } from './LDServerBaseClient';
 
 export type * from './LDClient';
 export type * from './LDServerBaseClient';
 export { LDIsomorphicProvider } from './LDIsomorphicProvider';
-
-import { LDServerBaseClient } from './LDServerBaseClient';
-import { LDServerSession } from './LDClient';
-
-const CLIENT_SIDE_REASON = { kind: 'ERROR' as const, errorKind: 'CLIENT_NOT_READY' };
-
-function makeNoOpDetail<T>(value: T): LDEvaluationDetailTyped<T> {
-  return {
-    value,
-    variationIndex: null,
-    reason: CLIENT_SIDE_REASON,
-  };
-}
-
-function makeNoOpFlagsState(): LDFlagsState {
-  return {
-    valid: false,
-    getFlagValue: () => null,
-    getFlagReason: () => null,
-    allValues: () => ({}),
-    toJSON: () => ({ $flagsState: {}, $valid: false }),
-  };
-}
 
 /**
  * Returns true when code is running in a server environment (e.g. Node), false when running in the
@@ -38,26 +13,6 @@ function makeNoOpFlagsState(): LDFlagsState {
  */
 export function isServer(): boolean {
   return typeof window === 'undefined';
-}
-
-function makeNoOpSession(context: LDContext): LDServerSession {
-  return {
-    initialized: () => false,
-    getContext: () => context,
-    boolVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
-    numberVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
-    stringVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
-    jsonVariation: (_key, defaultValue) => Promise.resolve(defaultValue),
-    boolVariationDetail: (_key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue)),
-    numberVariationDetail: (_key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue)),
-    stringVariationDetail: (_key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue)),
-    jsonVariationDetail: (_key, defaultValue) =>
-      Promise.resolve(makeNoOpDetail(defaultValue)),
-    allFlagsState: () => Promise.resolve(makeNoOpFlagsState()),
-  };
 }
 
 /**
@@ -69,9 +24,13 @@ function makeNoOpSession(context: LDContext): LDServerSession {
  * anonymous context). The returned {@link LDServerSession} exposes the same variation API as the
  * server SDK, but without the `context` parameter — the context is bound at creation time.
  *
- * When called in a browser environment (e.g. during build-time pre-rendering), returns a no-op
- * session that resolves every variation to its default value. This allows server components to
- * render safely at build time without contacting LaunchDarkly.
+ * @throws {Error} If called in a browser environment. This function must only be called on the
+ *   server. Ensure the module that calls this is not imported from client components.
+ * 
+ * @privateRemarks
+ * TODO: I think throwing an error might be better than just silently failing here.
+ * While the client -> server boundary is most likely a security loosening boundary,
+ * the server -> client boundary needs to be considered more carefully. Open to discussion.
  *
  * @example
  * ```ts
@@ -93,7 +52,10 @@ export function createLDServerSession(
   context: LDContext,
 ): LDServerSession {
   if (!isServer()) {
-    return makeNoOpSession(context);
+    throw new Error(
+      'createLDServerSession must only be called on the server. ' +
+        'Ensure this module is not imported from client components.',
+    );
   }
 
   return {
@@ -122,8 +84,6 @@ export function createLDServerSession(
  * This function is experimental and may change in the future.
  *
  * Creates a restricted version of the common server client that is used for server side rendering.
- * When not running on the server (e.g. in the browser), returns a no-op client that returns default
- * values and does not call the underlying LaunchDarkly client.
  */
 export function createReactServerClient(
   client: LDServerBaseClient,

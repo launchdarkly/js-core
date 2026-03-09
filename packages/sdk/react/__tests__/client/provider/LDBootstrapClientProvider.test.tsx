@@ -6,8 +6,8 @@ import React from 'react';
 
 import { LDContext } from '@launchdarkly/js-client-sdk';
 
-import { LDBootstrapClientProvider } from '../../../src/client/provider/LDBootstrapClientProvider';
 import { createClient } from '../../../src/client/LDReactClient';
+import { LDBootstrapClientProvider } from '../../../src/client/provider/LDBootstrapClientProvider';
 import { createLDReactProviderWithClient } from '../../../src/client/provider/LDReactProvider';
 import { makeMockClient } from './mockClient';
 
