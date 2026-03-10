@@ -59,15 +59,6 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * A list of plugins to be used with the SDK.
    */
   plugins?: LDPlugin[];
-
-  /**
-   * Opt-in to the FDv2 data delivery protocol. When enabled, the SDK uses
-   * the new `/sdk/poll/eval` and `/sdk/stream/eval` endpoints with the
-   * FDv2 protocol handler and orchestrator.
-   *
-   * Default: false
-   */
-  useFDv2?: boolean;
 }
 
 export interface ValidatedOptions {
@@ -76,7 +67,6 @@ export interface ValidatedOptions {
   streaming?: boolean;
   automaticBackgroundHandling?: boolean;
   plugins: LDPlugin[];
-  useFDv2: boolean;
 }
 
 const optDefaults = {
@@ -84,7 +74,6 @@ const optDefaults = {
   eventUrlTransformer: (url: string) => url,
   streaming: undefined,
   plugins: [],
-  useFDv2: false,
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
@@ -92,7 +81,6 @@ const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefine
   eventUrlTransformer: TypeValidators.Function,
   streaming: TypeValidators.Boolean,
   plugins: TypeValidators.createTypeArray('LDPlugin', {}),
-  useFDv2: TypeValidators.Boolean,
 };
 
 function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {

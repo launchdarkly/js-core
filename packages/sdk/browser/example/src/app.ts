@@ -25,7 +25,8 @@ statusBox.appendChild(document.createTextNode('Initializing...'));
 
 const main = async () => {
   const ldclient = createClient(clientSideID, context, {
-    useFDv2: true,
+    // @ts-ignore dataSystem is @internal — experimental FDv2 opt-in
+    dataSystem: {},
   });
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);
@@ -41,10 +42,10 @@ const main = async () => {
     );
   });
 
-  // Listen for flag changes
-  ldclient.on('change', () => {
-    render();
-  });
+  // // Listen for flag changes
+  // ldclient.on('change', () => {
+  //   render();
+  // });
 
   ldclient.start();
 

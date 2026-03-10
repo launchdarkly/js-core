@@ -79,15 +79,15 @@ class BrowserClientImpl extends LDClientImpl {
     const { eventUrlTransformer } = validatedBrowserOptions;
     const endpoints = browserFdv1Endpoints(clientSideId);
 
-    const dataManagerFactory = validatedBrowserOptions.useFDv2
-      ? (
-          flagManager: FlagManager,
-          configuration: Configuration,
-          baseHeaders: LDHeaders,
-          emitter: LDEmitter,
-          _diagnosticsManager?: internal.DiagnosticsManager,
-        ) =>
-          new BrowserFDv2DataManager(
+    const dataManagerFactory = (
+      flagManager: FlagManager,
+      configuration: Configuration,
+      baseHeaders: LDHeaders,
+      emitter: LDEmitter,
+      diagnosticsManager?: internal.DiagnosticsManager,
+    ) =>
+      configuration.dataSystem
+        ? new BrowserFDv2DataManager(
             platform,
             flagManager,
             clientSideId,
@@ -95,14 +95,7 @@ class BrowserClientImpl extends LDClientImpl {
             baseHeaders,
             emitter,
           )
-      : (
-          flagManager: FlagManager,
-          configuration: Configuration,
-          baseHeaders: LDHeaders,
-          emitter: LDEmitter,
-          diagnosticsManager?: internal.DiagnosticsManager,
-        ) =>
-          new BrowserDataManager(
+        : new BrowserDataManager(
             platform,
             flagManager,
             clientSideId,
