@@ -14,8 +14,6 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, flags: T): T {
 
   // There is still an potential issue here if this function is used to only evaluate a
   // small subset of flags. In this case, any flag updates will cause a reset of the cache.
-  // It is recommended to use the typed variation hooks (useBoolVariation, useStringVariation,
-  // useNumberVariation, useJsonVariation) for better performance when reading a subset of flags.
   const cache = new Map<string, unknown>();
 
   return new Proxy(flags, {
@@ -75,7 +73,7 @@ export function useFlags<T extends LDFlagSet = LDFlagSet>(
     return () => client.off('change', handler);
   }, [client]);
 
-  // context is included so the proxy is recreated on every identity change,
-  // ensuring variation is re-called for the new LaunchDarkly context.
+  // Context is included so the proxy is recreated on every identity change,
+  // ensuring variations are re-called for the new LaunchDarkly context.
   return useMemo(() => toFlagsProxy(client, flags), [client, flags, context]) as T;
 }
