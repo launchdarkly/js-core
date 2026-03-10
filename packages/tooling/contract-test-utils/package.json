@@ -38,9 +38,19 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-client-sdk-common": "workspace:^"
+  },
+  "peerDependencies": {
     "@launchdarkly/node-server-sdk": "workspace:^",
     "got": "14.4.7"
+  },
+  "peerDependenciesMeta": {
+    "@launchdarkly/node-server-sdk": {
+      "optional": true
+    },
+    "got": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
