@@ -1,6 +1,7 @@
 import {
   AutoEnvAttributes,
   BasicLogger,
+  BROWSER_DATA_SYSTEM_DEFAULTS,
   browserFdv1Endpoints,
   Configuration,
   FlagManager,
@@ -110,6 +111,7 @@ class BrowserClientImpl extends LDClientImpl {
         includeAuthorizationHeader: false,
         highTimeoutThreshold: 5,
         userAgentHeaderName: 'x-launchdarkly-user-agent',
+        dataSystemDefaults: BROWSER_DATA_SYSTEM_DEFAULTS,
         trackEventModifier: (event: internal.InputCustomEvent) =>
           new internal.InputCustomEvent(
             event.context,

@@ -35,6 +35,7 @@ const validators: Record<keyof LDOptions, TypeValidator> = {
   hooks: TypeValidators.createTypeArray('Hook[]', {}),
   inspectors: TypeValidators.createTypeArray('LDInspection', {}),
   cleanOldPersistentData: TypeValidators.Boolean,
+  dataSystem: TypeValidators.Object,
 };
 
 export default validators;

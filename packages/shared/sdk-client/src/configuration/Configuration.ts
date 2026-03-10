@@ -10,7 +10,12 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
+import type {
+  LDClientDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from '../api/datasource/LDClientDataSystemOptions';
 import { LDInspection } from '../api/LDInspection';
+import { dataSystemValidators } from '../datasource/LDClientDataSystemOptions';
 import validateOptions from './validateOptions';
 import validators from './validators';
 
@@ -21,6 +26,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
   credentialType: 'clientSideId' | 'mobileKey';
   getLegacyStorageKeys?: () => string[];
+  dataSystemDefaults?: PlatformDataSystemDefaults;
 }
 
 export interface Configuration {
@@ -59,6 +65,7 @@ export interface Configuration {
   readonly inspectors: LDInspection[];
   readonly credentialType: 'clientSideId' | 'mobileKey';
   readonly getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
+  readonly dataSystem?: LDClientDataSystemOptions;
 }
 
 const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
@@ -138,6 +145,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly getImplementationHooks: (
     environmentMetadata: LDPluginEnvironmentMetadata,
   ) => Hook[];
+  public readonly dataSystem?: LDClientDataSystemOptions;
 
   // Allow indexing Configuration by a string
   [index: string]: any;
@@ -179,5 +187,16 @@ export default class ConfigurationImpl implements Configuration {
 
     this.credentialType = internalOptions.credentialType;
     this.getImplementationHooks = internalOptions.getImplementationHooks;
+
+    // Deep-validate dataSystem if present, using platform-specific defaults.
+    if (pristineOptions.dataSystem !== undefined && internalOptions.dataSystemDefaults) {
+      this.dataSystem = validateOptions(
+        pristineOptions.dataSystem,
+        dataSystemValidators,
+        internalOptions.dataSystemDefaults as unknown as Record<string, unknown>,
+        this.logger,
+        'dataSystem',
+      ) as unknown as LDClientDataSystemOptions;
+    }
   }
 }
