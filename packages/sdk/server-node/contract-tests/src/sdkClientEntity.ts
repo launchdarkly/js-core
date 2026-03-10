@@ -1,5 +1,6 @@
 import got from 'got';
 
+import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
@@ -20,7 +21,6 @@ import ld, {
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
-import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
