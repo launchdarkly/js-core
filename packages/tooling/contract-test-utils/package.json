@@ -33,7 +33,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "echo 'Client exports use source .ts files; use build:server for ./server subpath'",
     "build:server": "tsc -p tsconfig.server.json",
     "clean": "rimraf dist"
   },
