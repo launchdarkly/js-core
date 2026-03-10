@@ -38,6 +38,8 @@ export function useFlag<T extends LDFlagType>(
   defaultValue: T,
   reactContext?: React.Context<LDReactClientContextValue>,
 ): T {
+  // useContext is called here (separate from the call inside useVariationCore) solely to access
+  // `client.logger` for the one-time deprecation warning below.
   const { client } = useContext(reactContext ?? LDReactContext);
 
   useEffect(() => {
