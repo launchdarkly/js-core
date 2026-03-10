@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { CreateInstanceParams } from '@launchdarkly/js-contract-test-utils/client';
 import {
   createClient,
   createLDReactProviderWithClient,
@@ -9,7 +10,6 @@ import {
 } from '@launchdarkly/react-sdk';
 
 import { ClientInstance, CommandHandler, makeSdkConfig } from './ClientEntity';
-import { CreateInstanceParams } from './ConfigParams';
 import TestHarnessWebSocket from './TestHarnessWebSocket';
 
 interface ClientRecord {

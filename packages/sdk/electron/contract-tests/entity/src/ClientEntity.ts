@@ -6,11 +6,15 @@ import path from 'node:path';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/electron-client-sdk';
-
-import { CommandParams, CommandType, ValueType } from './CommandParams';
-import { CreateInstanceParams, SDKConfigParams } from './ConfigParams';
-import { makeLogger } from './makeLogger';
-import TestHook from './TestHook';
+import {
+  CommandParams,
+  CommandType,
+  CreateInstanceParams,
+  makeLogger,
+  SDKConfigParams,
+  ClientSideTestHook as TestHook,
+  ValueType,
+} from '@launchdarkly/js-contract-test-utils/client';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');

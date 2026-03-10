@@ -1,8 +1,7 @@
+import { CreateInstanceParams, makeLogger } from '@launchdarkly/js-contract-test-utils/client';
 import { LDLogger } from '@launchdarkly/react-sdk';
 
 import { CommandHandler } from './ClientEntity';
-import { CreateInstanceParams } from './ConfigParams';
-import { makeLogger } from './makeLogger';
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;

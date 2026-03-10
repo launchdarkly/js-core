@@ -37,6 +37,7 @@
     "packages/store/node-server-sdk-redis",
     "packages/store/node-server-sdk-dynamodb",
     "packages/telemetry/node-server-sdk-otel",
+    "packages/tooling/contract-test-utils",
     "packages/tooling/jest",
     "packages/tooling/jest/example/react-native-example",
     "packages/sdk/browser",
