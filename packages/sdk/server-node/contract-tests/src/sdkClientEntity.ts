@@ -349,9 +349,7 @@ interface ListenerEntry {
   handler: (...args: any[]) => void;
 }
 
-export async function newSdkClientEntity(
-  options: CreateInstanceParams,
-): Promise<SdkClientEntity> {
+export async function newSdkClientEntity(options: CreateInstanceParams): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
   const listeners = new Map<string, ListenerEntry>();
