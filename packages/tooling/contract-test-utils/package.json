@@ -41,10 +41,14 @@
     "@launchdarkly/js-client-sdk-common": "workspace:^"
   },
   "peerDependencies": {
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "@launchdarkly/node-server-sdk": "workspace:^",
     "got": "14.4.7"
   },
   "peerDependenciesMeta": {
+    "@launchdarkly/js-server-sdk-common": {
+      "optional": true
+    },
     "@launchdarkly/node-server-sdk": {
       "optional": true
     },

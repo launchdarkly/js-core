@@ -1,4 +1,6 @@
-import { LDContext, LDEvaluationReason } from '@launchdarkly/js-client-sdk-common';
+// Shared command types with no SDK-specific dependencies.
+// SDK-specific types (those referencing LDContext/LDEvaluationReason) are in
+// client-side/types/CommandParams.ts and server-side/types/CommandParams.ts.
 
 export const CommandType = {
   EvaluateFlag: 'evaluate',
@@ -23,57 +25,8 @@ export const ValueType = {
 } as const;
 export type ValueType = (typeof ValueType)[keyof typeof ValueType];
 
-export interface CommandParams {
-  command: CommandType;
-  evaluate?: EvaluateFlagParams;
-  evaluateAll?: EvaluateAllFlagsParams;
-  customEvent?: CustomEventParams;
-  identifyEvent?: IdentifyEventParams;
-  contextBuild?: ContextBuildParams;
-  contextConvert?: ContextConvertParams;
-  contextComparison?: ContextComparisonPairParams;
-  secureModeHash?: SecureModeHashParams;
-}
-
-export interface EvaluateFlagParams {
-  flagKey: string;
-  context?: LDContext;
-  user?: any;
-  valueType: ValueType;
-  defaultValue: unknown;
-  detail: boolean;
-}
-
-export interface EvaluateFlagResponse {
-  value: unknown;
-  variationIndex?: number;
-  reason?: LDEvaluationReason;
-}
-
-export interface EvaluateAllFlagsParams {
-  context?: LDContext;
-  user?: any;
-  withReasons: boolean;
-  clientSideOnly: boolean;
-  detailsOnlyForTrackedFlags: boolean;
-}
-
 export interface EvaluateAllFlagsResponse {
   state: Record<string, unknown>;
-}
-
-export interface CustomEventParams {
-  eventKey: string;
-  context?: LDContext;
-  user?: any;
-  data?: unknown;
-  omitNullData: boolean;
-  metricValue?: number;
-}
-
-export interface IdentifyEventParams {
-  context?: LDContext;
-  user?: any;
 }
 
 export interface ContextBuildParams {
@@ -130,11 +83,6 @@ export interface ContextComparisonResponse {
   equals: boolean;
 }
 
-export interface SecureModeHashParams {
-  context?: LDContext;
-  user?: any;
-}
-
 export interface SecureModeHashResponse {
   result: string;
 }
@@ -144,17 +92,3 @@ export const HookStage = {
   AfterEvaluation: 'afterEvaluation',
 } as const;
 export type HookStage = (typeof HookStage)[keyof typeof HookStage];
-
-export interface EvaluationSeriesContext {
-  flagKey: string;
-  context: LDContext;
-  defaultValue: unknown;
-  method: string;
-}
-
-export interface HookExecutionPayload {
-  evaluationSeriesContext?: EvaluationSeriesContext;
-  evaluationSeriesData?: Record<string, unknown>;
-  evaluationDetail?: EvaluateFlagResponse;
-  stage?: HookStage;
-}

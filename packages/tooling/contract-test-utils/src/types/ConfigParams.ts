@@ -1,27 +1,8 @@
-import { LDContext } from '@launchdarkly/js-client-sdk-common';
+// Shared config types with no SDK-specific dependencies.
+// SDK-specific types (those referencing LDContext) are in
+// client-side/types/ConfigParams.ts and server-side/types/ConfigParams.ts.
 
 import { HookStage } from './CommandParams';
-
-export interface CreateInstanceParams {
-  configuration: SDKConfigParams;
-  tag: string;
-}
-
-export interface SDKConfigParams {
-  credential: string;
-  startWaitTimeMs?: number; // UnixMillisecondTime
-  initCanFail?: boolean;
-  serviceEndpoints?: SDKConfigServiceEndpointsParams;
-  tls?: SDKConfigTLSParams;
-  streaming?: SDKConfigStreamingParams;
-  polling?: SDKConfigPollingParams;
-  events?: SDKConfigEventParams;
-  tags?: SDKConfigTagsParams;
-  clientSide?: SDKConfigClientSideParams;
-  hooks?: SDKConfigHooksParams;
-  wrapper?: SDKConfigWrapper;
-  proxy?: SDKConfigProxyParams;
-}
 
 export interface SDKConfigTLSParams {
   skipVerifyPeer?: boolean;
@@ -60,14 +41,6 @@ export interface SDKConfigEventParams {
 export interface SDKConfigTagsParams {
   applicationId?: string;
   applicationVersion?: string;
-}
-
-export interface SDKConfigClientSideParams {
-  initialContext?: LDContext;
-  initialUser?: any;
-  evaluationReasons?: boolean;
-  useReport?: boolean;
-  includeEnvironmentAttributes?: boolean;
 }
 
 export interface SDKConfigEvaluationHookData {

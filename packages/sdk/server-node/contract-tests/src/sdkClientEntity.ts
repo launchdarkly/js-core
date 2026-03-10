@@ -1,6 +1,11 @@
 import got from 'got';
 
-import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
+import {
+  CommandParams,
+  CreateInstanceParams,
+  SDKConfigParams,
+  ServerSideTestHook as TestHook,
+} from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
@@ -8,9 +13,7 @@ import ld, {
   LDConcurrentExecution,
   LDContext,
   LDExecutionOrdering,
-  LDFlagValue,
   LDMigrationError,
-  LDMigrationStage,
   LDMigrationSuccess,
   LDOptions,
   LDSerialExecution,
@@ -25,152 +28,7 @@ import { Log, sdkLogger } from './log.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-interface SdkConfigOptions {
-  credential: string;
-  startWaitTimeMs?: number;
-  initCanFail?: boolean;
-  serviceEndpoints?: {
-    streaming?: string;
-    polling?: string;
-    events?: string;
-  };
-  tls?: {
-    skipVerifyPeer?: boolean;
-    customCAFile?: string;
-  };
-  streaming?: {
-    baseUri?: string;
-    initialRetryDelayMs?: number;
-    filter?: string;
-  };
-  polling?: {
-    baseUri?: string;
-    pollIntervalMs?: number;
-    filter?: string;
-  };
-  events?: {
-    baseUri?: string;
-    capacity?: number;
-    enableDiagnostics: boolean;
-    allAttributesPrivate?: boolean;
-    globalPrivateAttributes?: string[];
-    flushIntervalMs?: number;
-    omitAnonymousContexts?: boolean;
-    enableGzip?: boolean;
-  };
-  tags?: {
-    applicationId?: string;
-    applicationVersion?: string;
-  };
-  bigSegments?: {
-    callbackUri: string;
-    userCacheSize?: number;
-    userCacheTimeMs?: number;
-    statusPollIntervalMs?: number;
-    staleAfterMs?: number;
-  };
-  hooks?: {
-    hooks: {
-      name: string;
-      callbackUri: string;
-      data?: Record<string, Record<string, unknown>>;
-      errors?: Record<string, string>;
-    }[];
-  };
-  wrapper?: {
-    name: string;
-    version: string;
-  };
-  proxy?: {
-    httpProxy?: string;
-  };
-  dataSystem?: {
-    initializers?: SDKDataSystemInitializerParams[];
-    synchronizers?: SDKDataSystemSynchronizerParams[];
-    payloadFilter?: string;
-  };
-}
-
-interface CreateInstanceParams {
-  configuration: SdkConfigOptions;
-  tag: string;
-}
-
-export interface SDKDataSystemSynchronizerParams {
-  streaming?: SDKDataSourceStreamingParams;
-  polling?: SDKDataSourcePollingParams;
-}
-
-export interface SDKDataSystemInitializerParams {
-  polling?: SDKDataSourcePollingParams;
-}
-
-export interface SDKDataSourceStreamingParams {
-  baseUri?: string;
-  initialRetryDelayMs?: number;
-}
-
-export interface SDKDataSourcePollingParams {
-  baseUri?: string;
-  pollIntervalMs?: number;
-}
-
-interface CommandParams {
-  command: string;
-  evaluate?: {
-    flagKey: string;
-    context?: LDContext;
-    user?: LDUser;
-    defaultValue: LDFlagValue;
-    detail?: boolean;
-    valueType?: string;
-  };
-  evaluateAll?: {
-    context?: LDContext;
-    user?: LDUser;
-    clientSideOnly?: boolean;
-    detailsOnlyForTrackedFlags?: boolean;
-    withReasons?: boolean;
-  };
-  identifyEvent?: {
-    context?: LDContext;
-    user?: LDUser;
-  };
-  customEvent?: {
-    eventKey: string;
-    context?: LDContext;
-    user?: LDUser;
-    data?: any;
-    metricValue?: number;
-  };
-  migrationVariation?: {
-    key: string;
-    context: LDContext;
-    defaultStage: LDMigrationStage;
-  };
-  migrationOperation?: {
-    operation: string;
-    key: string;
-    context: LDContext;
-    defaultStage: LDMigrationStage;
-    payload: any;
-    readExecutionOrder: string;
-    trackLatency?: boolean;
-    trackErrors?: boolean;
-    trackConsistency?: boolean;
-    newEndpoint: string;
-    oldEndpoint: string;
-  };
-  registerFlagChangeListener?: {
-    listenerId: string;
-    callbackUri: string;
-  };
-  unregisterListener?: {
-    listenerId: string;
-  };
-}
-
-export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
+export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,

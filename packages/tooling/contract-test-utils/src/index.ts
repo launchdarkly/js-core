@@ -1,20 +1,7 @@
 // Universal exports (no SDK dependency)
+// These types have no references to LDContext or LDEvaluationReason.
+// SDK-specific types are exported from ./client and ./server subpaths.
 export * from './types/CommandParams';
-export {
-  type CreateInstanceParams,
-  type SDKConfigParams,
-  type SDKConfigTLSParams,
-  type SDKConfigServiceEndpointsParams,
-  type SDKConfigStreamingParams,
-  type SDKConfigPollingParams,
-  type SDKConfigEventParams,
-  type SDKConfigTagsParams,
-  type SDKConfigClientSideParams,
-  type SDKConfigEvaluationHookData,
-  type SDKConfigHookInstance,
-  type SDKConfigHooksParams,
-  type SDKConfigProxyParams,
-  type SDKConfigWrapper,
-} from './types/ConfigParams';
+export * from './types/ConfigParams';
 export { makeLogger } from './logging/makeLogger';
 export { ClientPool } from './server-side/ClientPool';
