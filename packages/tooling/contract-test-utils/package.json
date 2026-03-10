@@ -17,9 +17,9 @@
       "default": "./src/client.ts"
     },
     "./server": {
-      "types": "./src/server.ts",
-      "import": "./src/server.ts",
-      "default": "./src/server.ts"
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
     }
   },
   "typesVersions": {
@@ -28,7 +28,7 @@
         "./src/client.ts"
       ],
       "server": [
-        "./src/server.ts"
+        "./dist/server.d.ts"
       ]
     }
   },
