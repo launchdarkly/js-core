@@ -41,7 +41,7 @@ function processEvents(
   const handler = internal.createProtocolHandler(
     {
       'flag-eval': processFlagEval,
-    flag_eval: processFlagEval,
+      flag_eval: processFlagEval,
     },
     logger,
   );

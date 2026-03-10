@@ -1,4 +1,4 @@
-import { createClient } from '@launchdarkly/js-client-sdk';
+import { basicLogger, createClient } from '@launchdarkly/js-client-sdk';
 
 // Set clientSideID to your LaunchDarkly client-side ID
 const clientSideID = 'LD_CLIENT_SIDE_ID';
@@ -27,6 +27,7 @@ const main = async () => {
   const ldclient = createClient(clientSideID, context, {
     // @ts-ignore dataSystem is @internal — experimental FDv2 opt-in
     dataSystem: {},
+    logger: basicLogger({level: 'debug'}),
   });
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);
@@ -42,10 +43,10 @@ const main = async () => {
     );
   });
 
-  // // Listen for flag changes
-  // ldclient.on('change', () => {
-  //   render();
-  // });
+  // Listen for flag changes
+  ldclient.on('change', () => {
+    render();
+  });
 
   ldclient.start();
 

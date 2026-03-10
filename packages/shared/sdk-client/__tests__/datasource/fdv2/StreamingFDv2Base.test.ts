@@ -322,7 +322,9 @@ it('handles ping events by calling ping handler and queuing the result', async (
       version: 1,
       state: '(p:p1:1)',
       type: 'full' as const,
-      updates: [{ kind: 'flag-eval', key: 'ping-flag', version: 1, object: { value: 'from-ping' } }],
+      updates: [
+        { kind: 'flag-eval', key: 'ping-flag', version: 1, object: { value: 'from-ping' } },
+      ],
     },
     fdv1Fallback: false,
   };

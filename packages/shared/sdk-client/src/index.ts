@@ -105,6 +105,8 @@ export type { InitializerFactory, SynchronizerSlot } from './datasource/fdv2/Sou
 export { createSynchronizerSlot } from './datasource/fdv2/SourceManager';
 export { makeFDv2Requestor } from './datasource/fdv2/FDv2Requestor';
 export type { FDv2Requestor } from './datasource/fdv2/FDv2Requestor';
+export { createCacheInitializerFactory } from './datasource/fdv2/CacheInitializer';
+export type { CacheInitializerConfig } from './datasource/fdv2/CacheInitializer';
 export { createPollingInitializer } from './datasource/fdv2/PollingInitializer';
 export { createPollingSynchronizer } from './datasource/fdv2/PollingSynchronizer';
 export type { PingHandler, StreamingFDv2Base } from './datasource/fdv2/StreamingFDv2Base';
@@ -126,9 +128,32 @@ export {
 
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
+export { MODE_TABLE } from './datasource/ConnectionModeConfig';
 export {
   resolveConnectionMode,
   MOBILE_TRANSITION_TABLE,
   BROWSER_TRANSITION_TABLE,
   DESKTOP_TRANSITION_TABLE,
 } from './datasource/ModeResolver';
+
+// FDv2 shared data manager — mode switching, debouncing, and data source lifecycle.
+export type {
+  FDv2DataManagerBaseConfig,
+  FDv2DataManagerControl,
+} from './datasource/FDv2DataManagerBase';
+export { createFDv2DataManagerBase } from './datasource/FDv2DataManagerBase';
+export type {
+  SourceFactoryContext,
+  SourceFactoryProvider,
+} from './datasource/SourceFactoryProvider';
+export { createDefaultSourceFactoryProvider } from './datasource/SourceFactoryProvider';
+
+// State debounce manager.
+export type {
+  StateDebounceManager,
+  StateDebounceManagerConfig,
+  NetworkState,
+  PendingState,
+  ReconciliationCallback,
+} from './datasource/StateDebounceManager';
+export { createStateDebounceManager } from './datasource/StateDebounceManager';

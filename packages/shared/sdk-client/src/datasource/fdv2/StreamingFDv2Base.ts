@@ -1,4 +1,5 @@
 import {
+  DataSourceErrorKind,
   EventSource,
   getStreamingUri,
   httpErrorMessage,
@@ -9,7 +10,6 @@ import {
   Requests,
   ServiceEndpoints,
   shouldRetry,
-  DataSourceErrorKind,
 } from '@launchdarkly/js-sdk-common';
 
 import { processFlagEval } from '../flagEvalMapper';
@@ -282,15 +282,20 @@ export function createStreamingBase(config: {
       };
 
       es.onerror = (err?: HttpErrorResponse) => {
-        if(err && typeof err.status === 'number') {
+        if (err && typeof err.status === 'number') {
           // This condition will be handled by the error filter.
           return;
         }
-        resultQueue.put(interrupted({
-          kind: DataSourceErrorKind.NetworkError,
-          message: err?.message ?? 'IO Error',
-          time: Date.now(),
-        }, fdv1Fallback));
+        resultQueue.put(
+          interrupted(
+            {
+              kind: DataSourceErrorKind.NetworkError,
+              message: err?.message ?? 'IO Error',
+              time: Date.now(),
+            },
+            fdv1Fallback,
+          ),
+        );
       };
 
       es.onopen = () => {

@@ -286,18 +286,21 @@ class BrowserClientImpl extends LDClientImpl {
   }
 
   setStreaming(streaming?: boolean): void {
-    // With FDv2 we may want to consider if we support connection mode directly.
-    // Maybe with an extension to connection mode for 'automatic'.
     if (this.dataManager instanceof BrowserDataManager) {
+      this.dataManager.setForcedStreaming(streaming);
+    } else if (this.dataManager instanceof BrowserFDv2DataManager) {
       this.dataManager.setForcedStreaming(streaming);
     }
   }
 
   private _updateAutomaticStreamingState() {
+    const hasListeners = this.emitter
+      .eventNames()
+      .some((name) => name.startsWith('change:') || name === 'change');
+
     if (this.dataManager instanceof BrowserDataManager) {
-      const hasListeners = this.emitter
-        .eventNames()
-        .some((name) => name.startsWith('change:') || name === 'change');
+      this.dataManager.setAutomaticStreamingState(hasListeners);
+    } else if (this.dataManager instanceof BrowserFDv2DataManager) {
       this.dataManager.setAutomaticStreamingState(hasListeners);
     }
   }
