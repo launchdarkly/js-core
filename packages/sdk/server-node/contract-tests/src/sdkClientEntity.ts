@@ -14,6 +14,7 @@ import ld, {
   LDContext,
   LDExecutionOrdering,
   LDMigrationError,
+  LDMigrationStage,
   LDMigrationSuccess,
   LDOptions,
   LDSerialExecution,
@@ -251,12 +252,12 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
         if (pe.detail) {
           switch (pe.valueType) {
             case 'bool':
-              return client.boolVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.boolVariationDetail(pe.flagKey, context, pe.defaultValue as boolean);
             case 'int': // Intentional fallthrough.
             case 'double':
-              return client.numberVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.numberVariationDetail(pe.flagKey, context, pe.defaultValue as number);
             case 'string':
-              return client.stringVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.stringVariationDetail(pe.flagKey, context, pe.defaultValue as string);
             default:
               return client.variationDetail(
                 pe.flagKey,
@@ -268,16 +269,16 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
           switch (pe.valueType) {
             case 'bool':
               return {
-                value: await client.boolVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.boolVariation(pe.flagKey, context, pe.defaultValue as boolean),
               };
             case 'int': // Intentional fallthrough.
             case 'double':
               return {
-                value: await client.numberVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.numberVariation(pe.flagKey, context, pe.defaultValue as number),
               };
             case 'string':
               return {
-                value: await client.stringVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.stringVariation(pe.flagKey, context, pe.defaultValue as string),
               };
             default:
               return {
@@ -319,7 +320,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
         const res = await client.migrationVariation(
           migrationVariation.key,
           migrationVariation.context,
-          migrationVariation.defaultStage,
+          migrationVariation.defaultStage as LDMigrationStage,
         );
         return { result: res.value };
       }
@@ -384,7 +385,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
             const res = await migration.read(
               migrationOperation.key,
               migrationOperation.context,
-              migrationOperation.defaultStage,
+              migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
             if (res.success) {
@@ -396,7 +397,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
             const res = await migration.write(
               migrationOperation.key,
               migrationOperation.context,
-              migrationOperation.defaultStage,
+              migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
 

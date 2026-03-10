@@ -1,8 +1,29 @@
-// Shared config types with no SDK-specific dependencies.
-// SDK-specific types (those referencing LDContext) are in
-// client-side/types/ConfigParams.ts and server-side/types/ConfigParams.ts.
-
+import { LDContext } from './compat';
 import { HookStage } from './CommandParams';
+
+export interface CreateInstanceParams {
+  configuration: SDKConfigParams;
+  tag: string;
+}
+
+export interface SDKConfigParams {
+  credential: string;
+  startWaitTimeMs?: number; // UnixMillisecondTime
+  initCanFail?: boolean;
+  serviceEndpoints?: SDKConfigServiceEndpointsParams;
+  tls?: SDKConfigTLSParams;
+  streaming?: SDKConfigStreamingParams;
+  polling?: SDKConfigPollingParams;
+  events?: SDKConfigEventParams;
+  tags?: SDKConfigTagsParams;
+  clientSide?: SDKConfigClientSideParams;
+  hooks?: SDKConfigHooksParams;
+  wrapper?: SDKConfigWrapper;
+  proxy?: SDKConfigProxyParams;
+  // Server-specific config fields
+  bigSegments?: SDKConfigBigSegmentsParams;
+  dataSystem?: SDKDataSystemParams;
+}
 
 export interface SDKConfigTLSParams {
   skipVerifyPeer?: boolean;
@@ -43,6 +64,14 @@ export interface SDKConfigTagsParams {
   applicationVersion?: string;
 }
 
+export interface SDKConfigClientSideParams {
+  initialContext?: LDContext;
+  initialUser?: any;
+  evaluationReasons?: boolean;
+  useReport?: boolean;
+  includeEnvironmentAttributes?: boolean;
+}
+
 export interface SDKConfigEvaluationHookData {
   [key: string]: unknown;
 }
@@ -65,4 +94,39 @@ export interface SDKConfigProxyParams {
 export interface SDKConfigWrapper {
   name: string;
   version: string;
+}
+
+// Server-specific config types
+
+export interface SDKConfigBigSegmentsParams {
+  callbackUri: string;
+  userCacheSize?: number;
+  userCacheTimeMs?: number;
+  statusPollIntervalMs?: number;
+  staleAfterMs?: number;
+}
+
+export interface SDKDataSourceStreamingParams {
+  baseUri?: string;
+  initialRetryDelayMs?: number;
+}
+
+export interface SDKDataSourcePollingParams {
+  baseUri?: string;
+  pollIntervalMs?: number;
+}
+
+export interface SDKDataSystemSynchronizerParams {
+  streaming?: SDKDataSourceStreamingParams;
+  polling?: SDKDataSourcePollingParams;
+}
+
+export interface SDKDataSystemInitializerParams {
+  polling?: SDKDataSourcePollingParams;
+}
+
+export interface SDKDataSystemParams {
+  initializers?: SDKDataSystemInitializerParams[];
+  synchronizers?: SDKDataSystemSynchronizerParams[];
+  payloadFilter?: string;
 }
