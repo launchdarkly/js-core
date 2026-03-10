@@ -1,10 +1,6 @@
 import got from 'got';
 
-import {
-  CreateInstanceParams,
-  SDKConfigParams,
-  ServerSideTestHook as TestHook,
-} from '@launchdarkly/js-contract-test-utils/server';
+import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
@@ -29,17 +25,64 @@ import { Log, sdkLogger } from './log.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-/**
- * Server-specific extensions to the shared SDKConfigParams.
- * Adds bigSegments, dataSystem, and other server-only configuration.
- */
-interface ServerSDKConfigParams extends SDKConfigParams {
+interface SdkConfigOptions {
+  credential: string;
+  startWaitTimeMs?: number;
+  initCanFail?: boolean;
+  serviceEndpoints?: {
+    streaming?: string;
+    polling?: string;
+    events?: string;
+  };
+  tls?: {
+    skipVerifyPeer?: boolean;
+    customCAFile?: string;
+  };
+  streaming?: {
+    baseUri?: string;
+    initialRetryDelayMs?: number;
+    filter?: string;
+  };
+  polling?: {
+    baseUri?: string;
+    pollIntervalMs?: number;
+    filter?: string;
+  };
+  events?: {
+    baseUri?: string;
+    capacity?: number;
+    enableDiagnostics: boolean;
+    allAttributesPrivate?: boolean;
+    globalPrivateAttributes?: string[];
+    flushIntervalMs?: number;
+    omitAnonymousContexts?: boolean;
+    enableGzip?: boolean;
+  };
+  tags?: {
+    applicationId?: string;
+    applicationVersion?: string;
+  };
   bigSegments?: {
     callbackUri: string;
     userCacheSize?: number;
     userCacheTimeMs?: number;
     statusPollIntervalMs?: number;
     staleAfterMs?: number;
+  };
+  hooks?: {
+    hooks: {
+      name: string;
+      callbackUri: string;
+      data?: Record<string, Record<string, unknown>>;
+      errors?: Record<string, string>;
+    }[];
+  };
+  wrapper?: {
+    name: string;
+    version: string;
+  };
+  proxy?: {
+    httpProxy?: string;
   };
   dataSystem?: {
     initializers?: SDKDataSystemInitializerParams[];
@@ -48,8 +91,9 @@ interface ServerSDKConfigParams extends SDKConfigParams {
   };
 }
 
-interface ServerCreateInstanceParams extends CreateInstanceParams {
-  configuration: ServerSDKConfigParams;
+interface CreateInstanceParams {
+  configuration: SdkConfigOptions;
+  tag: string;
 }
 
 export interface SDKDataSystemSynchronizerParams {
@@ -126,7 +170,7 @@ interface CommandParams {
   };
 }
 
-export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
+export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
@@ -306,7 +350,7 @@ interface ListenerEntry {
 }
 
 export async function newSdkClientEntity(
-  options: ServerCreateInstanceParams,
+  options: CreateInstanceParams,
 ): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
