@@ -10,14 +10,11 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
-import type {
-  LDClientDataSystemOptions,
-  PlatformDataSystemDefaults,
-} from '../api/datasource/LDClientDataSystemOptions';
+import type { LDClientDataSystemOptions } from '../api/datasource/LDClientDataSystemOptions';
+import type { PlatformDataSystemDefaults } from '../api/datasource/LDClientDataSystemOptions';
 import { LDInspection } from '../api/LDInspection';
-import { dataSystemValidators } from '../datasource/LDClientDataSystemOptions';
 import validateOptions from './validateOptions';
-import validators from './validators';
+import createValidators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
 
@@ -158,6 +155,9 @@ export default class ConfigurationImpl implements Configuration {
     },
   ) {
     this.logger = ensureSafeLogger(pristineOptions.logger);
+    const validators = createValidators({
+      dataSystemDefaults: internalOptions.dataSystemDefaults,
+    });
     const validated = validateOptions(
       pristineOptions as Record<string, unknown>,
       validators,
@@ -187,16 +187,5 @@ export default class ConfigurationImpl implements Configuration {
 
     this.credentialType = internalOptions.credentialType;
     this.getImplementationHooks = internalOptions.getImplementationHooks;
-
-    // Deep-validate dataSystem if present, using platform-specific defaults.
-    if (pristineOptions.dataSystem !== undefined && internalOptions.dataSystemDefaults) {
-      this.dataSystem = validateOptions(
-        pristineOptions.dataSystem,
-        dataSystemValidators,
-        internalOptions.dataSystemDefaults as unknown as Record<string, unknown>,
-        this.logger,
-        'dataSystem',
-      ) as unknown as LDClientDataSystemOptions;
-    }
   }
 }
