@@ -20,12 +20,14 @@ export class ClientPool<T> {
   }
 
   /**
-   * Add a client entity to the pool with the given ID.
-   * @param id - The unique identifier for the client.
+   * Add a client entity to the pool, assigning it the next available ID.
    * @param client - The client entity to store.
+   * @returns The unique string ID assigned to the client.
    */
-  add(id: string, client: T): void {
+  add(client: T): string {
+    const id = this.nextId();
     this._clients[id] = client;
+    return id;
   }
 
   /**
