@@ -282,9 +282,7 @@ describe('dataSystem validation', () => {
       },
     );
     expect(config.dataSystem).toBeUndefined();
-    expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('dataSystem'),
-    );
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
   });
 
   it('validates automaticModeSwitching as a granular config object', () => {

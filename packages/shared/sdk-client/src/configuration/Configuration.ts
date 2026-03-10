@@ -10,8 +10,10 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
-import type { LDClientDataSystemOptions } from '../api/datasource/LDClientDataSystemOptions';
-import type { PlatformDataSystemDefaults } from '../api/datasource/LDClientDataSystemOptions';
+import type {
+  LDClientDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from '../api/datasource/LDClientDataSystemOptions';
 import { LDInspection } from '../api/LDInspection';
 import validateOptions from './validateOptions';
 import createValidators from './validators';

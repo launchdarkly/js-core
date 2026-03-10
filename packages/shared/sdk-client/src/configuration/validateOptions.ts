@@ -123,8 +123,9 @@ export function validatorOf(
         logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof value));
         return undefined;
       }
-      const nestedDefaults = builtInDefaults
-        ?? (TypeValidators.Object.is(defaults) ? (defaults as Record<string, unknown>) : {});
+      const nestedDefaults =
+        builtInDefaults ??
+        (TypeValidators.Object.is(defaults) ? (defaults as Record<string, unknown>) : {});
       const nested = validateOptions(
         value as Record<string, unknown>,
         validators,
