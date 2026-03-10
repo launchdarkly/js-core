@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 
 import { LDContext } from '@launchdarkly/js-client-sdk';
 
@@ -66,12 +66,14 @@ export interface LDBootstrapClientProviderProps {
  * server-evaluated flag values bootstrapped by {@link LDIsomorphicProvider}.
  *
  * @remarks
- * The client is created exactly once on mount (via `useState` initialiser). It starts
+ * The client is created exactly once on mount (via `useRef` guard). It starts
  * immediately with the supplied `bootstrap` data, so flag values are available
  * synchronously on the first render without waiting for a network round-trip.
  *
- * After the initial render, the client opens a streaming connection and live flag
- * changes propagate normally.
+ * @privateRemarks
+ * TODO: this is not completed yet as we will need think about whether it is
+ * appropriate to have a separate client for the bootstrapped data vs bootstrapping
+ * the data to a running client.
  *
  * Use {@link LDIsomorphicProvider} in a server component to compute the bootstrap
  * data and render this provider automatically.
@@ -82,14 +84,18 @@ export function LDBootstrapClientProvider({
   bootstrap,
   children,
 }: LDBootstrapClientProviderProps) {
-  const [LDProvider] = useState(() => {
-    if (typeof window === 'undefined') {
-      return createLDReactProviderWithClient(SSR_NOOP);
-    }
-    const client = createClient(clientSideId, context);
-    client.start({ bootstrap });
-    return createLDReactProviderWithClient(client);
-  });
+  const providerRef = useRef<React.FC<{ children: React.ReactNode }> | null>(null);
 
+  if (providerRef.current === null) {
+    if (typeof window === 'undefined') {
+      providerRef.current = createLDReactProviderWithClient(SSR_NOOP);
+    } else {
+      const client = createClient(clientSideId, context);
+      client.start({ bootstrap });
+      providerRef.current = createLDReactProviderWithClient(client);
+    }
+  }
+
+  const LDProvider = providerRef.current;
   return <LDProvider>{children}</LDProvider>;
 }
