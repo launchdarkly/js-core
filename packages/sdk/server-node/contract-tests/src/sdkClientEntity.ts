@@ -20,7 +20,7 @@ import ld, {
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
-import TestHook from './TestHook.js';
+import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
