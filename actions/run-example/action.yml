@@ -1,0 +1,44 @@
+# Composite action for running an example app e2e test.
+# Note: id-token: write permission must be declared on the calling job.
+name: Run Example App
+inputs:
+  workspace_name:
+    description: 'Yarn workspace name of the example app, e.g. @internal/react-sdk-example-client-only'
+    required: true
+  aws_assume_role:
+    description: 'AWS OIDC role ARN used to fetch secrets from SSM'
+    required: true
+  before_test:
+    description: 'Shell commands to run before the e2e test step (e.g. install Playwright browsers)'
+    default: ''
+runs:
+  using: composite
+  steps:
+    - name: Install dependencies
+      shell: bash
+      run: yarn workspaces focus ${{ inputs.workspace_name }}
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c
+      name: 'Get the client-side SDK key'
+      with:
+        aws_assume_role: ${{ inputs.aws_assume_role }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c
+      name: 'Get the test feature flag key'
+      with:
+        aws_assume_role: ${{ inputs.aws_assume_role }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
+
+    - name: Build SDK dependencies
+      shell: bash
+      run: yarn workspaces foreach -pR --topological-dev --from '${{ inputs.workspace_name }}' run build
+
+    - name: Before test hook
+      shell: bash
+      if: ${{ inputs.before_test != '' }}
+      run: ${{ inputs.before_test }}
+
+    - name: Run e2e tests
+      shell: bash
+      run: yarn workspace ${{ inputs.workspace_name }} test

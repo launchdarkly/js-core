@@ -1,7 +1,7 @@
+import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
 import { LDLogger } from '@launchdarkly/react-native-client-sdk';
 
 import { ClientEntity, newSdkClientEntity } from './ClientEntity';
-import { makeLogger } from './makeLogger';
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;

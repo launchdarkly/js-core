@@ -10,7 +10,7 @@ import {
 import './App.css';
 
 // Set FLAG_KEY to the feature flag key you want to evaluate.
-const FLAG_KEY = 'sample-feature';
+const FLAG_KEY = import.meta.env.LAUNCHDARKLY_FLAG_KEY ?? 'sample-feature';
 
 const PRESET_CONTEXTS: ReadonlyArray<LDContext> = [
   { kind: 'user', key: 'example-user-key', name: 'Sandy' },
