@@ -14,7 +14,8 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, flags: T): T {
 
   // There is still an potential issue here if this function is used to only evaluate a
   // small subset of flags. In this case, any flag updates will cause a reset of the cache.
-  // It is recommended to use the useFlags hook instead.
+  // It is recommended to use the typed variation hooks (useBoolVariation, useStringVariation,
+  // useNumberVariation, useJsonVariation) for better performance when reading a subset of flags.
   const cache = new Map<string, unknown>();
 
   return new Proxy(flags, {

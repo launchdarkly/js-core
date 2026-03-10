@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useFlags } from '../../../src/client/deprecated-hooks/useFlags';
 import { makeMockClient } from '../mockClient';
-import { makeWrapper } from './renderHelpers';
+import { makeStatefulWrapper, makeWrapper } from './renderHelpers';
 
 function FlagsConsumer({ onFlags }: { onFlags: (flags: Record<string, unknown>) => void }) {
   const flags = useFlags();
@@ -96,6 +96,45 @@ it('logs a deprecation warning on mount via client.logger.warn', async () => {
   expect(mockClient.logger.warn).toHaveBeenCalledWith(
     expect.stringContaining('[LaunchDarkly] useFlags is deprecated'),
   );
+});
+
+it('clears the variation cache when the context changes after identify', () => {
+  const mockClient = makeMockClient();
+  (mockClient.allFlags as jest.Mock).mockReturnValue({ 'my-flag': true });
+
+  const { Wrapper: StatefulWrapper, setterRef } = makeStatefulWrapper(mockClient);
+
+  let capturedFlags: Record<string, unknown> = {};
+
+  function FlagReader() {
+    capturedFlags = useFlags();
+    return null;
+  }
+
+  render(
+    <StatefulWrapper>
+      <FlagReader />
+    </StatefulWrapper>,
+  );
+
+  // Read the flag to prime the variation cache
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  capturedFlags['my-flag'];
+  const callsBefore = (mockClient.variation as jest.Mock).mock.calls.length;
+
+  // Simulate context change (e.g. after identify)
+  act(() => {
+    setterRef.current!({
+      client: mockClient,
+      context: { kind: 'user', key: 'new-user' },
+      initializedState: 'complete',
+    });
+  });
+
+  // Reading the same key again should call variation again (cache was cleared)
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  capturedFlags['my-flag'];
+  expect((mockClient.variation as jest.Mock).mock.calls.length).toBeGreaterThan(callsBefore);
 });
 
 it('calls client.variation when reading a flag value from the returned object', () => {
