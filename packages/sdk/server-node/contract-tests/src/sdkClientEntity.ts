@@ -1,6 +1,10 @@
 import got from 'got';
 
-import { ServerSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/server';
+import {
+  CreateInstanceParams,
+  SDKConfigParams,
+  ServerSideTestHook as TestHook,
+} from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
@@ -25,35 +29,11 @@ import { Log, sdkLogger } from './log.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-interface SdkConfigOptions {
-  streaming?: {
-    baseUri: string;
-    initialRetryDelayMs?: number;
-    filter?: string;
-  };
-  polling?: {
-    baseUri: string;
-    pollIntervalMs: number;
-    filter?: string;
-  };
-  dataSystem?: {
-    initializers?: SDKDataSystemInitializerParams[];
-    synchronizers?: SDKDataSystemSynchronizerParams[];
-    payloadFilter?: string;
-  };
-  events?: {
-    allAttributesPrivate?: boolean;
-    baseUri: string;
-    capacity?: number;
-    enableDiagnostics?: boolean;
-    flushIntervalMs?: number;
-    globalPrivateAttributes?: string[];
-    enableGzip?: boolean;
-  };
-  tags?: {
-    applicationId: string;
-    applicationVersion: string;
-  };
+/**
+ * Server-specific extensions to the shared SDKConfigParams.
+ * Adds bigSegments, dataSystem, and other server-only configuration.
+ */
+interface ServerSDKConfigParams extends SDKConfigParams {
   bigSegments?: {
     callbackUri: string;
     userCacheSize?: number;
@@ -61,18 +41,15 @@ interface SdkConfigOptions {
     statusPollIntervalMs?: number;
     staleAfterMs?: number;
   };
-  hooks?: {
-    hooks: {
-      name: string;
-      callbackUri: string;
-      data: any;
-      errors: any;
-    }[];
+  dataSystem?: {
+    initializers?: SDKDataSystemInitializerParams[];
+    synchronizers?: SDKDataSystemSynchronizerParams[];
+    payloadFilter?: string;
   };
-  wrapper?: {
-    name?: string;
-    version?: string;
-  };
+}
+
+interface ServerCreateInstanceParams extends CreateInstanceParams {
+  configuration: ServerSDKConfigParams;
 }
 
 export interface SDKDataSystemSynchronizerParams {
@@ -149,7 +126,7 @@ interface CommandParams {
   };
 }
 
-export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
+export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
@@ -169,7 +146,7 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
-    cf.pollInterval = options.polling.pollIntervalMs / 1000;
+    cf.pollInterval = maybeTime(options.polling.pollIntervalMs);
     if (options.polling.filter) {
       cf.payloadFilterKey = options.polling.filter;
     }
@@ -328,7 +305,7 @@ interface ListenerEntry {
   handler: (...args: any[]) => void;
 }
 
-export async function newSdkClientEntity(options: any): Promise<SdkClientEntity> {
+export async function newSdkClientEntity(options: ServerCreateInstanceParams): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
   const listeners = new Map<string, ListenerEntry>();

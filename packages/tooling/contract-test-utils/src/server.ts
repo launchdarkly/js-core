@@ -7,3 +7,20 @@ export type {
 
 // Re-export shared utilities that don't depend on client-side packages
 export { ClientPool } from './server-side/ClientPool.js';
+
+// Re-export shared types for server consumers that use node16 moduleResolution
+// (they cannot import from the '.' subpath which serves extensionless .ts source)
+export type {
+  CreateInstanceParams,
+  SDKConfigParams,
+  SDKConfigStreamingParams,
+  SDKConfigPollingParams,
+  SDKConfigEventParams,
+  SDKConfigTagsParams,
+  SDKConfigHooksParams,
+  SDKConfigHookInstance,
+  SDKConfigWrapper,
+  SDKConfigServiceEndpointsParams,
+  SDKConfigTLSParams,
+  SDKConfigProxyParams,
+} from './types/ConfigParams.js';

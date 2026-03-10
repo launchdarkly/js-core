@@ -2,6 +2,8 @@ import bodyParser from 'body-parser';
 import express, { Request, Response } from 'express';
 import { Server } from 'http';
 
+import { ClientPool } from '@launchdarkly/js-contract-test-utils/server';
+
 import { Log } from './log.js';
 import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClientEntity.js';
 
@@ -10,8 +12,7 @@ let server: Server | null = null;
 
 const port = 8000;
 
-let clientCounter = 0;
-const clients: Record<string, SdkClientEntity> = {};
+const clients = new ClientPool<SdkClientEntity>();
 
 const mainLog = Log('service');
 
@@ -66,16 +67,12 @@ app.delete('/', (req: Request, res: Response) => {
 app.post('/', async (req: Request, res: Response) => {
   const options = req.body;
 
-  clientCounter += 1;
-  const clientId = clientCounter.toString();
-  const resourceUrl = `/clients/${clientId}`;
-
   try {
     const client = await newSdkClientEntity(options);
-    clients[clientId] = client;
+    const clientId = clients.add(client);
 
     res.status(201);
-    res.set('Location', resourceUrl);
+    res.set('Location', `/clients/${clientId}`);
   } catch (e) {
     res.status(500);
     const message = e instanceof Error ? e.message : JSON.stringify(e);
@@ -86,7 +83,7 @@ app.post('/', async (req: Request, res: Response) => {
 });
 
 app.post('/clients/:id', async (req: Request, res: Response) => {
-  const client = clients[req.params.id];
+  const client = clients.get(req.params.id);
   if (!client) {
     res.status(404);
   } else {
@@ -113,13 +110,13 @@ app.post('/clients/:id', async (req: Request, res: Response) => {
 });
 
 app.delete('/clients/:id', async (req: Request, res: Response) => {
-  const client = clients[req.params.id];
+  const client = clients.get(req.params.id);
   if (!client) {
     res.status(404);
     res.send();
   } else {
     client.close();
-    delete clients[req.params.id];
+    clients.remove(req.params.id);
     res.status(204);
     res.send();
   }
