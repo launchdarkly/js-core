@@ -9,12 +9,9 @@ on:
     branches: [main, 'feat/**']
     paths-ignore:
       - '**.md'
-  schedule:
-    - cron: '0 0 * * *'
 
 jobs:
   build-test-react:
-    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -94,25 +91,10 @@ jobs:
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
-      - name: Install dependencies
-        run: yarn workspaces focus @internal/react-sdk-example-client-only
-      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c
-        name: 'Get the client-side SDK key'
+      - uses: ./actions/run-example
         with:
+          workspace_name: '@internal/react-sdk-example-client-only'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
-      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c
-        name: 'Get the test feature flag key'
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
-      - name: Build SDK dependencies
-        run: yarn workspaces foreach -pR --topological-dev --from '@internal/react-sdk-example-client-only' run build
-      - name: Build example app
-        run: yarn workspace @internal/react-sdk-example-client-only build
-      - name: Install Playwright dependencies
-        run: yarn workspace @internal/react-sdk-example-client-only playwright install --with-deps chromium
-      - name: Run e2e tests
-        run: yarn workspace @internal/react-sdk-example-client-only test
+          before_test: 'yarn workspace @internal/react-sdk-example-client-only playwright install --with-deps chromium'
 
 # TODO: Add contract tests
