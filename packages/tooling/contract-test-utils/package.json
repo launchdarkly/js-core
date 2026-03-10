@@ -15,21 +15,32 @@
       "types": "./src/client.ts",
       "import": "./src/client.ts",
       "default": "./src/client.ts"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
     }
   },
   "typesVersions": {
     "*": {
       "client": [
         "./src/client.ts"
+      ],
+      "server": [
+        "./dist/server.d.ts"
       ]
     }
   },
   "scripts": {
     "build": "tsc",
+    "build:server": "tsc -p tsconfig.server.json",
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^"
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "got": "14.4.7"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
