@@ -51,8 +51,10 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, flags: T): T {
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns All current flag values as `T`, wrapped in a proxy that records evaluations.
  *
- * @deprecated Use `useLDClient` with the client's variation methods directly. This hook will be
- * removed in a future major version.
+ * @deprecated This hook is provided to ease migration from older versions of the React SDK.
+ * For better performance, migrate to the typed variation hooks (`useBoolVariation`,
+ * `useStringVariation`, `useNumberVariation`, `useJsonVariation`) or use `useLDClient`
+ * with the client's `allFlags` method directly. This hook will be removed in a future major version.
  */
 export function useFlags<T extends LDFlagSet = LDFlagSet>(
   reactContext?: React.Context<LDReactClientContextValue>,
@@ -73,7 +75,7 @@ export function useFlags<T extends LDFlagSet = LDFlagSet>(
     return () => client.off('change', handler);
   }, [client]);
 
-  // context is included so the proxy (and its cache) is recreated on every identity
-  // change, ensuring variation is re-called for the new LaunchDarkly context.
+  // context is included so the proxy is recreated on every identity change,
+  // ensuring variation is re-called for the new LaunchDarkly context.
   return useMemo(() => toFlagsProxy(client, flags), [client, flags, context]) as T;
 }
