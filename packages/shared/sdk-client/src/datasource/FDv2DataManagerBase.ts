@@ -99,6 +99,11 @@ export interface FDv2DataManagerControl extends DataManager {
   getCurrentMode(): FDv2ConnectionMode;
   /** The configured default foreground mode (from config, not auto-promoted). */
   readonly configuredForegroundMode: FDv2ConnectionMode;
+  /**
+   * Set a callback to flush pending analytics events. Called immediately
+   * (not debounced) when the lifecycle transitions to background.
+   */
+  setFlushCallback(callback: () => void): void;
 }
 
 /**
@@ -141,6 +146,7 @@ export function createFDv2DataManagerBase(
   let initialized = false;
   let bootstrapped = false;
   let closed = false;
+  let flushCallback: (() => void) | undefined;
 
   // Outstanding identify promise callbacks — needed so that mode switches
   // during identify can wire the new data source's completion to the
@@ -488,6 +494,11 @@ export function createFDv2DataManagerBase(
     },
 
     setLifecycleState(state: LifecycleState): void {
+      // Flush immediately when going to background — the app may be
+      // about to close. This is not debounced (CONNMODE spec 3.3.1).
+      if (state === 'background' && lifecycleState !== 'background') {
+        flushCallback?.();
+      }
       lifecycleState = state;
       debounceManager?.setLifecycleState(state);
     },
@@ -504,6 +515,10 @@ export function createFDv2DataManagerBase(
 
     getCurrentMode(): FDv2ConnectionMode {
       return currentResolvedMode;
+    },
+
+    setFlushCallback(callback: () => void): void {
+      flushCallback = callback;
     },
   };
 }

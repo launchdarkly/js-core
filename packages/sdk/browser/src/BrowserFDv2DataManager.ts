@@ -95,6 +95,10 @@ export default class BrowserFDv2DataManager implements DataManager {
     this._base.close();
   }
 
+  setFlushCallback(callback: () => void): void {
+    this._base.setFlushCallback(callback);
+  }
+
   setForcedStreaming(streaming?: boolean): void {
     this._forcedStreaming = streaming;
     this._updateStreamingState();

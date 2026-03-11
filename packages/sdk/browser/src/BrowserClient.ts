@@ -143,6 +143,10 @@ class BrowserClientImpl extends LDClientImpl {
 
     this.setEventSendingEnabled(true, false);
 
+    if (this.dataManager instanceof BrowserFDv2DataManager) {
+      this.dataManager.setFlushCallback(() => this.flush());
+    }
+
     this._plugins = validatedBrowserOptions.plugins;
 
     if (validatedBrowserOptions.fetchGoals) {
