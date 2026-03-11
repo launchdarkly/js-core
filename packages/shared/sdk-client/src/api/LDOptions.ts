@@ -1,5 +1,6 @@
 import type { LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { LDClientDataSystemOptions } from './datasource/LDClientDataSystemOptions';
 import { Hook } from './integrations/Hooks';
 import { LDInspection } from './LDInspection';
 
@@ -279,4 +280,19 @@ export interface LDOptions {
    * @defaultValue false.
    */
   cleanOldPersistentData?: boolean;
+
+  /**
+   * @internal
+   *
+   * WARNING: This option is EXPERIMENTAL and UNSUPPORTED. It is subject to
+   * change or removal without notice. Do not use in production applications.
+   * Using this option may result in unexpected behavior, data loss, or
+   * breaking changes in future SDK versions. LaunchDarkly does not provide
+   * support for configurations using this option.
+   *
+   * Configuration for the FDv2 data system. When present, the SDK uses
+   * the FDv2 protocol for flag delivery instead of the default FDv1
+   * protocol.
+   */
+  dataSystem?: LDClientDataSystemOptions;
 }

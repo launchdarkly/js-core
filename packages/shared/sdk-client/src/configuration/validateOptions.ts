@@ -111,7 +111,10 @@ export default function validateOptions(
  * `validateOptions` will recursively validate the nested object's properties.
  * Defaults for nested fields are passed through from the parent.
  */
-export function validatorOf(validators: Record<string, TypeValidator>): CompoundValidator {
+export function validatorOf(
+  validators: Record<string, TypeValidator>,
+  builtInDefaults?: Record<string, unknown>,
+): CompoundValidator {
   return {
     is: (u: unknown) => TypeValidators.Object.is(u),
     getType: () => 'object',
@@ -120,9 +123,9 @@ export function validatorOf(validators: Record<string, TypeValidator>): Compound
         logger?.warn(OptionMessages.wrongOptionType(name, 'object', typeof value));
         return undefined;
       }
-      const nestedDefaults = TypeValidators.Object.is(defaults)
-        ? (defaults as Record<string, unknown>)
-        : {};
+      const nestedDefaults =
+        builtInDefaults ??
+        (TypeValidators.Object.is(defaults) ? (defaults as Record<string, unknown>) : {});
       const nested = validateOptions(
         value as Record<string, unknown>,
         validators,

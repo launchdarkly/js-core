@@ -11,6 +11,7 @@ import {
   LDEmitter,
   LDHeaders,
   LDPluginEnvironmentMetadata,
+  MOBILE_DATA_SYSTEM_DEFAULTS,
   mobileFdv1Endpoints,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -65,6 +66,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedRnOptions.plugins),
       credentialType: 'mobileKey',
+      dataSystemDefaults: MOBILE_DATA_SYSTEM_DEFAULTS,
     };
 
     const platform = createPlatform(logger, options, validatedRnOptions.storage);

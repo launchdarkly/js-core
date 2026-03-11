@@ -10,9 +10,13 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
+import type {
+  LDClientDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from '../api/datasource/LDClientDataSystemOptions';
 import { LDInspection } from '../api/LDInspection';
 import validateOptions from './validateOptions';
-import validators from './validators';
+import createValidators from './validators';
 
 const DEFAULT_POLLING_INTERVAL: number = 60 * 5;
 
@@ -21,6 +25,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
   credentialType: 'clientSideId' | 'mobileKey';
   getLegacyStorageKeys?: () => string[];
+  dataSystemDefaults?: PlatformDataSystemDefaults;
 }
 
 export interface Configuration {
@@ -59,6 +64,7 @@ export interface Configuration {
   readonly inspectors: LDInspection[];
   readonly credentialType: 'clientSideId' | 'mobileKey';
   readonly getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
+  readonly dataSystem?: LDClientDataSystemOptions;
 }
 
 const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
@@ -138,6 +144,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly getImplementationHooks: (
     environmentMetadata: LDPluginEnvironmentMetadata,
   ) => Hook[];
+  public readonly dataSystem?: LDClientDataSystemOptions;
 
   // Allow indexing Configuration by a string
   [index: string]: any;
@@ -150,6 +157,9 @@ export default class ConfigurationImpl implements Configuration {
     },
   ) {
     this.logger = ensureSafeLogger(pristineOptions.logger);
+    const validators = createValidators({
+      dataSystemDefaults: internalOptions.dataSystemDefaults,
+    });
     const validated = validateOptions(
       pristineOptions as Record<string, unknown>,
       validators,
