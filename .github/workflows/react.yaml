@@ -37,10 +37,9 @@ jobs:
         run: |
           yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' install
           yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" install
+          yarn workspace @launchdarkly/js-contract-test-utils build:client
           yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' run build
           yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" run build
-      - name: Build shared contract test utils (client)
-        run: yarn workspace @launchdarkly/js-contract-test-utils build:client
       - name: Install Playwright browsers
         run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
       - name: Run test adapter
