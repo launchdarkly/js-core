@@ -81,6 +81,7 @@ function createNoopReactClient(): LDReactClient {
         error: new Error('Server-side client cannot be used to wait for initialization'),
       }),
     addHook: () => {},
+    shouldUseCamelCaseFlagKeys: () => true,
   };
 }
 
@@ -114,6 +115,7 @@ export function createClient(
   if (isServerSide()) {
     return createNoopReactClient();
   }
+  const shouldUseCamelCaseFlagKeys = options?.useCamelCaseFlagKeys ?? true;
 
   const baseClient = createBaseClient(clientSideID, context, options);
   let initializationState: InitializedState = 'unknown';
@@ -165,5 +167,6 @@ export function createClient(
         initStatusSubscribers.delete(callback);
       };
     },
+    shouldUseCamelCaseFlagKeys: () => shouldUseCamelCaseFlagKeys,
   };
 }

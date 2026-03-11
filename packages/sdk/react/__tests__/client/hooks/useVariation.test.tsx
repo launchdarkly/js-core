@@ -14,10 +14,14 @@ import { LDReactClientContextValue } from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { makeMockClient } from '../mockClient';
 
-function makeWrapper(mockClient: ReturnType<typeof makeMockClient>) {
+function makeWrapper(
+  mockClient: ReturnType<typeof makeMockClient>,
+  contextOverrides?: Partial<LDReactClientContextValue>,
+) {
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
     initializedState: 'unknown',
+    ...contextOverrides,
   };
 
   return function Wrapper({ children }: { children: React.ReactNode }) {
