@@ -27,7 +27,7 @@ const main = async () => {
   const ldclient = createClient(clientSideID, context, {
     // @ts-ignore dataSystem is @internal — experimental FDv2 opt-in
     dataSystem: {},
-    logger: basicLogger({level: 'debug'}),
+    logger: basicLogger({ level: 'debug' }),
   });
   const render = () => {
     const flagValue = ldclient.variation(flagKey, false);

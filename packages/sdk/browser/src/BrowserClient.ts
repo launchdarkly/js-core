@@ -35,6 +35,15 @@ import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults
 import BrowserPlatform from './platform/BrowserPlatform';
 import { getAllStorageKeys } from './platform/LocalStorage';
 
+interface StreamingControl {
+  setForcedStreaming(streaming?: boolean): void;
+  setAutomaticStreamingState(streaming: boolean): void;
+}
+
+function hasStreamingControl(dm: unknown): dm is StreamingControl {
+  return dm instanceof BrowserDataManager || dm instanceof BrowserFDv2DataManager;
+}
+
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
@@ -286,21 +295,16 @@ class BrowserClientImpl extends LDClientImpl {
   }
 
   setStreaming(streaming?: boolean): void {
-    if (this.dataManager instanceof BrowserDataManager) {
-      this.dataManager.setForcedStreaming(streaming);
-    } else if (this.dataManager instanceof BrowserFDv2DataManager) {
+    if (hasStreamingControl(this.dataManager)) {
       this.dataManager.setForcedStreaming(streaming);
     }
   }
 
   private _updateAutomaticStreamingState() {
-    const hasListeners = this.emitter
-      .eventNames()
-      .some((name) => name.startsWith('change:') || name === 'change');
-
-    if (this.dataManager instanceof BrowserDataManager) {
-      this.dataManager.setAutomaticStreamingState(hasListeners);
-    } else if (this.dataManager instanceof BrowserFDv2DataManager) {
+    if (hasStreamingControl(this.dataManager)) {
+      const hasListeners = this.emitter
+        .eventNames()
+        .some((name) => name.startsWith('change:') || name === 'change');
       this.dataManager.setAutomaticStreamingState(hasListeners);
     }
   }
