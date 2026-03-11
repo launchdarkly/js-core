@@ -20,3 +20,13 @@ export interface LDEvaluationReason {
   kind: string;
   [key: string]: unknown;
 }
+
+/**
+ * A minimal LDLogger type compatible with both client and server SDKs.
+ */
+export interface LDLogger {
+  error(...args: any[]): void;
+  warn(...args: any[]): void;
+  info(...args: any[]): void;
+  debug(...args: any[]): void;
+}
