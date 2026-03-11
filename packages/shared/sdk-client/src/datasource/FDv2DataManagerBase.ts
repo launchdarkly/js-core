@@ -139,6 +139,7 @@ export function createFDv2DataManagerBase(
   let identifiedContext: Context | undefined;
   let factoryContext: SourceFactoryContext | undefined;
   let initialized = false;
+  let bootstrapped = false;
   let closed = false;
 
   // Outstanding identify promise callbacks — needed so that mode switches
@@ -184,6 +185,7 @@ export function createFDv2DataManagerBase(
   } {
     const initializerFactories: InitializerFactory[] = includeInitializers
       ? modeDef.initializers
+          .filter((entry) => !(bootstrapped && entry.type === 'cache'))
           .map((entry) => sourceFactoryProvider.createInitializerFactory(entry, ctx))
           .filter((f): f is InitializerFactory => f !== undefined)
       : [];
@@ -349,8 +351,12 @@ export function createFDv2DataManagerBase(
     dataSource?.close();
     dataSource = undefined;
 
-    // After initialization, only synchronizers change (spec 5.3.8).
-    const includeInitializers = !initialized;
+    // Include initializers if we don't have a selector yet. This covers:
+    // - Not yet initialized (normal case)
+    // - Initialized from bootstrap (no selector) — need initializers to
+    //   get a full payload via poll before starting synchronizers
+    // When we have a selector, only synchronizers change (spec 5.3.8).
+    const includeInitializers = !selector;
 
     createAndStartDataSource(newMode, includeInitializers);
   }
@@ -380,6 +386,7 @@ export function createFDv2DataManagerBase(
       debounceManager = undefined;
       selector = undefined;
       initialized = false;
+      bootstrapped = false;
       identifiedContext = context;
       pendingIdentifyResolve = identifyResolve;
       pendingIdentifyReject = identifyReject;
@@ -427,8 +434,32 @@ export function createFDv2DataManagerBase(
       const mode = resolveMode();
       logger.debug(`${logTag} Identify: initial mode resolved to '${mode}'.`);
 
-      // Create and start the data source with full pipeline.
-      createAndStartDataSource(mode, true);
+      bootstrapped = !!(identifyOptions as any)?.bootstrap;
+
+      if (bootstrapped) {
+        // Bootstrap data was already applied to the flag store by the
+        // caller (BrowserClient.start → presetFlags) before identify
+        // was called. Resolve immediately — flag evaluations will use
+        // the bootstrap data synchronously.
+        initialized = true;
+        // selector remains undefined — bootstrap data has no selector.
+        pendingIdentifyResolve?.();
+        pendingIdentifyResolve = undefined;
+        pendingIdentifyReject = undefined;
+
+        // Only create a data source if the mode has synchronizers.
+        // For one-shot (no synchronizers), there's nothing more to do.
+        const modeDef = getModeDefinition(mode);
+        if (modeDef.synchronizers.length > 0) {
+          // Start synchronizers without initializers — we already have
+          // data from bootstrap. Initializers will run on mode switches
+          // if selector is still undefined (see onReconcile).
+          createAndStartDataSource(mode, false);
+        }
+      } else {
+        // Normal identify — create and start the data source with full pipeline.
+        createAndStartDataSource(mode, true);
+      }
 
       // Set up debouncing for subsequent state changes.
       debounceManager = createStateDebounceManager({
