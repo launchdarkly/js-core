@@ -34,6 +34,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:client": "tsc -p tsconfig.client.json",
     "build:server": "tsc -p tsconfig.server.json",
     "clean": "rimraf dist"
   },

@@ -21,5 +21,5 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules", "src/server.ts", "src/server-side/TestHook.ts"]
+  "exclude": ["dist", "node_modules", "src/client.ts", "src/client-side/TestHook.ts", "src/server.ts", "src/server-side/TestHook.ts"]
 }

@@ -51,7 +51,7 @@ jobs:
         run: yarn workspace browser-contract-test-service install-playwright-browsers
 
       - name: Build shared contract test utils
-        run: yarn workspace @launchdarkly/js-contract-test-utils build
+        run: yarn workspace @launchdarkly/js-contract-test-utils build:client
 
       - name: Build contract test adapter
         run: yarn workspace browser-contract-test-adapter run build

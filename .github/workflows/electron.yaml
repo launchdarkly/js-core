@@ -40,7 +40,7 @@ jobs:
           ELECTRON_DISABLE_SANDBOX: '1'
         run: |
           yarn workspaces focus @internal/electron-contract-tests-entity
-          yarn workspace @launchdarkly/js-contract-test-utils build
+          yarn workspace @launchdarkly/js-contract-test-utils build:client
           yarn workspace @internal/electron-contract-tests-entity build
           sudo apt-get install -y xvfb
           Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
