@@ -12,6 +12,7 @@ export const CommandType = {
   ContextComparison: 'contextComparison',
   SecureModeHash: 'secureModeHash',
 } as const;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type CommandType = (typeof CommandType)[keyof typeof CommandType];
 
 export const ValueType = {
@@ -21,6 +22,7 @@ export const ValueType = {
   String: 'string',
   Any: 'any',
 } as const;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type ValueType = (typeof ValueType)[keyof typeof ValueType];
 
 export interface CommandParams {
@@ -143,6 +145,7 @@ export const HookStage = {
   BeforeEvaluation: 'beforeEvaluation',
   AfterEvaluation: 'afterEvaluation',
 } as const;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type HookStage = (typeof HookStage)[keyof typeof HookStage];
 
 export interface EvaluationSeriesContext {

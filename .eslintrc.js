@@ -15,6 +15,7 @@ module.exports = {
     '**/react-native/example/**',
     '**/react-universal/example/**',
     '**/fromExternal/**',
+    '**/sdk/react/contract-tests/**',
   ],
   rules: {
     '@typescript-eslint/lines-between-class-members': 'off',
