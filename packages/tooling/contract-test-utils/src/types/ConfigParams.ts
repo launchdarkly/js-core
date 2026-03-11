@@ -1,5 +1,5 @@
-import { LDContext } from './compat';
-import { HookStage } from './CommandParams';
+import { HookStage } from './CommandParams.js';
+import { LDContext } from './compat.js';
 
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;

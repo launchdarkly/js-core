@@ -7,9 +7,9 @@ import { init } from '@launchdarkly/shopify-oxygen-sdk';
 /* eslint-disable no-console */
 
 /**
- * ClientPool manages a pool of LDClient instances for Shopify Oxygen contract tests.
+ * ClientPool manages a pool of LDClient instances for contract tests.
  * It uses the shared generic ClientPool for client storage and ID generation, and
- * handles the Oxygen-specific client creation, command execution, and response sending.
+ * handles SDK-specific client creation, command execution, and response sending.
  *
  * @see https://github.com/launchdarkly/sdk-test-harness/blob/v2/docs/service_spec.md
  */

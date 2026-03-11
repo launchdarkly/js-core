@@ -1,4 +1,4 @@
-import { LDContext, LDEvaluationReason } from './compat';
+import { LDContext, LDEvaluationReason } from './compat.js';
 
 export const CommandType = {
   EvaluateFlag: 'evaluate',

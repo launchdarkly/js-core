@@ -192,10 +192,10 @@ function makeMigrationPostOptions(payload: any) {
 }
 
 function contextOrUser(
-  context: LDContext | undefined,
+  context: Record<string, any> | undefined,
   user: LDUser | undefined,
 ): LDContext | LDUser {
-  return (context || user)!;
+  return (context as LDContext | undefined) || user!;
 }
 
 export interface SdkClientEntity {
@@ -299,7 +299,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
       }
 
       case 'identifyEvent':
-        client.identify(params.identifyEvent!.context || params.identifyEvent!.user!);
+        client.identify(
+          (params.identifyEvent!.context as LDContext) || params.identifyEvent!.user!,
+        );
         return undefined;
 
       case 'customEvent': {
@@ -319,7 +321,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
         const migrationVariation = params.migrationVariation!;
         const res = await client.migrationVariation(
           migrationVariation.key,
-          migrationVariation.context,
+          migrationVariation.context as LDContext,
           migrationVariation.defaultStage as LDMigrationStage,
         );
         return { result: res.value };
@@ -384,7 +386,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
           case 'read': {
             const res = await migration.read(
               migrationOperation.key,
-              migrationOperation.context,
+              migrationOperation.context as LDContext,
               migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
@@ -396,7 +398,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
           case 'write': {
             const res = await migration.write(
               migrationOperation.key,
-              migrationOperation.context,
+              migrationOperation.context as LDContext,
               migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
