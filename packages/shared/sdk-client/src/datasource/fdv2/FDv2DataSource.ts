@@ -201,16 +201,9 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         return;
       }
 
-      const isPrime = sourceManager.isPrimeSynchronizer();
-      const availableCount = sourceManager.getAvailableSynchronizerCount();
-      logger?.warn(
-        `Synchronizer started: isPrime=${isPrime}, availableCount=${availableCount}, ` +
-          `fallbackMs=${fallbackTimeoutMs}, recoveryMs=${recoveryTimeoutMs}`,
-      );
-
       const conditions: ConditionGroup = getConditions(
-        availableCount,
-        isPrime,
+        sourceManager.getAvailableSynchronizerCount(),
+        sourceManager.isPrimeSynchronizer(),
         fallbackTimeoutMs,
         recoveryTimeoutMs,
       );
@@ -245,7 +238,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
             if (conditionType === 'fallback') {
               logger?.warn('Fallback condition fired, moving to next synchronizer.');
             } else if (conditionType === 'recovery') {
-              logger?.warn('Recovery condition fired, resetting to primary synchronizer.');
+              logger?.info('Recovery condition fired, resetting to primary synchronizer.');
               sourceManager.resetSourceIndex();
             }
 
