@@ -281,6 +281,10 @@ export function createStreamingBase(config: {
       };
 
       es.onerror = (err?: HttpErrorResponse) => {
+        if (stopped) {
+          return;
+        }
+
         if (err && typeof err.status === 'number') {
           // This condition will be handled by the error filter.
           return;
