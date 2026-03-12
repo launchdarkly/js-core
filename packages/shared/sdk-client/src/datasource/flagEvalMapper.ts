@@ -15,7 +15,7 @@ export function processFlagEval(object: unknown): FlagEvaluationResult {
 }
 
 /**
- * Converts an FDv2 {@link internal.Update} with `kind: 'flagEval'` into an
+ * Converts an FDv2 {@link internal.Update} with `kind: 'flag-eval'` into an
  * {@link ItemDescriptor} suitable for {@link FlagManager}.
  *
  * For put updates the envelope `version` is used as the {@link ItemDescriptor.version}

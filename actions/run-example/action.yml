@@ -18,13 +18,13 @@ runs:
       shell: bash
       run: yarn workspaces focus ${{ inputs.workspace_name }}
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@5adb11fd6953e1bc35d9cf1fc1b4374c464e3a8b
+    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
       name: 'Get the client-side SDK key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@5adb11fd6953e1bc35d9cf1fc1b4374c464e3a8b
+    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
       name: 'Get the test feature flag key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}

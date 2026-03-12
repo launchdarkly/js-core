@@ -1,0 +1,2 @@
+# Package-level lint handles this via packages/sdk/react/.eslintrc.cjs overrides.
+packages/sdk/react/contract-tests/
