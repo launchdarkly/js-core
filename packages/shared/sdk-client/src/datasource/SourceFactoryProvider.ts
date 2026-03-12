@@ -9,7 +9,7 @@ import {
   Storage,
 } from '@launchdarkly/js-sdk-common';
 
-import { DataSourceEntry } from '../api/datasource';
+import { InitializerEntry, SynchronizerEntry } from '../api/datasource';
 import { DataSourcePaths } from './DataSourceConfig';
 import { createCacheInitializerFactory } from './fdv2/CacheInitializer';
 import { FDv2Requestor } from './fdv2/FDv2Requestor';
@@ -64,26 +64,27 @@ export interface SourceFactoryContext {
 }
 
 /**
- * Converts declarative {@link DataSourceEntry} descriptors from the mode
- * table into concrete {@link InitializerFactory} and {@link SynchronizerSlot}
- * instances that the {@link FDv2DataSource} orchestrator can use.
+ * Converts declarative {@link InitializerEntry} and {@link SynchronizerEntry}
+ * descriptors from the mode table into concrete {@link InitializerFactory}
+ * and {@link SynchronizerSlot} instances that the {@link FDv2DataSource}
+ * orchestrator can use.
  */
 export interface SourceFactoryProvider {
   /**
-   * Create an initializer factory from a data source entry descriptor.
-   * Returns `undefined` if the entry type is not supported as an initializer.
+   * Create an initializer factory from an initializer entry descriptor.
+   * Returns `undefined` if the entry type is not supported.
    */
   createInitializerFactory(
-    entry: DataSourceEntry,
+    entry: InitializerEntry,
     ctx: SourceFactoryContext,
   ): InitializerFactory | undefined;
 
   /**
-   * Create a synchronizer slot from a data source entry descriptor.
-   * Returns `undefined` if the entry type is not supported as a synchronizer.
+   * Create a synchronizer slot from a synchronizer entry descriptor.
+   * Returns `undefined` if the entry type is not supported.
    */
   createSynchronizerSlot(
-    entry: DataSourceEntry,
+    entry: SynchronizerEntry,
     ctx: SourceFactoryContext,
   ): SynchronizerSlot | undefined;
 }
@@ -101,7 +102,7 @@ function createPingHandler(ctx: SourceFactoryContext): PingHandler {
 export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
   return {
     createInitializerFactory(
-      entry: DataSourceEntry,
+      entry: InitializerEntry,
       ctx: SourceFactoryContext,
     ): InitializerFactory | undefined {
       switch (entry.type) {
@@ -142,7 +143,7 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
     },
 
     createSynchronizerSlot(
-      entry: DataSourceEntry,
+      entry: SynchronizerEntry,
       ctx: SourceFactoryContext,
     ): SynchronizerSlot | undefined {
       switch (entry.type) {
@@ -172,10 +173,6 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
           };
           return createSynchronizerSlot(factory);
         }
-
-        case 'cache':
-          // Cache synchronizer doesn't make sense.
-          return undefined;
 
         default:
           return undefined;

@@ -81,6 +81,8 @@ export type {
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
+  InitializerEntry,
+  SynchronizerEntry,
   DataSourceEntry,
   ModeDefinition,
   LDClientDataSystemOptions,
