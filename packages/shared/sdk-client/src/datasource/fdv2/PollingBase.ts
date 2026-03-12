@@ -40,7 +40,7 @@ function processEvents(
 ): FDv2SourceResult {
   const handler = internal.createProtocolHandler(
     {
-      flagEval: processFlagEval,
+      'flag-eval': processFlagEval,
     },
     logger,
   );

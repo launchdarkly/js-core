@@ -43,7 +43,7 @@ it('passes through objects with extra unrecognized fields in processFlagEval', (
 
 it('converts a put update with all fields into an ItemDescriptor', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'my-flag',
     version: 5,
     object: fullEvalResult,
@@ -66,7 +66,7 @@ it('converts a put update with all fields into an ItemDescriptor', () => {
 
 it('preserves all FlagEvaluationResult fields on the mapped flag', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'all-fields',
     version: 5,
     object: fullEvalResult,
@@ -84,7 +84,7 @@ it('preserves all FlagEvaluationResult fields on the mapped flag', () => {
 
 it('converts a put update with only required fields', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'minimal-flag',
     version: 1,
     object: minimalEvalResult,
@@ -106,7 +106,7 @@ it('converts a put update with only required fields', () => {
 
 it('converts a delete update into a tombstone descriptor', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'deleted-flag',
     version: 10,
     deleted: true,
@@ -123,7 +123,7 @@ it('converts a delete update into a tombstone descriptor', () => {
 
 it('uses the envelope version as both ItemDescriptor.version and Flag.version', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'versioned-flag',
     version: 99,
     object: { ...minimalEvalResult, flagVersion: 7 },
@@ -138,7 +138,7 @@ it('uses the envelope version as both ItemDescriptor.version and Flag.version', 
 
 it('handles null value in evaluation result', () => {
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'null-flag',
     version: 1,
     object: { value: null, trackEvents: false },
@@ -152,7 +152,7 @@ it('handles null value in evaluation result', () => {
 it('handles complex object values', () => {
   const complexValue = { nested: { deeply: { value: [1, 2, 3] } } };
   const update: internal.Update = {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'complex-flag',
     version: 3,
     object: { value: complexValue, trackEvents: true },
@@ -166,13 +166,13 @@ it('handles complex object values', () => {
 it('converts multiple flagEval updates into a map of ItemDescriptors', () => {
   const updates: internal.Update[] = [
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'flag-1',
       version: 1,
       object: { value: true, trackEvents: false },
     },
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'flag-2',
       version: 2,
       object: { value: 'blue', trackEvents: true, variation: 0 },
@@ -190,7 +190,7 @@ it('converts multiple flagEval updates into a map of ItemDescriptors', () => {
 it('silently ignores updates with unrecognized kinds', () => {
   const updates: internal.Update[] = [
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'known-flag',
       version: 1,
       object: { value: true, trackEvents: false },
@@ -225,13 +225,13 @@ it('returns an empty map for an empty updates array', () => {
 it('handles a mix of puts and deletes', () => {
   const updates: internal.Update[] = [
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'active-flag',
       version: 5,
       object: { value: 'red', trackEvents: true },
     },
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'removed-flag',
       version: 3,
       deleted: true,
@@ -250,13 +250,13 @@ it('handles a mix of puts and deletes', () => {
 it('uses the last update when a key appears multiple times', () => {
   const updates: internal.Update[] = [
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'dup-flag',
       version: 1,
       object: { value: 'first', trackEvents: false },
     },
     {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: 'dup-flag',
       version: 2,
       object: { value: 'second', trackEvents: true },

@@ -94,6 +94,14 @@ export type {
   ModeResolutionTable,
 } from './api/datasource';
 
+// FDv2 data system validators and platform defaults.
+export {
+  dataSystemValidators,
+  BROWSER_DATA_SYSTEM_DEFAULTS,
+  MOBILE_DATA_SYSTEM_DEFAULTS,
+  DESKTOP_DATA_SYSTEM_DEFAULTS,
+} from './datasource/LDClientDataSystemOptions';
+
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
 export {

@@ -90,3 +90,19 @@ it('does not override common config flushInterval if it is set', () => {
   const result = filterToBaseOptionsWithDefaults(opts);
   expect(result.flushInterval).toEqual(15);
 });
+
+it('passes dataSystem through to base options without stripping', () => {
+  const opts = {
+    dataSystem: { initialConnectionMode: 'polling' },
+  } as any;
+  const result = filterToBaseOptionsWithDefaults(opts);
+  expect((result as any).dataSystem).toEqual({ initialConnectionMode: 'polling' });
+});
+
+it('passes an empty dataSystem through to base options', () => {
+  const opts = {
+    dataSystem: {},
+  } as any;
+  const result = filterToBaseOptionsWithDefaults(opts);
+  expect((result as any).dataSystem).toEqual({});
+});

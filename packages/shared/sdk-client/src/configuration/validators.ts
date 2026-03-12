@@ -1,40 +1,54 @@
-// eslint-disable-next-line max-classes-per-file
 import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
+import type { PlatformDataSystemDefaults } from '../api/datasource/LDClientDataSystemOptions';
+import { dataSystemValidators } from '../datasource/LDClientDataSystemOptions';
+import { validatorOf } from './validateOptions';
 
-const validators: Record<keyof LDOptions, TypeValidator> = {
-  logger: TypeValidators.Object,
-  maxCachedContexts: TypeValidators.numberWithMin(0),
+export interface ValidatorOptions {
+  dataSystemDefaults?: PlatformDataSystemDefaults;
+}
 
-  baseUri: TypeValidators.String,
-  streamUri: TypeValidators.String,
-  eventsUri: TypeValidators.String,
+export default function createValidators(
+  options?: ValidatorOptions,
+): Record<keyof LDOptions, TypeValidator> {
+  return {
+    logger: TypeValidators.Object,
+    maxCachedContexts: TypeValidators.numberWithMin(0),
 
-  capacity: TypeValidators.numberWithMin(1),
-  diagnosticRecordingInterval: TypeValidators.numberWithMin(2),
-  flushInterval: TypeValidators.numberWithMin(2),
-  streamInitialReconnectDelay: TypeValidators.numberWithMin(0),
+    baseUri: TypeValidators.String,
+    streamUri: TypeValidators.String,
+    eventsUri: TypeValidators.String,
 
-  allAttributesPrivate: TypeValidators.Boolean,
-  debug: TypeValidators.Boolean,
-  diagnosticOptOut: TypeValidators.Boolean,
-  withReasons: TypeValidators.Boolean,
-  sendEvents: TypeValidators.Boolean,
+    capacity: TypeValidators.numberWithMin(1),
+    diagnosticRecordingInterval: TypeValidators.numberWithMin(2),
+    flushInterval: TypeValidators.numberWithMin(2),
+    streamInitialReconnectDelay: TypeValidators.numberWithMin(0),
 
-  pollInterval: TypeValidators.numberWithMin(30),
+    allAttributesPrivate: TypeValidators.Boolean,
+    debug: TypeValidators.Boolean,
+    diagnosticOptOut: TypeValidators.Boolean,
+    withReasons: TypeValidators.Boolean,
+    sendEvents: TypeValidators.Boolean,
 
-  useReport: TypeValidators.Boolean,
+    pollInterval: TypeValidators.numberWithMin(30),
 
-  privateAttributes: TypeValidators.StringArray,
+    useReport: TypeValidators.Boolean,
 
-  applicationInfo: TypeValidators.Object,
-  wrapperName: TypeValidators.String,
-  wrapperVersion: TypeValidators.String,
-  payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
-  hooks: TypeValidators.createTypeArray('Hook[]', {}),
-  inspectors: TypeValidators.createTypeArray('LDInspection', {}),
-  cleanOldPersistentData: TypeValidators.Boolean,
-};
+    privateAttributes: TypeValidators.StringArray,
 
-export default validators;
+    applicationInfo: TypeValidators.Object,
+    wrapperName: TypeValidators.String,
+    wrapperVersion: TypeValidators.String,
+    payloadFilterKey: TypeValidators.stringMatchingRegex(/^[a-zA-Z0-9](\w|\.|-)*$/),
+    hooks: TypeValidators.createTypeArray('Hook[]', {}),
+    inspectors: TypeValidators.createTypeArray('LDInspection', {}),
+    cleanOldPersistentData: TypeValidators.Boolean,
+    dataSystem: options?.dataSystemDefaults
+      ? validatorOf(
+          dataSystemValidators,
+          options.dataSystemDefaults as unknown as Record<string, unknown>,
+        )
+      : TypeValidators.Object,
+  };
+}

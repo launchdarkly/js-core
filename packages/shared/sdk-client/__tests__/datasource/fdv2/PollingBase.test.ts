@@ -456,7 +456,7 @@ describe('given a partial (changes) transfer', () => {
       {
         event: 'put-object',
         data: {
-          kind: 'flagEval',
+          kind: 'flag-eval',
           key: 'updatedFlag',
           version: 5,
           object: { value: 'new-value', trackEvents: true },
@@ -499,7 +499,7 @@ describe('given a delete-object event', () => {
       {
         event: 'delete-object',
         data: {
-          kind: 'flagEval',
+          kind: 'flag-eval',
           key: 'deletedFlag',
           version: 3,
         },

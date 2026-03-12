@@ -178,3 +178,149 @@ it('does not wrap already safe loggers', () => {
   const config = new ConfigurationImpl({ logger });
   expect(config.logger).toBe(logger);
 });
+
+describe('dataSystem validation', () => {
+  it('does not set dataSystem when not provided', () => {
+    const config = new ConfigurationImpl(
+      {},
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          initialConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeUndefined();
+  });
+
+  it('validates dataSystem with platform defaults when provided as empty object', () => {
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: {} },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          initialConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeDefined();
+    expect(config.dataSystem!.initialConnectionMode).toBe('one-shot');
+    expect(config.dataSystem!.automaticModeSwitching).toBe(false);
+  });
+
+  it('validates dataSystem with user overrides applied over platform defaults', () => {
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: { initialConnectionMode: 'polling' } },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'mobileKey',
+        dataSystemDefaults: {
+          initialConnectionMode: 'streaming',
+          backgroundConnectionMode: 'background',
+          automaticModeSwitching: true,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeDefined();
+    expect(config.dataSystem!.initialConnectionMode).toBe('polling');
+    expect(config.dataSystem!.backgroundConnectionMode).toBe('background');
+    expect(config.dataSystem!.automaticModeSwitching).toBe(true);
+  });
+
+  it('warns and falls back to default for invalid dataSystem sub-fields', () => {
+    console.error = jest.fn();
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: { initialConnectionMode: 'turbo' } },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          initialConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeDefined();
+    expect(config.dataSystem!.initialConnectionMode).toBe('one-shot');
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('dataSystem.initialConnectionMode'),
+    );
+  });
+
+  it('does not deep-validate dataSystem when dataSystemDefaults is not provided', () => {
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: { initialConnectionMode: 'polling' } },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+      },
+    );
+    // Without defaults, deep validation is skipped — raw object from basic validator
+    expect(config.dataSystem).toBeDefined();
+  });
+
+  it('warns and ignores dataSystem when set to a non-object value', () => {
+    console.error = jest.fn();
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: 'streaming' },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          initialConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeUndefined();
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
+  });
+
+  it('validates automaticModeSwitching as a granular config object', () => {
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: { automaticModeSwitching: { lifecycle: true, network: false } } },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'mobileKey',
+        dataSystemDefaults: {
+          initialConnectionMode: 'streaming',
+          automaticModeSwitching: true,
+        },
+      },
+    );
+    expect(config.dataSystem).toBeDefined();
+    expect(config.dataSystem!.automaticModeSwitching).toEqual({
+      lifecycle: true,
+      network: false,
+    });
+  });
+
+  it('does not set other config fields when dataSystem defaults are provided', () => {
+    const config = new ConfigurationImpl(
+      {},
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          initialConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    // dataSystem defaults should not leak into the config when dataSystem is not provided
+    expect(config.dataSystem).toBeUndefined();
+    // Other fields should retain their normal defaults
+    expect(config.sendEvents).toBe(true);
+    expect(config.capacity).toBe(100);
+  });
+});
