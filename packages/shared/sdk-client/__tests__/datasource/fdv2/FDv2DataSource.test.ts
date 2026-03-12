@@ -470,7 +470,7 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
   // recovery (20ms) → sync1 second invocation delivers changeSet.
   await ds.start();
 
-  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Recovery condition fired'));
+  expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Recovery condition fired'));
   expect(dataCallback).toHaveBeenCalledWith(payload);
   ds.close();
 });
