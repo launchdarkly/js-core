@@ -20,7 +20,9 @@ export interface SDKConfigParams {
   hooks?: SDKConfigHooksParams;
   wrapper?: SDKConfigWrapper;
   proxy?: SDKConfigProxyParams;
-  // Server-specific config fields
+}
+
+export interface ServerSDKConfigParams extends SDKConfigParams {
   bigSegments?: SDKConfigBigSegmentsParams;
   dataSystem?: SDKDataSystemParams;
 }

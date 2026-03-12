@@ -3,7 +3,7 @@ import got from 'got';
 import {
   CommandParams,
   CreateInstanceParams,
-  SDKConfigParams,
+  ServerSDKConfigParams,
   ServerSideTestHook as TestHook,
 } from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
@@ -29,7 +29,7 @@ import { Log, sdkLogger } from './log.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
+export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
@@ -195,7 +195,11 @@ function contextOrUser(
   context: Record<string, any> | undefined,
   user: LDUser | undefined,
 ): LDContext | LDUser {
-  return (context as LDContext | undefined) || user!;
+  const result = (context as LDContext | undefined) ?? user;
+  if (!result) {
+    throw new Error('Neither context nor user provided');
+  }
+  return result;
 }
 
 export interface SdkClientEntity {
@@ -221,7 +225,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
       : 5000;
   const client: LDClient = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
-    makeSdkConfig(options.configuration, options.tag),
+    makeSdkConfig(options.configuration as ServerSDKConfigParams, options.tag),
   );
   try {
     await client.waitForInitialization({ timeout });

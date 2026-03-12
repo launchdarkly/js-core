@@ -33,20 +33,21 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json",
     "build:client": "tsc -p tsconfig.client.json",
     "build:server": "tsc -p tsconfig.server.json",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^"
-  },
   "peerDependencies": {
-    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "got": "14.4.7"
   },
   "peerDependenciesMeta": {
-    "@launchdarkly/node-server-sdk": {
+    "@launchdarkly/js-client-sdk-common": {
+      "optional": true
+    },
+    "@launchdarkly/js-server-sdk-common": {
       "optional": true
     },
     "got": {
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
+    "got": "14.4.7",
     "typescript": "^4.9.0"
   }
 }

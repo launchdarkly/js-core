@@ -11,6 +11,12 @@ export const CommandType = {
   ContextConvert: 'contextConvert',
   ContextComparison: 'contextComparison',
   SecureModeHash: 'secureModeHash',
+  // Server-specific commands
+  GetBigSegmentStoreStatus: 'getBigSegmentStoreStatus',
+  MigrationVariation: 'migrationVariation',
+  MigrationOperation: 'migrationOperation',
+  RegisterFlagChangeListener: 'registerFlagChangeListener',
+  UnregisterListener: 'unregisterListener',
 } as const;
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type CommandType = (typeof CommandType)[keyof typeof CommandType];
@@ -26,7 +32,7 @@ export const ValueType = {
 export type ValueType = (typeof ValueType)[keyof typeof ValueType];
 
 export interface CommandParams {
-  command: CommandType | string;
+  command: CommandType;
   evaluate?: EvaluateFlagParams;
   evaluateAll?: EvaluateAllFlagsParams;
   customEvent?: CustomEventParams;
@@ -165,6 +171,17 @@ export interface HookExecutionPayload {
   evaluationSeriesData?: Record<string, unknown>;
   evaluationDetail?: EvaluateFlagResponse;
   stage?: HookStage;
+}
+
+export interface HookData {
+  beforeEvaluation?: Record<string, unknown>;
+  afterEvaluation?: Record<string, unknown>;
+}
+
+export interface HookErrors {
+  beforeEvaluation?: string;
+  afterEvaluation?: string;
+  afterTrack?: string; // client-only; server ignores this field
 }
 
 // Server-specific command parameter types
