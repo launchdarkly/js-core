@@ -188,7 +188,10 @@ export function createStreamingBase(config: {
         }
 
         if (!event?.data) {
-          config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          // Some events (e.g. 'error') may legitimately arrive without a body.
+          if (eventName !== 'error') {
+            config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          }
           return;
         }
 
@@ -277,8 +280,18 @@ export function createStreamingBase(config: {
         config.logger?.info('Closed LaunchDarkly stream connection');
       };
 
-      es.onerror = () => {
-        // Error handling is done by errorFilter.
+      es.onerror = (err?: HttpErrorResponse) => {
+        if (stopped) {
+          return;
+        }
+
+        if (err && typeof err.status === 'number') {
+          // This condition will be handled by the error filter.
+          return;
+        }
+        resultQueue.put(
+          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fdv1Fallback),
+        );
       };
 
       es.onopen = () => {
