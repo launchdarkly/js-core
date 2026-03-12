@@ -174,6 +174,7 @@ export class LDAIConfigUtils {
       ...this._toBaseConfig(key, flagValue),
       tracker,
       messages: flagValue.messages,
+      tools: flagValue.tools,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
   }

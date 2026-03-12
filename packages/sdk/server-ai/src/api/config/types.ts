@@ -163,6 +163,10 @@ export interface LDAICompletionConfigDefault extends LDAIConfigDefault {
    */
   messages?: LDMessage[];
   /**
+   * Tools available for this completion config.
+   */
+  tools?: LDTool[];
+  /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
    */
@@ -229,6 +233,10 @@ export interface LDAICompletionConfig extends LDAIConfig {
    * Optional prompt data for completion configurations.
    */
   messages?: LDMessage[];
+  /**
+   * Tools available for this completion config.
+   */
+  tools?: LDTool[];
   /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
