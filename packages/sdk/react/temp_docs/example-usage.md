@@ -7,7 +7,7 @@ This doc will examine 3 example uses of the launchdarkly `react-sdk`:
 | Example | Description |
 |--------|-------------|
 | **client-only** | Browser-only React app (e.g. Create React App). Single client created with `createClient` and provided via React context. |
-| **server-only** | Next.js App Router with Server Components only. LaunchDarkly Node SDK + `createReactServerClient` for flag evaluation on the server. |
+| **server-only** | Next.js App Router with Server Components only. LaunchDarkly Node SDK + `createLDServerSession` for flag evaluation on the server. |
 | **server-and-client** | Next.js App Router with both Server and Client Components. Shared browser client + server client, with clear import boundaries. |
 
 ---
@@ -97,18 +97,18 @@ function App() {
 
 ## 2. Server-only app (Next.js RSC)
 
-Use when you only need flag evaluation in Server Components. No browser client; the Node SDK plus `createReactServerClient` provide a request-scoped client that uses a `contextProvider` for the current user.
+Use when you only need flag evaluation in Server Components. No browser client; the Node SDK plus `createLDServerSession` provide a request-scoped session bound to a context.
 
-### Create the server client
+### Create the server session
 
-Create the LaunchDarkly Node client and wrap it with `createReactServerClient`, providing a `contextProvider` that returns the LD context for the current request (e.g. from session or headers).
+Create the LaunchDarkly Node client and call `createLDServerSession(ldClient, context)`, passing the context for the current request directly.
 
 ```ts
 // /app/page.tsx (conceptually; in the example everything lives in page.tsx)
 import { init } from '@launchdarkly/node-server-sdk';
-import { createReactServerClient } from '@launchdarkly/react-sdk/server';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
 
-const ldClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
+const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
 
 const context = {
   kind: 'user',
@@ -116,22 +116,18 @@ const context = {
   name: 'Sandy',
 };
 
-const serverClient = createReactServerClient(ldClient, {
-  contextProvider: {
-    getContext: () => context,
-  },
-});
+const serverSession = createLDServerSession(ldBaseClient, context);
 ```
 
 ### Use in a Server Component
 
-Import the server client only in Server Components (or server-only modules). Call `await serverClient.variation(flagKey, defaultValue)`.
+Import the server session only in Server Components (or server-only modules). Call `await serverSession.boolVariation(flagKey, defaultValue)`.
 
 ```tsx
 // /app/page.tsx
 export default async function Home() {
-  await ldClient.waitForInitialization({ timeout: 10 });
-  const featureFlag = await serverClient.variation(flagKey, false);
+  await ldBaseClient.waitForInitialization({ timeout: 10 });
+  const featureFlag = await serverSession.boolVariation(flagKey, false);
 
   return <>{featureFlag ? 'Hello world' : 'Hello world disabled'}</>;
 }
@@ -183,22 +179,18 @@ Create the server client in a **server-only** module. Never import this file fro
 ```ts
 // /app/lib/ld-server.ts
 import { init } from '@launchdarkly/node-server-sdk';
-import { createReactServerClient } from '@launchdarkly/react-sdk/server';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
 import { defaultContext } from './ld-context';
 
-const ldClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
-const serverClient = createReactServerClient(ldClient, {
-  contextProvider: {
-    getContext: () => defaultContext,
-  },
-});
+const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
+const ldServer = createLDServerSession(ldBaseClient, defaultContext);
 
-export default serverClient;
+export default ldServer;
 ```
 
 ### Server Component: evaluate flags at request time
 
-Import `ld-server` only in Server Components. Use `await ldServer.variation(key, default)`.
+Import `ld-server` only in Server Components. Use `await ldServer.boolVariation(key, default)`.
 
 ```tsx
 // /app/page.tsx
@@ -210,7 +202,7 @@ import ServerContent from './server-content';
 const FLAG_KEY = 'sample-feature';
 
 export default async function Home() {
-  const flagValue = await ldServer.variation(FLAG_KEY, false);
+  const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
 
   return (
     <main>
@@ -234,7 +226,7 @@ import ldServer from './lib/ld-server';
 import ClientIsland from './client-island';
 
 export default async function ServerSection() {
-  const flagValue = await ldServer.variation(FLAG_KEY, false);
+  const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
 
   return (
     <>
@@ -254,7 +246,7 @@ You can pass a Server Component as `children` to a Client Component. The server 
 import ldServer from './lib/ld-server';
 
 export default async function ServerContent() {
-  const flagValue = await ldServer.variation(FLAG_KEY, false);
+  const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
   return <FlagBadge flagKey={FLAG_KEY} value={flagValue} />;
 }
 ```
