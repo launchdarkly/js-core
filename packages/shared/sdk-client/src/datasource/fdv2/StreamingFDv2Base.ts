@@ -1,5 +1,4 @@
 import {
-  DataSourceErrorKind,
   EventSource,
   getStreamingUri,
   httpErrorMessage,
@@ -282,19 +281,16 @@ export function createStreamingBase(config: {
       };
 
       es.onerror = (err?: HttpErrorResponse) => {
+        if (stopped) {
+          return;
+        }
+
         if (err && typeof err.status === 'number') {
           // This condition will be handled by the error filter.
           return;
         }
         resultQueue.put(
-          interrupted(
-            {
-              kind: DataSourceErrorKind.NetworkError,
-              message: err?.message ?? 'IO Error',
-              time: Date.now(),
-            },
-            fdv1Fallback,
-          ),
+          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fdv1Fallback),
         );
       };
 
