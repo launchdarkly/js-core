@@ -1,4 +1,5 @@
 import {
+  DataSourceErrorKind,
   EventSource,
   getStreamingUri,
   httpErrorMessage,
@@ -91,7 +92,7 @@ export function createStreamingBase(config: {
 }): StreamingFDv2Base {
   const resultQueue = createAsyncQueue<FDv2SourceResult>();
   const protocolHandler = internal.createProtocolHandler(
-    { flagEval: processFlagEval },
+    { 'flag-eval': processFlagEval },
     config.logger,
   );
 
@@ -188,7 +189,10 @@ export function createStreamingBase(config: {
         }
 
         if (!event?.data) {
-          config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          // Some events (e.g. 'error') may legitimately arrive without a body.
+          if (eventName !== 'error') {
+            config.logger?.warn(`Event from EventStream missing data for "${eventName}".`);
+          }
           return;
         }
 
@@ -277,8 +281,21 @@ export function createStreamingBase(config: {
         config.logger?.info('Closed LaunchDarkly stream connection');
       };
 
-      es.onerror = () => {
-        // Error handling is done by errorFilter.
+      es.onerror = (err?: HttpErrorResponse) => {
+        if (err && typeof err.status === 'number') {
+          // This condition will be handled by the error filter.
+          return;
+        }
+        resultQueue.put(
+          interrupted(
+            {
+              kind: DataSourceErrorKind.NetworkError,
+              message: err?.message ?? 'IO Error',
+              time: Date.now(),
+            },
+            fdv1Fallback,
+          ),
+        );
       };
 
       es.onopen = () => {
