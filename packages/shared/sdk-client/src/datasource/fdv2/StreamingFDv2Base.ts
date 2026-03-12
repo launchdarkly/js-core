@@ -91,7 +91,7 @@ export function createStreamingBase(config: {
 }): StreamingFDv2Base {
   const resultQueue = createAsyncQueue<FDv2SourceResult>();
   const protocolHandler = internal.createProtocolHandler(
-    { flagEval: processFlagEval },
+    { 'flag-eval': processFlagEval },
     config.logger,
   );
 
