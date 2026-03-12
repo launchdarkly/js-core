@@ -27,14 +27,14 @@ function transferredEvent(state: string, version: number): internal.FDv2Event {
 }
 
 function createHandler() {
-  return internal.createProtocolHandler({ flagEval: processFlagEval });
+  return internal.createProtocolHandler({ 'flag-eval': processFlagEval });
 }
 
 it('processes flagEval put-object events through the protocol handler', () => {
   const handler = createHandler();
   handler.processEvent(intentEvent('xfer-full', 'p1', 1));
   handler.processEvent(
-    putEvent('flagEval', 'my-flag', 5, {
+    putEvent('flag-eval', 'my-flag', 5, {
       flagVersion: 42,
       value: 'green',
       variation: 1,
@@ -47,7 +47,7 @@ it('processes flagEval put-object events through the protocol handler', () => {
   if (action.type !== 'payload') return;
 
   expect(action.payload.updates).toHaveLength(1);
-  expect(action.payload.updates[0].kind).toBe('flagEval');
+  expect(action.payload.updates[0].kind).toBe('flag-eval');
   expect(action.payload.updates[0].key).toBe('my-flag');
   expect(action.payload.updates[0].version).toBe(5);
   expect(action.payload.updates[0].object.value).toBe('green');
@@ -56,14 +56,14 @@ it('processes flagEval put-object events through the protocol handler', () => {
 it('processes flagEval delete-object events through the protocol handler', () => {
   const handler = createHandler();
   handler.processEvent(intentEvent('xfer-changes', 'p1', 1));
-  handler.processEvent(deleteEvent('flagEval', 'old-flag', 10));
+  handler.processEvent(deleteEvent('flag-eval', 'old-flag', 10));
 
   const action = handler.processEvent(transferredEvent('(p:p1:1)', 1));
   expect(action.type).toBe('payload');
   if (action.type !== 'payload') return;
 
   expect(action.payload.updates).toHaveLength(1);
-  expect(action.payload.updates[0].kind).toBe('flagEval');
+  expect(action.payload.updates[0].kind).toBe('flag-eval');
   expect(action.payload.updates[0].key).toBe('old-flag');
   expect(action.payload.updates[0].version).toBe(10);
   expect(action.payload.updates[0].deleted).toBe(true);
@@ -72,7 +72,7 @@ it('processes flagEval delete-object events through the protocol handler', () =>
 it('silently ignores unrecognized object kinds when flagEval is the only processor', () => {
   const handler = createHandler();
   handler.processEvent(intentEvent('xfer-full', 'p1', 1));
-  handler.processEvent(putEvent('flagEval', 'known', 1, { value: true, trackEvents: false }));
+  handler.processEvent(putEvent('flag-eval', 'known', 1, { value: true, trackEvents: false }));
   handler.processEvent(putEvent('unknown_kind', 'mystery', 1, { data: 'ignored' }));
 
   const action = handler.processEvent(transferredEvent('(p:p1:1)', 1));
@@ -86,11 +86,11 @@ it('silently ignores unrecognized object kinds when flagEval is the only process
 it('handles a full transfer of multiple flagEval objects', () => {
   const handler = createHandler();
   handler.processEvent(intentEvent('xfer-full', 'p1', 52));
-  handler.processEvent(putEvent('flagEval', 'flag-a', 1, { value: true, trackEvents: false }));
+  handler.processEvent(putEvent('flag-eval', 'flag-a', 1, { value: true, trackEvents: false }));
   handler.processEvent(
-    putEvent('flagEval', 'flag-b', 2, { value: 'blue', trackEvents: true, variation: 1 }),
+    putEvent('flag-eval', 'flag-b', 2, { value: 'blue', trackEvents: true, variation: 1 }),
   );
-  handler.processEvent(putEvent('flagEval', 'flag-c', 3, { value: 42, trackEvents: false }));
+  handler.processEvent(putEvent('flag-eval', 'flag-c', 3, { value: 42, trackEvents: false }));
 
   const action = handler.processEvent(transferredEvent('(p:p1:52)', 52));
   expect(action.type).toBe('payload');
@@ -106,12 +106,12 @@ it('handles incremental updates with flagEval after a full transfer', () => {
 
   // Full transfer
   handler.processEvent(intentEvent('xfer-full', 'p1', 1));
-  handler.processEvent(putEvent('flagEval', 'flag-a', 1, { value: true, trackEvents: false }));
+  handler.processEvent(putEvent('flag-eval', 'flag-a', 1, { value: true, trackEvents: false }));
   handler.processEvent(transferredEvent('(p:p1:1)', 1));
 
   // Incremental update
-  handler.processEvent(putEvent('flagEval', 'flag-a', 2, { value: false, trackEvents: true }));
-  handler.processEvent(deleteEvent('flagEval', 'flag-b', 3));
+  handler.processEvent(putEvent('flag-eval', 'flag-a', 2, { value: false, trackEvents: true }));
+  handler.processEvent(deleteEvent('flag-eval', 'flag-b', 3));
 
   const action = handler.processEvent(transferredEvent('(p:p1:2)', 2));
   expect(action.type).toBe('payload');
@@ -120,12 +120,12 @@ it('handles incremental updates with flagEval after a full transfer', () => {
   expect(action.payload.type).toBe('partial');
   expect(action.payload.updates).toHaveLength(2);
   expect(action.payload.updates[0]).toMatchObject({
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-a',
     object: { value: false },
   });
   expect(action.payload.updates[1]).toMatchObject({
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-b',
     deleted: true,
   });
