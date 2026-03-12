@@ -10,6 +10,7 @@ import {
   LDMessage,
   LDModelConfig,
   LDProviderConfig,
+  LDTool,
 } from './types';
 
 /**
@@ -32,6 +33,7 @@ export interface LDAIConfigFlagValue {
   evaluationMetricKey?: string;
   evaluationMetricKeys?: string[];
   judgeConfiguration?: LDJudgeConfiguration;
+  tools?: LDTool[];
 }
 
 /**
@@ -65,6 +67,9 @@ export class LDAIConfigUtils {
     }
     if ('instructions' in config && config.instructions !== undefined) {
       flagValue.instructions = config.instructions;
+    }
+    if ('tools' in config && config.tools !== undefined) {
+      flagValue.tools = config.tools;
     }
     if ('evaluationMetricKey' in config && config.evaluationMetricKey !== undefined) {
       flagValue.evaluationMetricKey = config.evaluationMetricKey;
@@ -189,6 +194,7 @@ export class LDAIConfigUtils {
       ...this._toBaseConfig(key, flagValue),
       tracker,
       instructions: flagValue.instructions,
+      tools: flagValue.tools,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
   }
