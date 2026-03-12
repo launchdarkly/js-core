@@ -37,8 +37,10 @@ runs:
     - name: Before test hook
       shell: bash
       if: ${{ inputs.before_test != '' }}
-      run: ${{ inputs.before_test }}
-
+run: |
+  echo "Running before_test hook"
+  ${{ inputs.before_test }}
+  echo "Hook completed"
     - name: Run e2e tests
       shell: bash
       run: yarn workspace ${{ inputs.workspace_name }} test
