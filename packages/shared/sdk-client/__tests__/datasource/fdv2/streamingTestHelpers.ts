@@ -82,7 +82,7 @@ export function sendFullTransfer(
 
   flags.forEach((flag) => {
     simulateEvent(mockEventSource, 'put-object', {
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key: flag.key,
       version: flag.version,
       object: { value: flag.value, trackEvents: false },

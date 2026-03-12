@@ -73,7 +73,7 @@ it('returns successive changeSet results', async () => {
 
   const p2 = synchronizer.next();
   simulateEvent(mockEventSource, 'put-object', {
-    kind: 'flagEval',
+    kind: 'flag-eval',
     key: 'flag-2',
     version: 2,
     object: { value: 'second', trackEvents: false },

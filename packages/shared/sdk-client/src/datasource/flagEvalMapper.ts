@@ -4,7 +4,7 @@ import { ItemDescriptor } from '../flag-manager/ItemDescriptor';
 import { FlagEvaluationResult } from '../types';
 
 /**
- * ObjProcessor for the `flagEval` object kind. Used by the protocol handler to
+ * ObjProcessor for the `flag-eval` object kind. Used by the protocol handler to
  * process objects received in `put-object` events.
  *
  * Client-side evaluation results are already in their final form (pre-evaluated
@@ -15,7 +15,7 @@ export function processFlagEval(object: unknown): FlagEvaluationResult {
 }
 
 /**
- * Converts an FDv2 {@link internal.Update} with `kind: 'flagEval'` into an
+ * Converts an FDv2 {@link internal.Update} with `kind: 'flag-eval'` into an
  * {@link ItemDescriptor} suitable for {@link FlagManager}.
  *
  * For put updates the envelope `version` is used as the {@link ItemDescriptor.version}
@@ -49,7 +49,7 @@ export function flagEvalUpdateToItemDescriptor(update: internal.Update): ItemDes
 
 /**
  * Converts an array of FDv2 payload updates into a map of flag key to
- * {@link ItemDescriptor}. Only `flagEval` kind updates are processed;
+ * {@link ItemDescriptor}. Only `flag-eval` kind updates are processed;
  * unrecognized kinds are silently ignored.
  */
 export function flagEvalPayloadToItemDescriptors(updates: internal.Update[]): {
@@ -58,7 +58,7 @@ export function flagEvalPayloadToItemDescriptors(updates: internal.Update[]): {
   const descriptors: { [key: string]: ItemDescriptor } = {};
 
   updates.forEach((update) => {
-    if (update.kind === 'flagEval') {
+    if (update.kind === 'flag-eval') {
       descriptors[update.key] = flagEvalUpdateToItemDescriptor(update);
     }
   });

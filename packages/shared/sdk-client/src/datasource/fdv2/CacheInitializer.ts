@@ -61,7 +61,7 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
 
   const updates: internal.Update[] = Object.entries(cached.flags).map(
     ([key, flag]): internal.Update => ({
-      kind: 'flagEval',
+      kind: 'flag-eval',
       key,
       version: flag.version,
       object: flagToEvaluationResult(flag),
