@@ -42,15 +42,20 @@ const streamingEntryValidators = {
   endpoints: validatorOf(endpointValidators),
 };
 
-const dataSourceEntryArrayValidator = arrayOf('type', {
+const initializerEntryArrayValidator = arrayOf('type', {
   cache: cacheEntryValidators,
   polling: pollingEntryValidators,
   streaming: streamingEntryValidators,
 });
 
+const synchronizerEntryArrayValidator = arrayOf('type', {
+  polling: pollingEntryValidators,
+  streaming: streamingEntryValidators,
+});
+
 const modeDefinitionValidators = {
-  initializers: dataSourceEntryArrayValidator,
-  synchronizers: dataSourceEntryArrayValidator,
+  initializers: initializerEntryArrayValidator,
+  synchronizers: synchronizerEntryArrayValidator,
 };
 
 const MODE_DEFINITION_DEFAULTS: Record<string, unknown> = {

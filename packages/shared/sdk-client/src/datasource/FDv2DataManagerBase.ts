@@ -189,16 +189,31 @@ export function createFDv2DataManagerBase(
     initializerFactories: InitializerFactory[];
     synchronizerSlots: SynchronizerSlot[];
   } {
-    const initializerFactories: InitializerFactory[] = includeInitializers
-      ? modeDef.initializers
-          .filter((entry) => !(bootstrapped && entry.type === 'cache'))
-          .map((entry) => sourceFactoryProvider.createInitializerFactory(entry, ctx))
-          .filter((f): f is InitializerFactory => f !== undefined)
-      : [];
+    const initializerFactories: InitializerFactory[] = [];
+    if (includeInitializers) {
+      modeDef.initializers
+        .filter((entry) => !(bootstrapped && entry.type === 'cache'))
+        .forEach((entry) => {
+          const factory = sourceFactoryProvider.createInitializerFactory(entry, ctx);
+          if (factory) {
+            initializerFactories.push(factory);
+          } else {
+            logger.warn(
+              `${logTag} Unsupported initializer type '${entry.type}'. It will be skipped.`,
+            );
+          }
+        });
+    }
 
-    const synchronizerSlots: SynchronizerSlot[] = modeDef.synchronizers
-      .map((entry) => sourceFactoryProvider.createSynchronizerSlot(entry, ctx))
-      .filter((s): s is SynchronizerSlot => s !== undefined);
+    const synchronizerSlots: SynchronizerSlot[] = [];
+    modeDef.synchronizers.forEach((entry) => {
+      const slot = sourceFactoryProvider.createSynchronizerSlot(entry, ctx);
+      if (slot) {
+        synchronizerSlots.push(slot);
+      } else {
+        logger.warn(`${logTag} Unsupported synchronizer type '${entry.type}'. It will be skipped.`);
+      }
+    });
 
     // Append a blocked FDv1 fallback synchronizer when configured and
     // when there are FDv2 synchronizers to fall back from.
