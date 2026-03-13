@@ -196,6 +196,8 @@ export function createFDv2DataManagerBase(
     const initializerFactories: InitializerFactory[] = [];
     if (includeInitializers) {
       modeDef.initializers
+        // Skip cache when bootstrapped — bootstrap data was applied to the
+        // flag store before identify, so the cache would only load older data.
         .filter((entry) => !(bootstrapped && entry.type === 'cache'))
         .forEach((entry) => {
           const factory = sourceFactoryProvider.createInitializerFactory(entry, ctx);
