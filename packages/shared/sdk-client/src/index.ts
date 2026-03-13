@@ -81,6 +81,8 @@ export type {
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
+  InitializerEntry,
+  SynchronizerEntry,
   DataSourceEntry,
   ModeDefinition,
   LDClientDataSystemOptions,
@@ -94,6 +96,10 @@ export type {
   ModeResolutionTable,
 } from './api/datasource';
 
+// FDv2 data source status manager.
+export { createDataSourceStatusManager } from './datasource/DataSourceStatusManager';
+export type { DataSourceStatusManager } from './datasource/DataSourceStatusManager';
+
 // FDv2 data system validators and platform defaults.
 export {
   dataSystemValidators,
@@ -104,9 +110,32 @@ export {
 
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
+export { MODE_TABLE } from './datasource/ConnectionModeConfig';
 export {
   resolveConnectionMode,
   MOBILE_TRANSITION_TABLE,
   BROWSER_TRANSITION_TABLE,
   DESKTOP_TRANSITION_TABLE,
 } from './datasource/ModeResolver';
+
+// FDv2 shared data manager — mode switching, debouncing, and data source lifecycle.
+export type {
+  FDv2DataManagerBaseConfig,
+  FDv2DataManagerControl,
+} from './datasource/FDv2DataManagerBase';
+export { createFDv2DataManagerBase } from './datasource/FDv2DataManagerBase';
+export type {
+  SourceFactoryContext,
+  SourceFactoryProvider,
+} from './datasource/SourceFactoryProvider';
+export { createDefaultSourceFactoryProvider } from './datasource/SourceFactoryProvider';
+
+// State debounce manager.
+export type {
+  StateDebounceManager,
+  StateDebounceManagerConfig,
+  NetworkState,
+  PendingState,
+  ReconciliationCallback,
+} from './datasource/StateDebounceManager';
+export { createStateDebounceManager } from './datasource/StateDebounceManager';

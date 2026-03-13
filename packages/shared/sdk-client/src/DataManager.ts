@@ -53,6 +53,33 @@ export interface DataManager {
    * Closes the data manager. Any active connections are closed.
    */
   close(): void;
+
+  /**
+   * Force streaming on or off. When `true`, the data manager should
+   * maintain a streaming connection. When `false`, streaming is disabled.
+   * When `undefined`, the forced state is cleared and automatic behavior
+   * takes over.
+   *
+   * Optional — only browser data managers implement this.
+   */
+  setForcedStreaming?(streaming?: boolean): void;
+
+  /**
+   * Update the automatic streaming state based on whether change listeners
+   * are registered. When `true` and forced streaming is not set, the data
+   * manager should activate streaming.
+   *
+   * Optional — only browser data managers implement this.
+   */
+  setAutomaticStreamingState?(streaming: boolean): void;
+
+  /**
+   * Set a callback to flush pending analytics events. Called immediately
+   * (not debounced) when the lifecycle transitions to background.
+   *
+   * Optional — only FDv2 data managers implement this.
+   */
+  setFlushCallback?(callback: () => void): void;
 }
 
 /**

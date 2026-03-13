@@ -14,6 +14,7 @@ export interface EndpointConfig {
 
 /**
  * Configuration for a cache data source entry.
+ * Cache is only valid as an initializer (not a synchronizer).
  */
 export interface CacheDataSourceEntry {
   readonly type: 'cache';
@@ -44,6 +45,21 @@ export interface StreamingDataSourceEntry {
   /** Endpoint overrides for this streaming source. */
   readonly endpoints?: EndpointConfig;
 }
+
+/**
+ * An entry in the initializers list of a mode definition. Initializers
+ * can be cache, polling, or streaming sources.
+ */
+export type InitializerEntry =
+  | CacheDataSourceEntry
+  | PollingDataSourceEntry
+  | StreamingDataSourceEntry;
+
+/**
+ * An entry in the synchronizers list of a mode definition. Synchronizers
+ * can be polling or streaming sources (not cache).
+ */
+export type SynchronizerEntry = PollingDataSourceEntry | StreamingDataSourceEntry;
 
 /**
  * A data source entry in a mode table. Each entry identifies a data source type

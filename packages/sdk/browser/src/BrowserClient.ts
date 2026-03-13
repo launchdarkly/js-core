@@ -2,11 +2,16 @@ import {
   AutoEnvAttributes,
   BasicLogger,
   BROWSER_DATA_SYSTEM_DEFAULTS,
+  BROWSER_TRANSITION_TABLE,
   browserFdv1Endpoints,
   Configuration,
+  createDefaultSourceFactoryProvider,
+  createFDv2DataManagerBase,
+  FDv2ConnectionMode,
   FlagManager,
   Hook,
   internal,
+  LDIdentifyOptions as LDBaseIdentifyOptions,
   LDClientImpl,
   LDContext,
   LDEmitter,
@@ -17,6 +22,7 @@ import {
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
+  MODE_TABLE,
   Platform,
   readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
@@ -78,56 +84,82 @@ class BrowserClientImpl extends LDClientImpl {
     const { eventUrlTransformer } = validatedBrowserOptions;
     const endpoints = browserFdv1Endpoints(clientSideId);
 
-    super(
-      clientSideId,
-      autoEnvAttributes,
-      platform,
-      baseOptionsWithDefaults,
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        emitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new BrowserDataManager(
+    const dataManagerFactory = (
+      flagManager: FlagManager,
+      configuration: Configuration,
+      baseHeaders: LDHeaders,
+      emitter: LDEmitter,
+      diagnosticsManager?: internal.DiagnosticsManager,
+    ) => {
+      if (configuration.dataSystem) {
+        const initialForegroundMode: FDv2ConnectionMode =
+          (configuration.dataSystem.initialConnectionMode as FDv2ConnectionMode) ?? 'one-shot';
+
+        return createFDv2DataManagerBase({
           platform,
           flagManager,
-          clientSideId,
-          configuration,
-          validatedBrowserOptions,
-          endpoints.polling,
-          endpoints.streaming,
+          credential: clientSideId,
+          config: configuration,
           baseHeaders,
           emitter,
-          diagnosticsManager,
+          transitionTable: BROWSER_TRANSITION_TABLE,
+          initialForegroundMode,
+          backgroundMode: undefined,
+          modeTable: MODE_TABLE,
+          sourceFactoryProvider: createDefaultSourceFactoryProvider(),
+          fdv1Endpoints: browserFdv1Endpoints(clientSideId),
+          buildQueryParams: (identifyOptions?: LDBaseIdentifyOptions) => {
+            const params: { key: string; value: string }[] = [{ key: 'auth', value: clientSideId }];
+            const browserOpts = identifyOptions as LDIdentifyOptions | undefined;
+            if (browserOpts?.hash) {
+              params.push({ key: 'h', value: browserOpts.hash });
+            }
+            return params;
+          },
+        });
+      }
+
+      return new BrowserDataManager(
+        platform,
+        flagManager,
+        clientSideId,
+        configuration,
+        validatedBrowserOptions,
+        endpoints.polling,
+        endpoints.streaming,
+        baseHeaders,
+        emitter,
+        diagnosticsManager,
+      );
+    };
+
+    super(clientSideId, autoEnvAttributes, platform, baseOptionsWithDefaults, dataManagerFactory, {
+      // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
+      getLegacyStorageKeys: () =>
+        getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
+      analyticsEventPath: `/events/bulk/${clientSideId}`,
+      diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
+      includeAuthorizationHeader: false,
+      highTimeoutThreshold: 5,
+      userAgentHeaderName: 'x-launchdarkly-user-agent',
+      dataSystemDefaults: BROWSER_DATA_SYSTEM_DEFAULTS,
+      trackEventModifier: (event: internal.InputCustomEvent) =>
+        new internal.InputCustomEvent(
+          event.context,
+          event.key,
+          event.data,
+          event.metricValue,
+          event.samplingRatio,
+          eventUrlTransformer(getHref()),
         ),
-      {
-        // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
-        getLegacyStorageKeys: () =>
-          getAllStorageKeys().filter((key) => key.startsWith(`ld:${clientSideId}:`)),
-        analyticsEventPath: `/events/bulk/${clientSideId}`,
-        diagnosticEventPath: `/events/diagnostic/${clientSideId}`,
-        includeAuthorizationHeader: false,
-        highTimeoutThreshold: 5,
-        userAgentHeaderName: 'x-launchdarkly-user-agent',
-        dataSystemDefaults: BROWSER_DATA_SYSTEM_DEFAULTS,
-        trackEventModifier: (event: internal.InputCustomEvent) =>
-          new internal.InputCustomEvent(
-            event.context,
-            event.key,
-            event.data,
-            event.metricValue,
-            event.samplingRatio,
-            eventUrlTransformer(getHref()),
-          ),
-        getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
-          internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
-        credentialType: 'clientSideId',
-      },
-    );
+      getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
+        internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
+      credentialType: 'clientSideId',
+    });
 
     this.setEventSendingEnabled(true, false);
+
+    this.dataManager.setFlushCallback?.(() => this.flush());
 
     this._plugins = validatedBrowserOptions.plugins;
 
@@ -281,18 +313,14 @@ class BrowserClientImpl extends LDClientImpl {
   }
 
   setStreaming(streaming?: boolean): void {
-    // With FDv2 we may want to consider if we support connection mode directly.
-    // Maybe with an extension to connection mode for 'automatic'.
-    const browserDataManager = this.dataManager as BrowserDataManager;
-    browserDataManager.setForcedStreaming(streaming);
+    this.dataManager.setForcedStreaming?.(streaming);
   }
 
   private _updateAutomaticStreamingState() {
-    const browserDataManager = this.dataManager as BrowserDataManager;
     const hasListeners = this.emitter
       .eventNames()
       .some((name) => name.startsWith('change:') || name === 'change');
-    browserDataManager.setAutomaticStreamingState(hasListeners);
+    this.dataManager.setAutomaticStreamingState?.(hasListeners);
   }
 
   override on(eventName: LDEmitterEventName, listener: Function): void {

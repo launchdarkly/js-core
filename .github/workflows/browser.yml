@@ -41,7 +41,7 @@ jobs:
           target_file: 'packages/sdk/browser/dist/index.js'
           package_name: '@launchdarkly/js-client-sdk'
           pr_number: ${{ github.event.number }}
-          size_limit: 25000
+          size_limit: 34000
 
       # Contract Tests
       - name: Install contract test dependencies

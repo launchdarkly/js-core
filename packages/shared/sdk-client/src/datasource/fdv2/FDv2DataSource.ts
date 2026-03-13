@@ -208,6 +208,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         recoveryTimeoutMs,
       );
 
+      if (conditions.promise) {
+        logger?.warn('Fallback condition active for current synchronizer.');
+      }
+
       // try/finally ensures conditions are closed on all code paths.
       let synchronizerRunning = true;
       try {
