@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { LDFlagSet } from '@launchdarkly/js-client-sdk';
 
@@ -96,9 +96,13 @@ export function useFlags<T extends LDFlagSet = LDFlagSet>(
   }, []);
 
   const [flags, setFlags] = useState<T>(() => client.allFlags() as T);
+  const didMountRef = useRef(false);
 
   useEffect(() => {
-    setFlags(client.allFlags() as T);
+    if (didMountRef.current) {
+      setFlags(client.allFlags() as T);
+    }
+    didMountRef.current = true;
     const handler = () => setFlags(client.allFlags() as T);
     client.on('change', handler);
     return () => client.off('change', handler);

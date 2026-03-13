@@ -206,6 +206,29 @@ it('calls client.variation only once per flag key when the same key is read mult
   expect(calls).toHaveLength(1);
 });
 
+// ─── Extra render on mount ────────────────────────────────────────────────────
+
+it('does not trigger an extra render on mount from setFlags', () => {
+  const mockClient = makeMockClient({ flagOverrides: { 'my-flag': true } });
+
+  let renderCount = 0;
+
+  function FlagConsumer() {
+    useFlags();
+    renderCount += 1;
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient);
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(renderCount).toBe(1);
+});
+
 // ─── Change event subscription ────────────────────────────────────────────────
 
 it('subscribes to change event on mount and unsubscribes on unmount', () => {
