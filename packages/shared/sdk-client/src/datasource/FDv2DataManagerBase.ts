@@ -182,6 +182,30 @@ export function createFDv2DataManagerBase(
   }
 
   /**
+   * Determine the foreground mode based on forced/automatic streaming state.
+   *
+   * +-----------+-----------+---------------------------+
+   * |  forced   | automatic |     result                |
+   * +-----------+-----------+---------------------------+
+   * | true      | any       | 'streaming'               |
+   * | false     | any       | configured, never streaming|
+   * | undefined | true      | 'streaming'               |
+   * | undefined | false     | configured mode           |
+   * +-----------+-----------+---------------------------+
+   */
+  function resolveStreamingMode(): FDv2ConnectionMode {
+    if (forcedStreaming === true) {
+      return 'streaming';
+    }
+    if (forcedStreaming === false) {
+      // Explicitly forced off — use configured mode, but never streaming.
+      return initialForegroundMode === 'streaming' ? 'one-shot' : initialForegroundMode;
+    }
+    // forcedStreaming === undefined — automatic behavior.
+    return automaticStreamingState ? 'streaming' : initialForegroundMode;
+  }
+
+  /**
    * Convert a ModeDefinition's entries into concrete InitializerFactory[]
    * and SynchronizerSlot[] using the source factory provider.
    */
@@ -544,16 +568,12 @@ export function createFDv2DataManagerBase(
 
     setForcedStreaming(streaming?: boolean): void {
       forcedStreaming = streaming;
-      const shouldStream =
-        forcedStreaming || (automaticStreamingState && forcedStreaming === undefined);
-      this.setForegroundMode(shouldStream ? 'streaming' : initialForegroundMode);
+      this.setForegroundMode(resolveStreamingMode());
     },
 
     setAutomaticStreamingState(streaming: boolean): void {
       automaticStreamingState = streaming;
-      const shouldStream =
-        forcedStreaming || (automaticStreamingState && forcedStreaming === undefined);
-      this.setForegroundMode(shouldStream ? 'streaming' : initialForegroundMode);
+      this.setForegroundMode(resolveStreamingMode());
     },
   };
 }
