@@ -129,6 +129,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this.platform,
       sdkKey,
       this._config.maxCachedContexts,
+      this._config.disableCache ?? false,
       this._config.logger,
     );
     this._diagnosticsManager = createDiagnosticsManager(sdkKey, this._config, platform);
