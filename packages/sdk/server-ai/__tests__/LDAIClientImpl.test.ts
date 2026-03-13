@@ -741,6 +741,199 @@ describe('createJudge method', () => {
   });
 });
 
+describe('tools on completion configs', () => {
+  it('includes tools from variation in completion config', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'completion-with-tools';
+    const defaultValue: LDAICompletionConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      model: { name: 'gpt-4', parameters: { temperature: 0.5 } },
+      provider: { name: 'openai' },
+      messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
+      tools: [
+        {
+          key: 'get-customer',
+          version: 1,
+          instructions: 'Use this tool to look up customer details by email.',
+          examples: 'Input: {"email": "jane@example.com"}\nOutput: {"name": "Jane Doe"}',
+          customParameters: { endpoint: '/api/customers' },
+        },
+        {
+          key: 'search-orders',
+          version: 2,
+          instructions: 'Search for orders by customer ID.',
+        },
+      ],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.enabled).toBe(true);
+    expect(result.tools).toBeDefined();
+    expect(result.tools).toHaveLength(2);
+    expect(result.tools![0].key).toBe('get-customer');
+    expect(result.tools![0].version).toBe(1);
+    expect(result.tools![0].instructions).toBe(
+      'Use this tool to look up customer details by email.',
+    );
+    expect(result.tools![0].examples).toBe(
+      'Input: {"email": "jane@example.com"}\nOutput: {"name": "Jane Doe"}',
+    );
+    expect(result.tools![0].customParameters).toEqual({ endpoint: '/api/customers' });
+    expect(result.tools![1].key).toBe('search-orders');
+    expect(result.tools![1].version).toBe(2);
+    expect(result.tools![1].instructions).toBe('Search for orders by customer ID.');
+  });
+
+  it('returns undefined tools when variation has no tools', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'no-tools';
+    const defaultValue: LDAICompletionConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      model: { name: 'gpt-4' },
+      messages: [{ role: 'system', content: 'Hello' }],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.enabled).toBe(true);
+    expect(result.tools).toBeUndefined();
+  });
+
+  it('includes tools from default value in completion config', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'completion-default-tools';
+    const defaultValue: LDAICompletionConfigDefault = {
+      enabled: true,
+      tools: [
+        {
+          key: 'default-tool',
+          version: 1,
+          instructions: 'A default tool.',
+        },
+      ],
+    };
+
+    const expectedFlagValue = {
+      _ldMeta: { enabled: true, mode: 'completion', variationKey: '' },
+      tools: defaultValue.tools,
+    };
+
+    mockLdClient.variation.mockResolvedValue(expectedFlagValue);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toBeDefined();
+    expect(result.tools).toHaveLength(1);
+    expect(result.tools![0].key).toBe('default-tool');
+    expect(result.tools![0].instructions).toBe('A default tool.');
+  });
+});
+
+describe('tools on agent configs', () => {
+  it('includes tools from variation in agent config', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'agent-with-tools';
+    const defaultValue: LDAIAgentConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      model: { name: 'gpt-4', parameters: { temperature: 0.3 } },
+      provider: { name: 'openai' },
+      instructions: 'You are a customer support agent.',
+      tools: [
+        {
+          key: 'crm-lookup',
+          version: 1,
+          instructions: 'Look up customer info in the CRM.',
+          examples: 'Input: {"id": "123"}\nOutput: {"name": "John", "plan": "Enterprise"}',
+          customParameters: { timeout: 30 },
+        },
+      ],
+      _ldMeta: { variationKey: 'agent-v1', enabled: true, mode: 'agent' },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfig(key, testContext, defaultValue);
+
+    expect(result.enabled).toBe(true);
+    expect(result.instructions).toBe('You are a customer support agent.');
+    expect(result.tools).toBeDefined();
+    expect(result.tools).toHaveLength(1);
+    expect(result.tools![0].key).toBe('crm-lookup');
+    expect(result.tools![0].version).toBe(1);
+    expect(result.tools![0].instructions).toBe('Look up customer info in the CRM.');
+    expect(result.tools![0].examples).toBe(
+      'Input: {"id": "123"}\nOutput: {"name": "John", "plan": "Enterprise"}',
+    );
+    expect(result.tools![0].customParameters).toEqual({ timeout: 30 });
+  });
+
+  it('includes tools from default value in agent config', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'agent-default-tools';
+    const defaultValue: LDAIAgentConfigDefault = {
+      enabled: true,
+      instructions: 'Default agent.',
+      tools: [
+        {
+          key: 'default-agent-tool',
+          version: 1,
+        },
+      ],
+    };
+
+    const expectedFlagValue = {
+      _ldMeta: { enabled: true, mode: 'agent', variationKey: '' },
+      instructions: 'Default agent.',
+      tools: defaultValue.tools,
+    };
+
+    mockLdClient.variation.mockResolvedValue(expectedFlagValue);
+
+    const result = await client.agentConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toBeDefined();
+    expect(result.tools).toHaveLength(1);
+    expect(result.tools![0].key).toBe('default-agent-tool');
+  });
+
+  it('returns undefined tools when agent variation has no tools', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'agent-no-tools';
+    const defaultValue: LDAIAgentConfigDefault = {
+      enabled: false,
+    };
+
+    const mockVariation = {
+      instructions: 'Simple agent.',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfig(key, testContext, defaultValue);
+
+    expect(result.enabled).toBe(true);
+    expect(result.instructions).toBe('Simple agent.');
+    expect(result.tools).toBeUndefined();
+  });
+});
+
 describe('optional default values', () => {
   it('uses a disabled completion config when no default is provided', async () => {
     const client = new LDAIClientImpl(mockLdClient);

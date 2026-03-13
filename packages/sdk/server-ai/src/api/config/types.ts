@@ -68,6 +68,26 @@ export interface LDJudgeConfiguration {
 }
 
 // ============================================================================
+// Tool Types
+// ============================================================================
+
+/**
+ * Configuration for an AI tool.
+ */
+export interface LDTool {
+  /** The key of the tool. */
+  key: string;
+  /** The version of the tool. */
+  version: number;
+  /** Instructions for how the AI should use this tool. */
+  instructions?: string;
+  /** Example inputs and expected outputs for this tool. */
+  examples?: string;
+  /** Custom metadata and configuration for application-level use. */
+  customParameters?: Record<string, unknown>;
+}
+
+// ============================================================================
 // Base AI Config Types
 // ============================================================================
 
@@ -124,6 +144,10 @@ export interface LDAIAgentConfigDefault extends LDAIConfigDefault {
    */
   instructions?: string;
   /**
+   * Tools available for this agent.
+   */
+  tools?: LDTool[];
+  /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
    */
@@ -138,6 +162,10 @@ export interface LDAICompletionConfigDefault extends LDAIConfigDefault {
    * Optional prompt data for completion configurations.
    */
   messages?: LDMessage[];
+  /**
+   * Tools available for this completion config.
+   */
+  tools?: LDTool[];
   /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
@@ -187,6 +215,10 @@ export interface LDAIAgentConfig extends LDAIConfig {
    */
   instructions?: string;
   /**
+   * Tools available for this agent.
+   */
+  tools?: LDTool[];
+  /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
    */
@@ -201,6 +233,10 @@ export interface LDAICompletionConfig extends LDAIConfig {
    * Optional prompt data for completion configurations.
    */
   messages?: LDMessage[];
+  /**
+   * Tools available for this completion config.
+   */
+  tools?: LDTool[];
   /**
    * Judge configuration for AI Configs being evaluated.
    * References judge AI Configs that should evaluate this AI Config.
