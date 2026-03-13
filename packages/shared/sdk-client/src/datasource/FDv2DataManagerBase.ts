@@ -148,6 +148,10 @@ export function createFDv2DataManagerBase(
   let closed = false;
   let flushCallback: (() => void) | undefined;
 
+  // Forced/automatic streaming state for browser listener-driven streaming.
+  let forcedStreaming: boolean | undefined;
+  let automaticStreamingState = false;
+
   // Outstanding identify promise callbacks — needed so that mode switches
   // during identify can wire the new data source's completion to the
   // original identify promise.
@@ -534,6 +538,20 @@ export function createFDv2DataManagerBase(
 
     setFlushCallback(callback: () => void): void {
       flushCallback = callback;
+    },
+
+    setForcedStreaming(streaming?: boolean): void {
+      forcedStreaming = streaming;
+      const shouldStream =
+        forcedStreaming || (automaticStreamingState && forcedStreaming === undefined);
+      this.setForegroundMode(shouldStream ? 'streaming' : initialForegroundMode);
+    },
+
+    setAutomaticStreamingState(streaming: boolean): void {
+      automaticStreamingState = streaming;
+      const shouldStream =
+        forcedStreaming || (automaticStreamingState && forcedStreaming === undefined);
+      this.setForegroundMode(shouldStream ? 'streaming' : initialForegroundMode);
     },
   };
 }

@@ -2,11 +2,16 @@ import {
   AutoEnvAttributes,
   BasicLogger,
   BROWSER_DATA_SYSTEM_DEFAULTS,
+  BROWSER_TRANSITION_TABLE,
   browserFdv1Endpoints,
   Configuration,
+  createDefaultSourceFactoryProvider,
+  createFDv2DataManagerBase,
+  FDv2ConnectionMode,
   FlagManager,
   Hook,
   internal,
+  LDIdentifyOptions as LDBaseIdentifyOptions,
   LDClientImpl,
   LDContext,
   LDEmitter,
@@ -17,6 +22,7 @@ import {
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
+  MODE_TABLE,
   Platform,
   readFlagsFromBootstrap,
   safeRegisterDebugOverridePlugins,
@@ -24,7 +30,6 @@ import {
 
 import { getHref } from './BrowserApi';
 import BrowserDataManager from './BrowserDataManager';
-import BrowserFDv2DataManager from './BrowserFDv2DataManager';
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
@@ -85,28 +90,48 @@ class BrowserClientImpl extends LDClientImpl {
       baseHeaders: LDHeaders,
       emitter: LDEmitter,
       diagnosticsManager?: internal.DiagnosticsManager,
-    ) =>
-      configuration.dataSystem
-        ? new BrowserFDv2DataManager(
-            platform,
-            flagManager,
-            clientSideId,
-            configuration,
-            baseHeaders,
-            emitter,
-          )
-        : new BrowserDataManager(
-            platform,
-            flagManager,
-            clientSideId,
-            configuration,
-            validatedBrowserOptions,
-            endpoints.polling,
-            endpoints.streaming,
-            baseHeaders,
-            emitter,
-            diagnosticsManager,
-          );
+    ) => {
+      if (configuration.dataSystem) {
+        const initialForegroundMode: FDv2ConnectionMode =
+          (configuration.dataSystem.initialConnectionMode as FDv2ConnectionMode) ?? 'one-shot';
+
+        return createFDv2DataManagerBase({
+          platform,
+          flagManager,
+          credential: clientSideId,
+          config: configuration,
+          baseHeaders,
+          emitter,
+          transitionTable: BROWSER_TRANSITION_TABLE,
+          initialForegroundMode,
+          backgroundMode: undefined,
+          modeTable: MODE_TABLE,
+          sourceFactoryProvider: createDefaultSourceFactoryProvider(),
+          fdv1Endpoints: browserFdv1Endpoints(clientSideId),
+          buildQueryParams: (identifyOptions?: LDBaseIdentifyOptions) => {
+            const params: { key: string; value: string }[] = [{ key: 'auth', value: clientSideId }];
+            const browserOpts = identifyOptions as LDIdentifyOptions | undefined;
+            if (browserOpts?.hash) {
+              params.push({ key: 'h', value: browserOpts.hash });
+            }
+            return params;
+          },
+        });
+      }
+
+      return new BrowserDataManager(
+        platform,
+        flagManager,
+        clientSideId,
+        configuration,
+        validatedBrowserOptions,
+        endpoints.polling,
+        endpoints.streaming,
+        baseHeaders,
+        emitter,
+        diagnosticsManager,
+      );
+    };
 
     super(clientSideId, autoEnvAttributes, platform, baseOptionsWithDefaults, dataManagerFactory, {
       // This logic is derived from https://github.com/launchdarkly/js-sdk-common/blob/main/src/PersistentFlagStore.js
