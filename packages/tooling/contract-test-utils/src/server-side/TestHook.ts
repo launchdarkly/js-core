@@ -1,11 +1,14 @@
-import got from 'got';
 import { integrations, LDEvaluationDetail } from '@launchdarkly/js-server-sdk-common';
 import { BaseTestHook } from '../shared/BaseTestHook.js';
 
 export default class TestHook extends BaseTestHook implements integrations.Hook {
   protected async _safePost(body: unknown): Promise<void> {
     try {
-      await got.post(this._endpoint, { json: body });
+      await fetch(this._endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
     } catch {
       // The test could move on before the post, so we are ignoring
       // failed posts.
