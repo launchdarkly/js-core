@@ -1,5 +1,20 @@
 # Changelog
 
+## [10.15.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.14.1...react-native-client-sdk-v10.15.0) (2026-03-13)
+
+
+### Features
+
+* Add experimental FDv2 configuration (unused) ([#1169](https://github.com/launchdarkly/js-core/issues/1169)) ([c7130cc](https://github.com/launchdarkly/js-core/commit/c7130ccabe19a699b3c14dc949432ef1afb37b3d))
+* create @launchdarkly/js-contract-test-utils package ([#1163](https://github.com/launchdarkly/js-core/issues/1163)) ([2de5c27](https://github.com/launchdarkly/js-core/commit/2de5c275928aa7f38b51704a62c77931410b1eba))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.21.0 to 1.22.0
+
 ## [10.14.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.14.0...react-native-client-sdk-v10.14.1) (2026-03-04)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.28](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.27...browser-telemetry-v1.0.28) (2026-03-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-client-sdk bumped from 4.3.1 to 4.4.0
+
 ## [1.0.27](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.26...browser-telemetry-v1.0.27) (2026-03-04)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.6](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.5...server-sdk-ai-v0.16.6) (2026-03-13)
+
+
+### Bug Fixes
+
+* Make defaultValue optional with a disabled default ([#1144](https://github.com/launchdarkly/js-core/issues/1144)) ([e46769b](https://github.com/launchdarkly/js-core/commit/e46769b872727cf6a1539f60a7e467c701769daf))
+
 ## [0.16.5](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.4...server-sdk-ai-v0.16.5) (2026-03-04)
 
 
