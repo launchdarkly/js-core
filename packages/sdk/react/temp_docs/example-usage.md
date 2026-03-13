@@ -97,37 +97,66 @@ function App() {
 
 ## 2. Server-only app (Next.js RSC)
 
-Use when you only need flag evaluation in Server Components. No browser client; the Node SDK plus `createLDServerSession` provide a request-scoped session bound to a context.
+Use when you only need flag evaluation in Server Components. No browser client; the Node SDK plus
+`createLDServerSession` provide a request-scoped session bound to a context. `useLDServerSession`
+lets any nested Server Component retrieve that session without prop drilling.
 
-### Create the server session
+### Singleton base client (module-level)
 
-Create the LaunchDarkly Node client and call `createLDServerSession(ldClient, context)`, passing the context for the current request directly.
+Initialize the Node SDK client once at module level. This instance is shared across all requests.
 
 ```ts
-// /app/page.tsx (conceptually; in the example everything lives in page.tsx)
+// /app/page.tsx (module-level, outside the component)
 import { init } from '@launchdarkly/node-server-sdk';
 import { createLDServerSession } from '@launchdarkly/react-sdk/server';
 
+// Singleton: initialized once per Node.js process, shared across all requests.
 const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
-
-const context = {
-  kind: 'user',
-  key: 'example-user-key',
-  name: 'Sandy',
-};
-
-const serverSession = createLDServerSession(ldBaseClient, context);
 ```
 
-### Use in a Server Component
+### Create the session per request (inside the component)
 
-Import the server session only in Server Components (or server-only modules). Call `await serverSession.boolVariation(flagKey, defaultValue)`.
+Call `createLDServerSession` inside the Server Component where you have access to the request
+(headers, cookies, auth tokens, or query parameters). The session is bound to that request's
+context and stored in React's `cache()` for the duration of the render.
 
 ```tsx
 // /app/page.tsx
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ userId?: string; userName?: string }>;
+}) {
   await ldBaseClient.waitForInitialization({ timeout: 10 });
-  const featureFlag = await serverSession.boolVariation(flagKey, false);
+
+  // Build context from the request. In production this comes from auth/cookies/session;
+  // here query parameters are used to make per-user isolation easy to observe.
+  const { userId = 'anonymous-user', userName = 'Anonymous' } = await searchParams;
+  const context = { kind: 'user' as const, key: userId, name: userName };
+
+  // Creates the session and stores it in React's per-request cache.
+  // Nested Server Components can call useLDServerSession() to retrieve it.
+  createLDServerSession(ldBaseClient, context);
+
+  return <FeatureSection />;
+}
+```
+
+### Retrieve the session in nested Server Components
+
+`useLDServerSession()` reads the session from React's cache — no props required. Each request
+has its own isolated cache instance, so sessions for different users never interfere.
+
+```tsx
+// /app/FeatureSection.tsx
+import { useLDServerSession } from '@launchdarkly/react-sdk/server';
+
+const flagKey = process.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
+
+export default async function FeatureSection() {
+  // React's cache() ensures this is the session created for the current request.
+  const session = useLDServerSession();
+  const featureFlag = await session!.boolVariation(flagKey, false);
 
   return <>{featureFlag ? 'Hello world' : 'Hello world disabled'}</>;
 }
@@ -172,29 +201,31 @@ export const defaultContext: LDContextStrict = {
 };
 ```
 
-### Server-only: server client
+### Server-only: base client singleton
 
-Create the server client in a **server-only** module. Never import this file from any `'use client'` component.
+Export the Node SDK client at module level. Session creation (which binds a context) happens
+per-request in the root Server Component.
 
 ```ts
-// /app/lib/ld-server.ts
+// /app/lib/ld-base-client.ts
 import { init } from '@launchdarkly/node-server-sdk';
-import { createLDServerSession } from '@launchdarkly/react-sdk/server';
-import { defaultContext } from './ld-context';
 
+// Singleton: one client per Node.js process, shared across all requests.
 const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY || '');
-const ldServer = createLDServerSession(ldBaseClient, defaultContext);
-
-export default ldServer;
+export default ldBaseClient;
 ```
 
-### Server Component: evaluate flags at request time
+### Server Component: create the session and evaluate flags at request time
 
-Import `ld-server` only in Server Components. Use `await ldServer.boolVariation(key, default)`.
+Import `ld-base-client` only in Server Components. Call `createLDServerSession` inside the
+component where you have access to the request context. Nested Server Components can then call
+`useLDServerSession()` to retrieve the cached session without prop drilling.
 
 ```tsx
 // /app/page.tsx
-import ldServer from './lib/ld-server';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+import ldBaseClient from './lib/ld-base-client';
+import { defaultContext } from './lib/ld-context';
 import ServerSection from './server-section';
 import ClientShell from './client-shell';
 import ServerContent from './server-content';
@@ -202,6 +233,10 @@ import ServerContent from './server-content';
 const FLAG_KEY = 'sample-feature';
 
 export default async function Home() {
+  // Create a per-request session. In production derive context from auth/cookies/headers.
+  // createLDServerSession also stores the session in React's cache() so nested Server
+  // Components can retrieve it via useLDServerSession() — no prop drilling needed.
+  const ldServer = createLDServerSession(ldBaseClient, defaultContext);
   const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
 
   return (
@@ -218,15 +253,17 @@ export default async function Home() {
 
 ### Nested Server Component
 
-Server components can evaluate flags and render client components as children (client “islands”).
+Nested Server Components use `useLDServerSession()` to retrieve the session from React's
+per-request cache. They can also render client components as children (client "islands").
 
 ```tsx
 // /app/server-section.tsx
-import ldServer from './lib/ld-server';
+import { useLDServerSession } from '@launchdarkly/react-sdk/server';
 import ClientIsland from './client-island';
 
 export default async function ServerSection() {
-  const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
+  const session = useLDServerSession();
+  const flagValue = await session!.boolVariation(FLAG_KEY, false);
 
   return (
     <>
@@ -243,10 +280,11 @@ You can pass a Server Component as `children` to a Client Component. The server 
 
 ```tsx
 // /app/server-content.tsx
-import ldServer from './lib/ld-server';
+import { useLDServerSession } from '@launchdarkly/react-sdk/server';
 
 export default async function ServerContent() {
-  const flagValue = await ldServer.boolVariation(FLAG_KEY, false);
+  const session = useLDServerSession();
+  const flagValue = await session!.boolVariation(FLAG_KEY, false);
   return <FlagBadge flagKey={FLAG_KEY} value={flagValue} />;
 }
 ```

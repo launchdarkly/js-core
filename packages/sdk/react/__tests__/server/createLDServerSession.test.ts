@@ -102,6 +102,43 @@ it('boolVariationDetail() calls base client with bound context', async () => {
   expect(client.boolVariationDetail).toHaveBeenCalledWith('my-flag', context, false);
 });
 
+it('numberVariationDetail() calls base client with bound context', async () => {
+  const client = makeMockBaseClient();
+  const detail = { value: 42, variationIndex: 1, reason: { kind: 'RULE_MATCH' as const } };
+  // @ts-ignore — valid LDEvaluationDetailTyped<number> shape; mock type is too narrow
+  client.numberVariationDetail.mockResolvedValue(detail);
+  const session = createLDServerSession(client, context);
+  const result = await session.numberVariationDetail('my-flag', 0);
+  expect(result).toEqual(detail);
+  expect(client.numberVariationDetail).toHaveBeenCalledWith('my-flag', context, 0);
+});
+
+it('stringVariationDetail() calls base client with bound context', async () => {
+  const client = makeMockBaseClient();
+  const detail = { value: 'hello', variationIndex: 1, reason: { kind: 'RULE_MATCH' as const } };
+  // @ts-ignore — valid LDEvaluationDetailTyped<string> shape; mock type is too narrow
+  client.stringVariationDetail.mockResolvedValue(detail);
+  const session = createLDServerSession(client, context);
+  const result = await session.stringVariationDetail('my-flag', 'default');
+  expect(result).toEqual(detail);
+  expect(client.stringVariationDetail).toHaveBeenCalledWith('my-flag', context, 'default');
+});
+
+it('jsonVariationDetail() calls base client with bound context', async () => {
+  const client = makeMockBaseClient();
+  const detail = {
+    value: { key: 'value' },
+    variationIndex: 1,
+    reason: { kind: 'RULE_MATCH' as const },
+  };
+  // @ts-ignore — valid LDEvaluationDetailTyped<unknown> shape; mock type is too narrow
+  client.jsonVariationDetail.mockResolvedValue(detail);
+  const session = createLDServerSession(client, context);
+  const result = await session.jsonVariationDetail('my-flag', {});
+  expect(result).toEqual(detail);
+  expect(client.jsonVariationDetail).toHaveBeenCalledWith('my-flag', context, {});
+});
+
 it('allFlagsState() calls base client with bound context', async () => {
   const client = makeMockBaseClient();
   const session = createLDServerSession(client, context);
