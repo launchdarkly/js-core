@@ -6,32 +6,10 @@ import {
   LDEvaluationDetail,
   TrackSeriesContext,
 } from '@launchdarkly/js-client-sdk-common';
+import { BaseTestHook } from '../shared/BaseTestHook.js';
 
-export interface HookData {
-  beforeEvaluation?: Record<string, unknown>;
-  afterEvaluation?: Record<string, unknown>;
-}
-
-export interface HookErrors {
-  beforeEvaluation?: string;
-  afterEvaluation?: string;
-  afterTrack?: string;
-}
-
-export default class TestHook implements Hook {
-  private _name: string;
-  private _endpoint: string;
-  private _data?: HookData;
-  private _errors?: HookErrors;
-
-  constructor(name: string, endpoint: string, data?: HookData, errors?: HookErrors) {
-    this._name = name;
-    this._endpoint = endpoint;
-    this._data = data;
-    this._errors = errors;
-  }
-
-  private async _safePost(body: unknown): Promise<void> {
+export default class TestHook extends BaseTestHook implements Hook {
+  protected async _safePost(body: unknown): Promise<void> {
     try {
       await fetch(this._endpoint, {
         method: 'POST',
@@ -43,25 +21,18 @@ export default class TestHook implements Hook {
     }
   }
 
-  getMetadata(): HookMetadata {
-    return {
-      name: this._name,
-    };
+  override getMetadata(): HookMetadata {
+    return super.getMetadata();
   }
 
   beforeEvaluation(
     hookContext: EvaluationSeriesContext,
     data: EvaluationSeriesData,
   ): EvaluationSeriesData {
-    if (this._errors?.beforeEvaluation) {
-      throw new Error(this._errors.beforeEvaluation);
-    }
-    this._safePost({
-      evaluationSeriesContext: hookContext,
-      evaluationSeriesData: data,
-      stage: 'beforeEvaluation',
-    });
-    return { ...data, ...(this._data?.beforeEvaluation || {}) };
+    return this._beforeEvaluationImpl(
+      hookContext as unknown as Record<string, unknown>,
+      data,
+    ) as EvaluationSeriesData;
   }
 
   afterEvaluation(
@@ -69,17 +40,11 @@ export default class TestHook implements Hook {
     data: EvaluationSeriesData,
     detail: LDEvaluationDetail,
   ): EvaluationSeriesData {
-    if (this._errors?.afterEvaluation) {
-      throw new Error(this._errors.afterEvaluation);
-    }
-    this._safePost({
-      evaluationSeriesContext: hookContext,
-      evaluationSeriesData: data,
-      stage: 'afterEvaluation',
-      evaluationDetail: detail,
-    });
-
-    return { ...data, ...(this._data?.afterEvaluation || {}) };
+    return this._afterEvaluationImpl(
+      hookContext as unknown as Record<string, unknown>,
+      data,
+      detail,
+    ) as EvaluationSeriesData;
   }
 
   afterTrack(hookContext: TrackSeriesContext): void {

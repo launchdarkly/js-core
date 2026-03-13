@@ -39,8 +39,7 @@ jobs:
           yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" install
           yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' run build
           yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" run build
-      - name: Install Playwright browsers
-        run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
+          yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
       - name: Run test adapter
         run: |
           yarn workspace @launchdarkly/react-sdk-contract-tests run start:adapter > /tmp/adapter.log 2>&1 &

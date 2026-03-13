@@ -7,6 +7,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
   },
+  noExternal: ['@launchdarkly/js-contract-test-utils'],
   minify: true,
   format: ['esm', 'cjs'],
   splitting: false,
