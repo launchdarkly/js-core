@@ -40,8 +40,7 @@
   },
   "peerDependencies": {
     "@launchdarkly/js-client-sdk-common": "workspace:^",
-    "@launchdarkly/js-server-sdk-common": "workspace:^",
-    "got": "14.4.7"
+    "@launchdarkly/js-server-sdk-common": "workspace:^"
   },
   "peerDependenciesMeta": {
     "@launchdarkly/js-client-sdk-common": {
@@ -49,14 +48,12 @@
     },
     "@launchdarkly/js-server-sdk-common": {
       "optional": true
-    },
-    "got": {
-      "optional": true
     }
   },
   "devDependencies": {
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "@types/node": "^18.11.9",
-    "got": "14.4.7",
     "typescript": "^4.9.0"
   }
 }

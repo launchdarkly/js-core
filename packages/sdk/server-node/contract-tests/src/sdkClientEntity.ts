@@ -1,5 +1,3 @@
-import got from 'got';
-
 import {
   CommandParams,
   CreateInstanceParams,
@@ -184,11 +182,11 @@ function getExecution(order: string) {
   }
 }
 
-function makeMigrationPostOptions(payload: any) {
+function makeMigrationPostOptions(payload: any): RequestInit {
   if (payload) {
-    return { body: payload };
+    return { method: 'POST', body: payload };
   }
-  return {};
+  return { method: 'POST' };
 }
 
 function contextOrUser(
@@ -342,44 +340,56 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
           check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
           readNew: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.newEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           writeNew: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.newEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           readOld: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.oldEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           writeOld: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.oldEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
@@ -423,14 +433,11 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
         const eventName = 'update';
 
         const handler = (eventParams: { key: string }) => {
-          got
-            .post(p.callbackUri, {
-              json: {
-                listenerId: p.listenerId,
-                flagKey: eventParams.key,
-              },
-            })
-            .catch(() => {});
+          fetch(p.callbackUri, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listenerId: p.listenerId, flagKey: eventParams.key }),
+          }).catch(() => {});
         };
 
         const existing = listeners.get(p.listenerId);
