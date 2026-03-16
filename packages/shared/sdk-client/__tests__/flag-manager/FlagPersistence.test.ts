@@ -28,6 +28,7 @@ describe('FlagPersistence tests', () => {
       makeMockPlatform(makeMemoryStorage(), makeMockCrypto()),
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       createFlagUpdater(flagStore, mockLogger),
       mockLogger,
@@ -45,6 +46,7 @@ describe('FlagPersistence tests', () => {
       makeMockPlatform(makeCorruptStorage(), makeMockCrypto()),
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       createFlagUpdater(flagStore, mockLogger),
       mockLogger,
@@ -72,6 +74,7 @@ describe('FlagPersistence tests', () => {
       makeMockPlatform(makeMemoryStorage(), makeMockCrypto()),
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -100,6 +103,7 @@ describe('FlagPersistence tests', () => {
       makeMockPlatform(memoryStorage, makeMockCrypto()),
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -129,6 +133,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -165,6 +170,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       1,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -213,6 +219,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       1,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -244,6 +251,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -277,6 +285,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -305,6 +314,173 @@ describe('FlagPersistence tests', () => {
     expect(await memoryStorage.get(contextDataKey)).toContain('"version":2');
   });
 
+  it('does not write to storage when maxCachedContexts is 0', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      0,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+
+    const context = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+
+    await fpUnderTest.init(context, flags);
+
+    const contextDataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context,
+    );
+    expect(await memoryStorage.get(contextDataKey)).toBeNull();
+  });
+
+  it('clears previously cached data when maxCachedContexts is 0', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const crypto = makeMockCrypto();
+    const mockPlatform = makeMockPlatform(memoryStorage, crypto);
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const contextA = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const storageKeyA = await namespaceForContextData(crypto, TEST_NAMESPACE, contextA);
+    const indexKey = await namespaceForContextIndex(TEST_NAMESPACE);
+
+    // Pre-populate storage as if a prior session had maxCachedContexts > 0
+    const indexJson = JSON.stringify({ index: [{ id: storageKeyA, timestamp: 1 }] });
+    await memoryStorage.set(indexKey, indexJson);
+    await memoryStorage.set(storageKeyA, JSON.stringify({ flagA: makeMockFlag() }));
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      0,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+    await fpUnderTest.init(contextA, flags);
+
+    // Existing entry must have been evicted
+    expect(await memoryStorage.get(storageKeyA)).toBeNull();
+    // Index must be saved as empty
+    const savedIndex = JSON.parse((await memoryStorage.get(indexKey))!);
+    expect(savedIndex.index).toHaveLength(0);
+  });
+
+  it('does not load from storage when maxCachedContexts is 0', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    // First write data to storage using a normal FlagPersistence
+    const writeFp = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      5,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+    const context = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+    await writeFp.init(context, flags);
+
+    // Now try to load with maxCachedContexts: 0
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      0,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+    const didLoad = await fpUnderTest.loadCached(context);
+    expect(didLoad).toEqual(false);
+  });
+
+  it('does not write to storage when disableCache is true', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      5,
+      true,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+
+    const context = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+
+    await fpUnderTest.init(context, flags);
+
+    const contextDataKey = await namespaceForContextData(
+      mockPlatform.crypto,
+      TEST_NAMESPACE,
+      context,
+    );
+    expect(await memoryStorage.get(contextDataKey)).toBeNull();
+  });
+
+  it('does not load from storage when disableCache is true', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    // First write data to storage using a normal FlagPersistence
+    const writeFp = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      5,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+    const context = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+    await writeFp.init(context, flags);
+
+    // Now try to load with disableCache: true
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      5,
+      true,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+    );
+    const didLoad = await fpUnderTest.loadCached(context);
+    expect(didLoad).toEqual(false);
+  });
+
   test('upsert ignores inactive context', async () => {
     const memoryStorage = makeMemoryStorage();
     const mockPlatform = makeMockPlatform(memoryStorage, makeMockCrypto());
@@ -316,6 +492,7 @@ describe('FlagPersistence tests', () => {
       mockPlatform,
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       flagUpdater,
       mockLogger,
@@ -350,6 +527,55 @@ describe('FlagPersistence tests', () => {
     expect(await memoryStorage.get(activeContextDataKey)).not.toBeNull();
     expect(await memoryStorage.get(inactiveContextDataKey)).toBeNull();
   });
+
+  it('does not write to storage when current context is pruned due to equal timestamps', async () => {
+    const memoryStorage = makeMemoryStorage();
+    const crypto = makeMockCrypto();
+    const mockPlatform = makeMockPlatform(memoryStorage, crypto);
+    const flagStore = createDefaultFlagStore();
+    const mockLogger = makeMockLogger();
+    const flagUpdater = createFlagUpdater(flagStore, mockLogger);
+
+    const contextA = Context.fromLDContext({ kind: 'org', key: 'TestyPizza' });
+    const contextB = Context.fromLDContext({ kind: 'user', key: 'TestyUser' });
+
+    const storageKeyA = await namespaceForContextData(crypto, TEST_NAMESPACE, contextA);
+    const storageKeyB = await namespaceForContextData(crypto, TEST_NAMESPACE, contextB);
+    const indexKey = await namespaceForContextIndex(TEST_NAMESPACE);
+
+    // Pre-populate storage: index with A before B (same timestamp t=1), and B's flag data
+    const indexJson = JSON.stringify({
+      index: [
+        { id: storageKeyA, timestamp: 1 },
+        { id: storageKeyB, timestamp: 1 },
+      ],
+    });
+    await memoryStorage.set(indexKey, indexJson);
+    await memoryStorage.set(storageKeyB, JSON.stringify({ flagB: makeMockFlag() }));
+
+    const fpUnderTest = new FlagPersistence(
+      mockPlatform,
+      TEST_NAMESPACE,
+      1,
+      false,
+      flagStore,
+      flagUpdater,
+      mockLogger,
+      () => 1,
+    );
+
+    const flags = { flagA: { version: 1, flag: makeMockFlag() } };
+    await fpUnderTest.init(contextA, flags);
+
+    // A was in the pruned list — must not be re-written to storage
+    expect(await memoryStorage.get(storageKeyA)).toBeNull();
+    // B was not pruned — its existing data should be untouched
+    expect(await memoryStorage.get(storageKeyB)).not.toBeNull();
+    // Index should contain only B
+    const savedIndex = JSON.parse((await memoryStorage.get(indexKey))!);
+    expect(savedIndex.index).toHaveLength(1);
+    expect(savedIndex.index[0].id).toBe(storageKeyB);
+  });
 });
 
 describe('FlagPersistence freshness', () => {
@@ -363,6 +589,7 @@ describe('FlagPersistence freshness', () => {
       makeMockPlatform(memoryStorage, crypto),
       TEST_NAMESPACE,
       5,
+      false,
       flagStore,
       createFlagUpdater(flagStore, mockLogger),
       mockLogger,

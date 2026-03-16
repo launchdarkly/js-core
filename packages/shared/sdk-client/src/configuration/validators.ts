@@ -37,6 +37,7 @@ export default function createValidators(
 
     privateAttributes: TypeValidators.StringArray,
 
+    disableCache: TypeValidators.Boolean,
     applicationInfo: TypeValidators.Object,
     wrapperName: TypeValidators.String,
     wrapperVersion: TypeValidators.String,

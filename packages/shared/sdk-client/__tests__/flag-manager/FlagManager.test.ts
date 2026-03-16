@@ -25,6 +25,7 @@ describe('FlagManager override tests', () => {
       mockPlatform,
       TEST_SDK_KEY,
       TEST_MAX_CACHED_CONTEXTS,
+      false,
       mockLogger,
     );
   });
