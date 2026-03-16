@@ -6,58 +6,53 @@ import {
 } from '@launchdarkly/js-server-sdk-common';
 
 /**
- * A per-request evaluation scope that binds an {@link LDServerBaseClient} to a specific
- * {@link LDContext}.
+ * A minimal structural interface that any LaunchDarkly server SDK that can be used with
+ * {@link createLDServerSession} should satisfy.
  *
  * @remarks
- * Unlike the server SDK (where every variation call requires a context parameter),
- * `LDServerSession` binds the context at creation time. This is idiomatic for React
- * Server Components, where the context comes from the incoming request (headers, cookies,
- * auth tokens) and does not change during the render.
- *
- * Create a session with {@link createLDServerSession}.
+ * This interface decouples the React SDK from the concrete `LDClient` type in
+ * `@launchdarkly/js-server-sdk-common`, allowing edge SDKs and other custom
+ * server client implementations to be used with {@link createLDServerSession}.
+ * For the most part, this interface should be compatible with any LaunchDarkly server SDK
+ * from the this monorepo.
  */
-export interface LDServerSession {
+export interface LDServerBaseClient {
   /**
-   * Tests whether the underlying server client has completed initialization.
+   * Tests whether the client has completed initialization.
    *
    * @returns True if the client has successfully initialized.
    */
   initialized(): boolean;
 
   /**
-   * Returns the context bound to this session.
+   * Determines the boolean variation of a feature flag for a context.
    */
-  getContext(): LDContext;
+  boolVariation(key: string, context: LDContext, defaultValue: boolean): Promise<boolean>;
 
   /**
-   * Determines the boolean variation of a feature flag for this session's context.
+   * Determines the numeric variation of a feature flag for a context.
    */
-  boolVariation(key: string, defaultValue: boolean): Promise<boolean>;
+  numberVariation(key: string, context: LDContext, defaultValue: number): Promise<number>;
 
   /**
-   * Determines the numeric variation of a feature flag for this session's context.
+   * Determines the string variation of a feature flag for a context.
    */
-  numberVariation(key: string, defaultValue: number): Promise<number>;
+  stringVariation(key: string, context: LDContext, defaultValue: string): Promise<string>;
 
   /**
-   * Determines the string variation of a feature flag for this session's context.
-   */
-  stringVariation(key: string, defaultValue: string): Promise<string>;
-
-  /**
-   * Determines the JSON variation of a feature flag for this session's context.
+   * Determines the JSON variation of a feature flag for a context.
    *
    * This version is preferred in TypeScript because it returns `unknown` instead of `any`,
    * requiring an explicit cast before use.
    */
-  jsonVariation(key: string, defaultValue: unknown): Promise<unknown>;
+  jsonVariation(key: string, context: LDContext, defaultValue: unknown): Promise<unknown>;
 
   /**
    * Determines the boolean variation of a feature flag, along with evaluation details.
    */
   boolVariationDetail(
     key: string,
+    context: LDContext,
     defaultValue: boolean,
   ): Promise<LDEvaluationDetailTyped<boolean>>;
 
@@ -66,6 +61,7 @@ export interface LDServerSession {
    */
   numberVariationDetail(
     key: string,
+    context: LDContext,
     defaultValue: number,
   ): Promise<LDEvaluationDetailTyped<number>>;
 
@@ -74,6 +70,7 @@ export interface LDServerSession {
    */
   stringVariationDetail(
     key: string,
+    context: LDContext,
     defaultValue: string,
   ): Promise<LDEvaluationDetailTyped<string>>;
 
@@ -82,14 +79,15 @@ export interface LDServerSession {
    */
   jsonVariationDetail(
     key: string,
+    context: LDContext,
     defaultValue: unknown,
   ): Promise<LDEvaluationDetailTyped<unknown>>;
 
   /**
-   * Builds an object encapsulating the state of all feature flags for this session's context.
+   * Builds an object encapsulating the state of all feature flags for a given context.
    *
    * The most common use case is bootstrapping client-side flags from a back-end service.
    * Call `toJSON()` on the returned object to get the data structure used by the client SDK.
    */
-  allFlagsState(options?: LDFlagsStateOptions): Promise<LDFlagsState>;
+  allFlagsState(context: LDContext, options?: LDFlagsStateOptions): Promise<LDFlagsState>;
 }

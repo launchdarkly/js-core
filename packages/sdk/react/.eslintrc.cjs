@@ -1,5 +1,5 @@
 module.exports = {
-  ignorePatterns: ['contract-tests/next-env.d.ts'],
+  ignorePatterns: ['contract-tests/next-env.d.ts', 'examples/server-only/next-env.d.ts'],
   overrides: [
     {
       files: ['contract-tests/**/*.ts', 'contract-tests/**/*.tsx'],
