@@ -31,11 +31,6 @@ export function isServer(): boolean {
  * @throws {Error} If called in a browser environment. This function must only be called on the
  *   server. Ensure the module that calls this is not imported from client components.
  *
- * @privateRemarks
- * TODO: I think throwing an error might be better than just silently failing here.
- * While the client -> server boundary is most likely a security loosening boundary,
- * the server -> client boundary needs to be considered more carefully. Open to discussion.
- *
  * @example
  * ```ts
  * // lib/ld-server.ts
