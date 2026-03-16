@@ -188,7 +188,7 @@
         "relayProxyDaemon": { "introduced": "1.0" },
         "relayProxyProxy": { "introduced": "1.0" },
         "secureMode": { "introduced": "3.0" },
-        "storingDataDynamodb": { "introduced": "8.0" },
+        "storingDataDynamodb": { "introduced": "5.6" },
         "storingDataRedis": { "introduced": "2.0" },
         "testDataSource": { "introduced": "6.3" },
         "track": { "introduced": "1.0" },
