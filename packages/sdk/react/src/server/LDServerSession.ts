@@ -6,8 +6,8 @@ import { LDServerSession } from './LDClient';
 import { LDServerBaseClient } from './LDServerBaseClient';
 
 // cache() creates a per-request memoized store — each React render tree (request)
-// gets its own isolated instance. The store is populated by LDIsomorphicProvider
-// and read by serverBoolVariation / useBoolVariation.
+// gets its own isolated instance. The store is populated by createLDServerSession
+// and read by useLDServerSession.
 const withCache = cache(() => ({ session: null as LDServerSession | null }));
 
 /**
@@ -57,7 +57,7 @@ export function createLDServerWrapper(
 ): LDServerSession {
   if (!isServer()) {
     throw new Error(
-      'createLDServerSession must only be called on the server. ' +
+      'createLDServerWrapper must only be called on the server. ' +
         'Ensure this module is not imported from client components.',
     );
   }

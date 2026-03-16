@@ -171,7 +171,7 @@ describe('given a browser environment (window defined)', () => {
   it('throws an error instead of returning a no-op session', () => {
     const client = makeMockBaseClient();
     expect(() => createLDServerSession(client, context)).toThrow(
-      'createLDServerSession must only be called on the server.',
+      'createLDServerWrapper must only be called on the server.',
     );
   });
 });
