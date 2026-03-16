@@ -19,6 +19,9 @@ export default class BigSegmentTestStore {
 
   async getMetadata(): Promise<BigSegmentMetadata> {
     const response = await fetch(`${this._callbackUri}/getMetadata`);
+    if (!response.ok) {
+      throw new Error(`getMetadata request failed with status ${response.status}`);
+    }
     const data = await response.json();
     return data as BigSegmentMetadata;
   }
@@ -29,6 +32,9 @@ export default class BigSegmentTestStore {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextHash }),
     });
+    if (!response.ok) {
+      throw new Error(`getUserMembership request failed with status ${response.status}`);
+    }
     const data = await response.json();
     return (data as BigSegmentMembership)?.values;
   }
