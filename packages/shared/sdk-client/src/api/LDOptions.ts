@@ -295,4 +295,13 @@ export interface LDOptions {
    * protocol.
    */
   dataSystem?: LDClientDataSystemOptions;
+
+  /**
+   * Set to true to completely disable the persistent flag cache. When disabled,
+   * flags are never read from or written to local storage. This takes precedence
+   * over `maxCachedContexts`.
+   *
+   * @defaultValue false
+   */
+  disableCache?: boolean;
 }

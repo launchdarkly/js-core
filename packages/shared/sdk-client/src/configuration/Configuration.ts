@@ -31,6 +31,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
 export interface Configuration {
   readonly logger: LDLogger;
   readonly maxCachedContexts: number;
+  readonly disableCache?: boolean;
   readonly capacity: number;
   readonly diagnosticRecordingInterval: number;
   readonly flushInterval: number;
@@ -93,6 +94,7 @@ export default class ConfigurationImpl implements Configuration {
   private readonly streamUri = DEFAULT_STREAM;
 
   public readonly maxCachedContexts = 5;
+  public readonly disableCache: boolean = false;
 
   public readonly capacity = 100;
   public readonly diagnosticRecordingInterval = 900;

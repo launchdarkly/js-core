@@ -126,6 +126,7 @@ export default class DefaultFlagManager implements FlagManager {
    * @param platform implementation of various platform provided functionality
    * @param sdkKey that will be used to distinguish different environments
    * @param maxCachedContexts that specifies the max number of contexts that will be cached in persistence
+   * @param disableCache set to true to completely disable the persistent flag cache
    * @param logger used for logging various messages
    * @param timeStamper exists for testing purposes
    */
@@ -133,6 +134,7 @@ export default class DefaultFlagManager implements FlagManager {
     platform: Platform,
     sdkKey: string,
     maxCachedContexts: number,
+    disableCache: boolean,
     logger: LDLogger,
     timeStamper: () => number = () => Date.now(),
   ) {
@@ -141,6 +143,7 @@ export default class DefaultFlagManager implements FlagManager {
       platform,
       sdkKey,
       maxCachedContexts,
+      disableCache,
       logger,
       timeStamper,
     );
@@ -150,6 +153,7 @@ export default class DefaultFlagManager implements FlagManager {
     platform: Platform,
     sdkKey: string,
     maxCachedContexts: number,
+    disableCache: boolean,
     logger: LDLogger,
     timeStamper: () => number = () => Date.now(),
   ): Promise<FlagPersistence> {
@@ -159,6 +163,7 @@ export default class DefaultFlagManager implements FlagManager {
       platform,
       environmentNamespace,
       maxCachedContexts,
+      disableCache,
       this._flagStore,
       this._flagUpdater,
       logger,

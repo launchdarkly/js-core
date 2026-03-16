@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.22.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.21.0...js-client-sdk-common-v1.22.0) (2026-03-16)
+
+
+### Features
+
+* Add experimental FDv2 configuration (unused) ([#1169](https://github.com/launchdarkly/js-core/issues/1169)) ([c7130cc](https://github.com/launchdarkly/js-core/commit/c7130ccabe19a699b3c14dc949432ef1afb37b3d))
+* Add explicit disableCache setting. ([6be89dd](https://github.com/launchdarkly/js-core/commit/6be89dd16098264a8c75761628f716c1b7387cb7))
+* Add FDv1 polling synchronizer for FDv2 fallback (SDK-1923) ([#1159](https://github.com/launchdarkly/js-core/issues/1159)) ([498216a](https://github.com/launchdarkly/js-core/commit/498216acc43ad007e6888b1fdd53892cd231a4a7))
+* Add mode resolution table for FDv2. ([#1146](https://github.com/launchdarkly/js-core/issues/1146)) ([ab2436d](https://github.com/launchdarkly/js-core/commit/ab2436dc677cfc923fba051aab649a2a7e959a3e))
+* FDv2 Cache Initializer ([#1147](https://github.com/launchdarkly/js-core/issues/1147)) ([7d6299f](https://github.com/launchdarkly/js-core/commit/7d6299fc20dac864487b1f07f283c41e07bf73de))
+
+
+### Bug Fixes
+
+* Allow 0 status code to be handled by the streaming error filter. ([d96b46b](https://github.com/launchdarkly/js-core/commit/d96b46b01331842647f71cccfaf70ab104029849))
+* Fix the calculation of the basis parameter for FDv2 streaming. (Does not affect FDv1). ([#1165](https://github.com/launchdarkly/js-core/issues/1165)) ([bbdd6c6](https://github.com/launchdarkly/js-core/commit/bbdd6c6f23fcc2a2fbd3ff72a39d872853ceef38))
+* Improve error handling for FDv2 streaming ([d96b46b](https://github.com/launchdarkly/js-core/commit/d96b46b01331842647f71cccfaf70ab104029849))
+* Max cached context enforcement wasn't working for 0. ([6be89dd](https://github.com/launchdarkly/js-core/commit/6be89dd16098264a8c75761628f716c1b7387cb7))
+* rename FDv2 object kind from `flagEval` to `flag-eval` ([#1185](https://github.com/launchdarkly/js-core/issues/1185)) ([cd4b119](https://github.com/launchdarkly/js-core/commit/cd4b1190362373d9a16582dea0f65a786210e8e3))
+
 ## [1.21.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.20.0...js-client-sdk-common-v1.21.0) (2026-03-04)
 
 
