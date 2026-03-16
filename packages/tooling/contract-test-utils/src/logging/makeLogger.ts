@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { LDLogger } from '../types/compat.js';
 
 export function makeLogger(tag: string): LDLogger {
   return {

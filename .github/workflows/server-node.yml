@@ -33,6 +33,8 @@ jobs:
           workspace_path: packages/sdk/server-node
       - name: Install contract test service dependencies
         run: yarn workspace node-server-sdk-contract-tests install --no-immutable
+      - name: Build shared contract test utils (server)
+        run: yarn workspace @launchdarkly/js-contract-test-utils build:server
       - name: Build the test service
         run: yarn workspace node-server-sdk-contract-tests build
       - name: Launch the test service in the background

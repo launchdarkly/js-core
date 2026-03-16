@@ -1,6 +1,5 @@
-import { LDContext } from '@launchdarkly/js-client-sdk-common';
-
-import { HookStage } from './CommandParams';
+import { HookStage } from './CommandParams.js';
+import { LDContext } from './compat.js';
 
 export interface CreateInstanceParams {
   configuration: SDKConfigParams;
@@ -21,6 +20,11 @@ export interface SDKConfigParams {
   hooks?: SDKConfigHooksParams;
   wrapper?: SDKConfigWrapper;
   proxy?: SDKConfigProxyParams;
+}
+
+export interface ServerSDKConfigParams extends SDKConfigParams {
+  bigSegments?: SDKConfigBigSegmentsParams;
+  dataSystem?: SDKDataSystemParams;
 }
 
 export interface SDKConfigTLSParams {
@@ -92,4 +96,39 @@ export interface SDKConfigProxyParams {
 export interface SDKConfigWrapper {
   name: string;
   version: string;
+}
+
+// Server-specific config types
+
+export interface SDKConfigBigSegmentsParams {
+  callbackUri: string;
+  userCacheSize?: number;
+  userCacheTimeMs?: number;
+  statusPollIntervalMs?: number;
+  staleAfterMs?: number;
+}
+
+export interface SDKDataSourceStreamingParams {
+  baseUri?: string;
+  initialRetryDelayMs?: number;
+}
+
+export interface SDKDataSourcePollingParams {
+  baseUri?: string;
+  pollIntervalMs?: number;
+}
+
+export interface SDKDataSystemSynchronizerParams {
+  streaming?: SDKDataSourceStreamingParams;
+  polling?: SDKDataSourcePollingParams;
+}
+
+export interface SDKDataSystemInitializerParams {
+  polling?: SDKDataSourcePollingParams;
+}
+
+export interface SDKDataSystemParams {
+  initializers?: SDKDataSystemInitializerParams[];
+  synchronizers?: SDKDataSystemSynchronizerParams[];
+  payloadFilter?: string;
 }

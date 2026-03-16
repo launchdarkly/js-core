@@ -68,12 +68,12 @@ describe('CacheInitializer', () => {
 
       const flag1Update = result.payload.updates.find((u) => u.key === 'flag1');
       expect(flag1Update).toBeDefined();
-      expect(flag1Update!.kind).toBe('flagEval');
+      expect(flag1Update!.kind).toBe('flag-eval');
       expect(flag1Update!.version).toBe(1);
 
       const flag2Update = result.payload.updates.find((u) => u.key === 'flag2');
       expect(flag2Update).toBeDefined();
-      expect(flag2Update!.kind).toBe('flagEval');
+      expect(flag2Update!.kind).toBe('flag-eval');
       expect(flag2Update!.version).toBe(2);
     }
   });

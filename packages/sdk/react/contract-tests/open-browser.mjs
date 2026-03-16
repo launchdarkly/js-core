@@ -38,7 +38,19 @@ page.on('pageerror', (error) => {
   console.error(`[Browser Error] ${error.message}`);
 });
 
-await page.goto(url);
+// Retry page.goto until the entity is ready (race-condition guard)
+const maxRetries = 15;
+const retryDelayMs = 2000;
+for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  try {
+    await page.goto(url);
+    break;
+  } catch (err) {
+    if (attempt === maxRetries) throw err;
+    console.log(`[Browser] Connection to ${url} failed (attempt ${attempt}/${maxRetries}), retrying in ${retryDelayMs}ms...`);
+    await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+  }
+}
 
 console.log('Browser is open and running. Press Ctrl+C to close.');
 

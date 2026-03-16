@@ -97,7 +97,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     // The event source may not produce a status. But the LaunchDarkly
     // polyfill can. If we can get the status, then we should stop retrying
     // on certain error codes.
-    if (err.status && typeof err.status === 'number' && !this._errorFilter(err)) {
+    if (typeof err.status === 'number' && !this._errorFilter(err)) {
       // If we encounter an unrecoverable condition, then we do not want to
       // retry anymore.
       return;

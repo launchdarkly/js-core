@@ -32,7 +32,7 @@ export function makeFullPayloadBody(
     events.push({
       event: 'put-object',
       data: {
-        kind: 'flagEval',
+        kind: 'flag-eval',
         key,
         version: 1,
         object: { value: flag.value, trackEvents: flag.trackEvents ?? false },

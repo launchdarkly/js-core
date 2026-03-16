@@ -1,42 +1,23 @@
 import { Response } from 'express';
 
+import { ClientPool as GenericClientPool } from '@launchdarkly/js-contract-test-utils';
 import { LDClient } from '@launchdarkly/js-server-sdk-common';
 import { init } from '@launchdarkly/shopify-oxygen-sdk';
 
 /* eslint-disable no-console */
 
-// NOTE: Currently, this is a very simple client pool that only really handles the
-// very limited Oxygen specific use cases... we should be expand this to be more
-// general purpose in the future and maybe even come up with some shared ts interface
-// to facilitate future contract testing.
-
-// TODO: currently this class will handle the response sending as well, which may technically
-// sit outside the scope of what it SHOULD be doing. We should refactor this to be more
-// general purpose and allow the caller to handle the response sending.
-
 /**
- * ClientPool is a singleton that manages a pool of LDClient instances. Currently there is
- * no separation between a managed client and this pool. Which means all of the client specs
- * will be implemented in this class.
+ * ClientPool manages a pool of LDClient instances for contract tests.
+ * It uses the shared generic ClientPool for client storage and ID generation, and
+ * handles SDK-specific client creation, command execution, and response sending.
  *
  * @see https://github.com/launchdarkly/sdk-test-harness/blob/v2/docs/service_spec.md
  */
 export default class ClientPool {
-  private _clients: Record<string, LDClient> = {};
-  private _clientCounter = 0;
-
-  constructor() {
-    this._clients = {};
-    this._clientCounter = 0;
-  }
-
-  private _makeId(): string {
-    this._clientCounter += 1;
-    return `client-${this._clientCounter}`;
-  }
+  private _pool = new GenericClientPool<LDClient>();
 
   public async runCommand(id: string, body: any, res: Response): Promise<void> {
-    const client = this._clients[id];
+    const client = this._pool.get(id);
     // TODO: handle the 'itCanFailCase'
     if (client) {
       try {
@@ -69,10 +50,10 @@ export default class ClientPool {
   }
 
   public async deleteClient(id: string, res: Response): Promise<void> {
-    const client = this._clients[id];
+    const client = this._pool.get(id);
     if (client) {
       client.close();
-      delete this._clients[id];
+      this._pool.remove(id);
       res.status(204);
       res.send();
     } else {
@@ -83,7 +64,6 @@ export default class ClientPool {
 
   public async createClient(options: any, res: Response): Promise<void> {
     try {
-      const id = this._makeId();
       const {
         configuration: { credential = 'unknown-sdk-key', polling },
       } = options;
@@ -101,7 +81,7 @@ export default class ClientPool {
       });
 
       await client.waitForInitialization({ timeout: 10 });
-      this._clients[id] = client;
+      const id = this._pool.add(client);
       res.status(201);
       res.set('Location', `/clients/${id}`);
       if (!client.initialized()) {
