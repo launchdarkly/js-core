@@ -444,6 +444,9 @@ export function createFDv2DataManagerBase(
 
       const plainContextString = JSON.stringify(Context.toLDContext(context));
       const queryParams = buildQueryParams(identifyOptions);
+      if (config.withReasons) {
+        queryParams.push({ key: 'withReasons', value: 'true' });
+      }
       const streamingEndpoints = endpoints.streaming();
       const pollingEndpoints = endpoints.polling();
 
