@@ -1,27 +1,32 @@
-import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
-import { LDLogger } from '@launchdarkly/react-native-client-sdk';
+import { makeLogger } from '../logging/makeLogger.js';
+import { CommandParams } from '../types/CommandParams.js';
+import { CreateInstanceParams } from '../types/ConfigParams.js';
 
-import { ClientEntity, newSdkClientEntity } from './ClientEntity';
+export interface IClientEntity {
+  doCommand(params: CommandParams): Promise<unknown>;
+  close(): void | Promise<void>;
+}
+
+export type CreateClientEntityFn = (options: CreateInstanceParams) => Promise<IClientEntity>;
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;
-  private readonly _entities: Record<string, ClientEntity> = {};
+  private readonly _entities: Record<string, IClientEntity> = {};
   private _clientCounter = 0;
-  private _logger: LDLogger = makeLogger('TestHarnessWebSocket');
+  private _logger = makeLogger('TestHarnessWebSocket');
   private _intentionalClose = false;
-  private _onConnectionChange?: (connected: boolean) => void;
 
   constructor(
     private readonly _url: string,
-    onConnectionChange?: (connected: boolean) => void,
-  ) {
-    this._onConnectionChange = onConnectionChange;
-  }
+    private readonly _capabilities: string[],
+    private readonly _createClient: CreateClientEntityFn,
+    private readonly _onConnectionChange?: (connected: boolean) => void,
+  ) {}
 
   connect() {
     this._intentionalClose = false;
     this._logger.info(`Connecting to web socket.`);
-    this._ws = new WebSocket(this._url, 'v1');
+    this._ws = new WebSocket(this._url, ['v1']);
     this._ws.onopen = () => {
       this._logger.info('Connected to websocket.');
       this._onConnectionChange?.(true);
@@ -45,26 +50,13 @@ export default class TestHarnessWebSocket {
       const resData: any = { reqId: data.reqId };
       switch (data.command) {
         case 'getCapabilities':
-          resData.capabilities = [
-            'client-side',
-            'mobile',
-            'service-endpoints',
-            'tags',
-            'user-type',
-            'inline-context-all',
-            'anonymous-redaction',
-            'strongly-typed',
-            'client-prereq-events',
-            'client-per-context-summaries',
-            'track-hooks',
-          ];
-
+          resData.capabilities = this._capabilities;
           break;
         case 'createClient':
           try {
             resData.resourceUrl = `/clients/${this._clientCounter}`;
             resData.status = 201;
-            const entity = await newSdkClientEntity(data.body);
+            const entity = await this._createClient(data.body);
             this._entities[this._clientCounter] = entity;
             this._clientCounter += 1;
           } catch (e: any) {
@@ -87,7 +79,6 @@ export default class TestHarnessWebSocket {
             resData.status = 404;
             this._logger.warn(`Client did not exist: ${data.id}`);
           }
-
           break;
         case 'deleteClient':
           if (Object.prototype.hasOwnProperty.call(this._entities, data.id)) {
@@ -102,7 +93,6 @@ export default class TestHarnessWebSocket {
         default:
           break;
       }
-
       this.send(resData);
     };
   }
