@@ -324,8 +324,10 @@ export function createFDv2DataManagerBase(
       includeInitializers,
     );
 
-    // If there are no sources at all (e.g., offline mode), don't create
-    // a data source — just mark as initialized if we have data.
+    currentResolvedMode = mode;
+
+    // If there are no sources at all (e.g., offline or one-shot mode
+    // post-initialization), don't create a data source.
     if (initializerFactories.length === 0 && synchronizerSlots.length === 0) {
       logger.debug(`${logTag} Mode '${mode}' has no sources. No data source created.`);
       if (!initialized && pendingIdentifyResolve) {
@@ -369,8 +371,6 @@ export function createFDv2DataManagerBase(
           pendingIdentifyReject = undefined;
         }
       });
-
-    currentResolvedMode = mode;
   }
 
   /**
