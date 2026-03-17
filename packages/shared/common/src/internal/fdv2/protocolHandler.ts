@@ -169,7 +169,7 @@ export function createProtocolHandler(
       !tempId ||
       !data.kind ||
       !data.key ||
-      !data.version ||
+      data.version == null ||
       !data.object
     ) {
       return ACTION_NONE;
@@ -191,7 +191,7 @@ export function createProtocolHandler(
   }
 
   function processDeleteObject(data: DeleteObject): ProtocolAction {
-    if (protocolState === 'inactive' || !tempId || !data.kind || !data.key || !data.version) {
+    if (protocolState === 'inactive' || !tempId || !data.kind || !data.key || data.version == null) {
       return ACTION_NONE;
     }
 
@@ -214,7 +214,7 @@ export function createProtocolHandler(
       };
     }
 
-    if (!tempId || data.state === null || data.state === undefined || !data.version) {
+    if (!tempId || data.state === null || data.state === undefined || data.version == null) {
       resetAll();
       return ACTION_NONE;
     }
