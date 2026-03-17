@@ -56,6 +56,9 @@
       "path": "./packages/tooling/jest/tsconfig.ref.json"
     },
     {
+      "path": "./packages/tooling/contract-test-utils/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/browser/tsconfig.ref.json"
     },
     {
