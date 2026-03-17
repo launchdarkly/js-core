@@ -21,6 +21,34 @@ export interface SDKConfigParams {
   hooks?: SDKConfigHooksParams;
   wrapper?: SDKConfigWrapper;
   proxy?: SDKConfigProxyParams;
+  dataSystem?: SDKConfigDataSystem;
+}
+
+export interface SDKConfigDataSystem {
+  useDefaultDataSystem?: boolean;
+  initializers?: SDKConfigDataInitializer[];
+  synchronizers?: SDKConfigDataSynchronizer[];
+  payloadFilter?: string;
+  connectionModeConfig?: SDKConfigConnectionModeConfig;
+}
+
+export interface SDKConfigConnectionModeConfig {
+  initialConnectionMode?: string;
+  customConnectionModes?: Record<string, SDKConfigModeDefinition>;
+}
+
+export interface SDKConfigModeDefinition {
+  initializers?: SDKConfigDataInitializer[];
+  synchronizers?: SDKConfigDataSynchronizer[];
+}
+
+export interface SDKConfigDataInitializer {
+  polling?: SDKConfigPollingParams;
+}
+
+export interface SDKConfigDataSynchronizer {
+  streaming?: SDKConfigStreamingParams;
+  polling?: SDKConfigPollingParams;
 }
 
 export interface SDKConfigTLSParams {

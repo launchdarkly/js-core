@@ -26,27 +26,56 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     useReport: options.clientSide.useReport,
   };
 
-  if (options.serviceEndpoints) {
-    cf.streamUri = options.serviceEndpoints.streaming;
-    cf.baseUri = options.serviceEndpoints.polling;
-    cf.eventsUri = options.serviceEndpoints.events;
-  }
+  if (options.dataSystem?.connectionModeConfig) {
+    const connMode = options.dataSystem.connectionModeConfig;
+    (cf as any).dataSystem = {
+      initialConnectionMode: connMode.initialConnectionMode,
+    };
 
-  if (options.polling) {
-    if (options.polling.baseUri) {
-      cf.baseUri = options.polling.baseUri;
-    }
-  }
+    if (connMode.customConnectionModes) {
+      for (const modeDef of Object.values(connMode.customConnectionModes)) {
+        for (const sync of modeDef.synchronizers ?? []) {
+          if (sync.streaming?.baseUri) {
+            cf.streamUri = sync.streaming.baseUri;
+            cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+          }
+          if (sync.polling?.baseUri) {
+            cf.baseUri = sync.polling.baseUri;
+          }
+        }
 
-  // Can contain streaming and polling, if streaming is set override the initial connection
-  // mode. This can be removed when we add JS specific initialization that uses polling
-  // and then streaming.
-  if (options.streaming) {
-    if (options.streaming.baseUri) {
-      cf.streamUri = options.streaming.baseUri;
+        // prefer to use polling endpoint from initializers, so we set this later
+        for (const init of modeDef.initializers ?? []) {
+          if (init.polling?.baseUri) {
+            cf.baseUri = init.polling.baseUri;
+          }
+        }
+      }
     }
-    cf.streaming = true;
-    cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+
+    if (options.dataSystem.payloadFilter) {
+      cf.payloadFilterKey = options.dataSystem.payloadFilter;
+    }
+  } else {
+    if (options.serviceEndpoints) {
+      cf.streamUri = options.serviceEndpoints.streaming;
+      cf.baseUri = options.serviceEndpoints.polling;
+      cf.eventsUri = options.serviceEndpoints.events;
+    }
+
+    if (options.polling) {
+      if (options.polling.baseUri) {
+        cf.baseUri = options.polling.baseUri;
+      }
+    }
+
+    if (options.streaming) {
+      if (options.streaming.baseUri) {
+        cf.streamUri = options.streaming.baseUri;
+      }
+      cf.streaming = true;
+      cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    }
   }
 
   if (options.events) {
