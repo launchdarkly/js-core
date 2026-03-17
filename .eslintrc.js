@@ -13,7 +13,6 @@ module.exports = {
     '**/dist/**',
     '**/vercel/examples/**',
     '**/react-native/example/**',
-    '**/react-universal/example/**',
     '**/fromExternal/**',
   ],
   rules: {
