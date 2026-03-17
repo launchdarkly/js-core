@@ -1,5 +1,3 @@
-import got from 'got';
-
 interface BigSegmentMetadata {
   lastUpToDate?: number;
 }
@@ -20,19 +18,24 @@ export default class BigSegmentTestStore {
   }
 
   async getMetadata(): Promise<BigSegmentMetadata> {
-    const data = await got.get(`${this._callbackUri}/getMetadata`, { retry: { limit: 0 } }).json();
+    const response = await fetch(`${this._callbackUri}/getMetadata`);
+    if (!response.ok) {
+      throw new Error(`getMetadata request failed with status ${response.status}`);
+    }
+    const data = await response.json();
     return data as BigSegmentMetadata;
   }
 
   async getUserMembership(contextHash: string): Promise<Record<string, boolean> | undefined> {
-    const data = await got
-      .post(`${this._callbackUri}/getMembership`, {
-        retry: { limit: 0 },
-        json: {
-          contextHash,
-        },
-      })
-      .json();
+    const response = await fetch(`${this._callbackUri}/getMembership`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextHash }),
+    });
+    if (!response.ok) {
+      throw new Error(`getUserMembership request failed with status ${response.status}`);
+    }
+    const data = await response.json();
     return (data as BigSegmentMembership)?.values;
   }
 
