@@ -52,6 +52,16 @@ export interface LDReactClient extends LDClient {
   onInitializationStatusChange(
     callback: (result: LDWaitForInitializationResult) => void,
   ): () => void;
+
+  /**
+   * Returns whether flag keys should be converted to camelCase in `useFlags()` and resolved from camelCase
+   * in the individual variation hooks. Defaults to `true` when absent.
+   *
+   * @deprecated This method is deprecated and will be removed in a future major version.
+   *
+   * @returns {boolean} Whether flag keys should be converted to camelCase.
+   */
+  shouldUseCamelCaseFlagKeys(): boolean;
 }
 
 /**

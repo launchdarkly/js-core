@@ -18,6 +18,8 @@ export interface LDReactClientOptions extends LDOptionsBase {
    * For more information, see the React SDK Reference Guide on
    * [flag keys](https://docs.launchdarkly.com/sdk/client-side/react/react-web#flag-keys).
    *
+   * @deprecated This option is deprecated and will be removed in a future major version.
+   *
    * @see https://docs.launchdarkly.com/sdk/client-side/react/react-web#flag-keys
    */
   useCamelCaseFlagKeys?: boolean;
