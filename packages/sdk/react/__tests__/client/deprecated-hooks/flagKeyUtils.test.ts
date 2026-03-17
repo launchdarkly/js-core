@@ -96,6 +96,12 @@ it('preserves digits adjacent to camelCase boundaries', () => {
   expect(toCamelCase('my2ndFlag')).toBe('my2ndFlag');
 });
 
+it('detects digit-to-uppercase boundary in camelCase keys', () => {
+  expect(toCamelCase('my2Flag')).toBe('my2Flag');
+  expect(toCamelCase('flag2Value')).toBe('flag2Value');
+  expect(toCamelCase('x2Y')).toBe('x2Y');
+});
+
 // NOTE: This case should never happen as LaunchDarkly should handle invalid
 // characters already.
 it('ignores a leading separator', () => {

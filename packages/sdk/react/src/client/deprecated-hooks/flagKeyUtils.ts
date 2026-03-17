@@ -13,7 +13,7 @@
  */
 export function toCamelCase(key: string): string {
   return key
-    .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase boundary: myFlag → my Flag
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2') // camelCase boundary: myFlag → my Flag, my2Flag → my2 Flag
     .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // ALLCAPS boundary: HTMLParser → HTML Parser
     .split(/[-._\s]+/)
     .filter(Boolean)
