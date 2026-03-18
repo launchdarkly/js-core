@@ -38,7 +38,7 @@
       }
     },
     "browser": {
-      "name": "JavaScript Browser SDK",
+      "name": "JavaScript Client SDK",
       "type": "client-side",
       "path": "packages/sdk/browser",
       "languages": ["JavaScript", "TypeScript"],
@@ -81,34 +81,6 @@
         "migrations": { "introduced": "2.2.2" },
         "secureMode": { "introduced": "2.0" },
         "track": { "introduced": "2.3" }
-      }
-    },
-    "combined-browser": {
-      "name": "Combined JavaScript Browser SDK",
-      "type": "client-side",
-      "path": "packages/sdk/combined-browser",
-      "languages": ["JavaScript", "TypeScript"],
-      "releases": {
-        "tag-prefix": "browser-"
-      },
-      "userAgents": ["JSClient"],
-      "features": {
-        "allFlags": { "introduced": "0.1" },
-        "appMetadata": { "introduced": "0.1" },
-        "bigSegments": { "introduced": "0.1" },
-        "bootstrapping": { "introduced": "0.1" },
-        "contexts": { "introduced": "0.1" },
-        "experimentation": { "introduced": "0.1" },
-        "flagChanges": { "introduced": "0.1" },
-        "hooks": { "introduced": "0.1" },
-        "inlineContextCustomEvents": { "introduced": "0.1" },
-        "perContextSummaryEvents": { "introduced": "0.1" },
-        "pluginSupport": { "introduced": "0.1" },
-        "privateAttrs": { "introduced": "0.1" },
-        "relayProxyProxy": { "introduced": "0.1" },
-        "secureMode": { "introduced": "0.1" },
-        "track": { "introduced": "0.1" },
-        "variationDetail": { "introduced": "0.1" }
       }
     },
     "fastly": {
