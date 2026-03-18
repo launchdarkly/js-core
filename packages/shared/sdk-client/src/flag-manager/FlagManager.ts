@@ -56,6 +56,22 @@ export interface FlagManager {
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
 
   /**
+   * Applies a changeset to the flag store. If {@link basis} is true, replaces
+   * all flags (like {@link init}). If false, upserts individual flags (like
+   * calling {@link upsert} for each entry). An empty updates object with
+   * basis=false is valid — it persists cache (updating freshness) without
+   * changing any flags.
+   *
+   * Designed for the FDv2 data path where init/upsert semantics, selector
+   * tracking, and freshness updates are all handled in one call.
+   */
+  applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    basis: boolean,
+  ): Promise<void>;
+
+  /**
    * Register a flag change callback.
    */
   on(callback: FlagsChangeCallback): void;
@@ -210,6 +226,14 @@ export default class DefaultFlagManager implements FlagManager {
 
   async loadCached(context: Context): Promise<boolean> {
     return (await this._flagPersistencePromise).loadCached(context);
+  }
+
+  async applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    basis: boolean,
+  ): Promise<void> {
+    return (await this._flagPersistencePromise).applyChanges(context, updates, basis);
   }
 
   on(callback: FlagsChangeCallback): void {

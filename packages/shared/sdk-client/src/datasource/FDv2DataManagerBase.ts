@@ -288,25 +288,22 @@ export function createFDv2DataManagerBase(
       selector = payload.state;
     }
 
-    if (payload.type === 'none') {
-      return;
-    }
-
     const context = identifiedContext;
     if (!context) {
       logger.warn(`${logTag} dataCallback called without an identified context.`);
       return;
     }
 
-    const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
-
-    if (payload.type === 'full') {
-      flagManager.init(context, descriptors);
-    } else {
-      Object.entries(descriptors).forEach(([key, descriptor]) => {
-        flagManager.upsert(context, key, descriptor);
-      });
+    if (payload.type === 'none') {
+      // Spec 5.2.2: transfer-none confirms data is still current.
+      // Persist cache to update freshness timestamp without changing flags.
+      flagManager.applyChanges(context, {}, false);
+      return;
     }
+
+    const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
+    const basis = payload.type === 'full';
+    flagManager.applyChanges(context, descriptors, basis);
   }
 
   /**
@@ -502,6 +499,7 @@ export function createFDv2DataManagerBase(
         // was called. Resolve immediately — flag evaluations will use
         // the bootstrap data synchronously.
         initialized = true;
+        statusManager.requestStateUpdate('VALID');
         // selector remains undefined — bootstrap data has no selector.
         pendingIdentifyResolve?.();
         pendingIdentifyResolve = undefined;
