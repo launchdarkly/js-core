@@ -10,7 +10,7 @@ if (fs.existsSync('.env')) {
 
 const ENTRY_FILE = path.join('src', 'app.ts');
 const OUTPUT_FILE = path.join('dist', 'app.js');
-const { LD_CLIENT_SIDE_ID, LD_FLAG_KEY } = process.env;
+const { LAUNCHDARKLY_CLIENT_SIDE_ID, LAUNCHDARKLY_FLAG_KEY } = process.env;
 
 const CLIENT_SIDE_ID_PLACEHOLDER = 'LD_CLIENT_SIDE_ID';
 const FLAG_KEY_PLACEHOLDER = 'LD_FLAG_KEY';
@@ -22,14 +22,14 @@ export default defineConfig({
   noExternal: ['@launchdarkly/js-client-sdk'],
   hooks(hooks) {
     hooks.hook('build:done', () => {
-      if (LD_CLIENT_SIDE_ID) {
+      if (LAUNCHDARKLY_CLIENT_SIDE_ID) {
         const content = fs.readFileSync(OUTPUT_FILE).toString();
         fs.writeFileSync(
           OUTPUT_FILE,
-          content.replaceAll(CLIENT_SIDE_ID_PLACEHOLDER, LD_CLIENT_SIDE_ID),
+          content.replaceAll(CLIENT_SIDE_ID_PLACEHOLDER, LAUNCHDARKLY_CLIENT_SIDE_ID),
         );
       }
-      const flagKey = LD_FLAG_KEY || 'sample-feature';
+      const flagKey = LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
       const content = fs.readFileSync(OUTPUT_FILE).toString();
       fs.writeFileSync(OUTPUT_FILE, content.replaceAll(FLAG_KEY_PLACEHOLDER, flagKey));
     });

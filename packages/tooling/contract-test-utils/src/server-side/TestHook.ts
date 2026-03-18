@@ -1,10 +1,11 @@
 import { integrations, LDEvaluationDetail } from '@launchdarkly/js-server-sdk-common';
+
 import { BaseTestHook } from '../shared/BaseTestHook.js';
 
 export default class TestHook extends BaseTestHook implements integrations.Hook {
-  protected async _safePost(body: unknown): Promise<void> {
+  protected async safePost(body: unknown): Promise<void> {
     try {
-      await fetch(this._endpoint, {
+      await fetch(this.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -23,7 +24,7 @@ export default class TestHook extends BaseTestHook implements integrations.Hook 
     hookContext: integrations.EvaluationSeriesContext,
     data: integrations.EvaluationSeriesData,
   ): integrations.EvaluationSeriesData {
-    return this._beforeEvaluationImpl(
+    return this.beforeEvaluationImpl(
       hookContext as unknown as Record<string, unknown>,
       data,
     ) as integrations.EvaluationSeriesData;
@@ -34,7 +35,7 @@ export default class TestHook extends BaseTestHook implements integrations.Hook 
     data: integrations.EvaluationSeriesData,
     detail: LDEvaluationDetail,
   ): integrations.EvaluationSeriesData {
-    return this._afterEvaluationImpl(
+    return this.afterEvaluationImpl(
       hookContext as unknown as Record<string, unknown>,
       data,
       detail,

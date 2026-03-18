@@ -196,15 +196,15 @@
         "webProxy": { "introduced": "1.0" }
       }
     },
-    "react-universal": {
-      "name": "React Universal SDK",
+    "react": {
+      "name": "React SDK",
       "type": "client-side",
-      "path": "packages/sdk/react-universal",
+      "path": "packages/sdk/react",
       "languages": ["JavaScript", "TypeScript"],
       "releases": {
-        "tag-prefix": "react-universal-sdk-"
+        "tag-prefix": "react-sdk-"
       },
-      "userAgents": ["ReactUniversalClient"],
+      "wrapperNames": ["react-client-sdk"],
       "features": {
         "contexts": { "introduced": "0.0.1" }
       }

@@ -1,53 +1,53 @@
 import { HookData, HookErrors } from '../types/CommandParams.js';
 
 export abstract class BaseTestHook {
-  protected readonly _name: string;
-  protected readonly _endpoint: string;
-  protected readonly _data?: HookData;
-  protected readonly _errors?: HookErrors;
+  protected readonly hookName: string;
+  protected readonly endpoint: string;
+  protected readonly hookData?: HookData;
+  protected readonly hookErrors?: HookErrors;
 
   constructor(name: string, endpoint: string, data?: HookData, errors?: HookErrors) {
-    this._name = name;
-    this._endpoint = endpoint;
-    this._data = data;
-    this._errors = errors;
+    this.hookName = name;
+    this.endpoint = endpoint;
+    this.hookData = data;
+    this.hookErrors = errors;
   }
 
-  protected abstract _safePost(body: unknown): Promise<void>;
+  protected abstract safePost(body: unknown): Promise<void>;
 
   getMetadata() {
-    return { name: this._name };
+    return { name: this.hookName };
   }
 
-  protected _beforeEvaluationImpl(
+  protected beforeEvaluationImpl(
     hookContext: Record<string, unknown>,
     data: Record<string, unknown>,
   ): Record<string, unknown> {
-    if (this._errors?.beforeEvaluation) {
-      throw new Error(this._errors.beforeEvaluation);
+    if (this.hookErrors?.beforeEvaluation) {
+      throw new Error(this.hookErrors.beforeEvaluation);
     }
-    this._safePost({
+    this.safePost({
       evaluationSeriesContext: hookContext,
       evaluationSeriesData: data,
       stage: 'beforeEvaluation',
     });
-    return { ...data, ...(this._data?.beforeEvaluation ?? {}) };
+    return { ...data, ...(this.hookData?.beforeEvaluation ?? {}) };
   }
 
-  protected _afterEvaluationImpl(
+  protected afterEvaluationImpl(
     hookContext: Record<string, unknown>,
     data: Record<string, unknown>,
     detail: unknown,
   ): Record<string, unknown> {
-    if (this._errors?.afterEvaluation) {
-      throw new Error(this._errors.afterEvaluation);
+    if (this.hookErrors?.afterEvaluation) {
+      throw new Error(this.hookErrors.afterEvaluation);
     }
-    this._safePost({
+    this.safePost({
       evaluationSeriesContext: hookContext,
       evaluationSeriesData: data,
       stage: 'afterEvaluation',
       evaluationDetail: detail,
     });
-    return { ...data, ...(this._data?.afterEvaluation ?? {}) };
+    return { ...data, ...(this.hookData?.afterEvaluation ?? {}) };
   }
 }
