@@ -321,3 +321,52 @@ it('noop client onInitializationStatusChange returns a no-op unsubscribe', () =>
   // @ts-ignore
   global.window = originalWindow;
 });
+
+it('passes wrapperName to the base client', () => {
+  const { mock } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  createClient('test-id', { kind: 'user', key: 'u1' });
+
+  expect(createBaseClient).toHaveBeenCalledWith(
+    'test-id',
+    { kind: 'user', key: 'u1' },
+    expect.objectContaining({ wrapperName: 'react-client-sdk' }),
+  );
+});
+
+it('preserves user-provided options alongside wrapper defaults', () => {
+  const { mock } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  createClient('test-id', { kind: 'user', key: 'u1' }, { streaming: false });
+
+  expect(createBaseClient).toHaveBeenCalledWith(
+    'test-id',
+    { kind: 'user', key: 'u1' },
+    expect.objectContaining({
+      wrapperName: 'react-client-sdk',
+      streaming: false,
+    }),
+  );
+});
+
+it('user-provided wrapperName/wrapperVersion overrides defaults', () => {
+  const { mock } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  createClient(
+    'test-id',
+    { kind: 'user', key: 'u1' },
+    {
+      wrapperName: 'custom',
+      wrapperVersion: '9.9.9',
+    },
+  );
+
+  expect(createBaseClient).toHaveBeenCalledWith(
+    'test-id',
+    { kind: 'user', key: 'u1' },
+    expect.objectContaining({ wrapperName: 'custom', wrapperVersion: '9.9.9' }),
+  );
+});
