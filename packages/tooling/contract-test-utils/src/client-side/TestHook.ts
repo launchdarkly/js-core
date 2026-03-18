@@ -6,12 +6,13 @@ import {
   LDEvaluationDetail,
   TrackSeriesContext,
 } from '@launchdarkly/js-client-sdk-common';
+
 import { BaseTestHook } from '../shared/BaseTestHook.js';
 
 export default class TestHook extends BaseTestHook implements Hook {
-  protected async _safePost(body: unknown): Promise<void> {
+  protected async safePost(body: unknown): Promise<void> {
     try {
-      await fetch(this._endpoint, {
+      await fetch(this.endpoint, {
         method: 'POST',
         body: JSON.stringify(body),
       });
@@ -29,7 +30,7 @@ export default class TestHook extends BaseTestHook implements Hook {
     hookContext: EvaluationSeriesContext,
     data: EvaluationSeriesData,
   ): EvaluationSeriesData {
-    return this._beforeEvaluationImpl(
+    return this.beforeEvaluationImpl(
       hookContext as unknown as Record<string, unknown>,
       data,
     ) as EvaluationSeriesData;
@@ -40,7 +41,7 @@ export default class TestHook extends BaseTestHook implements Hook {
     data: EvaluationSeriesData,
     detail: LDEvaluationDetail,
   ): EvaluationSeriesData {
-    return this._afterEvaluationImpl(
+    return this.afterEvaluationImpl(
       hookContext as unknown as Record<string, unknown>,
       data,
       detail,
@@ -48,10 +49,10 @@ export default class TestHook extends BaseTestHook implements Hook {
   }
 
   afterTrack(hookContext: TrackSeriesContext): void {
-    if (this._errors?.afterTrack) {
-      throw new Error(this._errors.afterTrack);
+    if (this.hookErrors?.afterTrack) {
+      throw new Error(this.hookErrors.afterTrack);
     }
-    this._safePost({
+    this.safePost({
       trackSeriesContext: hookContext,
       stage: 'afterTrack',
     });
