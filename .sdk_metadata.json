@@ -204,7 +204,7 @@
       "releases": {
         "tag-prefix": "react-sdk-"
       },
-      "userAgents": ["ReactClient"],
+      "wrapperNames": ["react-client-sdk"],
       "features": {
         "contexts": { "introduced": "0.0.1" }
       }
