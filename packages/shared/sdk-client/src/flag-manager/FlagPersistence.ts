@@ -1,4 +1,4 @@
-import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { FRESHNESS_SUFFIX, FreshnessRecord, hashContext } from '../storage/freshness';
 import { loadCachedFlags } from '../storage/loadCachedFlags';
@@ -59,19 +59,22 @@ export default class FlagPersistence {
   }
 
   /**
-   * Applies a changeset to the flag store. If {@link basis} is true, replaces all
-   * flags via {@link FlagUpdater.init}. If false, upserts individual flags via
-   * {@link FlagUpdater.upsert}. Always persists to cache afterwards, which
-   * updates the freshness timestamp even when no flags change (e.g., transfer-none).
+   * Applies a changeset to the flag store.
+   * - `'full'`: replaces all flags via {@link FlagUpdater.init}.
+   * - `'partial'`: upserts individual flags via {@link FlagUpdater.upsert}.
+   * - `'none'`: no flag changes, only persists cache to update freshness.
+   *
+   * Always persists to cache afterwards, which updates the freshness timestamp
+   * even when no flags change (e.g., transfer-none).
    */
   async applyChanges(
     context: Context,
     updates: { [key: string]: ItemDescriptor },
-    basis: boolean,
+    type: internal.PayloadType,
   ): Promise<void> {
-    if (basis) {
+    if (type === 'full') {
       this._flagUpdater.init(context, updates);
-    } else {
+    } else if (type === 'partial') {
       Object.entries(updates).forEach(([key, descriptor]) => {
         this._flagUpdater.upsert(context, key, descriptor);
       });

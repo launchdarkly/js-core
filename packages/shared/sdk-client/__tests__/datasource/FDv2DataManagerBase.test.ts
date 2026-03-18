@@ -710,7 +710,7 @@ it('sets up debounce manager with correct initial state after identify', async (
   manager.close();
 });
 
-it('calls flagManager.applyChanges with basis=true for a full payload', async () => {
+it('calls flagManager.applyChanges with type full for a full payload', async () => {
   const flagManager = makeFlagManager();
   const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
   await identifyManager(manager);
@@ -723,12 +723,16 @@ it('calls flagManager.applyChanges with basis=true for a full payload', async ()
   });
 
   expect(flagManager.applyChanges).toHaveBeenCalledTimes(1);
-  expect(flagManager.applyChanges).toHaveBeenCalledWith(expect.anything(), expect.anything(), true);
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(
+    expect.anything(),
+    expect.anything(),
+    'full',
+  );
 
   manager.close();
 });
 
-it('calls flagManager.applyChanges with basis=false for a partial payload', async () => {
+it('calls flagManager.applyChanges with type partial for a partial payload', async () => {
   const flagManager = makeFlagManager();
   const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
   await identifyManager(manager);
@@ -744,13 +748,13 @@ it('calls flagManager.applyChanges with basis=false for a partial payload', asyn
   expect(flagManager.applyChanges).toHaveBeenCalledWith(
     expect.anything(),
     expect.anything(),
-    false,
+    'partial',
   );
 
   manager.close();
 });
 
-it('calls flagManager.applyChanges with empty updates on none payload to update freshness', async () => {
+it('calls flagManager.applyChanges with type none on none payload to update freshness', async () => {
   const flagManager = makeFlagManager();
   const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
   await identifyManager(manager);
@@ -763,9 +767,9 @@ it('calls flagManager.applyChanges with empty updates on none payload to update 
   });
 
   // Spec 5.2.2: transfer-none confirms data is still current.
-  // applyChanges with empty updates and basis=false persists cache (updating freshness).
+  // applyChanges with type none persists cache (updating freshness).
   expect(flagManager.applyChanges).toHaveBeenCalledTimes(1);
-  expect(flagManager.applyChanges).toHaveBeenCalledWith(expect.anything(), {}, false);
+  expect(flagManager.applyChanges).toHaveBeenCalledWith(expect.anything(), {}, 'none');
 
   manager.close();
 });

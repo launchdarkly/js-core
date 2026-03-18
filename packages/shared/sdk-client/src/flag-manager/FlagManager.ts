@@ -1,4 +1,4 @@
-import { Context, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { namespaceForEnvironment } from '../storage/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
@@ -56,11 +56,10 @@ export interface FlagManager {
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
 
   /**
-   * Applies a changeset to the flag store. If {@link basis} is true, replaces
-   * all flags (like {@link init}). If false, upserts individual flags (like
-   * calling {@link upsert} for each entry). An empty updates object with
-   * basis=false is valid — it persists cache (updating freshness) without
-   * changing any flags.
+   * Applies a changeset to the flag store.
+   * - `'full'`: replaces all flags (like {@link init}).
+   * - `'partial'`: upserts individual flags (like calling {@link upsert} for each entry).
+   * - `'none'`: persists cache (updating freshness) without changing any flags.
    *
    * Designed for the FDv2 data path where init/upsert semantics, selector
    * tracking, and freshness updates are all handled in one call.
@@ -68,7 +67,7 @@ export interface FlagManager {
   applyChanges(
     context: Context,
     updates: { [key: string]: ItemDescriptor },
-    basis: boolean,
+    type: internal.PayloadType,
   ): Promise<void>;
 
   /**
@@ -231,9 +230,9 @@ export default class DefaultFlagManager implements FlagManager {
   async applyChanges(
     context: Context,
     updates: { [key: string]: ItemDescriptor },
-    basis: boolean,
+    type: internal.PayloadType,
   ): Promise<void> {
-    return (await this._flagPersistencePromise).applyChanges(context, updates, basis);
+    return (await this._flagPersistencePromise).applyChanges(context, updates, type);
   }
 
   on(callback: FlagsChangeCallback): void {

@@ -197,40 +197,48 @@ describe('given a flag manager with storage', () => {
     );
   });
 
-  it('replaces all flags when applyChanges is called with basis=true', async () => {
+  it('replaces all flags when applyChanges is called with type full', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
     await flagManager.init(context, {
       existing: makeMockItemDescriptor(1, 'old'),
     });
 
-    await flagManager.applyChanges(context, { 'new-flag': makeMockItemDescriptor(2, 'new') }, true);
+    await flagManager.applyChanges(
+      context,
+      { 'new-flag': makeMockItemDescriptor(2, 'new') },
+      'full',
+    );
 
-    // basis=true replaces, so existing flag should be gone.
+    // type=full replaces, so existing flag should be gone.
     expect(flagManager.get('existing')).toBeUndefined();
     expect(flagManager.get('new-flag')?.flag.value).toBe('new');
   });
 
-  it('upserts individual flags when applyChanges is called with basis=false', async () => {
+  it('upserts individual flags when applyChanges is called with type partial', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
     await flagManager.init(context, {
       existing: makeMockItemDescriptor(1, 'old'),
     });
 
-    await flagManager.applyChanges(context, { added: makeMockItemDescriptor(2, 'new') }, false);
+    await flagManager.applyChanges(
+      context,
+      { added: makeMockItemDescriptor(2, 'new') },
+      'partial',
+    );
 
-    // basis=false upserts, so existing flag should remain.
+    // type=partial upserts, so existing flag should remain.
     expect(flagManager.get('existing')?.flag.value).toBe('old');
     expect(flagManager.get('added')?.flag.value).toBe('new');
   });
 
-  it('persists cache when applyChanges is called with empty updates', async () => {
+  it('persists cache when applyChanges is called with type none', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
     await flagManager.init(context, {
       flag1: makeMockItemDescriptor(1, 'value'),
     });
 
-    // applyChanges with empty updates should still persist (updating freshness).
-    await flagManager.applyChanges(context, {}, false);
+    // applyChanges with type none should still persist (updating freshness).
+    await flagManager.applyChanges(context, {}, 'none');
 
     // Flag should still be present (no changes).
     expect(flagManager.get('flag1')?.flag.value).toBe('value');

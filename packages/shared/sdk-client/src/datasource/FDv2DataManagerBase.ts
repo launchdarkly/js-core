@@ -297,13 +297,12 @@ export function createFDv2DataManagerBase(
     if (payload.type === 'none') {
       // Spec 5.2.2: transfer-none confirms data is still current.
       // Persist cache to update freshness timestamp without changing flags.
-      flagManager.applyChanges(context, {}, false);
+      flagManager.applyChanges(context, {}, 'none');
       return;
     }
 
     const descriptors = flagEvalPayloadToItemDescriptors(payload.updates);
-    const basis = payload.type === 'full';
-    flagManager.applyChanges(context, descriptors, basis);
+    flagManager.applyChanges(context, descriptors, payload.type);
   }
 
   /**
