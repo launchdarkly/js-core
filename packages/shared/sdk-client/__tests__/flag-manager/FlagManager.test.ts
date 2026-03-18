@@ -221,11 +221,7 @@ describe('given a flag manager with storage', () => {
       existing: makeMockItemDescriptor(1, 'old'),
     });
 
-    await flagManager.applyChanges(
-      context,
-      { added: makeMockItemDescriptor(2, 'new') },
-      'partial',
-    );
+    await flagManager.applyChanges(context, { added: makeMockItemDescriptor(2, 'new') }, 'partial');
 
     // type=partial upserts, so existing flag should remain.
     expect(flagManager.get('existing')?.flag.value).toBe('old');
