@@ -196,6 +196,7 @@ export default class BrowserDataManager extends BaseDataManager {
       bootstrapParsed = readFlagsFromBootstrap(this.logger, browserIdentifyOptions.bootstrap);
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
+    this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Valid);
     this._debugLog('Identify - Initialization completed from bootstrap');
     identifyResolve();
   }
