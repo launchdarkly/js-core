@@ -25,6 +25,12 @@ runs:
         ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
 
     - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+      name: 'Get the mobile SDK key'
+      with:
+        aws_assume_role: ${{ inputs.aws_assume_role }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
       name: 'Get the test feature flag key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
