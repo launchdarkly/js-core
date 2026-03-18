@@ -15,7 +15,7 @@
   "dependencies": {
     "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/react-sdk": "workspace:^",
-    "next": "16.1.5",
+    "next": "16.1.7",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
