@@ -9,10 +9,10 @@ import {
   Storage,
 } from '@launchdarkly/js-sdk-common';
 
-import { InitializerEntry, SynchronizerEntry } from '../api/datasource';
+import { EndpointConfig, InitializerEntry, SynchronizerEntry } from '../api/datasource';
 import { DataSourcePaths } from './DataSourceConfig';
 import { createCacheInitializerFactory } from './fdv2/CacheInitializer';
-import { FDv2Requestor } from './fdv2/FDv2Requestor';
+import { FDv2Requestor, makeFDv2Requestor } from './fdv2/FDv2Requestor';
 import { poll as fdv2Poll } from './fdv2/PollingBase';
 import { createPollingInitializer } from './fdv2/PollingInitializer';
 import { createPollingSynchronizer } from './fdv2/PollingSynchronizer';
@@ -35,6 +35,8 @@ export interface SourceFactoryContext {
   encoding: Encoding;
   /** Service endpoint configuration. */
   serviceEndpoints: ServiceEndpoints;
+  /** The polling endpoint paths. */
+  pollingPaths: DataSourcePaths;
   /** The streaming endpoint paths. */
   streamingPaths: DataSourcePaths;
   /** Default HTTP headers. */
@@ -96,6 +98,49 @@ function createPingHandler(ctx: SourceFactoryContext): PingHandler {
 }
 
 /**
+ * Create a {@link ServiceEndpoints} with per-entry endpoint overrides applied.
+ * Returns the original endpoints if no overrides are specified.
+ */
+function resolveEndpoints(ctx: SourceFactoryContext, endpoints?: EndpointConfig): ServiceEndpoints {
+  if (!endpoints?.pollingBaseUri && !endpoints?.streamingBaseUri) {
+    return ctx.serviceEndpoints;
+  }
+  return new ServiceEndpoints(
+    endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
+    endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
+    ctx.serviceEndpoints.events,
+    ctx.serviceEndpoints.analyticsEventPath,
+    ctx.serviceEndpoints.diagnosticEventPath,
+    ctx.serviceEndpoints.includeAuthorizationHeader,
+    ctx.serviceEndpoints.payloadFilterKey,
+  );
+}
+
+/**
+ * Get the FDv2 requestor for a polling entry. If the entry has custom
+ * endpoints, creates a new requestor targeting those endpoints. Otherwise
+ * returns the shared requestor from the context.
+ */
+function resolvePollingRequestor(
+  ctx: SourceFactoryContext,
+  endpoints?: EndpointConfig,
+): FDv2Requestor {
+  if (!endpoints?.pollingBaseUri) {
+    return ctx.requestor;
+  }
+  const overriddenEndpoints = resolveEndpoints(ctx, endpoints);
+  return makeFDv2Requestor(
+    ctx.plainContextString,
+    overriddenEndpoints,
+    ctx.pollingPaths,
+    ctx.requests,
+    ctx.encoding,
+    ctx.baseHeaders,
+    ctx.queryParams,
+  );
+}
+
+/**
  * Creates a {@link SourceFactoryProvider} that handles `cache`, `polling`,
  * and `streaming` data source entries.
  */
@@ -106,16 +151,19 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
       ctx: SourceFactoryContext,
     ): InitializerFactory | undefined {
       switch (entry.type) {
-        case 'polling':
+        case 'polling': {
+          const requestor = resolvePollingRequestor(ctx, entry.endpoints);
           return (sg: () => string | undefined) =>
-            createPollingInitializer(ctx.requestor, ctx.logger, sg);
+            createPollingInitializer(requestor, ctx.logger, sg);
+        }
 
-        case 'streaming':
+        case 'streaming': {
+          const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
           return (sg: () => string | undefined) => {
             const streamUriPath = ctx.streamingPaths.pathGet(ctx.encoding, ctx.plainContextString);
             const base = createStreamingBase({
               requests: ctx.requests,
-              serviceEndpoints: ctx.serviceEndpoints,
+              serviceEndpoints: entryEndpoints,
               streamUriPath,
               parameters: ctx.queryParams,
               selectorGetter: sg,
@@ -127,6 +175,7 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
             });
             return createStreamingInitializer(base);
           };
+        }
 
         case 'cache':
           return createCacheInitializerFactory({
@@ -149,17 +198,19 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
       switch (entry.type) {
         case 'polling': {
           const intervalMs = (entry.pollInterval ?? ctx.pollInterval) * 1000;
+          const requestor = resolvePollingRequestor(ctx, entry.endpoints);
           const factory = (sg: () => string | undefined) =>
-            createPollingSynchronizer(ctx.requestor, ctx.logger, sg, intervalMs);
+            createPollingSynchronizer(requestor, ctx.logger, sg, intervalMs);
           return createSynchronizerSlot(factory);
         }
 
         case 'streaming': {
+          const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
           const factory = (sg: () => string | undefined) => {
             const streamUriPath = ctx.streamingPaths.pathGet(ctx.encoding, ctx.plainContextString);
             const base = createStreamingBase({
               requests: ctx.requests,
-              serviceEndpoints: ctx.serviceEndpoints,
+              serviceEndpoints: entryEndpoints,
               streamUriPath,
               parameters: ctx.queryParams,
               selectorGetter: sg,

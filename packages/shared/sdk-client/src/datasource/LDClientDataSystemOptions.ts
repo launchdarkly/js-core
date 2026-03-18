@@ -2,7 +2,7 @@ import { TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type { PlatformDataSystemDefaults } from '../api/datasource';
 import { anyOf, validatorOf } from '../configuration/validateOptions';
-import { connectionModeValidator } from './ConnectionModeConfig';
+import { connectionModesValidator, connectionModeValidator } from './ConnectionModeConfig';
 
 const modeSwitchingValidators = {
   lifecycle: TypeValidators.Boolean,
@@ -13,6 +13,7 @@ const dataSystemValidators = {
   initialConnectionMode: connectionModeValidator,
   backgroundConnectionMode: connectionModeValidator,
   automaticModeSwitching: anyOf(TypeValidators.Boolean, validatorOf(modeSwitchingValidators)),
+  connectionModes: connectionModesValidator,
 };
 
 /**

@@ -135,6 +135,11 @@ export function createFDv2DataManagerBase(
   const statusManager: DataSourceStatusManager = createDataSourceStatusManager(emitter);
   const endpoints = fdv2Endpoints();
 
+  // Merge user-provided connection mode overrides into the mode table.
+  const effectiveModeTable: ModeTable = config.dataSystem?.connectionModes
+    ? { ...modeTable, ...config.dataSystem.connectionModes }
+    : modeTable;
+
   // --- Mutable state ---
   let selector: string | undefined;
   let currentResolvedMode: FDv2ConnectionMode = initialForegroundMode;
@@ -165,7 +170,7 @@ export function createFDv2DataManagerBase(
   // --- Helpers ---
 
   function getModeDefinition(mode: FDv2ConnectionMode): ModeDefinition {
-    return modeTable[mode];
+    return effectiveModeTable[mode];
   }
 
   function buildModeState(): ModeState {
@@ -470,6 +475,7 @@ export function createFDv2DataManagerBase(
         requests: platform.requests,
         encoding: platform.encoding!,
         serviceEndpoints: config.serviceEndpoints,
+        pollingPaths: pollingEndpoints,
         streamingPaths: streamingEndpoints,
         baseHeaders,
         queryParams,

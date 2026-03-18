@@ -30,6 +30,10 @@ function text(s: string): Text {
   return document.createTextNode(s);
 }
 
+function formatContext(ctx: (typeof contexts)[0]): string {
+  return `${ctx.kind}:${ctx.key} (${ctx.name})`;
+}
+
 function buildUI() {
   const container = el('div', { id: 'app' });
 
@@ -103,10 +107,6 @@ function buildUI() {
 
   container.appendChild(controls);
   document.body.appendChild(container);
-}
-
-function formatContext(ctx: (typeof contexts)[0]): string {
-  return `${ctx.kind}:${ctx.key} (${ctx.name})`;
 }
 
 function log(msg: string) {

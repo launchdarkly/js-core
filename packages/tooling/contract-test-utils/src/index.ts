@@ -15,6 +15,11 @@ export {
   type SDKConfigHooksParams,
   type SDKConfigProxyParams,
   type SDKConfigWrapper,
+  type SDKConfigDataSystem,
+  type SDKConfigConnectionModeConfig,
+  type SDKConfigModeDefinition,
+  type SDKConfigDataInitializer,
+  type SDKConfigDataSynchronizer,
 } from './types/ConfigParams';
 export { makeLogger } from './logging/makeLogger';
 export { ClientPool } from './server-side/ClientPool';
