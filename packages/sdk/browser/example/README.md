@@ -18,11 +18,11 @@ Nodejs 20.6.0 or later
 
 2. Set the variables in `.env` to your specific LD values
     ```
-    # Set LD_CLIENT_SIDE_ID to your LaunchDarkly client-side ID
-    LD_CLIENT_SIDE_ID=
+    # Set LAUNCHDARKLY_CLIENT_SIDE_ID to your LaunchDarkly client-side ID
+    LAUNCHDARKLY_CLIENT_SIDE_ID=
 
-    # Set LD_FLAG_KEY to the feature flag key you want to evaluate
-    LD_FLAG_KEY=
+    # Set LAUNCHDARKLY_FLAG_KEY to the feature flag key you want to evaluate
+    LAUNCHDARKLY_FLAG_KEY=
     ```
     > [!NOTE]
     > Setting these values is equivilent to modifying the `clientSideID` and `flagKey`

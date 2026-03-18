@@ -28,6 +28,8 @@ jobs:
           workspace_path: packages/sdk/shopify-oxygen
       - name: Install contract test service dependencies
         run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests install --no-immutable
+      - name: Build shared contract test utils
+        run: yarn workspace @launchdarkly/js-contract-test-utils build:server
       - name: Build the test service
         run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests build
       - name: Launch the test service in the background

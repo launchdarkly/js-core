@@ -1,4 +1,4 @@
-import { LDContext, LDEvaluationReason } from '@launchdarkly/js-client-sdk-common';
+import { LDContext, LDEvaluationReason } from './compat.js';
 
 export const CommandType = {
   EvaluateFlag: 'evaluate',
@@ -11,6 +11,12 @@ export const CommandType = {
   ContextConvert: 'contextConvert',
   ContextComparison: 'contextComparison',
   SecureModeHash: 'secureModeHash',
+  // Server-specific commands
+  GetBigSegmentStoreStatus: 'getBigSegmentStoreStatus',
+  MigrationVariation: 'migrationVariation',
+  MigrationOperation: 'migrationOperation',
+  RegisterFlagChangeListener: 'registerFlagChangeListener',
+  UnregisterListener: 'unregisterListener',
 } as const;
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export type CommandType = (typeof CommandType)[keyof typeof CommandType];
@@ -35,6 +41,11 @@ export interface CommandParams {
   contextConvert?: ContextConvertParams;
   contextComparison?: ContextComparisonPairParams;
   secureModeHash?: SecureModeHashParams;
+  // Server-specific command fields
+  migrationVariation?: MigrationVariationParams;
+  migrationOperation?: MigrationOperationParams;
+  registerFlagChangeListener?: RegisterFlagChangeListenerParams;
+  unregisterListener?: UnregisterListenerParams;
 }
 
 export interface EvaluateFlagParams {
@@ -160,4 +171,46 @@ export interface HookExecutionPayload {
   evaluationSeriesData?: Record<string, unknown>;
   evaluationDetail?: EvaluateFlagResponse;
   stage?: HookStage;
+}
+
+export interface HookData {
+  beforeEvaluation?: Record<string, unknown>;
+  afterEvaluation?: Record<string, unknown>;
+}
+
+export interface HookErrors {
+  beforeEvaluation?: string;
+  afterEvaluation?: string;
+  afterTrack?: string; // client-only; server ignores this field
+}
+
+// Server-specific command parameter types
+
+export interface MigrationVariationParams {
+  key: string;
+  context: LDContext;
+  defaultStage: string;
+}
+
+export interface MigrationOperationParams {
+  operation: string;
+  key: string;
+  context: LDContext;
+  defaultStage: string;
+  payload: any;
+  readExecutionOrder: string;
+  trackLatency?: boolean;
+  trackErrors?: boolean;
+  trackConsistency?: boolean;
+  newEndpoint: string;
+  oldEndpoint: string;
+}
+
+export interface RegisterFlagChangeListenerParams {
+  listenerId: string;
+  callbackUri: string;
+}
+
+export interface UnregisterListenerParams {
+  listenerId: string;
 }

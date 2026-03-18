@@ -3,36 +3,69 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./client": {
-      "types": "./src/client.ts",
-      "import": "./src/client.ts",
-      "default": "./src/client.ts"
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
     }
   },
   "typesVersions": {
     "*": {
       "client": [
-        "./src/client.ts"
+        "./dist/client.d.ts"
+      ],
+      "server": [
+        "./dist/server.d.ts"
       ]
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json",
+    "build:client": "tsc -p tsconfig.client.json",
+    "build:server": "tsc -p tsconfig.server.json",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "yarn run lint --fix",
     "clean": "rimraf dist"
   },
-  "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^"
+  "peerDependencies": {
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@launchdarkly/js-client-sdk-common": {
+      "optional": true
+    },
+    "@launchdarkly/js-server-sdk-common": {
+      "optional": true
+    }
   },
   "devDependencies": {
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "@types/node": "^18.11.9",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.1.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
     "typescript": "^4.9.0"
   }
 }

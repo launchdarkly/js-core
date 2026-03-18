@@ -28,6 +28,7 @@ export default class FlagPersistence {
     private readonly _platform: Platform,
     private readonly _environmentNamespace: string,
     private readonly _maxCachedContexts: number,
+    private readonly _disableCache: boolean,
     private readonly _flagStore: FlagStore,
     private readonly _flagUpdater: FlagUpdater,
     private readonly _logger: LDLogger,
@@ -87,6 +88,9 @@ export default class FlagPersistence {
    * {@link FlagUpdater} this {@link FlagPersistence} was constructed with.
    */
   async loadCached(context: Context): Promise<boolean> {
+    if (this._disableCache || this._maxCachedContexts <= 0) {
+      return false;
+    }
     if (!this._platform.storage) {
       return false;
     }
@@ -161,6 +165,9 @@ export default class FlagPersistence {
   }
 
   private async _storeCache(context: Context): Promise<void> {
+    if (this._disableCache) {
+      return;
+    }
     const now = this._timeStamper();
     const index = await this._loadIndex();
     const storageKey = await namespaceForContextData(
@@ -168,9 +175,16 @@ export default class FlagPersistence {
       this._environmentNamespace,
       context,
     );
-    index.notice(storageKey, now);
+
+    if (this._maxCachedContexts > 0) {
+      index.notice(storageKey, now);
+    }
 
     const pruned = index.prune(this._maxCachedContexts);
+    // If maxCachedContexts <= 0, current context was never added, so always skip flag write
+    const currentContextWasPruned =
+      this._maxCachedContexts <= 0 || pruned.some((it) => it.id === storageKey);
+
     await Promise.all(
       pruned.flatMap((it) => [
         this._platform.storage?.clear(it.id),
@@ -178,8 +192,12 @@ export default class FlagPersistence {
       ]),
     );
 
-    // store index
     await this._platform.storage?.set(await this._indexKeyPromise, index.toJson());
+
+    if (currentContextWasPruned) {
+      return;
+    }
+
     const allFlags = this._flagStore.getAll();
 
     // mapping item descriptors to flags

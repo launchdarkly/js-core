@@ -38,7 +38,7 @@
       }
     },
     "browser": {
-      "name": "JavaScript Browser SDK",
+      "name": "JavaScript Client SDK",
       "type": "client-side",
       "path": "packages/sdk/browser",
       "languages": ["JavaScript", "TypeScript"],
@@ -56,6 +56,7 @@
         "flagChanges": { "introduced": "0.1" },
         "hooks": { "introduced": "0.3" },
         "inlineContextCustomEvents": { "introduced": "0.3" },
+        "perContextSummaryEvents": { "introduced": "0.7" },
         "pluginSupport": { "introduced": "0.4" },
         "privateAttrs": { "introduced": "0.1" },
         "relayProxyProxy": { "introduced": "0.1" },
@@ -80,33 +81,6 @@
         "migrations": { "introduced": "2.2.2" },
         "secureMode": { "introduced": "2.0" },
         "track": { "introduced": "2.3" }
-      }
-    },
-    "combined-browser": {
-      "name": "Combined JavaScript Browser SDK",
-      "type": "client-side",
-      "path": "packages/sdk/combined-browser",
-      "languages": ["JavaScript", "TypeScript"],
-      "releases": {
-        "tag-prefix": "browser-"
-      },
-      "userAgents": ["JSClient"],
-      "features": {
-        "allFlags": { "introduced": "0.1" },
-        "appMetadata": { "introduced": "0.1" },
-        "bigSegments": { "introduced": "0.1" },
-        "bootstrapping": { "introduced": "0.1" },
-        "contexts": { "introduced": "0.1" },
-        "experimentation": { "introduced": "0.1" },
-        "flagChanges": { "introduced": "0.1" },
-        "hooks": { "introduced": "0.1" },
-        "inlineContextCustomEvents": { "introduced": "0.1" },
-        "pluginSupport": { "introduced": "0.1" },
-        "privateAttrs": { "introduced": "0.1" },
-        "relayProxyProxy": { "introduced": "0.1" },
-        "secureMode": { "introduced": "0.1" },
-        "track": { "introduced": "0.1" },
-        "variationDetail": { "introduced": "0.1" }
       }
     },
     "fastly": {
@@ -148,6 +122,7 @@
         "hooks": { "introduced": "10.0" },
         "multiEnv": { "introduced": "4.2.0" },
         "offlineMode": { "introduced": "1.0" },
+        "perContextSummaryEvents": { "introduced": "10.10.1" },
         "pluginSupport": { "introduced": "10.10" },
         "privateAttrs": { "introduced": "4.0" },
         "relayProxyProxy": { "introduced": "1.0" },
@@ -180,10 +155,12 @@
         "offlineMode": { "introduced": "1.0" },
         "otel": { "introduced": "9.3" },
         "pluginSupport": { "introduced": "9.10" },
+        "pollingResponseCompression": { "introduced": "9.2" },
         "privateAttrs": { "introduced": "3.3" },
         "relayProxyDaemon": { "introduced": "1.0" },
         "relayProxyProxy": { "introduced": "1.0" },
         "secureMode": { "introduced": "3.0" },
+        "storingDataDynamodb": { "introduced": "5.6" },
         "storingDataRedis": { "introduced": "2.0" },
         "testDataSource": { "introduced": "6.3" },
         "track": { "introduced": "1.0" },
@@ -191,15 +168,15 @@
         "webProxy": { "introduced": "1.0" }
       }
     },
-    "react-universal": {
-      "name": "React Universal SDK",
+    "react": {
+      "name": "React SDK",
       "type": "client-side",
-      "path": "packages/sdk/react-universal",
+      "path": "packages/sdk/react",
       "languages": ["JavaScript", "TypeScript"],
       "releases": {
-        "tag-prefix": "react-universal-sdk-"
+        "tag-prefix": "react-sdk-"
       },
-      "userAgents": ["ReactUniversalClient"],
+      "wrapperNames": ["react-client-sdk"],
       "features": {
         "contexts": { "introduced": "0.0.1" }
       }
@@ -214,7 +191,9 @@
       },
       "userAgents": ["NodeJSAIClient"],
       "features": {
+        "aiAgentConfig": { "introduced": "0.11" },
         "aiCompletionConfig": { "introduced": "0.1" },
+        "aiJudgeConfig": { "introduced": "0.14" },
         "aiTrackMetrics": { "introduced": "0.1" },
         "contexts": { "introduced": "0.1" },
         "experimentation": { "introduced": "0.1" },

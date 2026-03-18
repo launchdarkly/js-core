@@ -1,5 +1,9 @@
-import got from 'got';
-
+import {
+  CommandParams,
+  CreateInstanceParams,
+  ServerSDKConfigParams,
+  ServerSideTestHook as TestHook,
+} from '@launchdarkly/js-contract-test-utils/server';
 import ld, {
   createMigration,
   DataSourceOptions,
@@ -7,7 +11,6 @@ import ld, {
   LDConcurrentExecution,
   LDContext,
   LDExecutionOrdering,
-  LDFlagValue,
   LDMigrationError,
   LDMigrationStage,
   LDMigrationSuccess,
@@ -20,136 +23,11 @@ import ld, {
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
-import TestHook from './TestHook.js';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-interface SdkConfigOptions {
-  streaming?: {
-    baseUri: string;
-    initialRetryDelayMs?: number;
-    filter?: string;
-  };
-  polling?: {
-    baseUri: string;
-    pollIntervalMs: number;
-    filter?: string;
-  };
-  dataSystem?: {
-    initializers?: SDKDataSystemInitializerParams[];
-    synchronizers?: SDKDataSystemSynchronizerParams[];
-    payloadFilter?: string;
-  };
-  events?: {
-    allAttributesPrivate?: boolean;
-    baseUri: string;
-    capacity?: number;
-    enableDiagnostics?: boolean;
-    flushIntervalMs?: number;
-    globalPrivateAttributes?: string[];
-    enableGzip?: boolean;
-  };
-  tags?: {
-    applicationId: string;
-    applicationVersion: string;
-  };
-  bigSegments?: {
-    callbackUri: string;
-    userCacheSize?: number;
-    userCacheTimeMs?: number;
-    statusPollIntervalMs?: number;
-    staleAfterMs?: number;
-  };
-  hooks?: {
-    hooks: {
-      name: string;
-      callbackUri: string;
-      data: any;
-      errors: any;
-    }[];
-  };
-  wrapper?: {
-    name?: string;
-    version?: string;
-  };
-}
-
-export interface SDKDataSystemSynchronizerParams {
-  streaming?: SDKDataSourceStreamingParams;
-  polling?: SDKDataSourcePollingParams;
-}
-
-export interface SDKDataSystemInitializerParams {
-  polling?: SDKDataSourcePollingParams;
-}
-
-export interface SDKDataSourceStreamingParams {
-  baseUri?: string;
-  initialRetryDelayMs?: number;
-}
-
-export interface SDKDataSourcePollingParams {
-  baseUri?: string;
-  pollIntervalMs?: number;
-}
-
-interface CommandParams {
-  command: string;
-  evaluate?: {
-    flagKey: string;
-    context?: LDContext;
-    user?: LDUser;
-    defaultValue: LDFlagValue;
-    detail?: boolean;
-    valueType?: string;
-  };
-  evaluateAll?: {
-    context?: LDContext;
-    user?: LDUser;
-    clientSideOnly?: boolean;
-    detailsOnlyForTrackedFlags?: boolean;
-    withReasons?: boolean;
-  };
-  identifyEvent?: {
-    context?: LDContext;
-    user?: LDUser;
-  };
-  customEvent?: {
-    eventKey: string;
-    context?: LDContext;
-    user?: LDUser;
-    data?: any;
-    metricValue?: number;
-  };
-  migrationVariation?: {
-    key: string;
-    context: LDContext;
-    defaultStage: LDMigrationStage;
-  };
-  migrationOperation?: {
-    operation: string;
-    key: string;
-    context: LDContext;
-    defaultStage: LDMigrationStage;
-    payload: any;
-    readExecutionOrder: string;
-    trackLatency?: boolean;
-    trackErrors?: boolean;
-    trackConsistency?: boolean;
-    newEndpoint: string;
-    oldEndpoint: string;
-  };
-  registerFlagChangeListener?: {
-    listenerId: string;
-    callbackUri: string;
-  };
-  unregisterListener?: {
-    listenerId: string;
-  };
-}
-
-export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions {
+export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
@@ -169,7 +47,7 @@ export function makeSdkConfig(options: SdkConfigOptions, tag: string): LDOptions
   if (options.polling) {
     cf.stream = false;
     cf.baseUri = options.polling.baseUri;
-    cf.pollInterval = options.polling.pollIntervalMs / 1000;
+    cf.pollInterval = maybeTime(options.polling.pollIntervalMs);
     if (options.polling.filter) {
       cf.payloadFilterKey = options.polling.filter;
     }
@@ -304,18 +182,22 @@ function getExecution(order: string) {
   }
 }
 
-function makeMigrationPostOptions(payload: any) {
+function makeMigrationPostOptions(payload: any): RequestInit {
   if (payload) {
-    return { body: payload };
+    return { method: 'POST', body: payload };
   }
-  return {};
+  return { method: 'POST' };
 }
 
 function contextOrUser(
-  context: LDContext | undefined,
+  context: Record<string, any> | undefined,
   user: LDUser | undefined,
 ): LDContext | LDUser {
-  return (context || user)!;
+  const result = (context as LDContext | undefined) ?? user;
+  if (!result) {
+    throw new Error('Neither context nor user provided');
+  }
+  return result;
 }
 
 export interface SdkClientEntity {
@@ -328,7 +210,7 @@ interface ListenerEntry {
   handler: (...args: any[]) => void;
 }
 
-export async function newSdkClientEntity(options: any): Promise<SdkClientEntity> {
+export async function newSdkClientEntity(options: CreateInstanceParams): Promise<SdkClientEntity> {
   const c: any = {};
   const log = Log(options.tag);
   const listeners = new Map<string, ListenerEntry>();
@@ -341,7 +223,7 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
       : 5000;
   const client: LDClient = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
-    makeSdkConfig(options.configuration, options.tag),
+    makeSdkConfig(options.configuration as ServerSDKConfigParams, options.tag),
   );
   try {
     await client.waitForInitialization({ timeout });
@@ -372,12 +254,12 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
         if (pe.detail) {
           switch (pe.valueType) {
             case 'bool':
-              return client.boolVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.boolVariationDetail(pe.flagKey, context, pe.defaultValue as boolean);
             case 'int': // Intentional fallthrough.
             case 'double':
-              return client.numberVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.numberVariationDetail(pe.flagKey, context, pe.defaultValue as number);
             case 'string':
-              return client.stringVariationDetail(pe.flagKey, context, pe.defaultValue);
+              return client.stringVariationDetail(pe.flagKey, context, pe.defaultValue as string);
             default:
               return client.variationDetail(
                 pe.flagKey,
@@ -389,16 +271,16 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
           switch (pe.valueType) {
             case 'bool':
               return {
-                value: await client.boolVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.boolVariation(pe.flagKey, context, pe.defaultValue as boolean),
               };
             case 'int': // Intentional fallthrough.
             case 'double':
               return {
-                value: await client.numberVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.numberVariation(pe.flagKey, context, pe.defaultValue as number),
               };
             case 'string':
               return {
-                value: await client.stringVariation(pe.flagKey, context, pe.defaultValue),
+                value: await client.stringVariation(pe.flagKey, context, pe.defaultValue as string),
               };
             default:
               return {
@@ -419,7 +301,9 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
       }
 
       case 'identifyEvent':
-        client.identify(params.identifyEvent!.context || params.identifyEvent!.user!);
+        client.identify(
+          (params.identifyEvent!.context as LDContext) || params.identifyEvent!.user!,
+        );
         return undefined;
 
       case 'customEvent': {
@@ -439,8 +323,8 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
         const migrationVariation = params.migrationVariation!;
         const res = await client.migrationVariation(
           migrationVariation.key,
-          migrationVariation.context,
-          migrationVariation.defaultStage,
+          migrationVariation.context as LDContext,
+          migrationVariation.defaultStage as LDMigrationStage,
         );
         return { result: res.value };
       }
@@ -456,44 +340,56 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
           check: migrationOperation.trackConsistency ? (a, b) => a === b : undefined,
           readNew: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.newEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           writeNew: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.newEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           readOld: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.oldEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
           },
           writeOld: async (payload) => {
             try {
-              const res = await got.post(
+              const res = await fetch(
                 migrationOperation.oldEndpoint,
                 makeMigrationPostOptions(payload),
               );
-              return LDMigrationSuccess(res.body);
+              if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+              }
+              return LDMigrationSuccess(await res.text());
             } catch (err: any) {
               return LDMigrationError(err.message);
             }
@@ -504,8 +400,8 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
           case 'read': {
             const res = await migration.read(
               migrationOperation.key,
-              migrationOperation.context,
-              migrationOperation.defaultStage,
+              migrationOperation.context as LDContext,
+              migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
             if (res.success) {
@@ -516,8 +412,8 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
           case 'write': {
             const res = await migration.write(
               migrationOperation.key,
-              migrationOperation.context,
-              migrationOperation.defaultStage,
+              migrationOperation.context as LDContext,
+              migrationOperation.defaultStage as LDMigrationStage,
               migrationOperation.payload,
             );
 
@@ -537,14 +433,11 @@ export async function newSdkClientEntity(options: any): Promise<SdkClientEntity>
         const eventName = 'update';
 
         const handler = (eventParams: { key: string }) => {
-          got
-            .post(p.callbackUri, {
-              json: {
-                listenerId: p.listenerId,
-                flagKey: eventParams.key,
-              },
-            })
-            .catch(() => {});
+          fetch(p.callbackUri, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listenerId: p.listenerId, flagKey: eventParams.key }),
+          }).catch(() => {});
         };
 
         const existing = listeners.get(p.listenerId);
