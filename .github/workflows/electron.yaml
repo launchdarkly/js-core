@@ -85,11 +85,11 @@ jobs:
         with:
           workspace_name: '@internal/electron-example'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          fetch_mobile_key: 'true'
+          env_vars: |
+            DISPLAY=:99
+            ELECTRON_DISABLE_SANDBOX=1
           before_test: |
             sudo apt-get install -y xvfb
             Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
-            echo "DISPLAY=:99" >> $GITHUB_ENV
-            echo "ELECTRON_DISABLE_SANDBOX=1" >> $GITHUB_ENV
             yarn workspace @internal/electron-example playwright install --with-deps chromium
             yarn workspace @internal/electron-example start -- --build
