@@ -116,7 +116,13 @@ app.delete('/clients/:id', async (req: Request, res: Response) => {
     res.send();
   } else {
     client.close();
-    clients.remove(req.params.id);
+    // Delay removal from the pool to mitigate a race condition in the test harness
+    // where goroutines spawned by assert.Never may outlive a test and send requests
+    // to a client that has already been deleted. The closed client can still serve
+    // requests since InMemoryFeatureStore.close() is a no-op.
+    setTimeout(() => {
+      clients.remove(req.params.id);
+    }, 1000);
     res.status(204);
     res.send();
   }
