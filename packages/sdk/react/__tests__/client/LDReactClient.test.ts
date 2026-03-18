@@ -76,25 +76,12 @@ jest.mock('@launchdarkly/js-client-sdk', () => {
   };
 });
 
-it('returns getInitializationState() === "unknown" initially', () => {
+it('returns getInitializationState() === "initializing" initially', () => {
   const { mock } = makeMockBaseClient();
   (createBaseClient as jest.Mock).mockReturnValue(mock);
 
   const client = createClient('test-id', { kind: 'user', key: 'u1' });
-  expect(client.getInitializationState()).toBe('unknown');
-});
-
-it('returns "initializing" while start() is in-flight', async () => {
-  const { mock, resolveStart } = makeMockBaseClient();
-  (createBaseClient as jest.Mock).mockReturnValue(mock);
-
-  const client = createClient('test-id', { kind: 'user', key: 'u1' });
-  const startPromise = client.start();
   expect(client.getInitializationState()).toBe('initializing');
-
-  resolveStart('complete');
-  await startPromise;
-  expect(client.getInitializationState()).toBe('complete');
 });
 
 it('sets initializedState to "complete" after start() resolves', async () => {
@@ -107,6 +94,45 @@ it('sets initializedState to "complete" after start() resolves', async () => {
   await startPromise;
 
   expect(client.getInitializationState()).toBe('complete');
+});
+
+it('start() fires onContextChange subscribers with the new context', async () => {
+  const ctx: LDContextStrict = { kind: 'user', key: 'u1' };
+  const { mock, resolveStart, setContext } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const received: LDContextStrict[] = [];
+  client.onContextChange((c) => received.push(c));
+
+  const startPromise = client.start();
+  setContext(ctx);
+  resolveStart('complete');
+  await startPromise;
+
+  expect(received).toHaveLength(1);
+  expect(received[0]).toEqual(ctx);
+});
+
+it('start() only notifies context subscribers once even if called multiple times', async () => {
+  const ctx: LDContextStrict = { kind: 'user', key: 'u1' };
+  const { mock, resolveStart, setContext } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+
+  const client = createClient('test-id', { kind: 'user', key: 'u1' });
+  const received: LDContextStrict[] = [];
+  client.onContextChange((c) => received.push(c));
+
+  setContext(ctx);
+  const startPromise1 = client.start();
+  resolveStart('complete');
+  await startPromise1;
+
+  // Second call should not notify again
+  const startPromise2 = client.start();
+  await startPromise2;
+
+  expect(received).toHaveLength(1);
 });
 
 it('invokes onContextChange callback after identify() resolves with the new context', async () => {

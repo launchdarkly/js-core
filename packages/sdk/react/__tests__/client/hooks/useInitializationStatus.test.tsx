@@ -23,18 +23,6 @@ function StatusConsumer({ onStatus }: { onStatus: (s: InitializationStatus) => v
   return null;
 }
 
-it('returns { status: "unknown" } when initializedState is "unknown"', () => {
-  const captured: InitializationStatus[] = [];
-
-  render(
-    <LDReactContext.Provider value={makeContextValue('unknown')}>
-      <StatusConsumer onStatus={(s) => captured.push(s)} />
-    </LDReactContext.Provider>,
-  );
-
-  expect(captured[0]).toEqual({ status: 'unknown' });
-});
-
 it('returns { status: "initializing" } when initializedState is "initializing"', () => {
   const captured: InitializationStatus[] = [];
 

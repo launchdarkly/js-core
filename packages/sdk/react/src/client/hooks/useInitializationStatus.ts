@@ -9,7 +9,6 @@ import { LDReactContext } from '../provider/LDReactContext';
  * Represents the current initialization state of the LaunchDarkly client.
  */
 export type InitializationStatus =
-  | { status: 'unknown' }
   | { status: 'initializing' }
   | { status: 'complete' }
   | { status: 'timeout' }

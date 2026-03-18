@@ -80,7 +80,7 @@ it('updates initializedState and context when onInitializationStatusChange fires
     </Provider>,
   );
 
-  expect(contextValues[contextValues.length - 1]?.initializedState).toBe('unknown');
+  expect(contextValues[contextValues.length - 1]?.initializedState).toBe('initializing');
 
   await act(async () => {
     client.fireInitStatusChange('complete');

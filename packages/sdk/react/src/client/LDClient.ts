@@ -10,7 +10,7 @@ import {
  * Initialization state of the client. This type should be consistent with
  * the `status` field of the `LDWaitForInitializationResult` type.
  */
-export type InitializedState = LDWaitForInitializationResult['status'] | 'initializing' | 'unknown';
+export type InitializedState = LDWaitForInitializationResult['status'] | 'initializing';
 
 /**
  * The LaunchDarkly client interface for React.
