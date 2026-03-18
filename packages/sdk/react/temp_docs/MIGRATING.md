@@ -179,6 +179,36 @@ state when initialization completes or when `client.identify()` is called.
 
 ---
 
+## Bootstrap
+
+### Old SDK
+
+Bootstrap data was passed nested inside `options`:
+
+```tsx
+// HOC
+withLDProvider({ clientSideID: 'your-id', options: { bootstrap: myData } })(App);
+
+// Async HOC
+const LDProvider = await asyncWithLDProvider({ clientSideID: 'your-id', options: { bootstrap: myData } });
+```
+
+### New SDK
+
+Bootstrap is a first-class option on `createLDReactProvider`:
+
+```tsx
+import { createLDReactProvider } from '@launchdarkly/react-sdk';
+
+const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', key: 'user-key' }, {
+  bootstrap: myData,
+});
+```
+
+The `bootstrap` data format is unchanged from the old SDK. You can pass either a plain key-value
+object (`{ 'my-flag': true }`) or the output of `allFlagsState().toJSON()`, which includes
+`$flagsState` and `$valid` metadata.
+
 ## Removed APIs
 
 | Old API | Status | Replacement |
