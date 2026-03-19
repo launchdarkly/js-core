@@ -3,6 +3,7 @@ import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 import DefaultFlagManager from '../../src/flag-manager/FlagManager';
 import { FlagsChangeCallback } from '../../src/flag-manager/FlagUpdater';
 import {
+  makeIncrementingStamper,
   makeMemoryStorage,
   makeMockCrypto,
   makeMockItemDescriptor,
@@ -175,5 +176,69 @@ describe('FlagManager override tests', () => {
     expect(allFlags['store-flag'].flag.value).toBe('store-value');
     expect(allFlags['shared-flag'].flag.value).toBe('override-value');
     expect(allFlags['override-only-flag'].flag.value).toBe('override-value');
+  });
+});
+
+describe('given a flag manager with storage', () => {
+  let flagManager: DefaultFlagManager;
+  let mockPlatform: Platform;
+  let mockLogger: LDLogger;
+  let storage: ReturnType<typeof makeMemoryStorage>;
+
+  beforeEach(() => {
+    mockLogger = makeMockLogger();
+    storage = makeMemoryStorage();
+    mockPlatform = makeMockPlatform(storage, makeMockCrypto());
+    flagManager = new DefaultFlagManager(
+      mockPlatform,
+      TEST_SDK_KEY,
+      TEST_MAX_CACHED_CONTEXTS,
+      false,
+      mockLogger,
+      makeIncrementingStamper(),
+    );
+  });
+
+  it('replaces all flags when applyChanges is called with type full', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.init(context, {
+      existing: makeMockItemDescriptor(1, 'old'),
+    });
+
+    await flagManager.applyChanges(
+      context,
+      { 'new-flag': makeMockItemDescriptor(2, 'new') },
+      'full',
+    );
+
+    // type=full replaces, so existing flag should be gone.
+    expect(flagManager.get('existing')).toBeUndefined();
+    expect(flagManager.get('new-flag')?.flag.value).toBe('new');
+  });
+
+  it('upserts individual flags when applyChanges is called with type partial', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.init(context, {
+      existing: makeMockItemDescriptor(1, 'old'),
+    });
+
+    await flagManager.applyChanges(context, { added: makeMockItemDescriptor(2, 'new') }, 'partial');
+
+    // type=partial upserts, so existing flag should remain.
+    expect(flagManager.get('existing')?.flag.value).toBe('old');
+    expect(flagManager.get('added')?.flag.value).toBe('new');
+  });
+
+  it('persists cache when applyChanges is called with type none', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.init(context, {
+      flag1: makeMockItemDescriptor(1, 'value'),
+    });
+
+    // applyChanges with type none should still persist (updating freshness).
+    await flagManager.applyChanges(context, {}, 'none');
+
+    // Flag should still be present (no changes).
+    expect(flagManager.get('flag1')?.flag.value).toBe('value');
   });
 });

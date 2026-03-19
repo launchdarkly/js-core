@@ -1,4 +1,4 @@
-import { Context, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDFlagValue, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { namespaceForEnvironment } from '../storage/namespaceUtils';
 import FlagPersistence from './FlagPersistence';
@@ -54,6 +54,21 @@ export interface FlagManager {
    * storage.
    */
   setBootstrap(context: Context, newFlags: { [key: string]: ItemDescriptor }): void;
+
+  /**
+   * Applies a changeset to the flag store.
+   * - `'full'`: replaces all flags (like {@link init}).
+   * - `'partial'`: upserts individual flags (like calling {@link upsert} for each entry).
+   * - `'none'`: persists cache (updating freshness) without changing any flags.
+   *
+   * Designed for the FDv2 data path where init/upsert semantics, selector
+   * tracking, and freshness updates are all handled in one call.
+   */
+  applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    type: internal.PayloadType,
+  ): Promise<void>;
 
   /**
    * Register a flag change callback.
@@ -215,6 +230,14 @@ export default class DefaultFlagManager implements FlagManager {
 
   async loadCached(context: Context): Promise<boolean> {
     return (await this._flagPersistencePromise).loadCached(context);
+  }
+
+  async applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    type: internal.PayloadType,
+  ): Promise<void> {
+    return (await this._flagPersistencePromise).applyChanges(context, updates, type);
   }
 
   on(callback: FlagsChangeCallback): void {
