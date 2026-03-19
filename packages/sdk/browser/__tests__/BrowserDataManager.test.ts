@@ -396,6 +396,10 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     });
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
     expect(platform.requests.fetch).not.toHaveBeenCalled();
+    expect(emitter.emit).toHaveBeenCalledWith(
+      'dataSourceStatus',
+      expect.objectContaining({ state: 'VALID' }),
+    );
   });
 
   it('should identify from polling when there are no cached flags', async () => {
