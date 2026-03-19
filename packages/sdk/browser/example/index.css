@@ -1,6 +1,5 @@
 body {
   margin: 0;
-  padding: 20px;
   background: #373841;
   color: white;
   font-family:
@@ -8,62 +7,5 @@ body {
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-#status {
-  padding: 10px;
-  margin-bottom: 10px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-}
-
-#flag {
-  font-size: 1.4em;
-  padding: 15px;
-  margin-bottom: 20px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 4px;
-}
-
-#controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
-#controls > div {
-  padding: 10px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 4px;
-}
-
-#controls h3 {
-  margin: 0 0 8px 0;
-  font-size: 0.9em;
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-
-button {
-  padding: 6px 14px;
-  margin: 3px 2px;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 4px;
-  background: rgba(255,255,255,0.1);
-  color: white;
-  cursor: pointer;
-  font-size: 0.9em;
-}
-
-button:hover {
-  background: rgba(255,255,255,0.2);
-}
-
-#log {
-  max-height: 200px;
-  overflow-y: auto;
-  font-family: monospace;
-  font-size: 0.8em;
-  line-height: 1.5;
-  opacity: 0.8;
+  text-align: center;
 }
