@@ -10,9 +10,13 @@ import { LDReactContext } from './LDReactContext';
 /**
  * Creates a new LaunchDarkly React provider wrapping an existing client instance.
  *
- * The caller is responsible for calling `client.start()` before or after mounting —
- * this function does not auto-start the client. The provider subscribes to
- * `onInitializationStatusChange()` and `onContextChange()` to update React state.
+ * @remarks
+ * **NOTE:** We recommend using the convenience factory function {@link createLDReactProvider}
+ * instead of this function if you can.
+ *
+ * This factory function is provided to allow the caller to use an existing client
+ * instance. When using this function, the caller is responsible for calling `client.start()`
+ * before or after mounting.
  *
  * @example
  * ```tsx
