@@ -117,3 +117,10 @@ export {
   BROWSER_TRANSITION_TABLE,
   DESKTOP_TRANSITION_TABLE,
 } from './datasource/ModeResolver';
+
+// FDv2 source factory provider — converts declarative config to concrete factories.
+export type {
+  SourceFactoryContext,
+  SourceFactoryProvider,
+} from './datasource/SourceFactoryProvider';
+export { createDefaultSourceFactoryProvider } from './datasource/SourceFactoryProvider';
