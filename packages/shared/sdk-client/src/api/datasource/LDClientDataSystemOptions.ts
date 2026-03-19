@@ -1,4 +1,5 @@
 import FDv2ConnectionMode from './FDv2ConnectionMode';
+import { ModeDefinition } from './ModeDefinition';
 
 // When FDv2 becomes the default, this should be integrated into the
 // main LDOptions interface (api/LDOptions.ts).
@@ -48,8 +49,27 @@ export interface LDClientDataSystemOptions {
    */
   automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig;
 
-  // Req 5.3.5 TBD — custom named modes reserved for future use.
-  // customModes?: Record<string, { initializers: ..., synchronizers: ... }>;
+  /**
+   * Override the data source pipeline for specific connection modes.
+   *
+   * Each key is a connection mode name (`'streaming'`, `'polling'`, `'offline'`,
+   * `'one-shot'`, `'background'`). The value defines the initializers and
+   * synchronizers for that mode, replacing the built-in defaults.
+   *
+   * Only the modes you specify are overridden — unspecified modes retain
+   * their built-in definitions.
+   *
+   * @example
+   * ```
+   * connectionModes: {
+   *   streaming: {
+   *     initializers: [{ type: 'polling' }],
+   *     synchronizers: [{ type: 'streaming' }],
+   *   },
+   * }
+   * ```
+   */
+  connectionModes?: Partial<Record<FDv2ConnectionMode, ModeDefinition>>;
 }
 
 /**

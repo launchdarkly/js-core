@@ -81,6 +81,8 @@ export type {
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
+  InitializerEntry,
+  SynchronizerEntry,
   DataSourceEntry,
   ModeDefinition,
   LDClientDataSystemOptions,
@@ -94,6 +96,10 @@ export type {
   ModeResolutionTable,
 } from './api/datasource';
 
+// FDv2 data source status manager.
+export { createDataSourceStatusManager } from './datasource/DataSourceStatusManager';
+export type { DataSourceStatusManager } from './datasource/DataSourceStatusManager';
+
 // FDv2 data system validators and platform defaults.
 export {
   dataSystemValidators,
@@ -104,6 +110,7 @@ export {
 
 // FDv2 connection mode type system — internal implementation.
 export type { ModeTable } from './datasource/ConnectionModeConfig';
+export { MODE_TABLE } from './datasource/ConnectionModeConfig';
 export {
   resolveConnectionMode,
   MOBILE_TRANSITION_TABLE,

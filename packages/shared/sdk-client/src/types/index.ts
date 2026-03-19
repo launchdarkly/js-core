@@ -21,10 +21,10 @@ export type DeleteFlag = Pick<PatchFlag, 'key' | 'version'>;
 
 /**
  * Represents a pre-evaluated flag result for a specific context, as delivered
- * by the FDv2 protocol via `put-object` events with `kind: 'flag_eval'`.
+ * by the FDv2 protocol via `put-object` events with `kind: 'flag-eval'`.
  *
  * This is the shape of the `object` field in a `put-object` event with
- * `kind: 'flag_eval'`. It contains all the same fields as {@link Flag} except
+ * `kind: 'flag-eval'`. It contains all the same fields as {@link Flag} except
  * `version`, which is provided separately in the `put-object` envelope.
  *
  * There is no aggregate payload-level version field; per-flag versioning is

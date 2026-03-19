@@ -4,6 +4,8 @@ export type {
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
+  InitializerEntry,
+  SynchronizerEntry,
   DataSourceEntry,
 } from './DataSourceEntry';
 export type { ModeDefinition } from './ModeDefinition';
