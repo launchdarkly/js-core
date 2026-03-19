@@ -81,32 +81,15 @@ jobs:
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 24
-      - name: Install dependencies
-        run: yarn workspaces focus @internal/electron-example
-      - name: Build SDK dependencies
-        run: yarn workspaces foreach -pR --topological-dev --from '@internal/electron-example' run build
-      - name: Build example app
-        env:
-          ELECTRON_DISABLE_SANDBOX: '1'
-        run: yarn workspace @internal/electron-example build
-      - name: Setup Xvfb
-        run: |
-          sudo apt-get install -y xvfb
-          Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
-      - name: Install Playwright dependencies
-        run: yarn workspace @internal/electron-example playwright install --with-deps chromium
-      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c # release-secrets-v1.2.0
-        name: 'Get the mobile SDK key'
+      - uses: ./actions/run-example
         with:
+          workspace_name: '@internal/electron-example'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
-      - uses: launchdarkly/gh-actions/actions/release-secrets@bbbbbda684f500766264e7fe327668094ba83d1c # release-secrets-v1.2.0
-        name: 'Get the test feature flag key'
-        with:
-          aws_assume_role: ${{ vars.AWS_ROLE_ARN  }}
-          ssm_parameter_pairs: '/sdk/common/hello-apps/boolean-flag-key = LAUNCHDARKLY_FLAG_KEY'
-      - name: Run e2e tests
-        env:
-          ELECTRON_DISABLE_SANDBOX: '1'
-          DISPLAY: ':99'
-        run: yarn workspace @internal/electron-example test
+          env_vars: |
+            DISPLAY=:99
+            ELECTRON_DISABLE_SANDBOX=1
+          before_test: |
+            sudo apt-get install -y xvfb
+            Xvfb :99 -screen 0 1024x768x24 > /tmp/xvfb.log 2>&1 &
+            yarn workspace @internal/electron-example playwright install --with-deps chromium
+            yarn workspace @internal/electron-example start -- --build
