@@ -124,3 +124,20 @@ export type {
   SourceFactoryProvider,
 } from './datasource/SourceFactoryProvider';
 export { createDefaultSourceFactoryProvider } from './datasource/SourceFactoryProvider';
+
+// FDv2 shared data manager — mode switching, debouncing, and data source lifecycle.
+export type {
+  FDv2DataManagerBaseConfig,
+  FDv2DataManagerControl,
+} from './datasource/FDv2DataManagerBase';
+export { createFDv2DataManagerBase } from './datasource/FDv2DataManagerBase';
+
+// State debounce manager.
+export type {
+  StateDebounceManager,
+  StateDebounceManagerConfig,
+  NetworkState,
+  PendingState,
+  ReconciliationCallback,
+} from './datasource/StateDebounceManager';
+export { createStateDebounceManager } from './datasource/StateDebounceManager';
