@@ -34,7 +34,7 @@ jobs:
       - name: Install contract test dependencies
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
-        run: yarn workspaces focus browser-contract-test-adapter @launchdarkly/react-sdk-contract-tests
+        run: yarn workspaces focus @launchdarkly/react-sdk browser-contract-test-adapter @launchdarkly/react-sdk-contract-tests
 
       - name: Install Playwright browsers
         run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
