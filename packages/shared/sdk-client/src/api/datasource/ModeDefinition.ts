@@ -1,4 +1,4 @@
-import { DataSourceEntry } from './DataSourceEntry';
+import { InitializerEntry, SynchronizerEntry } from './DataSourceEntry';
 
 /**
  * Defines the data pipeline for a connection mode: which data sources
@@ -10,7 +10,7 @@ export interface ModeDefinition {
    * Sources are tried in order; the first that successfully provides a full
    * data set transitions the SDK out of the initialization phase.
    */
-  readonly initializers: ReadonlyArray<DataSourceEntry>;
+  readonly initializers: ReadonlyArray<InitializerEntry>;
 
   /**
    * Ordered list of data sources for ongoing synchronization after
@@ -18,5 +18,5 @@ export interface ModeDefinition {
    * failover to the next source if the primary fails.
    * An empty array means no synchronization occurs (e.g., offline, one-shot).
    */
-  readonly synchronizers: ReadonlyArray<DataSourceEntry>;
+  readonly synchronizers: ReadonlyArray<SynchronizerEntry>;
 }

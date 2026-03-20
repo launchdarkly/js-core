@@ -257,6 +257,44 @@ describe('given entries with invalid type field', () => {
   });
 });
 
+describe('given cache entries in synchronizers', () => {
+  it('discards a cache entry from synchronizers and warns', () => {
+    const result = validateModeDefinition(
+      { initializers: [], synchronizers: [{ type: 'cache' }] },
+      'testMode',
+      logger,
+    );
+
+    expect(result.synchronizers).toEqual([]);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('got cache'));
+  });
+
+  it('keeps valid synchronizer entries and discards cache', () => {
+    const result = validateModeDefinition(
+      {
+        initializers: [],
+        synchronizers: [{ type: 'polling' }, { type: 'cache' }, { type: 'streaming' }],
+      },
+      'testMode',
+      logger,
+    );
+
+    expect(result.synchronizers).toEqual([{ type: 'polling' }, { type: 'streaming' }]);
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('allows cache as an initializer', () => {
+    const result = validateModeDefinition(
+      { initializers: [{ type: 'cache' }], synchronizers: [] },
+      'testMode',
+      logger,
+    );
+
+    expect(result.initializers).toEqual([{ type: 'cache' }]);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
 describe('given polling entries with invalid config', () => {
   it('drops pollInterval when it is a string and warns', () => {
     const result = validateModeDefinition(

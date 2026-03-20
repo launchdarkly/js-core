@@ -1,4 +1,5 @@
 import { LDLogger } from '../../api';
+import { isNullish } from '../../validators';
 import {
   DeleteObject,
   FDv2Event,
@@ -111,7 +112,10 @@ export function createProtocolHandler(
   }
 
   function processIntentNone(intent: PayloadIntent): ProtocolAction {
-    if (!intent.id || !intent.target) {
+    if (!intent.id || isNullish(intent.target)) {
+      logger?.warn(
+        `Ignoring 'none' intent with missing fields: id=${intent.id}, target=${intent.target}`,
+      );
       return ACTION_NONE;
     }
 
@@ -164,14 +168,15 @@ export function createProtocolHandler(
   }
 
   function processPutObject(data: PutObject): ProtocolAction {
-    if (
-      protocolState === 'inactive' ||
-      !tempId ||
-      !data.kind ||
-      !data.key ||
-      !data.version ||
-      !data.object
-    ) {
+    if (protocolState === 'inactive' || !tempId) {
+      logger?.warn('Received put-object before server-intent was established. Ignoring.');
+      return ACTION_NONE;
+    }
+
+    if (!data.kind || !data.key || isNullish(data.version) || !data.object) {
+      logger?.warn(
+        `Ignoring put-object with missing fields: kind=${data.kind}, key=${data.key}, version=${data.version}`,
+      );
       return ACTION_NONE;
     }
 
@@ -191,7 +196,15 @@ export function createProtocolHandler(
   }
 
   function processDeleteObject(data: DeleteObject): ProtocolAction {
-    if (protocolState === 'inactive' || !tempId || !data.kind || !data.key || !data.version) {
+    if (protocolState === 'inactive' || !tempId) {
+      logger?.warn('Received delete-object before server-intent was established. Ignoring.');
+      return ACTION_NONE;
+    }
+
+    if (!data.kind || !data.key || isNullish(data.version)) {
+      logger?.warn(
+        `Ignoring delete-object with missing fields: kind=${data.kind}, key=${data.key}, version=${data.version}`,
+      );
       return ACTION_NONE;
     }
 
@@ -214,7 +227,10 @@ export function createProtocolHandler(
       };
     }
 
-    if (!tempId || data.state === null || data.state === undefined || !data.version) {
+    if (!tempId || isNullish(data.state) || isNullish(data.version)) {
+      logger?.warn(
+        `Ignoring payload-transferred with missing fields: state=${data.state}, version=${data.version}`,
+      );
       resetAll();
       return ACTION_NONE;
     }
