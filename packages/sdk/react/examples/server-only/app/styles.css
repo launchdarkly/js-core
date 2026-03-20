@@ -30,17 +30,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: calc(10px + 2vmin);
   padding: 2rem;
   gap: 1rem;
 }
 
-.app--on  { background-color: #00844B; }
-.app--off { background-color: #373841; }
+.app--on {
+  background-color: #00844b;
+}
+.app--off {
+  background-color: #373841;
+}
 
 .context {
   font-size: 0.7em;
   opacity: 0.75;
 }
-

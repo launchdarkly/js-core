@@ -88,4 +88,9 @@ export interface LDServerBaseClient {
    * Builds an object encapsulating the state of all feature flags for a given context.
    */
   allFlagsState(context: LDContext, options?: LDFlagsStateOptions): Promise<LDFlagsState>;
+
+  /**
+   * Tracks that a context performed an event.
+   */
+  track(key: string, context: LDContext, data?: any, metricValue?: number): void;
 }

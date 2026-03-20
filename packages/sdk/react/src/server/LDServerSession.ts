@@ -57,21 +57,53 @@ export function createLDServerWrapper(
     );
   }
 
+  // Batch in a single event so we can track the usage of this SDK for React Server Components.
+  let tracked = false;
+
+  function trackRscUsage() {
+    if (tracked) {
+      return;
+    }
+    tracked = true;
+    // TODO: placeholder event name for now until we are sure this is a good idea.
+    client.track('$ld:react-sdk:rsc-evaluation', context);
+  }
+
   return {
     initialized: () => client.initialized(),
     getContext: () => context,
-    boolVariation: (key, defaultValue) => client.boolVariation(key, context, defaultValue),
-    numberVariation: (key, defaultValue) => client.numberVariation(key, context, defaultValue),
-    stringVariation: (key, defaultValue) => client.stringVariation(key, context, defaultValue),
-    jsonVariation: (key, defaultValue) => client.jsonVariation(key, context, defaultValue),
-    boolVariationDetail: (key, defaultValue) =>
-      client.boolVariationDetail(key, context, defaultValue),
-    numberVariationDetail: (key, defaultValue) =>
-      client.numberVariationDetail(key, context, defaultValue),
-    stringVariationDetail: (key, defaultValue) =>
-      client.stringVariationDetail(key, context, defaultValue),
-    jsonVariationDetail: (key, defaultValue) =>
-      client.jsonVariationDetail(key, context, defaultValue),
+    boolVariation: (key, defaultValue) => {
+      trackRscUsage();
+      return client.boolVariation(key, context, defaultValue);
+    },
+    numberVariation: (key, defaultValue) => {
+      trackRscUsage();
+      return client.numberVariation(key, context, defaultValue);
+    },
+    stringVariation: (key, defaultValue) => {
+      trackRscUsage();
+      return client.stringVariation(key, context, defaultValue);
+    },
+    jsonVariation: (key, defaultValue) => {
+      trackRscUsage();
+      return client.jsonVariation(key, context, defaultValue);
+    },
+    boolVariationDetail: (key, defaultValue) => {
+      trackRscUsage();
+      return client.boolVariationDetail(key, context, defaultValue);
+    },
+    numberVariationDetail: (key, defaultValue) => {
+      trackRscUsage();
+      return client.numberVariationDetail(key, context, defaultValue);
+    },
+    stringVariationDetail: (key, defaultValue) => {
+      trackRscUsage();
+      return client.stringVariationDetail(key, context, defaultValue);
+    },
+    jsonVariationDetail: (key, defaultValue) => {
+      trackRscUsage();
+      return client.jsonVariationDetail(key, context, defaultValue);
+    },
     allFlagsState: (options?: LDFlagsStateOptions) => client.allFlagsState(context, options),
   };
 }

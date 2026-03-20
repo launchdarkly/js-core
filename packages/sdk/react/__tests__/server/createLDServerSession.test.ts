@@ -1,49 +1,18 @@
-import { LDContext, LDFlagsStateOptions } from '@launchdarkly/js-server-sdk-common';
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { createLDServerSession } from '../../src/server/index';
+import { makeMockServerClient } from './mockServerClient';
 
 const context: LDContext = { kind: 'user', key: 'test-user' };
 
-function makeMockBaseClient() {
-  return {
-    initialized: jest.fn(() => true),
-    boolVariation: jest.fn((_key: string, _ctx: LDContext, def: boolean) => Promise.resolve(def)),
-    numberVariation: jest.fn((_key: string, _ctx: LDContext, def: number) => Promise.resolve(def)),
-    stringVariation: jest.fn((_key: string, _ctx: LDContext, def: string) => Promise.resolve(def)),
-    jsonVariation: jest.fn((_key: string, _ctx: LDContext, def: unknown) => Promise.resolve(def)),
-    boolVariationDetail: jest.fn((_key: string, _ctx: LDContext, def: boolean) =>
-      Promise.resolve({ value: def, variationIndex: null, reason: { kind: 'OFF' as const } }),
-    ),
-    numberVariationDetail: jest.fn((_key: string, _ctx: LDContext, def: number) =>
-      Promise.resolve({ value: def, variationIndex: null, reason: { kind: 'OFF' as const } }),
-    ),
-    stringVariationDetail: jest.fn((_key: string, _ctx: LDContext, def: string) =>
-      Promise.resolve({ value: def, variationIndex: null, reason: { kind: 'OFF' as const } }),
-    ),
-    jsonVariationDetail: jest.fn((_key: string, _ctx: LDContext, def: unknown) =>
-      Promise.resolve({ value: def, variationIndex: null, reason: { kind: 'OFF' as const } }),
-    ),
-    // @ts-ignore — mock return shape matches LDFlagsState structurally
-    allFlagsState: jest.fn((_context: LDContext, _options?: LDFlagsStateOptions) =>
-      Promise.resolve({
-        valid: true,
-        getFlagValue: jest.fn(),
-        getFlagReason: jest.fn(),
-        allValues: jest.fn(() => ({})),
-        toJSON: jest.fn(() => ({ $flagsState: {}, $valid: true })),
-      }),
-    ),
-  };
-}
-
 it('getContext() returns the context passed at creation', () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const session = createLDServerSession(client, context);
   expect(session.getContext()).toEqual(context);
 });
 
 it('initialized() delegates to the base client', () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   client.initialized.mockReturnValue(false);
   const session = createLDServerSession(client, context);
   expect(session.initialized()).toBe(false);
@@ -51,7 +20,7 @@ it('initialized() delegates to the base client', () => {
 });
 
 it('boolVariation() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   client.boolVariation.mockResolvedValue(true);
   const session = createLDServerSession(client, context);
   const result = await session.boolVariation('my-flag', false);
@@ -60,7 +29,7 @@ it('boolVariation() calls base client with bound context', async () => {
 });
 
 it('numberVariation() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   client.numberVariation.mockResolvedValue(42);
   const session = createLDServerSession(client, context);
   const result = await session.numberVariation('my-flag', 0);
@@ -69,7 +38,7 @@ it('numberVariation() calls base client with bound context', async () => {
 });
 
 it('stringVariation() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   client.stringVariation.mockResolvedValue('hello');
   const session = createLDServerSession(client, context);
   const result = await session.stringVariation('my-flag', 'default');
@@ -78,7 +47,7 @@ it('stringVariation() calls base client with bound context', async () => {
 });
 
 it('jsonVariation() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const json = { key: 'value' };
   client.jsonVariation.mockResolvedValue(json);
   const session = createLDServerSession(client, context);
@@ -88,7 +57,7 @@ it('jsonVariation() calls base client with bound context', async () => {
 });
 
 it('boolVariationDetail() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const detail = { value: true, variationIndex: 1, reason: { kind: 'RULE_MATCH' as const } };
   // @ts-ignore — valid LDEvaluationDetailTyped<boolean> shape; mock type is too narrow
   client.boolVariationDetail.mockResolvedValue(detail);
@@ -99,7 +68,7 @@ it('boolVariationDetail() calls base client with bound context', async () => {
 });
 
 it('numberVariationDetail() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const detail = { value: 42, variationIndex: 1, reason: { kind: 'RULE_MATCH' as const } };
   // @ts-ignore — valid LDEvaluationDetailTyped<number> shape; mock type is too narrow
   client.numberVariationDetail.mockResolvedValue(detail);
@@ -110,7 +79,7 @@ it('numberVariationDetail() calls base client with bound context', async () => {
 });
 
 it('stringVariationDetail() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const detail = { value: 'hello', variationIndex: 1, reason: { kind: 'RULE_MATCH' as const } };
   // @ts-ignore — valid LDEvaluationDetailTyped<string> shape; mock type is too narrow
   client.stringVariationDetail.mockResolvedValue(detail);
@@ -121,7 +90,7 @@ it('stringVariationDetail() calls base client with bound context', async () => {
 });
 
 it('jsonVariationDetail() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const detail = {
     value: { key: 'value' },
     variationIndex: 1,
@@ -136,14 +105,14 @@ it('jsonVariationDetail() calls base client with bound context', async () => {
 });
 
 it('allFlagsState() calls base client with bound context', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const session = createLDServerSession(client, context);
   await session.allFlagsState();
   expect(client.allFlagsState).toHaveBeenCalledWith(context, undefined);
 });
 
 it('allFlagsState() forwards options to base client', async () => {
-  const client = makeMockBaseClient();
+  const client = makeMockServerClient();
   const session = createLDServerSession(client, context);
   const options = { clientSideOnly: true };
   await session.allFlagsState(options);
@@ -165,7 +134,7 @@ describe('given a browser environment (window defined)', () => {
   });
 
   it('throws an error instead of returning a no-op session', () => {
-    const client = makeMockBaseClient();
+    const client = makeMockServerClient();
     expect(() => createLDServerSession(client, context)).toThrow(
       'createLDServerWrapper must only be called on the server.',
     );
