@@ -34,7 +34,10 @@ jobs:
       - name: Install contract test dependencies
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
-        run: yarn workspaces focus @launchdarkly/react-sdk browser-contract-test-adapter @launchdarkly/react-sdk-contract-tests
+          # Skip electron binary download to avoid postinstall race condition
+          # between electron versions sharing ~/.cache/electron
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: yarn install
 
       - name: Install Playwright browsers
         run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
