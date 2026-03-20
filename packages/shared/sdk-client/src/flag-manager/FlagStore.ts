@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { ItemDescriptor } from './ItemDescriptor';
 
 /**
@@ -22,11 +24,12 @@ export default interface FlagStore {
   getAll(): { [key: string]: ItemDescriptor };
 
   /**
-   * Applies partial updates by inserting or replacing entries without
-   * version checks. Used by FDv2 where ordering is handled at the
-   * protocol layer.
+   * Applies a changeset to the store without version checks.
+   * - `'full'`: replaces all flags.
+   * - `'partial'`: merges updates into existing flags.
+   * - `'none'`: no-op.
    */
-  applyPartial(updates: { [key: string]: ItemDescriptor }): void;
+  applyChanges(updates: { [key: string]: ItemDescriptor }, type: internal.PayloadType): void;
 }
 
 /**
@@ -56,10 +59,14 @@ export function createDefaultFlagStore(): FlagStore {
     getAll(): { [key: string]: ItemDescriptor } {
       return flags;
     },
-    applyPartial(updates: { [key: string]: ItemDescriptor }) {
-      Object.entries(updates).forEach(([key, descriptor]) => {
-        flags[key] = descriptor;
-      });
+    applyChanges(updates: { [key: string]: ItemDescriptor }, type: internal.PayloadType) {
+      if (type === 'full') {
+        this.init(updates);
+      } else if (type === 'partial') {
+        Object.entries(updates).forEach(([key, descriptor]) => {
+          flags[key] = descriptor;
+        });
+      }
     },
   };
 }

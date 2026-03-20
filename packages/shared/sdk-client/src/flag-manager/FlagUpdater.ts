@@ -135,12 +135,17 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
       updates: { [key: string]: ItemDescriptor },
       type: internal.PayloadType,
     ): void {
+      activeContext = context;
+      const oldFlags = flagStore.getAll();
+      flagStore.applyChanges(updates, type);
+
       if (type === 'full') {
-        this.init(context, updates);
+        const changed = calculateChangedKeys(oldFlags, updates);
+        if (changed.length > 0) {
+          this.handleFlagChanges(changed, 'init');
+        }
       } else if (type === 'partial') {
-        activeContext = context;
         const keys = Object.keys(updates);
-        flagStore.applyPartial(updates);
         if (keys.length > 0) {
           this.handleFlagChanges(keys, 'patch');
         }
