@@ -4,6 +4,9 @@ import {
   CommandType,
   CreateInstanceParams,
   makeLogger,
+  SDKConfigDataInitializer,
+  SDKConfigDataSynchronizer,
+  SDKConfigModeDefinition,
   SDKConfigParams,
   ClientSideTestHook as TestHook,
   ValueType,
@@ -11,6 +14,59 @@ import {
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
+
+function translateInitializer(init: SDKConfigDataInitializer): any | undefined {
+  if (init.polling) {
+    return {
+      type: 'polling',
+      ...(init.polling.pollIntervalMs !== undefined && {
+        pollInterval: init.polling.pollIntervalMs / 1000,
+      }),
+      ...(init.polling.baseUri && {
+        endpoints: { pollingBaseUri: init.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateSynchronizer(sync: SDKConfigDataSynchronizer): any | undefined {
+  if (sync.streaming) {
+    return {
+      type: 'streaming',
+      ...(sync.streaming.initialRetryDelayMs !== undefined && {
+        initialReconnectDelay: sync.streaming.initialRetryDelayMs / 1000,
+      }),
+      ...(sync.streaming.baseUri && {
+        endpoints: { streamingBaseUri: sync.streaming.baseUri },
+      }),
+    };
+  }
+  if (sync.polling) {
+    return {
+      type: 'polling',
+      ...(sync.polling.pollIntervalMs !== undefined && {
+        pollInterval: sync.polling.pollIntervalMs / 1000,
+      }),
+      ...(sync.polling.baseUri && {
+        endpoints: { pollingBaseUri: sync.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateModeDefinition(modeDef: SDKConfigModeDefinition): any {
+  const initializers = (modeDef.initializers ?? [])
+    .map(translateInitializer)
+    .filter((x: any) => x !== undefined);
+
+  const synchronizers = (modeDef.synchronizers ?? [])
+    .map(translateSynchronizer)
+    .filter((x: any) => x !== undefined);
+
+  return { initializers, synchronizers };
+}
 
 function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (!options.clientSide) {
@@ -23,30 +79,65 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   const cf: LDOptions = {
     withReasons: options.clientSide.evaluationReasons,
     logger: makeLogger(`${tag}.sdk`),
-    useReport: options.clientSide.useReport,
+    useReport: options.clientSide.useReport ?? undefined,
   };
 
-  if (options.serviceEndpoints) {
-    cf.streamUri = options.serviceEndpoints.streaming;
-    cf.baseUri = options.serviceEndpoints.polling;
-    cf.eventsUri = options.serviceEndpoints.events;
-  }
+  if (options.dataSystem?.connectionModeConfig) {
+    const connMode = options.dataSystem.connectionModeConfig;
+    const dataSystem: any = {
+      initialConnectionMode: connMode.initialConnectionMode,
+      automaticModeSwitching: false,
+    };
 
-  if (options.polling) {
-    if (options.polling.baseUri) {
-      cf.baseUri = options.polling.baseUri;
-    }
-  }
+    if (connMode.customConnectionModes) {
+      const connectionModes: Record<string, any> = {};
+      Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
+        connectionModes[modeName] = translateModeDefinition(modeDef);
 
-  // Can contain streaming and polling, if streaming is set override the initial connection
-  // mode. This can be removed when we add JS specific initialization that uses polling
-  // and then streaming.
-  if (options.streaming) {
-    if (options.streaming.baseUri) {
-      cf.streamUri = options.streaming.baseUri;
+        // Also set global endpoint URIs for compatibility with ServiceEndpoints.
+        (modeDef.synchronizers ?? []).forEach((sync) => {
+          if (sync.streaming?.baseUri) {
+            cf.streamUri = sync.streaming.baseUri;
+            cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+          }
+          if (sync.polling?.baseUri) {
+            cf.baseUri = sync.polling.baseUri;
+          }
+        });
+        (modeDef.initializers ?? []).forEach((init) => {
+          if (init.polling?.baseUri) {
+            cf.baseUri = init.polling.baseUri;
+          }
+        });
+      });
+      dataSystem.connectionModes = connectionModes;
     }
-    cf.streaming = true;
-    cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+
+    (cf as any).dataSystem = dataSystem;
+
+    if (options.dataSystem.payloadFilter) {
+      cf.payloadFilterKey = options.dataSystem.payloadFilter;
+    }
+  } else {
+    if (options.serviceEndpoints) {
+      cf.streamUri = options.serviceEndpoints.streaming;
+      cf.baseUri = options.serviceEndpoints.polling;
+      cf.eventsUri = options.serviceEndpoints.events;
+    }
+
+    if (options.polling) {
+      if (options.polling.baseUri) {
+        cf.baseUri = options.polling.baseUri;
+      }
+    }
+
+    if (options.streaming) {
+      if (options.streaming.baseUri) {
+        cf.streamUri = options.streaming.baseUri;
+      }
+      cf.streaming = true;
+      cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    }
   }
 
   if (options.events) {
