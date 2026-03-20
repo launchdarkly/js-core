@@ -11,6 +11,7 @@ import { InitializerEntry, SynchronizerEntry } from '../../src/api/datasource';
 import { DataSourcePaths } from '../../src/datasource/DataSourceConfig';
 import { createCacheInitializerFactory } from '../../src/datasource/fdv2/CacheInitializer';
 import { FDv2Requestor, makeFDv2Requestor } from '../../src/datasource/fdv2/FDv2Requestor';
+import { poll as fdv2Poll } from '../../src/datasource/fdv2/PollingBase';
 import { createPollingInitializer } from '../../src/datasource/fdv2/PollingInitializer';
 import { createPollingSynchronizer } from '../../src/datasource/fdv2/PollingSynchronizer';
 import { createSynchronizerSlot } from '../../src/datasource/fdv2/SourceManager';
@@ -39,6 +40,7 @@ const mockCreateStreamingSynchronizer = createStreamingSynchronizer as jest.Mock
 const mockCreateCacheInitializerFactory = createCacheInitializerFactory as jest.Mock;
 const mockMakeFDv2Requestor = makeFDv2Requestor as jest.Mock;
 const mockCreateSynchronizerSlot = createSynchronizerSlot as jest.Mock;
+const mockFdv2Poll = fdv2Poll as jest.Mock;
 
 jest.mock('../../src/datasource/fdv2/SourceManager', () => ({
   createSynchronizerSlot: jest.fn((factory: any) => ({
@@ -71,20 +73,23 @@ function makeSourceFactoryContext(overrides?: Partial<SourceFactoryContext>): So
       'https://poll.example.com',
       'https://events.example.com',
     ),
-    pollingPaths: makePaths(),
-    streamingPaths: makePaths(),
     baseHeaders: { authorization: 'sdk-key' },
     queryParams: [],
     plainContextString: '{"kind":"user","key":"test-user"}',
-    selectorGetter: () => undefined,
-    streamInitialReconnectDelay: 1,
-    pollInterval: 30,
     logger: {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
     } as unknown as LDLogger,
+    polling: {
+      paths: makePaths(),
+      intervalSeconds: 30,
+    },
+    streaming: {
+      paths: makePaths(),
+      initialReconnectDelaySeconds: 1,
+    },
     storage: undefined,
     crypto: {} as Crypto,
     environmentNamespace: 'test-env',
@@ -141,7 +146,7 @@ it('creates a StreamingInitializer for a streaming initializer entry', () => {
     expect.objectContaining({
       requests: ctx.requests,
       serviceEndpoints: ctx.serviceEndpoints,
-      initialRetryDelayMillis: ctx.streamInitialReconnectDelay * 1000,
+      initialRetryDelayMillis: ctx.streaming.initialReconnectDelaySeconds * 1000,
     }),
   );
   expect(mockCreateStreamingInitializer).toHaveBeenCalledWith(
@@ -196,7 +201,7 @@ it('creates a PollingSynchronizer slot for a polling synchronizer entry', () => 
     ctx.requestor,
     ctx.logger,
     selectorGetter,
-    ctx.pollInterval * 1000,
+    ctx.polling.intervalSeconds * 1000,
   );
 });
 
@@ -218,7 +223,7 @@ it('creates a StreamingSynchronizer slot for a streaming synchronizer entry', ()
     expect.objectContaining({
       requests: ctx.requests,
       serviceEndpoints: ctx.serviceEndpoints,
-      initialRetryDelayMillis: ctx.streamInitialReconnectDelay * 1000,
+      initialRetryDelayMillis: ctx.streaming.initialReconnectDelaySeconds * 1000,
     }),
   );
   expect(mockCreateStreamingSynchronizer).toHaveBeenCalledWith(
@@ -258,7 +263,7 @@ it('creates a new requestor when polling entry has endpoint overrides', () => {
       polling: 'https://custom-poll.example.com',
       streaming: 'https://stream.example.com',
     }),
-    ctx.pollingPaths,
+    ctx.polling.paths,
     ctx.requests,
     ctx.encoding,
     ctx.baseHeaders,
@@ -276,7 +281,7 @@ it('creates a new requestor when polling entry has endpoint overrides', () => {
 
 it('uses per-entry pollInterval override for polling synchronizer', () => {
   const provider = createDefaultSourceFactoryProvider();
-  const ctx = makeSourceFactoryContext({ pollInterval: 30 });
+  const ctx = makeSourceFactoryContext({ polling: { paths: makePaths(), intervalSeconds: 30 } });
   const entry: SynchronizerEntry = { type: 'polling', pollInterval: 60 };
 
   provider.createSynchronizerSlot(entry, ctx);
@@ -295,7 +300,9 @@ it('uses per-entry pollInterval override for polling synchronizer', () => {
 
 it('uses per-entry initialReconnectDelay override for streaming initializer', () => {
   const provider = createDefaultSourceFactoryProvider();
-  const ctx = makeSourceFactoryContext({ streamInitialReconnectDelay: 1 });
+  const ctx = makeSourceFactoryContext({
+    streaming: { paths: makePaths(), initialReconnectDelaySeconds: 1 },
+  });
   const entry: InitializerEntry = { type: 'streaming', initialReconnectDelay: 5 };
 
   const factory = provider.createInitializerFactory(entry, ctx);
@@ -307,4 +314,52 @@ it('uses per-entry initialReconnectDelay override for streaming initializer', ()
       initialRetryDelayMillis: 5000,
     }),
   );
+});
+
+// --- ping handler ---
+
+it('ping handler uses the factory selector getter, not a stale reference', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext();
+  const entry: InitializerEntry = { type: 'streaming' };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  expect(factory).toBeDefined();
+
+  let currentSelector: string | undefined = 'selector-v1';
+  const selectorGetter = () => currentSelector;
+  factory!(selectorGetter);
+
+  // Extract the pingHandler from the createStreamingBase call
+  const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];
+  const { pingHandler } = streamingBaseArgs;
+
+  // Update the selector after factory creation
+  currentSelector = 'selector-v2';
+  pingHandler.handlePing();
+
+  // The ping poll should use the fresh selector, not 'selector-v1'
+  expect(mockFdv2Poll).toHaveBeenCalledWith(expect.anything(), 'selector-v2', false, ctx.logger);
+});
+
+it('ping handler uses per-entry endpoint-overridden requestor', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext();
+  const entry: InitializerEntry = {
+    type: 'streaming',
+    endpoints: { pollingBaseUri: 'https://custom-poll.example.com' },
+  };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  expect(factory).toBeDefined();
+  factory!(() => undefined);
+
+  // Extract the pingHandler from the createStreamingBase call
+  const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];
+  const { pingHandler } = streamingBaseArgs;
+  pingHandler.handlePing();
+
+  // The ping poll should use the overridden requestor, not ctx.requestor
+  const overriddenRequestor = mockMakeFDv2Requestor.mock.results[0].value;
+  expect(mockFdv2Poll).toHaveBeenCalledWith(overriddenRequestor, undefined, false, ctx.logger);
 });

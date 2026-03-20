@@ -11,6 +11,9 @@ inputs:
   before_test:
     description: 'Shell commands to run before the e2e test step (e.g. install Playwright browsers)'
     default: ''
+  env_vars:
+    description: 'Newline-separated KEY=VALUE pairs to set as environment variables for all subsequent steps'
+    default: ''
 runs:
   using: composite
   steps:
@@ -18,11 +21,29 @@ runs:
       shell: bash
       run: yarn workspaces focus ${{ inputs.workspace_name }}
 
+    - name: Set environment variables
+      shell: bash
+      if: ${{ inputs.env_vars != '' }}
+      run: |
+        echo "${{ inputs.env_vars }}" >> $GITHUB_ENV
+
     - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
       name: 'Get the client-side SDK key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+      name: 'Get the mobile SDK key'
+      with:
+        aws_assume_role: ${{ inputs.aws_assume_role }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
+
+    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+      name: 'Get the server-side SDK key'
+      with:
+        aws_assume_role: ${{ inputs.aws_assume_role }}
+        ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SDK_KEY'
 
     - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
       name: 'Get the test feature flag key'
