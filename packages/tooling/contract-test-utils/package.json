@@ -11,6 +11,11 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./adapter": {
+      "types": "./dist/adapter.d.ts",
+      "import": "./dist/adapter.js",
+      "default": "./dist/adapter.js"
+    },
     "./client": {
       "types": "./dist/client.d.ts",
       "import": "./dist/client.js",
@@ -24,6 +29,9 @@
   },
   "typesVersions": {
     "*": {
+      "adapter": [
+        "./dist/adapter.d.ts"
+      ],
       "client": [
         "./dist/client.d.ts"
       ],
@@ -32,13 +40,24 @@
       ]
     }
   },
+  "bin": {
+    "sdk-testharness-server": "./dist/bin/sdk-testharness-server.js",
+    "sts": "./dist/bin/sdk-testharness-server.js"
+  },
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json",
+    "build": "tsc && tsc -p tsconfig.client.json && tsc -p tsconfig.server.json && tsc -p tsconfig.adapter.json",
+    "build:adapter": "tsc -p tsconfig.adapter.json",
     "build:client": "tsc -p tsconfig.client.json",
     "build:server": "tsc -p tsconfig.server.json",
     "lint": "eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
     "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "ws": "^8.18.0"
   },
   "peerDependencies": {
     "@launchdarkly/js-client-sdk-common": "workspace:^",
@@ -55,7 +74,10 @@
   "devDependencies": {
     "@launchdarkly/js-client-sdk-common": "workspace:^",
     "@launchdarkly/js-server-sdk-common": "workspace:^",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/node": "^18.11.9",
+    "@types/ws": "^8.5.12",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",

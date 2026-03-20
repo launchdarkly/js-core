@@ -8,7 +8,7 @@ This directory contains the contract test implementation for the LaunchDarkly Re
 
 This contract test consists of 3 components:
 
-1. [Adapter](../../browser/contract-tests/adapter/): A Node.js server that:
+1. [Adapter](../../browser/contract-tests/adapter/): A thin wrapper that delegates to the `sdk-testharness-server adapter` CLI from `@launchdarkly/js-contract-test-utils`. The adapter:
    - Exposes a REST API on port 8000 for the test harness
    - Runs a WebSocket server on port 8001 for browser communication
    - Translates REST commands to WebSocket messages
@@ -36,8 +36,8 @@ This contract test consists of 3 components:
 # Install the workspace if you haven't already
 yarn install
 
-# Build contract tests and browser contract test (dependency)
-yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' run build
+# Build contract test utils (includes the adapter CLI) and the react entity
+yarn workspace @launchdarkly/js-contract-test-utils build
 yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-sdk-contract-tests' run build
 
 yarn workspace @launchdarkly/react-sdk-contract-tests playwright install

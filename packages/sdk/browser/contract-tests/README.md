@@ -6,7 +6,7 @@ This directory contains the contract test implementation for the LaunchDarkly Br
 
 The browser contract tests consist of three components:
 
-1. **Adapter** (`adapter/`): A Node.js server that:
+1. **Adapter** (`adapter/`): A thin wrapper that delegates to the `sdk-testharness-server adapter` CLI from `@launchdarkly/js-contract-test-utils`. The adapter:
    - Exposes a REST API on port 8000 for the test harness
    - Runs a WebSocket server on port 8001 for browser communication
    - Translates REST commands to WebSocket messages

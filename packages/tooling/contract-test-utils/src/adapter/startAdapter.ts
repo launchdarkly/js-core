@@ -9,10 +9,15 @@ import http from 'node:http';
 import util from 'node:util';
 import { WebSocketServer } from 'ws';
 
+import { AdapterOptions } from './AdapterOptions.js';
+
 let server: http.Server | undefined;
 
-async function main() {
-  const wss = new WebSocketServer({ port: 8001 });
+export function startAdapter(options?: AdapterOptions) {
+  const restPort = options?.restPort ?? 8000;
+  const wsPort = options?.wsPort ?? 8001;
+
+  const wss = new WebSocketServer({ port: wsPort });
   const waiters: Record<string, (data: unknown) => void> = {};
 
   console.log('Running contract test harness adapter.');
@@ -46,8 +51,6 @@ async function main() {
     }
 
     const app = express();
-
-    const port = 8000;
 
     app.use(
       cors({
@@ -104,9 +107,8 @@ async function main() {
       res.send();
     });
 
-    server = app.listen(port, () => {
-      console.log('Listening on port %d', port);
+    server = app.listen(restPort, () => {
+      console.log('Listening on port %d', restPort);
     });
   });
 }
-main();

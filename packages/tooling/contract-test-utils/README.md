@@ -11,6 +11,7 @@ The package uses subpath exports to organize code by platform:
 | Import Path | Contents | Resolution |
 |---|---|---|
 | `@launchdarkly/js-contract-test-utils` | Universal types, logging, `ClientPool` | Source `.ts` (for bundlers) |
+| `@launchdarkly/js-contract-test-utils/adapter` | `startAdapter()`, `AdapterOptions` | Compiled `.js` |
 | `@launchdarkly/js-contract-test-utils/client` | Client-side `TestHook` | Source `.ts` (for bundlers) |
 
 ### Universal (`"."`)
@@ -27,6 +28,30 @@ import {
   makeLogger,
   ClientPool,
 } from '@launchdarkly/js-contract-test-utils';
+```
+
+### Adapter (`"./adapter"`)
+
+For browser, React, and React Native contract tests. Provides the REST↔WebSocket adapter server:
+
+```ts
+import { startAdapter } from '@launchdarkly/js-contract-test-utils/adapter';
+
+startAdapter({ restPort: 8000, wsPort: 8001 });
+```
+
+- **`startAdapter(options?)`** -- Starts an Express server (REST) and WebSocket server that bridges the SDK test harness to browser-based entities. Configurable via `AdapterOptions` (`restPort`, `wsPort`).
+
+#### CLI
+
+The package also ships a CLI binary `sdk-testharness-server` (alias `sts`):
+
+```bash
+# Start the adapter with default ports (8000/8001)
+sdk-testharness-server adapter
+
+# Override ports via environment variables
+ADAPTER_REST_PORT=9000 ADAPTER_WS_PORT=9001 sdk-testharness-server adapter
 ```
 
 ### Client-side (`"./client"`)
@@ -78,6 +103,11 @@ pool.add(id, entity);
 ```
 contract-test-utils/
   src/
+    adapter/
+      AdapterOptions.ts           # Adapter configuration interface
+      startAdapter.ts             # REST↔WebSocket bridge server
+    bin/
+      sdk-testharness-server.ts   # CLI entry point
     client-side/
       TestHook.ts                 # fetch()-based hook reporting
     server-side/
@@ -89,5 +119,6 @@ contract-test-utils/
       ConfigParams.ts             # SDK configuration type definitions
       compat.ts                   # Minimal cross-SDK type aliases
     index.ts                      # Universal exports
+    adapter.ts                    # Adapter exports
     client.ts                     # Client-side exports
 ```
