@@ -945,7 +945,7 @@ it('does not identify after close', async () => {
   );
 });
 
-it('exposes the selectorGetter in the factory context that reads current selector', async () => {
+it('populates polling and streaming config in the factory context', async () => {
   const sourceFactoryProvider = makeSourceFactoryProvider();
   let capturedCtx: any;
   // @ts-ignore - mock captures ctx argument
@@ -957,15 +957,12 @@ it('exposes the selectorGetter in the factory context that reads current selecto
   const manager = createFDv2DataManagerBase(makeBaseConfig({ sourceFactoryProvider }));
   await identifyManager(manager);
 
-  // Initially selector is undefined.
-  expect(capturedCtx.selectorGetter()).toBeUndefined();
-
-  // Deliver a payload with a selector via dataCallback.
-  const dsConfig = capturedDataSourceConfigs[0];
-  dsConfig.dataCallback({ type: 'full', updates: [], state: 'new-selector' });
-
-  // Now selectorGetter should return the selector.
-  expect(capturedCtx.selectorGetter()).toBe('new-selector');
+  expect(capturedCtx.polling).toBeDefined();
+  expect(capturedCtx.polling.paths).toBeDefined();
+  expect(capturedCtx.polling.intervalSeconds).toBeDefined();
+  expect(capturedCtx.streaming).toBeDefined();
+  expect(capturedCtx.streaming.paths).toBeDefined();
+  expect(capturedCtx.streaming.initialReconnectDelaySeconds).toBeDefined();
 
   manager.close();
 });
