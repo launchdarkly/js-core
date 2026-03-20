@@ -1,7 +1,6 @@
 /**
  * Converts a flag key to camelCase, matching the behavior of the legacy
- * launchdarkly-react-client-sdk. Handles kebab-case, snake_case, dot.separated,
- * ALL_CAPS, and already-camelCased keys.
+ * launchdarkly-react-client-sdk.
  *
  * Examples:
  *   'my-flag-key'  → 'myFlagKey'
@@ -13,8 +12,8 @@
  */
 export function toCamelCase(key: string): string {
   return key
-    .replace(/([a-z\d])([A-Z])/g, '$1 $2') // camelCase boundary: myFlag → my Flag, my2Flag → my2 Flag
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') // ALLCAPS boundary: HTMLParser → HTML Parser
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
     .split(/[-._\s]+/)
     .filter(Boolean)
     .map((word, i) => {

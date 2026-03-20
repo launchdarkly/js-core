@@ -21,10 +21,10 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, rawFlags: T): 
   // Pre-build the display object, filtering out $ system keys.
   // Mirrors getCamelizedKeysAndFlagMap in the old react-client-sdk.
   const displayFlags: LDFlagSet = {};
-  const flagKeyMap: Record<string, string> = {}; // camelKey -> originalKey
+  const flagKeyMap: Record<string, string> = {};
 
   Object.keys(rawFlags as LDFlagSet)
-    .filter((rawKey) => rawKey.indexOf('$') !== 0) // exclude system keys (matches old SDK)
+    .filter((rawKey) => rawKey.indexOf('$') !== 0)
     .forEach((rawKey) => {
       if (useCamelCase) {
         const camelKey = toCamelCase(rawKey);
@@ -35,13 +35,10 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, rawFlags: T): 
       }
     });
 
-  // Only a get trap — matches old SDK's toFlagsProxy scope.
   return new Proxy(displayFlags as T, {
     get(target, prop, receiver) {
       const currentValue = Reflect.get(target, prop, receiver);
 
-      // Only intercept own flag keys; pass through symbols and prototype methods.
-      // Equivalent to old SDK: hasFlag(flagKeyMap, prop) || hasFlag(target, prop)
       if (typeof prop === 'symbol' || !Object.prototype.hasOwnProperty.call(target, prop)) {
         return currentValue;
       }
@@ -65,15 +62,7 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, rawFlags: T): 
 }
 
 /**
- * Returns all feature flags for the current context. Re-renders whenever any flag value changes.
- * Flag values are accessed via a proxy that triggers a `variation` call on each read, ensuring
- * evaluation events are sent to LaunchDarkly for accurate usage metrics.
- *
- * @remarks
- * When `useCamelCaseFlagKeys` is `true`, flag keys are converted to camelCase.
- * This means `"my-flag"` is accessible as `flags.myFlag`. Note that key collisions may occur
- * if two flag keys differ only in separators (e.g. `'my-flag'` and `'my.flag'` both map to
- * `'myFlag'` — last key wins), and Code References will not function correctly with camelCased keys.
+ * Returns all feature flags for the current context.
  *
  * @param reactContext Optional React context to read from. Defaults to the global `LDReactContext`.
  * @returns All current flag values, optionally with camelCased keys, wrapped in a proxy that

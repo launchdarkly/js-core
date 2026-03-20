@@ -42,9 +42,7 @@ export interface LDReactClient extends LDClient {
   onContextChange(callback: (context: LDContextStrict) => void): () => void;
 
   /**
-   * Subscribes to initialization status changes triggered by `start()`. The callback is
-   * invoked once `start()` resolves. If `start()` has already resolved when this is called,
-   * the callback is invoked immediately with the last result.
+   * Subscribes to initialization status changes triggered when the client is initialized.
    *
    * @param callback Function called with the initialization result.
    * @returns An unsubscribe function. Call it to stop receiving notifications.
@@ -54,8 +52,13 @@ export interface LDReactClient extends LDClient {
   ): () => void;
 
   /**
+   * @internal
+   *
    * Returns whether flag keys should be converted to camelCase in `useFlags()` and resolved from camelCase
    * in the individual variation hooks. Defaults to `true` when absent.
+   *
+   * @remarks
+   * **NOTE:** This method is only used by `useFlags()` hook.
    *
    * @deprecated This method is deprecated and will be removed in a future major version.
    *
@@ -65,8 +68,7 @@ export interface LDReactClient extends LDClient {
 }
 
 /**
- * The react context interface for the launchdarkly client. This will be the type that is
- * used in the `createContext` function.
+ * The React context interface for the LaunchDarkly client.
  */
 export interface LDReactClientContextValue {
   /**

@@ -4,7 +4,7 @@ import type { LDReactClientContextValue } from '../LDClient';
 import useVariationCore from './useVariationCore';
 
 /**
- * Returns the boolean variation of a feature flag, re-rendering only when that specific flag changes.
+ * Returns the boolean variation of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -25,7 +25,7 @@ export function useBoolVariation(
 }
 
 /**
- * Returns the string variation of a feature flag, re-rendering only when that specific flag changes.
+ * Returns the string variation of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -46,7 +46,7 @@ export function useStringVariation(
 }
 
 /**
- * Returns the numeric variation of a feature flag, re-rendering only when that specific flag changes.
+ * Returns the numeric variation of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -67,7 +67,7 @@ export function useNumberVariation(
 }
 
 /**
- * Returns the JSON variation of a feature flag, re-rendering only when that specific flag changes.
+ * Returns the JSON variation of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.

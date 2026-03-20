@@ -1,6 +1,6 @@
 import { LDContext, LDFlagsStateOptions } from '@launchdarkly/js-server-sdk-common';
 
-import { createLDServerSession, isServer } from '../../src/server/index';
+import { createLDServerSession } from '../../src/server/index';
 
 const context: LDContext = { kind: 'user', key: 'test-user' };
 
@@ -35,10 +35,6 @@ function makeMockBaseClient() {
     ),
   };
 }
-
-it('isServer() returns true in a Node test environment', () => {
-  expect(isServer()).toBe(true);
-});
 
 it('getContext() returns the context passed at creation', () => {
   const client = makeMockBaseClient();

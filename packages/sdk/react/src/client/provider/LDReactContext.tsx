@@ -12,4 +12,7 @@ export function initLDReactContext(): LDReactClientContext {
   return createContext<LDReactClientContextValue>(null as any);
 }
 
+/**
+ * The LaunchDarkly React context.
+ */
 export const LDReactContext: LDReactClientContext = initLDReactContext();
