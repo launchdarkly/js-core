@@ -35,24 +35,30 @@ export interface SourceFactoryContext {
   encoding: Encoding;
   /** Service endpoint configuration. */
   serviceEndpoints: ServiceEndpoints;
-  /** The polling endpoint paths. */
-  pollingPaths: DataSourcePaths;
-  /** The streaming endpoint paths. */
-  streamingPaths: DataSourcePaths;
   /** Default HTTP headers. */
   baseHeaders: LDHeaders;
   /** Query parameters for requests (e.g., auth, secure mode hash). */
   queryParams: { key: string; value: string }[];
   /** JSON-serialized evaluation context. */
   plainContextString: string;
-  /** Getter for the current selector (basis) string. */
-  selectorGetter: () => string | undefined;
-  /** Initial reconnect delay for streaming, in seconds. */
-  streamInitialReconnectDelay: number;
-  /** Poll interval in seconds. */
-  pollInterval: number;
   /** Logger. */
   logger: LDLogger;
+
+  /** Polling-specific configuration. */
+  polling: {
+    /** The polling endpoint paths. */
+    paths: DataSourcePaths;
+    /** Default poll interval in seconds. */
+    intervalSeconds: number;
+  };
+
+  /** Streaming-specific configuration. */
+  streaming: {
+    /** The streaming endpoint paths. */
+    paths: DataSourcePaths;
+    /** Default initial reconnect delay in seconds. */
+    initialReconnectDelaySeconds: number;
+  };
 
   // Cache-related fields (needed for cache initializer).
   /** Platform storage for reading cached data. */
@@ -91,9 +97,13 @@ export interface SourceFactoryProvider {
   ): SynchronizerSlot | undefined;
 }
 
-function createPingHandler(ctx: SourceFactoryContext): PingHandler {
+function createPingHandler(
+  requestor: FDv2Requestor,
+  selectorGetter: () => string | undefined,
+  logger: LDLogger,
+): PingHandler {
   return {
-    handlePing: () => fdv2Poll(ctx.requestor, ctx.selectorGetter(), false, ctx.logger),
+    handlePing: () => fdv2Poll(requestor, selectorGetter(), false, logger),
   };
 }
 
@@ -132,12 +142,39 @@ function resolvePollingRequestor(
   return makeFDv2Requestor(
     ctx.plainContextString,
     overriddenEndpoints,
-    ctx.pollingPaths,
+    ctx.polling.paths,
     ctx.requests,
     ctx.encoding,
     ctx.baseHeaders,
     ctx.queryParams,
   );
+}
+
+/**
+ * Build a streaming base instance using per-entry config with context defaults
+ * as fallbacks. The `sg` selector getter is the canonical source of truth for
+ * the current selector — both the stream and its ping handler use it.
+ */
+function buildStreamingBase(
+  entry: { endpoints?: EndpointConfig; initialReconnectDelay?: number },
+  ctx: SourceFactoryContext,
+  sg: () => string | undefined,
+) {
+  const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
+  const requestor = resolvePollingRequestor(ctx, entry.endpoints);
+  const streamUriPath = ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
+  return createStreamingBase({
+    requests: ctx.requests,
+    serviceEndpoints: entryEndpoints,
+    streamUriPath,
+    parameters: ctx.queryParams,
+    selectorGetter: sg,
+    headers: ctx.baseHeaders,
+    initialRetryDelayMillis:
+      (entry.initialReconnectDelay ?? ctx.streaming.initialReconnectDelaySeconds) * 1000,
+    logger: ctx.logger,
+    pingHandler: createPingHandler(requestor, sg, ctx.logger),
+  });
 }
 
 /**
@@ -157,25 +194,9 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
             createPollingInitializer(requestor, ctx.logger, sg);
         }
 
-        case 'streaming': {
-          const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
-          return (sg: () => string | undefined) => {
-            const streamUriPath = ctx.streamingPaths.pathGet(ctx.encoding, ctx.plainContextString);
-            const base = createStreamingBase({
-              requests: ctx.requests,
-              serviceEndpoints: entryEndpoints,
-              streamUriPath,
-              parameters: ctx.queryParams,
-              selectorGetter: sg,
-              headers: ctx.baseHeaders,
-              initialRetryDelayMillis:
-                (entry.initialReconnectDelay ?? ctx.streamInitialReconnectDelay) * 1000,
-              logger: ctx.logger,
-              pingHandler: createPingHandler(ctx),
-            });
-            return createStreamingInitializer(base);
-          };
-        }
+        case 'streaming':
+          return (sg: () => string | undefined) =>
+            createStreamingInitializer(buildStreamingBase(entry, ctx, sg));
 
         case 'cache':
           return createCacheInitializerFactory({
@@ -197,7 +218,7 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
     ): SynchronizerSlot | undefined {
       switch (entry.type) {
         case 'polling': {
-          const intervalMs = (entry.pollInterval ?? ctx.pollInterval) * 1000;
+          const intervalMs = (entry.pollInterval ?? ctx.polling.intervalSeconds) * 1000;
           const requestor = resolvePollingRequestor(ctx, entry.endpoints);
           const factory = (sg: () => string | undefined) =>
             createPollingSynchronizer(requestor, ctx.logger, sg, intervalMs);
@@ -205,23 +226,8 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
         }
 
         case 'streaming': {
-          const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
-          const factory = (sg: () => string | undefined) => {
-            const streamUriPath = ctx.streamingPaths.pathGet(ctx.encoding, ctx.plainContextString);
-            const base = createStreamingBase({
-              requests: ctx.requests,
-              serviceEndpoints: entryEndpoints,
-              streamUriPath,
-              parameters: ctx.queryParams,
-              selectorGetter: sg,
-              headers: ctx.baseHeaders,
-              initialRetryDelayMillis:
-                (entry.initialReconnectDelay ?? ctx.streamInitialReconnectDelay) * 1000,
-              logger: ctx.logger,
-              pingHandler: createPingHandler(ctx),
-            });
-            return createStreamingSynchronizer(base);
-          };
+          const factory = (sg: () => string | undefined) =>
+            createStreamingSynchronizer(buildStreamingBase(entry, ctx, sg));
           return createSynchronizerSlot(factory);
         }
 

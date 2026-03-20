@@ -6,15 +6,7 @@ import type { LDReactClientContextValue } from '../LDClient';
 import { LDReactContext } from '../provider/LDReactContext';
 
 /**
- * The result of `useInitializationStatus`. Represents the current initialization
- * state of the LaunchDarkly client.
- *
- * @remarks
- * This replaces `useLDClientError` from `launchdarkly-react-client-sdk`. It provides
- * richer information: both the initialization state and the error (if any).
- *
- * Use `useInitializationStatus().error` to access the error,
- * and `useInitializationStatus().status` to determine the full state.
+ * Represents the current initialization state of the LaunchDarkly client.
  */
 export type InitializationStatus =
   | { status: 'unknown' }

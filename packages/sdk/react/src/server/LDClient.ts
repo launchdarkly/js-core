@@ -10,10 +10,8 @@ import {
  * {@link LDContext}.
  *
  * @remarks
- * Unlike the server SDK (where every variation call requires a context parameter),
- * `LDServerSession` binds the context at creation time. This is idiomatic for React
- * Server Components, where the context comes from the incoming request (headers, cookies,
- * auth tokens) and does not change during the render.
+ * This is idiomatic for React Server Components, where the context comes from the incoming
+ * request (headers, cookies, auth tokens) and does not change during the render.
  *
  * Create a session with {@link createLDServerSession}.
  */
