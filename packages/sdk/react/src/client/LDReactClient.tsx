@@ -21,16 +21,8 @@ function noopDetail<T>(defaultValue: T): { value: T; kind: LDEvaluationReason['k
 }
 
 /**
- * Returns a noop LDReactClient for use on the server. Never instantiates the browser SDK.
- * This is useful when dealing with applications that are using React Server Components.
- *
- * This fallback is helpful when compilers attempt to prerender components on build time.
- * This will enable the components to at least be prerendered with their default values.
- *
- * @privateRemarks TODO
- * I think we should move this and the server noop to a shared location... currently we
- * are separating everything to trivialize network boundary and tree shaking concerns.
- * But we shouldn't have any problems having some shared modules.
+ * @privateRemarks
+ * **WARNING:** This function is going to be removed soon! sdk-2043
  */
 function createNoopReactClient(): LDReactClient {
   return {
@@ -89,23 +81,28 @@ function createNoopReactClient(): LDReactClient {
  * Creates a new instance of the LaunchDarkly client for React.
  *
  * @remarks
- * When called on the server, returns a noop client that never instantiates the browser SDK.
- * This function is exported so that developers can have more flexibility in client creation.
- * More so this is to preserve previous behavior of app developers managing their own client
- * instance.
+ * **NOTE:** We recommend using the convenience factory function {@link createLDReactProvider}
+ * instead of this function to create your client instance if you can.
  *
- * we DO NOT recommend using this client creation method.
+ * This factory function is provided to allow the caller to have more control over their client instance.
+ * When using this function, the caller is responsible for:
+ *  - calling `client.start()` before or after mounting.
+ *  - subscribing to client lifecycle events.
+ *
+ * Refer to {@link createLDReactProviderWithClient} for the default behavior.
  *
  * @example
  * ```tsx
  * import { createClient } from '@launchdarkly/react';
  * const client = createClient(clientSideID, context, options);
+ *
+ * await client.start();
  * ```
  *
  * @param clientSideID launchdarkly client side id @see https://launchdarkly.com/docs/sdk/concepts/client-side-server-side#client-side-id
  * @param context launchdarkly context @see https://launchdarkly.com/docs/sdk/concepts/context
- * @param options
- * @returns
+ * @param options options for the client @see {@link LDReactClientOptions}
+ * @returns the new client instance @see {@link LDReactClient}
  */
 export function createClient(
   clientSideID: string,

@@ -7,7 +7,6 @@
   "private": true,
   "scripts": {
     "start": "electron-forge start",
-    "build": "electron-forge start -- --build",
     "test": "playwright test",
     "clean": "electron-forge clean",
     "package": "electron-forge package",

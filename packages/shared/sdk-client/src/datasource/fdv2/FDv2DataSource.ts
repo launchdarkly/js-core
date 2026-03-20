@@ -209,7 +209,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       );
 
       if (conditions.promise) {
+<<<<<<< rlamb/fdv2-source-factory-provider
         logger?.warn('Fallback condition active for current synchronizer.');
+=======
+        logger?.debug('Fallback condition active for current synchronizer.');
+>>>>>>> main
       }
 
       // try/finally ensures conditions are closed on all code paths.

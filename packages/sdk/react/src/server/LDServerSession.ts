@@ -14,19 +14,19 @@ const withCache = cache(() => ({ session: null as LDServerSession | null }));
  * Boundary check for server only code. Given that we are assuming a React ecosystem,
  * simply checking for the presence of window should be sufficient.
  */
-export function isServer(): boolean {
+function isServer(): boolean {
   return typeof window === 'undefined';
 }
 
 /**
- * Creates a per-request evaluation scope by binding an {@link LDServerBaseClient} to a specific
- * context.
+ * Creates a LaunchDarkly server SDK client that is scoped to a specific context.
  *
  * @remarks
- * Call this once per request (or share a session when the context is static, e.g. a shared
- * anonymous context). The returned {@link LDServerSession} exposes the same variation API as the
- * server SDK, but without the `context` parameter — the context is bound at creation time. The
- * reason for this is purely idiomatic to align the server and client APIs closer together.
+ * **NOTE:** We recommend using the {@link createLDServerSession} function to create your server session
+ * instead of directly calling this function.
+ *
+ * This function is provided to allow the caller to have more control over handling their scoped LD client.
+ * If using this function, the caller is responsible for managing the lifecycle of the created wrapped client.
  *
  * @throws {Error} If called in a browser environment. This function must only be called on the
  *   server. Ensure the module that calls this is not imported from client components.
@@ -76,6 +76,15 @@ export function createLDServerWrapper(
   };
 }
 
+/**
+ * Creates a per-request evaluation scope by binding an {@link LDServerBaseClient} to a specific
+ * context.
+ *
+ * @param client Any LaunchDarkly server SDK client that satisfies {@link LDServerBaseClient}.
+ * @param context The context to bind to this session. Typically resolved from the request
+ *   (e.g. from auth tokens, cookies, or headers).
+ * @returns An {@link LDServerSession} scoped to the given context.
+ */
 export function createLDServerSession(
   client: LDServerBaseClient,
   context: LDContext,
@@ -87,6 +96,34 @@ export function createLDServerSession(
   return session;
 }
 
+/**
+ * Returns the {@link LDServerSession} scoped to the current request.
+ *
+ * @remarks
+ * **NOTE:** This function is only used to retrieve the session stored by {@link createLDServerSession}.
+ * You must call {@link createLDServerSession} before calling this function or it will return a null value.
+ *
+ * @example
+ * ```ts
+ * // app.tsx (entry point)
+ * import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+ * const session = createLDServerSession(client, context);
+ *
+ * // component.ts
+ * import { useLDServerSession } from '@launchdarkly/react-sdk/server';
+ *
+ * export default function MyComponent() {
+ *   const session = useLDServerSession();
+ *   if (session) {
+ *     const flagValue = await session.boolVariation('my-flag', false);
+ *     return <div>{flagValue ? 'Yes' : 'No'}</div>;
+ *   }
+ *   return <div>Loading...</div>;
+ * }
+ * ```
+ *
+ * @returns The {@link LDServerSession} scoped to the current request, or `null` if no session has been created.
+ */
 export function useLDServerSession(): LDServerSession | null {
   if (!isServer()) {
     throw new Error(
