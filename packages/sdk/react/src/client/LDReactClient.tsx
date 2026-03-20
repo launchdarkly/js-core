@@ -36,7 +36,7 @@ function createNoopReactClient(): LDReactClient {
     close: () => Promise.resolve(),
     flush: () => Promise.resolve({ result: true }),
     getContext: () => undefined,
-    getInitializationState: (): InitializedState => 'initializing',
+    getInitializationState: (): InitializedState => 'failed',
     getInitializationError: (): Error | undefined => undefined,
     identify: () => Promise.resolve({ status: 'completed' as const }),
     jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
