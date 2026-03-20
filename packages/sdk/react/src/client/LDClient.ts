@@ -52,6 +52,8 @@ export interface LDReactClient extends LDClient {
   ): () => void;
 
   /**
+   * @internal
+   *
    * Returns whether flag keys should be converted to camelCase in `useFlags()` and resolved from camelCase
    * in the individual variation hooks. Defaults to `true` when absent.
    *

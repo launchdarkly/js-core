@@ -14,7 +14,7 @@ import {
  * `@launchdarkly/js-server-sdk-common`, allowing edge SDKs and other custom
  * server client implementations to be used with {@link createLDServerSession}.
  *
- * @see {@link https://github.com/launchdarkly/js-core/blob/main/packages/shared/sdk-server/src/api/LDClient.ts}
+ * @see {@link https://launchdarkly.github.io/js-core/packages/shared/sdk-server/docs/interfaces/LDClient.html}
  * for more information.
  */
 export interface LDServerBaseClient {
