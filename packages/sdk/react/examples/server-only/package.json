@@ -1,0 +1,25 @@
+{
+  "name": "@internal/react-sdk-example-server-only",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/react-sdk": "workspace:^",
+    "next": "^16",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

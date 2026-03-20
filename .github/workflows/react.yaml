@@ -96,4 +96,19 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           before_test: 'yarn workspace @internal/react-sdk-example-client-only playwright install --with-deps chromium'
 
+  run-server-only-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@internal/react-sdk-example-server-only'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          before_test: 'yarn workspace @internal/react-sdk-example-server-only playwright install --with-deps chromium'
+
 # TODO: Add contract tests

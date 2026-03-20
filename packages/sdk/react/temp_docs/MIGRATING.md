@@ -3,6 +3,8 @@
 This document describes the API differences between the legacy `launchdarkly-react-client-sdk` (v3.x)
 and the new `@launchdarkly/react-sdk` package.
 
+With the introduction of server components, we will narrow our official React support to a minimum major version of **18** (peer dependency: `react@>=18.0.0`). Support for React Server Components is experimental and may require React 18 or later.
+
 ---
 
 ## Hooks
@@ -109,34 +111,6 @@ value) without subscribing to every flag change.
 
 ---
 
-### `useFlag` — deprecated
-
-> **Deprecated.** Use `useBoolVariation`, `useStringVariation`, `useNumberVariation`, or
-> `useJsonVariation` instead. This hook will be removed in a future major version.
-
-```ts
-import { useFlag } from '@launchdarkly/react-sdk';
-
-const showNewFeature = useFlag<boolean>('show-new-feature', false);
-const maxItems = useFlag<number>('max-items', 10);
-```
-
----
-
-### `useFlagDetail` — deprecated
-
-> **Deprecated.** Use `useBoolVariationDetail`, `useStringVariationDetail`,
-> `useNumberVariationDetail`, or `useJsonVariationDetail` instead. This hook will be removed in a
-> future major version.
-
-```ts
-import { useFlagDetail } from '@launchdarkly/react-sdk';
-
-const { value, variationIndex, reason } = useFlagDetail<boolean>('show-new-feature', false);
-```
-
----
-
 ### `useFlags` — deprecated
 
 > **Deprecated.** Use individual typed variation hooks (`useBoolVariation`, etc.) or `useLDClient`
@@ -210,9 +184,11 @@ state when initialization completes or when `client.identify()` is called.
 | Old API | Status | Replacement |
 |---------|--------|-------------|
 | `useLDClientError()` | Removed | `useInitializationStatus().error` |
+| `useFlag()` | Removed | `useBoolVariation`, `useStringVariation`, `useNumberVariation`, `useJsonVariation` |
+| `useFlagDetail()` | Removed | `useBoolVariationDetail`, `useStringVariationDetail`, `useNumberVariationDetail`, `useJsonVariationDetail` |
 | `withLDProvider()` | Removed | `createLDReactProvider()` |
 | `asyncWithLDProvider()` | Removed | `createLDReactProvider()` |
-| `withLDConsumer()` | Removed | `useLDClient()`, `useFlags()` hooks |
+| `withLDConsumer()` | Removed | `useLDClient()`, typed variation hooks (`useBoolVariation`, etc.) |
 | `LDProvider` component | Removed | `createLDReactProvider()` |
 
 ---
@@ -293,7 +269,7 @@ const MyComponent = withLDConsumer({ reactContext: MyContext })(({ flags, ldClie
 ));
 
 // After
-import { initLDReactContext, createLDReactProvider, useFlags, useBoolVariation, useLDClient } from '@launchdarkly/react-sdk';
+import { initLDReactContext, createLDReactProvider, useBoolVariation, useLDClient } from '@launchdarkly/react-sdk';
 
 const MyContext = initLDReactContext();
 const LDProvider = createLDReactProvider('your-id', { kind: 'user', key: 'user-key' }, {
@@ -301,7 +277,6 @@ const LDProvider = createLDReactProvider('your-id', { kind: 'user', key: 'user-k
 });
 
 function MyComponent() {
-  const flags    = useFlags(MyContext);
   const myFlag   = useBoolVariation('my-flag', false, MyContext);
   const ldClient = useLDClient(MyContext);
   return <div>{myFlag ? 'on' : 'off'}</div>;

@@ -6,8 +6,7 @@ import type { LDReactClientContextValue } from '../LDClient';
 import useVariationCore from './useVariationCore';
 
 /**
- * Returns the boolean variation and evaluation detail of a feature flag, re-rendering only when
- * that specific flag changes.
+ * Returns the boolean variation and evaluation detail of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -28,8 +27,7 @@ export function useBoolVariationDetail(
 }
 
 /**
- * Returns the string variation and evaluation detail of a feature flag, re-rendering only when
- * that specific flag changes.
+ * Returns the string variation and evaluation detail of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -50,8 +48,7 @@ export function useStringVariationDetail(
 }
 
 /**
- * Returns the numeric variation and evaluation detail of a feature flag, re-rendering only when
- * that specific flag changes.
+ * Returns the numeric variation and evaluation detail of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.
@@ -72,8 +69,7 @@ export function useNumberVariationDetail(
 }
 
 /**
- * Returns the JSON variation and evaluation detail of a feature flag, re-rendering only when
- * that specific flag changes.
+ * Returns the JSON variation and evaluation detail of a feature flag.
  *
  * @param key The feature flag key.
  * @param defaultValue The value to return if the flag is not available.

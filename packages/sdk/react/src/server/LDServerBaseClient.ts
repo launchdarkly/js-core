@@ -13,8 +13,9 @@ import {
  * This interface decouples the React SDK from the concrete `LDClient` type in
  * `@launchdarkly/js-server-sdk-common`, allowing edge SDKs and other custom
  * server client implementations to be used with {@link createLDServerSession}.
- * For the most part, this interface should be compatible with any LaunchDarkly server SDK
- * from the this monorepo.
+ *
+ * @see {@link https://launchdarkly.github.io/js-core/packages/shared/sdk-server/docs/interfaces/LDClient.html}
+ * for more information.
  */
 export interface LDServerBaseClient {
   /**
@@ -85,9 +86,6 @@ export interface LDServerBaseClient {
 
   /**
    * Builds an object encapsulating the state of all feature flags for a given context.
-   *
-   * The most common use case is bootstrapping client-side flags from a back-end service.
-   * Call `toJSON()` on the returned object to get the data structure used by the client SDK.
    */
   allFlagsState(context: LDContext, options?: LDFlagsStateOptions): Promise<LDFlagsState>;
 }
