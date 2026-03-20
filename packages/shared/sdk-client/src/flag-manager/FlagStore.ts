@@ -20,6 +20,13 @@ export default interface FlagStore {
    * Gets all the flags in the flag store.
    */
   getAll(): { [key: string]: ItemDescriptor };
+
+  /**
+   * Applies partial updates by inserting or replacing entries without
+   * version checks. Used by FDv2 where ordering is handled at the
+   * protocol layer.
+   */
+  applyPartial(updates: { [key: string]: ItemDescriptor }): void;
 }
 
 /**
@@ -48,6 +55,11 @@ export function createDefaultFlagStore(): FlagStore {
     },
     getAll(): { [key: string]: ItemDescriptor } {
       return flags;
+    },
+    applyPartial(updates: { [key: string]: ItemDescriptor }) {
+      Object.entries(updates).forEach(([key, descriptor]) => {
+        flags[key] = descriptor;
+      });
     },
   };
 }
