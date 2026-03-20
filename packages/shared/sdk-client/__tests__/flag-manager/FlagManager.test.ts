@@ -241,4 +241,38 @@ describe('given a flag manager with storage', () => {
     // Flag should still be present (no changes).
     expect(flagManager.get('flag1')?.flag.value).toBe('value');
   });
+
+  it('partial applyChanges bypasses version checks (accepts older version)', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.init(context, {
+      flag1: makeMockItemDescriptor(10, 'v10'),
+    });
+
+    // FDv1 upsert would reject version 5 because 5 < 10.
+    // FDv2 applyChanges should accept it — protocol handles ordering.
+    await flagManager.applyChanges(
+      context,
+      { flag1: makeMockItemDescriptor(5, 'v5-override') },
+      'partial',
+    );
+
+    expect(flagManager.get('flag1')?.flag.value).toBe('v5-override');
+  });
+
+  it('applyChanges emits change events for partial updates', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+    await flagManager.init(context, {
+      flag1: makeMockItemDescriptor(1, 'old'),
+    });
+
+    const changes: string[][] = [];
+    flagManager.on((_ctx, keys) => {
+      changes.push(keys);
+    });
+
+    await flagManager.applyChanges(context, { flag1: makeMockItemDescriptor(2, 'new') }, 'partial');
+
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toContain('flag1');
+  });
 });

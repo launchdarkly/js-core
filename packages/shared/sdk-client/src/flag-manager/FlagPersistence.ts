@@ -73,13 +73,7 @@ export default class FlagPersistence {
     updates: { [key: string]: ItemDescriptor },
     type: internal.PayloadType,
   ): Promise<void> {
-    if (type === 'full') {
-      this._flagUpdater.init(context, updates);
-    } else if (type === 'partial') {
-      Object.entries(updates).forEach(([key, descriptor]) => {
-        this._flagUpdater.upsert(context, key, descriptor);
-      });
-    }
+    this._flagUpdater.applyChanges(context, updates, type);
     await this._storeCache(context);
   }
 

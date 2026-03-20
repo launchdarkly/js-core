@@ -1,4 +1,4 @@
-import { Context, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
@@ -61,6 +61,21 @@ export interface FlagUpdater {
   upsert(context: Context, key: string, item: ItemDescriptor): boolean;
 
   /**
+   * Applies a changeset directly to the flag store, bypassing version checks
+   * and inactive-context guards. Used by the FDv2 data path where ordering
+   * is handled at the protocol layer.
+   *
+   * - `'full'`: replaces all flags and emits change events for differences.
+   * - `'partial'`: merges updates and emits change events for each key.
+   * - `'none'`: no flag changes (caller handles freshness separately).
+   */
+  applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    type: internal.PayloadType,
+  ): void;
+
+  /**
    * Registers a callback to be called when the flags change.
    *
    * @param callback the callback to register
@@ -113,6 +128,29 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
       }
 
       this.init(context, newFlags);
+    },
+
+    applyChanges(
+      context: Context,
+      updates: { [key: string]: ItemDescriptor },
+      type: internal.PayloadType,
+    ): void {
+      activeContext = context;
+      if (type === 'full') {
+        const oldFlags = flagStore.getAll();
+        flagStore.init(updates);
+        const changed = calculateChangedKeys(oldFlags, updates);
+        if (changed.length > 0) {
+          this.handleFlagChanges(changed, 'init');
+        }
+      } else if (type === 'partial') {
+        const keys = Object.keys(updates);
+        flagStore.applyPartial(updates);
+        if (keys.length > 0) {
+          this.handleFlagChanges(keys, 'patch');
+        }
+      }
+      // 'none' — no flag changes, caller handles freshness.
     },
 
     upsert(context: Context, key: string, item: ItemDescriptor): boolean {
