@@ -110,17 +110,18 @@ function createNoopReactClient(): LDReactClient {
 export function createClient(
   clientSideID: string,
   context: LDContext,
-  options?: LDReactClientOptions,
+  options: LDReactClientOptions = {},
 ): LDReactClient {
   if (isServerSide()) {
     return createNoopReactClient();
   }
-  const shouldUseCamelCaseFlagKeys = options?.useCamelCaseFlagKeys ?? true;
+
+  const { useCamelCaseFlagKeys: shouldUseCamelCaseFlagKeys = true, ...ldOptions } = options;
 
   const baseClientOptions: LDOptions = {
-    ...options,
-    wrapperName: options?.wrapperName ?? 'react-client-sdk',
-    wrapperVersion: options?.wrapperVersion ?? '0.0.0', // x-release-please-version
+    ...ldOptions,
+    wrapperName: ldOptions?.wrapperName ?? 'react-client-sdk',
+    wrapperVersion: ldOptions?.wrapperVersion ?? '0.0.0', // x-release-please-version
   };
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);
