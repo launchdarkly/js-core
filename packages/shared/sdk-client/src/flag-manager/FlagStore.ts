@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { ItemDescriptor } from './ItemDescriptor';
 
 /**
@@ -20,6 +22,14 @@ export default interface FlagStore {
    * Gets all the flags in the flag store.
    */
   getAll(): { [key: string]: ItemDescriptor };
+
+  /**
+   * Applies a changeset to the store without version checks.
+   * - `'full'`: replaces all flags.
+   * - `'partial'`: merges updates into existing flags.
+   * - `'none'`: no-op.
+   */
+  applyChanges(updates: { [key: string]: ItemDescriptor }, type: internal.PayloadType): void;
 }
 
 /**
@@ -48,6 +58,15 @@ export function createDefaultFlagStore(): FlagStore {
     },
     getAll(): { [key: string]: ItemDescriptor } {
       return flags;
+    },
+    applyChanges(updates: { [key: string]: ItemDescriptor }, type: internal.PayloadType) {
+      if (type === 'full') {
+        this.init(updates);
+      } else if (type === 'partial') {
+        Object.entries(updates).forEach(([key, descriptor]) => {
+          flags[key] = descriptor;
+        });
+      }
     },
   };
 }

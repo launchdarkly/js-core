@@ -1,4 +1,4 @@
-import { Context, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDLogger, Platform } from '@launchdarkly/js-sdk-common';
 
 import { FRESHNESS_SUFFIX, FreshnessRecord, hashContext } from '../storage/freshness';
 import { loadCachedFlags } from '../storage/loadCachedFlags';
@@ -57,6 +57,24 @@ export default class FlagPersistence {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Applies a changeset to the flag store.
+   * - `'full'`: replaces all flags via {@link FlagUpdater.init}.
+   * - `'partial'`: upserts individual flags via {@link FlagUpdater.upsert}.
+   * - `'none'`: no flag changes, only persists cache to update freshness.
+   *
+   * Always persists to cache afterwards, which updates the freshness timestamp
+   * even when no flags change (e.g., transfer-none).
+   */
+  async applyChanges(
+    context: Context,
+    updates: { [key: string]: ItemDescriptor },
+    type: internal.PayloadType,
+  ): Promise<void> {
+    this._flagUpdater.applyChanges(context, updates, type);
+    await this._storeCache(context);
   }
 
   /**
