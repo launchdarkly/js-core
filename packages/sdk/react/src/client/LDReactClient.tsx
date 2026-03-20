@@ -37,7 +37,8 @@ function createNoopReactClient(): LDReactClient {
     flush: () => Promise.resolve({ result: true }),
     getContext: () => undefined,
     getInitializationState: (): InitializedState => 'failed',
-    getInitializationError: (): Error | undefined => undefined,
+    getInitializationError: (): Error | undefined =>
+      new Error('Server-side client cannot be used to evaluate flags'),
     identify: () => Promise.resolve({ status: 'completed' as const }),
     jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
     jsonVariationDetail: (key: string, defaultValue: unknown) =>
