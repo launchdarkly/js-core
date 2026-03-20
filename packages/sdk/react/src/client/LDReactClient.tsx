@@ -152,11 +152,11 @@ export function createClient(
       return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
         initializationState = result.status;
         lastInitResult = result;
-        initStatusSubscribers.forEach((cb) => cb(result));
         if (!startNotified) {
           startNotified = true;
           notifyContextSubscribers();
         }
+        initStatusSubscribers.forEach((cb) => cb(result));
         return result;
       });
     },
