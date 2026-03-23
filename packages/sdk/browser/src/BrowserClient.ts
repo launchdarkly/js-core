@@ -92,8 +92,11 @@ class BrowserClientImpl extends LDClientImpl {
       diagnosticsManager?: internal.DiagnosticsManager,
     ) => {
       if (configuration.dataSystem) {
+        const modeSwitching = configuration.dataSystem.automaticModeSwitching as any;
         const initialForegroundMode: FDv2ConnectionMode =
-          (configuration.dataSystem.initialConnectionMode as FDv2ConnectionMode) ?? 'one-shot';
+          modeSwitching?.type === 'manual' && modeSwitching?.initialConnectionMode
+            ? modeSwitching.initialConnectionMode
+            : BROWSER_DATA_SYSTEM_DEFAULTS.foregroundConnectionMode;
 
         return createFDv2DataManagerBase({
           platform,

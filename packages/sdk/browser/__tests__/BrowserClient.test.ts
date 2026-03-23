@@ -924,14 +924,14 @@ describe('given a mock platform for a BrowserClient', () => {
         sendEvents: false,
         fetchGoals: false,
         // @ts-ignore dataSystem is @internal
-        dataSystem: { initialConnectionMode: 'invalid-mode' },
+        dataSystem: { backgroundConnectionMode: 'invalid-mode' },
       },
       platform,
     );
 
     // Invalid mode should produce a warning
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('dataSystem.initialConnectionMode'),
+      expect.stringContaining('dataSystem.backgroundConnectionMode'),
     );
 
     await client.start();
