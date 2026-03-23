@@ -85,8 +85,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (options.dataSystem?.connectionModeConfig) {
     const connMode = options.dataSystem.connectionModeConfig;
     const dataSystem: any = {
-      initialConnectionMode: connMode.initialConnectionMode,
-      automaticModeSwitching: false,
+      automaticModeSwitching: connMode.initialConnectionMode
+        ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
+        : false,
     };
 
     if (connMode.customConnectionModes) {
