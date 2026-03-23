@@ -45,7 +45,7 @@ jobs:
 
       # Contract Tests
       - name: Install contract test dependencies
-        run: yarn workspaces focus browser-contract-test-adapter browser-contract-test-service
+        run: yarn workspaces focus browser-contract-test-service
 
       - name: Install Playwright browsers
         run: yarn workspace browser-contract-test-service install-playwright-browsers
@@ -53,15 +53,12 @@ jobs:
       - name: Build shared contract test utils
         run: yarn workspace @launchdarkly/js-contract-test-utils build
 
-      - name: Build contract test adapter
-        run: yarn workspace browser-contract-test-adapter run build
-
       - name: Build contract test entity (browser app)
         run: yarn workspace browser-contract-test-service run build
 
       - name: Start contract test adapter in background
         run: |
-          yarn workspace browser-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          yarn workspace browser-contract-test-service run start:adapter > /tmp/adapter.log 2>&1 &
           echo $! > /tmp/adapter.pid
 
       - name: Serve browser app with http-server

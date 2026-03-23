@@ -32,14 +32,16 @@ jobs:
 
       # Contract Tests
       - name: Install contract test dependencies
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
-        run: |
-          yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' install
-          yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" install
-          yarn workspaces foreach -pR --topological-dev --from 'browser-contract-test-adapter' run build
-          yarn workspaces foreach -pR --topological-dev --from "@launchdarkly/react-sdk-contract-tests" run build
-          yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
+        run: yarn workspaces focus @launchdarkly/react-sdk-contract-tests
+
+      - name: Install Playwright browsers
+        run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
+
+      - name: Build shared contract test utils
+        run: yarn workspace @launchdarkly/js-contract-test-utils build
+
+      - name: Build contract test entity (Next.js app)
+        run: yarn workspace @launchdarkly/react-sdk-contract-tests run build
       - name: Run test adapter
         run: |
           yarn workspace @launchdarkly/react-sdk-contract-tests run start:adapter > /tmp/adapter.log 2>&1 &

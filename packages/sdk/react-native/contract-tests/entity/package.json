@@ -8,7 +8,8 @@
     "expo-prebuild": "CI=1 expo prebuild --clean",
     "android": "expo run:android",
     "android-release": "expo run:android --variant release",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "start:adapter": "sdk-testharness-server adapter"
   },
   "dependencies": {
     "@launchdarkly/js-contract-test-utils": "workspace:^",
