@@ -70,4 +70,17 @@ export interface LDReactProviderOptions {
    * @returns {LDReactClientContext} The react context for the LaunchDarkly client.
    */
   reactContext?: LDReactClientContext;
+
+  /**
+   * Bootstrap data from the server. Pass the result of `flagsState.toJSON()` obtained
+   * from the server SDK's `allFlagsState` method.
+   *
+   * When provided, the client immediately uses these values before the first network
+   * response arrives — eliminating the flag-fetch waterfall on page load.
+   *
+   * This is merged into `startOptions.bootstrap` when the client is started. If both
+   * `bootstrap` and `startOptions.bootstrap` are provided, this top-level value takes
+   * precedence.
+   */
+  bootstrap?: unknown;
 }
