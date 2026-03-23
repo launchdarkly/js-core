@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.24.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.23.0...js-sdk-common-v2.24.0) (2026-03-23)
+
+
+### Features
+
+* FDv2 types, refined validators, and DataManager interface ([#1207](https://github.com/launchdarkly/js-core/issues/1207)) ([d7ccfc1](https://github.com/launchdarkly/js-core/commit/d7ccfc1a5359610d70751dc08e3b894bb7ecf334))
+
 ## [2.23.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.22.0...js-sdk-common-v2.23.0) (2026-03-04)
 
 
