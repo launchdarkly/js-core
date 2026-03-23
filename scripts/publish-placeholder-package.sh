@@ -20,7 +20,7 @@ if [ ! -f "$WORKSPACE_PATH/package.json" ]; then
   exit 1
 fi
 
-PACKAGE_NAME=$(node -p "require('./$WORKSPACE_PATH/package.json').name")
+PACKAGE_NAME=$(./scripts/package-name.sh "$WORKSPACE_PATH")
 echo "Publishing placeholder for: $PACKAGE_NAME"
 
 # We must ensure that we are not publishing a placeholder to a package that already
