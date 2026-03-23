@@ -35,7 +35,7 @@ export interface LDClientDataSystemOptions {
    *
    * Default is true for mobile SDKs, false/ignored for browser.
    */
-  automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig;
+  automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 
   /**
    * Override the data source pipeline for specific connection modes.
