@@ -1,9 +1,16 @@
 # LaunchDarkly React SDK
 
+[![NPM][react-sdk-npm-badge]][react-sdk-npm-link]
+[![Actions Status][react-sdk-ci-badge]][react-sdk-ci]
+[![Documentation][react-sdk-ghp-badge]][react-sdk-ghp-link]
+[![NPM][react-sdk-dm-badge]][react-sdk-npm-link]
+[![NPM][react-sdk-dt-badge]][react-sdk-npm-link]
+
 > [!CAUTION]
-> This [SDK|feature] is experimental and should NOT be considered ready for production use. 
-> It may change or be removed without notice and is not subject to backwards 
-> compatibility guarantees.
+> This SDK is in pre-release and not subject to backwards compatibility 
+> guarantees. The API may change based on feedback.
+>
+> Pin to a specific minor version and review the [changelog](./CHANGELOG.md) before upgrading.
 
 ## About LaunchDarkly
 
@@ -19,3 +26,12 @@
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
+
+[react-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react.yml/badge.svg
+[react-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/react.yml
+[react-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-sdk.svg?style=flat-square
+[react-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-sdk
+[react-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[react-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/react/docs/
+[react-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/react-sdk.svg?style=flat-square
+[react-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/react-sdk.svg?style=flat-square
