@@ -38,7 +38,7 @@ jobs:
         run: yarn workspace @launchdarkly/react-sdk-contract-tests install-playwright-browsers
 
       - name: Build shared contract test utils
-        run: yarn workspace @launchdarkly/js-contract-test-utils build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-contract-test-utils' run build
 
       - name: Build contract test entity (Next.js app)
         run: yarn workspace @launchdarkly/react-sdk-contract-tests run build

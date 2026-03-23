@@ -34,7 +34,7 @@ jobs:
         run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-client-sdk' run build
 
       - name: Build shared contract test utils
-        run: yarn workspace @launchdarkly/js-contract-test-utils build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-contract-test-utils' run build
 
       - name: Enable KVM group perms (for emulator performance)
         run: |

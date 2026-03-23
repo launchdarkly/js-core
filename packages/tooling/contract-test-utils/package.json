@@ -54,26 +54,14 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
+    "@launchdarkly/js-client-sdk-common": "workspace:^",
+    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "ws": "^8.18.0"
   },
-  "peerDependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^",
-    "@launchdarkly/js-server-sdk-common": "workspace:^"
-  },
-  "peerDependenciesMeta": {
-    "@launchdarkly/js-client-sdk-common": {
-      "optional": true
-    },
-    "@launchdarkly/js-server-sdk-common": {
-      "optional": true
-    }
-  },
   "devDependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^",
-    "@launchdarkly/js-server-sdk-common": "workspace:^",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^18.11.9",
