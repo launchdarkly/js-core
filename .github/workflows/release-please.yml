@@ -524,9 +524,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    # if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-react-released == 'true'}}
-    # TODO: Uncomment this when the package is ready to be released.
-    if: false
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-react-released == 'true'}}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - id: release-react

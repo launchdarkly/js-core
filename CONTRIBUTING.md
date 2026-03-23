@@ -165,7 +165,7 @@ flowchart LR
     akamai-base[sdk/akamai-base]
     akamai-edgekv[sdk/akamai-edgekv]
     server-ai[sdk/server-ai]
-    svelte[sdk/svelte]
+    react[sdk/react]
     shopify-oxygen[sdk/shopify-oxygen]
 
     %% Store packages
@@ -189,7 +189,8 @@ flowchart LR
     %% Dependencies for SDK packages
     sdk-client --> browser
     sdk-client --> react-native
-    sdk-client --> svelte
+    browser --> react
+    sdk-server --> react
     
     sdk-server --> server-node
     sdk-server --> server-ai
@@ -214,7 +215,7 @@ flowchart LR
     react-native -.-> jest
     
     class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker shared
-    class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,svelte sdk
+    class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen sdk
     class redis,dynamodb store
     class node-otel,browser-telemetry telemetry
     class jest tooling
