@@ -5,12 +5,13 @@ import { anyOf, validatorOf } from '../configuration/validateOptions';
 import { connectionModesValidator, connectionModeValidator } from './ConnectionModeConfig';
 
 const modeSwitchingValidators = {
+  type: TypeValidators.oneOf('automatic', 'manual'),
   lifecycle: TypeValidators.Boolean,
   network: TypeValidators.Boolean,
+  initialConnectionMode: connectionModeValidator,
 };
 
 const dataSystemValidators = {
-  initialConnectionMode: connectionModeValidator,
   backgroundConnectionMode: connectionModeValidator,
   automaticModeSwitching: anyOf(TypeValidators.Boolean, validatorOf(modeSwitchingValidators)),
   connectionModes: connectionModesValidator,
@@ -20,7 +21,7 @@ const dataSystemValidators = {
  * Default FDv2 data system configuration for browser SDKs.
  */
 const BROWSER_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
-  initialConnectionMode: 'one-shot',
+  foregroundConnectionMode: 'one-shot',
   backgroundConnectionMode: undefined,
   automaticModeSwitching: false,
 };
@@ -29,7 +30,7 @@ const BROWSER_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
  * Default FDv2 data system configuration for mobile (React Native) SDKs.
  */
 const MOBILE_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
-  initialConnectionMode: 'streaming',
+  foregroundConnectionMode: 'streaming',
   backgroundConnectionMode: 'background',
   automaticModeSwitching: true,
 };
@@ -38,7 +39,7 @@ const MOBILE_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
  * Default FDv2 data system configuration for desktop SDKs (Electron, etc.).
  */
 const DESKTOP_DATA_SYSTEM_DEFAULTS: PlatformDataSystemDefaults = {
-  initialConnectionMode: 'streaming',
+  foregroundConnectionMode: 'streaming',
   backgroundConnectionMode: undefined,
   automaticModeSwitching: false,
 };

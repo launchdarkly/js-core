@@ -87,6 +87,7 @@ export type {
   ModeDefinition,
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
+  ManualModeSwitching,
   PlatformDataSystemDefaults,
   LifecycleState,
   ModeState,

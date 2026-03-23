@@ -9,18 +9,6 @@ import { ModeDefinition } from './ModeDefinition';
  */
 export interface LDClientDataSystemOptions {
   /**
-   * The initial connection mode the SDK should use.
-   *
-   * If not specified, the platform SDK provides a default:
-   * - Browser: 'one-shot'
-   * - React Native: 'streaming'
-   * - Electron: 'streaming'
-   *
-   * See {@link FDv2ConnectionMode} for the available modes.
-   */
-  initialConnectionMode?: FDv2ConnectionMode;
-
-  /**
    * The connection mode to use when the application transitions to the background.
    *
    * This is primarily used by mobile SDKs (React Native). When the application
@@ -77,6 +65,11 @@ export interface LDClientDataSystemOptions {
  */
 export interface AutomaticModeSwitchingConfig {
   /**
+   * Specifies that mode switching is automatic.
+   */
+  readonly type: 'automatic';
+
+  /**
    * Whether to automatically switch modes in response to application lifecycle
    * events (foreground/background on mobile, visibility changes on browser).
    *
@@ -94,13 +87,30 @@ export interface AutomaticModeSwitchingConfig {
 }
 
 /**
+ * Disable automatic switching and specify the initial mode for connections.
+ *
+ * When automatic mode switching is disabled mode switches must be done with `setConnectionMode`.
+ */
+export interface ManualModeSwitching {
+  /**
+   * Specifies that mode switching is manual.
+   */
+  readonly type: 'manual';
+
+  /**
+   * The initial connection mode to use. Subsequently mode transitions will only happen with `setConnectionMode`.
+   */
+  initialConnectionMode: FDv2ConnectionMode;
+}
+
+/**
  * Platform-specific default configuration for the FDv2 data system.
  */
 export interface PlatformDataSystemDefaults {
-  /** The default initial connection mode for this platform. */
-  readonly initialConnectionMode: FDv2ConnectionMode;
+  /** The default foreground connection mode for this platform. */
+  readonly foregroundConnectionMode: FDv2ConnectionMode;
   /** The default background connection mode, if any. */
   readonly backgroundConnectionMode?: FDv2ConnectionMode;
   /** Whether automatic mode switching is enabled by default. */
-  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig;
+  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 }
