@@ -55,6 +55,7 @@ export function createClient(
     return createNoopClient();
   }
 
+
   const { useCamelCaseFlagKeys: shouldUseCamelCaseFlagKeys = true, ...ldOptions } = options;
 
   const baseClientOptions: LDOptions = {
@@ -87,7 +88,6 @@ export function createClient(
       if (startCalled) {
         return baseClient.start(startOptions);
       }
-      initializationState = 'initializing';
       startCalled = true;
       if (startOptions?.bootstrap) {
         hasBootstrap = true;
