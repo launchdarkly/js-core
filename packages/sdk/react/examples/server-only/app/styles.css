@@ -39,7 +39,7 @@
 .app--on  { background-color: #00844B; }
 .app--off { background-color: #373841; }
 
-.context {
+.context, .flag-key {
   font-size: 0.7em;
   opacity: 0.75;
 }

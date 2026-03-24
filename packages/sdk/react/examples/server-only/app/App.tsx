@@ -29,10 +29,11 @@ export default async function App() {
 
   return (
     <div className={`app ${flagValue ? 'app--on' : 'app--off'}`}>
-      <p>
-        <strong>Server:</strong> The {flagKey} feature flag evaluates to {String(flagValue)}.
-      </p>
+      <p className="flag-key">Feature flag: {flagKey}</p>
       <p className="context">Context: {ctx.name ?? ctx.key}</p>
+      <p>
+        <strong>Server:</strong> feature flag evaluates to {String(flagValue)} (server-side rendered).
+      </p>
       <BootstrapClient flagKey={flagKey} />
     </div>
   );
