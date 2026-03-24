@@ -104,6 +104,7 @@ export type { DataSourceStatusManager } from './datasource/DataSourceStatusManag
 // FDv2 data system validators and platform defaults.
 export {
   dataSystemValidators,
+  resolveForegroundMode,
   BROWSER_DATA_SYSTEM_DEFAULTS,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   DESKTOP_DATA_SYSTEM_DEFAULTS,
