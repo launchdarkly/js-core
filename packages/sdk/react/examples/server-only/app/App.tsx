@@ -1,6 +1,6 @@
 import { useLDServerSession } from '@launchdarkly/react-sdk/server';
 
-import BootstrapClient from './BootstrapClient';
+import BootstrappedClient from './BootstrappedClient';
 
 // The flag key to evaluate. Override with the LAUNCHDARKLY_FLAG_KEY environment variable.
 const flagKey = process.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
@@ -32,9 +32,10 @@ export default async function App() {
       <p className="flag-key">Feature flag: {flagKey}</p>
       <p className="context">Context: {ctx.name ?? ctx.key}</p>
       <p>
-        <strong>Server:</strong> feature flag evaluates to {String(flagValue)} (server-side rendered).
+        <strong>Server:</strong> feature flag evaluates to {String(flagValue)} (server-side
+        rendered).
       </p>
-      <BootstrapClient flagKey={flagKey} />
+      <BootstrappedClient flagKey={flagKey} />
     </div>
   );
 }

@@ -209,6 +209,60 @@ The `bootstrap` data format is unchanged from the old SDK. You can pass either a
 object (`{ 'my-flag': true }`) or the output of `allFlagsState().toJSON()`, which includes
 `$flagsState` and `$valid` metadata.
 
+---
+
+## Isomorphic Provider (React Server Components)
+
+> **New in `@launchdarkly/react-sdk`.**
+
+`LDIsomorphicProvider` is an async React Server Component that evaluates all flags on the server
+and bootstraps the browser SDK with those values. This eliminates the client-side flag fetch
+waterfall — the browser SDK starts immediately with real values instead of defaults.
+
+After hydration the client SDK opens a streaming connection and live flag updates propagate
+normally to all `useBoolVariation` / `useStringVariation` / etc. hooks.
+
+### Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `session` | `LDServerSession` | Yes | A session created by `createLDServerSession`. Provides the evaluation context and all-flags state. |
+| `clientSideId` | `string` | Yes | Your LaunchDarkly client-side ID. |
+| `options` | `LDReactProviderOptions` | No | Additional options forwarded to the underlying client provider (e.g. `ldOptions`, `startOptions`, `deferInitialization`, `reactContext`). The `bootstrap` field is overridden automatically. |
+
+### Usage
+
+```tsx
+// app/page.tsx (Server Component)
+import { init } from '@launchdarkly/node-server-sdk';
+import { createLDServerSession, LDIsomorphicProvider } from '@launchdarkly/react-sdk/server';
+
+const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY!);
+
+export default async function Page() {
+  await ldBaseClient.waitForInitialization({ timeout: 10 });
+
+  const session = createLDServerSession(ldBaseClient, {
+    kind: 'user',
+    key: 'user-key',
+    name: 'Sandy',
+  });
+
+  return (
+    <LDIsomorphicProvider
+      session={session}
+      clientSideId={process.env.LAUNCHDARKLY_CLIENT_SIDE_ID!}
+    >
+      <App />
+    </LDIsomorphicProvider>
+  );
+}
+```
+
+Server Components inside the provider tree can call `session.boolVariation(...)` directly.
+Client Components use the standard hooks (`useBoolVariation`, etc.) — they read from the
+bootstrapped data on first render and receive live updates afterwards.
+
 ## Removed APIs
 
 | Old API | Status | Replacement |

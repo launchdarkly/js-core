@@ -29,7 +29,7 @@ This demo requires Node.js 18 or higher.
 | `createLDServerSession(ldBaseClient, context)` | Called once per request in `app/page.tsx`. Binds the request context to the client and stores the session in React's `cache()`. |
 | `useLDServerSession()` (in `App.tsx`) | Retrieves the session from React's per-request cache. No props needed — React isolates each request automatically. |
 | `LDIsomorphicProvider` | Wraps the app to bootstrap the browser SDK with server-evaluated flags. |
-| `BootstrapClient` (in `App.tsx`) | A `'use client'` component that logs the bootstrap data to the browser console. |
+| `BootstrappedClient` (in `App.tsx`) | A `'use client'` component that evaluates a flag via the bootstrapped browser SDK. |
 
 To observe per-request isolation, open browser tabs with different `context` query parameters.
 Each tab gets a completely independent `LDServerSession` with its own context:
