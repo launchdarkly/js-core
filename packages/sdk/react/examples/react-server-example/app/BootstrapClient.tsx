@@ -12,7 +12,7 @@ export default function BootstrapClient({ flagKey }: { flagKey: string }) {
 
   return (
     <p>
-      <strong>Client:</strong> The {flagKey} feature flag evaluates to {String(flagValue)}.
+      <strong>Client:</strong> feature flag evaluates to {String(flagValue)} (bootstrapped).
     </p>
   );
 }
