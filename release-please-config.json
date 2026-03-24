@@ -104,7 +104,10 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/react": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/client/LDReactClient.tsx"
+      ]
     }
   },
   "plugins": [
