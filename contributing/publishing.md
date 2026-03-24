@@ -35,18 +35,24 @@ designed to:
 > the npm package on npmjs in order to establish the trust.
 > See [this discussion](https://github.com/orgs/community/discussions/127011)
 
-1. Set the `package.json` version to `0.0.0`
-2. Login to npm `npm login`
-3. Publish the placeholder `npm publish --tag snapshot`
-   > NOTE: we set a manual tag here so that this package version
-   > does not map to `latest`
-4. Logout of npm `npm logout`
+Run the placeholder publish script:
+```
+./scripts/publish-placeholder-package.sh packages/type/my-package
+```
+> The script handles `npm login`/`npm logout` internally and publishes an empty
+> `0.0.0` package under the `snapshot` tag so it does not become `latest`.
 
-After completing these steps, you should follow
+After completing this step, follow
 [this doc](https://docs.npmjs.com/trusted-publishers#configuring-trusted-publishing)
-to configure trusted publishing on the new NPM package.
+to configure trusted publishing on the new NPM package, then mark the package public.
 
-After everything is set up, you can then mark the package public.
+For this repo, you should use the following values:
+|||
+|-|-|
+Publisher| Github Actions
+Organization | `launchdarkly`
+Repository | `js-core`
+Workflow filename | `release-please.yml`
 
 ### Step 1. Extend `release-please-config.json`
 
