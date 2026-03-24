@@ -45,9 +45,12 @@ export function createClient(
   context: LDContext,
   options: LDReactClientOptions = {},
 ): LDReactClient {
+<<<<<<< HEAD
   // This should not happen during runtime, but some frameworks such as Next.js supports
   // static rendering which will attempt to render client code during build time. In these cases,
   // we will need to use the noop client to avoid errors.
+=======
+>>>>>>> c5eda353d (feat: adding isomorphic provider to bridge client and server)
   if (typeof window === 'undefined') {
     return createNoopClient();
   }
@@ -84,6 +87,7 @@ export function createClient(
       if (startCalled) {
         return baseClient.start(startOptions);
       }
+      initializationState = 'initializing';
       startCalled = true;
       if (startOptions?.bootstrap) {
         hasBootstrap = true;

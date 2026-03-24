@@ -39,6 +39,7 @@ export default defineConfig([
     ...sharedOptions,
     entry: { server: 'src/server/index.ts' },
     clean: false,
+    external: ['@launchdarkly/react-sdk'],
     esbuildOptions(opts) {
       mangleProps(opts);
     },
