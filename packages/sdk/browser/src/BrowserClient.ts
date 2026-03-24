@@ -93,7 +93,7 @@ class BrowserClientImpl extends LDClientImpl {
     ) => {
       if (configuration.dataSystem) {
         const modeSwitching = configuration.dataSystem.automaticModeSwitching as any;
-        const initialForegroundMode: FDv2ConnectionMode =
+        const foregroundMode: FDv2ConnectionMode =
           modeSwitching?.type === 'manual' && modeSwitching?.initialConnectionMode
             ? modeSwitching.initialConnectionMode
             : BROWSER_DATA_SYSTEM_DEFAULTS.foregroundConnectionMode;
@@ -106,7 +106,7 @@ class BrowserClientImpl extends LDClientImpl {
           baseHeaders,
           emitter,
           transitionTable: BROWSER_TRANSITION_TABLE,
-          initialForegroundMode,
+          foregroundMode,
           backgroundMode: undefined,
           modeTable: MODE_TABLE,
           sourceFactoryProvider: createDefaultSourceFactoryProvider(),
