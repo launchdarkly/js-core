@@ -46,8 +46,8 @@ export interface FDv2DataManagerBaseConfig {
 
   /** Mode resolution table for this platform. */
   transitionTable: ModeResolutionTable;
-  /** The initial foreground connection mode. */
-  initialForegroundMode: FDv2ConnectionMode;
+  /** The configured foreground connection mode. */
+  foregroundMode: FDv2ConnectionMode;
   /** The background connection mode, if any. */
   backgroundMode: FDv2ConnectionMode | undefined;
   /** The mode table mapping modes to data source definitions. */
@@ -121,7 +121,7 @@ export function createFDv2DataManagerBase(
     baseHeaders,
     emitter,
     transitionTable,
-    initialForegroundMode,
+    foregroundMode: configuredForegroundMode,
     backgroundMode,
     modeTable,
     sourceFactoryProvider,
@@ -142,8 +142,8 @@ export function createFDv2DataManagerBase(
 
   // --- Mutable state ---
   let selector: string | undefined;
-  let currentResolvedMode: FDv2ConnectionMode = initialForegroundMode;
-  let foregroundMode: FDv2ConnectionMode = initialForegroundMode;
+  let currentResolvedMode: FDv2ConnectionMode = configuredForegroundMode;
+  let foregroundMode: FDv2ConnectionMode = configuredForegroundMode;
   let dataSource: FDv2DataSource | undefined;
   let debounceManager: StateDebounceManager | undefined;
   let identifiedContext: Context | undefined;
@@ -204,10 +204,10 @@ export function createFDv2DataManagerBase(
     }
     if (forcedStreaming === false) {
       // Explicitly forced off — use configured mode, but never streaming.
-      return initialForegroundMode === 'streaming' ? 'one-shot' : initialForegroundMode;
+      return configuredForegroundMode === 'streaming' ? 'one-shot' : configuredForegroundMode;
     }
     // forcedStreaming === undefined — automatic behavior.
-    return automaticStreamingState ? 'streaming' : initialForegroundMode;
+    return automaticStreamingState ? 'streaming' : configuredForegroundMode;
   }
 
   /**
@@ -417,7 +417,7 @@ export function createFDv2DataManagerBase(
 
   return {
     get configuredForegroundMode(): FDv2ConnectionMode {
-      return initialForegroundMode;
+      return configuredForegroundMode;
     },
 
     async identify(
