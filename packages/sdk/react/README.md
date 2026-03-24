@@ -6,11 +6,15 @@
 [![NPM][react-sdk-dm-badge]][react-sdk-npm-link]
 [![NPM][react-sdk-dt-badge]][react-sdk-npm-link]
 
+⚠️⚠️⚠️
+
 > [!CAUTION]
 > This SDK is in pre-release and not subject to backwards compatibility 
 > guarantees. The API may change based on feedback.
 >
 > Pin to a specific minor version and review the [changelog](./CHANGELOG.md) before upgrading.
+
+☝️☝️☝️
 
 ## About LaunchDarkly
 
