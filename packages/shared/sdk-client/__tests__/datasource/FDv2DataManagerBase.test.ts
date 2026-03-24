@@ -120,7 +120,7 @@ function makeBaseConfig(
     baseHeaders: { authorization: 'test-credential' },
     emitter: { emit: jest.fn(), on: jest.fn(), off: jest.fn() } as any,
     transitionTable: BROWSER_TRANSITION_TABLE,
-    initialForegroundMode: 'one-shot',
+    foregroundMode: 'one-shot',
     backgroundMode: undefined,
     modeTable: MODE_TABLE,
     sourceFactoryProvider: makeSourceFactoryProvider(),
@@ -219,7 +219,7 @@ it('resolves identify immediately when bootstrap is provided', async () => {
 });
 
 it('does not create a data source when bootstrap is used with one-shot mode', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager, { bootstrap: {} });
 
   // one-shot has no synchronizers, so no data source should be created after bootstrap.
@@ -229,7 +229,7 @@ it('does not create a data source when bootstrap is used with one-shot mode', as
 });
 
 it('starts synchronizers when bootstrap is used with streaming mode', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager, { bootstrap: {} });
 
   // streaming has synchronizers, so a data source should be created.
@@ -243,7 +243,7 @@ it('starts synchronizers when bootstrap is used with streaming mode', async () =
 });
 
 it('includes initializers on mode switch when no selector has been obtained', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
   // Reset mock to capture second data source creation.
@@ -274,7 +274,7 @@ it('includes initializers on mode switch when no selector has been obtained', as
 });
 
 it('closes data source on mode switch from streaming to one-shot and updates current mode', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
   const firstDataSource = mockDataSource;
@@ -305,7 +305,7 @@ it('closes data source on mode switch from streaming to one-shot and updates cur
 });
 
 it('does nothing on mode switch when mode is unchanged', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
   mockCreateFDv2DataSource.mockClear();
@@ -323,7 +323,7 @@ it('does nothing on mode switch when mode is unchanged', async () => {
 });
 
 it('uses only synchronizers on mode switch after selector has been obtained', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
   // Simulate that a selector was obtained via dataCallback.
@@ -361,7 +361,7 @@ describe('given a manager with streaming as the initial foreground mode', () => 
   let manager: FDv2DataManagerControl;
 
   beforeEach(() => {
-    manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+    manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   });
 
   afterEach(() => {
@@ -402,7 +402,7 @@ describe('given a manager with one-shot as the initial foreground mode', () => {
   let manager: FDv2DataManagerControl;
 
   beforeEach(() => {
-    manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+    manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   });
 
   afterEach(() => {
@@ -447,7 +447,7 @@ describe('given a manager with one-shot as the initial foreground mode', () => {
 });
 
 it('falls back to one-shot when setForcedStreaming is false and configured mode is streaming', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
   mockDebounceManager.setRequestedMode.mockClear();
@@ -527,7 +527,7 @@ it('skips cache initializer on mode switch when bootstrapped', async () => {
   const sourceFactoryProvider = makeSourceFactoryProvider();
   const manager = createFDv2DataManagerBase(
     makeBaseConfig({
-      initialForegroundMode: 'streaming',
+      foregroundMode: 'streaming',
       sourceFactoryProvider,
     }),
   );
@@ -640,7 +640,7 @@ it('rejects identify when data source start fails', async () => {
 });
 
 it('exposes configuredForegroundMode from the initial config', () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'polling' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'polling' }));
 
   expect(manager.configuredForegroundMode).toBe('polling');
 
@@ -648,7 +648,7 @@ it('exposes configuredForegroundMode from the initial config', () => {
 });
 
 it('reports the initial resolved mode via getCurrentMode', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
   expect(manager.getCurrentMode()).toBe('one-shot');
@@ -674,7 +674,7 @@ it('does not reconcile after close', async () => {
 });
 
 it('resolves to offline when network is unavailable via reconcile', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
   const firstDataSource = mockDataSource;
@@ -695,7 +695,7 @@ it('resolves to offline when network is unavailable via reconcile', async () => 
 });
 
 it('sets up debounce manager with correct initial state after identify', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'streaming' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
   expect(mockCreateStateDebounceManager).toHaveBeenCalledTimes(1);
@@ -775,7 +775,7 @@ it('calls flagManager.applyChanges with type none on none payload to update fres
 });
 
 it('stores selector from payload state for subsequent data source creations', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ initialForegroundMode: 'one-shot' }));
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
   // Deliver a payload with a selector.
@@ -820,7 +820,7 @@ it('warns and skips unsupported initializer entry types', async () => {
       config: cfg,
       sourceFactoryProvider,
       // Use streaming mode which has cache + polling initializers.
-      initialForegroundMode: 'streaming',
+      foregroundMode: 'streaming',
     }),
   );
   await identifyManager(manager);
@@ -844,7 +844,7 @@ it('warns and skips unsupported synchronizer entry types', async () => {
       config: cfg,
       sourceFactoryProvider,
       // streaming mode has streaming + polling synchronizers.
-      initialForegroundMode: 'streaming',
+      foregroundMode: 'streaming',
     }),
   );
   await identifyManager(manager);
@@ -881,7 +881,7 @@ it('appends a blocked FDv1 fallback synchronizer when fdv1Endpoints are configur
       sourceFactoryProvider,
       fdv1Endpoints,
       // streaming mode has synchronizers, so FDv1 fallback will be appended.
-      initialForegroundMode: 'streaming',
+      foregroundMode: 'streaming',
     }),
   );
   await identifyManager(manager);
@@ -908,7 +908,7 @@ it('resolves identify immediately when initial mode has no sources', async () =>
       sourceFactoryProvider,
       // offline mode: [cache] initializer, [] synchronizers.
       // With provider returning undefined for cache, both arrays are empty.
-      initialForegroundMode: 'offline',
+      foregroundMode: 'offline',
     }),
   );
 
