@@ -27,25 +27,25 @@ runs:
       run: |
         echo "${{ inputs.env_vars }}" >> $GITHUB_ENV
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
       name: 'Get the client-side SDK key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/client-key = LAUNCHDARKLY_CLIENT_SIDE_ID'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
       name: 'Get the mobile SDK key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/mobile-key = LAUNCHDARKLY_MOBILE_KEY'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
       name: 'Get the server-side SDK key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
         ssm_parameter_pairs: '/sdk/common/hello-apps/server-key = LAUNCHDARKLY_SDK_KEY'
 
-    - uses: launchdarkly/gh-actions/actions/release-secrets@1a3dc56945c8e87bc952119b055f9481b4d642b0
+    - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
       name: 'Get the test feature flag key'
       with:
         aws_assume_role: ${{ inputs.aws_assume_role }}
