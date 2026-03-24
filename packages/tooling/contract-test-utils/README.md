@@ -52,8 +52,7 @@ yarn build
 contract-test-utils/
   src/
     adapter/
-      AdapterOptions.ts           # Adapter configuration interface
-      startAdapter.ts             # REST↔WebSocket bridge server
+      startAdapter.ts             # REST↔WebSocket bridge server + AdapterOptions
     bin/
       sdk-testharness-server.ts   # CLI entry point
     client-side/

@@ -1,6 +1,4 @@
 /* eslint-disable no-console */
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
@@ -9,7 +7,10 @@ import http from 'node:http';
 import util from 'node:util';
 import { WebSocketServer } from 'ws';
 
-import { AdapterOptions } from './AdapterOptions.js';
+export interface AdapterOptions {
+  restPort?: number;
+  wsPort?: number;
+}
 
 let server: http.Server | undefined;
 
@@ -34,6 +35,7 @@ export function startAdapter(options?: AdapterOptions) {
       }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const send = (data: { [key: string]: unknown; reqId: string }): Promise<any> => {
       let resolver: (data: unknown) => void;
       const waiter = new Promise((resolve) => {
