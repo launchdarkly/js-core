@@ -104,8 +104,7 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/react": {
-      "bump-minor-pre-major": true,
-      "bootstrap-sha": "9250766a9"
+      "bump-minor-pre-major": true
     }
   },
   "plugins": [
