@@ -5,6 +5,9 @@ import {
   type LDEvaluationDetailTyped,
   LDEvaluationReason,
   type LDFlagValue,
+  LDIdentifyOptions,
+  LDIdentifyResult,
+  LDOptions,
   LDStartOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
@@ -107,14 +110,21 @@ function createNoopReactClient(): LDReactClient {
 export function createClient(
   clientSideID: string,
   context: LDContext,
-  options?: LDReactClientOptions,
+  options: LDReactClientOptions = {},
 ): LDReactClient {
   if (isServerSide()) {
     return createNoopReactClient();
   }
-  const shouldUseCamelCaseFlagKeys = options?.useCamelCaseFlagKeys ?? true;
 
-  const baseClient = createBaseClient(clientSideID, context, options);
+  const { useCamelCaseFlagKeys: shouldUseCamelCaseFlagKeys = true, ...ldOptions } = options;
+
+  const baseClientOptions: LDOptions = {
+    ...ldOptions,
+    wrapperName: ldOptions?.wrapperName ?? 'react-client-sdk',
+    wrapperVersion: ldOptions?.wrapperVersion ?? '0.0.0', // x-release-please-version
+  };
+
+  const baseClient = createBaseClient(clientSideID, context, baseClientOptions);
   let initializationState: InitializedState = 'unknown';
   const subscribers = new Set<(context: LDContextStrict) => void>();
   const initStatusSubscribers = new Set<(result: LDWaitForInitializationResult) => void>();
@@ -129,15 +139,15 @@ export function createClient(
         return baseClient.start(startOptions);
       }
       initializationState = 'initializing';
-      return baseClient.start(startOptions).then((result) => {
+      return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
         initializationState = result.status;
         lastInitResult = result;
         initStatusSubscribers.forEach((cb) => cb(result));
         return result;
       });
     },
-    identify: (...args) =>
-      baseClient.identify(...args).then((result) => {
+    identify: (ldContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
+      baseClient.identify(ldContext, identifyOptions).then((result: LDIdentifyResult) => {
         if (result.status === 'completed') {
           const newContext = baseClient.getContext();
           if (newContext) {
@@ -149,7 +159,7 @@ export function createClient(
     getInitializationState: () => initializationState,
     getInitializationError: () =>
       lastInitResult?.status === 'failed' ? lastInitResult.error : undefined,
-    onContextChange: (callback: (context: LDContextStrict) => void) => {
+    onContextChange: (callback: (ldContext: LDContextStrict) => void) => {
       subscribers.add(callback);
       return () => {
         subscribers.delete(callback);
