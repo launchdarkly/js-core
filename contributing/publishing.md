@@ -46,8 +46,13 @@ After completing this step, follow
 [this doc](https://docs.npmjs.com/trusted-publishers#configuring-trusted-publishing)
 to configure trusted publishing on the new NPM package, then mark the package public.
 
-> HINT: you will need to enable the `release-please.yml` workflow for
-> the repo called `js-core` in the `launchdarkly` org.
+For this repo, you should use the following values:
+|||
+|-|-|
+Publisher| Github Actions
+Organization | `launchdarkly`
+Repository | `js-core`
+Workflow filename | `release-please.yml`
 
 ### Step 1. Extend `release-please-config.json`
 
