@@ -2,7 +2,7 @@ export type * from '@launchdarkly/js-client-sdk';
 export * from './LDClient';
 export * from './LDOptions';
 
-export { LDReactContext, initLDReactContext } from './provider/LDReactContext';
+export * from './provider/LDReactContext';
 export { createLDReactProvider, createLDReactProviderWithClient } from './provider/LDReactProvider';
 export { LDIsomorphicClientProvider } from './provider/LDIsomorphicClientProvider';
 export type { LDIsomorphicClientProviderProps } from './provider/LDIsomorphicClientProvider';
