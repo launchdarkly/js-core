@@ -284,9 +284,7 @@ export function createFDv2DataManagerBase(
       `${logTag} dataCallback: type=${payload.type}, updates=${payload.updates.length}, state=${payload.state}`,
     );
 
-    if (payload.state) {
-      selector = payload.state;
-    }
+    selector = payload.state;
 
     const context = identifiedContext;
     if (!context) {
