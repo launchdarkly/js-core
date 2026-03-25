@@ -484,7 +484,7 @@ export function createFDv2DataManagerBase(
       const mode = resolveMode();
       logger.debug(`${logTag} Identify: initial mode resolved to '${mode}'.`);
 
-      bootstrapped = !!(identifyOptions as any)?.bootstrap;
+      bootstrapped = identifyOptions?.bootstrap !== undefined;
 
       if (bootstrapped) {
         // Bootstrap data was already applied to the flag store by the
