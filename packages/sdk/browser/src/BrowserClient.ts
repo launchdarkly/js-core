@@ -7,7 +7,6 @@ import {
   Configuration,
   createDefaultSourceFactoryProvider,
   createFDv2DataManagerBase,
-  FDv2ConnectionMode,
   FlagManager,
   Hook,
   internal,
@@ -25,6 +24,7 @@ import {
   MODE_TABLE,
   Platform,
   readFlagsFromBootstrap,
+  resolveForegroundMode,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -92,12 +92,6 @@ class BrowserClientImpl extends LDClientImpl {
       diagnosticsManager?: internal.DiagnosticsManager,
     ) => {
       if (configuration.dataSystem) {
-        const modeSwitching = configuration.dataSystem.automaticModeSwitching as any;
-        const foregroundMode: FDv2ConnectionMode =
-          modeSwitching?.type === 'manual' && modeSwitching?.initialConnectionMode
-            ? modeSwitching.initialConnectionMode
-            : BROWSER_DATA_SYSTEM_DEFAULTS.foregroundConnectionMode;
-
         return createFDv2DataManagerBase({
           platform,
           flagManager,
@@ -106,7 +100,10 @@ class BrowserClientImpl extends LDClientImpl {
           baseHeaders,
           emitter,
           transitionTable: BROWSER_TRANSITION_TABLE,
-          foregroundMode,
+          foregroundMode: resolveForegroundMode(
+            configuration.dataSystem,
+            BROWSER_DATA_SYSTEM_DEFAULTS,
+          ),
           backgroundMode: undefined,
           modeTable: MODE_TABLE,
           sourceFactoryProvider: createDefaultSourceFactoryProvider(),
