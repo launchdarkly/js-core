@@ -87,7 +87,7 @@ export interface AutomaticModeSwitchingConfig {
  * Disable automatic switching and specify the initial connection mode.
  *
  * Subsequent mode transitions must be triggered explicitly via
- * {@link FDv2DataManagerControl.setRequestedMode}.
+ * {@link FDv2DataManagerControl.setConnectionMode}.
  */
 export interface ManualModeSwitching {
   /** Discriminant — selects manual mode switching. */
