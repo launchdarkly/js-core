@@ -9,18 +9,6 @@ import { ModeDefinition } from './ModeDefinition';
  */
 export interface LDClientDataSystemOptions {
   /**
-   * The initial connection mode the SDK should use.
-   *
-   * If not specified, the platform SDK provides a default:
-   * - Browser: 'one-shot'
-   * - React Native: 'streaming'
-   * - Electron: 'streaming'
-   *
-   * See {@link FDv2ConnectionMode} for the available modes.
-   */
-  initialConnectionMode?: FDv2ConnectionMode;
-
-  /**
    * The connection mode to use when the application transitions to the background.
    *
    * This is primarily used by mobile SDKs (React Native). When the application
@@ -34,20 +22,19 @@ export interface LDClientDataSystemOptions {
   backgroundConnectionMode?: FDv2ConnectionMode;
 
   /**
-   * Controls automatic mode switching in response to platform events.
+   * Controls how the SDK switches between connection modes.
    *
    * - `true` — enable all automatic switching (lifecycle + network)
-   * - `false` — disable all automatic switching; the user manages modes manually
-   * - `{ lifecycle?: boolean, network?: boolean }` — granular control over
-   *   which platform events trigger automatic mode switches
+   * - `false` — disable all automatic switching; uses the platform default
+   *   foreground mode
+   * - {@link AutomaticModeSwitchingConfig} — granular control over which
+   *   platform events trigger automatic mode switches
+   * - {@link ManualModeSwitching} — disable automatic switching and specify
+   *   the initial connection mode explicitly
    *
-   * `lifecycle` controls foreground/background transitions (mobile) and
-   * visibility changes (browser). `network` controls pause/resume of data
-   * sources when network availability changes.
-   *
-   * Default is true for mobile SDKs, false/ignored for browser.
+   * Default is `true` for mobile SDKs, `false` for browser.
    */
-  automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig;
+  automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 
   /**
    * Override the data source pipeline for specific connection modes.
@@ -76,6 +63,9 @@ export interface LDClientDataSystemOptions {
  * Granular control over which platform events trigger automatic mode switches.
  */
 export interface AutomaticModeSwitchingConfig {
+  /** Discriminant — selects automatic mode switching. */
+  readonly type: 'automatic';
+
   /**
    * Whether to automatically switch modes in response to application lifecycle
    * events (foreground/background on mobile, visibility changes on browser).
@@ -94,13 +84,30 @@ export interface AutomaticModeSwitchingConfig {
 }
 
 /**
+ * Disable automatic switching and specify the initial connection mode.
+ *
+ * Subsequent mode transitions must be triggered explicitly via
+ * {@link FDv2DataManagerControl.setConnectionMode}.
+ */
+export interface ManualModeSwitching {
+  /** Discriminant — selects manual mode switching. */
+  readonly type: 'manual';
+
+  /**
+   * The connection mode to use when the SDK starts. Overrides the
+   * platform default from {@link PlatformDataSystemDefaults.foregroundConnectionMode}.
+   */
+  initialConnectionMode: FDv2ConnectionMode;
+}
+
+/**
  * Platform-specific default configuration for the FDv2 data system.
  */
 export interface PlatformDataSystemDefaults {
-  /** The default initial connection mode for this platform. */
-  readonly initialConnectionMode: FDv2ConnectionMode;
+  /** The default foreground connection mode for this platform. */
+  readonly foregroundConnectionMode: FDv2ConnectionMode;
   /** The default background connection mode, if any. */
   readonly backgroundConnectionMode?: FDv2ConnectionMode;
   /** Whether automatic mode switching is enabled by default. */
-  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig;
+  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 }
