@@ -46,7 +46,7 @@ export interface FDv2DataManagerBaseConfig {
 
   /** Mode resolution table for this platform. */
   transitionTable: ModeResolutionTable;
-  /** The configured foreground connection mode. */
+  /** The configured foreground connection mode. Use {@link resolveForegroundMode} to derive. */
   foregroundMode: FDv2ConnectionMode;
   /** The background connection mode, if any. */
   backgroundMode: FDv2ConnectionMode | undefined;
