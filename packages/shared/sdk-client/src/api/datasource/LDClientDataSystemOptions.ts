@@ -22,18 +22,17 @@ export interface LDClientDataSystemOptions {
   backgroundConnectionMode?: FDv2ConnectionMode;
 
   /**
-   * Controls automatic mode switching in response to platform events.
+   * Controls how the SDK switches between connection modes.
    *
    * - `true` — enable all automatic switching (lifecycle + network)
-   * - `false` — disable all automatic switching; the user manages modes manually
-   * - `{ lifecycle?: boolean, network?: boolean }` — granular control over
-   *   which platform events trigger automatic mode switches
+   * - `false` — disable all automatic switching; uses the platform default
+   *   foreground mode
+   * - {@link AutomaticModeSwitchingConfig} — granular control over which
+   *   platform events trigger automatic mode switches
+   * - {@link ManualModeSwitching} — disable automatic switching and specify
+   *   the initial connection mode explicitly
    *
-   * `lifecycle` controls foreground/background transitions (mobile) and
-   * visibility changes (browser). `network` controls pause/resume of data
-   * sources when network availability changes.
-   *
-   * Default is true for mobile SDKs, false/ignored for browser.
+   * Default is `true` for mobile SDKs, `false` for browser.
    */
   automaticModeSwitching?: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 
@@ -64,9 +63,7 @@ export interface LDClientDataSystemOptions {
  * Granular control over which platform events trigger automatic mode switches.
  */
 export interface AutomaticModeSwitchingConfig {
-  /**
-   * Specifies that mode switching is automatic.
-   */
+  /** Discriminant — selects automatic mode switching. */
   readonly type: 'automatic';
 
   /**
@@ -87,18 +84,18 @@ export interface AutomaticModeSwitchingConfig {
 }
 
 /**
- * Disable automatic switching and specify the initial mode for connections.
+ * Disable automatic switching and specify the initial connection mode.
  *
- * When automatic mode switching is disabled mode switches must be done with `setConnectionMode`.
+ * Subsequent mode transitions must be triggered explicitly via
+ * {@link FDv2DataManagerControl.setRequestedMode}.
  */
 export interface ManualModeSwitching {
-  /**
-   * Specifies that mode switching is manual.
-   */
+  /** Discriminant — selects manual mode switching. */
   readonly type: 'manual';
 
   /**
-   * The initial connection mode to use. Subsequently mode transitions will only happen with `setConnectionMode`.
+   * The connection mode to use when the SDK starts. Overrides the
+   * platform default from {@link PlatformDataSystemDefaults.foregroundConnectionMode}.
    */
   initialConnectionMode: FDv2ConnectionMode;
 }
