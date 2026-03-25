@@ -296,7 +296,11 @@ describe('dataSystem validation', () => {
   it('validates automaticModeSwitching as a granular config object', () => {
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal
-      { dataSystem: { automaticModeSwitching: { lifecycle: true, network: false } } },
+      {
+        dataSystem: {
+          automaticModeSwitching: { type: 'automatic', lifecycle: true, network: false },
+        },
+      },
       {
         getImplementationHooks: () => [],
         credentialType: 'mobileKey',
@@ -308,6 +312,7 @@ describe('dataSystem validation', () => {
     );
     expect(config.dataSystem).toBeDefined();
     expect(config.dataSystem!.automaticModeSwitching).toEqual({
+      type: 'automatic',
       lifecycle: true,
       network: false,
     });
