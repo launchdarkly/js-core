@@ -80,8 +80,6 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
   return cf;
 }
 
-// NOTE: we can make this more idiomatic to React by creating a useCommand hook and reading return values from
-// a rendered component. But for now, this is just a simple way to get the tests running.
 export async function doCommand(client: LDReactClient, params: CommandParams): Promise<unknown> {
   const logger = makeLogger('doCommand');
   logger.info(`Received command: ${params.command}`);
