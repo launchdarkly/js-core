@@ -42,7 +42,7 @@ export interface LDIsomorphicProviderProps {
  *
  * @remarks
  * Place this component near the root of your layout (e.g. in `layout.tsx`). It evaluates
- * all flags on the server, then passes the results to {@link LDBootstrapClientProvider}
+ * all flags on the server, then passes the results to {@link LDIsomorphicClientProvider}
  * so the client-side SDK starts with real flag values.
  *
  * After hydration, the client-side SDK can open a streaming connection and live flag changes

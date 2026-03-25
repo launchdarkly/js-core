@@ -47,10 +47,10 @@ export interface LDIsomorphicClientProviderProps {
 
 /**
  * A `'use client'` provider that initializes the LaunchDarkly browser client from
- * server-evaluated flag values bootstrapped by {@link LDIsomorphicProvider}.J
+ * server-evaluated flag values bootstrapped by {@link LDIsomorphicProvider}.
  *
  * @remarks
- * **NOTE:** This provider is desinged to be used in conjunction with {@link LDIsomorphicProvider}
+ * **NOTE:** This provider is designed to be used in conjunction with {@link LDIsomorphicProvider}
  * in a server component to compute the bootstrap data and render this provider automatically.
  */
 export function LDIsomorphicClientProvider({
