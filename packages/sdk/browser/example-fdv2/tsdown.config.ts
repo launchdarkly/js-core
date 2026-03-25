@@ -4,8 +4,11 @@ import path from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { defineConfig } from 'tsdown';
 
-if (fs.existsSync('.env')) {
-  loadEnvFile('.env');
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const ENV_FILE = path.join(__dirname, '.env');
+
+if (fs.existsSync(ENV_FILE)) {
+  loadEnvFile(ENV_FILE);
 }
 
 const ENTRY_FILE = path.join('src', 'app.ts');
