@@ -159,6 +159,12 @@ class BrowserClientImpl extends LDClientImpl {
 
     this.setEventSendingEnabled(true, false);
 
+    // Forward the browser streaming option to the FDv2 data manager so that
+    // an explicit streaming: false prevents auto-promotion to streaming.
+    if (validatedBrowserOptions.streaming !== undefined) {
+      this.dataManager.setForcedStreaming?.(validatedBrowserOptions.streaming);
+    }
+
     this.dataManager.setFlushCallback?.(() => this.flush());
 
     this._plugins = validatedBrowserOptions.plugins;
