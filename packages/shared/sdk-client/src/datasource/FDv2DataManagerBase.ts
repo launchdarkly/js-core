@@ -457,6 +457,13 @@ export function createFDv2DataManagerBase(
         baseConfig.credential,
       );
 
+      // Re-check after the await — close() may have been called while
+      // namespaceForEnvironment was pending.
+      if (closed) {
+        logger.debug(`${logTag} Identify aborted: closed during async setup.`);
+        return;
+      }
+
       factoryContext = {
         requestor,
         requests: platform.requests,
