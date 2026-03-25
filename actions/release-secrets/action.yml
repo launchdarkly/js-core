@@ -15,12 +15,12 @@ runs:
   using: composite
   steps:
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1-node16
+      uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef # v1-node16
       with:
         audience: https://github.com/launchdarkly
         role-to-assume: ${{ inputs.aws_assume_role }}
         aws-region: us-east-1
-    - uses: dkershner6/aws-ssm-getparameters-action@4fcb4872421f387a6c43058473acc1b22443fe13
+    - uses: dkershner6/aws-ssm-getparameters-action@4fcb4872421f387a6c43058473acc1b22443fe13 # 4fcb4872421f387a6c43058473acc1b22443fe13
       with:
         parameterPairs: ${{ inputs.ssm_parameter_pairs }}
         withDecryption: 'true'
