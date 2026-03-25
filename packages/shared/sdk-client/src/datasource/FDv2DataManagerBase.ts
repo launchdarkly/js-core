@@ -87,14 +87,12 @@ export interface FDv2DataManagerControl extends DataManager {
   setNetworkState(state: NetworkState): void;
   /** Update the pending lifecycle state. Goes through debounce. */
   setLifecycleState(state: LifecycleState): void;
-  /** Update the requested connection mode. Goes through debounce. */
-  setRequestedMode(mode: FDv2ConnectionMode): void;
   /**
-   * Set the effective foreground mode directly. Used by browser
-   * listener-driven streaming to promote/demote the foreground mode.
-   * Goes through debounce.
+   * Set an explicit connection mode override that bypasses all automatic
+   * behavior (transition table, streaming, lifecycle). Pass undefined to
+   * clear the override and return to automatic behavior.
    */
-  setForegroundMode(mode: FDv2ConnectionMode): void;
+  setConnectionMode(mode?: FDv2ConnectionMode): void;
   /** Get the currently resolved connection mode. */
   getCurrentMode(): FDv2ConnectionMode;
   /** The configured default foreground mode (from config, not auto-promoted). */
@@ -153,6 +151,9 @@ export function createFDv2DataManagerBase(
   let closed = false;
   let flushCallback: (() => void) | undefined;
 
+  // Explicit connection mode override — bypasses transition table entirely.
+  let connectionModeOverride: FDv2ConnectionMode | undefined;
+
   // Forced/automatic streaming state for browser listener-driven streaming.
   let forcedStreaming: boolean | undefined;
   let automaticStreamingState = false;
@@ -182,32 +183,44 @@ export function createFDv2DataManagerBase(
     };
   }
 
+  /**
+   * Resolve the current effective connection mode.
+   *
+   * Priority:
+   * 1. connectionModeOverride (set via setConnectionMode) — bypasses everything
+   * 2. Transition table (network/lifecycle state + foreground/background modes)
+   */
   function resolveMode(): FDv2ConnectionMode {
+    if (connectionModeOverride !== undefined) {
+      return connectionModeOverride;
+    }
     return resolveConnectionMode(transitionTable, buildModeState());
   }
 
   /**
-   * Determine the foreground mode based on forced/automatic streaming state.
+   * Resolve the foreground mode input for the transition table based on
+   * forced/automatic streaming state.
    *
-   * +-----------+-----------+---------------------------+
-   * |  forced   | automatic |     result                |
-   * +-----------+-----------+---------------------------+
-   * | true      | any       | 'streaming'               |
-   * | false     | any       | configured, never streaming|
-   * | undefined | true      | 'streaming'               |
-   * | undefined | false     | configured mode           |
-   * +-----------+-----------+---------------------------+
+   * Priority: forcedStreaming > automaticStreaming > configuredForegroundMode
    */
-  function resolveStreamingMode(): FDv2ConnectionMode {
+  function resolveStreamingForeground(): FDv2ConnectionMode {
     if (forcedStreaming === true) {
       return 'streaming';
     }
     if (forcedStreaming === false) {
-      // Explicitly forced off — use configured mode, but never streaming.
       return configuredForegroundMode === 'streaming' ? 'one-shot' : configuredForegroundMode;
     }
-    // forcedStreaming === undefined — automatic behavior.
     return automaticStreamingState ? 'streaming' : configuredForegroundMode;
+  }
+
+  /**
+   * Compute the effective foreground mode from streaming state and push it
+   * through the debounce manager. Used by setForcedStreaming and
+   * setAutomaticStreamingState.
+   */
+  function pushForegroundMode(): void {
+    foregroundMode = resolveStreamingForeground();
+    debounceManager?.setRequestedMode(foregroundMode);
   }
 
   /**
@@ -487,6 +500,9 @@ export function createFDv2DataManagerBase(
         context,
       };
 
+      // Ensure foreground mode reflects current streaming state before resolving.
+      foregroundMode = resolveStreamingForeground();
+
       // Resolve the initial mode.
       const mode = resolveMode();
       logger.debug(`${logTag} Identify: initial mode resolved to '${mode}'.`);
@@ -555,14 +571,13 @@ export function createFDv2DataManagerBase(
       debounceManager?.setLifecycleState(state);
     },
 
-    setRequestedMode(mode: FDv2ConnectionMode): void {
-      foregroundMode = mode;
-      debounceManager?.setRequestedMode(mode);
-    },
-
-    setForegroundMode(mode: FDv2ConnectionMode): void {
-      foregroundMode = mode;
-      debounceManager?.setRequestedMode(mode);
+    setConnectionMode(mode?: FDv2ConnectionMode): void {
+      connectionModeOverride = mode;
+      if (mode !== undefined) {
+        debounceManager?.setRequestedMode(mode);
+      } else {
+        pushForegroundMode();
+      }
     },
 
     getCurrentMode(): FDv2ConnectionMode {
@@ -575,12 +590,12 @@ export function createFDv2DataManagerBase(
 
     setForcedStreaming(streaming?: boolean): void {
       forcedStreaming = streaming;
-      this.setForegroundMode(resolveStreamingMode());
+      pushForegroundMode();
     },
 
     setAutomaticStreamingState(streaming: boolean): void {
       automaticStreamingState = streaming;
-      this.setForegroundMode(resolveStreamingMode());
+      pushForegroundMode();
     },
   };
 }

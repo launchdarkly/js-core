@@ -512,13 +512,69 @@ it('delegates setLifecycleState to debounce manager', async () => {
   manager.close();
 });
 
-it('delegates setRequestedMode to debounce manager', async () => {
-  const manager = createFDv2DataManagerBase(makeBaseConfig());
+it('setConnectionMode overrides all automatic behavior', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
-  manager.setRequestedMode('streaming');
+  mockDebounceManager.setRequestedMode.mockClear();
+  manager.setConnectionMode('polling');
+
+  expect(mockDebounceManager.setRequestedMode).toHaveBeenCalledWith('polling');
+
+  manager.close();
+});
+
+it('setConnectionMode overrides forced streaming', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
+  await identifyManager(manager);
+
+  manager.setForcedStreaming!(true);
+  mockDebounceManager.setRequestedMode.mockClear();
+
+  manager.setConnectionMode('polling');
+
+  expect(mockDebounceManager.setRequestedMode).toHaveBeenCalledWith('polling');
+
+  // onReconcile should resolve to 'polling' (override bypasses transition table)
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'polling',
+  });
+  expect(manager.getCurrentMode()).toBe('polling');
+
+  manager.close();
+});
+
+it('clearing setConnectionMode returns to streaming logic', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
+  await identifyManager(manager);
+
+  manager.setForcedStreaming!(true);
+  manager.setConnectionMode('polling');
+  mockDebounceManager.setRequestedMode.mockClear();
+
+  // Clear the override — should fall back to forced streaming
+  manager.setConnectionMode(undefined);
 
   expect(mockDebounceManager.setRequestedMode).toHaveBeenCalledWith('streaming');
+
+  manager.close();
+});
+
+it('setConnectionMode override bypasses network unavailable', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
+  await identifyManager(manager);
+
+  manager.setConnectionMode('streaming');
+
+  // Even though network is unavailable, the override should win
+  capturedOnReconcile!({
+    networkState: 'unavailable',
+    lifecycleState: 'foreground',
+    requestedMode: 'streaming',
+  });
+  expect(manager.getCurrentMode()).toBe('streaming');
 
   manager.close();
 });
