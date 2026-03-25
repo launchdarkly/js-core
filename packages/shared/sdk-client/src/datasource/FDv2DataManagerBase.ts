@@ -306,7 +306,12 @@ export function createFDv2DataManagerBase(
     }
 
     const descriptors = flagEvalPayloadToItemDescriptors(payload.updates ?? []);
-    flagManager.applyChanges(context, descriptors, payload.type);
+    // Flag updates and change events happen synchronously inside applyChanges.
+    // The returned promise is only for async cache persistence — we intentionally
+    // do not await it so the data source pipeline is not blocked by storage I/O.
+    flagManager.applyChanges(context, descriptors, payload.type).catch((e) => {
+      logger.warn(`${logTag} Failed to persist flag cache: ${e}`);
+    });
   }
 
   /**
