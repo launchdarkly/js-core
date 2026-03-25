@@ -77,6 +77,9 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       package-common-released: ${{ steps.release.outputs['packages/shared/common--release_created'] }}
       package-sdk-client-released: ${{ steps.release.outputs['packages/shared/sdk-client--release_created'] }}
