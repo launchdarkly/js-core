@@ -4,11 +4,12 @@
 import { render } from '@testing-library/react';
 import React from 'react';
 
+import { useInitializationStatus } from '../../../src/client/hooks/useInitializationStatus';
 import {
   InitializationStatus,
-  useInitializationStatus,
-} from '../../../src/client/hooks/useInitializationStatus';
-import { InitializedState, LDReactClientContextValue } from '../../../src/client/LDClient';
+  InitializedState,
+  LDReactClientContextValue,
+} from '../../../src/client/LDClient';
 import { LDReactContext } from '../../../src/client/provider/LDReactContext';
 import { makeMockClient } from '../mockClient';
 
@@ -22,18 +23,6 @@ function StatusConsumer({ onStatus }: { onStatus: (s: InitializationStatus) => v
   onStatus(status);
   return null;
 }
-
-it('returns { status: "unknown" } when initializedState is "unknown"', () => {
-  const captured: InitializationStatus[] = [];
-
-  render(
-    <LDReactContext.Provider value={makeContextValue('unknown')}>
-      <StatusConsumer onStatus={(s) => captured.push(s)} />
-    </LDReactContext.Provider>,
-  );
-
-  expect(captured[0]).toEqual({ status: 'unknown' });
-});
 
 it('returns { status: "initializing" } when initializedState is "initializing"', () => {
   const captured: InitializationStatus[] = [];

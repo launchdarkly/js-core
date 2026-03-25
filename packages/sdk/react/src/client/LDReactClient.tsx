@@ -36,8 +36,9 @@ function createNoopReactClient(): LDReactClient {
     close: () => Promise.resolve(),
     flush: () => Promise.resolve({ result: true }),
     getContext: () => undefined,
-    getInitializationState: (): InitializedState => 'unknown',
-    getInitializationError: (): Error | undefined => undefined,
+    getInitializationState: (): InitializedState => 'failed',
+    getInitializationError: (): Error | undefined =>
+      new Error('Server-side client cannot be used to evaluate flags'),
     identify: () => Promise.resolve({ status: 'completed' as const }),
     jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
     jsonVariationDetail: (key: string, defaultValue: unknown) =>
@@ -125,23 +126,36 @@ export function createClient(
   };
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);
-  let initializationState: InitializedState = 'unknown';
+  let initializationState: InitializedState = 'initializing';
+  let startCalled = false;
+  let startNotified = false;
   const subscribers = new Set<(context: LDContextStrict) => void>();
   const initStatusSubscribers = new Set<(result: LDWaitForInitializationResult) => void>();
   let lastInitResult: LDWaitForInitializationResult | undefined;
+
+  function notifyContextSubscribers() {
+    const newContext = baseClient.getContext();
+    if (newContext) {
+      subscribers.forEach((cb) => cb(newContext));
+    }
+  }
 
   return {
     ...baseClient,
     start: (startOptions?: LDStartOptions) => {
       // The base client start method is idempotent, so we can just return
       // the result if it has already been called.
-      if (initializationState !== 'unknown') {
+      if (startCalled) {
         return baseClient.start(startOptions);
       }
-      initializationState = 'initializing';
+      startCalled = true;
       return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
         initializationState = result.status;
         lastInitResult = result;
+        if (!startNotified) {
+          startNotified = true;
+          notifyContextSubscribers();
+        }
         initStatusSubscribers.forEach((cb) => cb(result));
         return result;
       });
@@ -149,10 +163,7 @@ export function createClient(
     identify: (ldContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
       baseClient.identify(ldContext, identifyOptions).then((result: LDIdentifyResult) => {
         if (result.status === 'completed') {
-          const newContext = baseClient.getContext();
-          if (newContext) {
-            subscribers.forEach((cb) => cb(newContext));
-          }
+          notifyContextSubscribers();
         }
         return result;
       }),

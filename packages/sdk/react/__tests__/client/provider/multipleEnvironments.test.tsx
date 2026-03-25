@@ -147,8 +147,8 @@ it('initialization state is tracked independently per context', async () => {
     </ProviderA>,
   );
 
-  expect(screen.getByTestId('status-a').textContent).toBe('unknown');
-  expect(screen.getByTestId('status-b').textContent).toBe('unknown');
+  expect(screen.getByTestId('status-a').textContent).toBe('initializing');
+  expect(screen.getByTestId('status-b').textContent).toBe('initializing');
 
   await act(async () => {
     clientA.fireInitStatusChange('complete');
@@ -157,8 +157,8 @@ it('initialization state is tracked independently per context', async () => {
   await waitFor(() => {
     expect(screen.getByTestId('status-a').textContent).toBe('complete');
   });
-  // clientB still unknown
-  expect(screen.getByTestId('status-b').textContent).toBe('unknown');
+  // clientB still initializing
+  expect(screen.getByTestId('status-b').textContent).toBe('initializing');
 
   await act(async () => {
     clientB.fireInitStatusChange('complete');

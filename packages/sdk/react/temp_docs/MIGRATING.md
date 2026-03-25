@@ -38,7 +38,7 @@ const error = useLDClientError(); // Error | undefined
 // After
 import { useInitializationStatus } from '@launchdarkly/react-sdk';
 const { status, error } = useInitializationStatus();
-// status: 'unknown' | 'initializing' | 'complete' | 'timeout' | 'failed'
+// status: 'initializing' | 'complete' | 'timeout' | 'failed'
 // error: Error | undefined (only present when status === 'failed')
 ```
 
@@ -59,7 +59,7 @@ const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', 
 
 function App() {
   const { status, error } = useInitializationStatus();
-  if (status === 'initializing' || status === 'unknown') return <LoadingSpinner />;
+  if (status === 'initializing') return <LoadingSpinner />;
   if (status === 'failed') return <ErrorMessage error={error} />;
   return <YourApp />;
 }
