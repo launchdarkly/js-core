@@ -4,8 +4,8 @@ import path from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { defineConfig } from 'tsdown';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const ENV_FILE = path.join(__dirname, '.env');
+const configDir = path.dirname(new URL(import.meta.url).pathname);
+const ENV_FILE = path.join(configDir, '.env');
 
 if (fs.existsSync(ENV_FILE)) {
   loadEnvFile(ENV_FILE);
