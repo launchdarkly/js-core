@@ -2,17 +2,8 @@
 
 import { useContext } from 'react';
 
-import type { LDReactClientContextValue } from '../LDClient';
+import type { InitializationStatus, LDReactClientContextValue } from '../LDClient';
 import { LDReactContext } from '../provider/LDReactContext';
-
-/**
- * Represents the current initialization state of the LaunchDarkly client.
- */
-export type InitializationStatus =
-  | { status: 'initializing' }
-  | { status: 'complete' }
-  | { status: 'timeout' }
-  | { status: 'failed'; error: Error };
 
 /**
  * Returns the initialization status of the LaunchDarkly client.
