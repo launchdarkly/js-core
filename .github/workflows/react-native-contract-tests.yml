@@ -28,16 +28,13 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: yarn workspaces focus react-native-contract-test-adapter react-native-contract-test-entity
+        run: yarn workspaces focus react-native-contract-test-entity
 
       - name: Build SDK and dependencies
         run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-client-sdk' run build
 
       - name: Build shared contract test utils
-        run: yarn workspace @launchdarkly/js-contract-test-utils build:client
-
-      - name: Build contract test adapter
-        run: yarn workspace react-native-contract-test-adapter run build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-contract-test-utils' run build
 
       - name: Enable KVM group perms (for emulator performance)
         run: |
@@ -71,7 +68,7 @@ jobs:
 
       - name: Start adapter in background
         run: |
-          yarn workspace react-native-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          yarn workspace react-native-contract-test-entity run start:adapter > /tmp/adapter.log 2>&1 &
           echo $! > /tmp/adapter.pid
 
       - name: Wait for adapter to be ready

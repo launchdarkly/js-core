@@ -38,7 +38,7 @@ const error = useLDClientError(); // Error | undefined
 // After
 import { useInitializationStatus } from '@launchdarkly/react-sdk';
 const { status, error } = useInitializationStatus();
-// status: 'unknown' | 'initializing' | 'complete' | 'timeout' | 'failed'
+// status: 'initializing' | 'complete' | 'timeout' | 'failed'
 // error: Error | undefined (only present when status === 'failed')
 ```
 
@@ -59,7 +59,7 @@ const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', 
 
 function App() {
   const { status, error } = useInitializationStatus();
-  if (status === 'initializing' || status === 'unknown') return <LoadingSpinner />;
+  if (status === 'initializing') return <LoadingSpinner />;
   if (status === 'failed') return <ErrorMessage error={error} />;
   return <YourApp />;
 }
@@ -178,6 +178,36 @@ state when initialization completes or when `client.identify()` is called.
 `deferInitialization: true` — it never calls `start()` automatically.
 
 ---
+
+## Bootstrap
+
+### Old SDK
+
+Bootstrap data was passed nested inside `options`:
+
+```tsx
+// HOC
+withLDProvider({ clientSideID: 'your-id', options: { bootstrap: myData } })(App);
+
+// Async HOC
+const LDProvider = await asyncWithLDProvider({ clientSideID: 'your-id', options: { bootstrap: myData } });
+```
+
+### New SDK
+
+Bootstrap is a first-class option on `createLDReactProvider`:
+
+```tsx
+import { createLDReactProvider } from '@launchdarkly/react-sdk';
+
+const LDProvider = createLDReactProvider('your-client-side-id', { kind: 'user', key: 'user-key' }, {
+  bootstrap: myData,
+});
+```
+
+The `bootstrap` data format is unchanged from the old SDK. You can pass either a plain key-value
+object (`{ 'my-flag': true }`) or the output of `allFlagsState().toJSON()`, which includes
+`$flagsState` and `$valid` metadata.
 
 ## Removed APIs
 

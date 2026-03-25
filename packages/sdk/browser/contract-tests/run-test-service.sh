@@ -1,1 +1,1 @@
-yarn workspace browser-contract-test-adapter run start & yarn workspace browser-contract-test-service run start && kill $!
+yarn workspace browser-contract-test-service run start:adapter & yarn workspace browser-contract-test-service run start && kill $!

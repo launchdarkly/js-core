@@ -17,6 +17,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/js-client-sdk](packages/sdk/browser/README.md)                  | [![NPM][sdk-browser-npm-badge]][sdk-browser-npm-link]             | [Browser][package-sdk-browser-issues]             | [![Actions Status][sdk-browser-ci-badge]][sdk-browser-ci]             |
 | [@launchdarkly/server-sdk-ai](packages/sdk/server-ai/README.md)                | [![NPM][sdk-server-ai-npm-badge]][sdk-server-ai-npm-link]         | [server-ai][package-sdk-server-ai-issues]         | [![Actions Status][sdk-server-ai-ci-badge]][sdk-server-ai-ci]         |
 | [@launchdarkly/shopify-oxygen-sdk](packages/sdk/shopify-oxygen/README.md)      | [![NPM][sdk-shopify-oxygen-npm-badge]][sdk-shopify-oxygen-npm-link] | [Shopify Oxygen][package-sdk-shopify-oxygen-issues] | [![Actions Status][sdk-shopify-oxygen-ci-badge]][sdk-shopify-oxygen-ci] |
+| [@launchdarkly/react-sdk](packages/sdk/react/README.md)                       | [![NPM][sdk-react-npm-badge]][sdk-react-npm-link]                   | [React][package-sdk-react-issues]                   | [![Actions Status][sdk-react-ci-badge]][sdk-react-ci]                   |
 <!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
@@ -251,3 +252,9 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-shopify-oxygen-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/shopify-oxygen-sdk.svg?style=flat-square
 [sdk-shopify-oxygen-npm-link]: https://www.npmjs.com/package/@launchdarkly/shopify-oxygen-sdk
 [package-sdk-shopify-oxygen-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fshopify-oxygen%22+
+[//]: # 'sdk/react'
+[sdk-react-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/react.yml/badge.svg
+[sdk-react-ci]: https://github.com/launchdarkly/js-core/actions/workflows/react.yml
+[sdk-react-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-sdk.svg?style=flat-square
+[sdk-react-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-sdk
+[package-sdk-react-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Freact%22+

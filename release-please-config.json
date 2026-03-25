@@ -102,6 +102,12 @@
     "packages/telemetry/browser-telemetry": {},
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/react": {
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/client/LDReactClient.tsx"
+      ]
     }
   },
   "plugins": [

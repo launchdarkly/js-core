@@ -20,7 +20,6 @@ jest.mock('../../../src/client/LDReactClient', () => ({
 }));
 
 // ─── createLDReactProviderWithClient ────────────────────────────────────────
-
 it('renders children', () => {
   const client = makeMockClient();
   const Provider = createLDReactProviderWithClient(client);
@@ -81,7 +80,7 @@ it('updates initializedState and context when onInitializationStatusChange fires
     </Provider>,
   );
 
-  expect(contextValues[contextValues.length - 1]?.initializedState).toBe('unknown');
+  expect(contextValues[contextValues.length - 1]?.initializedState).toBe('initializing');
 
   await act(async () => {
     client.fireInitStatusChange('complete');
@@ -217,6 +216,31 @@ describe('createLDReactProvider (convenience factory)', () => {
     createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { startOptions });
 
     expect(mockClient.start).toHaveBeenCalledWith(startOptions);
+  });
+
+  it('merges bootstrap into startOptions when bootstrap is provided', () => {
+    const bootstrapData = { $flagsState: { flag: { variation: 0 } }, $valid: true };
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { bootstrap: bootstrapData });
+
+    expect(mockClient.start).toHaveBeenCalledWith({ bootstrap: bootstrapData });
+  });
+
+  it('merges bootstrap with existing startOptions', () => {
+    const bootstrapData = { $flagsState: { flag: { variation: 0 } }, $valid: true };
+    const startOptions = { timeout: 5 };
+    createLDReactProvider(
+      'sdk-key',
+      { kind: 'user', key: 'u1' },
+      { startOptions, bootstrap: bootstrapData },
+    );
+
+    expect(mockClient.start).toHaveBeenCalledWith({ timeout: 5, bootstrap: bootstrapData });
+  });
+
+  it('does not merge bootstrap into startOptions when bootstrap is not provided', () => {
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' });
+
+    expect(mockClient.start).toHaveBeenCalledWith(undefined);
   });
 
   it('uses provided reactContext option', () => {

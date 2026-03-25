@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.4.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.4.0...js-client-sdk-v4.4.1) (2026-03-23)
+
+
+### Bug Fixes
+
+* Report data source state as valid after bootstrap ([#1203](https://github.com/launchdarkly/js-core/issues/1203)) ([b00889f](https://github.com/launchdarkly/js-core/commit/b00889fa4f8018b982bb252b1156c858cd48898e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.22.0 to 1.23.0
+
 ## [4.4.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.3.1...js-client-sdk-v4.4.0) (2026-03-16)
 
 

@@ -45,23 +45,20 @@ jobs:
 
       # Contract Tests
       - name: Install contract test dependencies
-        run: yarn workspaces focus browser-contract-test-adapter browser-contract-test-service
+        run: yarn workspaces focus browser-contract-test-service
 
       - name: Install Playwright browsers
         run: yarn workspace browser-contract-test-service install-playwright-browsers
 
       - name: Build shared contract test utils
-        run: yarn workspace @launchdarkly/js-contract-test-utils build:client
-
-      - name: Build contract test adapter
-        run: yarn workspace browser-contract-test-adapter run build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-contract-test-utils' run build
 
       - name: Build contract test entity (browser app)
         run: yarn workspace browser-contract-test-service run build
 
       - name: Start contract test adapter in background
         run: |
-          yarn workspace browser-contract-test-adapter run start > /tmp/adapter.log 2>&1 &
+          yarn workspace browser-contract-test-service run start:adapter > /tmp/adapter.log 2>&1 &
           echo $! > /tmp/adapter.pid
 
       - name: Serve browser app with http-server
@@ -106,7 +103,7 @@ jobs:
           sleep 5  # Give the browser time to initialize and connect via WebSocket
 
       - name: Run contract tests
-        uses: launchdarkly/gh-actions/actions/contract-tests@1a3dc56945c8e87bc952119b055f9481b4d642b0
+        uses: launchdarkly/gh-actions/actions/contract-tests@d271978e893b5b9facb9f000414e9fcd62e1f78b
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -130,7 +127,7 @@ jobs:
           [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true
           pkill -f "playwright" || true
           pkill -f "http-server" || true
-          pkill -f "browser-contract-test-adapter" || true
+          pkill -f "sdk-testharness-server" || true
 
   run-example:
     runs-on: ubuntu-latest

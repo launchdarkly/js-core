@@ -19,7 +19,7 @@ it('returns the client from the nearest provider context', () => {
   const mockClient = makeMockClient();
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
-    initializedState: 'unknown',
+    initializedState: 'initializing',
   };
 
   let capturedClient: any;
@@ -43,7 +43,7 @@ it('returns the client from a custom react context', () => {
   const customContext = React.createContext<LDReactClientContextValue>(null as any);
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
-    initializedState: 'unknown',
+    initializedState: 'initializing',
   };
 
   let capturedClient: any;

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.23.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.22.0...js-client-sdk-common-v1.23.0) (2026-03-23)
+
+
+### Features
+
+* FDv2 types, refined validators, and DataManager interface ([#1207](https://github.com/launchdarkly/js-core/issues/1207)) ([d7ccfc1](https://github.com/launchdarkly/js-core/commit/d7ccfc1a5359610d70751dc08e3b894bb7ecf334))
+* FlagManager.applyChanges for FDv2 full/partial/none semantics ([#1208](https://github.com/launchdarkly/js-core/issues/1208)) ([d9a1bd7](https://github.com/launchdarkly/js-core/commit/d9a1bd7d24ea68e867496e93be0f3097b709392a))
+* SourceFactoryProvider for declarative data source creation ([#1209](https://github.com/launchdarkly/js-core/issues/1209)) ([e254f77](https://github.com/launchdarkly/js-core/commit/e254f771761b3d0d61a745a1e06f99f6216ff63a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.23.0 to 2.24.0
+
 ## [1.22.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.21.0...js-client-sdk-common-v1.22.0) (2026-03-16)
 
 
