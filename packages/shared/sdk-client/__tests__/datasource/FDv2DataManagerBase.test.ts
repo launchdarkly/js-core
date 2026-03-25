@@ -83,7 +83,7 @@ function makeFlagManager() {
   return {
     init: jest.fn(),
     upsert: jest.fn(),
-    applyChanges: jest.fn(),
+    applyChanges: jest.fn().mockResolvedValue(undefined),
     get: jest.fn(),
     getAll: jest.fn(),
     on: jest.fn(),
