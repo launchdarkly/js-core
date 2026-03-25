@@ -82,6 +82,10 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     useReport: options.clientSide.useReport ?? undefined,
   };
 
+  if (options.serviceEndpoints) {
+    cf.eventsUri = options.serviceEndpoints.events;
+  }
+
   if (options.dataSystem?.connectionModeConfig) {
     const connMode = options.dataSystem.connectionModeConfig;
     const dataSystem: any = {
@@ -123,7 +127,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     if (options.serviceEndpoints) {
       cf.streamUri = options.serviceEndpoints.streaming;
       cf.baseUri = options.serviceEndpoints.polling;
-      cf.eventsUri = options.serviceEndpoints.events;
     }
 
     if (options.polling) {
