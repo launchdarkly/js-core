@@ -5,7 +5,7 @@
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "install-playwright-browsers": "playwright install --with-deps chromium",
-    "start:adapter": "yarn workspace browser-contract-test-adapter run start",
+    "start:adapter": "sdk-testharness-server adapter",
     "dev": "next dev -p 8002",
     "build": "next build",
     "start:entity": "next dev -p 8002",

@@ -4,6 +4,7 @@ module.exports = {
     {
       files: ['contract-tests/**/*.ts', 'contract-tests/**/*.tsx'],
       parserOptions: {
+        tsconfigRootDir: __dirname,
         project: './contract-tests/tsconfig.json',
       },
     },

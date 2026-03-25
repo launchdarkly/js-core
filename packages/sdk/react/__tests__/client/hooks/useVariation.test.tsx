@@ -20,7 +20,7 @@ function makeWrapper(
 ) {
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
-    initializedState: 'unknown',
+    initializedState: 'initializing',
     ...contextOverrides,
   };
 

@@ -9,6 +9,7 @@
     "start": "tsc --noEmit && vite --open=true",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint ./src",
+    "start:adapter": "sdk-testharness-server adapter",
     "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../../.prettierignore"
   },
   "dependencies": {

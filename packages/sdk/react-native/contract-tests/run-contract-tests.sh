@@ -35,14 +35,9 @@ echo "Port forwarding configured."
 
 # Build the adapter
 echo ""
-echo "=== Building adapter ==="
-cd "$REPO_ROOT"
-yarn workspace react-native-contract-test-adapter run build
-
-# Start the adapter in the background
-echo ""
 echo "=== Starting adapter ==="
-yarn workspace react-native-contract-test-adapter run start > /tmp/rn-adapter.log 2>&1 &
+cd "$REPO_ROOT"
+yarn workspace react-native-contract-test-entity run start:adapter > /tmp/rn-adapter.log 2>&1 &
 ADAPTER_PID=$!
 echo "Adapter started (PID: $ADAPTER_PID)"
 

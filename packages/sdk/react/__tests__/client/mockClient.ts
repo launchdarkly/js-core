@@ -36,7 +36,7 @@ export function makeMockClient(options: MockClientOptions = {}): MockClient {
 
   const initStatusSubscribers = new Set<(result: LDWaitForInitializationResult) => void>();
   const contextChangeSubscribers = new Set<(ctx: LDContextStrict) => void>();
-  let initState: InitializedState = initialState ?? (preFailedError ? 'failed' : 'unknown');
+  let initState: InitializedState = initialState ?? (preFailedError ? 'failed' : 'initializing');
   let initError: Error | undefined = preFailedError;
   let currentContext: LDContextStrict | undefined;
   const eventHandlers = new Map<string, Set<EventHandler>>();
