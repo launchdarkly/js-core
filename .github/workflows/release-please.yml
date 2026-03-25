@@ -105,7 +105,7 @@ jobs:
       package-sdk-electron-released: ${{ steps.release.outputs['packages/sdk/electron--release_created'] }}
       package-sdk-react-released: ${{ steps.release.outputs['packages/sdk/react--release_created'] }}
     steps:
-      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
         id: release
         with:
           token: ${{secrets.GITHUB_TOKEN}}
