@@ -4,16 +4,28 @@ import type { PlatformDataSystemDefaults } from '../api/datasource';
 import { anyOf, validatorOf } from '../configuration/validateOptions';
 import { connectionModesValidator, connectionModeValidator } from './ConnectionModeConfig';
 
-const modeSwitchingValidators = {
-  type: TypeValidators.oneOf('automatic', 'manual'),
+function hasType(u: unknown, type: string): boolean {
+  return TypeValidators.Object.is(u) && (u as Record<string, unknown>).type === type;
+}
+
+const automaticModeValidators = {
+  type: TypeValidators.oneOf('automatic'),
   lifecycle: TypeValidators.Boolean,
   network: TypeValidators.Boolean,
+};
+
+const manualModeValidators = {
+  type: TypeValidators.oneOf('manual'),
   initialConnectionMode: connectionModeValidator,
 };
 
 const dataSystemValidators = {
   backgroundConnectionMode: connectionModeValidator,
-  automaticModeSwitching: anyOf(TypeValidators.Boolean, validatorOf(modeSwitchingValidators)),
+  automaticModeSwitching: anyOf(
+    TypeValidators.Boolean,
+    validatorOf(automaticModeValidators, { is: (u) => hasType(u, 'automatic') }),
+    validatorOf(manualModeValidators, { is: (u) => hasType(u, 'manual') }),
+  ),
   connectionModes: connectionModesValidator,
 };
 

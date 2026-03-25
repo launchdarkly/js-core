@@ -46,10 +46,9 @@ export default function createValidators(
     inspectors: TypeValidators.createTypeArray('LDInspection', {}),
     cleanOldPersistentData: TypeValidators.Boolean,
     dataSystem: options?.dataSystemDefaults
-      ? validatorOf(
-          dataSystemValidators,
-          options.dataSystemDefaults as unknown as Record<string, unknown>,
-        )
+      ? validatorOf(dataSystemValidators, {
+          defaults: options.dataSystemDefaults as unknown as Record<string, unknown>,
+        })
       : TypeValidators.Object,
   };
 }
