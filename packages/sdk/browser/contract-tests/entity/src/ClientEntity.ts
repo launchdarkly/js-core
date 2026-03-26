@@ -1,9 +1,20 @@
-import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
+import {
+  createClient,
+  InitializerEntry,
+  LDClient,
+  LDLogger,
+  LDOptions,
+  ModeDefinition,
+  SynchronizerEntry,
+} from '@launchdarkly/js-client-sdk';
 import {
   CommandParams,
   CommandType,
   CreateInstanceParams,
   makeLogger,
+  SDKConfigDataInitializer,
+  SDKConfigDataSynchronizer,
+  SDKConfigModeDefinition,
   SDKConfigParams,
   ClientSideTestHook as TestHook,
   ValueType,
@@ -11,6 +22,59 @@ import {
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
+
+function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
+  if (init.polling) {
+    return {
+      type: 'polling',
+      ...(init.polling.pollIntervalMs !== undefined && {
+        pollInterval: init.polling.pollIntervalMs / 1000,
+      }),
+      ...(init.polling.baseUri && {
+        endpoints: { pollingBaseUri: init.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateSynchronizer(sync: SDKConfigDataSynchronizer): SynchronizerEntry | undefined {
+  if (sync.streaming) {
+    return {
+      type: 'streaming',
+      ...(sync.streaming.initialRetryDelayMs !== undefined && {
+        initialReconnectDelay: sync.streaming.initialRetryDelayMs / 1000,
+      }),
+      ...(sync.streaming.baseUri && {
+        endpoints: { streamingBaseUri: sync.streaming.baseUri },
+      }),
+    };
+  }
+  if (sync.polling) {
+    return {
+      type: 'polling',
+      ...(sync.polling.pollIntervalMs !== undefined && {
+        pollInterval: sync.polling.pollIntervalMs / 1000,
+      }),
+      ...(sync.polling.baseUri && {
+        endpoints: { pollingBaseUri: sync.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefinition {
+  const initializers: InitializerEntry[] = (modeDef.initializers ?? [])
+    .map(translateInitializer)
+    .filter((x): x is InitializerEntry => x !== undefined);
+
+  const synchronizers: SynchronizerEntry[] = (modeDef.synchronizers ?? [])
+    .map(translateSynchronizer)
+    .filter((x): x is SynchronizerEntry => x !== undefined);
+
+  return { initializers, synchronizers };
+}
 
 function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (!options.clientSide) {
@@ -23,7 +87,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   const cf: LDOptions = {
     withReasons: options.clientSide.evaluationReasons,
     logger: makeLogger(`${tag}.sdk`),
-    useReport: options.clientSide.useReport,
+    useReport: options.clientSide.useReport ?? undefined,
   };
 
   if (options.serviceEndpoints) {
@@ -32,21 +96,60 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     cf.eventsUri = options.serviceEndpoints.events;
   }
 
-  if (options.polling) {
-    if (options.polling.baseUri) {
-      cf.baseUri = options.polling.baseUri;
-    }
+  if (options.dataSystem?.payloadFilter) {
+    cf.payloadFilterKey = options.dataSystem.payloadFilter;
   }
 
-  // Can contain streaming and polling, if streaming is set override the initial connection
-  // mode. This can be removed when we add JS specific initialization that uses polling
-  // and then streaming.
-  if (options.streaming) {
-    if (options.streaming.baseUri) {
-      cf.streamUri = options.streaming.baseUri;
+  if (options.dataSystem) {
+    const dataSystem: any = {};
+
+    if (options.dataSystem.connectionModeConfig) {
+      const connMode = options.dataSystem.connectionModeConfig;
+      dataSystem.automaticModeSwitching = connMode.initialConnectionMode
+        ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
+        : false;
+
+      if (connMode.customConnectionModes) {
+        const connectionModes: Record<string, any> = {};
+        Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
+          connectionModes[modeName] = translateModeDefinition(modeDef);
+
+          // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
+          // compatibility. These override the serviceEndpoints values above.
+          (modeDef.synchronizers ?? []).forEach((sync) => {
+            if (sync.streaming?.baseUri) {
+              cf.streamUri = sync.streaming.baseUri;
+              cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+            }
+            if (sync.polling?.baseUri) {
+              cf.baseUri = sync.polling.baseUri;
+            }
+          });
+          (modeDef.initializers ?? []).forEach((init) => {
+            if (init.polling?.baseUri) {
+              cf.baseUri = init.polling.baseUri;
+            }
+          });
+        });
+        dataSystem.connectionModes = connectionModes;
+      }
     }
-    cf.streaming = true;
-    cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+
+    (cf as any).dataSystem = dataSystem;
+  } else {
+    if (options.polling) {
+      if (options.polling.baseUri) {
+        cf.baseUri = options.polling.baseUri;
+      }
+    }
+
+    if (options.streaming) {
+      if (options.streaming.baseUri) {
+        cf.streamUri = options.streaming.baseUri;
+      }
+      cf.streaming = true;
+      cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    }
   }
 
   if (options.events) {

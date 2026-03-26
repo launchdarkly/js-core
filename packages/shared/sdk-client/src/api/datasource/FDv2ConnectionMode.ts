@@ -4,6 +4,11 @@
 /**
  * Connection modes for the FDv2 data system.
  *
+ * This type is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
+ *
  * This defines the full set of named connection modes available in FDv2.
  * Each mode maps to a specific initializer/synchronizer pipeline via the
  * mode table.

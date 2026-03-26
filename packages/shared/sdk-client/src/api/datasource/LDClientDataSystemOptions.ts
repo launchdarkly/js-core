@@ -6,21 +6,13 @@ import { ModeDefinition } from './ModeDefinition';
 
 /**
  * Configuration for the FDv2 client-side data system.
+ *
+ * This interface is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
  */
 export interface LDClientDataSystemOptions {
-  /**
-   * The connection mode to use when the application transitions to the background.
-   *
-   * This is primarily used by mobile SDKs (React Native). When the application
-   * enters the background, the SDK switches to this mode. When returning to
-   * the foreground, it switches back to the foreground mode.
-   *
-   * Set to undefined or omit to disable automatic background mode switching.
-   * Set to 'background' to use the built-in background mode (polling @ 1hr).
-   * Set to 'offline' to stop all connections in the background.
-   */
-  backgroundConnectionMode?: FDv2ConnectionMode;
-
   /**
    * Controls how the SDK switches between connection modes.
    *
@@ -61,6 +53,11 @@ export interface LDClientDataSystemOptions {
 
 /**
  * Granular control over which platform events trigger automatic mode switches.
+ *
+ * This interface is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
  */
 export interface AutomaticModeSwitchingConfig {
   /** Discriminant — selects automatic mode switching. */
@@ -88,26 +85,18 @@ export interface AutomaticModeSwitchingConfig {
  *
  * Subsequent mode transitions must be triggered explicitly via
  * {@link FDv2DataManagerControl.setConnectionMode}.
+ *
+ * This interface is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
  */
 export interface ManualModeSwitching {
   /** Discriminant — selects manual mode switching. */
   readonly type: 'manual';
 
   /**
-   * The connection mode to use when the SDK starts. Overrides the
-   * platform default from {@link PlatformDataSystemDefaults.foregroundConnectionMode}.
+   * The connection mode to use when the SDK starts.
    */
   initialConnectionMode: FDv2ConnectionMode;
-}
-
-/**
- * Platform-specific default configuration for the FDv2 data system.
- */
-export interface PlatformDataSystemDefaults {
-  /** The default foreground connection mode for this platform. */
-  readonly foregroundConnectionMode: FDv2ConnectionMode;
-  /** The default background connection mode, if any. */
-  readonly backgroundConnectionMode?: FDv2ConnectionMode;
-  /** Whether automatic mode switching is enabled by default. */
-  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
 }
