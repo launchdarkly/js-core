@@ -2,9 +2,6 @@ import {
   createClient as createBaseClient,
   LDContext,
   LDContextStrict,
-  type LDEvaluationDetailTyped,
-  LDEvaluationReason,
-  type LDFlagValue,
   LDIdentifyOptions,
   LDIdentifyResult,
   LDOptions,
@@ -12,75 +9,9 @@ import {
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
 
+import { createNoopClient } from './createNoopClient';
 import { InitializedState, LDReactClient } from './LDClient';
 import { LDReactClientOptions } from './LDOptions';
-
-function isServerSide() {
-  return typeof window === 'undefined';
-}
-
-function noopDetail<T>(defaultValue: T): { value: T; kind: LDEvaluationReason['kind'] } {
-  return { value: defaultValue, kind: 'NO Evaluation Reason' };
-}
-
-/**
- * @privateRemarks
- * **WARNING:** This function is going to be removed soon! sdk-2043
- */
-function createNoopReactClient(): LDReactClient {
-  return {
-    allFlags: () => ({}),
-    boolVariation: (_key: string, defaultValue: boolean) => defaultValue,
-    boolVariationDetail: (key: string, defaultValue: boolean) =>
-      noopDetail(defaultValue) as LDEvaluationDetailTyped<boolean>,
-    close: () => Promise.resolve(),
-    flush: () => Promise.resolve({ result: true }),
-    getContext: () => undefined,
-    getInitializationState: (): InitializedState => 'failed',
-    getInitializationError: (): Error | undefined =>
-      new Error('Server-side client cannot be used to evaluate flags'),
-    identify: () => Promise.resolve({ status: 'completed' as const }),
-    jsonVariation: (_key: string, defaultValue: unknown) => defaultValue,
-    jsonVariationDetail: (key: string, defaultValue: unknown) =>
-      noopDetail(defaultValue) as LDEvaluationDetailTyped<unknown>,
-    logger: {
-      debug: () => {},
-      info: () => {},
-      warn: () => {},
-      error: () => {},
-    },
-    numberVariation: (_key: string, defaultValue: number) => defaultValue,
-    numberVariationDetail: (key: string, defaultValue: number) =>
-      noopDetail(defaultValue) as LDEvaluationDetailTyped<number>,
-    off: () => {},
-    on: () => {},
-    onContextChange: () => () => {},
-    onInitializationStatusChange: () => () => {},
-    setStreaming: () => {},
-    start: () =>
-      Promise.resolve({
-        status: 'failed' as const,
-        error: new Error('Server-side client cannot be used to start'),
-      }),
-    stringVariation: (_key: string, defaultValue: string) => defaultValue,
-    stringVariationDetail: (key: string, defaultValue: string) =>
-      noopDetail(defaultValue) as LDEvaluationDetailTyped<string>,
-    track: () => {},
-    variation: (_key: string, defaultValue?: LDFlagValue) => defaultValue ?? null,
-    variationDetail: (key: string, defaultValue?: LDFlagValue) => {
-      const def = defaultValue ?? null;
-      return noopDetail(def) as LDEvaluationDetailTyped<LDFlagValue>;
-    },
-    waitForInitialization: () =>
-      Promise.resolve({
-        status: 'failed' as const,
-        error: new Error('Server-side client cannot be used to wait for initialization'),
-      }),
-    addHook: () => {},
-    isReady: () => true,
-    shouldUseCamelCaseFlagKeys: () => true,
-  };
-}
 
 /**
  * Creates a new instance of the LaunchDarkly client for React.
@@ -114,8 +45,11 @@ export function createClient(
   context: LDContext,
   options: LDReactClientOptions = {},
 ): LDReactClient {
-  if (isServerSide()) {
-    return createNoopReactClient();
+  // This should not happen during runtime, but some frameworks such as Next.js supports
+  // static rendering which will attempt to render client code during build time. In these cases,
+  // we will need to use the noop client to avoid errors.
+  if (typeof window === 'undefined') {
+    return createNoopClient();
   }
 
   const { useCamelCaseFlagKeys: shouldUseCamelCaseFlagKeys = true, ...ldOptions } = options;
