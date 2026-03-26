@@ -8,12 +8,13 @@ export default function useVariationCore<T, R = T>(
   defaultValue: T,
   evaluate: (client: LDReactClient, key: string, defaultValue: T) => R,
   reactContext?: React.Context<LDReactClientContextValue>,
+  notReadyDefault?: (defaultValue: T) => R,
 ): R {
   const { client, context, initializedState } = useContext(reactContext ?? LDReactContext);
 
   // The ready state is derived from when the client sends the "ready" event
-  // which denotes when the client is ready to evaluate flags. The logic is
-  // in the base `@launchdarkly/js-sdk-common` package.
+  // which denotes when the client is ready to evaluate flags. See
+  // `maybeSetInitializationResult` in `packages/shared/sdk-client/src/LDClientImpl.ts`.
   const ready = initializedState !== 'initializing';
 
   // Using refs here to capture the latest defaultValue and evaluate function
@@ -26,10 +27,14 @@ export default function useVariationCore<T, R = T>(
   const didMountRef = useRef(false);
 
   // If the client is ready at mount time, evaluate immediately.
-  // Otherwise, defer until ready.
-  const [value, setValue] = useState<R>(() =>
-    ready ? evaluate(client, key, defaultValue) : (defaultValue as unknown as R),
-  );
+  // Otherwise, defer until ready using the notReadyDefault factory if provided
+  // (detail hooks use this to return a proper LDEvaluationDetailTyped).
+  const [value, setValue] = useState<R>(() => {
+    if (ready) {
+      return evaluate(client, key, defaultValue);
+    }
+    return notReadyDefault ? notReadyDefault(defaultValue) : (defaultValue as unknown as R);
+  });
 
   useEffect(() => {
     if (didMountRef.current && ready) {

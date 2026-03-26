@@ -667,3 +667,26 @@ it('evaluates exactly once on mount when already initialized (bootstrap)', () =>
 
   expect(mockClient.boolVariation).toHaveBeenCalledTimes(1);
 });
+
+it('evaluates when initialization failed (client returns defaults on failure)', () => {
+  const mockClient = makeMockClient();
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(false);
+
+  const captured: boolean[] = [];
+
+  function FlagConsumer() {
+    const value = useBoolVariation('my-flag', false);
+    captured.push(value);
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient, { initializedState: 'failed' });
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(mockClient.boolVariation).toHaveBeenCalledTimes(1);
+  expect(captured[0]).toBe(false);
+});
