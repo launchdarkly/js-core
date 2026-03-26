@@ -527,6 +527,76 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     );
   });
 
+  it('includes the secure mode hash as a query parameter when hash is provided in identify options', async () => {
+    await mobileDataManager.setConnectionMode('polling');
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false, hash: 'test-hash-abc123' };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=test-hash-abc123'),
+      expect.anything(),
+    );
+  });
+
+  it('does not include the secure mode hash query parameter when hash is not provided', async () => {
+    await mobileDataManager.setConnectionMode('polling');
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.not.stringContaining('h='),
+      expect.anything(),
+    );
+  });
+
+  it('persists the secure mode hash when connection mode changes after identify', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: LDIdentifyOptions = { waitForNetworkResults: false, hash: 'my-secure-hash' };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    // Identify in streaming mode with a hash
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    // Switch to polling — hash should be forwarded to the new connection
+    await mobileDataManager.setConnectionMode('polling');
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=my-secure-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('clears the secure mode hash when identify is called without a hash after a previous hash was set', async () => {
+    await mobileDataManager.setConnectionMode('polling');
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    // First identify with hash
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, {
+      waitForNetworkResults: false,
+      hash: 'initial-hash',
+    });
+
+    // Second identify without hash — previous hash should not be forwarded
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, {
+      waitForNetworkResults: false,
+    });
+
+    const fetchCalls = (platform.requests.fetch as jest.Mock).mock.calls;
+    const lastCallUrl = fetchCalls[fetchCalls.length - 1][0];
+    expect(lastCallUrl).not.toContain('h=');
+  });
+
   it('does not include withReasons query parameter when withReasons is false', async () => {
     const withReasonsConfig = { ...config, withReasons: false };
     mobileDataManager = new MobileDataManager(
