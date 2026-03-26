@@ -13,7 +13,6 @@ export type {
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
   ManualModeSwitching,
-  PlatformDataSystemDefaults,
 } from './LDClientDataSystemOptions';
 export type {
   LifecycleState,

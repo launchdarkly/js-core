@@ -1,11 +1,11 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
-import type { PlatformDataSystemDefaults } from '../../src/api/datasource';
 import validateOptions from '../../src/configuration/validateOptions';
 import {
   BROWSER_DATA_SYSTEM_DEFAULTS,
   dataSystemValidators,
   MOBILE_DATA_SYSTEM_DEFAULTS,
+  type PlatformDataSystemDefaults,
 } from '../../src/datasource/LDClientDataSystemOptions';
 
 let logger: LDLogger;

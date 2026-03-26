@@ -10,11 +10,11 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
-import type {
-  LDClientDataSystemOptions,
-  PlatformDataSystemDefaults,
-} from '../api/datasource/LDClientDataSystemOptions';
 import { LDInspection } from '../api/LDInspection';
+import type {
+  InternalDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from '../datasource/LDClientDataSystemOptions';
 import validateOptions from './validateOptions';
 import createValidators from './validators';
 
@@ -65,7 +65,7 @@ export interface Configuration {
   readonly inspectors: LDInspection[];
   readonly credentialType: 'clientSideId' | 'mobileKey';
   readonly getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) => Hook[];
-  readonly dataSystem?: LDClientDataSystemOptions;
+  readonly dataSystem?: InternalDataSystemOptions;
 }
 
 const DEFAULT_POLLING: string = 'https://clientsdk.launchdarkly.com';
@@ -146,7 +146,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly getImplementationHooks: (
     environmentMetadata: LDPluginEnvironmentMetadata,
   ) => Hook[];
-  public readonly dataSystem?: LDClientDataSystemOptions;
+  public readonly dataSystem?: InternalDataSystemOptions;
 
   // Allow indexing Configuration by a string
   [index: string]: any;

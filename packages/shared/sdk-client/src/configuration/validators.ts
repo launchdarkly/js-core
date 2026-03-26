@@ -1,8 +1,10 @@
 import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
-import type { PlatformDataSystemDefaults } from '../api/datasource/LDClientDataSystemOptions';
-import { dataSystemValidators } from '../datasource/LDClientDataSystemOptions';
+import {
+  dataSystemValidators,
+  type PlatformDataSystemDefaults,
+} from '../datasource/LDClientDataSystemOptions';
 import { validatorOf } from './validateOptions';
 
 export interface ValidatorOptions {

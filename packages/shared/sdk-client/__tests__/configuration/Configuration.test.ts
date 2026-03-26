@@ -235,7 +235,10 @@ describe('dataSystem validation', () => {
       type: 'manual',
       initialConnectionMode: 'polling',
     });
+    // backgroundConnectionMode is internal — flows from platform defaults
     expect(config.dataSystem!.backgroundConnectionMode).toBe('background');
+    // foregroundConnectionMode is internal — flows from platform defaults
+    expect(config.dataSystem!.foregroundConnectionMode).toBe('streaming');
   });
 
   it('warns and falls back to default for invalid dataSystem sub-fields', () => {
