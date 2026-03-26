@@ -1,3 +1,4 @@
+// Temporary app for testing FDv2 functionality.
 import { basicLogger, createClient, type LDClient } from '@launchdarkly/js-client-sdk';
 
 // Set clientSideID to your LaunchDarkly client-side ID

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "LaunchDarkly example for JavaScript Browser SDK",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/example",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/example-fdv2",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"

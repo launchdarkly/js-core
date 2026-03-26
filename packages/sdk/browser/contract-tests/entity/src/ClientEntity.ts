@@ -1,4 +1,12 @@
-import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/js-client-sdk';
+import {
+  createClient,
+  InitializerEntry,
+  LDClient,
+  LDLogger,
+  LDOptions,
+  ModeDefinition,
+  SynchronizerEntry,
+} from '@launchdarkly/js-client-sdk';
 import {
   CommandParams,
   CommandType,
@@ -15,7 +23,7 @@ import {
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
 
-function translateInitializer(init: SDKConfigDataInitializer): any | undefined {
+function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
   if (init.polling) {
     return {
       type: 'polling',
@@ -30,7 +38,7 @@ function translateInitializer(init: SDKConfigDataInitializer): any | undefined {
   return undefined;
 }
 
-function translateSynchronizer(sync: SDKConfigDataSynchronizer): any | undefined {
+function translateSynchronizer(sync: SDKConfigDataSynchronizer): SynchronizerEntry | undefined {
   if (sync.streaming) {
     return {
       type: 'streaming',
@@ -56,14 +64,14 @@ function translateSynchronizer(sync: SDKConfigDataSynchronizer): any | undefined
   return undefined;
 }
 
-function translateModeDefinition(modeDef: SDKConfigModeDefinition): any {
-  const initializers = (modeDef.initializers ?? [])
+function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefinition {
+  const initializers: InitializerEntry[] = (modeDef.initializers ?? [])
     .map(translateInitializer)
-    .filter((x: any) => x !== undefined);
+    .filter((x): x is InitializerEntry => x !== undefined);
 
-  const synchronizers = (modeDef.synchronizers ?? [])
+  const synchronizers: SynchronizerEntry[] = (modeDef.synchronizers ?? [])
     .map(translateSynchronizer)
-    .filter((x: any) => x !== undefined);
+    .filter((x): x is SynchronizerEntry => x !== undefined);
 
   return { initializers, synchronizers };
 }
@@ -83,7 +91,13 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   };
 
   if (options.serviceEndpoints) {
+    cf.streamUri = options.serviceEndpoints.streaming;
+    cf.baseUri = options.serviceEndpoints.polling;
     cf.eventsUri = options.serviceEndpoints.events;
+  }
+
+  if (options.dataSystem?.payloadFilter) {
+    cf.payloadFilterKey = options.dataSystem.payloadFilter;
   }
 
   if (options.dataSystem?.connectionModeConfig) {
@@ -99,7 +113,8 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
       Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
         connectionModes[modeName] = translateModeDefinition(modeDef);
 
-        // Also set global endpoint URIs for compatibility with ServiceEndpoints.
+        // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
+        // compatibility. These override the serviceEndpoints values above.
         (modeDef.synchronizers ?? []).forEach((sync) => {
           if (sync.streaming?.baseUri) {
             cf.streamUri = sync.streaming.baseUri;
@@ -120,11 +135,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
 
     (cf as any).dataSystem = dataSystem;
   } else {
-    if (options.serviceEndpoints) {
-      cf.streamUri = options.serviceEndpoints.streaming;
-      cf.baseUri = options.serviceEndpoints.polling;
-    }
-
     if (options.polling) {
       if (options.polling.baseUri) {
         cf.baseUri = options.polling.baseUri;
