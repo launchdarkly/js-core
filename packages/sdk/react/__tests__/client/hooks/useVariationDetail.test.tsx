@@ -19,7 +19,7 @@ import { makeMockClient } from '../mockClient';
 function makeWrapper(mockClient: ReturnType<typeof makeMockClient>) {
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
-    initializedState: 'initializing',
+    initializedState: 'complete',
   };
 
   return function Wrapper({ children }: { children: React.ReactNode }) {

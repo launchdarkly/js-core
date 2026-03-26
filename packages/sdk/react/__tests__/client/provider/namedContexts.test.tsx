@@ -14,8 +14,8 @@ import { makeMockClient } from '../mockClient';
 it('hook using a named context reads from the named client, not the global one', () => {
   const NamedContext = initLDReactContext();
 
-  const globalClient = makeMockClient();
-  const namedClient = makeMockClient();
+  const globalClient = makeMockClient({ initialState: 'complete' });
+  const namedClient = makeMockClient({ initialState: 'complete' });
 
   (globalClient.boolVariation as jest.Mock).mockReturnValue(true);
   (namedClient.boolVariation as jest.Mock).mockReturnValue(false);
@@ -46,8 +46,8 @@ it('hook using a named context reads from the named client, not the global one',
 it('hook with no context arg reads from the global LDReactContext provider', () => {
   const NamedContext = initLDReactContext();
 
-  const globalClient = makeMockClient();
-  const namedClient = makeMockClient();
+  const globalClient = makeMockClient({ initialState: 'complete' });
+  const namedClient = makeMockClient({ initialState: 'complete' });
 
   (globalClient.boolVariation as jest.Mock).mockReturnValue(true);
   (namedClient.boolVariation as jest.Mock).mockReturnValue(false);
@@ -78,7 +78,7 @@ it('hook with no context arg reads from the global LDReactContext provider', () 
 it('a named-context provider does not populate the global LDReactContext', () => {
   const NamedContext = initLDReactContext();
 
-  const namedClient = makeMockClient();
+  const namedClient = makeMockClient({ initialState: 'complete' });
   const NamedProvider = createLDReactProviderWithClient(namedClient, NamedContext);
 
   let globalContextValue: LDReactClientContextValue | undefined;
@@ -102,8 +102,8 @@ it('a named-context provider does not populate the global LDReactContext', () =>
 it('useBoolVariation and useLDClient return data from the named context when supplied', () => {
   const NamedContext = initLDReactContext();
 
-  const globalClient = makeMockClient();
-  const namedClient = makeMockClient();
+  const globalClient = makeMockClient({ initialState: 'complete' });
+  const namedClient = makeMockClient({ initialState: 'complete' });
 
   (namedClient.boolVariation as jest.Mock).mockReturnValue(true);
   (globalClient.boolVariation as jest.Mock).mockReturnValue(false);
