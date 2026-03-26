@@ -12,6 +12,7 @@ export type { ModeDefinition } from './ModeDefinition';
 export type {
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
+  ManualModeSwitching,
   PlatformDataSystemDefaults,
 } from './LDClientDataSystemOptions';
 export type {

@@ -872,4 +872,72 @@ describe('given a mock platform for a BrowserClient', () => {
     // Verify that no fetch calls were made
     expect(platform.requests.fetch.mock.calls.length).toBe(0);
   });
+
+  it('uses FDv1 endpoints when dataSystem is not set', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { key: 'user-key', kind: 'user' },
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true, sendEvents: false, fetchGoals: false },
+      platform,
+    );
+
+    await client.start();
+
+    const fetchUrl = platform.requests.fetch.mock.calls[0][0];
+    expect(fetchUrl).toContain('/sdk/evalx/');
+    expect(fetchUrl).not.toContain('/sdk/poll/eval');
+  });
+
+  it('uses FDv2 endpoints when dataSystem is set', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { key: 'user-key', kind: 'user' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        fetchGoals: false,
+        // @ts-ignore dataSystem is @internal
+        dataSystem: {},
+      },
+      platform,
+    );
+
+    await client.start();
+
+    const fetchUrl = platform.requests.fetch.mock.calls[0][0];
+    expect(fetchUrl).toContain('/sdk/poll/eval/');
+  });
+
+  it('validates dataSystem options and applies browser defaults', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { key: 'user-key', kind: 'user' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        fetchGoals: false,
+        // @ts-ignore dataSystem is @internal
+        dataSystem: { backgroundConnectionMode: 'invalid-mode' },
+      },
+      platform,
+    );
+
+    // Invalid mode should produce a warning
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('dataSystem.backgroundConnectionMode'),
+    );
+
+    await client.start();
+
+    // Should still use FDv2 — invalid sub-fields fall back to defaults, not disable FDv2
+    const fetchUrl = platform.requests.fetch.mock.calls[0][0];
+    expect(fetchUrl).toContain('/sdk/poll/eval/');
+  });
 });

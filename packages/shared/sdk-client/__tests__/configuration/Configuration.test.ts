@@ -187,7 +187,7 @@ describe('dataSystem validation', () => {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
         dataSystemDefaults: {
-          initialConnectionMode: 'one-shot',
+          foregroundConnectionMode: 'one-shot',
           automaticModeSwitching: false,
         },
       },
@@ -203,61 +203,69 @@ describe('dataSystem validation', () => {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
         dataSystemDefaults: {
-          initialConnectionMode: 'one-shot',
+          foregroundConnectionMode: 'one-shot',
           automaticModeSwitching: false,
         },
       },
     );
     expect(config.dataSystem).toBeDefined();
-    expect(config.dataSystem!.initialConnectionMode).toBe('one-shot');
     expect(config.dataSystem!.automaticModeSwitching).toBe(false);
   });
 
   it('validates dataSystem with user overrides applied over platform defaults', () => {
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal
-      { dataSystem: { initialConnectionMode: 'polling' } },
+      {
+        dataSystem: {
+          automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' },
+        },
+      },
       {
         getImplementationHooks: () => [],
         credentialType: 'mobileKey',
         dataSystemDefaults: {
-          initialConnectionMode: 'streaming',
+          foregroundConnectionMode: 'streaming',
           backgroundConnectionMode: 'background',
           automaticModeSwitching: true,
         },
       },
     );
     expect(config.dataSystem).toBeDefined();
-    expect(config.dataSystem!.initialConnectionMode).toBe('polling');
+    expect(config.dataSystem!.automaticModeSwitching).toEqual({
+      type: 'manual',
+      initialConnectionMode: 'polling',
+    });
     expect(config.dataSystem!.backgroundConnectionMode).toBe('background');
-    expect(config.dataSystem!.automaticModeSwitching).toBe(true);
   });
 
   it('warns and falls back to default for invalid dataSystem sub-fields', () => {
     console.error = jest.fn();
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal
-      { dataSystem: { initialConnectionMode: 'turbo' } },
+      { dataSystem: { backgroundConnectionMode: 'turbo' } },
       {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
         dataSystemDefaults: {
-          initialConnectionMode: 'one-shot',
+          foregroundConnectionMode: 'one-shot',
           automaticModeSwitching: false,
         },
       },
     );
     expect(config.dataSystem).toBeDefined();
-    expect(config.dataSystem!.initialConnectionMode).toBe('one-shot');
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('dataSystem.initialConnectionMode'),
+      expect.stringContaining('dataSystem.backgroundConnectionMode'),
     );
   });
 
   it('does not deep-validate dataSystem when dataSystemDefaults is not provided', () => {
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal
-      { dataSystem: { initialConnectionMode: 'polling' } },
+      {
+        dataSystem: {
+          automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' },
+        },
+      },
       {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
@@ -276,7 +284,7 @@ describe('dataSystem validation', () => {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
         dataSystemDefaults: {
-          initialConnectionMode: 'one-shot',
+          foregroundConnectionMode: 'one-shot',
           automaticModeSwitching: false,
         },
       },
@@ -288,18 +296,23 @@ describe('dataSystem validation', () => {
   it('validates automaticModeSwitching as a granular config object', () => {
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal
-      { dataSystem: { automaticModeSwitching: { lifecycle: true, network: false } } },
+      {
+        dataSystem: {
+          automaticModeSwitching: { type: 'automatic', lifecycle: true, network: false },
+        },
+      },
       {
         getImplementationHooks: () => [],
         credentialType: 'mobileKey',
         dataSystemDefaults: {
-          initialConnectionMode: 'streaming',
+          foregroundConnectionMode: 'streaming',
           automaticModeSwitching: true,
         },
       },
     );
     expect(config.dataSystem).toBeDefined();
     expect(config.dataSystem!.automaticModeSwitching).toEqual({
+      type: 'automatic',
       lifecycle: true,
       network: false,
     });
@@ -312,7 +325,7 @@ describe('dataSystem validation', () => {
         getImplementationHooks: () => [],
         credentialType: 'clientSideId',
         dataSystemDefaults: {
-          initialConnectionMode: 'one-shot',
+          foregroundConnectionMode: 'one-shot',
           automaticModeSwitching: false,
         },
       },

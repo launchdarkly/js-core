@@ -110,13 +110,21 @@ export default function validateOptions(
  * Creates a validator for nested objects. When used in a validator map,
  * `validateOptions` will recursively validate the nested object's properties.
  * Defaults for nested fields are passed through from the parent.
+ *
+ * @param validators - Validator map for the nested object's fields.
+ * @param options - Optional configuration.
+ * @param options.defaults - Built-in defaults for nested fields.
+ * @param options.is - Custom `is` predicate. When provided, replaces the
+ *   default "is object" check. Use this to discriminate between object shapes
+ *   in an `anyOf` (e.g., matching on a `type` discriminant field).
  */
 export function validatorOf(
   validators: Record<string, TypeValidator>,
-  builtInDefaults?: Record<string, unknown>,
+  options?: { defaults?: Record<string, unknown>; is?: (u: unknown) => boolean },
 ): CompoundValidator {
+  const builtInDefaults = options?.defaults;
   return {
-    is: (u: unknown) => TypeValidators.Object.is(u),
+    is: options?.is ?? ((u: unknown) => TypeValidators.Object.is(u)),
     getType: () => 'object',
     validate(value: unknown, name: string, logger?: LDLogger, defaults?: unknown) {
       if (!TypeValidators.Object.is(value)) {

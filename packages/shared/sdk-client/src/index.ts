@@ -87,6 +87,7 @@ export type {
   ModeDefinition,
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
+  ManualModeSwitching,
   PlatformDataSystemDefaults,
   LifecycleState,
   ModeState,
@@ -103,6 +104,7 @@ export type { DataSourceStatusManager } from './datasource/DataSourceStatusManag
 // FDv2 data system validators and platform defaults.
 export {
   dataSystemValidators,
+  resolveForegroundMode,
   BROWSER_DATA_SYSTEM_DEFAULTS,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   DESKTOP_DATA_SYSTEM_DEFAULTS,
@@ -124,3 +126,20 @@ export type {
   SourceFactoryProvider,
 } from './datasource/SourceFactoryProvider';
 export { createDefaultSourceFactoryProvider } from './datasource/SourceFactoryProvider';
+
+// FDv2 shared data manager — mode switching, debouncing, and data source lifecycle.
+export type {
+  FDv2DataManagerBaseConfig,
+  FDv2DataManagerControl,
+} from './datasource/FDv2DataManagerBase';
+export { createFDv2DataManagerBase } from './datasource/FDv2DataManagerBase';
+
+// State debounce manager.
+export type {
+  StateDebounceManager,
+  StateDebounceManagerConfig,
+  NetworkState,
+  PendingState,
+  ReconciliationCallback,
+} from './datasource/StateDebounceManager';
+export { createStateDebounceManager } from './datasource/StateDebounceManager';
