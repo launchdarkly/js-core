@@ -22,6 +22,7 @@ export default class MobileDataManager extends BaseDataManager {
   // Not implemented yet.
   protected networkAvailable: boolean = true;
   protected connectionMode: ConnectionMode = 'streaming';
+  protected secureModeHash?: string;
 
   constructor(
     platform: Platform,
@@ -64,6 +65,9 @@ export default class MobileDataManager extends BaseDataManager {
       return;
     }
     this.context = context;
+
+    // Capture the secure mode hash (if set), so that it can be forwarded to makeRequestor on each re(connection).
+    this.secureModeHash = identifyOptions?.hash;
 
     // When bootstrap is provided, resolve identify immediately then fall through to connect.
     if (identifyOptions?.bootstrap) {
@@ -137,6 +141,7 @@ export default class MobileDataManager extends BaseDataManager {
       [],
       this.config.withReasons,
       this.config.useReport,
+      this.secureModeHash,
     );
 
     this.updateProcessor?.close();

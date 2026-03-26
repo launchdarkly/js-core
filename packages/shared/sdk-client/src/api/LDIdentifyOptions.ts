@@ -63,4 +63,13 @@ export interface LDIdentifyOptions {
    * @hidden
    */
   bootstrapParsed?: { [key: string]: ItemDescriptor };
+
+  /**
+   * The secure mode hash for the context being identified. Used to verify the context
+   * key on the LaunchDarkly server when secure mode is enabled for the environment.
+   * 
+   * Generate this hash server-side using the SDK key and the context key.
+   */
+
+  hash?: string;
 }
