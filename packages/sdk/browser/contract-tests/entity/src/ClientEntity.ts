@@ -100,37 +100,39 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     cf.payloadFilterKey = options.dataSystem.payloadFilter;
   }
 
-  if (options.dataSystem?.connectionModeConfig) {
-    const connMode = options.dataSystem.connectionModeConfig;
-    const dataSystem: any = {
-      automaticModeSwitching: connMode.initialConnectionMode
+  if (options.dataSystem) {
+    const dataSystem: any = {};
+
+    if (options.dataSystem.connectionModeConfig) {
+      const connMode = options.dataSystem.connectionModeConfig;
+      dataSystem.automaticModeSwitching = connMode.initialConnectionMode
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
-        : false,
-    };
+        : false;
 
-    if (connMode.customConnectionModes) {
-      const connectionModes: Record<string, any> = {};
-      Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
-        connectionModes[modeName] = translateModeDefinition(modeDef);
+      if (connMode.customConnectionModes) {
+        const connectionModes: Record<string, any> = {};
+        Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
+          connectionModes[modeName] = translateModeDefinition(modeDef);
 
-        // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
-        // compatibility. These override the serviceEndpoints values above.
-        (modeDef.synchronizers ?? []).forEach((sync) => {
-          if (sync.streaming?.baseUri) {
-            cf.streamUri = sync.streaming.baseUri;
-            cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
-          }
-          if (sync.polling?.baseUri) {
-            cf.baseUri = sync.polling.baseUri;
-          }
+          // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
+          // compatibility. These override the serviceEndpoints values above.
+          (modeDef.synchronizers ?? []).forEach((sync) => {
+            if (sync.streaming?.baseUri) {
+              cf.streamUri = sync.streaming.baseUri;
+              cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+            }
+            if (sync.polling?.baseUri) {
+              cf.baseUri = sync.polling.baseUri;
+            }
+          });
+          (modeDef.initializers ?? []).forEach((init) => {
+            if (init.polling?.baseUri) {
+              cf.baseUri = init.polling.baseUri;
+            }
+          });
         });
-        (modeDef.initializers ?? []).forEach((init) => {
-          if (init.polling?.baseUri) {
-            cf.baseUri = init.polling.baseUri;
-          }
-        });
-      });
-      dataSystem.connectionModes = connectionModes;
+        dataSystem.connectionModes = connectionModes;
+      }
     }
 
     (cf as any).dataSystem = dataSystem;
