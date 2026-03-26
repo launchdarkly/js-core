@@ -119,10 +119,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     }
 
     (cf as any).dataSystem = dataSystem;
-
-    if (options.dataSystem.payloadFilter) {
-      cf.payloadFilterKey = options.dataSystem.payloadFilter;
-    }
   } else {
     if (options.serviceEndpoints) {
       cf.streamUri = options.serviceEndpoints.streaming;
