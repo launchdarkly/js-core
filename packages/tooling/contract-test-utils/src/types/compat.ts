@@ -18,7 +18,6 @@ export type LDContext = Record<string, any>;
  */
 export interface LDEvaluationReason {
   kind: string;
-  [key: string]: unknown;
 }
 
 /**
