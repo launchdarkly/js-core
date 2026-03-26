@@ -50,6 +50,16 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
+  // FDv2 data system configuration types.
+  FDv2ConnectionMode,
+  InitializerEntry,
+  SynchronizerEntry,
+  ModeDefinition,
+  ManualModeSwitching,
+  CacheDataSourceEntry,
+  PollingDataSourceEntry,
+  StreamingDataSourceEntry,
+  EndpointConfig,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
