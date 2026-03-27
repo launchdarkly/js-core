@@ -1,6 +1,6 @@
 import {
-  FDv2ConnectionMode,
   LDClient as CommonClient,
+  FDv2ConnectionMode,
   LDContext,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
@@ -33,10 +33,7 @@ export interface LDStartOptions extends LDWaitForInitializationOptions {
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
  */
 
-export type LDClient = Omit<
-  CommonClient,
-  'getConnectionMode' | 'getOffline' | 'identify'
-> & {
+export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | 'identify'> & {
   /**
    * @ignore
    * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.

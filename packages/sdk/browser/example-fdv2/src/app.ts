@@ -112,12 +112,12 @@ function buildUI() {
   modeSection.appendChild(modeStatus);
   modeSection.appendChild(el('br'));
   const modes: FDv2ConnectionMode[] = ['streaming', 'polling', 'offline', 'one-shot', 'background'];
-  for (const mode of modes) {
+  modes.forEach((mode) => {
     const btn = el('button', { id: `btn-mode-${mode}` });
     btn.textContent = mode;
     modeSection.appendChild(btn);
     modeSection.appendChild(text(' '));
-  }
+  });
   const btnModeClear = el('button', { id: 'btn-mode-clear' });
   btnModeClear.textContent = 'Clear';
   modeSection.appendChild(btnModeClear);
@@ -282,13 +282,13 @@ const main = async () => {
     'one-shot',
     'background',
   ];
-  for (const mode of connectionModes) {
+  connectionModes.forEach((mode) => {
     document.getElementById(`btn-mode-${mode}`)!.addEventListener('click', () => {
       client.setConnectionMode(mode);
       updateModeStatus(mode);
       log(`setConnectionMode('${mode}')`);
     });
-  }
+  });
   document.getElementById('btn-mode-clear')!.addEventListener('click', () => {
     client.setConnectionMode(undefined);
     updateModeStatus(undefined);

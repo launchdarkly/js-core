@@ -24,8 +24,10 @@ const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
  * to this feature please join the EAP.
  * https://launchdarkly.com/docs/sdk/features/data-saving-mode
  */
-export interface BrowserDataSystemOptions
-  extends Omit<LDClientDataSystemOptions, 'automaticModeSwitching'> {
+export interface BrowserDataSystemOptions extends Omit<
+  LDClientDataSystemOptions,
+  'automaticModeSwitching'
+> {
   automaticModeSwitching?: false | ManualModeSwitching;
 }
 
