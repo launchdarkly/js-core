@@ -322,15 +322,14 @@ it('getInitializationError() returns the error after a failed start()', async ()
   expect(client.getInitializationError()).toBe(failError);
 });
 
-it('noop client getInitializationError() returns an error', () => {
+it('noop client returns initializing state on the server without bootstrap', () => {
   const originalWindow = global.window;
   // @ts-ignore
   delete global.window;
 
   const client = createClient('test-id', { kind: 'user', key: 'u1' });
-  expect(client.getInitializationError()).toEqual(
-    new Error('Server-side client cannot be used to evaluate flags'),
-  );
+  expect(client.getInitializationState()).toBe('initializing');
+  expect(client.getInitializationError()).toBeUndefined();
 
   // @ts-ignore
   global.window = originalWindow;
