@@ -566,8 +566,9 @@ it('useJsonVariation calls variation again when context changes', () => {
 
 // ─── ready-gating tests ──────────────────────────────────────────────────────
 
-it('does not call variation when initializing', () => {
+it('does not call variation when not ready', () => {
   const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
 
   function FlagConsumer() {
     useBoolVariation('my-flag', false);
@@ -584,8 +585,9 @@ it('does not call variation when initializing', () => {
   expect(mockClient.boolVariation).not.toHaveBeenCalled();
 });
 
-it('returns defaultValue when initializing', () => {
+it('returns defaultValue when not ready', () => {
   const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
   (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
 
   const captured: boolean[] = [];
@@ -608,6 +610,7 @@ it('returns defaultValue when initializing', () => {
 
 it('evaluates once when initialization completes', () => {
   const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
   (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
 
   let setContextValue!: React.Dispatch<React.SetStateAction<LDReactClientContextValue>>;
@@ -636,6 +639,8 @@ it('evaluates once when initialization completes', () => {
 
   expect(mockClient.boolVariation).not.toHaveBeenCalled();
   expect(captured[captured.length - 1]).toBe(false);
+
+  (mockClient.isReady as jest.Mock).mockReturnValue(true);
 
   act(() => {
     setContextValue({

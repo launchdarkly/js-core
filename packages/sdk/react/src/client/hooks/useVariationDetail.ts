@@ -6,14 +6,8 @@ import type { LDReactClientContextValue } from '../LDClient';
 import useVariationCore from './useVariationCore';
 
 /**
- * Returns an evaluation detail with the default value and a reason of CLIENT_NOT_READY.
- *
- * @remarks
- * This aligns with the flag evaluation error kind that is defined in the base
- * `@launchdarkly/js-sdk-common` package.
- *
- * @param def default value to return if the flag is not available.
- * @returns an evaluation detail with the default value and a reason of CLIENT_NOT_READY.
+ * Returns an evaluation detail with the default value and a CLIENT_NOT_READY error reason.
+ * Aligns with `ErrorKinds.ClientNotReady` in `@launchdarkly/js-sdk-common`.
  */
 function notReadyDetail<T>(def: T): LDEvaluationDetailTyped<T> {
   return {
