@@ -50,7 +50,7 @@ export function createPollingInitializer(
           return result;
         }
 
-        // Non-retryable status (terminal_error, goodbye) → return immediately
+        // Non-retryable status (terminal_error, goodbye) -> return immediately
         if (result.state !== 'interrupted') {
           return result;
         }
@@ -70,7 +70,7 @@ export function createPollingInitializer(
         }
       }
 
-      // Convert final interrupted → terminal_error
+      // Convert final interrupted -> terminal_error
       const status = lastResult as StatusResult;
       return terminalError(status.errorInfo!, status.fdv1Fallback);
     },
