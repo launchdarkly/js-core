@@ -15,7 +15,7 @@ function mockResponse(value: string, statusCode: number) {
     // @ts-ignore
     headers: {
       // @ts-ignore
-      get: jest.fn(),
+      get: jest.fn(() => null),
       // @ts-ignore
       keys: jest.fn(),
       // @ts-ignore
@@ -58,6 +58,34 @@ export function makeRequests(): Requests {
               urls: [{ kind: 'exact', url: 'http://browserclientintegration.com' }],
             },
           ]),
+          200,
+        )();
+      }
+      if (url.includes('/sdk/poll/eval')) {
+        return mockFetch(
+          JSON.stringify({
+            events: [
+              {
+                event: 'server-intent',
+                data: {
+                  payloads: [{ id: 'mock', target: 1, intentCode: 'xfer-full', reason: 'mock' }],
+                },
+              },
+              {
+                event: 'put-object',
+                data: {
+                  kind: 'flag-eval',
+                  key: 'flagA',
+                  version: 1,
+                  object: { value: true, trackEvents: false },
+                },
+              },
+              {
+                event: 'payload-transferred',
+                data: { state: 'mock-state', version: 1, id: 'mock' },
+              },
+            ],
+          }),
           200,
         )();
       }
