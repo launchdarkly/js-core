@@ -4,8 +4,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import {
   Capability,
+  ConfigBuilder,
   IClientEntity,
-  parseClientOptions,
   TestHarnessWebSocketBuilder,
 } from '@launchdarkly/js-contract-test-utils/client';
 import {
@@ -42,7 +42,6 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   const commandHandlers = useRef(new Map<string, CommandHandler>());
   const handlerReadyMap = useRef(new Map<string, () => void>());
   const clientsRef = useRef<ClientRecord[]>([]);
-  // Entity map for the WS builder's get/delete callbacks
   const entityMap = useRef(new Map<string, IClientEntity>());
 
   const onReady = (readyId: string) => {
@@ -53,18 +52,17 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     const ws = new TestHarnessWebSocketBuilder()
       .setCapabilities(CAPABILITIES)
       .onCreateClient(async (id, params) => {
-        const { timeout, sdkConfig, initialContext, credential, initCanFail } =
-          parseClientOptions(params);
+        const config = new ConfigBuilder(params).set({ fetchGoals: false });
 
         const client = createClient(
-          credential,
-          initialContext as LDContext,
-          { ...sdkConfig, fetchGoals: false } as LDOptions,
+          config.credential,
+          config.initialContext as LDContext,
+          config.build() as LDOptions,
         );
 
-        const { status } = await client.start({ timeout: timeout / 1000 });
+        const { status } = await client.start({ timeout: config.timeout / 1000 });
 
-        if (status === 'failed' && !initCanFail) {
+        if (status === 'failed' && !config.initCanFail) {
           client.close();
           throw new Error('client initialization failed');
         }

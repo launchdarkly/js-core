@@ -1,8 +1,8 @@
 import {
   ClientEntity,
+  ConfigBuilder,
   CreateInstanceParams,
   IClientEntity,
-  parseClientOptions,
 } from '@launchdarkly/js-contract-test-utils/client';
 import {
   AutoEnvAttributes,
@@ -15,24 +15,12 @@ export async function newSdkClientEntity(
   _id: string,
   options: CreateInstanceParams,
 ): Promise<IClientEntity> {
-  const { timeout, sdkConfig, initialContext, initCanFail } = parseClientOptions(options);
-
-  // Add RN-specific options
-  const rnConfig: LDOptions = {
-    ...sdkConfig,
+  const config = new ConfigBuilder(options).skip('streaming').set({
     automaticNetworkHandling: false,
     automaticBackgroundHandling: false,
-  } as LDOptions;
-
-  // RN uses initialConnectionMode instead of streaming boolean
-  if (options.configuration.polling) {
-    rnConfig.initialConnectionMode = 'polling';
-  }
-  if (options.configuration.streaming) {
-    rnConfig.initialConnectionMode = 'streaming';
-  }
-  // Remove the browser-style streaming field — RN doesn't use it
-  delete (rnConfig as Record<string, unknown>).streaming;
+    ...(options.configuration.polling && { initialConnectionMode: 'polling' }),
+    ...(options.configuration.streaming && { initialConnectionMode: 'streaming' }),
+  });
 
   const autoEnvAttributes = options.configuration.clientSide?.includeEnvironmentAttributes
     ? AutoEnvAttributes.Enabled
@@ -41,27 +29,27 @@ export async function newSdkClientEntity(
   const client = new ReactNativeLDClient(
     options.configuration.credential || 'unknown-mobile-key',
     autoEnvAttributes,
-    rnConfig,
+    config.build() as LDOptions,
   );
 
   let failed = false;
   try {
     await Promise.race([
-      client.identify(initialContext as LDContext, {
-        timeout: timeout / 1000,
+      client.identify(config.initialContext as LDContext, {
+        timeout: config.timeout / 1000,
         waitForNetworkResults: true,
       }),
       new Promise((_resolve, reject) => {
-        setTimeout(reject, timeout);
+        setTimeout(reject, config.timeout);
       }),
     ]);
   } catch (_) {
     failed = true;
   }
-  if (failed && !initCanFail) {
+  if (failed && !config.initCanFail) {
     client.close();
     throw new Error('client initialization failed');
   }
 
-  return new ClientEntity(client, options.tag);
+  return new ClientEntity(client, config.tag);
 }

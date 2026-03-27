@@ -8,14 +8,12 @@ import {
 } from '@launchdarkly/js-client-sdk';
 import {
   ClientEntity,
+  ConfigBuilder,
   CreateInstanceParams,
   IClientEntity,
-  makeSdkConfig,
-  parseClientOptions,
   SDKConfigDataInitializer,
   SDKConfigDataSynchronizer,
   SDKConfigModeDefinition,
-  SDKConfigParams,
 } from '@launchdarkly/js-contract-test-utils/client';
 
 function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
@@ -71,25 +69,28 @@ function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefiniti
   return { initializers, synchronizers };
 }
 
-/**
- * Browser-specific makeSdkConfig that wraps the shared base config with
- * FDv2 data system translation and browser-specific options.
- */
-function makeBrowserSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
-  const isSet = (x?: unknown) => x !== null && x !== undefined;
-  const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds! / 1000 : undefined);
+export async function newSdkClientEntity(
+  _id: string,
+  options: CreateInstanceParams,
+): Promise<IClientEntity> {
+  const config = new ConfigBuilder(options).set({ fetchGoals: false });
 
-  const cf = { ...makeSdkConfig(options, tag), fetchGoals: false } as LDOptions;
+  if (options.configuration.dataSystem) {
+    // FDv2: skip legacy streaming — data system handles connection modes
+    config.skip('streaming');
 
-  if (options.dataSystem?.payloadFilter) {
-    cf.payloadFilterKey = options.dataSystem.payloadFilter;
-  }
+    const isSet = (x?: unknown) => x !== null && x !== undefined;
+    const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds! / 1000 : undefined);
+    const fdv2Overrides: Record<string, unknown> = {};
 
-  if (options.dataSystem) {
+    if (options.configuration.dataSystem.payloadFilter) {
+      fdv2Overrides.payloadFilterKey = options.configuration.dataSystem.payloadFilter;
+    }
+
     const dataSystem: any = {};
 
-    if (options.dataSystem.connectionModeConfig) {
-      const connMode = options.dataSystem.connectionModeConfig;
+    if (options.configuration.dataSystem.connectionModeConfig) {
+      const connMode = options.configuration.dataSystem.connectionModeConfig;
       dataSystem.automaticModeSwitching = connMode.initialConnectionMode
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
         : false;
@@ -99,20 +100,20 @@ function makeBrowserSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
         Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
           connectionModes[modeName] = translateModeDefinition(modeDef);
 
-          // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
-          // compatibility. These override the serviceEndpoints values above.
           (modeDef.synchronizers ?? []).forEach((sync) => {
             if (sync.streaming?.baseUri) {
-              cf.streamUri = sync.streaming.baseUri;
-              cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+              fdv2Overrides.streamUri = sync.streaming.baseUri;
+              fdv2Overrides.streamInitialReconnectDelay = maybeTime(
+                sync.streaming.initialRetryDelayMs,
+              );
             }
             if (sync.polling?.baseUri) {
-              cf.baseUri = sync.polling.baseUri;
+              fdv2Overrides.baseUri = sync.polling.baseUri;
             }
           });
           (modeDef.initializers ?? []).forEach((init) => {
             if (init.polling?.baseUri) {
-              cf.baseUri = init.polling.baseUri;
+              fdv2Overrides.baseUri = init.polling.baseUri;
             }
           });
         });
@@ -120,37 +121,28 @@ function makeBrowserSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
       }
     }
 
-    (cf as any).dataSystem = dataSystem;
+    fdv2Overrides.dataSystem = dataSystem;
+    config.set(fdv2Overrides);
   }
 
-  return cf;
-}
-
-export async function newSdkClientEntity(
-  _id: string,
-  options: CreateInstanceParams,
-): Promise<IClientEntity> {
-  const { timeout, initialContext, credential, initCanFail } = parseClientOptions(options);
-
-  const sdkConfig = makeBrowserSdkConfig(options.configuration, options.tag);
-
-  const client = createClient(credential, initialContext as LDContext, sdkConfig);
+  const sdkConfig = config.build() as LDOptions;
+  const client = createClient(config.credential, config.initialContext as LDContext, sdkConfig);
 
   let failed = false;
   try {
     await Promise.race([
       client.start(),
       new Promise((_resolve, reject) => {
-        setTimeout(reject, timeout);
+        setTimeout(reject, config.timeout);
       }),
     ]);
   } catch (_) {
     failed = true;
   }
-  if (failed && !initCanFail) {
+  if (failed && !config.initCanFail) {
     client.close();
     throw new Error('client initialization failed');
   }
 
-  return new ClientEntity(client, options.tag);
+  return new ClientEntity(client, config.tag);
 }
