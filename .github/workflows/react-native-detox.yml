@@ -37,7 +37,7 @@ jobs:
       - name: Build
         run: yarn workspaces foreach -pR --topological-dev --from 'react-native-example' run build
 
-      - uses: ./actions/release-secrets
+      - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
         name: 'Get mobile key'
         with:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN_EXAMPLES }}
