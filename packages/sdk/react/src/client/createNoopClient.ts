@@ -1,5 +1,8 @@
 import type { LDReactClient } from './LDClient';
 
+// NOTE: We intentionally do not check `$valid` here. During SSR, we serve bootstrap
+// flags on a best-effort basis regardless of validity since there is no live connection
+// to LaunchDarkly. The client-side SDK will re-evaluate once hydrated.
 function extractFlags(bootstrap: object): Record<string, unknown> {
   return Object.fromEntries(Object.entries(bootstrap).filter(([key]) => !key.startsWith('$')));
 }
@@ -65,6 +68,7 @@ export function createNoopClient(bootstrap?: object): LDReactClient {
     getContext: () => undefined,
     getInitializationState: () => (hasBootstrap ? 'complete' : 'initializing'),
     getInitializationError: () => undefined,
+    isReady: () => hasBootstrap,
     boolVariation: (key: string, def: boolean) => getVariation(key, def, isBoolean),
     numberVariation: (key: string, def: number) => getVariation(key, def, isNumber),
     stringVariation: (key: string, def: string) => getVariation(key, def, isString),

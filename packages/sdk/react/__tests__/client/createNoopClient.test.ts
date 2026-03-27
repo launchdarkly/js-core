@@ -221,6 +221,16 @@ describe('handles edge cases gracefully', () => {
     const client = createNoopClient();
     expect(client.getInitializationState()).toBe('initializing');
   });
+
+  it('isReady returns true when bootstrap is provided', () => {
+    const client = createNoopClient({});
+    expect(client.isReady()).toBe(true);
+  });
+
+  it('isReady returns false when bootstrap is not provided', () => {
+    const client = createNoopClient();
+    expect(client.isReady()).toBe(false);
+  });
 });
 
 describe('event and lifecycle stubs do not throw and return expected values', () => {
