@@ -2,11 +2,11 @@ import {
   ClientEntity,
   CreateInstanceParams,
   IClientEntity,
-  makeDefaultInitialContext,
-  makeSdkConfig,
+  parseClientOptions,
 } from '@launchdarkly/js-contract-test-utils/client';
 import {
   AutoEnvAttributes,
+  LDContext,
   LDOptions,
   ReactNativeLDClient,
 } from '@launchdarkly/react-native-client-sdk';
@@ -15,49 +15,42 @@ export async function newSdkClientEntity(
   _id: string,
   options: CreateInstanceParams,
 ): Promise<IClientEntity> {
-  const timeout =
-    options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+  const { timeout, sdkConfig, initialContext, initCanFail } = parseClientOptions(options);
 
-  // Build base config, then add RN-specific options
-  const baseConfig = makeSdkConfig(options.configuration, options.tag);
-  const sdkConfig: LDOptions = {
-    ...baseConfig,
+  // Add RN-specific options
+  const rnConfig: LDOptions = {
+    ...sdkConfig,
     automaticNetworkHandling: false,
     automaticBackgroundHandling: false,
   } as LDOptions;
 
   // RN uses initialConnectionMode instead of streaming boolean
   if (options.configuration.polling) {
-    sdkConfig.initialConnectionMode = 'polling';
+    rnConfig.initialConnectionMode = 'polling';
   }
   if (options.configuration.streaming) {
-    sdkConfig.initialConnectionMode = 'streaming';
+    rnConfig.initialConnectionMode = 'streaming';
   }
   // Remove the browser-style streaming field — RN doesn't use it
-  delete (sdkConfig as Record<string, unknown>).streaming;
+  delete (rnConfig as Record<string, unknown>).streaming;
 
   const autoEnvAttributes = options.configuration.clientSide?.includeEnvironmentAttributes
     ? AutoEnvAttributes.Enabled
     : AutoEnvAttributes.Disabled;
 
-  const initialContext =
-    options.configuration.clientSide?.initialUser ||
-    options.configuration.clientSide?.initialContext ||
-    makeDefaultInitialContext();
-
   const client = new ReactNativeLDClient(
     options.configuration.credential || 'unknown-mobile-key',
     autoEnvAttributes,
-    sdkConfig,
+    rnConfig,
   );
 
   let failed = false;
   try {
     await Promise.race([
-      client.identify(initialContext, { timeout: timeout / 1000, waitForNetworkResults: true }),
+      client.identify(initialContext as LDContext, {
+        timeout: timeout / 1000,
+        waitForNetworkResults: true,
+      }),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
       }),
@@ -65,7 +58,7 @@ export async function newSdkClientEntity(
   } catch (_) {
     failed = true;
   }
-  if (failed && !options.configuration.initCanFail) {
+  if (failed && !initCanFail) {
     client.close();
     throw new Error('client initialization failed');
   }

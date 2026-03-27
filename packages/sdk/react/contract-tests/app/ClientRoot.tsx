@@ -3,29 +3,39 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import {
-  CLIENT_SIDE_CAPABILITIES,
+  Capability,
   IClientEntity,
-  makeDefaultInitialContext,
+  parseClientOptions,
   TestHarnessWebSocketBuilder,
 } from '@launchdarkly/js-contract-test-utils/client';
 import {
   createClient,
   createLDReactProviderWithClient,
+  LDContext,
+  LDOptions,
   LDReactClient,
 } from '@launchdarkly/react-sdk';
 
-import {
-  ClientInstance,
-  CommandHandler,
-  createReactClientEntity,
-  makeSdkConfig,
-} from './ClientEntity';
+import { ClientInstance, CommandHandler, createReactClientEntity } from './ClientEntity';
 
 interface ClientRecord {
   id: string;
   client: LDReactClient;
   Provider: React.FC<{ children: React.ReactNode }>;
 }
+
+const CAPABILITIES: Capability[] = [
+  'client-side',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-per-context-summaries',
+  'track-hooks',
+];
 
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -41,29 +51,20 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     const ws = new TestHarnessWebSocketBuilder()
-      .setCapabilities(CLIENT_SIDE_CAPABILITIES)
+      .setCapabilities(CAPABILITIES)
       .onCreateClient(async (id, params) => {
-        const timeout =
-          params.configuration.startWaitTimeMs !== null &&
-          params.configuration.startWaitTimeMs !== undefined
-            ? params.configuration.startWaitTimeMs
-            : 5000;
-
-        const sdkConfig = makeSdkConfig(params.configuration, params.tag);
-        const initialContext =
-          params.configuration.clientSide?.initialUser ||
-          params.configuration.clientSide?.initialContext ||
-          makeDefaultInitialContext();
+        const { timeout, sdkConfig, initialContext, credential, initCanFail } =
+          parseClientOptions(params);
 
         const client = createClient(
-          params.configuration.credential || 'unknown-env-id',
-          initialContext,
-          sdkConfig,
+          credential,
+          initialContext as LDContext,
+          { ...sdkConfig, fetchGoals: false } as LDOptions,
         );
 
         const { status } = await client.start({ timeout: timeout / 1000 });
 
-        if (status === 'failed' && !params.configuration.initCanFail) {
+        if (status === 'failed' && !initCanFail) {
           client.close();
           throw new Error('client initialization failed');
         }

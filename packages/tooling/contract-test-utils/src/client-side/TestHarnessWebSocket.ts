@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 import { makeLogger } from '../logging/makeLogger.js';
 import { CommandParams } from '../types/CommandParams.js';
 import { LDLogger } from '../types/compat.js';

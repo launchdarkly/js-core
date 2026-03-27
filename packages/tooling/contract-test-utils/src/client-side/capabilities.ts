@@ -47,21 +47,3 @@ export type Capability =
   | 'track-hooks'
   | 'user-type'
   | 'wrapper';
-
-/**
- * Capabilities shared by all client-side SDK contract test entities
- * (browser, react, electron). Platform-specific entities may extend
- * this list (e.g. react-native adds 'mobile').
- */
-export const CLIENT_SIDE_CAPABILITIES: Capability[] = [
-  'client-side',
-  'service-endpoints',
-  'tags',
-  'user-type',
-  'inline-context-all',
-  'anonymous-redaction',
-  'strongly-typed',
-  'client-prereq-events',
-  'client-per-context-summaries',
-  'track-hooks',
-];

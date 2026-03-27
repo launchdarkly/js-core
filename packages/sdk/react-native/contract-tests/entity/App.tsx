@@ -3,14 +3,25 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import {
   Capability,
-  CLIENT_SIDE_CAPABILITIES,
   IClientEntity,
   TestHarnessWebSocketBuilder,
 } from '@launchdarkly/js-contract-test-utils/client';
 
 import { newSdkClientEntity } from './src/ClientEntity';
 
-const RN_CAPABILITIES: Capability[] = [...CLIENT_SIDE_CAPABILITIES, 'mobile'];
+const RN_CAPABILITIES: Capability[] = [
+  'client-side',
+  'mobile',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-per-context-summaries',
+  'track-hooks',
+];
 
 const styles = StyleSheet.create({
   container: {

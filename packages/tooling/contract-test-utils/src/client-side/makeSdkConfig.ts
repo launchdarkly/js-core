@@ -1,6 +1,6 @@
 import { makeLogger } from '../logging/makeLogger.js';
 import { LDLogger } from '../types/compat.js';
-import { SDKConfigParams } from '../types/ConfigParams.js';
+import { CreateInstanceParams, SDKConfigParams } from '../types/ConfigParams.js';
 import ClientSideTestHook from './TestHook.js';
 
 /**
@@ -28,17 +28,6 @@ export interface ClientSideSdkConfig {
   [key: string]: unknown;
 }
 
-/**
- * Transforms test harness SDKConfigParams into a base SDK config object.
- *
- * This handles the common config fields shared by all client-side SDKs.
- * Platform-specific fields (e.g. `fetchGoals`, `initialConnectionMode`,
- * `automaticNetworkHandling`) should be added by the consumer:
- *
- * ```typescript
- * const config = { ...makeSdkConfig(options, tag), fetchGoals: false } as LDOptions;
- * ```
- */
 export function makeSdkConfig(options: SDKConfigParams, tag: string): ClientSideSdkConfig {
   if (!options.clientSide) {
     throw new Error('configuration did not include clientSide options');
@@ -104,4 +93,33 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): ClientSide
 
 export function makeDefaultInitialContext() {
   return { kind: 'user', key: 'key-not-specified' };
+}
+
+export interface ParsedClientOptions {
+  timeout: number;
+  sdkConfig: ClientSideSdkConfig;
+  initialContext: Record<string, any>;
+  credential: string;
+  initCanFail: boolean;
+}
+
+/**
+ * Transforms test harness SDKConfigParams into a base SDK config object.
+ *
+ * This function aims to provide common default values for the SDK configs.
+ */
+export function parseClientOptions(options: CreateInstanceParams): ParsedClientOptions {
+  const timeout =
+    options.configuration.startWaitTimeMs !== null &&
+    options.configuration.startWaitTimeMs !== undefined
+      ? options.configuration.startWaitTimeMs
+      : 5000;
+  const sdkConfig = makeSdkConfig(options.configuration, options.tag);
+  const initialContext =
+    options.configuration.clientSide?.initialUser ||
+    options.configuration.clientSide?.initialContext ||
+    makeDefaultInitialContext();
+  const credential = options.configuration.credential || 'unknown-env-id';
+  const initCanFail = options.configuration.initCanFail ?? false;
+  return { timeout, sdkConfig, initialContext, credential, initCanFail };
 }

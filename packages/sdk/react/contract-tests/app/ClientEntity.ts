@@ -3,17 +3,11 @@
 import { useEffect } from 'react';
 
 import {
-  makeSdkConfig as baseMakeSdkConfig,
   CommandParams,
   doCommand,
   IClientEntity,
-  SDKConfigParams,
 } from '@launchdarkly/js-contract-test-utils/client';
-import { LDOptions, LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
-
-export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
-  return { ...baseMakeSdkConfig(options, tag), fetchGoals: false } as LDOptions;
-}
+import { LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
 
 export type CommandHandler = (params: CommandParams) => Promise<unknown>;
 

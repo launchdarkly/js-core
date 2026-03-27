@@ -1,6 +1,7 @@
 import {
   createClient,
   InitializerEntry,
+  LDContext,
   LDOptions,
   ModeDefinition,
   SynchronizerEntry,
@@ -9,8 +10,8 @@ import {
   ClientEntity,
   CreateInstanceParams,
   IClientEntity,
-  makeDefaultInitialContext,
   makeSdkConfig,
+  parseClientOptions,
   SDKConfigDataInitializer,
   SDKConfigDataSynchronizer,
   SDKConfigModeDefinition,
@@ -129,23 +130,11 @@ export async function newSdkClientEntity(
   _id: string,
   options: CreateInstanceParams,
 ): Promise<IClientEntity> {
-  const timeout =
-    options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+  const { timeout, initialContext, credential, initCanFail } = parseClientOptions(options);
 
   const sdkConfig = makeBrowserSdkConfig(options.configuration, options.tag);
-  const initialContext =
-    options.configuration.clientSide?.initialUser ||
-    options.configuration.clientSide?.initialContext ||
-    makeDefaultInitialContext();
 
-  const client = createClient(
-    options.configuration.credential || 'unknown-env-id',
-    initialContext,
-    sdkConfig,
-  );
+  const client = createClient(credential, initialContext as LDContext, sdkConfig);
 
   let failed = false;
   try {
@@ -158,7 +147,7 @@ export async function newSdkClientEntity(
   } catch (_) {
     failed = true;
   }
-  if (failed && !options.configuration.initCanFail) {
+  if (failed && !initCanFail) {
     client.close();
     throw new Error('client initialization failed');
   }

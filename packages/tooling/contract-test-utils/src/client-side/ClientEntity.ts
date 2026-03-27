@@ -10,26 +10,24 @@ import { IClientEntity } from './TestHarnessWebSocket.js';
  * commands. Suitable for browser, react-native, and electron entities.
  *
  * Subclass and override `doCommand` to customize command handling for
- * platform-specific behavior. For example, React Native overrides to
- * handle async `flush()` differently.
+ * platform-specific behavior.
  */
 export class ClientEntity implements IClientEntity {
-  protected readonly _logger: LDLogger;
+  protected readonly logger: LDLogger;
+  protected readonly client: CommandableClient;
 
-  constructor(
-    protected readonly _client: CommandableClient,
-    tag: string,
-  ) {
-    this._logger = makeLogger(tag);
+  constructor(client: CommandableClient, tag: string) {
+    this.client = client;
+    this.logger = makeLogger(tag);
   }
 
   close() {
-    this._client.close();
-    this._logger.info('Test ended');
+    this.client.close();
+    this.logger.info('Test ended');
   }
 
   async doCommand(params: CommandParams): Promise<unknown> {
-    this._logger.info(`Received command: ${params.command}`);
-    return doCommandFn(this._client, params);
+    this.logger.info(`Received command: ${params.command}`);
+    return doCommandFn(this.client, params);
   }
 }
