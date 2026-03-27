@@ -50,7 +50,7 @@ jobs:
           ./test-harness -url http://localhost:8000 -debug --skip-from=testharness-suppressions-fdv2.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1.0.2
+      - uses: launchdarkly/gh-actions/actions/contract-tests@0b3ff8f7ffc27033ba68fe8e98cf9dd263887147 # contract-tests-v1.0.2
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
