@@ -7,7 +7,7 @@ import {
   doCommand,
   IClientEntity,
 } from '@launchdarkly/js-contract-test-utils/client';
-import { LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
+import { useLDClient } from '@launchdarkly/react-sdk';
 
 export type CommandHandler = (params: CommandParams) => Promise<unknown>;
 
