@@ -27,3 +27,4 @@ stats.html
 .env
 .env.local
 .env.*.local
+.claude/worktrees

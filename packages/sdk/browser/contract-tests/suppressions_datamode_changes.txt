@@ -1,0 +1,45 @@
+streaming/requests/method and headers/REPORT/http
+streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
+streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
+streaming/requests/query parameters/evaluationReasons set to [none]/REPORT
+streaming/requests/query parameters/evaluationReasons set to false/REPORT
+streaming/requests/query parameters/evaluationReasons set to true/REPORT
+streaming/requests/context properties/single kind minimal/REPORT
+streaming/requests/context properties/single kind with all attributes/REPORT
+streaming/requests/context properties/multi-kind/REPORT
+polling/requests/method and headers/REPORT/http
+polling/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
+polling/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
+polling/requests/query parameters/evaluationReasons set to [none]/REPORT
+polling/requests/query parameters/evaluationReasons set to false/REPORT
+polling/requests/query parameters/evaluationReasons set to true/REPORT
+polling/requests/context properties/single kind minimal/REPORT
+polling/requests/context properties/single kind with all attributes/REPORT
+polling/requests/context properties/multi-kind/REPORT
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"","applicationVersion":null}
+tags/stream requests/{"applicationId":"","applicationVersion":""}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+tags/disallowed characters

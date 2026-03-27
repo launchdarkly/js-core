@@ -2,12 +2,43 @@ import { TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import type FDv2ConnectionMode from '../api/datasource/FDv2ConnectionMode';
 import type {
+  AutomaticModeSwitchingConfig,
   LDClientDataSystemOptions,
   ManualModeSwitching,
-  PlatformDataSystemDefaults,
 } from '../api/datasource/LDClientDataSystemOptions';
 import { anyOf, validatorOf } from '../configuration/validateOptions';
 import { connectionModesValidator, connectionModeValidator } from './ConnectionModeConfig';
+
+/**
+ * Internal data system options that extend the public type with fields
+ * that are set by platform SDKs but not exposed to end users.
+ */
+export interface InternalDataSystemOptions extends LDClientDataSystemOptions {
+  /**
+   * The default foreground connection mode for this platform.
+   * Populated from platform defaults during validation.
+   */
+  foregroundConnectionMode?: FDv2ConnectionMode;
+
+  /**
+   * The connection mode to use when the application transitions to the background.
+   * Set by platform SDKs (e.g., mobile) via platform defaults.
+   */
+  backgroundConnectionMode?: FDv2ConnectionMode;
+}
+
+/**
+ * Platform-specific default configuration for the FDv2 data system.
+ * Internal to the SDK — not exposed to end users.
+ */
+export interface PlatformDataSystemDefaults {
+  /** The default foreground connection mode for this platform. */
+  readonly foregroundConnectionMode: FDv2ConnectionMode;
+  /** The default background connection mode, if any. */
+  readonly backgroundConnectionMode?: FDv2ConnectionMode;
+  /** Whether automatic mode switching is enabled by default. */
+  readonly automaticModeSwitching: boolean | AutomaticModeSwitchingConfig | ManualModeSwitching;
+}
 
 function hasType(u: unknown, type: string): boolean {
   return TypeValidators.Object.is(u) && (u as Record<string, unknown>).type === type;
@@ -73,13 +104,13 @@ function isManualModeSwitching(
  * otherwise falls back to the platform default.
  */
 function resolveForegroundMode(
-  dataSystem: LDClientDataSystemOptions,
+  dataSystem: InternalDataSystemOptions,
   defaults: PlatformDataSystemDefaults,
 ): FDv2ConnectionMode {
   if (isManualModeSwitching(dataSystem.automaticModeSwitching)) {
     return dataSystem.automaticModeSwitching.initialConnectionMode;
   }
-  return defaults.foregroundConnectionMode;
+  return dataSystem.foregroundConnectionMode ?? defaults.foregroundConnectionMode;
 }
 
 export {

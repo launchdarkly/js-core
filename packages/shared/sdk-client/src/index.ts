@@ -88,7 +88,6 @@ export type {
   LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
   ManualModeSwitching,
-  PlatformDataSystemDefaults,
   LifecycleState,
   ModeState,
   ConfiguredMode,
@@ -102,6 +101,10 @@ export { createDataSourceStatusManager } from './datasource/DataSourceStatusMana
 export type { DataSourceStatusManager } from './datasource/DataSourceStatusManager';
 
 // FDv2 data system validators and platform defaults.
+export type {
+  InternalDataSystemOptions,
+  PlatformDataSystemDefaults,
+} from './datasource/LDClientDataSystemOptions';
 export {
   dataSystemValidators,
   resolveForegroundMode,
