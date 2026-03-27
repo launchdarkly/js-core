@@ -1,6 +1,8 @@
 import {
+  LDClientDataSystemOptions,
   LDLogger,
   LDOptions as LDOptionsBase,
+  ManualModeSwitching,
   OptionMessages,
   TypeValidator,
   TypeValidators,
@@ -11,9 +13,38 @@ import { LDPlugin } from './LDPlugin';
 const DEFAULT_FLUSH_INTERVAL_SECONDS = 2;
 
 /**
+ * Data system options for the browser SDK.
+ *
+ * The browser SDK does not support automatic mode switching (lifecycle or
+ * network-based). Use `false` (the default) to disable automatic switching,
+ * or {@link ManualModeSwitching} to specify an explicit initial connection mode.
+ *
+ * This interface is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
+ */
+export interface BrowserDataSystemOptions
+  extends Omit<LDClientDataSystemOptions, 'automaticModeSwitching'> {
+  automaticModeSwitching?: false | ManualModeSwitching;
+}
+
+/**
  * Initialization options for the LaunchDarkly browser SDK.
  */
 export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMode'> {
+  /**
+   * @internal
+   *
+   * Configuration for the FDv2 data system. When present, the SDK uses
+   * the FDv2 protocol for flag delivery instead of the default FDv1
+   * protocol.
+   *
+   * The browser SDK restricts `automaticModeSwitching` to `false` or
+   * {@link ManualModeSwitching} only — automatic switching has no effect
+   * in browser environments.
+   */
+  dataSystem?: BrowserDataSystemOptions;
   /**
    * Whether the client should make a request to LaunchDarkly for Experimentation metrics (goals).
    *

@@ -18,6 +18,7 @@ import { BrowserOptions as LDOptions } from './options';
 
 export * from './common';
 export type { LDClient, LDOptions, LDStartOptions };
+export type { BrowserDataSystemOptions } from './options';
 export type { LDPlugin } from './LDPlugin';
 
 /**

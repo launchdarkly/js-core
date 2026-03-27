@@ -1,4 +1,5 @@
 import {
+  FDv2ConnectionMode,
   LDClient as CommonClient,
   LDContext,
   LDIdentifyResult,
@@ -34,15 +35,34 @@ export interface LDStartOptions extends LDWaitForInitializationOptions {
 
 export type LDClient = Omit<
   CommonClient,
-  'setConnectionMode' | 'getConnectionMode' | 'getOffline' | 'identify'
+  'getConnectionMode' | 'getOffline' | 'identify'
 > & {
   /**
    * @ignore
-   * Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
    * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
    * Implementation Note: The browser SDK has different identify options, so omits the base implementation
    * from the interface.
    */
+  /**
+   * Sets the connection mode for the SDK's data system.
+   *
+   * When set, this mode is used exclusively, overriding all automatic mode
+   * selection (including {@link setStreaming}). The {@link setStreaming} state
+   * is not modified -- {@link setConnectionMode} acts as a higher-priority
+   * override.
+   *
+   * Pass `undefined` (or call with no arguments) to clear the override and
+   * return to automatic mode selection.
+   *
+   * This method is not stable, and not subject to any backwards compatibility
+   * guarantees or semantic versioning. It is in early access. If you want access
+   * to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
+   *
+   * @param mode The connection mode to use, or `undefined` to clear the override.
+   */
+  setConnectionMode(mode?: FDv2ConnectionMode): void;
+
   /**
    * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *

@@ -7,6 +7,7 @@ import {
   Configuration,
   createDefaultSourceFactoryProvider,
   createFDv2DataManagerBase,
+  FDv2ConnectionMode,
   FlagManager,
   Hook,
   internal,
@@ -318,6 +319,10 @@ class BrowserClientImpl extends LDClientImpl {
     return this._startPromise;
   }
 
+  setConnectionMode(mode?: FDv2ConnectionMode): void {
+    this.dataManager.setConnectionMode?.(mode);
+  }
+
   setStreaming(streaming?: boolean): void {
     this.dataManager.setForcedStreaming?.(streaming);
   }
@@ -376,6 +381,7 @@ export function makeClient(
     on: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.on(key, callback),
     off: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.off(key, callback),
     flush: () => impl.flush(),
+    setConnectionMode: (mode?: FDv2ConnectionMode) => impl.setConnectionMode(mode),
     setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
     identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
       impl.identifyResult(pristineContext, identifyOptions),
