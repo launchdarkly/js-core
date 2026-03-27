@@ -100,6 +100,22 @@ it('forwards options to the client provider', async () => {
   expect(element.props.options).toEqual(options);
 });
 
+it('falls back to empty bootstrap when allFlagsState throws', async () => {
+  const session = makeMockSession({
+    allFlagsState: jest.fn(() => Promise.reject(new Error('client not initialized'))),
+  });
+
+  const result = await LDIsomorphicProvider({
+    session,
+    clientSideId: 'client-id-123',
+    children: React.createElement('div'),
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const element = result as any;
+  expect(element.props.bootstrap).toEqual({});
+});
+
 it('passes children to the client provider', async () => {
   const session = makeMockSession();
   const child = React.createElement('span', null, 'hello');
