@@ -222,7 +222,7 @@ describe('handles edge cases gracefully', () => {
     expect(client.getInitializationState()).toBe('initializing');
   });
 
- it('isReady returns true when bootstrap is provided', () => {
+  it('isReady returns true when bootstrap is provided', () => {
     const client = createNoopClient({});
     expect(client.isReady()).toBe(true);
   });
