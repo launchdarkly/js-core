@@ -1,9 +1,6 @@
 /**
  * Known capability strings from the SDK test harness service spec.
  * See: https://github.com/launchdarkly/sdk-test-harness/blob/v2/docs/service_spec.md
- *
- * Each entity should define its own capabilities array typed against this union,
- * since different SDKs advertise different capabilities.
  */
 export type Capability =
   | 'server-side'

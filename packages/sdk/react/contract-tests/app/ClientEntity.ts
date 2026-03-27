@@ -11,11 +11,8 @@ import { useLDClient } from '@launchdarkly/react-sdk';
 
 export type CommandHandler = (params: CommandParams) => Promise<unknown>;
 
-/**
- * Creates an IClientEntity wrapper for a React-managed client.
- * The entity's doCommand delegates to the command handler registered
- * by ClientInstance once the React component mounts.
- */
+// We are creating this wrapper because we have a custom commandHandler implementation to work well
+// with React rendering.
 export function createReactClientEntity(
   clientId: string,
   commandHandlers: Map<string, CommandHandler>,
