@@ -8,11 +8,14 @@ export default function useVariationCore<T, R = T>(
   defaultValue: T,
   evaluate: (client: LDReactClient, key: string, defaultValue: T) => R,
   reactContext?: React.Context<LDReactClientContextValue>,
+  notReadyDefault?: (defaultValue: T) => R,
 ): R {
   const { client, context } = useContext(reactContext ?? LDReactContext);
+  const ready = client.isReady();
 
-  // Using refs here to capture the latest defaultValue and evaluate function
-  // without making them dependencies of the effect.
+  // Refs are used here so their values are captured and stay updated in the
+  // effect hook. These are purposely not dependencies of the effect hook as
+  // they should not trigger any changes to the hook state.
   const defaultValueRef = useRef(defaultValue);
   defaultValueRef.current = defaultValue;
   const evaluateRef = useRef(evaluate);
@@ -20,13 +23,15 @@ export default function useVariationCore<T, R = T>(
 
   const didMountRef = useRef(false);
 
-  const [value, setValue] = useState<R>(() => evaluate(client, key, defaultValue));
+  const [value, setValue] = useState<R>(() => {
+    if (ready) {
+      return evaluate(client, key, defaultValue);
+    }
+    return notReadyDefault ? notReadyDefault(defaultValue) : (defaultValue as unknown as R);
+  });
 
   useEffect(() => {
-    if (didMountRef.current) {
-      // Re-evaluate when key, client, or context changes (not on initial mount).
-      // This is to avoid an initial double render that will happen when this hook is
-      // first mounted.
+    if (didMountRef.current && ready) {
       setValue(evaluateRef.current(client, key, defaultValueRef.current));
     }
     didMountRef.current = true;
@@ -34,7 +39,7 @@ export default function useVariationCore<T, R = T>(
     const handler = () => setValue(evaluateRef.current(client, key, defaultValueRef.current));
     client.on(`change:${key}`, handler);
     return () => client.off(`change:${key}`, handler);
-  }, [client, key, context]);
+  }, [client, key, context, ready]);
 
   return value;
 }

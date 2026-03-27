@@ -167,6 +167,66 @@ it('includes error in initial state when client was already failed before mount'
   expect(firstRender?.error).toBe(preFailedError);
 });
 
+it('initializedState is complete when client is already initialized at mount (bootstrap)', () => {
+  const client = makeMockClient({ initialState: 'complete' });
+  const contextValues: LDReactClientContextValue[] = [];
+
+  function Consumer() {
+    const value = useContext(LDReactContext);
+    contextValues.push(value);
+    return null;
+  }
+
+  const Provider = createLDReactProviderWithClient(client);
+
+  render(
+    <Provider>
+      <Consumer />
+    </Provider>,
+  );
+
+  expect(contextValues[0]?.initializedState).toBe('complete');
+});
+
+it('initializedState stays complete after context changes from identify', async () => {
+  const client = makeMockClient();
+  const contextValues: LDReactClientContextValue[] = [];
+
+  function Consumer() {
+    const value = useContext(LDReactContext);
+    contextValues.push(value);
+    return null;
+  }
+
+  const Provider = createLDReactProviderWithClient(client);
+
+  render(
+    <Provider>
+      <Consumer />
+    </Provider>,
+  );
+
+  await act(async () => {
+    client.fireInitStatusChange('complete');
+  });
+
+  await waitFor(() => {
+    expect(contextValues[contextValues.length - 1]?.initializedState).toBe('complete');
+  });
+
+  await act(async () => {
+    client.fireContextChange({ kind: 'user', key: 'new-user' });
+  });
+
+  await waitFor(() => {
+    expect(contextValues[contextValues.length - 1]?.context).toEqual({
+      kind: 'user',
+      key: 'new-user',
+    });
+  });
+  expect(contextValues[contextValues.length - 1]?.initializedState).toBe('complete');
+});
+
 // ─── createLDReactProvider (convenience factory) ─────────────────────────────
 
 describe('createLDReactProvider (convenience factory)', () => {

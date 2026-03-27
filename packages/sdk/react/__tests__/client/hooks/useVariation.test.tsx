@@ -20,7 +20,7 @@ function makeWrapper(
 ) {
   const contextValue: LDReactClientContextValue = {
     client: mockClient,
-    initializedState: 'initializing',
+    initializedState: 'complete',
     ...contextOverrides,
   };
 
@@ -562,4 +562,136 @@ it('useJsonVariation calls variation again when context changes', () => {
   });
 
   expect((mockClient.jsonVariation as jest.Mock).mock.calls.length).toBeGreaterThan(callsBefore);
+});
+
+// ─── ready-gating tests ──────────────────────────────────────────────────────
+
+it('does not call variation when not ready', () => {
+  const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
+
+  function FlagConsumer() {
+    useBoolVariation('my-flag', false);
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient, { initializedState: 'initializing' });
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(mockClient.boolVariation).not.toHaveBeenCalled();
+});
+
+it('returns defaultValue when not ready', () => {
+  const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
+
+  const captured: boolean[] = [];
+
+  function FlagConsumer() {
+    const value = useBoolVariation('my-flag', false);
+    captured.push(value);
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient, { initializedState: 'initializing' });
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(captured[0]).toBe(false);
+});
+
+it('evaluates once when initialization completes', () => {
+  const mockClient = makeMockClient();
+  (mockClient.isReady as jest.Mock).mockReturnValue(false);
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
+
+  let setContextValue!: React.Dispatch<React.SetStateAction<LDReactClientContextValue>>;
+  const captured: boolean[] = [];
+
+  function StatefulWrapper({ children }: { children: React.ReactNode }) {
+    const [ctxValue, setCtx] = React.useState<LDReactClientContextValue>({
+      client: mockClient,
+      initializedState: 'initializing',
+    });
+    setContextValue = setCtx;
+    return <LDReactContext.Provider value={ctxValue}>{children}</LDReactContext.Provider>;
+  }
+
+  function FlagConsumer() {
+    const value = useBoolVariation('my-flag', false);
+    captured.push(value);
+    return null;
+  }
+
+  render(
+    <StatefulWrapper>
+      <FlagConsumer />
+    </StatefulWrapper>,
+  );
+
+  expect(mockClient.boolVariation).not.toHaveBeenCalled();
+  expect(captured[captured.length - 1]).toBe(false);
+
+  (mockClient.isReady as jest.Mock).mockReturnValue(true);
+
+  act(() => {
+    setContextValue({
+      client: mockClient,
+      initializedState: 'complete',
+      context: { kind: 'user', key: 'user-1' },
+    });
+  });
+
+  expect(mockClient.boolVariation).toHaveBeenCalledTimes(1);
+  expect(captured[captured.length - 1]).toBe(true);
+});
+
+it('evaluates exactly once on mount when already initialized (bootstrap)', () => {
+  const mockClient = makeMockClient();
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(true);
+
+  function FlagConsumer() {
+    useBoolVariation('my-flag', false);
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient, { initializedState: 'complete' });
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(mockClient.boolVariation).toHaveBeenCalledTimes(1);
+});
+
+it('evaluates when initialization failed (client returns defaults on failure)', () => {
+  const mockClient = makeMockClient();
+  (mockClient.boolVariation as jest.Mock).mockReturnValue(false);
+
+  const captured: boolean[] = [];
+
+  function FlagConsumer() {
+    const value = useBoolVariation('my-flag', false);
+    captured.push(value);
+    return null;
+  }
+
+  const Wrapper = makeWrapper(mockClient, { initializedState: 'failed' });
+  render(
+    <Wrapper>
+      <FlagConsumer />
+    </Wrapper>,
+  );
+
+  expect(mockClient.boolVariation).toHaveBeenCalledTimes(1);
+  expect(captured[0]).toBe(false);
 });

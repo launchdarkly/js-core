@@ -16,8 +16,8 @@ it('useBoolVariation reads from each respective client when using separate conte
   const ContextA = initLDReactContext();
   const ContextB = initLDReactContext();
 
-  const clientA = makeMockClient();
-  const clientB = makeMockClient();
+  const clientA = makeMockClient({ initialState: 'complete' });
+  const clientB = makeMockClient({ initialState: 'complete' });
 
   (clientA.boolVariation as jest.Mock).mockReturnValue(true);
   (clientB.boolVariation as jest.Mock).mockReturnValue(false);
@@ -52,8 +52,8 @@ it('useBoolVariation calls boolVariation on the correct client for each context'
   const ContextA = initLDReactContext();
   const ContextB = initLDReactContext();
 
-  const clientA = makeMockClient();
-  const clientB = makeMockClient();
+  const clientA = makeMockClient({ initialState: 'complete' });
+  const clientB = makeMockClient({ initialState: 'complete' });
 
   (clientA.boolVariation as jest.Mock).mockReturnValue(true);
   (clientB.boolVariation as jest.Mock).mockReturnValue(false);
@@ -88,8 +88,8 @@ it('useLDClient returns the respective client for each context', () => {
   const ContextA = initLDReactContext();
   const ContextB = initLDReactContext();
 
-  const clientA = makeMockClient();
-  const clientB = makeMockClient();
+  const clientA = makeMockClient({ initialState: 'complete' });
+  const clientB = makeMockClient({ initialState: 'complete' });
 
   const ProviderA = createLDReactProviderWithClient(clientA, ContextA);
   const ProviderB = createLDReactProviderWithClient(clientB, ContextB);

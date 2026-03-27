@@ -58,41 +58,46 @@ function App() {
     statusMessage = 'Initializing…';
   }
 
-  const headerBgColor = flagValue ? '#00844B' : '#373841';
+  const ready = status !== 'initializing';
+  const headerBgColor = ready && flagValue ? '#00844B' : '#373841';
 
   return (
     <div className="App">
       <header className="App-header" style={{ backgroundColor: headerBgColor }}>
-        <p>{statusMessage}</p>
-        <p>{`The ${flagKey} feature flag evaluates to ${flagValue ? 'true' : 'false'}.`}</p>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Flag key"
-            aria-label="Flag key"
-          />
-          <button type="submit">Update flag</button>
-        </form>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {PRESET_CONTEXTS.map((preset) => {
-            const isActive = activeContextKey === (preset.key as string);
-            return (
-              <button
-                key={preset.key as string}
-                onClick={() => handleSelectContext(preset)}
-                disabled={identifyPending}
-                style={{
-                  fontWeight: isActive ? 'bold' : 'normal',
-                  outline: isActive ? '2px solid white' : 'none',
-                }}
-              >
-                {preset.name as string}
-              </button>
-            );
-          })}
-        </div>
+        {ready && (
+          <>
+            <p>{statusMessage}</p>
+            <p>{`The ${flagKey} feature flag evaluates to ${flagValue ? 'true' : 'false'}.`}</p>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Flag key"
+                aria-label="Flag key"
+              />
+              <button type="submit">Update flag</button>
+            </form>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {PRESET_CONTEXTS.map((preset) => {
+                const isActive = activeContextKey === (preset.key as string);
+                return (
+                  <button
+                    key={preset.key as string}
+                    onClick={() => handleSelectContext(preset)}
+                    disabled={identifyPending}
+                    style={{
+                      fontWeight: isActive ? 'bold' : 'normal',
+                      outline: isActive ? '2px solid white' : 'none',
+                    }}
+                  >
+                    {preset.name as string}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </header>
     </div>
   );

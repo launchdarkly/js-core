@@ -57,6 +57,15 @@ export interface LDReactClient extends LDClient {
   ): () => void;
 
   /**
+   * Returns whether the client is ready to evaluate flags. This is true when the client
+   * has completed initialization (successfully or with failure), or when bootstrap data
+   * was provided (flags are available immediately via `presetFlags`).
+   *
+   * @returns {boolean} Whether the client can evaluate flags.
+   */
+  isReady(): boolean;
+
+  /**
    * @internal
    *
    * Returns whether flag keys should be converted to camelCase in `useFlags()` and resolved from camelCase

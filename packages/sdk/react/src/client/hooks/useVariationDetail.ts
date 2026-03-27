@@ -6,6 +6,18 @@ import type { LDReactClientContextValue } from '../LDClient';
 import useVariationCore from './useVariationCore';
 
 /**
+ * Returns an evaluation detail with the default value and a CLIENT_NOT_READY error reason.
+ * Aligns with `ErrorKinds.ClientNotReady` in `@launchdarkly/js-sdk-common`.
+ */
+function notReadyDetail<T>(def: T): LDEvaluationDetailTyped<T> {
+  return {
+    value: def,
+    variationIndex: null,
+    reason: { kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' },
+  };
+}
+
+/**
  * Returns the boolean variation and evaluation detail of a feature flag.
  *
  * @param key The feature flag key.
@@ -23,6 +35,7 @@ export function useBoolVariationDetail(
     defaultValue,
     (client, k, def) => client.boolVariationDetail(k, def),
     reactContext,
+    notReadyDetail,
   );
 }
 
@@ -44,6 +57,7 @@ export function useStringVariationDetail(
     defaultValue,
     (client, k, def) => client.stringVariationDetail(k, def),
     reactContext,
+    notReadyDetail,
   );
 }
 
@@ -65,6 +79,7 @@ export function useNumberVariationDetail(
     defaultValue,
     (client, k, def) => client.numberVariationDetail(k, def),
     reactContext,
+    notReadyDetail,
   );
 }
 
@@ -86,5 +101,6 @@ export function useJsonVariationDetail<T = unknown>(
     defaultValue,
     (client, k, def) => client.jsonVariationDetail(k, def) as LDEvaluationDetailTyped<T>,
     reactContext,
+    notReadyDetail,
   );
 }

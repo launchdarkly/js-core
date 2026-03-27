@@ -88,6 +88,7 @@ export function makeMockClient(options: MockClientOptions = {}): MockClient {
     // @ts-ignore
     waitForInitialization: jest.fn(() => Promise.resolve({ status: 'complete' as const })),
     addHook: jest.fn(),
+    isReady: jest.fn(() => true),
     shouldUseCamelCaseFlagKeys: jest.fn(() => true),
   } as unknown as LDReactClient;
 

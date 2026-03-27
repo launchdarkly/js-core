@@ -77,6 +77,7 @@ function createNoopReactClient(): LDReactClient {
         error: new Error('Server-side client cannot be used to wait for initialization'),
       }),
     addHook: () => {},
+    isReady: () => true,
     shouldUseCamelCaseFlagKeys: () => true,
   };
 }
@@ -127,6 +128,7 @@ export function createClient(
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);
   let initializationState: InitializedState = 'initializing';
+  let hasBootstrap = false;
   let startCalled = false;
   let startNotified = false;
   const subscribers = new Set<(context: LDContextStrict) => void>();
@@ -149,6 +151,9 @@ export function createClient(
         return baseClient.start(startOptions);
       }
       startCalled = true;
+      if (startOptions?.bootstrap) {
+        hasBootstrap = true;
+      }
       return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
         initializationState = result.status;
         lastInitResult = result;
@@ -185,6 +190,7 @@ export function createClient(
         initStatusSubscribers.delete(callback);
       };
     },
+    isReady: () => initializationState !== 'initializing' || hasBootstrap,
     shouldUseCamelCaseFlagKeys: () => shouldUseCamelCaseFlagKeys,
   };
 }
