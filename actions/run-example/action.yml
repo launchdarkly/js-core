@@ -3,7 +3,7 @@
 name: Run Example App
 inputs:
   workspace_name:
-    description: 'Yarn workspace name of the example app, e.g. @internal/react-sdk-example-client-only'
+    description: 'Yarn workspace name of the example app'
     required: true
   aws_assume_role:
     description: 'AWS OIDC role ARN used to fetch secrets from SSM'
