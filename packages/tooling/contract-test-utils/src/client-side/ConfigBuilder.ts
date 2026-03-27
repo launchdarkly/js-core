@@ -55,6 +55,7 @@ export class ConfigBuilder {
   private _configuration: SDKConfigParams;
   private _tag: string;
   private _skippedSections: Set<ConfigSection> = new Set();
+  private _omittedKeys: Set<string> = new Set();
   private _overrides: Record<string, unknown> = {};
 
   constructor(options: CreateInstanceParams) {
@@ -95,6 +96,13 @@ export class ConfigBuilder {
   /** Skip one or more config sections — they won't appear in the output. */
   skip(...sections: ConfigSection[]): this {
     sections.forEach((s) => this._skippedSections.add(s));
+    return this;
+  }
+
+  /** Remove specific keys from the built output. Unlike skip(), the section
+   *  still runs — only the named keys are deleted from the result. */
+  omit(...keys: string[]): this {
+    keys.forEach((k) => this._omittedKeys.add(k));
     return this;
   }
 
@@ -166,7 +174,9 @@ export class ConfigBuilder {
       );
     }
 
-    return { ...cf, ...this._overrides };
+    const result: ClientSideSdkConfig = { ...cf, ...this._overrides };
+    this._omittedKeys.forEach((key) => delete result[key]);
+    return result;
   }
 
   private _maybeTime(ms?: number): number | undefined {

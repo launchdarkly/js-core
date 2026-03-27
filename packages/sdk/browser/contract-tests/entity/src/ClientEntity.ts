@@ -76,8 +76,7 @@ export async function newSdkClientEntity(
   const config = new ConfigBuilder(options).set({ fetchGoals: false });
 
   if (options.configuration.dataSystem) {
-    // FDv2: skip legacy streaming — data system handles connection modes
-    config.skip('streaming');
+    config.skip('streaming', 'polling');
 
     const isSet = (x?: unknown) => x !== null && x !== undefined;
     const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds! / 1000 : undefined);

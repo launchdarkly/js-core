@@ -15,7 +15,7 @@ export async function newSdkClientEntity(
   _id: string,
   options: CreateInstanceParams,
 ): Promise<IClientEntity> {
-  const config = new ConfigBuilder(options).skip('streaming').set({
+  const config = new ConfigBuilder(options).omit('streaming').set({
     automaticNetworkHandling: false,
     automaticBackgroundHandling: false,
     ...(options.configuration.polling && { initialConnectionMode: 'polling' }),

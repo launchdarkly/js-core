@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Capability,
@@ -37,16 +37,18 @@ const CAPABILITIES: Capability[] = [
   'track-hooks',
 ];
 
-export default function ClientRoot({ children }: { children: React.ReactNode }) {
-  const [clients, setClients] = useState<ClientRecord[]>([]);
-  const commandHandlers = useRef(new Map<string, CommandHandler>());
-  const handlerReadyMap = useRef(new Map<string, () => void>());
-  const clientsRef = useRef<ClientRecord[]>([]);
-  const entityMap = useRef(new Map<string, IClientEntity>());
+const commandHandlers = new Map<string, CommandHandler>();
+const handlerReadyMap = new Map<string, () => void>();
+const entityMap = new Map<string, IClientEntity>();
+let clientRecords: ClientRecord[] = [];
 
-  const onReady = (readyId: string) => {
-    handlerReadyMap.current.get(readyId)?.();
-  };
+function onReady(readyId: string) {
+  handlerReadyMap.get(readyId)?.();
+}
+
+export default function ClientRoot({ children }: { children: React.ReactNode }) {
+  const [, setRenderTick] = useState(0);
+  const rerender = () => setRenderTick((n) => n + 1);
 
   useEffect(() => {
     const ws = new TestHarnessWebSocketBuilder()
@@ -70,25 +72,25 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
         const Provider = createLDReactProviderWithClient(client);
 
         const handlerReady = new Promise<void>((resolve) => {
-          handlerReadyMap.current.set(id, resolve);
+          handlerReadyMap.set(id, resolve);
         });
 
-        clientsRef.current = [...clientsRef.current, { id, client, Provider }];
-        setClients([...clientsRef.current]);
+        clientRecords = [...clientRecords, { id, client, Provider }];
+        rerender();
 
         await handlerReady;
-        handlerReadyMap.current.delete(id);
+        handlerReadyMap.delete(id);
 
-        const entity = createReactClientEntity(id, commandHandlers.current, () => client.close());
-        entityMap.current.set(id, entity);
+        const entity = createReactClientEntity(id, commandHandlers, () => client.close());
+        entityMap.set(id, entity);
         return entity;
       })
-      .onGetClient((id) => entityMap.current.get(id))
+      .onGetClient((id) => entityMap.get(id))
       .onDeleteClient((id) => {
-        entityMap.current.delete(id);
-        clientsRef.current.find((r) => r.id === id)?.client.close();
-        clientsRef.current = clientsRef.current.filter((r) => r.id !== id);
-        setClients((prev) => prev.filter((r) => r.id !== id));
+        entityMap.delete(id);
+        clientRecords.find((r) => r.id === id)?.client.close();
+        clientRecords = clientRecords.filter((r) => r.id !== id);
+        rerender();
       })
       .build();
 
@@ -99,9 +101,9 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   return (
     <>
       {children}
-      {clients.map(({ id, Provider }) => (
+      {clientRecords.map(({ id, Provider }) => (
         <Provider key={id}>
-          <ClientInstance clientId={id} handlers={commandHandlers.current} onReady={onReady} />
+          <ClientInstance clientId={id} handlers={commandHandlers} onReady={onReady} />
         </Provider>
       ))}
     </>
