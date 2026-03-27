@@ -41,7 +41,7 @@ export function createPollingSynchronizer(
 
     const startTime = Date.now();
     try {
-      const result = await poll(requestor, selectorGetter(), false, logger);
+      const result = await poll(requestor, selectorGetter(), logger);
 
       if (stopped) {
         return;

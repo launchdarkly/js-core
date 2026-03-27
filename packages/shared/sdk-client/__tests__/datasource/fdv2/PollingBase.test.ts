@@ -25,7 +25,7 @@ describe('given a successful FDv2 response', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('changeSet');
     if (result.type === 'changeSet') {
@@ -48,7 +48,7 @@ describe('given a successful FDv2 response', () => {
       body,
     });
 
-    await poll(requestor, 'my-basis', false, logger);
+    await poll(requestor, 'my-basis', logger);
 
     expect(requestor.poll).toHaveBeenCalledWith('my-basis');
   });
@@ -62,7 +62,7 @@ describe('given a 304 Not Modified response', () => {
       body: null,
     });
 
-    const result = await poll(requestor, 'some-basis', false, logger);
+    const result = await poll(requestor, 'some-basis', logger);
 
     expect(result.type).toBe('changeSet');
     if (result.type === 'changeSet') {
@@ -76,25 +76,13 @@ describe('given a network error', () => {
   it('returns interrupted for synchronizer mode', async () => {
     const requestor = makeErrorRequestor(new Error('connection reset'));
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
       expect(result.state).toBe('interrupted');
       expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.NetworkError);
       expect(result.errorInfo?.message).toBe('connection reset');
-    }
-  });
-
-  it('returns terminal error for initializer mode', async () => {
-    const requestor = makeErrorRequestor(new Error('connection reset'));
-
-    const result = await poll(requestor, undefined, true, logger);
-
-    expect(result.type).toBe('status');
-    if (result.type === 'status') {
-      expect(result.state).toBe('terminal_error');
-      expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.NetworkError);
     }
   });
 });
@@ -107,7 +95,7 @@ describe('given an unrecoverable HTTP error', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -123,7 +111,7 @@ describe('given an unrecoverable HTTP error', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     if (result.type === 'status') {
       expect(result.state).toBe('terminal_error');
@@ -139,7 +127,7 @@ describe('given a recoverable HTTP error', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -155,24 +143,10 @@ describe('given a recoverable HTTP error', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     if (result.type === 'status') {
       expect(result.state).toBe('interrupted');
-    }
-  });
-
-  it('returns terminal error for initializer mode on 500', async () => {
-    const requestor = makeRequestor({
-      status: 500,
-      headers: makeHeaders(),
-      body: null,
-    });
-
-    const result = await poll(requestor, undefined, true, logger);
-
-    if (result.type === 'status') {
-      expect(result.state).toBe('terminal_error');
     }
   });
 });
@@ -186,7 +160,7 @@ describe('given x-ld-fd-fallback header', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.fdv1Fallback).toBe(true);
   });
@@ -199,7 +173,7 @@ describe('given x-ld-fd-fallback header', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.fdv1Fallback).toBe(false);
   });
@@ -211,7 +185,7 @@ describe('given x-ld-fd-fallback header', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.fdv1Fallback).toBe(true);
   });
@@ -226,7 +200,7 @@ describe('given x-ld-envid header', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     if (result.type === 'changeSet') {
       expect(result.environmentId).toBe('env-abc-123');
@@ -240,7 +214,7 @@ describe('given x-ld-envid header', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     if (result.type === 'changeSet') {
       expect(result.environmentId).toBe('env-abc-123');
@@ -256,25 +230,10 @@ describe('given malformed JSON response', () => {
       body: '{invalid json',
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     if (result.type === 'status') {
       expect(result.state).toBe('interrupted');
-      expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
-    }
-  });
-
-  it('returns terminal error for initializer mode', async () => {
-    const requestor = makeRequestor({
-      status: 200,
-      headers: makeHeaders(),
-      body: '{invalid json',
-    });
-
-    const result = await poll(requestor, undefined, true, logger);
-
-    if (result.type === 'status') {
-      expect(result.state).toBe('terminal_error');
       expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
     }
   });
@@ -288,29 +247,13 @@ describe('given valid JSON without an events array', () => {
       body: '{"notEvents": true}',
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
       expect(result.state).toBe('interrupted');
       expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
       expect(result.errorInfo?.message).toContain('missing or invalid events array');
-    }
-  });
-
-  it('returns terminal error for initializer mode', async () => {
-    const requestor = makeRequestor({
-      status: 200,
-      headers: makeHeaders(),
-      body: '{"events": "not-an-array"}',
-    });
-
-    const result = await poll(requestor, undefined, true, logger);
-
-    expect(result.type).toBe('status');
-    if (result.type === 'status') {
-      expect(result.state).toBe('terminal_error');
-      expect(result.errorInfo?.kind).toBe(DataSourceErrorKind.InvalidData);
     }
   });
 });
@@ -323,7 +266,7 @@ describe('given an empty response body', () => {
       body: null,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -352,7 +295,7 @@ describe('given a goodbye event in the response', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -382,7 +325,7 @@ describe('given a server error event in the response', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -408,7 +351,7 @@ describe('given a response with no payload-transferred event', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('status');
     if (result.type === 'status') {
@@ -433,7 +376,7 @@ describe('given an intent with code none', () => {
       body,
     });
 
-    const result = await poll(requestor, undefined, false, logger);
+    const result = await poll(requestor, undefined, logger);
 
     expect(result.type).toBe('changeSet');
     if (result.type === 'changeSet') {
@@ -473,7 +416,7 @@ describe('given a partial (changes) transfer', () => {
       body,
     });
 
-    const result = await poll(requestor, 'old-state', false, logger);
+    const result = await poll(requestor, 'old-state', logger);
 
     expect(result.type).toBe('changeSet');
     if (result.type === 'changeSet') {
@@ -515,7 +458,7 @@ describe('given a delete-object event', () => {
       body,
     });
 
-    const result = await poll(requestor, 'old-state', false, logger);
+    const result = await poll(requestor, 'old-state', logger);
 
     expect(result.type).toBe('changeSet');
     if (result.type === 'changeSet') {
