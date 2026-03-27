@@ -1,5 +1,10 @@
 // Temporary app for testing FDv2 functionality.
-import { basicLogger, createClient, type LDClient } from '@launchdarkly/js-client-sdk';
+import {
+  basicLogger,
+  createClient,
+  type FDv2ConnectionMode,
+  type LDClient,
+} from '@launchdarkly/js-client-sdk';
 
 // Set clientSideID to your LaunchDarkly client-side ID
 const clientSideID = 'LD_CLIENT_SIDE_ID';
@@ -98,6 +103,26 @@ function buildUI() {
   streamSection.appendChild(btnUndef);
   controls.appendChild(streamSection);
 
+  // Connection mode control
+  const modeSection = el('div');
+  modeSection.appendChild(el('h3'));
+  modeSection.querySelector('h3')!.textContent = 'Connection Mode';
+  const modeStatus = el('span', { id: 'mode-status' });
+  modeStatus.textContent = 'undefined (automatic)';
+  modeSection.appendChild(modeStatus);
+  modeSection.appendChild(el('br'));
+  const modes: FDv2ConnectionMode[] = ['streaming', 'polling', 'offline', 'one-shot', 'background'];
+  for (const mode of modes) {
+    const btn = el('button', { id: `btn-mode-${mode}` });
+    btn.textContent = mode;
+    modeSection.appendChild(btn);
+    modeSection.appendChild(text(' '));
+  }
+  const btnModeClear = el('button', { id: 'btn-mode-clear' });
+  btnModeClear.textContent = 'Clear';
+  modeSection.appendChild(btnModeClear);
+  controls.appendChild(modeSection);
+
   // Log
   const logSection = el('div');
   logSection.appendChild(el('h3'));
@@ -146,6 +171,15 @@ function updateEvtStatus() {
   } else {
     evtStatus.textContent = 'Not registered';
     btn.textContent = 'Register';
+  }
+}
+
+function updateModeStatus(mode: FDv2ConnectionMode | undefined) {
+  const label = document.getElementById('mode-status')!;
+  if (mode !== undefined) {
+    label.textContent = `${mode} (override active)`;
+  } else {
+    label.textContent = 'undefined (automatic)';
   }
 }
 
@@ -238,6 +272,27 @@ const main = async () => {
     client.setStreaming(undefined);
     updateStreamStatus(undefined);
     log('setStreaming(undefined)');
+  });
+
+  // Connection mode controls
+  const connectionModes: FDv2ConnectionMode[] = [
+    'streaming',
+    'polling',
+    'offline',
+    'one-shot',
+    'background',
+  ];
+  for (const mode of connectionModes) {
+    document.getElementById(`btn-mode-${mode}`)!.addEventListener('click', () => {
+      client.setConnectionMode(mode);
+      updateModeStatus(mode);
+      log(`setConnectionMode('${mode}')`);
+    });
+  }
+  document.getElementById('btn-mode-clear')!.addEventListener('click', () => {
+    client.setConnectionMode(undefined);
+    updateModeStatus(undefined);
+    log('setConnectionMode(undefined)');
   });
 
   // Start
