@@ -38,6 +38,9 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
   /**
    * @internal
    *
+   * WARNING: This option is not ready for use and may change or be removed
+   * without notice.
+   *
    * Configuration for the FDv2 data system. When present, the SDK uses
    * the FDv2 protocol for flag delivery instead of the default FDv1
    * protocol.
