@@ -56,7 +56,12 @@
     },
     "packages/sdk/server-node": {
       "extra-files": [
-        "src/platform/NodeInfo.ts"
+        "src/platform/NodeInfo.ts",
+        {
+          "type": "json",
+          "path": "/packages/sdk/react/examples/server-only/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        }
       ]
     },
     "packages/sdk/vercel": {
@@ -106,7 +111,17 @@
     "packages/sdk/react": {
       "bump-minor-pre-major": true,
       "extra-files": [
-        "src/client/LDReactClient.tsx"
+        "src/client/LDReactClient.tsx",
+        {
+          "type": "json",
+          "path": "examples/hello-react/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "examples/server-only/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        }
       ]
     }
   },
