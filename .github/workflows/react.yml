@@ -34,6 +34,8 @@ jobs:
       - name: Install and build contract test dependencies
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+          # Skip Electron binary download to avoid flaky race condition during concurrent installs.
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-sdk-contract-tests' install
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-sdk-contract-tests' run build
