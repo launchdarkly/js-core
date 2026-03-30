@@ -284,12 +284,14 @@ const main = async () => {
   ];
   connectionModes.forEach((mode) => {
     document.getElementById(`btn-mode-${mode}`)!.addEventListener('click', () => {
+      // @ts-ignore setConnectionMode is @internal — experimental FDv2 opt-in
       client.setConnectionMode(mode);
       updateModeStatus(mode);
       log(`setConnectionMode('${mode}')`);
     });
   });
   document.getElementById('btn-mode-clear')!.addEventListener('click', () => {
+    // @ts-ignore setConnectionMode is @internal — experimental FDv2 opt-in
     client.setConnectionMode(undefined);
     updateModeStatus(undefined);
     log('setConnectionMode(undefined)');

@@ -41,6 +41,11 @@ export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | '
    * from the interface.
    */
   /**
+   * @internal
+   *
+   * WARNING: This method is not ready for use and may change or be removed
+   * without notice.
+   *
    * Sets the connection mode for the SDK's data system.
    *
    * When set, this mode is used exclusively, overriding all automatic mode
