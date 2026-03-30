@@ -33,7 +33,6 @@ function getEnvironmentId(headers: { get(name: string): string | null }): string
  */
 function processEvents(
   events: internal.FDv2Event[],
-  oneShot: boolean,
   fdv1Fallback: boolean,
   environmentId: string | undefined,
   logger?: LDLogger,
@@ -64,9 +63,7 @@ function processEvents(
       case 'serverError': {
         const errorInfo = errorInfoFromUnknown(action.reason);
         logger?.error(`Server error during polling: ${action.reason}`);
-        earlyResult = oneShot
-          ? terminalError(errorInfo, fdv1Fallback)
-          : interrupted(errorInfo, fdv1Fallback);
+        earlyResult = interrupted(errorInfo, fdv1Fallback);
         break;
       }
       case 'error': {
@@ -74,9 +71,7 @@ function processEvents(
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
           const errorInfo = errorInfoFromInvalidData(action.message);
           logger?.warn(`Protocol error during polling: ${action.message}`);
-          earlyResult = oneShot
-            ? terminalError(errorInfo, fdv1Fallback)
-            : interrupted(errorInfo, fdv1Fallback);
+          earlyResult = interrupted(errorInfo, fdv1Fallback);
         } else {
           // Non-actionable errors (UNKNOWN_EVENT) are logged but don't stop processing
           logger?.warn(action.message);
@@ -96,23 +91,21 @@ function processEvents(
   // Events didn't produce a result
   const errorInfo = errorInfoFromUnknown('Unexpected end of polling response');
   logger?.error('Unexpected end of polling response');
-  return oneShot ? terminalError(errorInfo, fdv1Fallback) : interrupted(errorInfo, fdv1Fallback);
+  return interrupted(errorInfo, fdv1Fallback);
 }
 
 /**
  * Performs a single FDv2 poll request, processes the protocol response, and
  * returns an {@link FDv2SourceResult}.
  *
- * The `oneShot` parameter controls error handling: when true (initializer),
- * all errors are terminal; when false (synchronizer), recoverable errors
- * produce interrupted results.
+ * Recoverable errors produce interrupted results; unrecoverable HTTP errors
+ * produce terminal errors.
  *
  * @internal
  */
 export async function poll(
   requestor: FDv2Requestor,
   basis: string | undefined,
-  oneShot: boolean,
   logger?: LDLogger,
 ): Promise<FDv2SourceResult> {
   let fdv1Fallback = false;
@@ -140,10 +133,6 @@ export async function poll(
       const errorInfo = errorInfoFromHttpError(response.status);
       logger?.error(`Polling request failed with HTTP error: ${response.status}`);
 
-      if (oneShot) {
-        return terminalError(errorInfo, fdv1Fallback);
-      }
-
       const recoverable = response.status <= 0 || isHttpRecoverable(response.status);
       return recoverable
         ? interrupted(errorInfo, fdv1Fallback)
@@ -154,9 +143,7 @@ export async function poll(
     if (!response.body) {
       const errorInfo = errorInfoFromInvalidData('Empty response body');
       logger?.error('Polling request received empty response body');
-      return oneShot
-        ? terminalError(errorInfo, fdv1Fallback)
-        : interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback);
     }
 
     let parsed: internal.FDv2EventsCollection;
@@ -165,9 +152,7 @@ export async function poll(
     } catch {
       const errorInfo = errorInfoFromInvalidData('Malformed JSON data in polling response');
       logger?.error('Polling request received malformed data');
-      return oneShot
-        ? terminalError(errorInfo, fdv1Fallback)
-        : interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback);
     }
 
     if (!Array.isArray(parsed.events)) {
@@ -175,17 +160,15 @@ export async function poll(
         'Invalid polling response: missing or invalid events array',
       );
       logger?.error('Polling response does not contain a valid events array');
-      return oneShot
-        ? terminalError(errorInfo, fdv1Fallback)
-        : interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback);
     }
 
-    return processEvents(parsed.events, oneShot, fdv1Fallback, environmentId, logger);
+    return processEvents(parsed.events, fdv1Fallback, environmentId, logger);
   } catch (err: any) {
     // Network or other I/O error from the fetch itself
     const message = err?.message ?? String(err);
     logger?.error(`Polling request failed with network error: ${message}`);
     const errorInfo = errorInfoFromNetworkError(message);
-    return oneShot ? terminalError(errorInfo, fdv1Fallback) : interrupted(errorInfo, fdv1Fallback);
+    return interrupted(errorInfo, fdv1Fallback);
   }
 }

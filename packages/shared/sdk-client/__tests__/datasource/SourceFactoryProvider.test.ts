@@ -339,7 +339,7 @@ it('ping handler uses the factory selector getter, not a stale reference', () =>
   pingHandler.handlePing();
 
   // The ping poll should use the fresh selector, not 'selector-v1'
-  expect(mockFdv2Poll).toHaveBeenCalledWith(expect.anything(), 'selector-v2', false, ctx.logger);
+  expect(mockFdv2Poll).toHaveBeenCalledWith(expect.anything(), 'selector-v2', ctx.logger);
 });
 
 it('ping handler uses per-entry endpoint-overridden requestor', () => {
@@ -361,5 +361,5 @@ it('ping handler uses per-entry endpoint-overridden requestor', () => {
 
   // The ping poll should use the overridden requestor, not ctx.requestor
   const overriddenRequestor = mockMakeFDv2Requestor.mock.results[0].value;
-  expect(mockFdv2Poll).toHaveBeenCalledWith(overriddenRequestor, undefined, false, ctx.logger);
+  expect(mockFdv2Poll).toHaveBeenCalledWith(overriddenRequestor, undefined, ctx.logger);
 });

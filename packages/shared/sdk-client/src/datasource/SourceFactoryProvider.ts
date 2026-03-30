@@ -103,7 +103,7 @@ function createPingHandler(
   logger: LDLogger,
 ): PingHandler {
   return {
-    handlePing: () => fdv2Poll(requestor, selectorGetter(), false, logger),
+    handlePing: () => fdv2Poll(requestor, selectorGetter(), logger),
   };
 }
 
