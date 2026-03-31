@@ -57,6 +57,9 @@ export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | '
    * Pass `undefined` (or call with no arguments) to clear the override and
    * return to automatic mode selection.
    *
+   * This method requires the FDv2 data system (`dataSystem` option). If
+   * FDv2 is not enabled, the call logs a warning and has no effect.
+   *
    * @param mode The connection mode to use, or `undefined` to clear the override.
    */
   setConnectionMode(mode?: FDv2ConnectionMode): void;

@@ -320,7 +320,14 @@ class BrowserClientImpl extends LDClientImpl {
   }
 
   setConnectionMode(mode?: FDv2ConnectionMode): void {
-    this.dataManager.setConnectionMode?.(mode);
+    if (!this.dataManager.setConnectionMode) {
+      this.logger.warn(
+        'setConnectionMode requires the FDv2 data system (dataSystem option). ' +
+          'The call has no effect without it.',
+      );
+      return;
+    }
+    this.dataManager.setConnectionMode(mode);
   }
 
   setStreaming(streaming?: boolean): void {
