@@ -5,6 +5,7 @@ import React, { useRef } from 'react';
 import { LDContext } from '@launchdarkly/js-client-sdk';
 
 import { createNoopClient } from '../createNoopClient';
+import { LDReactClientContextValue } from '../LDClient';
 import { LDReactProviderOptions } from '../LDOptions';
 import { createLDReactProvider, createLDReactProviderWithClient } from './LDReactProvider';
 
@@ -34,10 +35,21 @@ export interface LDIsomorphicClientProviderProps {
   /**
    * Additional options forwarded to {@link createLDReactProvider}.
    *
-   * The `bootstrap` field within these options will be overridden by the top-level
-   * `bootstrap` prop (which contains server-evaluated data).
+   * The `bootstrap` and `reactContext` fields within these options will be overridden by
+   * the top-level props.
    */
-  options?: Omit<LDReactProviderOptions, 'bootstrap'>;
+  options?: Omit<LDReactProviderOptions, 'bootstrap' | 'reactContext'>;
+
+  /**
+   * Optional custom React context for the LaunchDarkly client. Use this when you need
+   * multiple LaunchDarkly client instances in the same application.
+   *
+   * @remarks
+   * This prop is NOT serializable across the RSC boundary, so it cannot be passed via
+   * {@link LDIsomorphicProvider}. For multi-context setups, use this component directly
+   * from a `'use client'` component.
+   */
+  reactContext?: React.Context<LDReactClientContextValue>;
 
   /**
    * Child components.
@@ -58,15 +70,23 @@ export function LDIsomorphicClientProvider({
   context,
   bootstrap,
   options,
+  reactContext,
   children,
 }: LDIsomorphicClientProviderProps) {
   const providerRef = useRef<React.FC<{ children: React.ReactNode }> | null>(null);
 
   if (providerRef.current === null) {
     if (typeof window === 'undefined') {
-      providerRef.current = createLDReactProviderWithClient(createNoopClient(bootstrap as object));
+      providerRef.current = createLDReactProviderWithClient(
+        createNoopClient(bootstrap as object),
+        reactContext,
+      );
     } else {
-      providerRef.current = createLDReactProvider(clientSideId, context, { ...options, bootstrap });
+      providerRef.current = createLDReactProvider(clientSideId, context, {
+        ...options,
+        bootstrap,
+        reactContext,
+      });
     }
   }
 

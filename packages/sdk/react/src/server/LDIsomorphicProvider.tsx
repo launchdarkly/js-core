@@ -22,13 +22,16 @@ export interface LDIsomorphicProviderProps {
 
   /**
    * Additional options forwarded to the underlying client provider and ultimately
-   * to {@link createLDReactProvider}. This allows control over `ldOptions`,
-   * `startOptions`, `deferInitialization`, and `reactContext`.
+   * to {@link createLDReactProvider}.
    *
-   * The `bootstrap` field within these options will be overridden by server-evaluated
-   * flag data from the session.
+   * @remarks
+   * The `bootstrap` field is overridden by server-evaluated flag data from the session.
+   *
+   * The `reactContext` field is excluded because React Context objects are not serializable
+   * across the RSC boundary. For multi-context setups, use {@link LDIsomorphicClientProvider}
+   * directly from a `'use client'` component.
    */
-  options?: Omit<LDReactProviderOptions, 'bootstrap'>;
+  options?: Omit<LDReactProviderOptions, 'bootstrap' | 'reactContext'>;
 
   /**
    * Child components. Server components and client components can both be children.

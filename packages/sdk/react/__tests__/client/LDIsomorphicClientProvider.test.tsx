@@ -41,7 +41,7 @@ it('creates a noop client with bootstrap on the server', () => {
   LDIsomorphicClientProvider(defaultProps);
 
   expect(createNoopClient).toHaveBeenCalledWith(defaultProps.bootstrap);
-  expect(createLDReactProviderWithClient).toHaveBeenCalledWith(mockNoopClient);
+  expect(createLDReactProviderWithClient).toHaveBeenCalledWith(mockNoopClient, undefined);
   expect(createLDReactProvider).not.toHaveBeenCalled();
 });
 
@@ -76,7 +76,7 @@ describe('given a browser environment (window defined)', () => {
     expect(createLDReactProvider).toHaveBeenCalledWith(
       defaultProps.clientSideId,
       defaultProps.context,
-      { bootstrap: defaultProps.bootstrap },
+      { bootstrap: defaultProps.bootstrap, reactContext: undefined },
     );
     expect(createNoopClient).not.toHaveBeenCalled();
   });
@@ -89,7 +89,7 @@ describe('given a browser environment (window defined)', () => {
     expect(createLDReactProvider).toHaveBeenCalledWith(
       defaultProps.clientSideId,
       defaultProps.context,
-      { deferInitialization: true, bootstrap: defaultProps.bootstrap },
+      { deferInitialization: true, bootstrap: defaultProps.bootstrap, reactContext: undefined },
     );
   });
 });
