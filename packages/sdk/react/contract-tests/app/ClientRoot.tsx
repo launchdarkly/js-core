@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { CreateInstanceParams } from '@launchdarkly/js-contract-test-utils/client';
 import {
@@ -18,24 +18,28 @@ interface ClientRecord {
   Provider: React.FC<{ children: React.ReactNode }>;
 }
 
+const commandHandlers = new Map<string, CommandHandler>();
+const handlerReadyMap = new Map<string, () => void>();
+let clientRecords: ClientRecord[] = [];
+let clientCounter = 0;
+
+function onReady(readyId: string) {
+  handlerReadyMap.get(readyId)?.();
+}
+
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
-  // Keeps a list of all the clients that we have, we will need to keep this as a state
-  // to ensure that the ld client providers are being rendered.
-  const [clients, setClients] = useState<ClientRecord[]>([]);
-  const commandHandlers = useRef(new Map<string, CommandHandler>());
-  const handlerReadyMap = useRef(new Map<string, () => void>());
-  const clientCounterRef = useRef(0);
-  const clientsRef = useRef<ClientRecord[]>([]);
+  const [, setRenderTick] = useState(0);
+  const rerender = () => setRenderTick((n) => n + 1);
 
   useEffect(() => {
     const ws = new TestHarnessWebSocket(
       'ws://localhost:8001',
-      commandHandlers.current,
+      commandHandlers,
 
       // On create client
       async (params: CreateInstanceParams) => {
-        const id = String(clientCounterRef.current);
-        clientCounterRef.current += 1;
+        const id = String(clientCounter);
+        clientCounter += 1;
 
         const timeout =
           params.configuration.startWaitTimeMs !== null &&
@@ -63,28 +67,25 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
           throw new Error('client initialization failed');
         }
 
-        // Currently these tests are creating the provider with a custom ld client, which is a
-        // supported feature, but I think it would be better if we can use the create provider
-        // factory function instead.
         const Provider = createLDReactProviderWithClient(client);
 
         const handlerReady = new Promise<void>((resolve) => {
-          handlerReadyMap.current.set(id, resolve);
+          handlerReadyMap.set(id, resolve);
         });
 
-        clientsRef.current = [...clientsRef.current, { id, client, Provider }];
-        setClients((prev) => [...prev, { id, client, Provider }]);
+        clientRecords = [...clientRecords, { id, client, Provider }];
+        rerender();
 
         await handlerReady;
-        handlerReadyMap.current.delete(id);
+        handlerReadyMap.delete(id);
         return id;
       },
 
       // On delete client
       (id: string) => {
-        clientsRef.current.find((r) => r.id === id)?.client.close();
-        clientsRef.current = clientsRef.current.filter((r) => r.id !== id);
-        setClients((prev) => prev.filter((r) => r.id !== id));
+        clientRecords.find((r) => r.id === id)?.client.close();
+        clientRecords = clientRecords.filter((r) => r.id !== id);
+        rerender();
       },
     );
 
@@ -92,16 +93,12 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     return () => ws.disconnect();
   }, []);
 
-  const onReady = useCallback((readyId: string) => {
-    handlerReadyMap.current.get(readyId)?.();
-  }, []);
-
   return (
     <>
       {children}
-      {clients.map(({ id, Provider }) => (
+      {clientRecords.map(({ id, Provider }) => (
         <Provider key={id}>
-          <ClientInstance clientId={id} handlers={commandHandlers.current} onReady={onReady} />
+          <ClientInstance clientId={id} handlers={commandHandlers} onReady={onReady} />
         </Provider>
       ))}
     </>
