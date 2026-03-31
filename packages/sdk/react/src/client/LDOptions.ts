@@ -61,13 +61,11 @@ export interface LDReactProviderOptions {
   deferInitialization?: boolean;
 
   /**
-   * This option allow developers to provide their own named react context for
-   * the launchdarkly client. This is useful for cases where you want to have multiple
+   * This option allows developers to provide their own named react context for
+   * the LaunchDarkly client. This is useful for cases where you want to have multiple
    * clients in the same application. If not provided, the default context will be used.
    *
-   * @see {@link LDReactClientContext} for the possible values and their meaning
-   *
-   * @returns {LDReactClientContext} The react context for the LaunchDarkly client.
+   * @see {@link LDReactClientContext}
    */
   reactContext?: LDReactClientContext;
 
