@@ -41,14 +41,6 @@ import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults
 import BrowserPlatform from './platform/BrowserPlatform';
 import { getAllStorageKeys } from './platform/LocalStorage';
 
-const VALID_CONNECTION_MODES: Set<string> = new Set([
-  'streaming',
-  'polling',
-  'offline',
-  'one-shot',
-  'background',
-]);
-
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
@@ -335,10 +327,10 @@ class BrowserClientImpl extends LDClientImpl {
       );
       return;
     }
-    if (mode !== undefined && !VALID_CONNECTION_MODES.has(mode)) {
+    if (mode !== undefined && !(mode in MODE_TABLE)) {
       this.logger.warn(
         `setConnectionMode called with invalid mode '${mode}'. ` +
-          `Valid modes: ${[...VALID_CONNECTION_MODES].join(', ')}.`,
+          `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
       );
       return;
     }
