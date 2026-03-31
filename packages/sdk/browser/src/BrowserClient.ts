@@ -41,6 +41,14 @@ import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults
 import BrowserPlatform from './platform/BrowserPlatform';
 import { getAllStorageKeys } from './platform/LocalStorage';
 
+const VALID_CONNECTION_MODES: Set<string> = new Set([
+  'streaming',
+  'polling',
+  'offline',
+  'one-shot',
+  'background',
+]);
+
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
@@ -324,6 +332,13 @@ class BrowserClientImpl extends LDClientImpl {
       this.logger.warn(
         'setConnectionMode requires the FDv2 data system (dataSystem option). ' +
           'The call has no effect without it.',
+      );
+      return;
+    }
+    if (mode !== undefined && !VALID_CONNECTION_MODES.has(mode)) {
+      this.logger.warn(
+        `setConnectionMode called with invalid mode '${mode}'. ` +
+          `Valid modes: ${[...VALID_CONNECTION_MODES].join(', ')}.`,
       );
       return;
     }
