@@ -66,7 +66,7 @@ export function createNoopClient(bootstrap?: object): LDReactClient {
   return {
     allFlags: () => ({ ...flags }),
     getContext: () => undefined,
-    getInitializationState: () => (hasBootstrap ? 'complete' : 'initializing'),
+    getInitializationState: () => 'initializing',
     getInitializationError: () => undefined,
     isReady: () => hasBootstrap,
     boolVariation: (key: string, def: boolean) => getVariation(key, def, isBoolean),

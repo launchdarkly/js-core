@@ -207,19 +207,10 @@ describe('handles edge cases gracefully', () => {
     expect(detail.variationIndex).toBeNull();
   });
 
-  it('reports initialization state as complete when bootstrap is provided', () => {
-    const client = createNoopClient({});
-    expect(client.getInitializationState()).toBe('complete');
-  });
-
-  it('reports initialization state as complete when bootstrap has flags', () => {
-    const client = createNoopClient({ 'my-flag': true });
-    expect(client.getInitializationState()).toBe('complete');
-  });
-
-  it('reports initialization state as initializing when bootstrap is not provided', () => {
-    const client = createNoopClient();
-    expect(client.getInitializationState()).toBe('initializing');
+  it('always reports initialization state as initializing', () => {
+    expect(createNoopClient({}).getInitializationState()).toBe('initializing');
+    expect(createNoopClient({ 'my-flag': true }).getInitializationState()).toBe('initializing');
+    expect(createNoopClient().getInitializationState()).toBe('initializing');
   });
 
   it('isReady returns true when bootstrap is provided', () => {
