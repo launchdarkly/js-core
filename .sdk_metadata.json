@@ -178,7 +178,21 @@
       },
       "wrapperNames": ["react-client-sdk"],
       "features": {
-        "contexts": { "introduced": "0.0.1" }
+        "allFlags": { "introduced": "2.9" },
+        "appMetadata": { "introduced": "2.26" },
+        "bigSegments": { "introduced": "2.9" },
+        "bootstrapping": { "introduced": "2.9.5" },
+        "contexts": { "introduced": "3.0" },
+        "experimentation": { "introduced": "2.9" },
+        "flagChanges": { "introduced": "2.9" },
+        "hooks": { "introduced": "3.7" },
+        "perContextSummaryEvents": { "introduced": "3.8" },
+        "pluginSupport": { "introduced": "3.7" },
+        "privateAttrs": { "introduced": "2.9" },
+        "relayProxyProxy": { "introduced": "2.9" },
+        "secureMode": { "introduced": "2.18" },
+        "track": { "introduced": "2.9" },
+        "variationDetail": { "introduced": "2.21" }
       }
     },
     "server-ai": {
