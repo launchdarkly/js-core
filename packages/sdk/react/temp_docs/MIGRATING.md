@@ -216,8 +216,8 @@ object (`{ 'my-flag': true }`) or the output of `allFlagsState().toJSON()`, whic
 > **New in `@launchdarkly/react-sdk`.**
 
 `LDIsomorphicProvider` is an async React Server Component that evaluates all flags on the server
-and bootstraps the browser SDK with those values. This eliminates the client-side flag fetch
-waterfall — the browser SDK starts immediately with real values instead of defaults.
+and bootstraps the Client-side SDK with those values. This allows the Client-side SDK to start
+immediately with real values instead of defaults.
 
 After hydration the client SDK opens a streaming connection and live flag updates propagate
 normally to all `useBoolVariation` / `useStringVariation` / etc. hooks.

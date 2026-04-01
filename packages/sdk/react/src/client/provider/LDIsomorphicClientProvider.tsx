@@ -27,33 +27,29 @@ export interface LDIsomorphicClientProviderProps {
    * Bootstrap data from the server. Pass the result of `flagsState.toJSON()` obtained
    * from {@link LDServerSession.allFlagsState} on the server.
    *
-   * When provided, the client immediately uses these values before the first network
-   * response arrives — eliminating the flag-fetch waterfall on page load.
+   * @remarks
+   * **NOTE:** This interface is meant to be used with the server component {@link LDIsomorphicProvider}.
+   * If you are looking to providing your own bootstrap data, you should use
+   * the {@link createLDReactProvider} function directly.
+   *
    */
   bootstrap: unknown;
 
   /**
    * Additional options forwarded to {@link createLDReactProvider}.
    *
-   * The `bootstrap` and `reactContext` fields within these options will be overridden by
-   * the top-level props.
+   * @remarks
+   * The omitted fields are hoisted to top level options because they are not
+   * serializable across the RSC boundary.
    */
   options?: Omit<LDReactProviderOptions, 'bootstrap' | 'reactContext'>;
 
   /**
    * Optional custom React context for the LaunchDarkly client. Use this when you need
    * multiple LaunchDarkly client instances in the same application.
-   *
-   * @remarks
-   * This prop is NOT serializable across the RSC boundary, so it cannot be passed via
-   * {@link LDIsomorphicProvider}. For multi-context setups, use this component directly
-   * from a `'use client'` component.
    */
   reactContext?: React.Context<LDReactClientContextValue>;
 
-  /**
-   * Child components.
-   */
   children: React.ReactNode;
 }
 

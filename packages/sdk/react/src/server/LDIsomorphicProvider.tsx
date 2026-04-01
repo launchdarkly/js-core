@@ -16,7 +16,7 @@ export interface LDIsomorphicProviderProps {
   session: LDServerSession;
 
   /**
-   * The LaunchDarkly client-side ID used to initialize the browser SDK.
+   * The LaunchDarkly client-side ID used to initialize the JavaScript Client SDK.
    */
   clientSideId: string;
 
@@ -25,17 +25,11 @@ export interface LDIsomorphicProviderProps {
    * to {@link createLDReactProvider}.
    *
    * @remarks
-   * The `bootstrap` field is overridden by server-evaluated flag data from the session.
-   *
-   * The `reactContext` field is excluded because React Context objects are not serializable
-   * across the RSC boundary. For multi-context setups, use {@link LDIsomorphicClientProvider}
-   * directly from a `'use client'` component.
+   * We omit the `bootstrap` and `reactContext` fields because they are not serializable
+   * across the RSC boundary.
    */
   options?: Omit<LDReactProviderOptions, 'bootstrap' | 'reactContext'>;
 
-  /**
-   * Child components. Server components and client components can both be children.
-   */
   children: React.ReactNode;
 }
 
@@ -44,15 +38,8 @@ export interface LDIsomorphicProviderProps {
  * server-evaluated flag values.
  *
  * @remarks
- * Place this component near the root of your layout (e.g. in `layout.tsx`). It evaluates
- * all flags on the server, then passes the results to {@link LDIsomorphicClientProvider}
- * so the client-side SDK starts with real flag values.
- *
- * After hydration, the client-side SDK can open a streaming connection and live flag changes
- * propagate normally to all `useVariation` / `useBoolVariation` etc. hooks.
- *
- * Server components in the same tree can continue to call `session.boolVariation(...)` etc.
- * directly. Client components use the standard `useBoolVariation(...)` hooks.
+ * **NOTE:** This component is designed to be used in conjunction with {@link LDIsomorphicClientProvider}
+ * in a server component to compute the bootstrap data and render this provider automatically.
  *
  * See the `server-only` example for how to use this component.
  */
