@@ -1,11 +1,12 @@
 import { init } from '@launchdarkly/node-server-sdk';
-import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+import { createLDServerSession, LDIsomorphicProvider } from '@launchdarkly/react-sdk/server';
 
 import App from './App';
 
 // The base client is a module-level singleton — initialized once for the lifetime of the
 // Node.js process and shared across all incoming requests.
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY || '';
+const clientSideId = process.env.LAUNCHDARKLY_CLIENT_SIDE_ID || '';
 const ldBaseClient = sdkKey ? init(sdkKey) : null;
 
 // Select via ?context=sandy|jamie|alex (defaults to sandy).
@@ -26,6 +27,17 @@ export default async function Home({
         <p>
           LaunchDarkly SDK key is required: set the LAUNCHDARKLY_SDK_KEY environment variable and
           try again.
+        </p>
+      </div>
+    );
+  }
+
+  if (!clientSideId) {
+    return (
+      <div className="error">
+        <p>
+          LaunchDarkly client-side ID is required: set the LAUNCHDARKLY_CLIENT_SIDE_ID environment
+          variable and try again.
         </p>
       </div>
     );
@@ -52,8 +64,14 @@ export default async function Home({
 
   // Create a per-request session bound to this user's context.
   // createLDServerSession also stores the session in React's cache() so any Server Component
-  // in this render tree can retrieve it via useLDServerSession() — no prop drilling needed.
-  createLDServerSession(ldBaseClient, context);
+  // in this render tree can retrieve it via useLDServerSession().
+  const session = createLDServerSession(ldBaseClient, context);
 
-  return <App />;
+  // Wrap the app with LDIsomorphicProvider to bootstrap the browser SDK with
+  // server-evaluated flag values.
+  return (
+    <LDIsomorphicProvider session={session} clientSideId={clientSideId}>
+      <App />
+    </LDIsomorphicProvider>
+  );
 }

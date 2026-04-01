@@ -9,6 +9,7 @@ let mockCacheStore: { session: LDServerSession | null } = { session: null };
 
 jest.mock('react', () => ({
   cache: (_fn: unknown) => () => mockCacheStore,
+  createContext: jest.fn(),
 }));
 
 beforeEach(() => {

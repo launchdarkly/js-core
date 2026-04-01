@@ -16,7 +16,10 @@
     "stripInternal": true,
     "target": "ES2017",
     "types": ["jest", "node", "react/canary"],
-    "jsx": "react"
+    "jsx": "react",
+    "paths": {
+      "@launchdarkly/react-sdk": ["./src/client/index.ts"]
+    }
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "examples/**"]
