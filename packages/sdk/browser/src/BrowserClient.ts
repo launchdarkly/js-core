@@ -7,6 +7,7 @@ import {
   Configuration,
   createDefaultSourceFactoryProvider,
   createFDv2DataManagerBase,
+  FDv2ConnectionMode,
   FlagManager,
   Hook,
   internal,
@@ -318,6 +319,24 @@ class BrowserClientImpl extends LDClientImpl {
     return this._startPromise;
   }
 
+  setConnectionMode(mode?: FDv2ConnectionMode): void {
+    if (!this.dataManager.setConnectionMode) {
+      this.logger.warn(
+        'setConnectionMode requires the FDv2 data system (dataSystem option). ' +
+          'The call has no effect without it.',
+      );
+      return;
+    }
+    if (mode !== undefined && !(mode in MODE_TABLE)) {
+      this.logger.warn(
+        `setConnectionMode called with invalid mode '${mode}'. ` +
+          `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
+      );
+      return;
+    }
+    this.dataManager.setConnectionMode(mode);
+  }
+
   setStreaming(streaming?: boolean): void {
     this.dataManager.setForcedStreaming?.(streaming);
   }
@@ -376,6 +395,7 @@ export function makeClient(
     on: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.on(key, callback),
     off: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.off(key, callback),
     flush: () => impl.flush(),
+    setConnectionMode: (mode?: FDv2ConnectionMode) => impl.setConnectionMode(mode),
     setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
     identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
       impl.identifyResult(pristineContext, identifyOptions),

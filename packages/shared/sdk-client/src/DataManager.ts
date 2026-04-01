@@ -10,6 +10,7 @@ import {
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
+import type FDv2ConnectionMode from './api/datasource/FDv2ConnectionMode';
 import { LDIdentifyOptions } from './api/LDIdentifyOptions';
 import { Configuration } from './configuration/Configuration';
 import {
@@ -72,6 +73,15 @@ export interface DataManager {
    * Optional — only browser data managers implement this.
    */
   setAutomaticStreamingState?(streaming: boolean): void;
+
+  /**
+   * Set an explicit connection mode override. When set, only this mode is
+   * used, bypassing all automatic behavior. Pass undefined to clear the
+   * override.
+   *
+   * Optional — only FDv2 data managers implement this.
+   */
+  setConnectionMode?(mode?: FDv2ConnectionMode): void;
 
   /**
    * Set a callback to flush pending analytics events. Called immediately

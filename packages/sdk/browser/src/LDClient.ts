@@ -1,5 +1,6 @@
 import {
   LDClient as CommonClient,
+  FDv2ConnectionMode,
   LDContext,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
@@ -32,17 +33,37 @@ export interface LDStartOptions extends LDWaitForInitializationOptions {
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
  */
 
-export type LDClient = Omit<
-  CommonClient,
-  'setConnectionMode' | 'getConnectionMode' | 'getOffline' | 'identify'
-> & {
+export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | 'identify'> & {
   /**
    * @ignore
-   * Implementation Note: We are not supporting dynamically setting the connection mode on the LDClient.
    * Implementation Note: The SDK does not support offline mode. Instead bootstrap data can be used.
    * Implementation Note: The browser SDK has different identify options, so omits the base implementation
    * from the interface.
    */
+  /**
+   * @internal
+   *
+   * This feature is experimental and should NOT be considered ready for
+   * production use. It may change or be removed without notice and is not
+   * subject to backwards compatibility guarantees.
+   *
+   * Sets the connection mode for the SDK's data system.
+   *
+   * When set, this mode is used exclusively, overriding all automatic mode
+   * selection (including {@link setStreaming}). The {@link setStreaming} state
+   * is not modified -- {@link setConnectionMode} acts as a higher-priority
+   * override.
+   *
+   * Pass `undefined` (or call with no arguments) to clear the override and
+   * return to automatic mode selection.
+   *
+   * This method requires the FDv2 data system (`dataSystem` option). If
+   * FDv2 is not enabled, the call logs a warning and has no effect.
+   *
+   * @param mode The connection mode to use, or `undefined` to clear the override.
+   */
+  setConnectionMode(mode?: FDv2ConnectionMode): void;
+
   /**
    * Specifies whether or not to open a streaming connection to LaunchDarkly for live flag updates.
    *
