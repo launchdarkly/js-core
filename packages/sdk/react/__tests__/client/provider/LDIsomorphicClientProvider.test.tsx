@@ -1,21 +1,21 @@
 import React from 'react';
 
-import { createNoopClient } from '../../src/client/createNoopClient';
-import { LDIsomorphicClientProvider } from '../../src/client/provider/LDIsomorphicClientProvider';
+import { createNoopClient } from '../../../src/client/createNoopClient';
+import { LDIsomorphicClientProvider } from '../../../src/client/provider/LDIsomorphicClientProvider';
 import {
   createLDReactProvider,
   createLDReactProviderWithClient,
-} from '../../src/client/provider/LDReactProvider';
+} from '../../../src/client/provider/LDReactProvider';
 
 const mockNoopClient = { noop: true };
 const MockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   React.createElement('div', { 'data-testid': 'mock-provider' }, children);
 
-jest.mock('../../src/client/createNoopClient', () => ({
+jest.mock('../../../src/client/createNoopClient', () => ({
   createNoopClient: jest.fn(() => mockNoopClient),
 }));
 
-jest.mock('../../src/client/provider/LDReactProvider', () => ({
+jest.mock('../../../src/client/provider/LDReactProvider', () => ({
   createLDReactProvider: jest.fn(() => MockProvider),
   createLDReactProviderWithClient: jest.fn(() => MockProvider),
 }));

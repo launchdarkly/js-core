@@ -100,7 +100,7 @@ it('forwards options to the client provider', async () => {
   expect(element.props.options).toEqual(options);
 });
 
-it('falls back to empty bootstrap when allFlagsState throws', async () => {
+it('falls back to undefined bootstrap when allFlagsState throws', async () => {
   const session = makeMockSession({
     allFlagsState: jest.fn(() => Promise.reject(new Error('client not initialized'))),
   });
@@ -113,7 +113,7 @@ it('falls back to empty bootstrap when allFlagsState throws', async () => {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
-  expect(element.props.bootstrap).toEqual({});
+  expect(element.props.bootstrap).toBeUndefined();
 });
 
 it('passes children to the client provider', async () => {

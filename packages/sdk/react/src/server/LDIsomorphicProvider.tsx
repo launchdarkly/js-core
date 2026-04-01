@@ -62,13 +62,12 @@ export async function LDIsomorphicProvider({
   options,
   children,
 }: LDIsomorphicProviderProps) {
-  let bootstrap: unknown = {};
+  let bootstrap: unknown;
   try {
     const flagsState = await session.allFlagsState({ clientSideOnly: true });
     bootstrap = flagsState.toJSON();
   } catch {
-    // If allFlagsState fails, fall back to an empty bootstrap
-    // so the client SDK can still initialize and fetch flags normally.
+    // If allFlagsState fails, bootstrap stays undefined.
   }
 
   const context = session.getContext();
