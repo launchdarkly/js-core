@@ -341,8 +341,7 @@
       "release-as": "1.0.0"
     },
     "packages/tooling/client-testing-plugin": {
-      "bump-minor-pre-major": true,
-      "prerelease": true,
+      "release-as": "1.0.0",
       "extra-files": [
         {
           "type": "json",
