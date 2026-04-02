@@ -168,7 +168,7 @@
         "webProxy": { "introduced": "1.0" }
       }
     },
-    "react": {
+    "react-client-sdk": {
       "name": "React Web SDK",
       "type": "client-side",
       "path": "packages/sdk/react",
