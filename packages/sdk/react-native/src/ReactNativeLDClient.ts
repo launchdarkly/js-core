@@ -21,6 +21,7 @@ import {
   mobileFdv1Endpoints,
   MODE_TABLE,
   resolveForegroundMode,
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
 import MobileDataManager from './MobileDataManager';
@@ -104,6 +105,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
       highTimeoutThreshold: 15,
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedRnOptions.plugins),
+      registerDebugOverrides: (debugOverride) =>
+        safeRegisterDebugOverridePlugins(logger, debugOverride, validatedRnOptions.plugins),
       credentialType: 'mobileKey',
       dataSystemDefaults: MOBILE_DATA_SYSTEM_DEFAULTS,
     };

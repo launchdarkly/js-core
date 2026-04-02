@@ -225,6 +225,11 @@
           "type": "json",
           "path": "example-fdv2/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/tooling/client-testing-plugin/example/sdks/react-sdk/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         }
       ]
     },
@@ -296,6 +301,11 @@
         {
           "type": "json",
           "path": "examples/vercel-edge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/tooling/client-testing-plugin/example/sdks/react-sdk/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         }
       ]

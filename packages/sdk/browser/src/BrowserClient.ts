@@ -149,6 +149,8 @@ class BrowserClientImpl extends LDClientImpl {
         ),
       getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
+      registerDebugOverrides: (debugOverride) =>
+        safeRegisterDebugOverridePlugins(logger, debugOverride, validatedBrowserOptions.plugins),
       credentialType: 'clientSideId',
       requiresStart: true,
       initialContext,
@@ -223,11 +225,6 @@ class BrowserClientImpl extends LDClientImpl {
       client,
       this._plugins || [],
     );
-
-    const override = this.getDebugOverrides();
-    if (override) {
-      safeRegisterDebugOverridePlugins(this.logger, override, this._plugins || []);
-    }
   }
 
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {

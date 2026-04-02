@@ -146,6 +146,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this._config.disableCache ?? false,
       this._config.logger,
     );
+
+    const debugOverride = this._flagManager.getDebugOverride?.();
+    if (debugOverride && internalOptions?.registerDebugOverrides) {
+      internalOptions.registerDebugOverrides(debugOverride);
+    }
+
     this._diagnosticsManager = createDiagnosticsManager(sdkKey, this._config, platform);
     this._eventProcessor = createEventProcessor(
       sdkKey,

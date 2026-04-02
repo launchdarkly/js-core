@@ -12,6 +12,7 @@ import {
 import { Hook, type LDOptions } from '../api';
 import { LDContext } from '../api/LDContext';
 import { LDInspection } from '../api/LDInspection';
+import type { LDDebugOverride } from '../flag-manager/FlagManager';
 import type {
   InternalDataSystemOptions,
   PlatformDataSystemDefaults,
@@ -27,6 +28,7 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   credentialType: 'clientSideId' | 'mobileKey';
   getLegacyStorageKeys?: () => string[];
   dataSystemDefaults?: PlatformDataSystemDefaults;
+  registerDebugOverrides?: (debugOverride: LDDebugOverride) => void;
 
   /**
    * When true, the SDK requires `start()` to be called before `identify()`.

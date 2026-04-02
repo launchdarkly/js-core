@@ -23,6 +23,8 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   mobileFdv1Endpoints,
+  readFlagsFromBootstrap,
+  safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from './ElectronDataManager';
@@ -88,6 +90,8 @@ export class ElectronClient extends LDClientImpl {
       highTimeoutThreshold: 15,
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedElectronOptions.plugins),
+      registerDebugOverrides: (debugOverride) =>
+        safeRegisterDebugOverridePlugins(logger, debugOverride, validatedElectronOptions.plugins),
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
       requiresStart: true,
       initialContext,
