@@ -169,7 +169,7 @@
       }
     },
     "react": {
-      "name": "React SDK",
+      "name": "React Web SDK",
       "type": "client-side",
       "path": "packages/sdk/react",
       "languages": ["JavaScript", "TypeScript"],
