@@ -8,7 +8,7 @@ This SDK supports React server components in `@launchdarkly/react-sdk/server` su
 in React 19 and are only stable in a handful of frameworks (as of the time of writing), so you **MUST** be on React 19 to leverage the server submodule.
 Otherwise, being in an earlier version of React **SHOULD** work if you are only using the `@launchdarkly/react-sdk`.
 
-NOTE: the new React SDK will be based on `@launchdarkly/js-client-sdk` which is our JavaScript SDK at version >= 4.0.0. Please also read the differences
+NOTE: the new React SDK is based on `@launchdarkly/js-client-sdk` which is our JavaScript SDK at version >= 4.0.0. Please also read the differences
 between that version and the older versions of the JavaScript SDK as those changes are also relevant to the React SDK.
 > https://launchdarkly.com/docs/sdk/client-side/javascript/migration-3-to-4
 ---
