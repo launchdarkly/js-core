@@ -67,11 +67,8 @@ export interface RNStorage {
 /**
  * Data system options for the React Native SDK.
  *
- * React Native supports the full range of automatic mode switching options,
- * including lifecycle-based (foreground/background) and network-based switching.
- *
  * Note: Network-based automatic mode switching is not yet supported.
- * Lifecycle-based switching (foreground/background) is fully functional.
+ * Lifecycle-based switching is.
  *
  * This interface is not stable, and not subject to any backwards compatibility
  * guarantees or semantic versioning. It is in early access. If you want access
