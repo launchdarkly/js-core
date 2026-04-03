@@ -1,5 +1,5 @@
 {
-  "name": "react-native-example-fdv2",
+  "name": "@launchdarkly/react-native-example-fdv2",
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
