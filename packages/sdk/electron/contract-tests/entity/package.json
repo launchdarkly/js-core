@@ -1,5 +1,5 @@
 {
-  "name": "@internal/electron-contract-tests-entity",
+  "name": "@launchdarkly/electron-contract-tests-entity",
   "version": "0.0.1",
   "description": "Contract test entity for the LaunchDarkly Electron SDK",
   "main": ".vite/build/main.js",

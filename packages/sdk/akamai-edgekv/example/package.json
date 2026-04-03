@@ -1,5 +1,5 @@
 {
-  "name": "akamai-edgekv-playground",
+  "name": "@launchdarkly/akamai-edgekv-playground",
   "version": "1.0.4",
   "description": "",
   "main": "main.js",

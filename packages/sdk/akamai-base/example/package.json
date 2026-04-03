@@ -1,5 +1,5 @@
 {
-  "name": "akamai-playground",
+  "name": "@launchdarkly/akamai-playground",
   "version": "1.0.4",
   "description": "",
   "main": "main.js",

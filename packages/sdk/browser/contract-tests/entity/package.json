@@ -1,5 +1,5 @@
 {
-  "name": "browser-contract-test-service",
+  "name": "@launchdarkly/browser-contract-test-service",
   "private": true,
   "version": "0.0.0",
   "type": "module",

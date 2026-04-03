@@ -1,5 +1,5 @@
 {
-  "name": "chat-observability-example",
+  "name": "@launchdarkly/chat-observability-example",
   "version": "1.0.0",
   "description": "LaunchDarkly AI SDK chat example with observability plugin",
   "scripts": {

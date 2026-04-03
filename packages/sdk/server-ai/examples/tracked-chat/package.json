@@ -1,5 +1,5 @@
 {
-  "name": "tracked-chat-example",
+  "name": "@launchdarkly/tracked-chat-example",
   "version": "1.0.0",
   "description": "Example demonstrating LaunchDarkly AI SDK chat functionality with multiple providers",
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@internal/electron-example",
+  "name": "@launchdarkly/electron-example",
   "productName": "example-application",
   "version": "0.0.1",
   "description": "My Electron application description",

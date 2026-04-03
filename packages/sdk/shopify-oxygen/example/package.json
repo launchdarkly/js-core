@@ -1,5 +1,5 @@
 {
-  "name": "shopify-oxygen-sdk-example",
+  "name": "@launchdarkly/shopify-oxygen-sdk-example",
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "build": "tsup",
