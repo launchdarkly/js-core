@@ -65,7 +65,14 @@
       ]
     },
     "packages/sdk/vercel": {
-      "extra-files": ["src/createPlatformInfo.ts"]
+      "extra-files": [
+        "src/createPlatformInfo.ts",
+        {
+          "type": "json",
+          "path": "/packages/sdk/react/examples/vercel-edge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/vercel-server-sdk']"
+        }
+      ]
     },
     "packages/sdk/akamai-base": {
       "extra-files": [
@@ -120,6 +127,11 @@
         {
           "type": "json",
           "path": "examples/react-server-example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "examples/vercel-edge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         }
       ]
