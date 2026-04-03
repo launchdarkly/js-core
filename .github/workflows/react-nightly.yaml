@@ -16,6 +16,6 @@ jobs:
           node-version: 24
       - uses: ./actions/run-example
         with:
-          workspace_name: '@internal/react-sdk-example-hello-react'
+          workspace_name: '@launchdarkly/react-sdk-example-hello-react'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          before_test: 'yarn workspace @internal/react-sdk-example-hello-react playwright install --with-deps chromium'
+          before_test: 'yarn workspace @launchdarkly/react-sdk-example-hello-react playwright install --with-deps chromium'

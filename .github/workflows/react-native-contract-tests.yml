@@ -28,7 +28,7 @@ jobs:
           node-version: 24
 
       - name: Install dependencies
-        run: yarn workspaces focus react-native-contract-test-entity
+        run: yarn workspaces focus @launchdarkly/react-native-contract-test-entity
 
       - name: Build SDK and dependencies
         run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-client-sdk' run build
@@ -68,7 +68,7 @@ jobs:
 
       - name: Start adapter in background
         run: |
-          yarn workspace react-native-contract-test-entity run start:adapter > /tmp/adapter.log 2>&1 &
+          yarn workspace @launchdarkly/react-native-contract-test-entity run start:adapter > /tmp/adapter.log 2>&1 &
           echo $! > /tmp/adapter.pid
 
       - name: Wait for adapter to be ready

@@ -35,7 +35,7 @@ jobs:
       - name: Install deps
         run: yarn workspaces focus
       - name: Build
-        run: yarn workspaces foreach -pR --topological-dev --from 'react-native-example' run build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-example' run build
 
       - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
         name: 'Get mobile key'
