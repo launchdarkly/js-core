@@ -59,7 +59,7 @@ export interface LDReactClient extends LDClient {
   /**
    * Returns whether the client is ready to evaluate flags. This is true when the client
    * has completed initialization (successfully or with failure), or when bootstrap data
-   * was provided (flags are available immediately via `presetFlags`).
+   * was provided.
    *
    * @returns {boolean} Whether the client can evaluate flags.
    */
@@ -68,8 +68,8 @@ export interface LDReactClient extends LDClient {
   /**
    * @internal
    *
-   * Returns whether flag keys should be converted to camelCase in `useFlags()` and resolved from camelCase
-   * in the individual variation hooks. Defaults to `true` when absent.
+   * Returns whether flag keys should be converted to camelCase in `useFlags()`.
+   * Defaults to `true` when absent.
    *
    * @remarks
    * **NOTE:** This method is only used by `useFlags()` hook.

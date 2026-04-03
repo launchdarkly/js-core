@@ -11,7 +11,7 @@ import { LDReactContext } from './LDReactContext';
  * Creates a new LaunchDarkly React provider wrapping an existing client instance.
  *
  * @remarks
- * **NOTE:** We recommend using the convenience factory function {@link createLDReactProvider}
+ * **NOTE:** We recommend using the factory function {@link createLDReactProvider}
  * instead of this function if you can.
  *
  * This factory function is provided to allow the caller to use an existing client

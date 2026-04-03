@@ -5,15 +5,11 @@ import { LDContext, type LDFlagsStateOptions } from '@launchdarkly/js-server-sdk
 import { LDServerSession } from './LDClient';
 import { LDServerBaseClient } from './LDServerBaseClient';
 
-// cache() creates a per-request memoized store — each React render tree (request)
+// Creates a per-request memoized store — each React render tree (request)
 // gets its own isolated instance. The store is populated by createLDServerSession
 // and read by useLDServerSession.
 const withCache = cache(() => ({ session: null as LDServerSession | null }));
 
-/**
- * Boundary check for server only code. Given that we are assuming a React ecosystem,
- * simply checking for the presence of window should be sufficient.
- */
 function isServer(): boolean {
   return typeof window === 'undefined';
 }
@@ -35,10 +31,10 @@ function isServer(): boolean {
  * ```ts
  * // lib/ld-server.ts
  * import { init } from '@launchdarkly/node-server-sdk';
- * import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+ * import { createLDServerWrapper } from '@launchdarkly/react-sdk/server';
  *
  * const ldBaseClient = await init(process.env.LAUNCHDARKLY_SDK_KEY || '');
- * export const serverSession = createLDServerSession(ldBaseClient, defaultContext);
+ * export const serverSession = createLDServerWrapper(ldBaseClient, defaultContext);
  * ```
  *
  * @param client Any LaunchDarkly server SDK client that satisfies {@link LDServerBaseClient}.
