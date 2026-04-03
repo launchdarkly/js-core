@@ -19,7 +19,7 @@ This example was scaffolded with [Electron Forge](https://www.electronforge.io/)
 
 3. Run the app from the repository root:
    ```bash
-   yarn workspace @internal/electron-example start
+   yarn workspace @launchdarkly/electron-example start
    ```
 
    Electron Forge will build and launch the app. The window shows the current value of the flag and updates in real time when you change it in LaunchDarkly.

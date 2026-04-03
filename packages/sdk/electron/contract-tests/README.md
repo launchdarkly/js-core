@@ -32,12 +32,12 @@ The test harness sends HTTP requests to the entity’s REST API. The entity runs
 
 2. **Build the entity** so the Electron app has a built main process. From the repository root:
    ```bash
-   yarn workspaces foreach -pR --topological-dev --from @internal/electron-contract-tests-entity run build
+   yarn workspaces foreach -pR --topological-dev --from @launchdarkly/electron-contract-tests-entity run build
    ```
 
 3. **Start the contract test entity** (the Electron app with the REST server on port 8000). From the repository root:
    ```bash
-   yarn workspace @internal/electron-contract-tests-entity run start
+   yarn workspace @launchdarkly/electron-contract-tests-entity run start
    ```
    Or from `entity/`:
    ```bash
@@ -47,7 +47,7 @@ The test harness sends HTTP requests to the entity’s REST API. The entity runs
 
    For a headless run (e.g. CI), use the open-electron script instead:
    ```bash
-   yarn workspace @internal/electron-contract-tests-entity run open-electron
+   yarn workspace @launchdarkly/electron-contract-tests-entity run open-electron
    ```
    This launches the built app via Playwright’s Electron API and keeps it running until you press Ctrl+C.
 

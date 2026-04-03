@@ -1,5 +1,5 @@
 {
-  "name": "fastly-example",
+  "name": "@launchdarkly/fastly-example",
   "packageManager": "yarn@3.4.1",
   "type": "module",
   "engines": {

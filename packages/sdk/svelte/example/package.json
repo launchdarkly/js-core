@@ -1,5 +1,5 @@
 {
-	"name": "ld-svelte-example",
+	"name": "@launchdarkly/ld-svelte-example",
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",
