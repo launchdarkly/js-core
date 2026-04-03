@@ -29,7 +29,7 @@ import { LDReactClientOptions } from './LDOptions';
  *
  * @example
  * ```tsx
- * import { createClient } from '@launchdarkly/react';
+ * import { createClient } from '@launchdarkly/react-sdk';
  * const client = createClient(clientSideID, context, options);
  *
  * await client.start();

@@ -40,8 +40,6 @@ export interface LDIsomorphicProviderProps {
  * @remarks
  * **NOTE:** This component is designed to be used in conjunction with {@link LDIsomorphicClientProvider}
  * in a server component to compute the bootstrap data and render this provider automatically.
- *
- * See the `server-only` example for how to use this component.
  */
 export async function LDIsomorphicProvider({
   session,
