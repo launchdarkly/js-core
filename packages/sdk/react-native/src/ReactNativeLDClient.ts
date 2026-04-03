@@ -202,25 +202,29 @@ export default class ReactNativeLDClient extends LDClientImpl {
   }
 
   /**
+   * Sets the SDK connection mode.
+   *
+   * @param mode The connection mode to use (`'streaming'`, `'polling'`, or `'offline'`).
+   */
+  async setConnectionMode(mode: ConnectionMode): Promise<void>;
+  /**
    * @internal
    *
-   * This feature is experimental and should NOT be considered ready for
+   * This overload is experimental and should NOT be considered ready for
    * production use. It may change or be removed without notice and is not
    * subject to backwards compatibility guarantees.
    *
-   * Sets the connection mode for the SDK's data system.
+   * Sets the connection mode for the FDv2 data system.
    *
    * When the FDv2 data system is enabled (`dataSystem` option), this method
-   * accepts FDv2 connection modes (`'streaming'`, `'polling'`, `'offline'`,
-   * `'one-shot'`, `'background'`). Pass `undefined` to clear an explicit
-   * override and return to automatic mode selection.
-   *
-   * Without FDv2, this method accepts FDv1 connection modes
-   * (`'streaming'`, `'polling'`, `'offline'`).
+   * additionally accepts `'one-shot'` and `'background'` modes. Pass
+   * `undefined` to clear an explicit override and return to automatic mode
+   * selection.
    *
    * @param mode The connection mode to use, or `undefined` to clear the
    *   override (FDv2 only).
    */
+  async setConnectionMode(mode?: FDv2ConnectionMode): Promise<void>;
   async setConnectionMode(mode?: ConnectionMode | FDv2ConnectionMode): Promise<void> {
     if (this._connectionManager) {
       // FDv1 path
@@ -250,6 +254,11 @@ export default class ReactNativeLDClient extends LDClientImpl {
   /**
    * Gets the SDK connection mode.
    */
+  getConnectionMode(): ConnectionMode;
+  /**
+   * @internal
+   */
+  getConnectionMode(): FDv2ConnectionMode;
   getConnectionMode(): ConnectionMode | FDv2ConnectionMode {
     if (this._connectionManager) {
       return (this.dataManager as MobileDataManager).getConnectionMode();
