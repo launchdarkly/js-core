@@ -766,10 +766,7 @@ it('can use bootstrap data with identify', async () => {
   expect(mockedCreateEventSource).toHaveBeenCalled();
 });
 
-it('parses bootstrap data only once when identify is called with bootstrap', async () => {
-  const commonModule = await import('@launchdarkly/js-client-sdk-common');
-  const readFlagsFromBootstrapSpy = jest.spyOn(commonModule, 'readFlagsFromBootstrap');
-
+it('parses bootstrap data when start is called with bootstrap', async () => {
   (ElectronPlatform as jest.Mock).mockReturnValue({
     crypto: new ElectronCrypto(),
     info: new ElectronInfo(),
@@ -796,7 +793,8 @@ it('parses bootstrap data only once when identify is called with bootstrap', asy
 
   await client.start({ bootstrap: goodBootstrapData });
 
-  expect(readFlagsFromBootstrapSpy).toHaveBeenCalledTimes(1);
-  expect(readFlagsFromBootstrapSpy).toHaveBeenCalledWith(expect.anything(), goodBootstrapData);
-  readFlagsFromBootstrapSpy.mockRestore();
+  // Verify that bootstrap data was parsed and flags are available.
+  expect(client.allFlags().killswitch).toBe(true);
+  expect(client.allFlags()['string-flag']).toBe('is bob');
+  expect(client.allFlags().cat).toBe(false);
 });

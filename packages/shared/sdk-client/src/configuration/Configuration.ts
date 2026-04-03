@@ -26,6 +26,12 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   credentialType: 'clientSideId' | 'mobileKey';
   getLegacyStorageKeys?: () => string[];
   dataSystemDefaults?: PlatformDataSystemDefaults;
+
+  /**
+   * When true, the SDK requires `start()` to be called before `identify()`.
+   * Set this value to `true` to use the new initialization pattern.
+   */
+  requiresStart?: boolean;
 }
 
 export interface Configuration {

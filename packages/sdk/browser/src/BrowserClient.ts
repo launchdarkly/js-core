@@ -21,10 +21,8 @@ import {
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
-  LDWaitForInitializationResult,
   MODE_TABLE,
   Platform,
-  readFlagsFromBootstrap,
   resolveForegroundMode,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
@@ -44,11 +42,6 @@ import { getAllStorageKeys } from './platform/LocalStorage';
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
   private readonly _plugins?: LDPlugin[];
-
-  private _initialContext?: LDContext;
-
-  // NOTE: This also keeps track of when we tried to initialize the client.
-  private _startPromise?: Promise<LDWaitForInitializationResult>;
 
   constructor(
     clientSideId: string,
@@ -156,6 +149,7 @@ class BrowserClientImpl extends LDClientImpl {
       getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
       credentialType: 'clientSideId',
+      requiresStart: true,
     });
 
     this.setEventSendingEnabled(true, false);
@@ -234,10 +228,6 @@ class BrowserClientImpl extends LDClientImpl {
     }
   }
 
-  setInitialContext(context: LDContext): void {
-    this._initialContext = context;
-  }
-
   override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
     return super.identify(context, identifyOptions);
   }
@@ -246,77 +236,9 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    if (!this._startPromise) {
-      this.logger.error(
-        'Client must be started before it can identify a context, did you forget to call start()?',
-      );
-      return { status: 'error', error: new Error('Identify called before start') };
-    }
-
-    const identifyOptionsWithUpdatedDefaults = {
-      ...identifyOptions,
-    };
-    if (identifyOptions?.sheddable === undefined) {
-      identifyOptionsWithUpdatedDefaults.sheddable = true;
-    }
-
-    const res = await super.identifyResult(context, identifyOptionsWithUpdatedDefaults);
-
+    const res = await super.identifyResult(context, identifyOptions);
     this._goalManager?.startTracking();
     return res;
-  }
-
-  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
-    if (this.initializeResult) {
-      return Promise.resolve(this.initializeResult);
-    }
-    if (this._startPromise) {
-      return this._startPromise;
-    }
-    if (!this._initialContext) {
-      this.logger.error('Initial context not set');
-      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
-    }
-
-    // When we get to this point, we assume this is the first time that start is being
-    // attempted. This line should only be called once during the lifetime of the client.
-    const identifyOptions = {
-      ...(options?.identifyOptions ?? {}),
-
-      // Initial identify operations are not sheddable.
-      sheddable: false,
-    };
-
-    // If the bootstrap data is provided in the start options, and the identify options do not have bootstrap data,
-    // then use the bootstrap data from the start options.
-    if (options?.bootstrap && !identifyOptions.bootstrap) {
-      identifyOptions.bootstrap = options.bootstrap;
-    }
-
-    if (identifyOptions?.bootstrap) {
-      try {
-        if (!identifyOptions.bootstrapParsed) {
-          identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
-            this.logger,
-            identifyOptions.bootstrap,
-          );
-        }
-        this.presetFlags(identifyOptions.bootstrapParsed!);
-      } catch (error) {
-        this.logger.error('Failed to bootstrap data', error);
-      }
-    }
-
-    if (!this.initializedPromise) {
-      this.initializedPromise = new Promise((resolve) => {
-        this.initResolve = resolve;
-      });
-    }
-
-    this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
-
-    this.identifyResult(this._initialContext!, identifyOptions);
-    return this._startPromise;
   }
 
   setConnectionMode(mode?: FDv2ConnectionMode): void {

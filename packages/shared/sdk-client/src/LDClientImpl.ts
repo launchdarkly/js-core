@@ -28,6 +28,7 @@ import {
   LDIdentifySuccess,
   LDIdentifyTimeout,
   type LDOptions,
+  LDStartOptions,
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationOptions,
@@ -53,6 +54,7 @@ import {
 } from './evaluation/evaluationDetail';
 import createEventProcessor from './events/createEventProcessor';
 import EventFactory from './events/EventFactory';
+import { readFlagsFromBootstrap } from './flag-manager/bootstrap';
 import DefaultFlagManager, { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
 import { FlagChangeType } from './flag-manager/FlagUpdater';
 import { ItemDescriptor } from './flag-manager/ItemDescriptor';
@@ -98,6 +100,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   protected initResolve?: (result: LDWaitForInitializationResult) => void;
   protected initializeResult?: LDWaitForInitializationResult;
 
+  // NOTE: this is used to ease the transition to the new initialization pattern.
+  // All client SDKs should set this to true with the exception of React Native which is
+  // still using the deprecated construct + identify pattern.
+  private _requiresStart: boolean = false;
+  protected initialContext?: LDContext;
+  protected startPromise?: Promise<LDWaitForInitializationResult>;
+
   /**
    * Creates the client object synchronously. No async, no network calls.
    */
@@ -119,6 +128,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._config = new ConfigurationImpl(options, internalOptions);
     this.logger = this._config.logger;
+    this._requiresStart = internalOptions?.requiresStart ?? false;
 
     this._baseHeaders = defaultHeaders(
       this.sdkKey,
@@ -266,6 +276,75 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   }
 
   /**
+   * Sets the initial context for the client. This must be called before `start()`.
+   * @param context The initial context.
+   */
+  setInitialContext(context: LDContext): void {
+    this.initialContext = context;
+  }
+
+  /**
+   * Starts the client and returns a promise that resolves to the initialization result.
+   *
+   * This method is idempotent — calling it multiple times returns the same promise.
+   *
+   * @param options Optional configuration. See {@link LDStartOptions}.
+   * @returns A promise that resolves to the initialization result.
+   */
+  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
+    if (this.initializeResult) {
+      return Promise.resolve(this.initializeResult);
+    }
+    if (this.startPromise) {
+      return this.startPromise;
+    }
+    if (!this.initialContext) {
+      this.logger.error('Initial context not set');
+      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
+    }
+
+    const identifyOptions: LDIdentifyOptions = {
+      ...(options?.identifyOptions ?? {}),
+
+      // Initial identify operations are not sheddable.
+      sheddable: false,
+    };
+
+    // If the bootstrap data is provided in the start options, and the identify options do not
+    // have bootstrap data, then use the bootstrap data from the start options.
+    if (options?.bootstrap && !identifyOptions.bootstrap) {
+      identifyOptions.bootstrap = options.bootstrap;
+    }
+
+    if (identifyOptions.bootstrap) {
+      try {
+        if (!identifyOptions.bootstrapParsed) {
+          identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
+            this.logger,
+            identifyOptions.bootstrap,
+          );
+        }
+        if (identifyOptions.bootstrapParsed) {
+          this.presetFlags(identifyOptions.bootstrapParsed);
+        }
+      } catch (error) {
+        this.logger.error('Failed to bootstrap data', error);
+      }
+    }
+
+    if (!this.initializedPromise) {
+      this.initializedPromise = new Promise((resolve) => {
+        this.initResolve = resolve;
+      });
+    }
+
+    this.startPromise = this._promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
+
+    this.identifyResult(this.initialContext!, identifyOptions);
+    return this.startPromise;
+  }
+
+  /**
    * Identifies a context to LaunchDarkly. See {@link LDClient.identify}.
    *
    * If used with the `sheddable` option set to true, then the identify operation will be sheddable. This means that if
@@ -307,8 +386,21 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
-    const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
+    if (this._requiresStart && !this.startPromise) {
+      this.logger.error(
+        'Client must be started before it can identify a context, did you forget to call start()?',
+      );
+      return { status: 'error', error: new Error('Identify called before start') };
+    }
+
+    let effectiveOptions = identifyOptions;
+    if (this._requiresStart && identifyOptions?.sheddable === undefined) {
+      effectiveOptions = { ...identifyOptions, sheddable: true };
+    }
+
+    const identifyTimeout = effectiveOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
+    const noTimeout =
+      effectiveOptions?.timeout === undefined && effectiveOptions?.noTimeout === true;
 
     // When noTimeout is specified, and a timeout is not specified, then this condition cannot
     // be encountered. (Our default would need to be greater)
@@ -330,7 +422,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             }
             const checkedContext = Context.fromLDContext(context);
             if (checkedContext.valid) {
-              const afterIdentify = this._hookRunner.identify(context, identifyOptions?.timeout);
+              const afterIdentify = this._hookRunner.identify(context, effectiveOptions?.timeout);
               return {
                 context,
                 checkedContext,
@@ -363,7 +455,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               identifyResolve,
               identifyReject,
               checkedContext,
-              identifyOptions,
+              effectiveOptions,
             );
 
             return identifyPromise;
@@ -378,7 +470,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             }
           },
         },
-        identifyOptions?.sheddable ?? false,
+        effectiveOptions?.sheddable ?? false,
       )
       .then((res) => {
         if (res.status === 'error') {
@@ -441,7 +533,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     // If waitForInitialization was previously called, then return the promise with a timeout.
     // This condition should only be triggered if waitForInitialization was called multiple times.
     if (this.initializedPromise) {
-      return this.promiseWithTimeout(this.initializedPromise, timeout);
+      return this._promiseWithTimeout(this.initializedPromise, timeout);
     }
 
     // Create a new promise for tracking initialization
@@ -451,22 +543,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       });
     }
 
-    return this.promiseWithTimeout(this.initializedPromise, timeout);
+    return this._promiseWithTimeout(this.initializedPromise, timeout);
   }
 
   /**
-   * Apply a timeout promise to a base promise. This is for use with waitForInitialization.
+   * Apply a timeout promise to a base promise. This is for use with waitForInitialization
+   * and start.
    *
    * @param basePromise The promise to race against a timeout.
    * @param timeout The timeout in seconds.
    * @returns A promise that resolves to the initialization result or timeout.
-   *
-   * @privateRemarks
-   * This method is protected because it is used by the browser SDK's `start` method.
-   * Eventually, the start method will be moved to this common implementation and this method will
-   * be made private.
    */
-  protected promiseWithTimeout(
+  private _promiseWithTimeout(
     basePromise: Promise<LDWaitForInitializationResult>,
     timeout: number,
   ): Promise<LDWaitForInitializationResult> {
