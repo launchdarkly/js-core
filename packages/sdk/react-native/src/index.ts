@@ -6,7 +6,7 @@
  * @packageDocumentation
  */
 import ReactNativeLDClient from './ReactNativeLDClient';
-import RNOptions, { RNStorage } from './RNOptions';
+import RNOptions, { RNDataSystemOptions, RNStorage } from './RNOptions';
 
 export * from '@launchdarkly/js-client-sdk-common';
 
@@ -21,4 +21,4 @@ export type {
   LDEvaluationDetail,
 } from './hooks/variation/LDEvaluationDetail';
 
-export { ReactNativeLDClient, RNOptions as LDOptions, RNStorage };
+export { ReactNativeLDClient, RNOptions as LDOptions, RNDataSystemOptions, RNStorage };

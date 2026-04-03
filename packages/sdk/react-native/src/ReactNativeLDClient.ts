@@ -4,6 +4,10 @@ import {
   BasicLogger,
   type Configuration,
   ConnectionMode,
+  createDefaultSourceFactoryProvider,
+  createFDv2DataManagerBase,
+  FDv2ConnectionMode,
+  type FDv2DataManagerControl,
   FlagManager,
   internal,
   LDClientImpl,
@@ -12,13 +16,21 @@ import {
   LDHeaders,
   LDPluginEnvironmentMetadata,
   MOBILE_DATA_SYSTEM_DEFAULTS,
+  MOBILE_TRANSITION_TABLE,
   mobileFdv1Endpoints,
+  MODE_TABLE,
+  resolveForegroundMode,
 } from '@launchdarkly/js-client-sdk-common';
 
 import MobileDataManager from './MobileDataManager';
 import validateOptions, { filterToBaseOptions } from './options';
 import createPlatform from './platform';
-import { ConnectionDestination, ConnectionManager } from './platform/ConnectionManager';
+import {
+  ApplicationState,
+  ConnectionDestination,
+  ConnectionManager,
+  NetworkState,
+} from './platform/ConnectionManager';
 import LDOptions from './RNOptions';
 import RNStateDetector from './RNStateDetector';
 
@@ -36,7 +48,8 @@ import RNStateDetector from './RNStateDetector';
  * ```
  */
 export default class ReactNativeLDClient extends LDClientImpl {
-  private _connectionManager: ConnectionManager;
+  private _connectionManager?: ConnectionManager;
+  private _stateDetector?: RNStateDetector;
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -72,62 +85,114 @@ export default class ReactNativeLDClient extends LDClientImpl {
     const platform = createPlatform(logger, options, validatedRnOptions.storage);
     const endpoints = mobileFdv1Endpoints();
 
+    const dataManagerFactory = (
+      flagManager: FlagManager,
+      configuration: Configuration,
+      baseHeaders: LDHeaders,
+      emitter: LDEmitter,
+      diagnosticsManager?: internal.DiagnosticsManager,
+    ) => {
+      if (configuration.dataSystem) {
+        return createFDv2DataManagerBase({
+          platform,
+          flagManager,
+          credential: sdkKey,
+          config: configuration,
+          baseHeaders,
+          emitter,
+          transitionTable: MOBILE_TRANSITION_TABLE,
+          foregroundMode: resolveForegroundMode(
+            configuration.dataSystem,
+            MOBILE_DATA_SYSTEM_DEFAULTS,
+          ),
+          backgroundMode: configuration.dataSystem.backgroundConnectionMode ?? 'background',
+          modeTable: MODE_TABLE,
+          sourceFactoryProvider: createDefaultSourceFactoryProvider(),
+          fdv1Endpoints: mobileFdv1Endpoints(),
+          buildQueryParams: () => [], // Mobile uses Authorization header, not query params
+        });
+      }
+
+      return new MobileDataManager(
+        platform,
+        flagManager,
+        sdkKey,
+        configuration,
+        validatedRnOptions,
+        endpoints.polling,
+        endpoints.streaming,
+        baseHeaders,
+        emitter,
+        diagnosticsManager,
+      );
+    };
+
     super(
       sdkKey,
       autoEnvAttributes,
       platform,
       { ...filterToBaseOptions(options), logger },
-      (
-        flagManager: FlagManager,
-        configuration: Configuration,
-        baseHeaders: LDHeaders,
-        emitter: LDEmitter,
-        diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new MobileDataManager(
-          platform,
-          flagManager,
-          sdkKey,
-          configuration,
-          validatedRnOptions,
-          endpoints.polling,
-          endpoints.streaming,
-          baseHeaders,
-          emitter,
-          diagnosticsManager,
-        ),
+      dataManagerFactory,
       internalOptions,
     );
 
-    this.setEventSendingEnabled(!this.isOffline(), false);
+    const isFDv2 = !!options.dataSystem;
 
-    const dataManager = this.dataManager as MobileDataManager;
-    const destination: ConnectionDestination = {
-      setNetworkAvailability: (available: boolean) => {
-        dataManager.setNetworkAvailability(available);
-      },
-      setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
-        this.setEventSendingEnabled(enabled, flush);
-      },
-      setConnectionMode: async (mode: ConnectionMode) => {
-        // Pass the connection mode to the base implementation.
-        // The RN implementation will pass the connection mode through the connection manager.
-        dataManager.setConnectionMode(mode);
-      },
-    };
+    if (isFDv2) {
+      const fdv2DataManager = this.dataManager as FDv2DataManagerControl;
 
-    const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
-    this._connectionManager = new ConnectionManager(
-      logger,
-      {
-        initialConnectionMode,
-        automaticNetworkHandling: validatedRnOptions.automaticNetworkHandling,
-        automaticBackgroundHandling: validatedRnOptions.automaticBackgroundHandling,
-        runInBackground: validatedRnOptions.runInBackground,
-      },
-      destination,
-      new RNStateDetector(),
-    );
+      this.setEventSendingEnabled(true, false);
+      fdv2DataManager.setFlushCallback(() => this.flush());
+
+      // Wire state detection directly to FDv2 data manager.
+      const stateDetector = new RNStateDetector();
+      this._stateDetector = stateDetector;
+
+      if (validatedRnOptions.automaticBackgroundHandling) {
+        stateDetector.setApplicationStateListener((state) => {
+          fdv2DataManager.setLifecycleState(
+            state === ApplicationState.Foreground ? 'foreground' : 'background',
+          );
+        });
+      }
+
+      if (validatedRnOptions.automaticNetworkHandling) {
+        stateDetector.setNetworkStateListener((state) => {
+          fdv2DataManager.setNetworkState(
+            state === NetworkState.Available ? 'available' : 'unavailable',
+          );
+        });
+      }
+    } else {
+      const initialConnectionMode = options.initialConnectionMode ?? 'streaming';
+      this.setEventSendingEnabled(initialConnectionMode !== 'offline', false);
+
+      const dataManager = this.dataManager as MobileDataManager;
+      const destination: ConnectionDestination = {
+        setNetworkAvailability: (available: boolean) => {
+          dataManager.setNetworkAvailability(available);
+        },
+        setEventSendingEnabled: (enabled: boolean, flush: boolean) => {
+          this.setEventSendingEnabled(enabled, flush);
+        },
+        setConnectionMode: async (mode: ConnectionMode) => {
+          dataManager.setConnectionMode(mode);
+        },
+      };
+
+      this._connectionManager = new ConnectionManager(
+        logger,
+        {
+          initialConnectionMode,
+          automaticNetworkHandling: validatedRnOptions.automaticNetworkHandling,
+          automaticBackgroundHandling: validatedRnOptions.automaticBackgroundHandling,
+          runInBackground: validatedRnOptions.runInBackground,
+        },
+        destination,
+        new RNStateDetector(),
+      );
+    }
+
     internal.safeRegisterPlugins(
       logger,
       this.environmentMetadata,
@@ -136,24 +201,66 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    // Set the connection mode before setting offline, in case there is any mode transition work
-    // such as flushing on entering the background.
-    this._connectionManager.setConnectionMode(mode);
-    // For now the data source connection and the event processing state are connected.
-    this._connectionManager.setOffline(mode === 'offline');
+  /**
+   * @internal
+   *
+   * This feature is experimental and should NOT be considered ready for
+   * production use. It may change or be removed without notice and is not
+   * subject to backwards compatibility guarantees.
+   *
+   * Sets the connection mode for the SDK's data system.
+   *
+   * When the FDv2 data system is enabled (`dataSystem` option), this method
+   * accepts FDv2 connection modes (`'streaming'`, `'polling'`, `'offline'`,
+   * `'one-shot'`, `'background'`). Pass `undefined` to clear an explicit
+   * override and return to automatic mode selection.
+   *
+   * Without FDv2, this method accepts FDv1 connection modes
+   * (`'streaming'`, `'polling'`, `'offline'`).
+   *
+   * @param mode The connection mode to use, or `undefined` to clear the
+   *   override (FDv2 only).
+   */
+  async setConnectionMode(mode?: ConnectionMode | FDv2ConnectionMode): Promise<void> {
+    if (this._connectionManager) {
+      // FDv1 path
+      if (mode === undefined || mode === 'one-shot' || mode === 'background') {
+        this.logger.warn(
+          `setConnectionMode('${mode}') is only supported with the FDv2 data system (dataSystem option).`,
+        );
+        return;
+      }
+      this._connectionManager.setConnectionMode(mode as ConnectionMode);
+      this._connectionManager.setOffline(mode === 'offline');
+    } else {
+      // FDv2 path
+      if (mode !== undefined && !(mode in MODE_TABLE)) {
+        this.logger.warn(
+          `setConnectionMode called with invalid mode '${mode}'. ` +
+            `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
+        );
+        return;
+      }
+      (this.dataManager as FDv2DataManagerControl).setConnectionMode(
+        mode as FDv2ConnectionMode | undefined,
+      );
+    }
   }
 
   /**
    * Gets the SDK connection mode.
    */
-  getConnectionMode(): ConnectionMode {
-    const dataManager = this.dataManager as MobileDataManager;
-    return dataManager.getConnectionMode();
+  getConnectionMode(): ConnectionMode | FDv2ConnectionMode {
+    if (this._connectionManager) {
+      return (this.dataManager as MobileDataManager).getConnectionMode();
+    }
+    return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
   }
 
   isOffline() {
-    const dataManager = this.dataManager as MobileDataManager;
-    return dataManager.getConnectionMode() === 'offline';
+    if (this._connectionManager) {
+      return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';
+    }
+    return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
   }
 }
