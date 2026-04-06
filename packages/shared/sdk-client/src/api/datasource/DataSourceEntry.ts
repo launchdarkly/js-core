@@ -67,6 +67,24 @@ export interface StreamingDataSourceEntry {
 }
 
 /**
+ * Configuration for the FDv1 polling fallback within a mode definition.
+ * When fdv1Endpoints is provided at the platform level, this controls
+ * how the FDv1 fallback synchronizer behaves for a specific mode.
+ *
+ * This interface is not stable, and not subject to any backwards compatibility
+ * guarantees or semantic versioning. It is in early access. If you want access
+ * to this feature please join the EAP.
+ * https://launchdarkly.com/docs/sdk/features/data-saving-mode
+ */
+export interface FDv1FallbackConfig {
+  /** Poll interval for the FDv1 fallback in seconds. Minimum 30. */
+  readonly pollInterval?: number;
+
+  /** Endpoint overrides for the FDv1 fallback. */
+  readonly endpoints?: EndpointConfig;
+}
+
+/**
  * An entry in the initializers list of a mode definition. Initializers
  * can be cache, polling, or streaming sources.
  *

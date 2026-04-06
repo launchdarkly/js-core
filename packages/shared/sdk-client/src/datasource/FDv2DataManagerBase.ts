@@ -1,4 +1,10 @@
-import { Context, internal, LDHeaders, Platform } from '@launchdarkly/js-sdk-common';
+import {
+  Context,
+  internal,
+  LDHeaders,
+  Platform,
+  ServiceEndpoints,
+} from '@launchdarkly/js-sdk-common';
 
 import {
   FDv2ConnectionMode,
@@ -104,6 +110,26 @@ export interface FDv2DataManagerControl extends DataManager {
   setFlushCallback(callback: () => void): void;
 }
 
+function mergeModeTables(
+  defaults: ModeTable,
+  overrides?: Partial<Record<FDv2ConnectionMode, ModeDefinition>>,
+): ModeTable {
+  if (!overrides) {
+    return defaults;
+  }
+  const result: Record<string, ModeDefinition> = { ...defaults };
+  (Object.keys(overrides) as FDv2ConnectionMode[]).forEach((mode) => {
+    const override = overrides[mode];
+    if (override) {
+      result[mode] = {
+        ...override,
+        fdv1Fallback: override.fdv1Fallback ?? defaults[mode]?.fdv1Fallback,
+      };
+    }
+  });
+  return result as ModeTable;
+}
+
 /**
  * Creates a shared FDv2 data manager that owns mode resolution, debouncing,
  * selector state, and FDv2DataSource lifecycle. Platform SDKs (browser, RN)
@@ -134,9 +160,12 @@ export function createFDv2DataManagerBase(
   const endpoints = fdv2Endpoints();
 
   // Merge user-provided connection mode overrides into the mode table.
-  const effectiveModeTable: ModeTable = config.dataSystem?.connectionModes
-    ? { ...modeTable, ...config.dataSystem.connectionModes }
-    : modeTable;
+  // When a user overrides a mode without specifying fdv1Fallback, the
+  // default from the base mode table is preserved (fallback cannot be removed).
+  const effectiveModeTable: ModeTable = mergeModeTables(
+    modeTable,
+    config.dataSystem?.connectionModes,
+  );
 
   // --- Mutable state ---
   let selector: string | undefined;
@@ -266,10 +295,26 @@ export function createFDv2DataManagerBase(
     // Append a blocked FDv1 fallback synchronizer when configured and
     // when there are FDv2 synchronizers to fall back from.
     if (fdv1Endpoints && synchronizerSlots.length > 0) {
+      const fallbackConfig = modeDef.fdv1Fallback;
+      const fallbackPollIntervalMs = (fallbackConfig?.pollInterval ?? config.pollInterval) * 1000;
+
+      const fallbackServiceEndpoints =
+        fallbackConfig?.endpoints?.pollingBaseUri || fallbackConfig?.endpoints?.streamingBaseUri
+          ? new ServiceEndpoints(
+              fallbackConfig.endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
+              fallbackConfig.endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
+              ctx.serviceEndpoints.events,
+              ctx.serviceEndpoints.analyticsEventPath,
+              ctx.serviceEndpoints.diagnosticEventPath,
+              ctx.serviceEndpoints.includeAuthorizationHeader,
+              ctx.serviceEndpoints.payloadFilterKey,
+            )
+          : ctx.serviceEndpoints;
+
       const fdv1RequestorFactory = () =>
         makeRequestor(
           ctx.plainContextString,
-          ctx.serviceEndpoints,
+          fallbackServiceEndpoints,
           fdv1Endpoints.polling(),
           ctx.requests,
           ctx.encoding,
@@ -280,7 +325,7 @@ export function createFDv2DataManagerBase(
         );
 
       const fdv1SyncFactory = () =>
-        createFDv1PollingSynchronizer(fdv1RequestorFactory(), config.pollInterval * 1000, logger);
+        createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger);
 
       synchronizerSlots.push(createSynchronizerSlot(fdv1SyncFactory, { isFDv1Fallback: true }));
     }

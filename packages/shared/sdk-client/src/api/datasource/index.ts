@@ -1,6 +1,7 @@
 export type { default as FDv2ConnectionMode } from './FDv2ConnectionMode';
 export type {
   EndpointConfig,
+  FDv1FallbackConfig,
   CacheDataSourceEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
