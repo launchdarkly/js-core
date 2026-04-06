@@ -2,6 +2,11 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import validateOptions from '../../src/configuration/validateOptions';
 import {
+  BACKGROUND_POLL_INTERVAL_SECONDS,
+  DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+  MODE_TABLE,
+} from '../../src/datasource/ConnectionModeConfig';
+import {
   BROWSER_DATA_SYSTEM_DEFAULTS,
   dataSystemValidators,
   MOBILE_DATA_SYSTEM_DEFAULTS,
@@ -27,7 +32,7 @@ function validateDataSystemOptions(
   return validateOptions(
     input,
     dataSystemValidators,
-    defaults as unknown as Record<string, unknown>,
+    { ...defaults, connectionModes: MODE_TABLE } as unknown as Record<string, unknown>,
     testLogger,
     'dataSystem',
   );
@@ -223,5 +228,117 @@ describe('given no logger', () => {
     );
 
     expect(result.automaticModeSwitching).toBe(false);
+  });
+});
+
+describe('given connectionModes with fdv1Fallback', () => {
+  it('fills in fdv1Fallback defaults from MODE_TABLE when user omits it', () => {
+    const result = validateDataSystemOptions(
+      {
+        connectionModes: {
+          streaming: {
+            initializers: [{ type: 'polling' }],
+            synchronizers: [{ type: 'streaming' }],
+          },
+        },
+      },
+      MOBILE_DATA_SYSTEM_DEFAULTS,
+      logger,
+    );
+
+    const modes = result.connectionModes as any;
+    expect(modes.streaming.fdv1Fallback).toEqual({
+      pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('fills in fdv1Fallback.pollInterval when user provides only endpoints', () => {
+    const result = validateDataSystemOptions(
+      {
+        connectionModes: {
+          background: {
+            initializers: [{ type: 'cache' }],
+            synchronizers: [{ type: 'polling', pollInterval: 3600 }],
+            fdv1Fallback: {
+              endpoints: { pollingBaseUri: 'https://relay.example.com' },
+            },
+          },
+        },
+      },
+      MOBILE_DATA_SYSTEM_DEFAULTS,
+      logger,
+    );
+
+    const modes = result.connectionModes as any;
+    expect(modes.background.fdv1Fallback).toEqual({
+      pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS,
+      endpoints: { pollingBaseUri: 'https://relay.example.com' },
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('uses user-specified fdv1Fallback.pollInterval over the default', () => {
+    const result = validateDataSystemOptions(
+      {
+        connectionModes: {
+          streaming: {
+            initializers: [{ type: 'cache' }],
+            synchronizers: [{ type: 'streaming' }],
+            fdv1Fallback: { pollInterval: 120 },
+          },
+        },
+      },
+      MOBILE_DATA_SYSTEM_DEFAULTS,
+      logger,
+    );
+
+    const modes = result.connectionModes as any;
+    expect(modes.streaming.fdv1Fallback).toEqual({ pollInterval: 120 });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('preserves MODE_TABLE defaults for modes the user does not override', () => {
+    const result = validateDataSystemOptions(
+      {
+        connectionModes: {
+          polling: {
+            initializers: [{ type: 'cache' }],
+            synchronizers: [{ type: 'polling', pollInterval: 60 }],
+          },
+        },
+      },
+      MOBILE_DATA_SYSTEM_DEFAULTS,
+      logger,
+    );
+
+    const modes = result.connectionModes as any;
+    // User overrode polling; background retains MODE_TABLE default.
+    expect(modes.background.fdv1Fallback).toEqual({
+      pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS,
+    });
+    expect(modes.streaming.fdv1Fallback).toEqual({
+      pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+    });
+  });
+
+  it('clamps fdv1Fallback.pollInterval to minimum 30', () => {
+    const result = validateDataSystemOptions(
+      {
+        connectionModes: {
+          streaming: {
+            initializers: [],
+            synchronizers: [{ type: 'polling' }],
+            fdv1Fallback: { pollInterval: 5 },
+          },
+        },
+      },
+      MOBILE_DATA_SYSTEM_DEFAULTS,
+      logger,
+    );
+
+    const modes = result.connectionModes as any;
+    expect(modes.streaming.fdv1Fallback.pollInterval).toBe(30);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
   });
 });
