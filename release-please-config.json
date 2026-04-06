@@ -59,7 +59,7 @@
         "src/platform/NodeInfo.ts",
         {
           "type": "json",
-          "path": "/packages/sdk/react/examples/server-only/package.json",
+          "path": "/packages/sdk/react/examples/react-server-example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         }
       ]
@@ -119,7 +119,7 @@
         },
         {
           "type": "json",
-          "path": "examples/server-only/package.json",
+          "path": "examples/react-server-example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         }
       ]

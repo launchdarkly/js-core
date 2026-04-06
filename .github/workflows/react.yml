@@ -98,7 +98,7 @@ jobs:
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           before_test: 'yarn workspace @launchdarkly/react-sdk-example-hello-react playwright install --with-deps chromium'
 
-  run-server-only-example:
+  run-react-server-example:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -109,6 +109,6 @@ jobs:
           node-version: 24
       - uses: ./actions/run-example
         with:
-          workspace_name: '@launchdarkly/react-sdk-example-server-only'
+          workspace_name: '@launchdarkly/react-sdk-example-react-server'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          before_test: 'yarn workspace @launchdarkly/react-sdk-example-server-only playwright install --with-deps chromium'
+          before_test: 'yarn workspace @launchdarkly/react-sdk-example-react-server playwright install --with-deps chromium'

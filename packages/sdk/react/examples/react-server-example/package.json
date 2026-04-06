@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/react-sdk-example-server-only",
+  "name": "@launchdarkly/react-sdk-example-react-server",
   "private": true,
   "scripts": {
     "dev": "next dev",
