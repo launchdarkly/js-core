@@ -1,5 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-chat-judge",
+  "private": true,
   "version": "1.0.0",
   "description": "Example demonstrating LaunchDarkly AI SDK chat judge functionality for automatically evaluating AI responses",
   "type": "module",
