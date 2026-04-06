@@ -121,9 +121,14 @@ function mergeModeTables(
   (Object.keys(overrides) as FDv2ConnectionMode[]).forEach((mode) => {
     const override = overrides[mode];
     if (override) {
+      const defaultFallback = defaults[mode]?.fdv1Fallback;
+      const overrideFallback = override.fdv1Fallback;
       result[mode] = {
         ...override,
-        fdv1Fallback: override.fdv1Fallback ?? defaults[mode]?.fdv1Fallback,
+        fdv1Fallback:
+          defaultFallback || overrideFallback
+            ? { ...defaultFallback, ...overrideFallback }
+            : undefined,
       };
     }
   });
