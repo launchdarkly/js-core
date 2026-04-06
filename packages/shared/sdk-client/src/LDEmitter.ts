@@ -77,6 +77,23 @@ export default class LDEmitter {
     listeners?.forEach((listener) => this._invokeListener(listener, name, ...detail));
   }
 
+  /**
+   * Reports an error to registered error listeners, or logs it if none are registered.
+   *
+   * @remarks
+   * If a user has registered an error listener via `on('error', handler)`, the error
+   * is emitted to those listeners and internal logging is suppressed.
+   * If no listener is registered, the error is logged via the SDK logger.
+   */
+  maybeReportError(...detail: any[]) {
+    if (this.listenerCount('error')) {
+      this.emit('error', ...detail);
+    } else {
+      const [context, error] = detail;
+      this._logger?.error(`error: ${error}, context: ${JSON.stringify(context)}`);
+    }
+  }
+
   eventNames(): string[] {
     return [...this._listeners.keys()];
   }

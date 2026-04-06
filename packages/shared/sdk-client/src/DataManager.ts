@@ -167,7 +167,7 @@ export abstract class BaseDataManager implements DataManager {
         identifyResolve?.();
       },
       (err) => {
-        this.emitter.emit('error', context, err);
+        this.emitter.maybeReportError(context, err);
         this._dataSourceEventHandler.handlePollingError(err);
         identifyReject?.(err);
       },
@@ -205,7 +205,7 @@ export abstract class BaseDataManager implements DataManager {
       pollingRequestor,
       this.diagnosticsManager,
       (e) => {
-        this.emitter.emit('error', context, e);
+        this.emitter.maybeReportError(context, e);
         this._dataSourceEventHandler.handleStreamingError(e);
         identifyReject?.(e);
       },

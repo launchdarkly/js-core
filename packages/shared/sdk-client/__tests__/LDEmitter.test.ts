@@ -151,6 +151,63 @@ describe('LDEmitter', () => {
     );
   });
 
+  describe('maybeReportError', () => {
+    it('emits error to listeners when listeners are registered', () => {
+      const errorHandler = jest.fn();
+      const context = { kind: 'user', key: 'test-user' };
+      const err = new Error('test-error');
+
+      emitter.on('error', errorHandler);
+      emitter.maybeReportError(context, err);
+
+      expect(errorHandler).toHaveBeenCalledWith(context, err);
+      expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('logs error when no listeners are registered', () => {
+      const context = { kind: 'user', key: 'test-user' };
+      const err = new Error('test-error');
+
+      emitter.maybeReportError(context, err);
+
+      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('test-error'));
+    });
+
+    it('suppresses logging when a listener is added after construction', () => {
+      const errorHandler = jest.fn();
+      const context = { kind: 'user', key: 'test-user' };
+      const err = new Error('first-error');
+
+      // First error — no listener, should log
+      emitter.maybeReportError(context, err);
+      expect(logger.error).toHaveBeenCalledTimes(1);
+
+      // Register a listener
+      emitter.on('error', errorHandler);
+
+      // Second error — listener present, should emit not log
+      const err2 = new Error('second-error');
+      emitter.maybeReportError(context, err2);
+      expect(errorHandler).toHaveBeenCalledWith(context, err2);
+      expect(logger.error).toHaveBeenCalledTimes(1); // still just the first call
+    });
+
+    it('resumes logging when all listeners are removed', () => {
+      const errorHandler = jest.fn();
+      const context = { kind: 'user', key: 'test-user' };
+
+      emitter.on('error', errorHandler);
+      emitter.maybeReportError(context, new Error('emitted'));
+      expect(errorHandler).toHaveBeenCalledTimes(1);
+      expect(logger.error).not.toHaveBeenCalled();
+
+      emitter.off('error', errorHandler);
+      emitter.maybeReportError(context, new Error('logged'));
+      expect(errorHandler).toHaveBeenCalledTimes(1); // not called again
+      expect(logger.error).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('logs a warning when a non-string event name is provided to on', () => {
     const handler = jest.fn();
     emitter.on(123 as any, handler);

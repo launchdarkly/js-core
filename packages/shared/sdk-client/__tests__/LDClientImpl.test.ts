@@ -316,6 +316,32 @@ describe('sdk-client object', () => {
     expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
   });
 
+  test('registering on(error) suppresses internal console logging', async () => {
+    mockPlatform.requests.createEventSource.mockImplementation(
+      (streamUri: string = '', options: any = {}) => {
+        mockEventSource = new MockEventSource(streamUri, options);
+        mockEventSource.simulateError({ status: 404, message: 'test-error' });
+        return mockEventSource;
+      },
+    );
+
+    const errorHandler = jest.fn();
+    ldc.on('error', errorHandler);
+
+    const carContext: LDContext = { kind: 'car', key: 'test-car' };
+    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+
+    expect(errorHandler).toHaveBeenCalledWith(
+      expect.objectContaining({ car: { key: 'test-car' } }),
+      expect.objectContaining({ message: 'test-error' }),
+    );
+
+    const maybeReportErrorCalls = (logger.error as jest.Mock).mock.calls.filter(
+      ([msg]: [string]) => typeof msg === 'string' && msg.startsWith('error:'),
+    );
+    expect(maybeReportErrorCalls).toHaveLength(0);
+  });
+
   test('identify change and error listeners', async () => {
     // @ts-ignore
     const { emitter } = ldc;
@@ -331,7 +357,7 @@ describe('sdk-client object', () => {
     // No default listeners. This is important for clients to be able to determine if there are
     // any listeners and act on that information.
     expect(emitter.listenerCount('change')).toEqual(0);
-    expect(emitter.listenerCount('error')).toEqual(1);
+    expect(emitter.listenerCount('error')).toEqual(0);
   });
 
   test('can complete identification using storage', async () => {

@@ -86,6 +86,8 @@ describe('sdk-client storage', () => {
       },
     );
 
+    // Register an error listener so errors are emitted (not just logged).
+    ldc.on('error', () => {});
     const changePromise = onChangePromise();
     await ldc.identify(context);
     await changePromise;
@@ -136,6 +138,8 @@ describe('sdk-client storage', () => {
     emitter = ldc.emitter;
     jest.spyOn(emitter as LDEmitter, 'emit');
 
+    // Register an error listener so errors are emitted (not just logged).
+    ldc.on('error', () => {});
     await ldc.identify(context);
     await jest.runAllTimersAsync();
 
