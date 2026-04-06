@@ -1,5 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-direct-judge",
+  "private": true,
   "version": "1.0.0",
   "description": "Example demonstrating LaunchDarkly AI SDK direct judge functionality for evaluating arbitrary input and output",
   "type": "module",
