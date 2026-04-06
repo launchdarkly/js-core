@@ -110,31 +110,6 @@ export interface FDv2DataManagerControl extends DataManager {
   setFlushCallback(callback: () => void): void;
 }
 
-function mergeModeTables(
-  defaults: ModeTable,
-  overrides?: Partial<Record<FDv2ConnectionMode, ModeDefinition>>,
-): ModeTable {
-  if (!overrides) {
-    return defaults;
-  }
-  const result: Record<string, ModeDefinition> = { ...defaults };
-  (Object.keys(overrides) as FDv2ConnectionMode[]).forEach((mode) => {
-    const override = overrides[mode];
-    if (override) {
-      const defaultFallback = defaults[mode]?.fdv1Fallback;
-      const overrideFallback = override.fdv1Fallback;
-      result[mode] = {
-        ...override,
-        fdv1Fallback:
-          defaultFallback || overrideFallback
-            ? { ...defaultFallback, ...overrideFallback }
-            : undefined,
-      };
-    }
-  });
-  return result as ModeTable;
-}
-
 /**
  * Creates a shared FDv2 data manager that owns mode resolution, debouncing,
  * selector state, and FDv2DataSource lifecycle. Platform SDKs (browser, RN)
@@ -165,12 +140,9 @@ export function createFDv2DataManagerBase(
   const endpoints = fdv2Endpoints();
 
   // Merge user-provided connection mode overrides into the mode table.
-  // When a user overrides a mode without specifying fdv1Fallback, the
-  // default from the base mode table is preserved (fallback cannot be removed).
-  const effectiveModeTable: ModeTable = mergeModeTables(
-    modeTable,
-    config.dataSystem?.connectionModes,
-  );
+  const effectiveModeTable: ModeTable = config.dataSystem?.connectionModes
+    ? { ...modeTable, ...config.dataSystem.connectionModes }
+    : modeTable;
 
   // --- Mutable state ---
   let selector: string | undefined;

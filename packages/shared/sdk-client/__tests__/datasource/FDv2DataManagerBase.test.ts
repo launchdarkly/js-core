@@ -1026,7 +1026,11 @@ it('preserves per-mode fdv1Fallback pollInterval when user provides only endpoin
             background: {
               initializers: [{ type: 'cache' }],
               synchronizers: [{ type: 'polling', pollInterval: 3600 }],
+              // Simulate validated output: validation merges per-mode defaults
+              // from MODE_TABLE into user-provided fdv1Fallback, so a partial
+              // override like { endpoints: {...} } gets the default pollInterval.
               fdv1Fallback: {
+                pollInterval: 3600,
                 endpoints: { pollingBaseUri: 'https://relay.example.com' },
               },
             },

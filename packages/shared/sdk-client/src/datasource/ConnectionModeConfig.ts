@@ -70,11 +70,6 @@ const MODE_DEFINITION_DEFAULTS: Record<string, unknown> = {
   synchronizers: [],
 };
 
-const connectionModesValidator = recordOf(
-  connectionModeValidator,
-  validatorOf(modeDefinitionValidators),
-);
-
 const MODE_TABLE: ModeTable = {
   streaming: {
     initializers: [{ type: 'cache' }, { type: 'polling' }],
@@ -100,6 +95,11 @@ const MODE_TABLE: ModeTable = {
     fdv1Fallback: { pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS },
   },
 };
+
+const connectionModesValidator = recordOf(
+  connectionModeValidator,
+  validatorOf(modeDefinitionValidators),
+);
 
 export type { ModeTable };
 export {
