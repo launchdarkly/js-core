@@ -1,4 +1,10 @@
-import { Context, internal, LDHeaders, Platform } from '@launchdarkly/js-sdk-common';
+import {
+  Context,
+  internal,
+  LDHeaders,
+  Platform,
+  ServiceEndpoints,
+} from '@launchdarkly/js-sdk-common';
 
 import {
   FDv2ConnectionMode,
@@ -266,10 +272,26 @@ export function createFDv2DataManagerBase(
     // Append a blocked FDv1 fallback synchronizer when configured and
     // when there are FDv2 synchronizers to fall back from.
     if (fdv1Endpoints && synchronizerSlots.length > 0) {
+      const fallbackConfig = modeDef.fdv1Fallback;
+      const fallbackPollIntervalMs = (fallbackConfig?.pollInterval ?? config.pollInterval) * 1000;
+
+      const fallbackServiceEndpoints =
+        fallbackConfig?.endpoints?.pollingBaseUri || fallbackConfig?.endpoints?.streamingBaseUri
+          ? new ServiceEndpoints(
+              fallbackConfig.endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
+              fallbackConfig.endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
+              ctx.serviceEndpoints.events,
+              ctx.serviceEndpoints.analyticsEventPath,
+              ctx.serviceEndpoints.diagnosticEventPath,
+              ctx.serviceEndpoints.includeAuthorizationHeader,
+              ctx.serviceEndpoints.payloadFilterKey,
+            )
+          : ctx.serviceEndpoints;
+
       const fdv1RequestorFactory = () =>
         makeRequestor(
           ctx.plainContextString,
-          ctx.serviceEndpoints,
+          fallbackServiceEndpoints,
           fdv1Endpoints.polling(),
           ctx.requests,
           ctx.encoding,
@@ -280,7 +302,7 @@ export function createFDv2DataManagerBase(
         );
 
       const fdv1SyncFactory = () =>
-        createFDv1PollingSynchronizer(fdv1RequestorFactory(), config.pollInterval * 1000, logger);
+        createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger);
 
       synchronizerSlots.push(createSynchronizerSlot(fdv1SyncFactory, { isFDv1Fallback: true }));
     }

@@ -1,4 +1,4 @@
-import { InitializerEntry, SynchronizerEntry } from './DataSourceEntry';
+import { FDv1FallbackConfig, InitializerEntry, SynchronizerEntry } from './DataSourceEntry';
 
 /**
  * Defines the data pipeline for a connection mode: which data sources
@@ -24,4 +24,16 @@ export interface ModeDefinition {
    * An empty array means no synchronization occurs (e.g., offline, one-shot).
    */
   readonly synchronizers: ReadonlyArray<SynchronizerEntry>;
+
+  /**
+   * Configuration for the FDv1 polling fallback synchronizer for this mode.
+   * When the platform provides fdv1Endpoints, a fallback synchronizer is
+   * automatically appended to modes with synchronizers. This field controls
+   * the poll interval and endpoint overrides for that fallback.
+   *
+   * When omitted (or when a user overrides a mode without specifying this),
+   * the built-in default for the mode is used. The fallback cannot be removed
+   * through configuration.
+   */
+  readonly fdv1Fallback?: FDv1FallbackConfig;
 }
