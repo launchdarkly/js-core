@@ -103,6 +103,24 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (options.dataSystem) {
     const dataSystem: any = {};
 
+    // Helper to apply endpoint overrides from a mode definition to global URIs.
+    const applyEndpointOverrides = (modeDef: SDKConfigModeDefinition) => {
+      (modeDef.synchronizers ?? []).forEach((sync) => {
+        if (sync.streaming?.baseUri) {
+          cf.streamUri = sync.streaming.baseUri;
+          cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+        }
+        if (sync.polling?.baseUri) {
+          cf.baseUri = sync.polling.baseUri;
+        }
+      });
+      (modeDef.initializers ?? []).forEach((init) => {
+        if (init.polling?.baseUri) {
+          cf.baseUri = init.polling.baseUri;
+        }
+      });
+    };
+
     if (options.dataSystem.connectionModeConfig) {
       const connMode = options.dataSystem.connectionModeConfig;
       dataSystem.automaticModeSwitching = connMode.initialConnectionMode
@@ -113,26 +131,25 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
         const connectionModes: Record<string, any> = {};
         Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
           connectionModes[modeName] = translateModeDefinition(modeDef);
-
-          // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
-          // compatibility. These override the serviceEndpoints values above.
-          (modeDef.synchronizers ?? []).forEach((sync) => {
-            if (sync.streaming?.baseUri) {
-              cf.streamUri = sync.streaming.baseUri;
-              cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
-            }
-            if (sync.polling?.baseUri) {
-              cf.baseUri = sync.polling.baseUri;
-            }
-          });
-          (modeDef.initializers ?? []).forEach((init) => {
-            if (init.polling?.baseUri) {
-              cf.baseUri = init.polling.baseUri;
-            }
-          });
+          applyEndpointOverrides(modeDef);
         });
         dataSystem.connectionModes = connectionModes;
       }
+    } else if (options.dataSystem.initializers || options.dataSystem.synchronizers) {
+      // Top-level initializers/synchronizers (no connection modes). Wrap them
+      // into a single 'streaming' connection mode for the browser SDK.
+      const modeDef: SDKConfigModeDefinition = {
+        initializers: options.dataSystem.initializers,
+        synchronizers: options.dataSystem.synchronizers,
+      };
+      dataSystem.automaticModeSwitching = {
+        type: 'manual',
+        initialConnectionMode: 'streaming',
+      };
+      dataSystem.connectionModes = {
+        streaming: translateModeDefinition(modeDef),
+      };
+      applyEndpointOverrides(modeDef);
     }
 
     (cf as any).dataSystem = dataSystem;
