@@ -1,6 +1,7 @@
 import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
 import { type LDOptions } from '../api';
+import { MODE_TABLE } from '../datasource/ConnectionModeConfig';
 import {
   dataSystemValidators,
   type PlatformDataSystemDefaults,
@@ -49,7 +50,10 @@ export default function createValidators(
     cleanOldPersistentData: TypeValidators.Boolean,
     dataSystem: options?.dataSystemDefaults
       ? validatorOf(dataSystemValidators, {
-          defaults: options.dataSystemDefaults as unknown as Record<string, unknown>,
+          defaults: {
+            ...options.dataSystemDefaults,
+            connectionModes: MODE_TABLE,
+          } as unknown as Record<string, unknown>,
         })
       : TypeValidators.Object,
   };

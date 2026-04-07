@@ -951,6 +951,50 @@ it('appends a blocked FDv1 fallback synchronizer when fdv1Endpoints are configur
   manager.close();
 });
 
+it('uses per-mode fdv1Fallback pollInterval from MODE_TABLE for background mode', async () => {
+  const sourceFactoryProvider = makeSourceFactoryProvider();
+  const fdv1Endpoints = {
+    polling: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+    streaming: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+  };
+
+  (makeRequestor as jest.Mock).mockReturnValue({});
+  (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      sourceFactoryProvider,
+      fdv1Endpoints,
+      foregroundMode: 'background',
+    }),
+  );
+  await identifyManager(manager);
+
+  const dsConfig = capturedDataSourceConfigs[0];
+  const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+  // Invoke the factory to trigger createFDv1PollingSynchronizer.
+  fdv1Slot.factory(() => undefined);
+
+  // The FDv1 fallback synchronizer should use background's default (3600s = 3600000ms).
+  expect(createFDv1PollingSynchronizer).toHaveBeenCalledWith(
+    expect.anything(),
+    3600 * 1000,
+    expect.anything(),
+  );
+
+  manager.close();
+});
+
 it('resolves identify immediately when initial mode has no sources', async () => {
   // Use a custom mode table where the initial mode has empty initializers and synchronizers.
   const sourceFactoryProvider = makeSourceFactoryProvider();
