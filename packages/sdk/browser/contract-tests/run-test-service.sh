@@ -1,1 +1,1 @@
-yarn workspace browser-contract-test-service run start:adapter & yarn workspace browser-contract-test-service run start && kill $!
+yarn workspace @launchdarkly/browser-contract-test-service run start:adapter & yarn workspace @launchdarkly/browser-contract-test-service run start && kill $!

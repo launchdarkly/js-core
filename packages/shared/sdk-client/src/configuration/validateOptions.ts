@@ -254,6 +254,10 @@ export function anyOf(...validators: TypeValidator[]): CompoundValidator {
  *
  * @param keyValidator - Validates that each key is an allowed value.
  * @param valueValidator - Validates each value in the record.
+ * @param options - Optional configuration.
+ * @param options.defaults - Built-in defaults for the record entries. When
+ *   provided, takes priority over defaults passed from the parent at
+ *   validation time (same precedence as {@link validatorOf}).
  *
  * @example
  * ```ts
@@ -268,7 +272,9 @@ export function anyOf(...validators: TypeValidator[]): CompoundValidator {
 export function recordOf(
   keyValidator: TypeValidator,
   valueValidator: TypeValidator,
+  options?: { defaults?: Record<string, unknown> },
 ): CompoundValidator {
+  const builtInDefaults = options?.defaults;
   return {
     is: (u: unknown) => TypeValidators.Object.is(u),
     getType: () => 'object',
@@ -296,9 +302,9 @@ export function recordOf(
         }
       });
 
-      const recordDefaults = TypeValidators.Object.is(defaults)
-        ? (defaults as Record<string, unknown>)
-        : {};
+      const recordDefaults =
+        builtInDefaults ??
+        (TypeValidators.Object.is(defaults) ? (defaults as Record<string, unknown>) : {});
       return { value: validateOptions(filtered, validatorMap, recordDefaults, logger, name) };
     },
   };

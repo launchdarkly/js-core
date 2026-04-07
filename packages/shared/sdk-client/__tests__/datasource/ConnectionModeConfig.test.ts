@@ -2,7 +2,9 @@ import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import validateOptions from '../../src/configuration/validateOptions';
 import {
+  BACKGROUND_POLL_INTERVAL_SECONDS,
   connectionModesValidator,
+  DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
   MODE_DEFINITION_DEFAULTS,
   MODE_TABLE,
   modeDefinitionValidators,
@@ -497,6 +499,7 @@ describe('given a partial override', () => {
     expect(result.streaming).toEqual({
       initializers: [{ type: 'polling' }],
       synchronizers: [{ type: 'streaming' }],
+      fdv1Fallback: { pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS },
     });
     // Other modes retain their defaults.
     expect(result.polling).toEqual(MODE_TABLE.polling);
@@ -555,6 +558,7 @@ describe('given unknown mode names', () => {
     expect(result.polling).toEqual({
       initializers: [],
       synchronizers: [{ type: 'polling', pollInterval: 60 }],
+      fdv1Fallback: { pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS },
     });
     expect(result.streaming).toEqual(MODE_TABLE.streaming);
     expect(logger.warn).toHaveBeenCalledTimes(1);
@@ -610,6 +614,7 @@ describe('given a custom defaults table', () => {
     expect(result.polling).toEqual({
       initializers: [],
       synchronizers: [{ type: 'polling', pollInterval: 120 }],
+      fdv1Fallback: { pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS },
     });
     // Custom default retained for streaming (not the built-in MODE_TABLE default).
     expect(result.streaming).toEqual(customDefaults.streaming);
@@ -638,5 +643,188 @@ describe('given no logger for validateModeTable', () => {
 
     expect(result.streaming).toEqual(MODE_TABLE.streaming);
     expect(result.polling).toEqual(MODE_TABLE.polling);
+  });
+});
+
+// ----------------------------- fdv1Fallback validation --------------------------------
+
+describe('given MODE_TABLE fdv1Fallback defaults', () => {
+  it('has the default poll interval for streaming mode', () => {
+    expect(MODE_TABLE.streaming.fdv1Fallback).toEqual({
+      pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+    });
+  });
+
+  it('has the default poll interval for polling mode', () => {
+    expect(MODE_TABLE.polling.fdv1Fallback).toEqual({
+      pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+    });
+  });
+
+  it('has the background poll interval for background mode', () => {
+    expect(MODE_TABLE.background.fdv1Fallback).toEqual({
+      pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS,
+    });
+  });
+
+  it('does not have fdv1Fallback for offline mode', () => {
+    expect(MODE_TABLE.offline.fdv1Fallback).toBeUndefined();
+  });
+
+  it('does not have fdv1Fallback for one-shot mode', () => {
+    expect(MODE_TABLE['one-shot'].fdv1Fallback).toBeUndefined();
+  });
+});
+
+describe('given a valid fdv1Fallback in a mode definition', () => {
+  it('passes through a valid fdv1Fallback with pollInterval', () => {
+    const input = {
+      initializers: [{ type: 'cache' }],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: { pollInterval: 600 },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toEqual({ pollInterval: 600 });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('passes through fdv1Fallback with endpoint overrides', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: {
+        pollInterval: 120,
+        endpoints: { pollingBaseUri: 'https://relay.example.com' },
+      },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toEqual({
+      pollInterval: 120,
+      endpoints: { pollingBaseUri: 'https://relay.example.com' },
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('passes through fdv1Fallback with only endpoints', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: {
+        endpoints: { pollingBaseUri: 'https://relay.example.com' },
+      },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toEqual({
+      endpoints: { pollingBaseUri: 'https://relay.example.com' },
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('given invalid fdv1Fallback in a mode definition', () => {
+  it('clamps pollInterval to minimum when below 30', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: { pollInterval: 5 },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toEqual({ pollInterval: 30 });
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
+  });
+
+  it('drops pollInterval when it is a string and warns', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: { pollInterval: 'fast' },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    // validatorOf returns undefined when all nested fields are invalid/dropped.
+    expect(result.fdv1Fallback).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollInterval'));
+  });
+
+  it('drops fdv1Fallback when it is not an object and warns', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: 'invalid',
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('fdv1Fallback'));
+  });
+
+  it('drops invalid endpoint fields within fdv1Fallback', () => {
+    const input = {
+      initializers: [],
+      synchronizers: [{ type: 'polling' }],
+      fdv1Fallback: {
+        pollInterval: 60,
+        endpoints: { pollingBaseUri: 123 },
+      },
+    };
+
+    const result = validateModeDefinition(input, 'testMode', logger);
+
+    expect(result.fdv1Fallback).toEqual({ pollInterval: 60 });
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('pollingBaseUri'));
+  });
+});
+
+describe('given mode table overrides with fdv1Fallback', () => {
+  it('preserves default fdv1Fallback when user override does not specify it', () => {
+    const result = validateModeTable(
+      {
+        streaming: {
+          initializers: [{ type: 'polling' }],
+          synchronizers: [{ type: 'streaming' }],
+        },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    // The validatorOf merges defaults from MODE_TABLE, so fdv1Fallback
+    // is carried through even when the user doesn't specify it.
+    expect((result.streaming as any).fdv1Fallback).toEqual({
+      pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+    });
+    expect((result.streaming as any).initializers).toEqual([{ type: 'polling' }]);
+    expect((result.streaming as any).synchronizers).toEqual([{ type: 'streaming' }]);
+    // Non-overridden modes retain their defaults including fdv1Fallback.
+    expect((result.background as any).fdv1Fallback).toEqual({
+      pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS,
+    });
+  });
+
+  it('uses user-specified fdv1Fallback when provided', () => {
+    const result = validateModeTable(
+      {
+        background: {
+          initializers: [{ type: 'cache' }],
+          synchronizers: [{ type: 'polling', pollInterval: 7200 }],
+          fdv1Fallback: { pollInterval: 7200 },
+        },
+      },
+      MODE_TABLE,
+      logger,
+    );
+
+    expect((result.background as any).fdv1Fallback).toEqual({ pollInterval: 7200 });
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });

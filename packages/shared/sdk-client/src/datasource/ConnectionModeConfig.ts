@@ -10,6 +10,7 @@ type ModeTable = {
   readonly [K in FDv2ConnectionMode]: ModeDefinition;
 };
 
+const DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS = 300;
 const BACKGROUND_POLL_INTERVAL_SECONDS = 3600;
 
 const dataSourceTypeValidator = TypeValidators.oneOf('cache', 'polling', 'streaming');
@@ -53,9 +54,15 @@ const synchronizerEntryArrayValidator = arrayOf('type', {
   streaming: streamingEntryValidators,
 });
 
+const fdv1FallbackValidators = {
+  pollInterval: TypeValidators.numberWithMin(30),
+  endpoints: validatorOf(endpointValidators),
+};
+
 const modeDefinitionValidators = {
   initializers: initializerEntryArrayValidator,
   synchronizers: synchronizerEntryArrayValidator,
+  fdv1Fallback: validatorOf(fdv1FallbackValidators),
 };
 
 const MODE_DEFINITION_DEFAULTS: Record<string, unknown> = {
@@ -63,19 +70,16 @@ const MODE_DEFINITION_DEFAULTS: Record<string, unknown> = {
   synchronizers: [],
 };
 
-const connectionModesValidator = recordOf(
-  connectionModeValidator,
-  validatorOf(modeDefinitionValidators),
-);
-
 const MODE_TABLE: ModeTable = {
   streaming: {
     initializers: [{ type: 'cache' }, { type: 'polling' }],
     synchronizers: [{ type: 'streaming' }, { type: 'polling' }],
+    fdv1Fallback: { pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS },
   },
   polling: {
     initializers: [{ type: 'cache' }],
     synchronizers: [{ type: 'polling' }],
+    fdv1Fallback: { pollInterval: DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS },
   },
   offline: {
     initializers: [{ type: 'cache' }],
@@ -88,13 +92,20 @@ const MODE_TABLE: ModeTable = {
   background: {
     initializers: [{ type: 'cache' }],
     synchronizers: [{ type: 'polling', pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS }],
+    fdv1Fallback: { pollInterval: BACKGROUND_POLL_INTERVAL_SECONDS },
   },
 };
+
+const connectionModesValidator = recordOf(
+  connectionModeValidator,
+  validatorOf(modeDefinitionValidators),
+);
 
 export type { ModeTable };
 export {
   MODE_TABLE,
   MODE_DEFINITION_DEFAULTS,
+  DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
   BACKGROUND_POLL_INTERVAL_SECONDS,
   connectionModeValidator,
   modeDefinitionValidators,
