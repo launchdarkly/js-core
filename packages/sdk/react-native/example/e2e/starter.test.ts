@@ -5,9 +5,10 @@ describe('given the example application', () => {
     await device.launchApp({
       newInstance: true,
       launchArgs: {
-        // Detox will wait for HTTP requests to complete. This prevents detox from waiting for
-        // requests matching this URL to complete.
-        detoxURLBlacklistRegex: '\\("^https://clientstream.launchdarkly.com/meval.*"\\)',
+        // Detox waits for HTTP requests to complete. Blacklist all LD endpoints so
+        // streaming, polling, and event requests don't block test synchronization.
+        detoxURLBlacklistRegex:
+          '\\(".*clientstream.launchdarkly.com.*",".*clientsdk.launchdarkly.com.*",".*events.launchdarkly.com.*"\\)',
       },
     });
   });
