@@ -135,8 +135,16 @@ export interface LDOptions {
   logger?: LDLogger;
 
   /**
-   * The maximum number of locally cached contexts.  The cache is used to decrease initialization
-   * latency and to provide fallback when the SDK cannot reach LaunchDarkly services.
+   * The maximum number of locally cached contexts. The cache is used to decrease initialization
+   * latency and to provide fallback flag values when the SDK cannot reach LaunchDarkly services.
+   *
+   * @remarks
+   * Setting this to `0` disables caching entirely: the SDK will not read from or
+   * write to the cache, and any previously cached entries will be pruned from
+   * local storage.
+   *
+   * To suppress cache read/writes **without** removing existing cached data, use
+   * {@link LDOptions.disableCache} instead.
    *
    * @defaultValue 5
    */
@@ -297,9 +305,13 @@ export interface LDOptions {
   dataSystem?: LDClientDataSystemOptions;
 
   /**
-   * Set to true to completely disable the persistent flag cache. When disabled,
-   * flags are never read from or written to local storage. This takes precedence
-   * over `maxCachedContexts`.
+   * Set to `true` to suppress all reads and writes to the persistent flag cache
+   * in local storage.
+   *
+   * @remarks
+   * Unlike setting {@link LDOptions.maxCachedContexts} to `0`,
+   * this does **not** remove previously cached data — existing entries are left
+   * intact. This takes precedence over `maxCachedContexts`.
    *
    * @defaultValue false
    */
