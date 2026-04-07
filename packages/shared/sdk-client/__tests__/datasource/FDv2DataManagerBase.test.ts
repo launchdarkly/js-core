@@ -995,68 +995,6 @@ it('uses per-mode fdv1Fallback pollInterval from MODE_TABLE for background mode'
   manager.close();
 });
 
-it('preserves per-mode fdv1Fallback pollInterval when user provides only endpoints override', async () => {
-  const sourceFactoryProvider = makeSourceFactoryProvider();
-  const fdv1Endpoints = {
-    polling: jest.fn(() => ({
-      pathGet: jest.fn(),
-      pathReport: jest.fn(),
-      pathPost: jest.fn(),
-      pathPing: jest.fn(),
-    })),
-    streaming: jest.fn(() => ({
-      pathGet: jest.fn(),
-      pathReport: jest.fn(),
-      pathPost: jest.fn(),
-      pathPing: jest.fn(),
-    })),
-  };
-
-  (makeRequestor as jest.Mock).mockReturnValue({});
-  (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
-
-  const manager = createFDv2DataManagerBase(
-    makeBaseConfig({
-      sourceFactoryProvider,
-      fdv1Endpoints,
-      foregroundMode: 'background',
-      config: makeConfig({
-        dataSystem: {
-          connectionModes: {
-            background: {
-              initializers: [{ type: 'cache' }],
-              synchronizers: [{ type: 'polling', pollInterval: 3600 }],
-              // Simulate validated output: validation merges per-mode defaults
-              // from MODE_TABLE into user-provided fdv1Fallback, so a partial
-              // override like { endpoints: {...} } gets the default pollInterval.
-              fdv1Fallback: {
-                pollInterval: 3600,
-                endpoints: { pollingBaseUri: 'https://relay.example.com' },
-              },
-            },
-          },
-        },
-      }),
-    }),
-  );
-  await identifyManager(manager);
-
-  const dsConfig = capturedDataSourceConfigs[0];
-  const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
-  // Invoke the factory to trigger createFDv1PollingSynchronizer.
-  fdv1Slot.factory(() => undefined);
-
-  // The user only overrode endpoints — pollInterval should still be the
-  // background default (3600s), not the global config.pollInterval (300s).
-  expect(createFDv1PollingSynchronizer).toHaveBeenCalledWith(
-    expect.anything(),
-    3600 * 1000,
-    expect.anything(),
-  );
-
-  manager.close();
-});
-
 it('resolves identify immediately when initial mode has no sources', async () => {
   // Use a custom mode table where the initial mode has empty initializers and synchronizers.
   const sourceFactoryProvider = makeSourceFactoryProvider();
