@@ -118,4 +118,14 @@ export interface ElectronOptions extends LDOptionsBase {
    * in future versions of this sdk. Please use mobile key instead.
    */
   useClientSideId?: boolean;
+
+  /**
+   * An optional namespace to isolate this client's storage and IPC channels
+   * from other clients using the same credential in the same process.
+   *
+   * @remarks
+   * Useful when running multiple client instances (e.g., multiple environments)
+   * in the same Electron app. When omitted, isolation is based solely on the credential.
+   */
+  namespace?: string;
 }

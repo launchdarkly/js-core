@@ -1,9 +1,11 @@
+import { deriveNamespace } from './deriveNamespace';
 import { makeClient } from './ElectronClient';
 import type { ElectronOptions, LDProxyOptions, LDTLSOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDContext } from './LDCommon';
 import type { LDPlugin } from './LDPlugin';
 
+export { deriveNamespace };
 export * from './LDCommon';
 
 /** @internal */

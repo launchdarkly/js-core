@@ -27,7 +27,7 @@ export const malformedCommand = new Error('command was malformed');
 const isSet = (x?: unknown) => x !== null && x !== undefined;
 const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds / 1000 : undefined);
 
-function makeSdkConfig(options: SDKConfigParams, tag: string) {
+function makeSdkConfig(options: SDKConfigParams, tag: string, namespace?: string) {
   if (!options.clientSide) {
     throw new Error('configuration did not include clientSide options');
   }
@@ -119,12 +119,8 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   //   }
   // }
 
-  // NOTE: we may want need to discuss this at some point. Right now, we are
-  // running this suite of tests because the way we register our IPC bridge listern
-  // using the client side id. The problem with this is that we cannot be registering
-  // the same listener multiple times. In order to support registering multiple clients,
-  // we will need to change the way we hash the listener name.
   cf.enableIPC = false;
+  cf.namespace = namespace;
 
   // TODO: we might need this
   // cf.fetchGoals = false;
@@ -262,7 +258,7 @@ export class ClientEntity {
   }
 }
 
-export async function createEntity(options: CreateInstanceParams) {
+export async function createEntity(options: CreateInstanceParams, clientNamespace?: string) {
   const logger = makeLogger(options.tag);
 
   const clientSideId = options.configuration.credential || 'unknown-env-id';
@@ -275,7 +271,7 @@ export async function createEntity(options: CreateInstanceParams) {
     options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
-  const sdkConfig = makeSdkConfig(options.configuration, options.tag);
+  const sdkConfig = makeSdkConfig(options.configuration, options.tag, clientNamespace);
   const initialContext =
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||

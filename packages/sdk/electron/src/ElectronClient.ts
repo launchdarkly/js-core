@@ -26,6 +26,7 @@ import {
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
+import { deriveNamespace } from './deriveNamespace';
 import ElectronDataManager from './ElectronDataManager';
 import {
   AllAsyncChannels,
@@ -130,7 +131,7 @@ export class ElectronClient extends LDClientImpl {
     this.setEventSendingEnabled(!this.isOffline(), false);
 
     if (validatedElectronOptions.enableIPC) {
-      this._openIPCChannels(credential);
+      this._openIPCChannels(derivedNs);
     }
   }
 

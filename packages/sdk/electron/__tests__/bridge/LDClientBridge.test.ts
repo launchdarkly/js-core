@@ -2,10 +2,11 @@ import { ipcRenderer } from 'electron';
 
 import '../../src/bridge';
 import type { LDClientBridge } from '../../src/bridge/LDClientBridge';
-import type { LDContext, LDEvaluationDetail, LDEvaluationDetailTyped } from '../../src/index';
+import { deriveNamespace } from '../../src/deriveNamespace';
+import type { LDContext } from '../../src/index';
 
 const clientSideId = 'client-side-id';
-let ldClientBridge: (clientSideId: string) => LDClientBridge;
+let ldClientBridge: (namespace: string) => LDClientBridge;
 
 jest.mock('electron', () => ({
   contextBridge: {
@@ -43,7 +44,7 @@ globalThis.MessageChannel = jest.fn().mockImplementation(() => ({
   port2: port2Mock,
 }));
 
-const getEventName = (baseName: string) => `ld:${clientSideId}:${baseName}`;
+const getEventName = (baseName: string) => `ld:${deriveNamespace(clientSideId)}:${baseName}`;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -60,7 +61,7 @@ describe('given a registered LDClientBridge', () => {
   let bridge: LDClientBridge;
 
   beforeEach(() => {
-    bridge = ldClientBridge(clientSideId);
+    bridge = ldClientBridge(deriveNamespace(clientSideId));
   });
 
   it('passes allFlags() call through to ipcRenderer', () => {
@@ -73,37 +74,28 @@ describe('given a registered LDClientBridge', () => {
     expect(result).toEqual({ flag1: true });
   });
 
-  it('passes boolVariation() call through to ipcRenderer', () => {
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(true);
-
-    const result = bridge.boolVariation('flag1', false);
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('boolVariation'),
-      'flag1',
-      false,
-    );
-    expect(result).toEqual(true);
-  });
-
-  it('passes boolVariationDetail() call through to ipcRenderer', () => {
-    const expected: LDEvaluationDetailTyped<boolean> = {
-      value: true,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
+  it.each([
+    ['boolVariation', true, false],
+    ['boolVariationDetail', { value: true, reason: { kind: 'RULE_MATCH' } }, false],
+    ['numberVariation', 1234.5, 0],
+    ['numberVariationDetail', { value: 1234.5, reason: { kind: 'RULE_MATCH' } }, 0],
+    ['stringVariation', 'value', ''],
+    ['stringVariationDetail', { value: 'value', reason: { kind: 'RULE_MATCH' } }, ''],
+    ['jsonVariation', { key1: 'value1' }, {}],
+    ['jsonVariationDetail', { value: { key1: 'value1' }, reason: { kind: 'RULE_MATCH' } }, {}],
+    ['variation', true, false],
+    ['variationDetail', { value: true, reason: { kind: 'RULE_MATCH' } }, false],
+  ])('passes %s() call through to ipcRenderer', (method, expected, defaultValue) => {
     (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
 
-    const result = bridge.boolVariationDetail('flag1', false);
+    const result = (bridge as any)[method]('flag1', defaultValue);
 
     expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
     expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
       1,
-      getEventName('boolVariationDetail'),
+      getEventName(method),
       'flag1',
-      false,
+      defaultValue,
     );
     expect(result).toEqual(expected);
   });
@@ -141,113 +133,6 @@ describe('given a registered LDClientBridge', () => {
     });
   });
 
-  it('passes jsonVariation() call through to ipcRenderer', () => {
-    const expected = { key1: 'value1', key2: true };
-
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
-
-    const result = bridge.jsonVariation('flag1', {});
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('jsonVariation'),
-      'flag1',
-      {},
-    );
-    expect(result).toEqual(expected);
-  });
-
-  it('passes jsonVariationDetail() call through to ipcRenderer', () => {
-    const expected: LDEvaluationDetailTyped<unknown> = {
-      value: { key1: 'value1', key2: true },
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
-
-    const result = bridge.jsonVariationDetail('flag1', {});
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('jsonVariationDetail'),
-      'flag1',
-      {},
-    );
-    expect(result).toEqual(expected);
-  });
-
-  it('passes numberVariation() call through to ipcRenderer', () => {
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(1234.5);
-
-    const result = bridge.numberVariation('flag1', 0);
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('numberVariation'),
-      'flag1',
-      0,
-    );
-    expect(result).toEqual(1234.5);
-  });
-
-  it('passes numberVariationDetail() call through to ipcRenderer', () => {
-    const expected: LDEvaluationDetailTyped<number> = {
-      value: 1234.5,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
-
-    const result = bridge.numberVariationDetail('flag1', 0);
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('numberVariationDetail'),
-      'flag1',
-      0,
-    );
-    expect(result).toEqual(expected);
-  });
-
-  it('passes stringVariation() call through to ipcRenderer', () => {
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce('value');
-
-    const result = bridge.stringVariation('flag1', '');
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('stringVariation'),
-      'flag1',
-      '',
-    );
-    expect(result).toEqual('value');
-  });
-
-  it('passes stringVariationDetail() call through to ipcRenderer', () => {
-    const expected: LDEvaluationDetailTyped<string> = {
-      value: 'value',
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
-
-    const result = bridge.stringVariationDetail('flag1', '');
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('stringVariationDetail'),
-      'flag1',
-      '',
-    );
-    expect(result).toEqual(expected);
-  });
-
   it('passes track() call through to ipcRenderer', () => {
     bridge.track('event1', { key1: 'value1' }, 1234.5);
 
@@ -259,41 +144,6 @@ describe('given a registered LDClientBridge', () => {
       { key1: 'value1' },
       1234.5,
     );
-  });
-
-  it('passes variation() call through to ipcRenderer', () => {
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(true);
-
-    const result = bridge.variation('flag1', false);
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('variation'),
-      'flag1',
-      false,
-    );
-    expect(result).toEqual(true);
-  });
-
-  it('passes variationDetail() call through to ipcRenderer', () => {
-    const expected: LDEvaluationDetail = {
-      value: true,
-      reason: { kind: 'RULE_MATCH' },
-    };
-
-    (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce(expected);
-
-    const result = bridge.variationDetail('flag1', false);
-
-    expect(ipcRenderer.sendSync).toHaveBeenCalledTimes(1);
-    expect(ipcRenderer.sendSync).toHaveBeenNthCalledWith(
-      1,
-      getEventName('variationDetail'),
-      'flag1',
-      false,
-    );
-    expect(result).toEqual(expected);
   });
 
   it('passes setConnectionMode() call through to ipcRenderer', async () => {
