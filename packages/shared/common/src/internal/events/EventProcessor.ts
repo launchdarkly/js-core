@@ -205,6 +205,17 @@ export default class EventProcessor implements LDEventProcessor {
     this._eventSender.sendEventData(LDEventType.DiagnosticEvent, event);
   }
 
+  sendScopedClientDiagnosticEvent(wrapperName: string, wrapperVersion?: string): void {
+    if (!this._diagnosticsManager) {
+      return;
+    }
+    const event = this._diagnosticsManager.createInitEvent();
+    event.sdk.wrapperName = wrapperName;
+    event.sdk.wrapperVersion = wrapperVersion;
+    event.creationDate = Date.now();
+    this._postDiagnosticEvent(event);
+  }
+
   close() {
     clearInterval(this._flushTimer);
     if (this._flushUsersTimer) {

@@ -1,6 +1,7 @@
 export * from './data';
 export * from './options';
 export * from './LDClient';
+export * from './LDScopedClient';
 export * from './LDMigration';
 export * from './interfaces/DataKind';
 export * from './subsystems/LDFeatureStore';
