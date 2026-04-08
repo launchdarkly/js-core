@@ -15,6 +15,7 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import { getIPCChannelName } from '../ElectronIPC';
+import { ensureJsonSerializable } from './ensureJsonSerializable';
 import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 
 // NOTE: This is a simple way to generate a unique ID for a callback. We should also
@@ -43,10 +44,18 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     ipcRenderer.invoke(getIPCChannelName(namespace, 'identify'), context, identifyOptions),
 
   jsonVariation: (key: string, defaultValue: unknown): unknown =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'jsonVariation'), key, defaultValue),
+    ipcRenderer.sendSync(
+      getIPCChannelName(namespace, 'jsonVariation'),
+      key,
+      ensureJsonSerializable(defaultValue, 'jsonVariation defaultValue'),
+    ),
 
   jsonVariationDetail: (key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'jsonVariationDetail'), key, defaultValue),
+    ipcRenderer.sendSync(
+      getIPCChannelName(namespace, 'jsonVariationDetail'),
+      key,
+      ensureJsonSerializable(defaultValue, 'jsonVariationDetail defaultValue'),
+    ),
 
   waitForInitialization: (
     options?: LDWaitForInitializationOptions,
@@ -66,13 +75,26 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'stringVariationDetail'), key, defaultValue),
 
   track: (key: string, data?: any, metricValue?: number): void =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'track'), key, data, metricValue),
+    ipcRenderer.sendSync(
+      getIPCChannelName(namespace, 'track'),
+      key,
+      ensureJsonSerializable(data, 'track data'),
+      metricValue,
+    ),
 
   variation: (key: string, defaultValue?: LDFlagValue): LDFlagValue =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'variation'), key, defaultValue),
+    ipcRenderer.sendSync(
+      getIPCChannelName(namespace, 'variation'),
+      key,
+      ensureJsonSerializable(defaultValue, 'variation defaultValue'),
+    ),
 
   variationDetail: (key: string, defaultValue?: LDFlagValue): LDEvaluationDetail =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'variationDetail'), key, defaultValue),
+    ipcRenderer.sendSync(
+      getIPCChannelName(namespace, 'variationDetail'),
+      key,
+      ensureJsonSerializable(defaultValue, 'variationDetail defaultValue'),
+    ),
 
   setConnectionMode: (mode: ConnectionMode): Promise<void> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'setConnectionMode'), mode),

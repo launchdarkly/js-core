@@ -360,6 +360,53 @@ describe('given a registered LDClientBridge', () => {
     expect(result).toEqual(true);
   });
 
+  it('sanitizes non-serializable jsonVariation defaultValue before IPC', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    bridge.jsonVariation('flag1', () => {});
+
+    expect(ipcRenderer.sendSync).toHaveBeenCalledWith(
+      getEventName('jsonVariation'),
+      'flag1',
+      undefined,
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[LaunchDarkly]'));
+    warnSpy.mockRestore();
+  });
+
+  it('sanitizes non-serializable variation defaultValue before IPC', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const circular: any = {};
+    circular.self = circular;
+
+    bridge.variation('flag1', circular);
+
+    expect(ipcRenderer.sendSync).toHaveBeenCalledWith(
+      getEventName('variation'),
+      'flag1',
+      undefined,
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[LaunchDarkly]'));
+    warnSpy.mockRestore();
+  });
+
+  it('sanitizes non-serializable track data before IPC', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const circular: any = { valid: 1 };
+    circular.self = circular;
+
+    bridge.track('event1', circular, 5);
+
+    expect(ipcRenderer.sendSync).toHaveBeenCalledWith(
+      getEventName('track'),
+      'event1',
+      undefined,
+      5,
+    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[LaunchDarkly]'));
+    warnSpy.mockRestore();
+  });
+
   it('invokes optional onClose when the message port is closed', () => {
     const callback = jest.fn();
     const onClose = jest.fn();
