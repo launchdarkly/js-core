@@ -18,6 +18,7 @@ import {
   LDHeaders,
   LDIdentifyOptions,
   LDIdentifyResult,
+  LDLogger,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
@@ -285,6 +286,13 @@ export class ElectronClient extends LDClientImpl {
     ipcMain.handle(getIPCChannelName(credential, 'identify'), (_event, context, identifyOptions) =>
       this.identifyResult(context, identifyOptions),
     );
+
+    ipcMain.on(getIPCChannelName(credential, 'log'), (_event, level: string, message: string) => {
+      const logFn = this.logger[level as keyof LDLogger];
+      if (typeof logFn === 'function') {
+        logFn.call(this.logger, message);
+      }
+    });
 
     ipcMain.on(getIPCChannelName(credential, 'jsonVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
