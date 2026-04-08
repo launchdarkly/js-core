@@ -13,9 +13,13 @@ import {
   type LDClientDataSystemOptions,
   LDClientImpl,
   LDClientInternalOptions,
+  type LDContext,
   LDEmitter,
   LDHeaders,
+  type LDIdentifyOptions,
+  type LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDTimeoutError,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   MOBILE_TRANSITION_TABLE,
   mobileFdv1Endpoints,
@@ -225,6 +229,32 @@ export default class ReactNativeLDClient extends LDClientImpl {
       this,
       validatedRnOptions.plugins,
     );
+  }
+
+  /**
+   * Identifies a context to LaunchDarkly.
+   *
+   * This override preserves backward compatibility by throwing on error or timeout,
+   * matching the behavior consumers expect from the React Native SDK.
+   *
+   * @param context The LDContext object.
+   * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
+   */
+  override async identify(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
+    const result = await super.identify(context, identifyOptions);
+    if (result.status === 'error') {
+      throw result.error;
+    } else if (result.status === 'timeout') {
+      const timeoutError = new LDTimeoutError(
+        `identify timed out after ${result.timeout} seconds.`,
+      );
+      this.logger.error(timeoutError.message);
+      throw timeoutError;
+    }
+    return result;
   }
 
   override async close(): Promise<void> {

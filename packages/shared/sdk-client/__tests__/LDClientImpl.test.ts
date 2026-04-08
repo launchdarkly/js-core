@@ -286,7 +286,6 @@ describe('sdk-client object', () => {
 
     // @ts-expect-error - invalid context
     const result = await ldc.identify(carContext);
-    expect(result.status).toBe('error');
     expect(result).toEqual(expect.objectContaining({ status: 'error', error: expect.any(Error) }));
     expect(ldc.getContext()).toBeUndefined();
   });
@@ -296,7 +295,6 @@ describe('sdk-client object', () => {
 
     // @ts-ignore - invalid context
     const result = await ldc.identify(carContext);
-    expect(result.status).toBe('error');
     expect(result).toEqual(expect.objectContaining({ status: 'error', error: expect.any(Error) }));
     expect(ldc.getContext()).toBeUndefined();
   });
@@ -313,7 +311,7 @@ describe('sdk-client object', () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     const result = await ldc.identify(carContext);
-    expect(result.status).toBe('error');
+    expect(result).toEqual(expect.objectContaining({ status: 'error' }));
     expect(logger.error).toHaveBeenCalledTimes(2);
     expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringMatching(/^error:.*test-error/));
     expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
@@ -434,7 +432,7 @@ describe('sdk-client object', () => {
     ldc.on('dataSourceStatus', spyListener);
     const changePromise = onDataSourceChangePromise(2);
     const identifyResult = await ldc.identify(carContext);
-    expect(identifyResult.status).toBe('error');
+    expect(identifyResult).toEqual(expect.objectContaining({ status: 'error' }));
     await changePromise;
 
     expect(spyListener).toHaveBeenCalledTimes(2);
