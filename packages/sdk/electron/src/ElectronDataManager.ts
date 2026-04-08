@@ -26,7 +26,7 @@ export default class ElectronDataManager extends BaseDataManager {
   constructor(
     platform: Platform,
     flagManager: FlagManager,
-    credential: string,
+    sdkKey: string,
     config: Configuration,
     private readonly _electronConfig: ValidatedOptions,
     getPollingPaths: () => DataSourcePaths,
@@ -38,7 +38,7 @@ export default class ElectronDataManager extends BaseDataManager {
     super(
       platform,
       flagManager,
-      credential,
+      sdkKey,
       config,
       getPollingPaths,
       getStreamingPaths,

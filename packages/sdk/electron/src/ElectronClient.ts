@@ -59,7 +59,7 @@ export class ElectronClient extends LDClientImpl {
     | { type: 'remove'; event: IpcMainEvent; callbackId: string }
   >;
 
-  constructor(credential: string, initialContext: LDContext, options: ElectronOptions = {}) {
+  constructor(sdkKey: string, initialContext: LDContext, options: ElectronOptions = {}) {
     const { logger: customLogger, debug } = options;
     const logger =
       customLogger ??
@@ -82,9 +82,9 @@ export class ElectronClient extends LDClientImpl {
     const { useClientSideId } = validatedElectronOptions;
 
     const internalOptions: LDClientInternalOptions = {
-      analyticsEventPath: useClientSideId ? `/events/bulk/${credential}` : `/mobile`,
+      analyticsEventPath: useClientSideId ? `/events/bulk/${sdkKey}` : `/mobile`,
       diagnosticEventPath: useClientSideId
-        ? `/events/diagnostic/${credential}`
+        ? `/events/diagnostic/${sdkKey}`
         : `/mobile/events/diagnostic`,
       highTimeoutThreshold: 15,
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
@@ -92,11 +92,11 @@ export class ElectronClient extends LDClientImpl {
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
     };
 
-    const platform = new ElectronPlatform(logger, credential, options);
-    const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
+    const platform = new ElectronPlatform(logger, sdkKey, options);
+    const endpoints = useClientSideId ? browserFdv1Endpoints(sdkKey) : mobileFdv1Endpoints();
 
     super(
-      credential,
+      sdkKey,
       AutoEnvAttributes.Disabled,
       platform,
       { ...filterToBaseOptions(options), logger },
@@ -110,7 +110,7 @@ export class ElectronClient extends LDClientImpl {
         new ElectronDataManager(
           platform,
           flagManager,
-          credential,
+          sdkKey,
           configuration,
           validatedElectronOptions,
           endpoints.polling,
@@ -127,7 +127,7 @@ export class ElectronClient extends LDClientImpl {
     this.setEventSendingEnabled(!this.isOffline(), false);
 
     if (validatedElectronOptions.enableIPC) {
-      this._openIPCChannels(credential);
+      this._openIPCChannels(sdkKey);
     }
   }
 
@@ -232,14 +232,14 @@ export class ElectronClient extends LDClientImpl {
     return dataManager.getConnectionMode() === 'offline';
   }
 
-  private _openIPCChannels(credential: string): void {
-    this._ipcNamespace = credential;
+  private _openIPCChannels(sdkKey: string): void {
+    this._ipcNamespace = sdkKey;
     this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
     this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
     this._ipcSubscriptionQueue = [];
 
     ipcMain.on(
-      getIPCChannelName(credential, 'addEventHandler'),
+      getIPCChannelName(sdkKey, 'addEventHandler'),
       (event: IpcMainEvent, messageData: IpcEventCallback) => {
         this._ipcSubscriptionQueue!.push({ type: 'add', event, messageData });
         this._processSubscriptionQueue();
@@ -247,7 +247,7 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(
-      getIPCChannelName(credential, 'removeEventHandler'),
+      getIPCChannelName(sdkKey, 'removeEventHandler'),
       (event: IpcMainEvent, callbackId: string) => {
         this._ipcSubscriptionQueue!.push({ type: 'remove', event, callbackId });
         this._processSubscriptionQueue();
@@ -255,98 +255,92 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.handle(
-      getIPCChannelName(credential, 'waitForInitialization'),
+      getIPCChannelName(sdkKey, 'waitForInitialization'),
       (_event, options?: LDWaitForInitializationOptions): Promise<LDWaitForInitializationResult> =>
         this.waitForInitialization(options),
     );
 
-    ipcMain.on(getIPCChannelName(credential, 'allFlags'), (event) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'allFlags'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.allFlags();
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'boolVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'boolVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariation(key, defaultValue);
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'boolVariationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'boolVariationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariationDetail(key, defaultValue);
     });
 
-    ipcMain.handle(getIPCChannelName(credential, 'flush'), (_event) => this.flush());
+    ipcMain.handle(getIPCChannelName(sdkKey, 'flush'), (_event) => this.flush());
 
-    ipcMain.on(getIPCChannelName(credential, 'getContext'), (event) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'getContext'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getContext();
     });
 
-    ipcMain.handle(getIPCChannelName(credential, 'identify'), (_event, context, identifyOptions) =>
+    ipcMain.handle(getIPCChannelName(sdkKey, 'identify'), (_event, context, identifyOptions) =>
       this.identifyResult(context, identifyOptions),
     );
 
-    ipcMain.on(getIPCChannelName(credential, 'jsonVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'jsonVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariation(key, defaultValue);
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'jsonVariationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'jsonVariationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariationDetail(key, defaultValue);
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'numberVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'numberVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.numberVariation(key, defaultValue);
     });
 
-    ipcMain.on(
-      getIPCChannelName(credential, 'numberVariationDetail'),
-      (event, key, defaultValue) => {
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = this.numberVariationDetail(key, defaultValue);
-      },
-    );
+    ipcMain.on(getIPCChannelName(sdkKey, 'numberVariationDetail'), (event, key, defaultValue) => {
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = this.numberVariationDetail(key, defaultValue);
+    });
 
-    ipcMain.on(getIPCChannelName(credential, 'stringVariation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'stringVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.stringVariation(key, defaultValue);
     });
 
-    ipcMain.on(
-      getIPCChannelName(credential, 'stringVariationDetail'),
-      (event, key, defaultValue) => {
-        // eslint-disable-next-line no-param-reassign
-        event.returnValue = this.stringVariationDetail(key, defaultValue);
-      },
-    );
+    ipcMain.on(getIPCChannelName(sdkKey, 'stringVariationDetail'), (event, key, defaultValue) => {
+      // eslint-disable-next-line no-param-reassign
+      event.returnValue = this.stringVariationDetail(key, defaultValue);
+    });
 
-    ipcMain.on(getIPCChannelName(credential, 'track'), (event, key, data, metricValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'track'), (event, key, data, metricValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.track(key, data, metricValue);
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'variation'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'variation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variation(key, defaultValue);
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'variationDetail'), (event, key, defaultValue) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'variationDetail'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variationDetail(key, defaultValue);
     });
 
-    ipcMain.handle(getIPCChannelName(credential, 'setConnectionMode'), (_event, mode) =>
+    ipcMain.handle(getIPCChannelName(sdkKey, 'setConnectionMode'), (_event, mode) =>
       this.setConnectionMode(mode),
     );
 
-    ipcMain.on(getIPCChannelName(credential, 'getConnectionMode'), (event) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'getConnectionMode'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getConnectionMode();
     });
 
-    ipcMain.on(getIPCChannelName(credential, 'isOffline'), (event) => {
+    ipcMain.on(getIPCChannelName(sdkKey, 'isOffline'), (event) => {
       // eslint-disable-next-line no-param-reassign
       event.returnValue = this.isOffline();
     });
@@ -458,11 +452,11 @@ export class ElectronClient extends LDClientImpl {
  * identify results. Plugins are registered with the facade.
  */
 export function makeClient(
-  credential: string,
+  sdkKey: string,
   initialContext: LDContext,
   options: ElectronOptions = {},
 ): LDClient {
-  const impl = new ElectronClient(credential, initialContext, options);
+  const impl = new ElectronClient(sdkKey, initialContext, options);
 
   const client: LDClient = {
     variation: (key: string, defaultValue?: LDFlagValue) => impl.variation(key, defaultValue),
