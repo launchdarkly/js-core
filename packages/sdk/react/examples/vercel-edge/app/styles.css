@@ -1,0 +1,50 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Error states (page.tsx) ───────────────────────── */
+.error {
+  min-height: 100vh;
+  background-color: #373841;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ── App ──────────────────────────────────────────── */
+.no-session {
+  color: #ff6b6b;
+  font-family: monospace;
+}
+
+.app {
+  min-height: 100vh;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: calc(10px + 2vmin);
+  padding: 2rem;
+  gap: 1rem;
+}
+
+.app--on {
+  background-color: #00844b;
+}
+.app--off {
+  background-color: #373841;
+}
+
+.context,
+.flag-key {
+  font-size: 0.7em;
+  opacity: 0.75;
+}
