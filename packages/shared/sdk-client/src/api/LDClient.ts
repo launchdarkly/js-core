@@ -107,17 +107,10 @@ export interface LDClient {
    * @param identifyOptions
    *    Optional configuration. Please see {@link LDIdentifyOptions}.
    * @returns
-   *    A Promise which resolves when the flag values for the specified
-   * context are available. It rejects when:
-   *
-   * 1. The context is unspecified or has no key.
-   *
-   * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
-   * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
-   *
-   * 3. A network error is encountered during initialization.
+   *    A promise which resolves to an object containing the result of the identify operation.
+   *    The promise returned from this method will not be rejected.
    */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void>;
+  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult>;
 
   /**
    * Determines the json variation of a feature flag.
@@ -378,8 +371,7 @@ export interface LDClient {
 /**
  * Interface that extends the LDClient interface to include the identifyResult method.
  *
- * This is an independent interface for backwards compatibility. Adding this to the LDClient interface would require
- * a breaking change.
+ * @deprecated Use {@link LDClient.identify} instead, which now returns `Promise<LDIdentifyResult>`.
  */
 export interface LDClientIdentifyResult {
   /**

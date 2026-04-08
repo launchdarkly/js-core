@@ -11,7 +11,6 @@ import {
   LDHeaders,
   LDLogger,
   LDPluginEnvironmentMetadata,
-  LDTimeoutError,
   Platform,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -337,7 +336,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       'start',
     );
 
-    this.identifyResult(this.initialContext!, identifyOptions);
+    this.identify(this.initialContext!, identifyOptions);
     return this.startPromise;
   }
 
@@ -348,38 +347,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    * multiple identify operations are done, without waiting for the previous one to complete, then intermediate
    * operations may be discarded.
    *
-   * It is recommended to use the `identifyResult` method instead when the operation is sheddable. In a future release,
-   * all identify operations will default to being sheddable.
-   *
    * @param pristineContext The LDContext object to be identified.
    * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
-   * @returns A Promise which resolves when the flag values for the specified
-   * context are available. It rejects when:
-   *
-   * 1. The context is unspecified or has no key.
-   *
-   * 2. The identify timeout is exceeded. In client SDKs this defaults to 5s.
-   * You can customize this timeout with {@link LDIdentifyOptions | identifyOptions}.
-   *
-   * 3. A network error is encountered during initialization.
+   * @returns A promise which resolves to an object containing the result of the identify operation.
+   *    The promise returned from this method will not be rejected.
    */
-  async identify(pristineContext: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    // In order to manage customization in the derived classes it is important that `identify` MUST be implemented in
-    // terms of `identifyResult`. So that the logic of the identification process can be extended in one place.
-    const result = await this.identifyResult(pristineContext, identifyOptions);
-    if (result.status === 'error') {
-      throw result.error;
-    } else if (result.status === 'timeout') {
-      const timeoutError = new LDTimeoutError(
-        `identify timed out after ${result.timeout} seconds.`,
-      );
-      this.logger.error(timeoutError.message);
-      throw timeoutError;
-    }
-    // If completed or shed, then we are done.
-  }
-
-  async identifyResult(
+  async identify(
     pristineContext: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
@@ -489,6 +462,16 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       }, identifyTimeout * 1000);
     });
     return Promise.race([callSitePromise, timeoutPromise]);
+  }
+
+  /**
+   * @deprecated Use {@link identify} instead, which now returns `Promise<LDIdentifyResult>`.
+   */
+  async identifyResult(
+    pristineContext: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
+    return this.identify(pristineContext, identifyOptions);
   }
 
   /**

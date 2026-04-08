@@ -63,25 +63,30 @@ describe('sdk-client identify timeout', () => {
     jest.resetAllMocks();
   });
 
-  test('rejects with default timeout of 5s', async () => {
+  test('returns timeout result with default timeout of 5s', async () => {
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
-    await expect(ldc.identify(carContext)).rejects.toThrow(/identify timed out/);
-    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/identify timed out/));
+    await expect(ldc.identify(carContext)).resolves.toEqual({
+      status: 'timeout',
+      timeout: DEFAULT_IDENTIFY_TIMEOUT,
+    });
   });
 
-  test('rejects with custom timeout', async () => {
+  test('returns timeout result with custom timeout', async () => {
     const timeout = 15;
     jest.advanceTimersByTimeAsync(timeout * 1000).then();
-    await expect(ldc.identify(carContext, { timeout })).rejects.toThrow(/identify timed out/);
+    await expect(ldc.identify(carContext, { timeout })).resolves.toEqual({
+      status: 'timeout',
+      timeout,
+    });
   });
 
-  test('resolves with default timeout', async () => {
+  test('resolves with completed status on default timeout', async () => {
     // set simulated events to be default response
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT * 1000).then();
 
-    await expect(ldc.identify(carContext)).resolves.toBeUndefined();
+    await expect(ldc.identify(carContext)).resolves.toEqual({ status: 'completed' });
 
     expect(ldc.getContext()).toEqual(expect.objectContaining(toMulti(carContext)));
     expect(ldc.allFlags()).toEqual({
@@ -106,7 +111,7 @@ describe('sdk-client identify timeout', () => {
 
     jest.advanceTimersByTimeAsync(timeout).then();
 
-    await expect(ldc.identify(carContext, { timeout })).resolves.toBeUndefined();
+    await expect(ldc.identify(carContext, { timeout })).resolves.toEqual({ status: 'completed' });
 
     expect(ldc.getContext()).toEqual(expect.objectContaining(toMulti(carContext)));
     expect(ldc.allFlags()).toEqual({
