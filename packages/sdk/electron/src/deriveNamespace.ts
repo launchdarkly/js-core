@@ -5,5 +5,5 @@
  * preserving backward compatibility for single-client apps.
  */
 export function deriveNamespace(credential: string, customNamespace?: string): string {
-  return customNamespace ? `${customNamespace}:${credential}` : credential;
+  return customNamespace ? `${customNamespace}_${credential}` : credential;
 }

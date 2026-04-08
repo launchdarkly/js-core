@@ -6,7 +6,7 @@ it('derives namespace from credential alone', () => {
 });
 
 it('derives namespace from credential with custom namespace', () => {
-  expect(deriveNamespace('mob-abc-123', 'my-namespace')).toBe('my-namespace:mob-abc-123');
+  expect(deriveNamespace('mob-abc-123', 'my-namespace')).toBe('my-namespace_mob-abc-123');
 });
 
 it('produces different namespaces with and without custom namespace', () => {
