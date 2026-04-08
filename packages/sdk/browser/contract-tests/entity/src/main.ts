@@ -1,9 +1,9 @@
 // eslint-disable-next-line prettier/prettier
 import './style.css';
-import TestHarnessWebSocket from './TestHarnessWebSocket';
+import { createTestHarnessWebSocket } from './TestHarnessWebSocket';
 
 async function runContractTests() {
-  const ws = new TestHarnessWebSocket('ws://localhost:8001');
+  const ws = createTestHarnessWebSocket();
   ws.connect();
 }
 

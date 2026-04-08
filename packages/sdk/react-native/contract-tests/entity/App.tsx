@@ -1,7 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import TestHarnessWebSocket from './src/TestHarnessWebSocket';
+import {
+  Capability,
+  IClientEntity,
+  TestHarnessWebSocketBuilder,
+} from '@launchdarkly/js-contract-test-utils/client';
+
+import { newSdkClientEntity } from './src/ClientEntity';
+
+const RN_CAPABILITIES: Capability[] = [
+  'client-side',
+  'mobile',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-per-context-summaries',
+  'track-hooks',
+];
 
 const styles = StyleSheet.create({
   container: {
@@ -24,7 +44,21 @@ export default function App() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const ws = new TestHarnessWebSocket('ws://localhost:8001', setConnected);
+    const entities = new Map<string, IClientEntity>();
+    const ws = new TestHarnessWebSocketBuilder()
+      .setCapabilities(RN_CAPABILITIES)
+      .onCreateClient(async (id, params) => {
+        const entity = await newSdkClientEntity(id, params);
+        entities.set(id, entity);
+        return entity;
+      })
+      .onGetClient((id) => entities.get(id))
+      .onDeleteClient((id) => {
+        entities.get(id)?.close();
+        entities.delete(id);
+      })
+      .onConnectionChange(setConnected)
+      .build();
     ws.connect();
     return () => ws.disconnect();
   }, []);

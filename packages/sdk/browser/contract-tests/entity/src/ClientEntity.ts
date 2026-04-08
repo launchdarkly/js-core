@@ -1,27 +1,20 @@
 import {
   createClient,
   InitializerEntry,
-  LDClient,
-  LDLogger,
+  LDContext,
   LDOptions,
   ModeDefinition,
   SynchronizerEntry,
 } from '@launchdarkly/js-client-sdk';
 import {
-  CommandParams,
-  CommandType,
+  ClientEntity,
+  ConfigBuilder,
   CreateInstanceParams,
-  makeLogger,
+  IClientEntity,
   SDKConfigDataInitializer,
   SDKConfigDataSynchronizer,
   SDKConfigModeDefinition,
-  SDKConfigParams,
-  ClientSideTestHook as TestHook,
-  ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
-
-export const badCommandError = new Error('unsupported command');
-export const malformedCommand = new Error('command was malformed');
 
 function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
   if (init.polling) {
@@ -76,35 +69,27 @@ function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefiniti
   return { initializers, synchronizers };
 }
 
-function makeSdkConfig(options: SDKConfigParams, tag: string) {
-  if (!options.clientSide) {
-    throw new Error('configuration did not include clientSide options');
-  }
+export async function newSdkClientEntity(
+  _id: string,
+  options: CreateInstanceParams,
+): Promise<IClientEntity> {
+  const config = new ConfigBuilder(options).set({ fetchGoals: false });
 
-  const isSet = (x?: unknown) => x !== null && x !== undefined;
-  const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds / 1000 : undefined);
+  if (options.configuration.dataSystem) {
+    config.skip('streaming', 'polling');
 
-  const cf: LDOptions = {
-    withReasons: options.clientSide.evaluationReasons,
-    logger: makeLogger(`${tag}.sdk`),
-    useReport: options.clientSide.useReport ?? undefined,
-  };
+    const isSet = (x?: unknown) => x !== null && x !== undefined;
+    const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds! / 1000 : undefined);
+    const fdv2Overrides: Record<string, unknown> = {};
 
-  if (options.serviceEndpoints) {
-    cf.streamUri = options.serviceEndpoints.streaming;
-    cf.baseUri = options.serviceEndpoints.polling;
-    cf.eventsUri = options.serviceEndpoints.events;
-  }
+    if (options.configuration.dataSystem.payloadFilter) {
+      fdv2Overrides.payloadFilterKey = options.configuration.dataSystem.payloadFilter;
+    }
 
-  if (options.dataSystem?.payloadFilter) {
-    cf.payloadFilterKey = options.dataSystem.payloadFilter;
-  }
-
-  if (options.dataSystem) {
     const dataSystem: any = {};
 
-    if (options.dataSystem.connectionModeConfig) {
-      const connMode = options.dataSystem.connectionModeConfig;
+    if (options.configuration.dataSystem.connectionModeConfig) {
+      const connMode = options.configuration.dataSystem.connectionModeConfig;
       dataSystem.automaticModeSwitching = connMode.initialConnectionMode
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
         : false;
@@ -114,20 +99,20 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
         Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
           connectionModes[modeName] = translateModeDefinition(modeDef);
 
-          // Per-entry endpoint overrides also set global URIs for ServiceEndpoints
-          // compatibility. These override the serviceEndpoints values above.
           (modeDef.synchronizers ?? []).forEach((sync) => {
             if (sync.streaming?.baseUri) {
-              cf.streamUri = sync.streaming.baseUri;
-              cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+              fdv2Overrides.streamUri = sync.streaming.baseUri;
+              fdv2Overrides.streamInitialReconnectDelay = maybeTime(
+                sync.streaming.initialRetryDelayMs,
+              );
             }
             if (sync.polling?.baseUri) {
-              cf.baseUri = sync.polling.baseUri;
+              fdv2Overrides.baseUri = sync.polling.baseUri;
             }
           });
           (modeDef.initializers ?? []).forEach((init) => {
             if (init.polling?.baseUri) {
-              cf.baseUri = init.polling.baseUri;
+              fdv2Overrides.baseUri = init.polling.baseUri;
             }
           });
         });
@@ -135,206 +120,28 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
       }
     }
 
-    (cf as any).dataSystem = dataSystem;
-  } else {
-    if (options.polling) {
-      if (options.polling.baseUri) {
-        cf.baseUri = options.polling.baseUri;
-      }
-    }
-
-    if (options.streaming) {
-      if (options.streaming.baseUri) {
-        cf.streamUri = options.streaming.baseUri;
-      }
-      cf.streaming = true;
-      cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
-    }
+    fdv2Overrides.dataSystem = dataSystem;
+    config.set(fdv2Overrides);
   }
 
-  if (options.events) {
-    if (options.events.baseUri) {
-      cf.eventsUri = options.events.baseUri;
-    }
-    cf.allAttributesPrivate = options.events.allAttributesPrivate;
-    cf.capacity = options.events.capacity;
-    cf.diagnosticOptOut = !options.events.enableDiagnostics;
-    cf.flushInterval = maybeTime(options.events.flushIntervalMs);
-    cf.privateAttributes = options.events.globalPrivateAttributes;
-  } else {
-    cf.sendEvents = false;
-  }
+  const sdkConfig = config.build() as LDOptions;
+  const client = createClient(config.credential, config.initialContext as LDContext, sdkConfig);
 
-  if (options.tags) {
-    cf.applicationInfo = {
-      id: options.tags.applicationId,
-      version: options.tags.applicationVersion,
-    };
-  }
-
-  if (options.hooks) {
-    cf.hooks = options.hooks.hooks.map(
-      (hook) => new TestHook(hook.name, hook.callbackUri, hook.data, hook.errors),
-    );
-  }
-
-  cf.fetchGoals = false;
-
-  return cf;
-}
-
-function makeDefaultInitialContext() {
-  return { kind: 'user', key: 'key-not-specified' };
-}
-
-export class ClientEntity {
-  constructor(
-    private readonly _client: LDClient,
-    private readonly _logger: LDLogger,
-  ) {}
-
-  close() {
-    this._client.close();
-    this._logger.info('Test ended');
-  }
-
-  async doCommand(params: CommandParams) {
-    this._logger.info(`Received command: ${params.command}`);
-    switch (params.command) {
-      case CommandType.EvaluateFlag: {
-        const evaluationParams = params.evaluate;
-        if (!evaluationParams) {
-          throw malformedCommand;
-        }
-        if (evaluationParams.detail) {
-          switch (evaluationParams.valueType) {
-            case ValueType.Bool:
-              return this._client.boolVariationDetail(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as boolean,
-              );
-            case ValueType.Int: // Intentional fallthrough.
-            case ValueType.Double:
-              return this._client.numberVariationDetail(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as number,
-              );
-            case ValueType.String:
-              return this._client.stringVariationDetail(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as string,
-              );
-            default:
-              return this._client.variationDetail(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue,
-              );
-          }
-        }
-        switch (evaluationParams.valueType) {
-          case ValueType.Bool:
-            return {
-              value: this._client.boolVariation(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as boolean,
-              ),
-            };
-          case ValueType.Int: // Intentional fallthrough.
-          case ValueType.Double:
-            return {
-              value: this._client.numberVariation(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as number,
-              ),
-            };
-          case ValueType.String:
-            return {
-              value: this._client.stringVariation(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue as string,
-              ),
-            };
-          default:
-            return {
-              value: this._client.variation(
-                evaluationParams.flagKey,
-                evaluationParams.defaultValue,
-              ),
-            };
-        }
-      }
-
-      case CommandType.EvaluateAllFlags:
-        return { state: this._client.allFlags() };
-
-      case CommandType.IdentifyEvent: {
-        const identifyParams = params.identifyEvent;
-        if (!identifyParams) {
-          throw malformedCommand;
-        }
-        await this._client.identify(identifyParams.user || identifyParams.context);
-        return undefined;
-      }
-
-      case CommandType.CustomEvent: {
-        const customEventParams = params.customEvent;
-        if (!customEventParams) {
-          throw malformedCommand;
-        }
-        this._client.track(
-          customEventParams.eventKey,
-          customEventParams.data,
-          customEventParams.metricValue,
-        );
-        return undefined;
-      }
-
-      case CommandType.FlushEvents:
-        this._client.flush();
-        return undefined;
-
-      default:
-        throw badCommandError;
-    }
-  }
-}
-
-export async function newSdkClientEntity(options: CreateInstanceParams) {
-  const logger = makeLogger(options.tag);
-
-  logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
-
-  const timeout =
-    options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
-  const sdkConfig = makeSdkConfig(options.configuration, options.tag);
-  const initialContext =
-    options.configuration.clientSide?.initialUser ||
-    options.configuration.clientSide?.initialContext ||
-    makeDefaultInitialContext();
-  const client = createClient(
-    options.configuration.credential || 'unknown-env-id',
-    initialContext,
-    sdkConfig,
-  );
   let failed = false;
   try {
     await Promise.race([
       client.start(),
       new Promise((_resolve, reject) => {
-        setTimeout(reject, timeout);
+        setTimeout(reject, config.timeout);
       }),
     ]);
   } catch (_) {
-    // we get here if waitForInitialization() rejects or if we timed out
     failed = true;
   }
-  if (failed && !options.configuration.initCanFail) {
+  if (failed && !config.initCanFail) {
     client.close();
     throw new Error('client initialization failed');
   }
 
-  return new ClientEntity(client, logger);
+  return new ClientEntity(client, config.tag);
 }
