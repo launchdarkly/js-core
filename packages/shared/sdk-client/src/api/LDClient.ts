@@ -369,8 +369,6 @@ export interface LDClient {
 }
 
 /**
- * Interface that extends the LDClient interface to include the identifyResult method.
- *
  * @deprecated Use {@link LDClient.identify} instead, which now returns `Promise<LDIdentifyResult>`.
  */
 export interface LDClientIdentifyResult {

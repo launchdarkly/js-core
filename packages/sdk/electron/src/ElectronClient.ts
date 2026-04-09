@@ -140,7 +140,7 @@ export class ElectronClient extends LDClientImpl {
     internal.safeRegisterPlugins(this.logger, this.environmentMetadata, client, this._plugins);
   }
 
-  override async identifyResult(
+  override async identify(
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
@@ -148,7 +148,7 @@ export class ElectronClient extends LDClientImpl {
       identifyOptions?.sheddable === undefined
         ? { ...identifyOptions, sheddable: true }
         : identifyOptions;
-    return super.identifyResult(context, options);
+    return super.identify(context, options);
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
@@ -223,7 +223,7 @@ export class ElectronClient extends LDClientImpl {
     });
 
     ipcMain.handle(getIPCChannelName(namespace, 'identify'), (_event, context, identifyOptions) =>
-      this.identifyResult(context, identifyOptions),
+      this.identify(context, identifyOptions),
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'log'), (_event, level: string, message: string) => {
@@ -434,7 +434,7 @@ export function makeClient(
       impl.off(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
     flush: () => impl.flush(),
     identify: (ctx: LDContext, identifyOptions?: LDIdentifyOptions) =>
-      impl.identifyResult(ctx, identifyOptions),
+      impl.identify(ctx, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
