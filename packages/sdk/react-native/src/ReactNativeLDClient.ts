@@ -231,7 +231,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       if (mode !== undefined && !(mode in MODE_TABLE)) {
         this.logger.warn(
           `setConnectionMode called with invalid mode '${mode}'. ` +
-          `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
+            `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
         );
         return;
       }
