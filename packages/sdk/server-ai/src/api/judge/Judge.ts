@@ -185,11 +185,10 @@ export class Judge {
    * control syntax by a second Mustache pass, blinding the judge.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    let result = content;
-    for (const [key, value] of Object.entries(variables)) {
-      result = result.split(`{{${key}}}`).join(value);
-    }
-    return result;
+    return Object.entries(variables).reduce(
+      (result, [key, value]) => result.split(`{{${key}}}`).join(value),
+      content,
+    );
   }
 
   /**
