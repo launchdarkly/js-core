@@ -49,7 +49,8 @@ import RNStateDetector from './RNStateDetector';
  */
 export default class ReactNativeLDClient extends LDClientImpl {
   private _connectionManager?: ConnectionManager;
-  private _stateDetector?: RNStateDetector;
+  private _isFdv2: boolean;
+
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -136,9 +137,9 @@ export default class ReactNativeLDClient extends LDClientImpl {
       internalOptions,
     );
 
-    const isFDv2 = !!options.dataSystem;
+    this._isFdv2 = !!options.dataSystem;
 
-    if (isFDv2) {
+    if (this._isFdv2) {
       const fdv2DataManager = this.dataManager as FDv2DataManagerControl;
 
       this.setEventSendingEnabled(true, false);
@@ -146,7 +147,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
 
       // Wire state detection directly to FDv2 data manager.
       const stateDetector = new RNStateDetector();
-      this._stateDetector = stateDetector;
 
       if (validatedRnOptions.automaticBackgroundHandling) {
         stateDetector.setApplicationStateListener((state) => {
@@ -226,7 +226,19 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   async setConnectionMode(mode?: FDv2ConnectionMode): Promise<void>;
   async setConnectionMode(mode?: ConnectionMode | FDv2ConnectionMode): Promise<void> {
-    if (this._connectionManager) {
+    if (this._isFdv2) {
+      // FDv2 path
+      if (mode !== undefined && !(mode in MODE_TABLE)) {
+        this.logger.warn(
+          `setConnectionMode called with invalid mode '${mode}'. ` +
+          `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
+        );
+        return;
+      }
+      (this.dataManager as FDv2DataManagerControl).setConnectionMode(
+        mode as FDv2ConnectionMode | undefined,
+      );
+    } else {
       // FDv1 path
       if (mode === undefined || mode === 'one-shot' || mode === 'background') {
         this.logger.warn(
@@ -234,20 +246,8 @@ export default class ReactNativeLDClient extends LDClientImpl {
         );
         return;
       }
-      this._connectionManager.setConnectionMode(mode as ConnectionMode);
-      this._connectionManager.setOffline(mode === 'offline');
-    } else {
-      // FDv2 path
-      if (mode !== undefined && !(mode in MODE_TABLE)) {
-        this.logger.warn(
-          `setConnectionMode called with invalid mode '${mode}'. ` +
-            `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
-        );
-        return;
-      }
-      (this.dataManager as FDv2DataManagerControl).setConnectionMode(
-        mode as FDv2ConnectionMode | undefined,
-      );
+      this._connectionManager?.setConnectionMode(mode as ConnectionMode);
+      this._connectionManager?.setOffline(mode === 'offline');
     }
   }
 
@@ -260,16 +260,16 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   getConnectionMode(): FDv2ConnectionMode;
   getConnectionMode(): ConnectionMode | FDv2ConnectionMode {
-    if (this._connectionManager) {
-      return (this.dataManager as MobileDataManager).getConnectionMode();
+    if (this._isFdv2) {
+      return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
     }
-    return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
+    return (this.dataManager as MobileDataManager).getConnectionMode();
   }
 
   isOffline() {
-    if (this._connectionManager) {
-      return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';
+    if (this._isFdv2) {
+      return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
     }
-    return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
+    return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';
   }
 }
