@@ -49,7 +49,6 @@ import RNStateDetector from './RNStateDetector';
  */
 export default class ReactNativeLDClient extends LDClientImpl {
   private _connectionManager?: ConnectionManager;
-  private _isFdv2: boolean;
 
   /**
    * Creates an instance of the LaunchDarkly client.
@@ -137,9 +136,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
       internalOptions,
     );
 
-    this._isFdv2 = !!options.dataSystem;
-
-    if (this._isFdv2) {
+    if (this.isFDv2) {
       const fdv2DataManager = this.dataManager as FDv2DataManagerControl;
 
       this.setEventSendingEnabled(true, false);
@@ -226,7 +223,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   async setConnectionMode(mode?: FDv2ConnectionMode): Promise<void>;
   async setConnectionMode(mode?: ConnectionMode | FDv2ConnectionMode): Promise<void> {
-    if (this._isFdv2) {
+    if (this.isFDv2) {
       // FDv2 path
       if (mode !== undefined && !(mode in MODE_TABLE)) {
         this.logger.warn(
@@ -260,14 +257,14 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   getConnectionMode(): FDv2ConnectionMode;
   getConnectionMode(): ConnectionMode | FDv2ConnectionMode {
-    if (this._isFdv2) {
+    if (this.isFDv2) {
       return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
     }
     return (this.dataManager as MobileDataManager).getConnectionMode();
   }
 
   isOffline() {
-    if (this._isFdv2) {
+    if (this.isFDv2) {
       return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
     }
     return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';

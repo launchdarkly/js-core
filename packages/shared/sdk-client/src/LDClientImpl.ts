@@ -83,6 +83,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _eventSendingEnabled: boolean = false;
   private _baseHeaders: LDHeaders;
   protected dataManager: DataManager;
+  protected readonly isFDv2: boolean;
   protected readonly environmentMetadata: LDPluginEnvironmentMetadata;
   private _hookRunner: HookRunner;
   private _inspectorManager: InspectorManager;
@@ -161,6 +162,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       this.emitter,
       this._diagnosticsManager,
     );
+    this.isFDv2 = !!this._config.dataSystem;
 
     const hooks: Hook[] = [...this._config.hooks];
 
