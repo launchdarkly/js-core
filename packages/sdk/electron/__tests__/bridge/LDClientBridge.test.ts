@@ -2,7 +2,7 @@ import { ipcRenderer } from 'electron';
 
 import '../../src/bridge';
 import type { LDClientBridge } from '../../src/bridge/LDClientBridge';
-import { deriveNamespace } from '../../src/deriveNamespace';
+import { deriveNamespace } from '../../src/ElectronIPC';
 import type { LDContext } from '../../src/index';
 
 const clientSideId = 'client-side-id';

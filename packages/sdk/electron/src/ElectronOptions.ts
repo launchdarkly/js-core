@@ -120,12 +120,8 @@ export interface ElectronOptions extends LDOptionsBase {
   useClientSideId?: boolean;
 
   /**
-   * An optional namespace to isolate this client's storage and IPC channels
+   * An optional namespace to isolate this client's IPC channels
    * from other clients using the same credential in the same process.
-   *
-   * @remarks
-   * Useful when running multiple client instances (e.g., multiple environments)
-   * in the same Electron app. When omitted, isolation is based solely on the credential.
    */
   namespace?: string;
 }

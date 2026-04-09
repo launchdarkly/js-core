@@ -1,5 +1,4 @@
-import { deriveNamespace } from '../src/deriveNamespace';
-import { getIPCChannelName } from '../src/ElectronIPC';
+import { deriveNamespace, getIPCChannelName } from '../src/ElectronIPC';
 
 it('derives namespace from credential alone', () => {
   expect(deriveNamespace('mob-abc-123')).toBe('mob-abc-123');

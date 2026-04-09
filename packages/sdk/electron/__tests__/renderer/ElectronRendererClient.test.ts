@@ -1,7 +1,7 @@
 import type { LDContext } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDClientBridge } from '../../src/bridge/LDClientBridge';
-import { deriveNamespace } from '../../src/deriveNamespace';
+import { deriveNamespace } from '../../src/ElectronIPC';
 import { ElectronRendererClient } from '../../src/renderer/ElectronRendererClient';
 
 const ldClientBridge: LDClientBridge = {

@@ -13,7 +13,7 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDClientBridge } from '../bridge/LDClientBridge';
-import { deriveNamespace } from '../deriveNamespace';
+import { deriveNamespace } from '../ElectronIPC';
 import type { LDRendererClient } from './LDRendererClient';
 
 export class ElectronRendererClient implements LDRendererClient {

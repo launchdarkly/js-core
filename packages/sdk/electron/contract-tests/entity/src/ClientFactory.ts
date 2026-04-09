@@ -10,7 +10,7 @@ export default class ClientFactory {
     const id = this._clientCounter.toString();
     this._clientCounter += 1;
 
-    const client = await createEntity(options, id);
+    const client = await createEntity(options);
     this._clients[id] = client;
 
     return id;

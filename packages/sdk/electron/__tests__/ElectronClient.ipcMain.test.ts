@@ -8,9 +8,8 @@ import type {
   LDIdentifyOptions,
 } from '@launchdarkly/js-client-sdk-common';
 
-import { deriveNamespace } from '../src/deriveNamespace';
 import { ElectronClient } from '../src/ElectronClient';
-import { getIPCChannelName } from '../src/ElectronIPC';
+import { deriveNamespace, getIPCChannelName } from '../src/ElectronIPC';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
 import ElectronInfo from '../src/platform/ElectronInfo';

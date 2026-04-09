@@ -84,7 +84,7 @@ await clientA.start();
 await clientB.start();
 ```
 
-The namespace isolates storage (cached flags) and IPC channels between clients. Without a namespace, two clients sharing the same credential will collide on cached flag data and IPC handlers.
+The namespace isolates IPC channels between clients. Without a namespace, two clients sharing the same credential will collide on IPC handlers.
 
 Renderer clients must also pass the matching namespace:
 

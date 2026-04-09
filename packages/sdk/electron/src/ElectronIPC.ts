@@ -1,3 +1,5 @@
+import type { MessagePortMain } from 'electron';
+
 import { LDEmitterEventName } from '@launchdarkly/js-client-sdk-common';
 
 /**
@@ -70,7 +72,7 @@ export type IPCChannel = IPCSyncChannel | IPCAsyncChannel;
  */
 export interface IpcEventSubscription {
   broadcastCallback: (...args: any[]) => void;
-  ports: Map<string, Electron.MessagePortMain>;
+  ports: Map<string, MessagePortMain>;
 }
 
 export interface IpcEventCallback {
@@ -83,4 +85,11 @@ export interface IpcEventCallback {
  */
 export function getIPCChannelName(namespace: string, channel: IPCChannel): string {
   return `ld:${namespace}:${channel}`;
+}
+
+/**
+ * Derives an IPC namespace from a credential and an optional user-provided namespace.
+ */
+export function deriveNamespace(credential: string, customNamespace?: string): string {
+  return customNamespace ? `${customNamespace}_${credential}` : credential;
 }

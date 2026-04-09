@@ -1,6 +1,5 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { app } from 'electron';
-import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -28,7 +27,7 @@ export const malformedCommand = new Error('command was malformed');
 const isSet = (x?: unknown) => x !== null && x !== undefined;
 const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds / 1000 : undefined);
 
-function makeSdkConfig(options: SDKConfigParams, tag: string, namespace?: string) {
+function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (!options.clientSide) {
     throw new Error('configuration did not include clientSide options');
   }
@@ -121,7 +120,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string, namespace?: string
   // }
 
   cf.enableIPC = false;
-  cf.namespace = namespace;
 
   // TODO: we might need this
   // cf.fetchGoals = false;
@@ -259,7 +257,7 @@ export class ClientEntity {
   }
 }
 
-export async function createEntity(options: CreateInstanceParams, clientNamespace?: string) {
+export async function createEntity(options: CreateInstanceParams) {
   const logger = makeLogger(options.tag);
 
   const clientSideId = options.configuration.credential || 'unknown-env-id';
@@ -272,7 +270,7 @@ export async function createEntity(options: CreateInstanceParams, clientNamespac
     options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
-  const sdkConfig = makeSdkConfig(options.configuration, options.tag, clientNamespace);
+  const sdkConfig = makeSdkConfig(options.configuration, options.tag);
   const initialContext =
     options.configuration.clientSide?.initialUser ||
     options.configuration.clientSide?.initialContext ||
