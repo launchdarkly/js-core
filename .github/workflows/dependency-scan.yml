@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Generate SBOM
-        uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@a210a815330938287c6816ab44b54684996afd0b # main
+        uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@8220ae5b6e56f7108d076da0e710dc4feca15101 # main
         with:
           types: 'nodejs'
 
@@ -25,6 +25,6 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Evaluate SBOM Policy
-        uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@a210a815330938287c6816ab44b54684996afd0b # main
+        uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@8220ae5b6e56f7108d076da0e710dc4feca15101 # main
         with:
           artifacts-pattern: bom-*
