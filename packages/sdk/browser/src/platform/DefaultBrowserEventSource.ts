@@ -23,6 +23,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private _es?: EventSource;
   private _backoff: DefaultBackoff;
   private _errorFilter: (err: HttpErrorResponse) => boolean;
+  private _urlBuilder?: () => string;
 
   // The type of the handle can be platform specific and we treat is opaquely.
   private _reconnectTimeoutHandle?: any;
@@ -30,7 +31,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private _listeners: Record<string, EventListener[]> = {};
 
   constructor(
-    private readonly _url: string,
+    private _url: string,
     options: EventSourceInitDict,
   ) {
     this._backoff = new DefaultBackoff(
@@ -38,6 +39,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
       options.retryResetIntervalMillis,
     );
     this._errorFilter = options.errorFilter;
+    this._urlBuilder = options.urlBuilder;
     this._openConnection();
   }
 
@@ -50,6 +52,9 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   onretrying: ((e: { delayMillis: number }) => void) | undefined;
 
   private _openConnection() {
+    if (this._urlBuilder) {
+      this._url = this._urlBuilder();
+    }
     this._es = new EventSource(this._url);
     this._es.onopen = () => {
       this._backoff.success();
@@ -58,6 +63,14 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     // The error could be from a polyfill, or from the browser event source, so we are loose on the
     // typing.
     this._es.onerror = (err: any) => {
+      // In browsers, a server-sent "event: error" SSE message fires both
+      // addEventListener('error', ...) AND onerror. We must not treat it as a
+      // connection failure. A server-sent error arrives as a MessageEvent while
+      // the connection is still open; a real connection error is a plain Event
+      // with readyState !== OPEN.
+      if (err instanceof MessageEvent) {
+        return;
+      }
       this._handleError(err);
       this.onerror?.(err);
     };
