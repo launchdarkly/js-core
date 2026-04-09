@@ -1,5 +1,3 @@
-import Mustache from 'mustache';
-
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
@@ -179,10 +177,19 @@ export class Judge {
   }
 
   /**
-   * Interpolates message content with variables using Mustache templating.
+   * Interpolates message content with variables using simple string replacement.
+   *
+   * Uses literal string replacement instead of a template engine to prevent
+   * template injection: attacker-controlled values from pass 1 (e.g. Mustache
+   * delimiter-change tags like {{=[ ]=}}) would otherwise be interpreted as
+   * control syntax by a second Mustache pass, blinding the judge.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    return Mustache.render(content, variables, undefined, { escape: (item: any) => item });
+    let result = content;
+    for (const [key, value] of Object.entries(variables)) {
+      result = result.split(`{{${key}}}`).join(value);
+    }
+    return result;
   }
 
   /**
