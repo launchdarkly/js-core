@@ -32,7 +32,7 @@ it('creates a changeSet result with a payload', () => {
 });
 
 it('creates a changeSet result with fdv1Fallback flag', () => {
-  const payload = { id: 'id', version: 1, type: 'full' as const, updates: [] };
+  const payload = { version: 1, type: 'full' as const, updates: [] };
   const result = changeSet(payload, true);
 
   expect(result.type).toBe('changeSet');

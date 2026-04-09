@@ -75,7 +75,6 @@ export function makePayload(
   opts: { state?: string; type?: internal.PayloadType } = {},
 ): internal.Payload {
   return {
-    id: 'test-payload',
     version: 1,
     state: opts.state ?? 'test-selector',
     type: opts.type ?? 'full',
