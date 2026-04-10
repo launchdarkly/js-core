@@ -265,12 +265,14 @@
     "packages/telemetry/browser-telemetry": {},
     "packages/sdk/electron": {
       "extra-files": [
+        "src/platform/ElectronInfo.ts",
         {
           "type": "json",
           "path": "example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/electron-client-sdk']"
         }
       ]
+    },
     },
     "packages/sdk/svelte": {
       "extra-files": [
