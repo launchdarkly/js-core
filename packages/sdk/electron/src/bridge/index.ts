@@ -24,7 +24,12 @@ import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 const generateCallbackId = () =>
   `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
 
-function safeSendSync<T>(namespace: string, method: IPCChannel, ...args: unknown[]): T {
+function safeSendSync<T>(
+  namespace: string,
+  method: IPCChannel,
+  fallback: T,
+  ...args: unknown[]
+): T {
   try {
     return ipcRenderer.sendSync(getIPCChannelName(namespace, method), ...args);
   } catch (e: unknown) {
@@ -34,7 +39,7 @@ function safeSendSync<T>(namespace: string, method: IPCChannel, ...args: unknown
       'warn',
       `${method}: a value is not IPC-serializable and will be dropped. ${message}`,
     );
-    return undefined as T;
+    return fallback;
   }
 }
 
@@ -58,12 +63,13 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     ipcRenderer.invoke(getIPCChannelName(namespace, 'identify'), context, identifyOptions),
 
   jsonVariation: (key: string, defaultValue: unknown): unknown =>
-    safeSendSync<unknown>(namespace, 'jsonVariation', key, defaultValue),
+    safeSendSync<unknown>(namespace, 'jsonVariation', defaultValue, key, defaultValue),
 
   jsonVariationDetail: (key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> =>
     safeSendSync<LDEvaluationDetailTyped<unknown>>(
       namespace,
       'jsonVariationDetail',
+      { value: defaultValue, reason: { kind: 'ERROR', errorKind: 'EXCEPTION' } },
       key,
       defaultValue,
     ),
@@ -86,14 +92,20 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'stringVariationDetail'), key, defaultValue),
 
   track: (key: string, data?: any, metricValue?: number): void => {
-    safeSendSync(namespace, 'track', key, data, metricValue);
+    safeSendSync<void>(namespace, 'track', undefined, key, data, metricValue);
   },
 
   variation: (key: string, defaultValue?: LDFlagValue): LDFlagValue =>
-    safeSendSync<LDFlagValue>(namespace, 'variation', key, defaultValue),
+    safeSendSync<LDFlagValue>(namespace, 'variation', defaultValue, key, defaultValue),
 
   variationDetail: (key: string, defaultValue?: LDFlagValue): LDEvaluationDetail =>
-    safeSendSync<LDEvaluationDetail>(namespace, 'variationDetail', key, defaultValue),
+    safeSendSync<LDEvaluationDetail>(
+      namespace,
+      'variationDetail',
+      { value: defaultValue, reason: { kind: 'ERROR', errorKind: 'EXCEPTION' } },
+      key,
+      defaultValue,
+    ),
 
   setConnectionMode: (mode: ConnectionMode): Promise<void> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'setConnectionMode'), mode),

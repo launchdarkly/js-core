@@ -40,6 +40,8 @@ import type { LDPlugin } from './LDPlugin';
 import validateOptions, { filterToBaseOptions } from './options';
 import ElectronPlatform from './platform/ElectronPlatform';
 
+const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(['error', 'warn', 'info', 'debug']);
+
 export class ElectronClient extends LDClientImpl {
   private readonly _initialContext: LDContext;
 
@@ -288,9 +290,8 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(getIPCChannelName(credential, 'log'), (_event, level: string, message: string) => {
-      const logFn = this.logger[level as keyof LDLogger];
-      if (typeof logFn === 'function') {
-        logFn.call(this.logger, message);
+      if (VALID_LOG_LEVELS.has(level)) {
+        this.logger[level as keyof LDLogger](message);
       }
     });
 

@@ -361,20 +361,34 @@ describe('given a registered LDClientBridge', () => {
     expect(result).toEqual(true);
   });
 
-  it('sends log warning and returns undefined when sendSync throws', () => {
+  it('sends log warning and returns fallback when sendSync throws', () => {
     const error = new Error('Could not clone');
     (ipcRenderer.sendSync as jest.Mock).mockImplementationOnce(() => {
       throw error;
     });
 
-    const result = bridge.jsonVariation('flag1', {});
+    const defaultValue = { key: 'default' };
+    const result = bridge.jsonVariation('flag1', defaultValue);
 
-    expect(result).toBeUndefined();
+    expect(result).toEqual(defaultValue);
     expect(ipcRenderer.send).toHaveBeenCalledWith(
       getEventName('log'),
       'warn',
       expect.stringContaining('Could not clone'),
     );
+  });
+
+  it('returns well-formed detail on error for variationDetail', () => {
+    (ipcRenderer.sendSync as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('clone failed');
+    });
+
+    const result = bridge.variationDetail('flag1', 'fallback');
+
+    expect(result).toEqual({
+      value: 'fallback',
+      reason: { kind: 'ERROR', errorKind: 'EXCEPTION' },
+    });
   });
 
   it('invokes optional onClose when the message port is closed', () => {
