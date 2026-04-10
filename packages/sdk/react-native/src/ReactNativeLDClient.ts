@@ -10,6 +10,7 @@ import {
   type FDv2DataManagerControl,
   FlagManager,
   internal,
+  type LDClientDataSystemOptions,
   LDClientImpl,
   LDClientInternalOptions,
   LDEmitter,
@@ -47,8 +48,33 @@ import RNStateDetector from './RNStateDetector';
  * </LDProvider>
  * ```
  */
+function shouldAutoSwitchLifecycle(
+  config: LDClientDataSystemOptions['automaticModeSwitching'],
+): boolean {
+  if (config === true) {
+    return true;
+  }
+  if (typeof config === 'object' && config.type === 'automatic') {
+    return config.lifecycle ?? true;
+  }
+  return false;
+}
+
+function shouldAutoSwitchNetwork(
+  config: LDClientDataSystemOptions['automaticModeSwitching'],
+): boolean {
+  if (config === true) {
+    return true;
+  }
+  if (typeof config === 'object' && config.type === 'automatic') {
+    return config.network ?? true;
+  }
+  return false;
+}
+
 export default class ReactNativeLDClient extends LDClientImpl {
   private _connectionManager?: ConnectionManager;
+  private _stateDetector?: RNStateDetector;
 
   /**
    * Creates an instance of the LaunchDarkly client.
@@ -142,10 +168,13 @@ export default class ReactNativeLDClient extends LDClientImpl {
       this.setEventSendingEnabled(true, false);
       fdv2DataManager.setFlushCallback(() => this.flush());
 
-      // Wire state detection directly to FDv2 data manager.
+      // Wire state detection directly to FDv2 data manager using the
+      // validated automaticModeSwitching config from the data system.
+      const { automaticModeSwitching } = this.dataSystemConfig ?? {};
       const stateDetector = new RNStateDetector();
+      this._stateDetector = stateDetector;
 
-      if (validatedRnOptions.automaticBackgroundHandling) {
+      if (shouldAutoSwitchLifecycle(automaticModeSwitching)) {
         stateDetector.setApplicationStateListener((state) => {
           fdv2DataManager.setLifecycleState(
             state === ApplicationState.Foreground ? 'foreground' : 'background',
@@ -153,7 +182,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
         });
       }
 
-      if (validatedRnOptions.automaticNetworkHandling) {
+      if (shouldAutoSwitchNetwork(automaticModeSwitching)) {
         stateDetector.setNetworkStateListener((state) => {
           fdv2DataManager.setNetworkState(
             state === NetworkState.Available ? 'available' : 'unavailable',
@@ -196,6 +225,12 @@ export default class ReactNativeLDClient extends LDClientImpl {
       this,
       validatedRnOptions.plugins,
     );
+  }
+
+  override async close(): Promise<void> {
+    this._stateDetector?.stopListening();
+    this._connectionManager?.close();
+    return super.close();
   }
 
   /**
