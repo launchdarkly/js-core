@@ -11,8 +11,7 @@ jest.mock('electron', () => ({
   },
 }));
 
-const namespace = 'test_namespace';
-const storageFile = `/user/data/ldcache-${namespace}`;
+const storageFile = '/user/data/ldcache';
 const tempFile = `${storageFile}.tmp`;
 
 const logger: LDLogger = {
@@ -30,7 +29,7 @@ it('handles failed initialization when clearing values', async () => {
   (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error('file not found'));
   (fs.writeFile as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.clear('key1');
 
   expect(logger.debug).not.toHaveBeenCalled();
@@ -47,7 +46,7 @@ it('can clear values', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.clear('key1');
 
   expect(await storage.get('key1')).toBeNull();
@@ -70,7 +69,7 @@ it('does nothing when clearing a non-existent key', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.clear('key3');
 
   expect(fs.writeFile).not.toHaveBeenCalled();
@@ -88,7 +87,7 @@ it('handles error when clearing values', async () => {
   );
   (fs.writeFile as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.clear('key1');
 
   expect(await storage.get('key1')).toEqual('value1');
@@ -105,7 +104,7 @@ it('handles failed initialization when getting values', async () => {
   (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error('file not found'));
   (fs.writeFile as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   const value = await storage.get('key1');
 
   expect(value).toBeNull();
@@ -124,7 +123,7 @@ it('can get values', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   const value = await storage.get('key1');
 
   expect(value).toEqual('value1');
@@ -140,7 +139,7 @@ it('returns null when getting a non-existent key', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   const value = await storage.get('key3');
 
   expect(value).toBeNull();
@@ -155,7 +154,7 @@ it('handles failed initialization when setting values', async () => {
   (fs.readFile as jest.Mock).mockRejectedValueOnce(new Error('file not found'));
   (fs.writeFile as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.set('key3', 'value3');
 
   expect(logger.debug).not.toHaveBeenCalled();
@@ -172,7 +171,7 @@ it('can set values', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.set('key3', 'value3');
 
   expect(await storage.get('key3')).toEqual('value3');
@@ -195,7 +194,7 @@ it('can set values with existing keys', async () => {
     JSON.stringify({ key1: 'value1', key2: 'value2' }),
   );
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.set('key1', 'new-value1');
 
   expect(await storage.get('key1')).toEqual('new-value1');
@@ -219,7 +218,7 @@ it('handles error when setting values', async () => {
   );
   (fs.writeFile as jest.Mock).mockRejectedValueOnce(new Error('write failed'));
 
-  const storage = new ElectronStorage(namespace, logger);
+  const storage = new ElectronStorage(logger);
   await storage.set('key3', 'value3');
 
   expect(await storage.get('key3')).toBeNull();

@@ -15,9 +15,6 @@ if (process.argv.includes('--build')) {
 const capabilities = [
   'client-side',
   'mobile',
-  // This is a required feature since electron SDK uses a shared localstorage for all clients.
-  // Which would cause issues with flag evaluations when multiple clients are created.
-  'singleton',
   'service-endpoints',
   'tags',
   'user-type',

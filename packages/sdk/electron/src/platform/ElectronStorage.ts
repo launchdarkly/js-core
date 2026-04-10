@@ -10,11 +10,8 @@ export default class ElectronStorage implements Storage {
   private readonly _initialized: Promise<boolean>;
   private _cache: Map<string, string>;
 
-  constructor(
-    private readonly _namespace: string,
-    private readonly _logger?: LDLogger,
-  ) {
-    this._storageFile = path.join(electron.app.getPath('userData'), `ldcache-${this._namespace}`);
+  constructor(private readonly _logger?: LDLogger) {
+    this._storageFile = path.join(electron.app.getPath('userData'), 'ldcache');
     this._tempFile = `${this._storageFile}.tmp`;
     this._cache = new Map<string, string>();
     this._initialized = this._initialize();

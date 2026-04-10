@@ -1,4 +1,3 @@
-import { createHash } from 'crypto';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { app } from 'electron';
 import fs from 'node:fs';
@@ -257,15 +256,10 @@ export class ClientEntity {
 export async function createEntity(options: CreateInstanceParams) {
   const logger = makeLogger(options.tag);
 
-  // Need to keep track of this to know where electron is storing the caches.
-  // We can make this a bit more robust by either mocking out the storage path
-  // or allowing users to define a custom storage. That way we can isolate each
-  // client's cache.
   const clientSideId = options.configuration.credential || 'unknown-env-id';
   logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
 
-  const namespace = createHash('sha256').update(clientSideId).digest?.('base64url');
-  const storagePath = path.join(app.getPath('userData'), `ldcache-${namespace}`);
+  const storagePath = path.join(app.getPath('userData'), 'ldcache');
 
   const timeoutMs =
     options.configuration.startWaitTimeMs !== null &&

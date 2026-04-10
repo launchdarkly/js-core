@@ -21,9 +21,8 @@ export default class ElectronPlatform implements platform.Platform {
 
   requests: platform.Requests;
 
-  constructor(logger: LDLogger, clientSideId: string, options: ElectronOptions) {
-    const namespace = this.crypto.createHash('sha256').update(clientSideId).digest?.('base64url');
-    this.storage = new ElectronStorage(namespace!, logger);
+  constructor(logger: LDLogger, options: ElectronOptions) {
+    this.storage = new ElectronStorage(logger);
     this.requests = new ElectronRequests(
       options.tlsParams,
       options.proxyOptions,
