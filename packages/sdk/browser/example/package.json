@@ -18,7 +18,7 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "workspace:^"
+    "@launchdarkly/js-client-sdk": "4.4.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",

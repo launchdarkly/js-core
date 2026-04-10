@@ -2,15 +2,81 @@
   "packages": {
     "packages/ai-providers/server-ai-langchain": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-langchain']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-langchain']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/direct-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-langchain']"
+        }
+      ]
     },
     "packages/ai-providers/server-ai-vercel": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/vercel-ai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/direct-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
+        }
+      ]
     },
     "packages/ai-providers/server-ai-openai": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/openai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/direct-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-observability/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        }
+      ]
     },
     "packages/sdk/shopify-oxygen": {
       "bump-minor-pre-major": true,
@@ -51,7 +117,12 @@
     },
     "packages/sdk/react-native": {
       "extra-files": [
-        "src/platform/PlatformInfo.ts"
+        "src/platform/PlatformInfo.ts",
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-native-client-sdk']"
+        }
       ]
     },
     "packages/sdk/server-node": {
@@ -60,6 +131,41 @@
         {
           "type": "json",
           "path": "/packages/sdk/react/examples/react-server-example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/openai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/bedrock/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/vercel-ai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/direct-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/chat-observability/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         }
       ]
@@ -99,19 +205,82 @@
     "packages/telemetry/node-server-sdk-otel": {},
     "packages/sdk/browser": {
       "extra-files": [
-        "src/platform/BrowserInfo.ts"
+        "src/platform/BrowserInfo.ts",
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "example-fdv2/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        }
       ]
     },
     "packages/sdk/server-ai": {
       "bump-minor-pre-major": true,
       "extra-files": [
-        "src/sdkInfo.ts"
+        "src/sdkInfo.ts",
+        {
+          "type": "json",
+          "path": "examples/openai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/bedrock/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/vercel-ai/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/chat-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/direct-judge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/chat-observability/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        }
       ]
     },
     "packages/tooling/jest": {
       "release-as": "1.0.0"
     },
     "packages/telemetry/browser-telemetry": {},
+    "packages/sdk/electron": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/electron-client-sdk']"
+        }
+      ]
+    },
+    "packages/sdk/svelte": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "example/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/svelte-client-sdk']"
+        }
+      ]
+    },
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
     },
