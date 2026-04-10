@@ -113,3 +113,19 @@ export default class ElectronStorage implements Storage {
     }
   }
 }
+
+// Storage should be a singleton to support multiple instances of the SDK. This should have
+// the same limitations as the browser sdk using the shared localStorage cache.
+let instance: ElectronStorage | undefined;
+
+export function getElectronStorage(logger?: LDLogger): ElectronStorage {
+  if (!instance) {
+    instance = new ElectronStorage(logger);
+  }
+  return instance;
+}
+
+/** @internal Visible for testing only. */
+export function resetElectronStorage(): void {
+  instance = undefined;
+}

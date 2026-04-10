@@ -4,7 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/electron-client-sdk';
+import {
+  createClient,
+  LDClient,
+  LDLogger,
+  LDOptions,
+  resetElectronStorage,
+} from '@launchdarkly/electron-client-sdk';
 import {
   CommandParams,
   CommandType,
@@ -146,6 +152,9 @@ export class ClientEntity {
       if (fs.existsSync(`${this._storagePath}.tmp`)) {
         fs.rmSync(`${this._storagePath}.tmp`, { recursive: true });
       }
+      // Reset the singleton so the next client gets a fresh storage instance
+      // that reads from disk instead of returning stale in-memory data.
+      resetElectronStorage();
       this._logger.info('Test ended');
     } catch (error) {
       this._logger.error(`Error closing client: ${error}`);

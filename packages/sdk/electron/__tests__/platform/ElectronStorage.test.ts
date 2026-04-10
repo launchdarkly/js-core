@@ -2,7 +2,10 @@ import * as fs from 'fs/promises';
 
 import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
-import ElectronStorage from '../../src/platform/ElectronStorage';
+import ElectronStorage, {
+  getElectronStorage,
+  resetElectronStorage,
+} from '../../src/platform/ElectronStorage';
 
 jest.mock('fs/promises');
 jest.mock('electron', () => ({
@@ -23,6 +26,7 @@ const logger: LDLogger = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  resetElectronStorage();
 });
 
 it('handles failed initialization when clearing values', async () => {
@@ -229,4 +233,17 @@ it('handles error when setting values', async () => {
   expect(logger.error).toHaveBeenCalledWith(
     'Error setting key in storage: key3, reason: write failed',
   );
+});
+
+it('getElectronStorage returns the same instance on subsequent calls', () => {
+  const a = getElectronStorage(logger);
+  const b = getElectronStorage(logger);
+  expect(a).toBe(b);
+});
+
+it('resetElectronStorage causes a fresh instance on next call', () => {
+  const a = getElectronStorage(logger);
+  resetElectronStorage();
+  const b = getElectronStorage(logger);
+  expect(a).not.toBe(b);
 });

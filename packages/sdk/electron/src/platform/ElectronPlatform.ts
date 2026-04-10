@@ -5,7 +5,7 @@ import ElectronCrypto from './ElectronCrypto';
 import ElectronEncoding from './ElectronEncoding';
 import ElectronInfo from './ElectronInfo';
 import ElectronRequests from './ElectronRequests';
-import ElectronStorage from './ElectronStorage';
+import { getElectronStorage } from './ElectronStorage';
 
 // NOTE: Because Electron main process runs on Node.js, this platform should be
 // very similar to the Node server sdk platform.
@@ -22,7 +22,7 @@ export default class ElectronPlatform implements platform.Platform {
   requests: platform.Requests;
 
   constructor(logger: LDLogger, options: ElectronOptions) {
-    this.storage = new ElectronStorage(logger);
+    this.storage = getElectronStorage(logger);
     this.requests = new ElectronRequests(
       options.tlsParams,
       options.proxyOptions,
