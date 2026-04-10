@@ -35,7 +35,7 @@
     "vite": "^5.4.21"
   },
   "dependencies": {
-    "@launchdarkly/electron-client-sdk": "workspace:^",
+    "@launchdarkly/electron-client-sdk": "0.0.1",
     "electron-squirrel-startup": "^1.0.1"
   }
 }

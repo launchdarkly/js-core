@@ -23,7 +23,7 @@
 	"types": "./dist/index.d.ts",
 	"type": "module",
 	"dependencies": {
-		"@launchdarkly/svelte-client-sdk": "workspace:^",
+		"@launchdarkly/svelte-client-sdk": "0.1.0",
 		"esm-env": "^1.0.0",
 		"svelte": "^5.4.0"
 	},
