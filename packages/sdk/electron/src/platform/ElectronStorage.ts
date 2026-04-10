@@ -9,6 +9,8 @@ export default class ElectronStorage implements Storage {
   private readonly _tempFile: string;
   private readonly _initialized: Promise<boolean>;
   private _cache: Map<string, string>;
+  private _flushPending: boolean = false;
+  private _flushQueue: Promise<void> = Promise.resolve();
 
   constructor(private readonly _logger?: LDLogger) {
     this._storageFile = path.join(electron.app.getPath('userData'), 'ldcache');
@@ -58,7 +60,7 @@ export default class ElectronStorage implements Storage {
       } catch (cleanupError) {
         this._logError('Error cleaning up temporary file', cleanupError);
       }
-      throw error; // Re-throw the original error
+      throw error;
     }
   }
 
@@ -78,11 +80,8 @@ export default class ElectronStorage implements Storage {
     try {
       await this._throwIfNotInitialized();
       if (this._cache.has(key)) {
-        const cacheCopy = new Map(this._cache);
-        cacheCopy.delete(key);
-        await this._atomicWriteToFile(cacheCopy);
-        // Only update cache if write was successful
-        this._cache = cacheCopy;
+        this._cache.delete(key);
+        await this._scheduleFlush();
       }
     } catch (error) {
       this._logError(`Error clearing key from storage: ${key}, reason`, error);
@@ -103,14 +102,27 @@ export default class ElectronStorage implements Storage {
   async set(key: string, value: string): Promise<void> {
     try {
       await this._throwIfNotInitialized();
-      const cacheCopy = new Map(this._cache);
-      cacheCopy.set(key, value);
-      await this._atomicWriteToFile(cacheCopy);
-      // Only update cache if write was successful
-      this._cache = cacheCopy;
+      this._cache.set(key, value);
+      await this._scheduleFlush();
     } catch (error) {
       this._logError(`Error setting key in storage: ${key}, reason`, error);
     }
+  }
+
+  private _scheduleFlush(): Promise<void> {
+    if (this._flushPending) {
+      return this._flushQueue;
+    }
+    this._flushPending = true;
+    this._flushQueue = this._flushQueue
+      .then(async () => {
+        this._flushPending = false;
+        await this._atomicWriteToFile(new Map(this._cache));
+      })
+      .catch((error) => {
+        this._logError('Error flushing storage to disk', error);
+      });
+    return this._flushQueue;
   }
 }
 

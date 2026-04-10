@@ -94,14 +94,14 @@ it('handles error when clearing values', async () => {
   const storage = new ElectronStorage(logger);
   await storage.clear('key1');
 
-  expect(await storage.get('key1')).toEqual('value1');
+  // Cache is updated synchronously — the in-memory state reflects the clear
+  // even if the disk write failed. The data will be flushed on the next write.
+  expect(await storage.get('key1')).toBeNull();
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).not.toHaveBeenCalled();
-  expect(logger.error).toHaveBeenCalledWith(
-    'Error clearing key from storage: key1, reason: write failed',
-  );
+  expect(logger.error).toHaveBeenCalledWith('Error flushing storage to disk: write failed');
 });
 
 it('handles failed initialization when getting values', async () => {
@@ -225,14 +225,14 @@ it('handles error when setting values', async () => {
   const storage = new ElectronStorage(logger);
   await storage.set('key3', 'value3');
 
-  expect(await storage.get('key3')).toBeNull();
+  // Cache is updated synchronously — the in-memory state reflects the set
+  // even if the disk write failed. The data will be flushed on the next write.
+  expect(await storage.get('key3')).toEqual('value3');
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).not.toHaveBeenCalled();
-  expect(logger.error).toHaveBeenCalledWith(
-    'Error setting key in storage: key3, reason: write failed',
-  );
+  expect(logger.error).toHaveBeenCalledWith('Error flushing storage to disk: write failed');
 });
 
 it('getElectronStorage returns the same instance on subsequent calls', () => {
