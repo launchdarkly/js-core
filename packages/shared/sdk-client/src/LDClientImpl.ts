@@ -388,7 +388,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   ): Promise<LDIdentifyResult> {
     if (this._requiresStart && !this.startPromise) {
       this.logger.error(
-        'Client must be started before it can identify a context, did you forget to call start()?',
+        'The client must be started before a context can be identified. Call start() prior to identifying a context.',
       );
       return { status: 'error', error: new Error('Identify called before start') };
     }
