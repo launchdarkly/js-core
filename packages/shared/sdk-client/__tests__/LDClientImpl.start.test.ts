@@ -238,7 +238,7 @@ describe('LDClientImpl.start()', () => {
         expect(result.error.message).toBe('Identify called before start');
       }
       expect(logger.error).toHaveBeenCalledWith(
-        'Client must be started before it can identify a context, did you forget to call start()?',
+        'The client must be started before a context can be identified. Call start() prior to identifying a context.',
       );
     });
 
