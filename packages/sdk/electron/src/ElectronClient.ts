@@ -17,6 +17,8 @@ import {
   LDFlagValue,
   LDHeaders,
   LDIdentifyOptions,
+  LDIdentifyResult,
+  LDLogger,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
@@ -134,6 +136,17 @@ export class ElectronClient extends LDClientImpl {
    */
   registerPluginsWith(client: LDClient): void {
     internal.safeRegisterPlugins(this.logger, this.environmentMetadata, client, this._plugins);
+  }
+
+  override async identifyResult(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
+    const options =
+      identifyOptions?.sheddable === undefined
+        ? { ...identifyOptions, sheddable: true }
+        : identifyOptions;
+    return super.identifyResult(context, options);
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {

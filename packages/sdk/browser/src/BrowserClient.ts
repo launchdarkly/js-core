@@ -238,7 +238,11 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    const res = await super.identifyResult(context, identifyOptions);
+    const options =
+      identifyOptions?.sheddable === undefined
+        ? { ...identifyOptions, sheddable: true }
+        : identifyOptions;
+    const res = await super.identifyResult(context, options);
     // Ensure that we do not start the goal manager if start() is not called.
     if (this.startPromise) {
       this._goalManager?.startTracking();

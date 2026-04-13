@@ -275,7 +275,7 @@ describe('LDClientImpl.start()', () => {
       expect(result.status).toBe('completed');
     });
 
-    it('defaults sheddable to true for post-start identifies when requiresStart is true', async () => {
+    it('allows concurrent identifies after start', async () => {
       const mockPlatform = setupStreamingPlatform();
       const { ldc } = setupClient(mockPlatform, { requiresStart: true, initialContext: context });
 
@@ -292,21 +292,6 @@ describe('LDClientImpl.start()', () => {
       ]);
 
       expect(startResult.status).toBe('complete');
-      expect(result1.status).toBe('shed');
-      expect(result2.status).toBe('shed');
-      expect(result3.status).toBe('completed');
-    });
-
-    it('does not default sheddable when requiresStart is false', async () => {
-      const mockPlatform = setupStreamingPlatform();
-      const { ldc } = setupClient(mockPlatform, { requiresStart: false });
-
-      const promise1 = ldc.identifyResult({ kind: 'user', key: 'user-1' });
-      const promise2 = ldc.identifyResult({ kind: 'user', key: 'user-2' });
-      const promise3 = ldc.identifyResult({ kind: 'user', key: 'user-3' });
-
-      const [result1, result2, result3] = await Promise.all([promise1, promise2, promise3]);
-
       expect(result1.status).toBe('completed');
       expect(result2.status).toBe('completed');
       expect(result3.status).toBe('completed');
