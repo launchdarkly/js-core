@@ -167,6 +167,28 @@ describe('given an initialized ElectronClient', () => {
     expect(result).toEqual({ status: 'completed' });
   });
 
+  it('handles log() by dispatching to the correct logger method', () => {
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'warn', 'test warning');
+    expect(logger.warn).toHaveBeenCalledWith('test warning');
+
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'error', 'test error');
+    expect(logger.error).toHaveBeenCalledWith('test error');
+
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'info', 'test info');
+    expect(logger.info).toHaveBeenCalledWith('test info');
+
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'debug', 'test debug');
+    expect(logger.debug).toHaveBeenCalledWith('test debug');
+  });
+
+  it('ignores log() calls with invalid severity levels', () => {
+    mockIpcMain.getHandler(getEventName('log'))?.({}, 'invalid', 'should be ignored');
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(logger.error).not.toHaveBeenCalled();
+    expect(logger.info).not.toHaveBeenCalled();
+    expect(logger.debug).not.toHaveBeenCalled();
+  });
+
   it('handles jsonVariation() call', () => {
     const expected = { key1: 'value', key2: true };
 
