@@ -246,31 +246,6 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(client.getContext()).toEqual({ kind: 'user', key: 'bob' });
   });
 
-  it('parses bootstrap data when start is called with bootstrap', async () => {
-    const client = makeClient(
-      'client-side-id',
-      { kind: 'user', key: 'bob' },
-      AutoEnvAttributes.Disabled,
-      {
-        streaming: false,
-        logger,
-        diagnosticOptOut: true,
-      },
-      platform,
-    );
-
-    await client.start({
-      identifyOptions: {
-        bootstrap: goodBootstrapDataWithReasons,
-      },
-    });
-
-    // Verify that bootstrap data was parsed and flags are available.
-    expect(client.allFlags().killswitch).toBe(true);
-    expect(client.allFlags()['string-flag']).toBe('is bob');
-    expect(client.allFlags().cat).toBe(false);
-  });
-
   it('uses the latest bootstrap data when identify is called with new bootstrap data', async () => {
     const initialBootstrapData = {
       'string-flag': 'is bob',

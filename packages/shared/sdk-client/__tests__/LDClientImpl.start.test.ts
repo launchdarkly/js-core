@@ -1,6 +1,7 @@
 import { AutoEnvAttributes, clone, Hasher, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDContext } from '../src/api/LDContext';
+import * as bootstrapModule from '../src/flag-manager/bootstrap';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import { createBasicPlatform } from './createBasicPlatform';
@@ -222,6 +223,26 @@ describe('LDClientImpl.start()', () => {
       const flags = ldc.allFlags();
       expect(flags['other-flag']).toBe(true);
       expect(flags.killswitch).toBeUndefined();
+    });
+
+    it('parses bootstrap data only once when using start()', async () => {
+      const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
+
+      const mockPlatform = createBasicPlatform();
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
+      ldc.setInitialContext(context);
+
+      await ldc.start({
+        identifyOptions: { bootstrap: goodBootstrapDataWithReasons },
+      });
+
+      expect(readFlagsFromBootstrapSpy).toHaveBeenCalledTimes(1);
+      expect(readFlagsFromBootstrapSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        goodBootstrapDataWithReasons,
+      );
+
+      readFlagsFromBootstrapSpy.mockRestore();
     });
   });
 
