@@ -177,7 +177,7 @@ export class Judge {
   }
 
   /**
-   * Use string replacement to prevent context attributes like {{=[ ]=}}) from
+   * Use string replacement to prevent context attributes like {{=[ ]=}} from
    * influencing judge template parsing.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
