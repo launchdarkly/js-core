@@ -2,17 +2,18 @@ import * as electron from 'electron';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-import type { LDLogger, Storage } from '@launchdarkly/js-client-sdk-common';
+import type { Storage } from '@launchdarkly/js-client-sdk-common';
 
 export default class ElectronStorage implements Storage {
   private readonly _storageFile: string;
   private readonly _tempFile: string;
   private readonly _initialized: Promise<boolean>;
+  private _initError?: Error;
   private _cache: Map<string, string>;
   private _flushPending: boolean = false;
   private _flushQueue: Promise<void> = Promise.resolve();
 
-  constructor(private readonly _logger?: LDLogger) {
+  constructor() {
     this._storageFile = path.join(electron.app.getPath('userData'), 'ldcache');
     this._tempFile = `${this._storageFile}.tmp`;
     this._cache = new Map<string, string>();
@@ -22,25 +23,22 @@ export default class ElectronStorage implements Storage {
   private async _initialize(): Promise<boolean> {
     try {
       try {
-        // Clean up any leftover temp files from crashed writes
         await fs.unlink(this._tempFile);
       } catch {
         // Ignore error if file doesn't exist
       }
 
       try {
-        // Populate cache if file exists
         const data = await fs.readFile(this._storageFile, 'utf8');
         const parsed = JSON.parse(data);
         this._cache = new Map(Object.entries(parsed));
       } catch {
-        // If file doesn't exist, initialize with empty object
         await this._atomicWriteToFile(this._cache);
       }
 
       return true;
     } catch (error) {
-      this._logError('Error initializing storage', error);
+      this._initError = error instanceof Error ? error : new Error(String(error));
       return false;
     }
   }
@@ -48,65 +46,44 @@ export default class ElectronStorage implements Storage {
   private async _atomicWriteToFile(data: Map<string, string>): Promise<void> {
     try {
       const content = JSON.stringify(Object.fromEntries(data));
-
-      // Write to temporary file first
       await fs.writeFile(this._tempFile, content, { encoding: 'utf8', mode: 0o600 });
-
-      // Rename temporary file to target file (atomic operation on most filesystems)
       await fs.rename(this._tempFile, this._storageFile);
     } catch (error) {
       try {
         await fs.unlink(this._tempFile);
-      } catch (cleanupError) {
-        this._logError('Error cleaning up temporary file', cleanupError);
+      } catch {
+        // Ignore cleanup errors
       }
       throw error;
     }
   }
 
-  private _logError(message: string, error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : error;
-    this._logger?.error(`${message}: ${errorMessage}`);
-  }
-
   private async _throwIfNotInitialized() {
     const initialized = await this._initialized;
     if (!initialized) {
-      throw new Error('Storage is not initialized');
+      const reason = this._initError ? `: ${this._initError.message}` : '';
+      throw new Error(`Storage is not initialized${reason}`);
     }
   }
 
   async clear(key: string): Promise<void> {
-    try {
-      await this._throwIfNotInitialized();
-      if (this._cache.has(key)) {
-        this._cache.delete(key);
-        await this._scheduleFlush();
-      }
-    } catch (error) {
-      this._logError(`Error clearing key from storage: ${key}, reason`, error);
+    await this._throwIfNotInitialized();
+    if (this._cache.has(key)) {
+      this._cache.delete(key);
+      await this._scheduleFlush();
     }
   }
 
   async get(key: string): Promise<string | null> {
-    try {
-      await this._throwIfNotInitialized();
-      const value = this._cache.get(key);
-      return value ?? null;
-    } catch (error) {
-      this._logError(`Error getting key from storage: ${key}, reason`, error);
-      return null;
-    }
+    await this._throwIfNotInitialized();
+    const value = this._cache.get(key);
+    return value ?? null;
   }
 
   async set(key: string, value: string): Promise<void> {
-    try {
-      await this._throwIfNotInitialized();
-      this._cache.set(key, value);
-      await this._scheduleFlush();
-    } catch (error) {
-      this._logError(`Error setting key in storage: ${key}, reason`, error);
-    }
+    await this._throwIfNotInitialized();
+    this._cache.set(key, value);
+    await this._scheduleFlush();
   }
 
   private _scheduleFlush(): Promise<void> {
@@ -114,15 +91,14 @@ export default class ElectronStorage implements Storage {
       return this._flushQueue;
     }
     this._flushPending = true;
-    this._flushQueue = this._flushQueue
-      .then(async () => {
-        this._flushPending = false;
-        await this._atomicWriteToFile(new Map(this._cache));
-      })
-      .catch((error) => {
-        this._logError('Error flushing storage to disk', error);
-      });
-    return this._flushQueue;
+
+    const flush = this._flushQueue.then(async () => {
+      this._flushPending = false;
+      await this._atomicWriteToFile(new Map(this._cache));
+    });
+
+    this._flushQueue = flush.catch(() => {});
+    return flush;
   }
 }
 
@@ -130,9 +106,9 @@ export default class ElectronStorage implements Storage {
 // the same limitations as the browser sdk using the shared localStorage cache.
 let instance: ElectronStorage | undefined;
 
-export function getElectronStorage(logger?: LDLogger): ElectronStorage {
+export function getElectronStorage(): ElectronStorage {
   if (!instance) {
-    instance = new ElectronStorage(logger);
+    instance = new ElectronStorage();
   }
   return instance;
 }
