@@ -26,3 +26,4 @@ export function initAi(ldClient: LDClientMin): LDAIClient {
 export type LDLogger = common.LDLogger;
 
 export * from './api';
+export { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
