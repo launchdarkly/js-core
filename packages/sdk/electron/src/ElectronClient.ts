@@ -95,7 +95,7 @@ export class ElectronClient extends LDClientImpl {
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
     };
 
-    const platform = new ElectronPlatform(logger, credential, options);
+    const platform = new ElectronPlatform(logger, options);
     const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
     super(

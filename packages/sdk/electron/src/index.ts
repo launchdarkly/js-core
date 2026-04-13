@@ -6,6 +6,9 @@ import type { LDPlugin } from './LDPlugin';
 
 export * from './LDCommon';
 
+/** @internal */
+export { resetElectronStorage } from './platform/ElectronStorage';
+
 export type {
   ElectronOptions as LDOptions,
   LDClient,

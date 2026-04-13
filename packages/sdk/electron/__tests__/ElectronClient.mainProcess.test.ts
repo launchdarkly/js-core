@@ -288,6 +288,101 @@ describe('given an initialized ElectronClient with enableIPC: false and polling'
   });
 });
 
+function makeMemoryStorage() {
+  const data = new Map<string, string>();
+  return {
+    get: jest.fn(async (key: string) => data.get(key) ?? null),
+    set: jest.fn(async (key: string, value: string) => {
+      data.set(key, value);
+    }),
+    clear: jest.fn(async (key: string) => {
+      data.delete(key);
+    }),
+    keys: () => Array.from(data.keys()),
+  };
+}
+
+describe('maxCachedContexts', () => {
+  it('evicts the oldest cached context when the limit is exceeded', async () => {
+    const storage = makeMemoryStorage();
+    const mockedFetch = mockFetch(JSON.stringify(remoteFlagsMockData), 200);
+    (ElectronPlatform as jest.Mock).mockReturnValue({
+      crypto: new ElectronCrypto(),
+      info: new ElectronInfo(),
+      requests: {
+        createEventSource: jest.fn(),
+        fetch: mockedFetch,
+        getEventSourceCapabilities: jest.fn(),
+      },
+      encoding: new ElectronEncoding(),
+      storage,
+    });
+
+    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'polling',
+      enableIPC: false,
+      diagnosticOptOut: true,
+      sendEvents: false,
+      maxCachedContexts: 1,
+    });
+    await client.start();
+
+    // After start, context A's flags are cached.
+    // Storage should contain: context index + context A data + context A freshness
+    const keysAfterStart = storage.keys();
+    const contextDataKeys = keysAfterStart.filter(
+      (k) => !k.includes('ContextIndex') && !k.includes('_freshness'),
+    );
+    expect(contextDataKeys).toHaveLength(1);
+
+    // Identify a second context — context A should be evicted (maxCachedContexts: 1)
+    await client.identify({ kind: 'user', key: 'context-b' });
+
+    const keysAfterIdentify = storage.keys();
+    const contextDataKeysAfter = keysAfterIdentify.filter(
+      (k) => !k.includes('ContextIndex') && !k.includes('_freshness'),
+    );
+    expect(contextDataKeysAfter).toHaveLength(1);
+
+    // The surviving key should be different from the first one (context B replaced context A)
+    expect(contextDataKeysAfter[0]).not.toEqual(contextDataKeys[0]);
+  });
+
+  it('does not cache flags when maxCachedContexts is 0', async () => {
+    const storage = makeMemoryStorage();
+    const mockedFetch = mockFetch(JSON.stringify(remoteFlagsMockData), 200);
+    (ElectronPlatform as jest.Mock).mockReturnValue({
+      crypto: new ElectronCrypto(),
+      info: new ElectronInfo(),
+      requests: {
+        createEventSource: jest.fn(),
+        fetch: mockedFetch,
+        getEventSourceCapabilities: jest.fn(),
+      },
+      encoding: new ElectronEncoding(),
+      storage,
+    });
+
+    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'polling',
+      enableIPC: false,
+      diagnosticOptOut: true,
+      sendEvents: false,
+      maxCachedContexts: 0,
+    });
+    await client.start();
+
+    // Flags should still evaluate correctly from the network response
+    expect(client.boolVariation('on-off-flag', false)).toBe(true);
+
+    // But no context data should be persisted to storage
+    const contextDataKeys = storage
+      .keys()
+      .filter((k) => !k.includes('ContextIndex') && !k.includes('_freshness'));
+    expect(contextDataKeys).toHaveLength(0);
+  });
+});
+
 describe('given an initialized ElectronClient with enableIPC: false and streaming', () => {
   const logger: LDLogger = {
     debug: jest.fn(),
