@@ -181,9 +181,8 @@ export class Judge {
    * influencing judge template parsing.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    return Object.entries(variables).reduce(
-      (result, [key, value]) => result.split(`{{${key}}}`).join(value),
-      content,
+    return content.replace(/\{\{(\w+)\}\}/g, (match, key) =>
+      Object.prototype.hasOwnProperty.call(variables, key) ? variables[key] : match,
     );
   }
 

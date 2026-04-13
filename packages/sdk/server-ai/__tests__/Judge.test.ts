@@ -872,6 +872,22 @@ describe('Judge', () => {
       expect(messages[0].content).toBe('HISTORY | HISTORY');
     });
 
+    it('does not allow cross-placeholder injection via message_history value', () => {
+      const template = 'History: {{message_history}}\nResponse: {{response_to_evaluate}}';
+      const judge = makeJudge(template);
+
+      // eslint-disable-next-line no-underscore-dangle
+      const constructMessages = (judge as any)._constructEvaluationMessages.bind(judge);
+      // message_history value contains the other placeholder literally
+      const messages = constructMessages('{{response_to_evaluate}}', 'REAL OUTPUT');
+
+      expect(messages).toHaveLength(1);
+      // The literal text {{response_to_evaluate}} from the history value must survive
+      expect(messages[0].content).toBe(
+        'History: {{response_to_evaluate}}\nResponse: REAL OUTPUT',
+      );
+    });
+
     it('preserves Mustache-like syntax inside history and response values', () => {
       const template = 'History: {{message_history}}\nResponse: {{response_to_evaluate}}';
       const judge = makeJudge(template);
