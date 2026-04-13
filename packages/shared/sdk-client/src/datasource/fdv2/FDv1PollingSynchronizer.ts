@@ -20,8 +20,6 @@ import {
 } from './FDv2SourceResult';
 import { Synchronizer } from './Synchronizer';
 
-const PAYLOAD_ID = 'FDv1Fallback';
-
 function flagsToPayload(flags: Flags): internal.Payload {
   const updates: internal.Update[] = Object.entries(flags).map(([key, flag]) => ({
     kind: 'flag',
@@ -31,7 +29,6 @@ function flagsToPayload(flags: Flags): internal.Payload {
   }));
 
   return {
-    id: PAYLOAD_ID,
     version: 1,
     type: 'full',
     updates,

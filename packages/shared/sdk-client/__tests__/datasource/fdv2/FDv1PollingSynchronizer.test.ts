@@ -58,7 +58,6 @@ it('produces a changeSet with full payload from a successful poll', async () => 
   expect(result.type).toBe('changeSet');
   if (result.type === 'changeSet') {
     expect(result.payload.type).toBe('full');
-    expect(result.payload.id).toBe('FDv1Fallback');
     expect(result.payload.version).toBe(1);
     expect(result.payload.updates).toHaveLength(2);
 

@@ -35,7 +35,6 @@ export type PayloadType = 'full' | 'partial' | 'none';
  * - `none`: no changes are needed; the SDK is up-to-date.
  */
 export interface Payload {
-  id: string;
   version: number;
   state?: string;
   type: PayloadType;
@@ -86,7 +85,6 @@ export function createProtocolHandler(
   logger?: LDLogger,
 ): ProtocolHandler {
   let protocolState: ProtocolState = 'inactive';
-  let tempId: string | undefined;
   let tempType: PayloadType = 'partial';
   let tempUpdates: Update[] = [];
 
@@ -96,7 +94,6 @@ export function createProtocolHandler(
 
   function resetAll(): void {
     protocolState = 'inactive';
-    tempId = undefined;
     tempType = 'partial';
     tempUpdates = [];
   }
@@ -112,17 +109,14 @@ export function createProtocolHandler(
   }
 
   function processIntentNone(intent: PayloadIntent): ProtocolAction {
-    if (!intent.id || isNullish(intent.target)) {
-      logger?.warn(
-        `Ignoring 'none' intent with missing fields: id=${intent.id}, target=${intent.target}`,
-      );
+    if (isNullish(intent.target)) {
+      logger?.warn(`Ignoring 'none' intent with missing fields: target=${intent.target}`);
       return ACTION_NONE;
     }
 
     return {
       type: 'payload',
       payload: {
-        id: intent.id,
         version: intent.target,
         type: 'none',
         updates: [],
@@ -147,19 +141,16 @@ export function createProtocolHandler(
         protocolState = 'full';
         tempUpdates = [];
         tempType = 'full';
-        tempId = payload.id;
         return ACTION_NONE;
       case 'xfer-changes':
         protocolState = 'changes';
         tempUpdates = [];
         tempType = 'partial';
-        tempId = payload.id;
         return ACTION_NONE;
       case 'none':
         protocolState = 'changes';
         tempUpdates = [];
         tempType = 'partial';
-        tempId = payload.id;
         return processIntentNone(payload);
       default:
         logger?.warn(`Unable to process intent code '${payload?.intentCode}'.`);
@@ -168,7 +159,7 @@ export function createProtocolHandler(
   }
 
   function processPutObject(data: PutObject): ProtocolAction {
-    if (protocolState === 'inactive' || !tempId) {
+    if (protocolState === 'inactive') {
       logger?.warn('Received put-object before server-intent was established. Ignoring.');
       return ACTION_NONE;
     }
@@ -196,7 +187,7 @@ export function createProtocolHandler(
   }
 
   function processDeleteObject(data: DeleteObject): ProtocolAction {
-    if (protocolState === 'inactive' || !tempId) {
+    if (protocolState === 'inactive') {
       logger?.warn('Received delete-object before server-intent was established. Ignoring.');
       return ACTION_NONE;
     }
@@ -227,7 +218,7 @@ export function createProtocolHandler(
       };
     }
 
-    if (!tempId || isNullish(data.state) || isNullish(data.version)) {
+    if (isNullish(data.state) || isNullish(data.version)) {
       logger?.warn(
         `Ignoring payload-transferred with missing fields: state=${data.state}, version=${data.version}`,
       );
@@ -238,7 +229,6 @@ export function createProtocolHandler(
     const result: ProtocolAction = {
       type: 'payload',
       payload: {
-        id: tempId,
         version: data.version,
         state: data.state,
         type: tempType,
@@ -259,9 +249,7 @@ export function createProtocolHandler(
   }
 
   function processError(data: any): ProtocolAction {
-    logger?.info(
-      `An issue was encountered receiving updates for payload ${tempId} with reason: ${data.reason}.`,
-    );
+    logger?.info(`An issue was encountered receiving updates with reason: ${data.reason}.`);
     resetAfterError();
     return { type: 'serverError', id: data.payload_id, reason: data.reason };
   }

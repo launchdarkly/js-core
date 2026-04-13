@@ -120,7 +120,6 @@ export async function poll(
     // (Spec Requirement 10.1.2)
     if (response.status === 304) {
       const nonePayload: internal.Payload = {
-        id: '',
         version: 0,
         type: 'none',
         updates: [],
