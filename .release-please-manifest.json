@@ -1,4 +1,5 @@
 {
+  "packages/ai-providers/server-ai-strands": "0.0.0",
   "packages/ai-providers/server-ai-langchain": "0.5.3",
   "packages/ai-providers/server-ai-openai": "0.5.3",
   "packages/ai-providers/server-ai-vercel": "0.5.3",

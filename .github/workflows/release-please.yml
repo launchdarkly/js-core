@@ -58,6 +58,7 @@ on:
           - packages/ai-providers/server-ai-openai
           - packages/ai-providers/server-ai-vercel
           - packages/ai-providers/server-ai-langchain
+          - packages/ai-providers/server-ai-strands
           - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
@@ -102,6 +103,7 @@ jobs:
       package-server-ai-langchain-released: ${{ steps.release.outputs['packages/ai-providers/server-ai-langchain--release_created'] }}
       package-server-ai-openai-released: ${{ steps.release.outputs['packages/ai-providers/server-ai-openai--release_created'] }}
       package-server-ai-vercel-released: ${{ steps.release.outputs['packages/ai-providers/server-ai-vercel--release_created'] }}
+      package-server-ai-strands-released: ${{ steps.release.outputs['packages/ai-providers/server-ai-strands--release_created'] }}
       package-browser-telemetry-released: ${{ steps.release.outputs['packages/telemetry/browser-telemetry--release_created'] }}
       package-combined-browser-released: ${{ steps.release.outputs['packages/sdk/combined-browser--release_created'] }}
       package-sdk-shopify-oxygen-released: ${{ steps.release.outputs['packages/sdk/shopify-oxygen--release_created'] }}
@@ -485,6 +487,22 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/ai-providers/server-ai-vercel
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-server-ai-strands:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-server-ai']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-strands-released == 'true'}}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: release-server-ai-strands
+        name: Full release of packages/ai-providers/server-ai-strands
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/ai-providers/server-ai-strands
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-shopify-oxygen:

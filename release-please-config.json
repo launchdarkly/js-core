@@ -47,6 +47,10 @@
         }
       ]
     },
+    "packages/ai-providers/server-ai-strands": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
     "packages/ai-providers/server-ai-openai": {
       "bump-minor-pre-major": true,
       "prerelease": true,

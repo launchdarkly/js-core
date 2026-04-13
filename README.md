@@ -39,6 +39,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 
 | AI Providers                                                                              | npm                                                           | issues                                      | tests                                                               |
 | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------- |
+| [@launchdarkly/server-sdk-ai-strands](packages/ai-providers/server-ai-strands/README.md) | [![NPM][server-ai-strands-npm-badge]][server-ai-strands-npm-link] | [server-ai-strands][package-ai-providers-server-ai-strands-issues] | [![Actions Status][server-ai-strands-ci-badge]][server-ai-strands-ci] |
 | [@launchdarkly/server-sdk-ai-langchain](packages/ai-providers/server-ai-langchain/README.md) | [![NPM][server-ai-langchain-npm-badge]][server-ai-langchain-npm-link] | [server-ai-langchain][package-ai-providers-server-ai-langchain-issues] | [![Actions Status][server-ai-langchain-ci-badge]][server-ai-langchain-ci] |
 | [@launchdarkly/server-sdk-ai-openai](packages/ai-providers/server-ai-openai/README.md) | [![NPM][server-ai-openai-npm-badge]][server-ai-openai-npm-link] | [server-ai-openai][package-ai-providers-server-ai-openai-issues] | [![Actions Status][server-ai-openai-ci-badge]][server-ai-openai-ci] |
 | [@launchdarkly/server-sdk-ai-vercel](packages/ai-providers/server-ai-vercel/README.md) | [![NPM][server-ai-vercel-npm-badge]][server-ai-vercel-npm-link] | [server-ai-vercel][package-ai-providers-server-ai-vercel-issues] | [![Actions Status][server-ai-vercel-ci-badge]][server-ai-vercel-ci] |
@@ -228,6 +229,12 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-combined-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
 [sdk-combined-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
 [package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcombined-browser%22+
+[//]: # 'ai-providers/server-ai-strands'
+[server-ai-strands-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-strands.yml/badge.svg
+[server-ai-strands-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-strands.yml
+[server-ai-strands-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/server-sdk-ai-strands.svg?style=flat-square
+[server-ai-strands-npm-link]: https://www.npmjs.com/package/@launchdarkly/server-sdk-ai-strands
+[package-ai-providers-server-ai-strands-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+ai-providers%2Fserver-ai-strands%22+
 [//]: # 'ai-providers/server-ai-langchain'
 [server-ai-langchain-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml/badge.svg
 [server-ai-langchain-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml
