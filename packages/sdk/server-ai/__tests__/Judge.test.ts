@@ -883,9 +883,7 @@ describe('Judge', () => {
 
       expect(messages).toHaveLength(1);
       // The literal text {{response_to_evaluate}} from the history value must survive
-      expect(messages[0].content).toBe(
-        'History: {{response_to_evaluate}}\nResponse: REAL OUTPUT',
-      );
+      expect(messages[0].content).toBe('History: {{response_to_evaluate}}\nResponse: REAL OUTPUT');
     });
 
     it('preserves Mustache-like syntax inside history and response values', () => {
