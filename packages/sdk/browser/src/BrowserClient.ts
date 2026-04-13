@@ -45,6 +45,7 @@ class BrowserClientImpl extends LDClientImpl {
 
   constructor(
     clientSideId: string,
+    initialContext: LDContext,
     autoEnvAttributes: AutoEnvAttributes,
     options: BrowserOptions = {},
     overridePlatform?: Platform,
@@ -150,6 +151,7 @@ class BrowserClientImpl extends LDClientImpl {
         internal.safeGetHooks(logger, environmentMetadata, validatedBrowserOptions.plugins),
       credentialType: 'clientSideId',
       requiresStart: true,
+      initialContext,
     });
 
     this.setEventSendingEnabled(true, false);
@@ -291,8 +293,13 @@ export function makeClient(
   options: BrowserOptions = {},
   overridePlatform?: Platform,
 ): LDClient {
-  const impl = new BrowserClientImpl(clientSideId, autoEnvAttributes, options, overridePlatform);
-  impl.setInitialContext(initialContext);
+  const impl = new BrowserClientImpl(
+    clientSideId,
+    initialContext,
+    autoEnvAttributes,
+    options,
+    overridePlatform,
+  );
 
   // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
   // In the future we should consider updating the common SDK code to not use inheritance and instead compose

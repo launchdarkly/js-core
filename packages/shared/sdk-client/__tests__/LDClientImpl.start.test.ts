@@ -22,6 +22,7 @@ function setupClient(
     requiresStart?: boolean;
     disableNetwork?: boolean;
     sendEvents?: boolean;
+    initialContext?: LDContext;
   },
 ) {
   const logger = options?.logger ?? {
@@ -46,6 +47,7 @@ function setupClient(
       getImplementationHooks: () => [],
       credentialType: 'clientSideId',
       requiresStart: options?.requiresStart ?? true,
+      initialContext: options?.initialContext,
     },
   );
 
@@ -97,8 +99,7 @@ describe('LDClientImpl.start()', () => {
 
   it('returns the same promise when called multiple times', async () => {
     const mockPlatform = setupStreamingPlatform();
-    const { ldc } = setupClient(mockPlatform);
-    ldc.setInitialContext(context);
+    const { ldc } = setupClient(mockPlatform, { initialContext: context });
 
     const promise1 = ldc.start();
     const promise2 = ldc.start();
@@ -115,8 +116,7 @@ describe('LDClientImpl.start()', () => {
 
   it('returns cached result after initialization completes', async () => {
     const mockPlatform = setupStreamingPlatform();
-    const { ldc } = setupClient(mockPlatform);
-    ldc.setInitialContext(context);
+    const { ldc } = setupClient(mockPlatform, { initialContext: context });
 
     const result1 = await ldc.start();
     expect(result1.status).toBe('complete');
@@ -127,8 +127,7 @@ describe('LDClientImpl.start()', () => {
 
   it('resolves with complete status on successful identify', async () => {
     const mockPlatform = setupStreamingPlatform();
-    const { ldc } = setupClient(mockPlatform);
-    ldc.setInitialContext(context);
+    const { ldc } = setupClient(mockPlatform, { initialContext: context });
 
     const result = await ldc.start();
     expect(result.status).toBe('complete');
@@ -136,8 +135,7 @@ describe('LDClientImpl.start()', () => {
 
   it('sets the active context after start completes', async () => {
     const mockPlatform = setupStreamingPlatform();
-    const { ldc } = setupClient(mockPlatform);
-    ldc.setInitialContext(context);
+    const { ldc } = setupClient(mockPlatform, { initialContext: context });
 
     expect(ldc.getContext()).toBeUndefined();
     await ldc.start();
@@ -147,8 +145,7 @@ describe('LDClientImpl.start()', () => {
   describe('bootstrap data', () => {
     it('presets flags from bootstrap in identifyOptions', async () => {
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       await ldc.start({
         identifyOptions: { bootstrap: goodBootstrapData },
@@ -162,8 +159,7 @@ describe('LDClientImpl.start()', () => {
 
     it('presets flags from top-level bootstrap option', async () => {
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       await ldc.start({ bootstrap: goodBootstrapData });
 
@@ -174,8 +170,7 @@ describe('LDClientImpl.start()', () => {
 
     it('makes flags available synchronously before identify completes', async () => {
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       const startPromise = ldc.start({
         identifyOptions: { bootstrap: goodBootstrapDataWithReasons },
@@ -190,8 +185,7 @@ describe('LDClientImpl.start()', () => {
 
     it('supports bootstrap data with evaluation reasons', async () => {
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       await ldc.start({
         identifyOptions: { bootstrap: goodBootstrapDataWithReasons },
@@ -206,8 +200,7 @@ describe('LDClientImpl.start()', () => {
 
     it('prefers identifyOptions.bootstrap over top-level bootstrap', async () => {
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       const differentBootstrap = {
         'other-flag': true,
@@ -229,8 +222,7 @@ describe('LDClientImpl.start()', () => {
       const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
 
       const mockPlatform = createBasicPlatform();
-      const { ldc } = setupClient(mockPlatform, { disableNetwork: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { disableNetwork: true, initialContext: context });
 
       await ldc.start({
         identifyOptions: { bootstrap: goodBootstrapDataWithReasons },
@@ -249,8 +241,10 @@ describe('LDClientImpl.start()', () => {
   describe('requiresStart guard', () => {
     it('blocks identify before start when requiresStart is true', async () => {
       const mockPlatform = setupStreamingPlatform();
-      const { ldc, logger } = setupClient(mockPlatform, { requiresStart: true });
-      ldc.setInitialContext(context);
+      const { ldc, logger } = setupClient(mockPlatform, {
+        requiresStart: true,
+        initialContext: context,
+      });
 
       const result = await ldc.identifyResult({ kind: 'user', key: 'other-user' });
 
@@ -265,8 +259,7 @@ describe('LDClientImpl.start()', () => {
 
     it('allows identify after start when requiresStart is true', async () => {
       const mockPlatform = setupStreamingPlatform();
-      const { ldc } = setupClient(mockPlatform, { requiresStart: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { requiresStart: true, initialContext: context });
 
       await ldc.start();
 
@@ -284,8 +277,7 @@ describe('LDClientImpl.start()', () => {
 
     it('defaults sheddable to true for post-start identifies when requiresStart is true', async () => {
       const mockPlatform = setupStreamingPlatform();
-      const { ldc } = setupClient(mockPlatform, { requiresStart: true });
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { requiresStart: true, initialContext: context });
 
       const startPromise = ldc.start();
       const promise1 = ldc.identifyResult({ kind: 'user', key: 'user-1' });
@@ -324,8 +316,7 @@ describe('LDClientImpl.start()', () => {
   describe('waitForInitialization integration', () => {
     it('resolves waitForInitialization when start completes', async () => {
       const mockPlatform = setupStreamingPlatform();
-      const { ldc } = setupClient(mockPlatform);
-      ldc.setInitialContext(context);
+      const { ldc } = setupClient(mockPlatform, { initialContext: context });
 
       const waitPromise = ldc.waitForInitialization({ timeout: 10 });
       const startPromise = ldc.start();

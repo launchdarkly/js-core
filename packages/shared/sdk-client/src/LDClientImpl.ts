@@ -129,6 +129,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this._config = new ConfigurationImpl(options, internalOptions);
     this.logger = this._config.logger;
     this._requiresStart = internalOptions?.requiresStart ?? false;
+    this.initialContext = internalOptions?.initialContext;
 
     this._baseHeaders = defaultHeaders(
       this.sdkKey,
@@ -273,14 +274,6 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
    */
   protected presetFlags(newFlags: { [key: string]: ItemDescriptor }) {
     this._flagManager.presetFlags(newFlags);
-  }
-
-  /**
-   * Sets the initial context for the client. This must be called before `start()`.
-   * @param context The initial context.
-   */
-  setInitialContext(context: LDContext): void {
-    this.initialContext = context;
   }
 
   /**

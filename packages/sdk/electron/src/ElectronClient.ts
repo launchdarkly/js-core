@@ -87,6 +87,7 @@ export class ElectronClient extends LDClientImpl {
         internal.safeGetHooks(logger, _environmentMetadata, validatedElectronOptions.plugins),
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
       requiresStart: true,
+      initialContext,
     };
 
     const platform = new ElectronPlatform(logger, options);
@@ -119,7 +120,6 @@ export class ElectronClient extends LDClientImpl {
       internalOptions,
     );
 
-    this.setInitialContext(initialContext);
     this._plugins = validatedElectronOptions.plugins;
     this.setEventSendingEnabled(!this.isOffline(), false);
 
