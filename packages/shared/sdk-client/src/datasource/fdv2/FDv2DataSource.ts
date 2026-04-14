@@ -145,18 +145,18 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         return;
       }
 
-      if (result.type === 'changeSet') {
+      if (result.type === 'changeSet' && result.payload.type !== 'none') {
         applyChangeSet(result);
 
         if (handleFdv1Fallback(result)) {
-          // FDv1 fallback triggered during initialization — data was received
+          // FDv1 fallback triggered during initialization -- data was received
           // but we should move to synchronizers where the FDv1 adapter will run.
           dataReceived = true;
           break;
         }
 
         if (result.payload.state) {
-          // Got basis data with a selector — initialization is complete.
+          // Got basis data with a selector -- initialization is complete.
           markInitialized();
           return;
         }
