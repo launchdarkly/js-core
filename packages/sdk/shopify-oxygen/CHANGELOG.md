@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.8](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.7...shopify-oxygen-sdk-v0.1.8) (2026-04-14)
+
+
+### Bug Fixes
+
+* **shopify:** standardizing the pre-release banner ([#1268](https://github.com/launchdarkly/js-core/issues/1268)) ([82adddb](https://github.com/launchdarkly/js-core/commit/82adddb56bcd752954a0107ff3983cf57d1bdb26))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.3 to 2.18.4
+
 ## [0.1.7](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.6...shopify-oxygen-sdk-v0.1.7) (2026-03-23)
 
 
