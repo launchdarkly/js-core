@@ -1,0 +1,23 @@
+{
+  "name": "openai-observability-example",
+  "version": "1.0.0",
+  "description": "LaunchDarkly AI SDK example: provider-specific observability with OpenAI",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/observability-node": "^1.0.0",
+    "@launchdarkly/server-sdk-ai": "workspace:^",
+    "@launchdarkly/server-sdk-ai-openai": "workspace:^",
+    "@opentelemetry/instrumentation": "^0.57.0",
+    "@traceloop/instrumentation-openai": "^0.22.0",
+    "dotenv": "^16.0.0",
+    "openai": "^5.12.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
