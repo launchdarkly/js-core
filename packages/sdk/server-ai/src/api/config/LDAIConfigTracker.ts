@@ -38,8 +38,7 @@ export interface LDAIConfigTracker {
   /**
    * Get the data for tracking.
    *
-   * @param graphKey When set, includes graphKey in the returned payload. Used when this
-   * tracker is operating in the context of an agent graph node.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   getTrackData(graphKey?: string): {
     variationKey: string;
@@ -55,7 +54,7 @@ export interface LDAIConfigTracker {
    * Ideally this would not include overhead time such as network communication.
    *
    * @param durationMs The duration in milliseconds.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackDuration(durationMs: number, graphKey?: string): void;
 
@@ -63,21 +62,21 @@ export interface LDAIConfigTracker {
    * Track information about token usage.
    *
    * @param tokens Token usage information.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackTokens(tokens: LDTokenUsage, graphKey?: string): void;
 
   /**
    * Generation was successful.
    *
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackSuccess(graphKey?: string): void;
 
   /**
    * An error was encountered during generation.
    *
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackError(graphKey?: string): void;
 
@@ -85,7 +84,7 @@ export interface LDAIConfigTracker {
    * Track sentiment about the generation.
    *
    * @param feedback Feedback about the generation.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackFeedback(feedback: { kind: LDFeedbackKind }, graphKey?: string): void;
 
@@ -93,7 +92,7 @@ export interface LDAIConfigTracker {
    * Track the time to first token for this generation.
    *
    * @param timeToFirstTokenMs The duration in milliseconds.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackTimeToFirstToken(timeToFirstTokenMs: number, graphKey?: string): void;
 
@@ -101,7 +100,7 @@ export interface LDAIConfigTracker {
    * Track evaluation scores for multiple metrics.
    *
    * @param scores Record mapping metric keys to their evaluation scores
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackEvalScores(scores: Record<string, EvalScore>, graphKey?: string): void;
 
@@ -109,7 +108,7 @@ export interface LDAIConfigTracker {
    * Track a judge response containing evaluation scores and judge configuration key.
    *
    * @param response Judge response containing evaluation scores and judge configuration key
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackJudgeResponse(response: JudgeResponse, graphKey?: string): void;
 
@@ -117,7 +116,7 @@ export interface LDAIConfigTracker {
    * Track a single tool invocation.
    *
    * @param toolKey The identifier of the tool that was invoked.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackToolCall(toolKey: string, graphKey?: string): void;
 
@@ -125,7 +124,7 @@ export interface LDAIConfigTracker {
    * Track multiple tool invocations.
    *
    * @param toolKeys The identifiers of the tools that were invoked.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackToolCalls(toolKeys: string[], graphKey?: string): void;
 
@@ -138,7 +137,7 @@ export interface LDAIConfigTracker {
    * This function does not automatically record an error when the function throws.
    *
    * @param func The function to track the duration of.
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    * @returns The result of the function.
    */
   trackDurationOf(func: () => Promise<any>, graphKey?: string): Promise<any>;
@@ -155,7 +154,7 @@ export interface LDAIConfigTracker {
    *
    * @param metricsExtractor Function that extracts LDAIMetrics from the operation result
    * @param func Function which executes the operation
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    * @returns The result of the operation
    */
   trackMetricsOf<TRes>(
@@ -183,7 +182,7 @@ export interface LDAIConfigTracker {
    *
    * @param streamCreator Function that creates and returns the stream (synchronous)
    * @param metricsExtractor Function that asynchronously extracts metrics from the stream
-   * @param graphKey When set, includes graphKey in the event payload.
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    * @returns The stream result (returned immediately, not a Promise)
    */
   trackStreamMetricsOf<TStream>(
