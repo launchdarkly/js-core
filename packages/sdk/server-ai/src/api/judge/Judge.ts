@@ -21,7 +21,6 @@ export class Judge {
 
   constructor(
     private readonly _aiConfig: LDAIJudgeConfig,
-    private readonly _aiConfigTracker: LDAIConfigTracker,
     private readonly _aiProvider: AIProvider,
     logger?: LDLogger,
   ) {
@@ -65,21 +64,19 @@ export class Judge {
     output: string,
     samplingRate: number = 1,
   ): Promise<JudgeResponse | undefined> {
+    const tracker = this._aiConfig.createTracker!();
     try {
       const evaluationMetricKey = this._getEvaluationMetricKey();
       if (!evaluationMetricKey) {
         this._logger?.warn(
           'Judge configuration is missing required evaluation metric key',
-          this._aiConfigTracker.getTrackData(),
+          tracker.getTrackData(),
         );
         return undefined;
       }
 
       if (!this._aiConfig.messages) {
-        this._logger?.warn(
-          'Judge configuration must include messages',
-          this._aiConfigTracker.getTrackData(),
-        );
+        this._logger?.warn('Judge configuration must include messages', tracker.getTrackData());
         return undefined;
       }
 
@@ -90,19 +87,19 @@ export class Judge {
 
       const messages = this._constructEvaluationMessages(input, output);
 
-      const response = await this._aiConfigTracker.trackMetricsOf(
+      const response = await tracker.trackMetricsOf(
         (result: StructuredResponse) => result.metrics,
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
       );
 
       let { success } = response.metrics;
 
-      const evals = this._parseEvaluationResponse(response.data, evaluationMetricKey);
+      const evals = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
 
       if (!evals[evaluationMetricKey]) {
         this._logger?.warn(
           'Judge evaluation did not return the expected evaluation',
-          this._aiConfigTracker.getTrackData(),
+          tracker.getTrackData(),
         );
         success = false;
       }
@@ -150,13 +147,6 @@ export class Judge {
   }
 
   /**
-   * Returns the tracker associated with this judge.
-   */
-  getTracker(): LDAIConfigTracker {
-    return this._aiConfigTracker;
-  }
-
-  /**
    * Returns the AI provider used by this judge.
    */
   getProvider(): AIProvider {
@@ -191,6 +181,7 @@ export class Judge {
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
     evaluationMetricKey: string,
+    tracker: LDAIConfigTracker,
   ): Record<string, EvalScore> {
     const evaluations = data.evaluations as Record<string, unknown>;
     const results: Record<string, EvalScore> = {};
@@ -205,7 +196,7 @@ export class Judge {
     if (!evaluation || typeof evaluation !== 'object') {
       this._logger?.warn(
         `Missing evaluation for metric key: ${evaluationMetricKey}`,
-        this._aiConfigTracker.getTrackData(),
+        tracker.getTrackData(),
       );
       return results;
     }
@@ -215,7 +206,7 @@ export class Judge {
     if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
       this._logger?.warn(
         `Invalid score evaluated for ${evaluationMetricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
-        this._aiConfigTracker.getTrackData(),
+        tracker.getTrackData(),
       );
       return results;
     }
@@ -223,7 +214,7 @@ export class Judge {
     if (typeof evalData.reasoning !== 'string') {
       this._logger?.warn(
         `Invalid reasoning evaluated for ${evaluationMetricKey}: ${evalData.reasoning}. Reasoning must be a string`,
-        this._aiConfigTracker.getTrackData(),
+        tracker.getTrackData(),
       );
       return results;
     }

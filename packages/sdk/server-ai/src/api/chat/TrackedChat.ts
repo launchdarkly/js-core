@@ -1,6 +1,5 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
 import { JudgeResponse } from '../judge/types';
@@ -18,7 +17,6 @@ export class TrackedChat {
 
   constructor(
     protected readonly aiConfig: LDAICompletionConfig,
-    protected readonly tracker: LDAIConfigTracker,
     protected readonly provider: AIProvider,
     protected readonly judges: Record<string, Judge> = {},
     private readonly _logger?: LDLogger,
@@ -31,6 +29,8 @@ export class TrackedChat {
    * This method handles conversation management and tracking, delegating to the provider's invokeModel method.
    */
   async invoke(prompt: string): Promise<ChatResponse> {
+    const tracker = this.aiConfig.createTracker!();
+
     // Convert prompt string to LDMessage with role 'user' and add to conversation history
     const userMessage: LDMessage = {
       role: 'user',
@@ -43,7 +43,7 @@ export class TrackedChat {
     const allMessages = [...configMessages, ...this.messages];
 
     // Delegate to provider-specific implementation with tracking
-    const response = await this.tracker.trackMetricsOf(
+    const response = await tracker.trackMetricsOf(
       (result: ChatResponse) => result.metrics,
       () => this.provider.invokeModel(allMessages),
     );
@@ -52,7 +52,16 @@ export class TrackedChat {
       this.aiConfig.judgeConfiguration?.judges &&
       this.aiConfig.judgeConfiguration.judges.length > 0
     ) {
-      response.evaluations = this._evaluateWithJudges(this.messages, response);
+      response.evaluations = this._evaluateWithJudges(this.messages, response).then(
+        (evaluations) => {
+          evaluations.forEach((judgeResponse) => {
+            if (judgeResponse?.success) {
+              tracker.trackJudgeResponse(judgeResponse);
+            }
+          });
+          return evaluations;
+        },
+      );
     }
 
     this.messages.push(response.message);
@@ -78,23 +87,12 @@ export class TrackedChat {
       const judge = this.judges[judgeConfig.key];
       if (!judge) {
         this._logger?.warn(
-          `Judge configuration is not enabled: ${judgeConfig.key}`,
-          this.tracker.getTrackData(),
+          `Judge configuration is not enabled for ${judgeConfig.key} in ${this.aiConfig.key}`,
         );
         return undefined;
       }
 
-      const judgeResponse = await judge.evaluateMessages(
-        messages,
-        response,
-        judgeConfig.samplingRate,
-      );
-
-      if (judgeResponse && judgeResponse.success) {
-        this.tracker.trackJudgeResponse(judgeResponse);
-      }
-
-      return judgeResponse;
+      return judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
     });
 
     // ensure all evaluations complete even if some fail
@@ -108,13 +106,6 @@ export class TrackedChat {
    */
   getConfig(): LDAICompletionConfig {
     return this.aiConfig;
-  }
-
-  /**
-   * Get the underlying AI configuration tracker used to initialize this TrackedChat.
-   */
-  getTracker(): LDAIConfigTracker {
-    return this.tracker;
   }
 
   /**

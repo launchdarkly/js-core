@@ -1,4 +1,5 @@
 import Mustache from 'mustache';
+import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
@@ -13,6 +14,7 @@ import {
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
+  LDAIConfigTracker,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
   LDJudge,
@@ -87,19 +89,21 @@ export class LDAIClientImpl implements LDAIClient {
       return LDAIConfigUtils.createDisabledConfig(key, mode);
     }
 
-    const tracker = new LDAIConfigTrackerImpl(
-      this._ldClient,
-      key,
-      // eslint-disable-next-line no-underscore-dangle
-      value._ldMeta?.variationKey ?? '',
-      // eslint-disable-next-line no-underscore-dangle
-      value._ldMeta?.version ?? 1,
-      value.model?.name ?? '',
-      value.provider?.name ?? '',
-      context,
-    );
+    const trackerFactory = () =>
+      new LDAIConfigTrackerImpl(
+        this._ldClient,
+        randomUUID(),
+        key,
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.variationKey ?? '',
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.version ?? 1,
+        value.model?.name ?? '',
+        value.provider?.name ?? '',
+        context,
+      );
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, tracker);
+    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
@@ -296,7 +300,7 @@ export class LDAIClientImpl implements LDAIClient {
       variables,
     );
 
-    if (!config.enabled || !config.tracker) {
+    if (!config.enabled) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
       return undefined;
     }
@@ -313,7 +317,7 @@ export class LDAIClientImpl implements LDAIClient {
       defaultAiProvider,
     );
 
-    return new TrackedChat(config, config.tracker, provider, judges, this._logger);
+    return new TrackedChat(config, provider, judges, this._logger);
   }
 
   async createJudge(
@@ -351,7 +355,7 @@ export class LDAIClientImpl implements LDAIClient {
         extendedVariables,
       );
 
-      if (!judgeConfig.enabled || !judgeConfig.tracker) {
+      if (!judgeConfig.enabled) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
         return undefined;
       }
@@ -361,7 +365,7 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      return new Judge(judgeConfig, judgeConfig.tracker, provider, this._logger);
+      return new Judge(judgeConfig, provider, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;
@@ -379,5 +383,9 @@ export class LDAIClientImpl implements LDAIClient {
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  }
+
+  createTracker(token: string, context: LDContext): LDAIConfigTracker {
+    return LDAIConfigTrackerImpl.fromResumptionToken(token, this._ldClient, context);
   }
 }
