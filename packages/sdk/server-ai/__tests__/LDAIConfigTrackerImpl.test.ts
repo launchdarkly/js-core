@@ -877,3 +877,148 @@ describe('trackJudgeResponse', () => {
     );
   });
 });
+
+describe('trackToolCall', () => {
+  it('tracks a single tool call', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackToolCall('my-tool');
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'my-tool' },
+      1,
+    );
+  });
+
+  it('includes graphKey when provided', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackToolCall('my-tool', 'my-graph');
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph', toolKey: 'my-tool' },
+      1,
+    );
+  });
+});
+
+describe('trackToolCalls', () => {
+  it('tracks multiple tool calls', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackToolCalls(['tool-a', 'tool-b', 'tool-c']);
+
+    expect(mockTrack).toHaveBeenCalledTimes(3);
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-a' },
+      1,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-b' },
+      1,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-c' },
+      1,
+    );
+  });
+});
+
+describe('graphKey parameter support', () => {
+  it('includes graphKey in trackDuration event', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackDuration(1000, 'my-graph');
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph' },
+      1000,
+    );
+  });
+
+  it('includes graphKey in trackSuccess event', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackSuccess('my-graph');
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph' },
+      1,
+    );
+  });
+
+  it('does not include graphKey when not provided', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackSuccess();
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      getExpectedTrackData(),
+      1,
+    );
+  });
+});
