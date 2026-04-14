@@ -23,8 +23,8 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.679.0",
-    "@launchdarkly/node-server-sdk": "9.10.10",
-    "@launchdarkly/server-sdk-ai": "0.16.7"
+    "@launchdarkly/node-server-sdk": "9.10.11",
+    "@launchdarkly/server-sdk-ai": "0.16.8"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

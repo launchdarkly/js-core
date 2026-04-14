@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.24.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.0...js-sdk-common-v2.24.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* FDv2 - Support dynamic reconnect URL for streaming. Handle 'error' event types for SSE. ([#1252](https://github.com/launchdarkly/js-core/issues/1252)) ([4ef6cdd](https://github.com/launchdarkly/js-core/commit/4ef6cdd3f07a15e9a6b3b831defcf41d10e6334b))
+
 ## [2.24.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.23.0...js-sdk-common-v2.24.0) (2026-03-23)
 
 
