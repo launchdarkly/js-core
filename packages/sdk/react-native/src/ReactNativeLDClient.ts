@@ -233,7 +233,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
     return super.close();
   }
 
-
   /**
    * Sets the SDK connection mode.
    *
