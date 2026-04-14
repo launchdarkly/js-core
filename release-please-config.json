@@ -263,27 +263,6 @@
       "release-as": "1.0.0"
     },
     "packages/telemetry/browser-telemetry": {},
-    "packages/sdk/electron": {
-      "bump-minor-pre-major": true,
-      "extra-files": [
-        "src/platform/ElectronInfo.ts",
-        {
-          "type": "json",
-          "path": "example/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/electron-client-sdk']"
-        }
-      ]
-    },
-    "packages/sdk/svelte": {
-      "bump-minor-pre-major": true,
-      "extra-files": [
-        {
-          "type": "json",
-          "path": "example/package.json",
-          "jsonpath": "$.dependencies['@launchdarkly/svelte-client-sdk']"
-        }
-      ]
-    },
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
     },
