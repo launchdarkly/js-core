@@ -264,6 +264,7 @@
     },
     "packages/telemetry/browser-telemetry": {},
     "packages/sdk/electron": {
+      "bump-minor-pre-major": true,
       "extra-files": [
         "src/platform/ElectronInfo.ts",
         {
@@ -274,6 +275,7 @@
       ]
     },
     "packages/sdk/svelte": {
+      "bump-minor-pre-major": true,
       "extra-files": [
         {
           "type": "json",
