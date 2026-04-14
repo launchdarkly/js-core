@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.4.1...js-client-sdk-v4.5.0) (2026-04-14)
+
+
+### Features
+
+* add retry logic to FDv2 polling initializer ([#1230](https://github.com/launchdarkly/js-core/issues/1230)) ([fe8bd37](https://github.com/launchdarkly/js-core/commit/fe8bd375af48edfcfe83822bbbbe4546551c90d9))
+* expose setConnectionMode on browser SDK ([#1232](https://github.com/launchdarkly/js-core/issues/1232)) ([9019808](https://github.com/launchdarkly/js-core/commit/9019808edd5f78cbddd9b031da1589cbaa49938f))
+* FDv2 contract test wiring, suppressions, and example app, cleanup configuration exports. ([#1225](https://github.com/launchdarkly/js-core/issues/1225)) ([c67c5f6](https://github.com/launchdarkly/js-core/commit/c67c5f65f92e39d2e311b26d025a4b90112f2e4f))
+* wire FDv2 data manager into BrowserClient ([#1222](https://github.com/launchdarkly/js-core/issues/1222)) ([0b855f0](https://github.com/launchdarkly/js-core/commit/0b855f0be6ad5fd086f293603d7880992d41452e))
+
+
+### Bug Fixes
+
+* FDv2 - Support dynamic reconnect URL for streaming. Handle 'error' event types for SSE. ([#1252](https://github.com/launchdarkly/js-core/issues/1252)) ([4ef6cdd](https://github.com/launchdarkly/js-core/commit/4ef6cdd3f07a15e9a6b3b831defcf41d10e6334b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.23.0 to 1.24.0
+
 ## [4.4.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.4.0...js-client-sdk-v4.4.1) (2026-03-23)
 
 
