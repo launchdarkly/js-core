@@ -65,7 +65,6 @@ it('emits a full payload after xfer-full and payload-transferred', () => {
   if (action.type !== 'payload') return;
 
   expect(action.payload.type).toBe('full');
-  expect(action.payload.id).toBe('p1');
   expect(action.payload.version).toBe(52);
   expect(action.payload.state).toBe('(p:p1:52)');
   expect(action.payload.updates).toHaveLength(2);
@@ -114,7 +113,6 @@ it('returns a none-type payload immediately on intent-none', () => {
   if (action.type !== 'payload') return;
 
   expect(action.payload.type).toBe('none');
-  expect(action.payload.id).toBe('p1');
   expect(action.payload.version).toBe(42);
   expect(action.payload.updates).toHaveLength(0);
   expect(action.payload.state).toBeUndefined();

@@ -63,7 +63,6 @@ describe('given a one shot initializer', () => {
       initMetadata: undefined,
       payload: {
         type: 'full',
-        id: `mockId`,
         state: `mockState`,
         updates: [
           {

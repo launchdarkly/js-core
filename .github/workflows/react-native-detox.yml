@@ -35,7 +35,7 @@ jobs:
       - name: Install deps
         run: yarn workspaces focus
       - name: Build
-        run: yarn workspaces foreach -pR --topological-dev --from 'react-native-example' run build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-native-example' run build
 
       - uses: launchdarkly/gh-actions/actions/release-secrets@d271978e893b5b9facb9f000414e9fcd62e1f78b
         name: 'Get mobile key'
@@ -85,11 +85,11 @@ jobs:
           arch: x86_64
           avd-name: ${{ steps.device.outputs.AVD_NAME }}
           working-directory: packages/sdk/react-native/example
-          script: yarn detox test --configuration android.emu.release --headless --record-logs all
+          script: yarn detox test --configuration android.emu.release --headless --record-logs all --retries 2
 
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: detox-artifacts
           path: packages/sdk/react-native/example/artifacts

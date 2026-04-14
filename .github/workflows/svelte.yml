@@ -25,5 +25,5 @@ jobs:
           should_build_docs: false
       - name: Build example
         run: |
-          yarn workspaces focus ld-svelte-example
-          yarn workspaces foreach -pR --topological-dev --from 'ld-svelte-example' run build
+          yarn workspaces focus @launchdarkly/ld-svelte-example
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/ld-svelte-example' run build

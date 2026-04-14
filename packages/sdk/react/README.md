@@ -16,6 +16,9 @@
 
 ☝️☝️☝️
 
+## Getting started
+Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/react/react-web#get-started) for instructions on getting started with using the SDK.
+
 ## About LaunchDarkly
 
 - LaunchDarkly is a continuous delivery platform that provides feature flags as a service and allows developers to iterate quickly and safely. We allow you to easily flag your features and manage them from the LaunchDarkly dashboard. With LaunchDarkly, you can:

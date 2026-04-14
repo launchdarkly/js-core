@@ -1,5 +1,5 @@
 {
-  "name": "node-server-sdk-contract-tests",
+  "name": "@launchdarkly/node-server-sdk-contract-tests",
   "version": "0.0.0",
   "main": "dist/src/index.js",
   "scripts": {

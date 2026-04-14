@@ -12,6 +12,7 @@ type IPCSyncChannel =
   | 'getContext'
   | 'jsonVariation'
   | 'jsonVariationDetail'
+  | 'log'
   | 'numberVariation'
   | 'numberVariationDetail'
   | 'stringVariation'
@@ -36,6 +37,7 @@ export const AllSyncChannels: readonly IPCSyncChannel[] = [
   'getContext',
   'jsonVariation',
   'jsonVariationDetail',
+  'log',
   'numberVariation',
   'numberVariationDetail',
   'stringVariation',

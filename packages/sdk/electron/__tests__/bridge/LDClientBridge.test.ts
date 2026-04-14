@@ -14,6 +14,7 @@ jest.mock('electron', () => ({
     }),
   },
   ipcRenderer: {
+    send: jest.fn(),
     sendSync: jest.fn(),
     invoke: jest.fn(),
     postMessage: jest.fn(),
@@ -358,6 +359,36 @@ describe('given a registered LDClientBridge', () => {
       'callback-id-1',
     );
     expect(result).toEqual(true);
+  });
+
+  it('sends log warning and returns fallback when sendSync throws', () => {
+    const error = new Error('Could not clone');
+    (ipcRenderer.sendSync as jest.Mock).mockImplementationOnce(() => {
+      throw error;
+    });
+
+    const defaultValue = { key: 'default' };
+    const result = bridge.jsonVariation('flag1', defaultValue);
+
+    expect(result).toEqual(defaultValue);
+    expect(ipcRenderer.send).toHaveBeenCalledWith(
+      getEventName('log'),
+      'warn',
+      expect.stringContaining('Could not clone'),
+    );
+  });
+
+  it('returns well-formed detail on error for variationDetail', () => {
+    (ipcRenderer.sendSync as jest.Mock).mockImplementationOnce(() => {
+      throw new Error('clone failed');
+    });
+
+    const result = bridge.variationDetail('flag1', 'fallback');
+
+    expect(result).toEqual({
+      value: 'fallback',
+      reason: { kind: 'ERROR', errorKind: 'EXCEPTION' },
+    });
   });
 
   it('invokes optional onClose when the message port is closed', () => {

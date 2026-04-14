@@ -85,7 +85,6 @@ describe('given a polling processor', () => {
       },
       payload: {
         type: 'full',
-        id: `mockId`,
         state: `mockState`,
         updates: [
           {
@@ -123,7 +122,6 @@ describe('given a polling processor', () => {
       },
       payload: {
         type: 'full',
-        id: `FDv1Fallback`,
         state: `FDv1Fallback`,
         updates: [
           {

@@ -1,5 +1,5 @@
 {
-  "name": "react-native-contract-test-entity",
+  "name": "@launchdarkly/react-native-contract-test-entity",
   "private": true,
   "version": "0.0.1",
   "main": "index.js",

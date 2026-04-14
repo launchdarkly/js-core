@@ -1,5 +1,5 @@
 {
-  "name": "feature-flag-apple-store",
+  "name": "@launchdarkly/feature-flag-apple-store",
   "repository": "https://github.com/vercel/examples.git",
   "license": "MIT",
   "private": true,

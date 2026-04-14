@@ -248,7 +248,6 @@ describe('given a stream processor with mock event source', () => {
       },
       payload: {
         type: 'full',
-        id: `mockId`,
         state: `mockState`,
         updates: [
           {

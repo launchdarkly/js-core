@@ -270,6 +270,7 @@ export function createStreamingBase(config: {
         initialRetryDelayMillis: config.initialRetryDelayMillis,
         readTimeoutMillis: 5 * 60 * 1000,
         retryResetIntervalMillis: 60 * 1000,
+        urlBuilder: buildStreamUri,
       });
       eventSource = es;
 

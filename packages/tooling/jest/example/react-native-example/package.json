@@ -1,5 +1,5 @@
 {
-  "name": "react-native-jest-example",
+  "name": "@launchdarkly/react-native-jest-example",
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {

@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.24.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.23.0...js-client-sdk-common-v1.24.0) (2026-04-14)
+
+
+### Features
+
+* add retry logic to FDv2 polling initializer ([#1230](https://github.com/launchdarkly/js-core/issues/1230)) ([fe8bd37](https://github.com/launchdarkly/js-core/commit/fe8bd375af48edfcfe83822bbbbe4546551c90d9))
+* expose setConnectionMode on browser SDK ([#1232](https://github.com/launchdarkly/js-core/issues/1232)) ([9019808](https://github.com/launchdarkly/js-core/commit/9019808edd5f78cbddd9b031da1589cbaa49938f))
+* FDv2 contract test wiring, suppressions, and example app, cleanup configuration exports. ([#1225](https://github.com/launchdarkly/js-core/issues/1225)) ([c67c5f6](https://github.com/launchdarkly/js-core/commit/c67c5f65f92e39d2e311b26d025a4b90112f2e4f))
+* FDv2DataManagerBase for mode switching and data source lifecycle ([#1210](https://github.com/launchdarkly/js-core/issues/1210)) ([8f8051c](https://github.com/launchdarkly/js-core/commit/8f8051ca769d214a5df09fdf0e71c25f2b98a7f7))
+* support per-mode FDv1 fallback configuration ([#1246](https://github.com/launchdarkly/js-core/issues/1246)) ([9956bce](https://github.com/launchdarkly/js-core/commit/9956bce2cc70642c63da79f904c5d5554892e046))
+* wire FDv2 data manager into BrowserClient ([#1222](https://github.com/launchdarkly/js-core/issues/1222)) ([0b855f0](https://github.com/launchdarkly/js-core/commit/0b855f0be6ad5fd086f293603d7880992d41452e))
+
+
+### Bug Fixes
+
+* FDv2 - Support dynamic reconnect URL for streaming. Handle 'error' event types for SSE. ([#1252](https://github.com/launchdarkly/js-core/issues/1252)) ([4ef6cdd](https://github.com/launchdarkly/js-core/commit/4ef6cdd3f07a15e9a6b3b831defcf41d10e6334b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.0 to 2.24.1
+
 ## [1.23.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.22.0...js-client-sdk-common-v1.23.0) (2026-03-23)
 
 

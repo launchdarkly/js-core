@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-sdk",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "LaunchDarkly SDK for React frameworks",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
   "repository": {
@@ -13,6 +13,7 @@
     "launchdarkly",
     "react",
     "isomorphic",
+    "react-server-components",
     "nextjs",
     "remix"
   ],
@@ -68,8 +69,8 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "^4.4.1",
-    "@launchdarkly/js-server-sdk-common": "^2.18.3"
+    "@launchdarkly/js-client-sdk": "^4.5.0",
+    "@launchdarkly/js-server-sdk-common": "^2.18.4"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

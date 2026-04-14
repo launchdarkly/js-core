@@ -1,29 +1,27 @@
-# Migrating from `launchdarkly-react-client-sdk` v3 to `@launchdarkly/react-sdk`
+# Migrating from `launchdarkly-react-client-sdk` v3 to `@launchdarkly/react-sdk` v4
 
 This document describes the API differences between the legacy `launchdarkly-react-client-sdk` (v3.x)
 and the new `@launchdarkly/react-sdk` package.
 
-With the introduction of server components, we will narrow our official React support to a minimum major version of **18** (peer dependency: `react@>=18.0.0`). Support for React Server Components is experimental and may require React 18 or later.
+With the introduction of server components, we will narrow our official React support to a minimum major version of **18** (peer dependency: `react@>=18.0.0`).
+This SDK supports React server components in `@launchdarkly/react-sdk/server` submodule. It is important to note that React server components are stabilized
+in React 19 and are only stable in a handful of frameworks (as of the time of writing), so you **MUST** be on React 19 to leverage the server submodule.
+Otherwise, being in an earlier version of React **SHOULD** work if you are only using the `@launchdarkly/react-sdk`.
+
+NOTE: the new React SDK is based on `@launchdarkly/js-client-sdk` which is our JavaScript SDK at version >= 4.0.0. Please also read the differences
+between that version and the older versions of the JavaScript SDK as those changes are also relevant to the React SDK.
+> https://launchdarkly.com/docs/sdk/client-side/javascript/migration-3-to-4
+---
+## Package name and location
+
+Globally, we've changed our package from `launchdarkly-react-client-sdk` to `@launchdarkly/react-sdk`. The reasoning is:
+1. Scoped packages are easier to manage
+2. We moved the implementation into our `js-core` monorepo which makes downstream dependencies much easier to manage
+3. We took the `client` out of the name as we are also supporting server side rendering with this major version release
 
 ---
 
 ## Hooks
-
-### `useLDClient` — unchanged
-
-```ts
-// Before
-import { useLDClient } from 'launchdarkly-react-client-sdk';
-const client = useLDClient();
-
-// After
-import { useLDClient } from '@launchdarkly/react-sdk';
-const client = useLDClient();
-```
-
-Both return the `LDClient` instance. Use the client directly for `identify()`, `track()`, etc.
-
----
 
 ### `useLDClientError` → `useInitializationStatus` (replacement)
 
@@ -116,6 +114,17 @@ value) without subscribing to every flag change.
 > **Deprecated.** Use individual typed variation hooks (`useBoolVariation`, etc.) or `useLDClient`
 > instead. This hook will be removed in a future major version.
 
+The `useFlags` hook is still available to use, but it is deprecated. We strongly recommend using our typed
+variation hooks for flag evaluations. If you must have a `allFlag` output then you can call `allFlags` directly
+from the LDClient:
+
+```ts
+import { useLDClient } from '@launchdarkly/react-sdk';
+
+const ldClient = useLDClient();
+const flags = ldClient.allFlags();
+```
+
 ---
 
 ## Provider setup
@@ -195,7 +204,7 @@ const LDProvider = await asyncWithLDProvider({ clientSideID: 'your-id', options:
 
 ### New SDK
 
-Bootstrap is a first-class option on `createLDReactProvider`:
+Bootstrap is a top level option on `createLDReactProvider`:
 
 ```tsx
 import { createLDReactProvider } from '@launchdarkly/react-sdk';
@@ -211,7 +220,116 @@ object (`{ 'my-flag': true }`) or the output of `allFlagsState().toJSON()`, whic
 
 ---
 
-## Isomorphic Provider (React Server Components)
+## React server component support
+
+> **New in `@launchdarkly/react-sdk`.**
+
+### `createLDServerSession` (recommended)
+
+Creates a per-request evaluation scope by binding a server SDK client to a specific context.
+The session is cached using React's `cache()` API, so each request gets its own isolated instance.
+This also enables `useLDServerSession()` to retrieve the session from nested Server Components.
+
+```ts
+import { init } from '@launchdarkly/node-server-sdk';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+
+const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY!);
+
+// In your root Server Component (e.g. app/layout.tsx or app/page.tsx)
+export default async function Page() {
+  await ldBaseClient.waitForInitialization({ timeout: 10 });
+
+  const session = createLDServerSession(ldBaseClient, {
+    kind: 'user',
+    key: 'user-key',
+    name: 'Sandy',
+  });
+
+  const showFeature = await session.boolVariation('show-new-feature', false);
+  return <div>{showFeature ? 'New Feature!' : 'Classic'}</div>;
+}
+```
+
+### `useLDServerSession`
+
+Retrieves the cached session created by `createLDServerSession` from anywhere in the
+Server Component tree. Returns `null` if no session has been created for the current request.
+
+```tsx
+// app/page.tsx — create the session in a parent component
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+
+export default async function Page() {
+  await ldBaseClient.waitForInitialization({ timeout: 10 });
+  createLDServerSession(ldBaseClient, { kind: 'user', key: 'user-key' });
+
+  return <FeatureBanner />;
+}
+
+// components/FeatureBanner.tsx — retrieve it in a nested Server Component
+import { useLDServerSession } from '@launchdarkly/react-sdk/server';
+
+export default async function FeatureBanner() {
+  const session = useLDServerSession();
+  if (!session) return null;
+
+  const banner = await session.stringVariation('banner-text', 'Welcome');
+  return <h1>{banner}</h1>;
+}
+```
+
+### `createLDServerWrapper` (advanced)
+
+Same as `createLDServerSession` but does **not** cache the session. Use this when you need
+manual lifecycle control or want to avoid the React `cache()` mechanism.
+
+```ts
+import { createLDServerWrapper } from '@launchdarkly/react-sdk/server';
+
+const session = createLDServerWrapper(ldBaseClient, context);
+```
+
+> **Note:** Sessions created with `createLDServerWrapper` are not retrievable via
+> `useLDServerSession()`. You must pass the session through props or module scope yourself.
+
+### Server-only usage (without client hydration)
+
+If your page is entirely server-rendered and you don't need client-side live updates, you can
+use `createLDServerSession` directly without `LDIsomorphicProvider`:
+
+```tsx
+// app/dashboard/page.tsx — pure Server Component, no client SDK needed
+import { init } from '@launchdarkly/node-server-sdk';
+import { createLDServerSession } from '@launchdarkly/react-sdk/server';
+
+const ldBaseClient = init(process.env.LAUNCHDARKLY_SDK_KEY!);
+
+export default async function Dashboard() {
+  await ldBaseClient.waitForInitialization({ timeout: 10 });
+
+  const session = createLDServerSession(ldBaseClient, {
+    kind: 'user',
+    key: 'user-key',
+  });
+
+  const maxItems = await session.numberVariation('max-dashboard-items', 5);
+  const theme = await session.stringVariation('ui-theme', 'light');
+
+  return (
+    <div className={theme}>
+      <ItemList limit={maxItems} />
+    </div>
+  );
+}
+```
+
+This is simpler than the isomorphic approach but flags will not update until the next
+server render (e.g. page navigation or revalidation).
+
+---
+
+## Isomorphic Provider
 
 > **New in `@launchdarkly/react-sdk`.**
 
@@ -262,18 +380,6 @@ export default async function Page() {
 Server Components inside the provider tree can call `session.boolVariation(...)` directly.
 Client Components use the standard hooks (`useBoolVariation`, etc.) — they read from the
 bootstrapped data on first render and receive live updates afterwards.
-
-## Removed APIs
-
-| Old API | Status | Replacement |
-|---------|--------|-------------|
-| `useLDClientError()` | Removed | `useInitializationStatus().error` |
-| `useFlag()` | Removed | `useBoolVariation`, `useStringVariation`, `useNumberVariation`, `useJsonVariation` |
-| `useFlagDetail()` | Removed | `useBoolVariationDetail`, `useStringVariationDetail`, `useNumberVariationDetail`, `useJsonVariationDetail` |
-| `withLDProvider()` | Removed | `createLDReactProvider()` |
-| `asyncWithLDProvider()` | Removed | `createLDReactProvider()` |
-| `withLDConsumer()` | Removed | `useLDClient()`, typed variation hooks (`useBoolVariation`, etc.) |
-| `LDProvider` component | Removed | `createLDReactProvider()` |
 
 ---
 
@@ -366,3 +472,16 @@ function MyComponent() {
   return <div>{myFlag ? 'on' : 'off'}</div>;
 }
 ```
+---
+
+## Removed APIs
+
+| Old API | Status | Replacement |
+|---------|--------|-------------|
+| `useLDClientError()` | Removed | `useInitializationStatus().error` |
+| `useFlag()` | Removed | `useBoolVariation`, `useStringVariation`, `useNumberVariation`, `useJsonVariation` |
+| `useFlagDetail()` | Removed | `useBoolVariationDetail`, `useStringVariationDetail`, `useNumberVariationDetail`, `useJsonVariationDetail` |
+| `withLDProvider()` | Removed | `createLDReactProvider()` |
+| `asyncWithLDProvider()` | Removed | `createLDReactProvider()` |
+| `withLDConsumer()` | Removed | `useLDClient()`, typed variation hooks (`useBoolVariation`, etc.) |
+| `LDProvider` component | Removed | `createLDReactProvider()` |

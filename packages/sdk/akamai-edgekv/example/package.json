@@ -1,5 +1,6 @@
 {
-  "name": "akamai-edgekv-playground",
+  "name": "@launchdarkly/akamai-edgekv-playground",
+  "private": true,
   "version": "1.0.4",
   "description": "",
   "main": "main.js",
@@ -31,6 +32,6 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/akamai-server-edgekv-sdk": "1.4.20"
+    "@launchdarkly/akamai-server-edgekv-sdk": "1.4.21"
   }
 }

@@ -31,7 +31,6 @@ it('it sets type to full when intent code is xfer-full', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
 });
@@ -53,7 +52,6 @@ it('it sets type to partial when intent code is xfer-changes', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('partial');
 });
@@ -72,7 +70,6 @@ it('it sets type to none and emits empty payload when intent code is none', () =
     data: '{"payloads": [{"intentCode": "none", "id": "mockId", "target": 42}]}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].version).toEqual(42);
   expect(receivedPayloads[0].type).toEqual('none');
 });
@@ -104,14 +101,12 @@ it('it handles xfer-full then xfer-changes', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(2);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
   expect(receivedPayloads[0].updates[0].deleted).toEqual(undefined);
 
-  expect(receivedPayloads[1].id).toEqual('mockId');
   expect(receivedPayloads[1].state).toEqual('mockState');
   expect(receivedPayloads[1].type).toEqual('partial');
   expect(receivedPayloads[1].updates.length).toEqual(1);
@@ -145,7 +140,6 @@ it('it includes multiple types of updates in payload', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(3);
@@ -253,7 +247,7 @@ it('logs prescribed message when error event is encountered', () => {
   });
   expect(receivedPayloads.length).toEqual(1);
   expect(mockLogger.info).toHaveBeenCalledWith(
-    'An issue was encountered receiving updates for payload mockId with reason: Womp womp.',
+    'An issue was encountered receiving updates with reason: Womp womp.',
   );
 });
 
@@ -309,13 +303,11 @@ it('discards partially transferred data when an error is encountered', () => {
     data: '{"state": "mockState2", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(2);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldB: 'objectValueB' });
   expect(receivedPayloads[0].updates[0].deleted).toEqual(undefined);
-  expect(receivedPayloads[1].id).toEqual('mockId2');
   expect(receivedPayloads[1].state).toEqual('mockState2');
   expect(receivedPayloads[1].type).toEqual('full');
   expect(receivedPayloads[1].updates.length).toEqual(3);
@@ -350,7 +342,6 @@ it('silently ignores unrecognized kinds', () => {
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);
@@ -380,7 +371,6 @@ it('ignores additional payloads beyond the first payload in the server-intent me
     data: '{"state": "mockState", "version": 1}',
   });
   expect(receivedPayloads.length).toEqual(1);
-  expect(receivedPayloads[0].id).toEqual('mockId');
   expect(receivedPayloads[0].state).toEqual('mockState');
   expect(receivedPayloads[0].type).toEqual('full');
   expect(receivedPayloads[0].updates.length).toEqual(1);

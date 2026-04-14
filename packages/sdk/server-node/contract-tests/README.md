@@ -9,8 +9,8 @@ The contract test service is an Express server that exposes a REST API on port 8
 From the repository root:
 
 ```bash
-yarn workspace node-server-sdk-contract-tests run build
-yarn workspace node-server-sdk-contract-tests run start
+yarn workspace @launchdarkly/node-server-sdk-contract-tests run build
+yarn workspace @launchdarkly/node-server-sdk-contract-tests run start
 ```
 
 The service will listen on http://localhost:8000. You can then run the test harness from a separate terminal (see the [SDK Test Harness](https://github.com/launchdarkly/sdk-test-harness) repository for details).

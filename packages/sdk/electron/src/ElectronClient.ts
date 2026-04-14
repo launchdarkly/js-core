@@ -18,6 +18,7 @@ import {
   LDHeaders,
   LDIdentifyOptions,
   LDIdentifyResult,
+  LDLogger,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
@@ -38,6 +39,8 @@ import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
 import validateOptions, { filterToBaseOptions } from './options';
 import ElectronPlatform from './platform/ElectronPlatform';
+
+const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(['error', 'warn', 'info', 'debug']);
 
 export class ElectronClient extends LDClientImpl {
   private readonly _initialContext: LDContext;
@@ -92,7 +95,7 @@ export class ElectronClient extends LDClientImpl {
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
     };
 
-    const platform = new ElectronPlatform(logger, credential, options);
+    const platform = new ElectronPlatform(logger, options);
     const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
     super(
@@ -285,6 +288,12 @@ export class ElectronClient extends LDClientImpl {
     ipcMain.handle(getIPCChannelName(credential, 'identify'), (_event, context, identifyOptions) =>
       this.identifyResult(context, identifyOptions),
     );
+
+    ipcMain.on(getIPCChannelName(credential, 'log'), (_event, level: string, message: string) => {
+      if (VALID_LOG_LEVELS.has(level)) {
+        this.logger[level as keyof LDLogger](message);
+      }
+    });
 
     ipcMain.on(getIPCChannelName(credential, 'jsonVariation'), (event, key, defaultValue) => {
       // eslint-disable-next-line no-param-reassign

@@ -1,5 +1,6 @@
 {
-  "name": "akamai-playground",
+  "name": "@launchdarkly/akamai-playground",
+  "private": true,
   "version": "1.0.4",
   "description": "",
   "main": "main.js",
@@ -32,6 +33,6 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/akamai-server-base-sdk": "3.0.18"
+    "@launchdarkly/akamai-server-base-sdk": "3.0.19"
   }
 }

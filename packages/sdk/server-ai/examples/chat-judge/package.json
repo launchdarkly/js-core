@@ -1,5 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-chat-judge",
+  "private": true,
   "version": "1.0.0",
   "description": "Example demonstrating LaunchDarkly AI SDK chat judge functionality for automatically evaluating AI responses",
   "type": "module",
@@ -9,11 +10,11 @@
     "start": "yarn build && node ./dist/index.js"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "workspace:^",
-    "@launchdarkly/server-sdk-ai": "workspace:^",
-    "@launchdarkly/server-sdk-ai-langchain": "workspace:^",
-    "@launchdarkly/server-sdk-ai-openai": "workspace:^",
-    "@launchdarkly/server-sdk-ai-vercel": "workspace:^",
+    "@launchdarkly/node-server-sdk": "9.10.11",
+    "@launchdarkly/server-sdk-ai": "0.16.8",
+    "@launchdarkly/server-sdk-ai-langchain": "0.5.4",
+    "@launchdarkly/server-sdk-ai-openai": "0.5.4",
+    "@launchdarkly/server-sdk-ai-vercel": "0.5.4",
     "dotenv": "^16.0.0"
   },
   "devDependencies": {

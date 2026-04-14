@@ -29,7 +29,7 @@ import { LDReactClientOptions } from './LDOptions';
  *
  * @example
  * ```tsx
- * import { createClient } from '@launchdarkly/react';
+ * import { createClient } from '@launchdarkly/react-sdk';
  * const client = createClient(clientSideID, context, options);
  *
  * await client.start();
@@ -57,7 +57,7 @@ export function createClient(
   const baseClientOptions: LDOptions = {
     ...ldOptions,
     wrapperName: ldOptions?.wrapperName ?? 'react-client-sdk',
-    wrapperVersion: ldOptions?.wrapperVersion ?? '0.0.0', // x-release-please-version
+    wrapperVersion: ldOptions?.wrapperVersion ?? '0.2.0', // x-release-please-version
   };
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);

@@ -14,6 +14,7 @@ import type {
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
 
+import type { IPCChannel } from '../ElectronIPC';
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 
@@ -22,6 +23,25 @@ import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
 // footprint of the bridge module).
 const generateCallbackId = () =>
   `${Date.now().toString(36)}${Math.random().toString(36).substring(2)}`.toUpperCase();
+
+function safeSendSync<T>(
+  namespace: string,
+  method: IPCChannel,
+  fallback: T,
+  ...args: unknown[]
+): T {
+  try {
+    return ipcRenderer.sendSync(getIPCChannelName(namespace, method), ...args);
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    ipcRenderer.send(
+      getIPCChannelName(namespace, 'log'),
+      'warn',
+      `${method}: a value is not IPC-serializable and will be dropped. ${message}`,
+    );
+    return fallback;
+  }
+}
 
 const ldClientBridge = (namespace: string): LDClientBridge => ({
   allFlags: (): LDFlagSet => ipcRenderer.sendSync(getIPCChannelName(namespace, 'allFlags')),
@@ -43,10 +63,16 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     ipcRenderer.invoke(getIPCChannelName(namespace, 'identify'), context, identifyOptions),
 
   jsonVariation: (key: string, defaultValue: unknown): unknown =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'jsonVariation'), key, defaultValue),
+    safeSendSync<unknown>(namespace, 'jsonVariation', defaultValue, key, defaultValue),
 
   jsonVariationDetail: (key: string, defaultValue: unknown): LDEvaluationDetailTyped<unknown> =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'jsonVariationDetail'), key, defaultValue),
+    safeSendSync<LDEvaluationDetailTyped<unknown>>(
+      namespace,
+      'jsonVariationDetail',
+      { value: defaultValue, reason: { kind: 'ERROR', errorKind: 'EXCEPTION' } },
+      key,
+      defaultValue,
+    ),
 
   waitForInitialization: (
     options?: LDWaitForInitializationOptions,
@@ -65,14 +91,21 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
   stringVariationDetail: (key: string, defaultValue: string): LDEvaluationDetailTyped<string> =>
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'stringVariationDetail'), key, defaultValue),
 
-  track: (key: string, data?: any, metricValue?: number): void =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'track'), key, data, metricValue),
+  track: (key: string, data?: any, metricValue?: number): void => {
+    safeSendSync<void>(namespace, 'track', undefined, key, data, metricValue);
+  },
 
   variation: (key: string, defaultValue?: LDFlagValue): LDFlagValue =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'variation'), key, defaultValue),
+    safeSendSync<LDFlagValue>(namespace, 'variation', defaultValue, key, defaultValue),
 
   variationDetail: (key: string, defaultValue?: LDFlagValue): LDEvaluationDetail =>
-    ipcRenderer.sendSync(getIPCChannelName(namespace, 'variationDetail'), key, defaultValue),
+    safeSendSync<LDEvaluationDetail>(
+      namespace,
+      'variationDetail',
+      { value: defaultValue, reason: { kind: 'ERROR', errorKind: 'EXCEPTION' } },
+      key,
+      defaultValue,
+    ),
 
   setConnectionMode: (mode: ConnectionMode): Promise<void> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'setConnectionMode'), mode),

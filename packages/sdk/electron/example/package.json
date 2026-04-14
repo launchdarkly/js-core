@@ -1,5 +1,5 @@
 {
-  "name": "@internal/electron-example",
+  "name": "@launchdarkly/electron-example",
   "productName": "example-application",
   "version": "0.0.1",
   "description": "My Electron application description",
@@ -34,8 +34,11 @@
     "typescript": "~4.5.4",
     "vite": "^5.4.21"
   },
+  "peerDependencies": {
+    "electron": "^40.4.1"
+  },
   "dependencies": {
-    "@launchdarkly/electron-client-sdk": "workspace:^",
+    "@launchdarkly/electron-client-sdk": "0.0.1",
     "electron-squirrel-startup": "^1.0.1"
   }
 }

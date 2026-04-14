@@ -38,10 +38,7 @@ function makeInterrupted(): FDv2SourceResult {
 }
 
 function makeChangeSet(): FDv2SourceResult {
-  return changeSet(
-    { id: 'test', version: 1, state: 'test-state', type: 'full', updates: [] },
-    false,
-  );
+  return changeSet({ version: 1, state: 'test-state', type: 'full', updates: [] }, false);
 }
 
 // -- fallback condition --

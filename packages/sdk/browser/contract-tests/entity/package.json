@@ -1,5 +1,5 @@
 {
-  "name": "browser-contract-test-service",
+  "name": "@launchdarkly/browser-contract-test-service",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,6 +7,7 @@
   "scripts": {
     "install-playwright-browsers": "playwright install --with-deps chromium",
     "start": "tsc --noEmit && vite --open=true",
+    "start:headless": "tsc --noEmit && vite",
     "build": "tsc --noEmit && vite build",
     "lint": "eslint ./src",
     "start:adapter": "sdk-testharness-server adapter",

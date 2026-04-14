@@ -69,7 +69,6 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
   );
 
   const payload: internal.Payload = {
-    id: 'cache',
     version: 0,
     // No `state` field. The orchestrator sees a changeSet without a selector,
     // records dataReceived=true, and continues to the next initializer.

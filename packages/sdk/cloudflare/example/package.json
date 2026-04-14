@@ -1,11 +1,12 @@
 {
-  "name": "cloudflare-example",
+  "name": "@launchdarkly/cloudflare-example",
+  "private": true,
   "version": "0.0.0",
   "type": "module",
   "module": "./dist/index.mjs",
   "packageManager": "yarn@3.4.1",
   "dependencies": {
-    "@launchdarkly/cloudflare-server-sdk": "2.7.17"
+    "@launchdarkly/cloudflare-server-sdk": "2.7.18"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",

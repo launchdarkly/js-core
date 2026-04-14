@@ -17,8 +17,9 @@ export default function useVariationCore<T, R = T>(
   // effect hook. These are purposely not dependencies of the effect hook as
   // they should not trigger any changes to the hook state.
   const defaultValueRef = useRef(defaultValue);
-  defaultValueRef.current = defaultValue;
   const evaluateRef = useRef(evaluate);
+
+  defaultValueRef.current = defaultValue;
   evaluateRef.current = evaluate;
 
   const didMountRef = useRef(false);

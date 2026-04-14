@@ -10,6 +10,7 @@ import {
   type FDv2DataManagerControl,
   FlagManager,
   internal,
+  type LDClientDataSystemOptions,
   LDClientImpl,
   LDClientInternalOptions,
   LDEmitter,
@@ -47,9 +48,34 @@ import RNStateDetector from './RNStateDetector';
  * </LDProvider>
  * ```
  */
+function shouldAutoSwitchLifecycle(
+  config: LDClientDataSystemOptions['automaticModeSwitching'],
+): boolean {
+  if (config === true) {
+    return true;
+  }
+  if (typeof config === 'object' && config.type === 'automatic') {
+    return config.lifecycle ?? true;
+  }
+  return false;
+}
+
+function shouldAutoSwitchNetwork(
+  config: LDClientDataSystemOptions['automaticModeSwitching'],
+): boolean {
+  if (config === true) {
+    return true;
+  }
+  if (typeof config === 'object' && config.type === 'automatic') {
+    return config.network ?? true;
+  }
+  return false;
+}
+
 export default class ReactNativeLDClient extends LDClientImpl {
   private _connectionManager?: ConnectionManager;
   private _stateDetector?: RNStateDetector;
+
   /**
    * Creates an instance of the LaunchDarkly client.
    *
@@ -136,19 +162,19 @@ export default class ReactNativeLDClient extends LDClientImpl {
       internalOptions,
     );
 
-    const isFDv2 = !!options.dataSystem;
-
-    if (isFDv2) {
+    if (this.isFDv2) {
       const fdv2DataManager = this.dataManager as FDv2DataManagerControl;
 
       this.setEventSendingEnabled(true, false);
       fdv2DataManager.setFlushCallback(() => this.flush());
 
-      // Wire state detection directly to FDv2 data manager.
+      // Wire state detection directly to FDv2 data manager using the
+      // validated automaticModeSwitching config from the data system.
+      const { automaticModeSwitching } = this.dataSystemConfig ?? {};
       const stateDetector = new RNStateDetector();
       this._stateDetector = stateDetector;
 
-      if (validatedRnOptions.automaticBackgroundHandling) {
+      if (shouldAutoSwitchLifecycle(automaticModeSwitching)) {
         stateDetector.setApplicationStateListener((state) => {
           fdv2DataManager.setLifecycleState(
             state === ApplicationState.Foreground ? 'foreground' : 'background',
@@ -156,7 +182,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
         });
       }
 
-      if (validatedRnOptions.automaticNetworkHandling) {
+      if (shouldAutoSwitchNetwork(automaticModeSwitching)) {
         stateDetector.setNetworkStateListener((state) => {
           fdv2DataManager.setNetworkState(
             state === NetworkState.Available ? 'available' : 'unavailable',
@@ -201,6 +227,13 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
+  override async close(): Promise<void> {
+    this._stateDetector?.stopListening();
+    this._connectionManager?.close();
+    return super.close();
+  }
+
+
   /**
    * Sets the SDK connection mode.
    *
@@ -226,17 +259,7 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   async setConnectionMode(mode?: FDv2ConnectionMode): Promise<void>;
   async setConnectionMode(mode?: ConnectionMode | FDv2ConnectionMode): Promise<void> {
-    if (this._connectionManager) {
-      // FDv1 path
-      if (mode === undefined || mode === 'one-shot' || mode === 'background') {
-        this.logger.warn(
-          `setConnectionMode('${mode}') is only supported with the FDv2 data system (dataSystem option).`,
-        );
-        return;
-      }
-      this._connectionManager.setConnectionMode(mode as ConnectionMode);
-      this._connectionManager.setOffline(mode === 'offline');
-    } else {
+    if (this.isFDv2) {
       // FDv2 path
       if (mode !== undefined && !(mode in MODE_TABLE)) {
         this.logger.warn(
@@ -248,6 +271,16 @@ export default class ReactNativeLDClient extends LDClientImpl {
       (this.dataManager as FDv2DataManagerControl).setConnectionMode(
         mode as FDv2ConnectionMode | undefined,
       );
+    } else {
+      // FDv1 path
+      if (mode === undefined || mode === 'one-shot' || mode === 'background') {
+        this.logger.warn(
+          `setConnectionMode('${mode}') is only supported with the FDv2 data system (dataSystem option).`,
+        );
+        return;
+      }
+      this._connectionManager?.setConnectionMode(mode as ConnectionMode);
+      this._connectionManager?.setOffline(mode === 'offline');
     }
   }
 
@@ -260,16 +293,16 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   getConnectionMode(): FDv2ConnectionMode;
   getConnectionMode(): ConnectionMode | FDv2ConnectionMode {
-    if (this._connectionManager) {
-      return (this.dataManager as MobileDataManager).getConnectionMode();
+    if (this.isFDv2) {
+      return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
     }
-    return (this.dataManager as FDv2DataManagerControl).getCurrentMode();
+    return (this.dataManager as MobileDataManager).getConnectionMode();
   }
 
   isOffline() {
-    if (this._connectionManager) {
-      return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';
+    if (this.isFDv2) {
+      return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
     }
-    return (this.dataManager as FDv2DataManagerControl).getCurrentMode() === 'offline';
+    return (this.dataManager as MobileDataManager).getConnectionMode() === 'offline';
   }
 }

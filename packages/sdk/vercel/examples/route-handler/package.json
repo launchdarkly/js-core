@@ -1,5 +1,6 @@
 {
-  "name": "example-vercel",
+  "name": "@launchdarkly/example-vercel",
+  "private": true,
   "version": "0.0.0",
   "packageManager": "yarn@3.4.1",
   "scripts": {
