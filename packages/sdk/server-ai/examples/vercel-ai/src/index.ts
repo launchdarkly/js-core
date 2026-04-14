@@ -52,7 +52,7 @@ async function main() {
   //   const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue);
   const aiConfig = await aiClient.completionConfig(aiConfigKey, context);
 
-  if (!aiConfig.enabled || !aiConfig.tracker) {
+  if (!aiConfig.enabled) {
     console.log('*** AI configuration is not enabled');
     process.exit(0);
   }
@@ -74,9 +74,9 @@ async function main() {
     });
 
     // Call the model and track metrics for the ai config
-    const result = await aiConfig.tracker.trackMetricsOf(
-      VercelProvider.getAIMetricsFromResponse,
-      () => generateText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
+    const tracker = aiConfig.createTracker!();
+    const result = await tracker.trackMetricsOf(VercelProvider.getAIMetricsFromResponse, () =>
+      generateText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
     );
 
     console.log('Response:', result.text);
@@ -99,7 +99,8 @@ async function main() {
     });
 
     // Stream is returned immediately (synchronously), metrics tracked in background
-    const streamResult = aiConfig.tracker.trackStreamMetricsOf(
+    const streamTracker = aiConfig.createTracker!();
+    const streamResult = streamTracker.trackStreamMetricsOf(
       () => streamText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
       VercelProvider.getAIMetricsFromStream,
     );
