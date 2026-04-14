@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>basicLogger | @launchdarkly/js-client-sdk - v4.5.0</title><meta name="description" content="Documentation for @launchdarkly/js-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>FDv2ConnectionMode | @launchdarkly/js-client-sdk - v4.5.0</title><meta name="description" content="Documentation for @launchdarkly/js-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -13,50 +13,35 @@
 <div class="tsd-page-title">
 <ul class="tsd-breadcrumb">
 <li><a href="../index.html">@launchdarkly/js-client-sdk</a></li>
-<li><a href="basicLogger-1.html">basicLogger</a></li></ul>
-<h1>Function basicLogger</h1></div>
-<section class="tsd-panel">
-<ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="basicLogger"><span class="tsd-kind-call-signature">basic<wbr/>Logger</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">options</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a><a href="#basicLogger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Provides a basic <a href="../interfaces/LDLogger.html" class="tsd-kind-interface">LDLogger</a> implementation.</p>
-<p>This logging implementation uses a basic format that includes only the log level
-and the message text. By default this uses log level &#39;info&#39; and the output is
-written to <code>console.error</code>.</p>
-<p>To use the logger created by this function, put it into <a href="../interfaces/LDOptions.html#logger" class="tsd-kind-property">LDOptions.logger</a>. If
-you do not set <a href="../interfaces/LDOptions.html#logger" class="tsd-kind-property">LDOptions.logger</a> to anything, the SDK uses a default logger
-that will log &quot;info&quot; level and higher priorty messages and it will log messages to
-console.info, console.warn, and console.error.</p>
+<li><a href="FDv2ConnectionMode.html">FDv2ConnectionMode</a></li></ul>
+<h1>Type alias FDv2ConnectionMode</h1></div>
+<div class="tsd-signature"><span class="tsd-kind-type-alias">FDv2<wbr/>Connection<wbr/>Mode</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;streaming&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;polling&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;offline&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;one-shot&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;background&quot;</span></div>
+<div class="tsd-comment tsd-typography"><p>Connection modes for the FDv2 data system.</p>
+<p>This type is not stable, and not subject to any backwards compatibility
+guarantees or semantic versioning. It is in early access. If you want access
+to this feature please join the EAP.
+<a href="https://launchdarkly.com/docs/sdk/features/data-saving-mode">https://launchdarkly.com/docs/sdk/features/data-saving-mode</a></p>
+<p>This defines the full set of named connection modes available in FDv2.
+Each mode maps to a specific initializer/synchronizer pipeline via the
+mode table.</p>
 </div>
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><span class="tsd-kind-parameter">options</span>: <a href="../interfaces/BasicLoggerOptions.html" class="tsd-signature-type tsd-kind-interface">BasicLoggerOptions</a></h5>
-<div class="tsd-comment tsd-typography"><p>Configuration for the logger. If no options are specified, the
-  logger uses <code>{ level: &#39;info&#39; }</code>.</p>
-</div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="../interfaces/LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></h4>
 <div class="tsd-comment tsd-typography">
-<h4>Example</h4><p>This example shows how to use <code>basicLogger</code> in your SDK options to enable console
-logging only at <code>warn</code> and <code>error</code> levels.</p>
-<pre><code class="language-javascript"><span class="hl-1">  </span><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">ldOptions</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-3">logger:</span><span class="hl-1"> </span><span class="hl-4">basicLogger</span><span class="hl-1">({ </span><span class="hl-3">level:</span><span class="hl-1"> </span><span class="hl-9">&#39;warn&#39;</span><span class="hl-1"> }),</span><br/><span class="hl-1">  };</span>
-</code><button>Copy</button></pre>
-
-<h4>Example</h4><p>This example shows how to use <code>basicLogger</code> in your SDK options to cause all
-log output to go to <code>console.log</code></p>
-<pre><code class="language-javascript"><span class="hl-1">  </span><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">ldOptions</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-3">logger:</span><span class="hl-1"> </span><span class="hl-4">basicLogger</span><span class="hl-1">({ </span><span class="hl-3">destination:</span><span class="hl-1"> </span><span class="hl-3">console</span><span class="hl-1">.</span><span class="hl-3">log</span><span class="hl-1"> }),</span><br/><span class="hl-1">  };</span>
-</code><button>Copy</button></pre>
-<ul>
-<li></li>
-</ul>
-
-<h4>Example</h4><p>The configuration also allows you to control the destination for each log level.</p>
-<pre><code class="language-javascript"><span class="hl-1">  </span><span class="hl-0">const</span><span class="hl-1"> </span><span class="hl-2">ldOptions</span><span class="hl-1"> = {</span><br/><span class="hl-1">    </span><span class="hl-3">logger:</span><span class="hl-1"> </span><span class="hl-4">basicLogger</span><span class="hl-1">({</span><br/><span class="hl-1">      </span><span class="hl-3">destination:</span><span class="hl-1"> {</span><br/><span class="hl-1">        </span><span class="hl-3">debug:</span><span class="hl-1"> </span><span class="hl-3">console</span><span class="hl-1">.</span><span class="hl-3">debug</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-3">info:</span><span class="hl-1"> </span><span class="hl-3">console</span><span class="hl-1">.</span><span class="hl-3">info</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-3">warn:</span><span class="hl-1"> </span><span class="hl-3">console</span><span class="hl-1">.</span><span class="hl-3">warn</span><span class="hl-1">,</span><br/><span class="hl-1">        </span><span class="hl-3">error:console</span><span class="hl-1">.</span><span class="hl-3">error</span><br/><span class="hl-1">      }</span><br/><span class="hl-1">    }),</span><br/><span class="hl-1">  };</span>
-</code><button>Copy</button></pre>
+<h4>Remarks</h4><p>The following connection modes are supported:</p>
+<p>streaming - Initializes from cache then polling. Synchronizes via streaming
+with polling fallback. Designed for mobile foreground and desktop use.</p>
+<p>polling - Initializes from cache. Synchronizes via polling at the configured
+interval.</p>
+<p>offline - Initializes from cache only. No synchronizers run. The SDK will not
+receive updates or send analytic/diagnostic events.</p>
+<p>one-shot - Initializes from cache, then polling, then streaming. No
+synchronizers run after initialization. Designed for browser SDKs where
+a single flag fetch at page load is sufficient.</p>
+<p>background - Initializes from cache. Synchronizes via polling at a reduced
+frequency (1 hour by default). Designed for mobile SDKs when the application
+is in the background.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/fd6095b/packages/sdk/browser/src/common.ts#L113">packages/sdk/browser/src/common.ts:113</a></li></ul></aside></li></ul></section></div>
+<li>Defined in packages/shared/sdk-client/dist/esm/api/datasource/FDv2ConnectionMode.d.ts:33</li></ul></aside></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -119,22 +104,22 @@ log output to go to <code>console.log</code></p>
 <li><a href="../interfaces/PollingDataSourceEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Polling<wbr/>Data<wbr/>Source<wbr/>Entry</span></a></li>
 <li><a href="../interfaces/StreamingDataSourceEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Streaming<wbr/>Data<wbr/>Source<wbr/>Entry</span></a></li>
 <li><a href="../interfaces/TrackSeriesContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Track<wbr/>Series<wbr/>Context</span></a></li>
-<li><a href="../types/FDv2ConnectionMode.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2097152"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>FDv2<wbr/>Connection<wbr/>Mode</span></a></li>
-<li><a href="../types/IdentifySeriesStatus.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Identify<wbr/>Series<wbr/>Status</span></a></li>
-<li><a href="../types/InitializerEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Initializer<wbr/>Entry</span></a></li>
-<li><a href="../types/LDClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDClient</span></a></li>
-<li><a href="../types/LDContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext</span></a></li>
-<li><a href="../types/LDContextStrict.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext<wbr/>Strict</span></a></li>
-<li><a href="../types/LDEvaluationDetail.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail</span></a></li>
-<li><a href="../types/LDEvaluationDetailTyped.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail<wbr/>Typed</span></a></li>
-<li><a href="../types/LDFlagValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDFlag<wbr/>Value</span></a></li>
-<li><a href="../types/LDIdentifyResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDIdentify<wbr/>Result</span></a></li>
-<li><a href="../types/LDInspection.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDInspection</span></a></li>
-<li><a href="../types/LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
-<li><a href="../types/LDWaitForInitializationResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDWait<wbr/>For<wbr/>Initialization<wbr/>Result</span></a></li>
-<li><a href="../types/SynchronizerEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Synchronizer<wbr/>Entry</span></a></li>
-<li><a href="basicLogger-1.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>basic<wbr/>Logger</span></a></li>
-<li><a href="createClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Client</span></a></li></ul></nav></div></div></div>
+<li><a href="FDv2ConnectionMode.html" class="current"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-2097152"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-type-alias)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M11.31 16V8.224H8.91V7.24H14.79V8.224H12.39V16H11.31Z" fill="var(--color-text)"></path></g></svg><span>FDv2<wbr/>Connection<wbr/>Mode</span></a></li>
+<li><a href="IdentifySeriesStatus.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Identify<wbr/>Series<wbr/>Status</span></a></li>
+<li><a href="InitializerEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Initializer<wbr/>Entry</span></a></li>
+<li><a href="LDClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDClient</span></a></li>
+<li><a href="LDContext.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext</span></a></li>
+<li><a href="LDContextStrict.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDContext<wbr/>Strict</span></a></li>
+<li><a href="LDEvaluationDetail.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail</span></a></li>
+<li><a href="LDEvaluationDetailTyped.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDEvaluation<wbr/>Detail<wbr/>Typed</span></a></li>
+<li><a href="LDFlagValue.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDFlag<wbr/>Value</span></a></li>
+<li><a href="LDIdentifyResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDIdentify<wbr/>Result</span></a></li>
+<li><a href="LDInspection.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDInspection</span></a></li>
+<li><a href="LDLogLevel.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDLog<wbr/>Level</span></a></li>
+<li><a href="LDWaitForInitializationResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDWait<wbr/>For<wbr/>Initialization<wbr/>Result</span></a></li>
+<li><a href="SynchronizerEntry.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Synchronizer<wbr/>Entry</span></a></li>
+<li><a href="../functions/basicLogger-1.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-64"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-function)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.39 16V7.24H14.55V8.224H10.446V11.128H14.238V12.112H10.47V16H9.39Z" fill="var(--color-text)"></path></g></svg><span>basic<wbr/>Logger</span></a></li>
+<li><a href="../functions/createClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>create<wbr/>Client</span></a></li></ul></nav></div></div></div>
 <div class="tsd-generator">
 <p>Generated using <a href="https://typedoc.org/" rel="noopener" target="_blank">TypeDoc</a></p></div>
 <div class="overlay"></div></body></html>
