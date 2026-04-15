@@ -38,13 +38,13 @@ describe('TrackedChat', () => {
       messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
-      tracker: mockTracker,
+      createTracker: () => mockTracker,
     };
   });
 
   describe('appendMessages', () => {
     it('appends messages to the conversation history', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       const messagesToAppend: LDMessage[] = [
         { role: 'user', content: 'Hello' },
@@ -60,7 +60,7 @@ describe('TrackedChat', () => {
     });
 
     it('appends multiple message batches sequentially', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([{ role: 'user', content: 'First message' }]);
       chat.appendMessages([{ role: 'assistant', content: 'Second message' }]);
@@ -74,7 +74,7 @@ describe('TrackedChat', () => {
     });
 
     it('handles empty message array', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([]);
 
@@ -85,7 +85,7 @@ describe('TrackedChat', () => {
 
   describe('getMessages', () => {
     it('returns only conversation history when includeConfigMessages is false', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([
         { role: 'user', content: 'User message' },
@@ -100,7 +100,7 @@ describe('TrackedChat', () => {
     });
 
     it('returns only conversation history when includeConfigMessages is omitted (defaults to false)', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([{ role: 'user', content: 'User message' }]);
 
@@ -111,7 +111,7 @@ describe('TrackedChat', () => {
     });
 
     it('returns config messages prepended when includeConfigMessages is true', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([
         { role: 'user', content: 'User message' },
@@ -127,7 +127,7 @@ describe('TrackedChat', () => {
     });
 
     it('returns only config messages when no conversation history exists and includeConfigMessages is true', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       const messages = chat.getMessages(true);
 
@@ -140,7 +140,7 @@ describe('TrackedChat', () => {
         ...aiConfig,
         messages: [],
       };
-      const chat = new TrackedChat(configWithoutMessages, mockTracker, mockProvider);
+      const chat = new TrackedChat(configWithoutMessages, mockProvider);
 
       const messages = chat.getMessages(false);
 
@@ -148,7 +148,7 @@ describe('TrackedChat', () => {
     });
 
     it('returns a copy of the messages array (not a reference)', () => {
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([{ role: 'user', content: 'Original message' }]);
 
@@ -171,7 +171,7 @@ describe('TrackedChat', () => {
         ...aiConfig,
         messages: undefined,
       };
-      const chat = new TrackedChat(configWithoutMessages, mockTracker, mockProvider);
+      const chat = new TrackedChat(configWithoutMessages, mockProvider);
 
       chat.appendMessages([{ role: 'user', content: 'User message' }]);
 
@@ -196,7 +196,7 @@ describe('TrackedChat', () => {
 
       mockProvider.invokeModel.mockResolvedValue(mockResponse);
 
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       await chat.invoke('Hello');
 
@@ -216,7 +216,7 @@ describe('TrackedChat', () => {
 
       mockProvider.invokeModel.mockResolvedValue(mockResponse);
 
-      const chat = new TrackedChat(aiConfig, mockTracker, mockProvider);
+      const chat = new TrackedChat(aiConfig, mockProvider);
 
       chat.appendMessages([{ role: 'user', content: 'Pre-appended message' }]);
       await chat.invoke('New user input');

@@ -60,20 +60,19 @@ async function main() {
     myVariable: 'My User Defined Variable',
   });
 
-  if (!aiConfig.enabled || !aiConfig.tracker) {
+  if (!aiConfig.enabled) {
     console.log('*** AI configuration is not enabled');
     process.exit(0);
   }
 
-  const completion = await aiConfig.tracker.trackMetricsOf(
-    OpenAIProvider.createAIMetrics,
-    async () =>
-      client.chat.completions.create({
-        messages: aiConfig.messages || [],
-        model: aiConfig.model?.name || 'gpt-4',
-        temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
-        max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
-      }),
+  const tracker = aiConfig.createTracker!();
+  const completion = await tracker.trackMetricsOf(OpenAIProvider.createAIMetrics, async () =>
+    client.chat.completions.create({
+      messages: aiConfig.messages || [],
+      model: aiConfig.model?.name || 'gpt-4',
+      temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+      max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
+    }),
   );
 
   console.log('AI Response:', completion.choices[0]?.message.content);

@@ -105,10 +105,11 @@ export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
   enabled: boolean;
 
   /**
-   * A tracker which can be used to generate analytics.
-   * Undefined for disabled configs.
+   * Creates a new tracker for this AI Config invocation. Each call returns a
+   * new tracker with a fresh runId. Use createTracker() at the start of each
+   * execution to obtain a tracker, then use it to record metrics for that run.
    */
-  tracker?: LDAIConfigTracker;
+  createTracker?: () => LDAIConfigTracker;
 }
 
 // ============================================================================

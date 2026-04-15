@@ -62,12 +62,13 @@ async function main() {
     },
   );
 
-  if (!aiConfig.enabled || !aiConfig.tracker) {
+  if (!aiConfig.enabled) {
     console.log('*** AI configuration is not enabled');
     process.exit(0);
   }
 
-  const completion = aiConfig.tracker.trackBedrockConverseMetrics(
+  const tracker = aiConfig.createTracker!();
+  const completion = tracker.trackBedrockConverseMetrics(
     await awsClient.send(
       new ConverseCommand({
         modelId: aiConfig.model?.name ?? 'no-model',

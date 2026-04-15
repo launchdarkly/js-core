@@ -7,6 +7,7 @@ import {
   LDAIAgentRequestConfig,
   LDAICompletionConfig,
   LDAICompletionConfigDefault,
+  LDAIConfigTracker,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
 } from './config';
@@ -325,4 +326,15 @@ export interface LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Judge | undefined>;
+
+  /**
+   * Reconstructs an AIConfigTracker from a resumption token string previously
+   * obtained from a tracker's `resumptionToken` property. Use this to associate
+   * deferred events (such as user feedback) with the original invocation's runId.
+   *
+   * @param token A URL-safe Base64-encoded resumption token string.
+   * @param context The evaluation context to use for subsequent track calls.
+   * @returns A reconstructed AIConfigTracker with the original runId preserved.
+   */
+  createTracker(token: string, context: LDContext): LDAIConfigTracker;
 }
