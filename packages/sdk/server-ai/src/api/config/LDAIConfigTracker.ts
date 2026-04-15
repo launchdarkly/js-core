@@ -41,15 +41,29 @@ export interface LDAIConfigTracker {
    * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   getTrackData(graphKey?: string): {
-    variationKey: string;
+    runId: string;
     configKey: string;
+    variationKey: string;
     version: number;
     modelName: string;
     providerName: string;
     graphKey?: string;
   };
+
+  /**
+   * A URL-safe Base64-encoded token that encodes the tracker's runId, configKey,
+   * variationKey, and version. Pass this to AIClient.createTracker() to reconstruct
+   * the tracker across process boundaries (e.g. for associating deferred feedback
+   * with the original invocation).
+   */
+  readonly resumptionToken: string;
+
   /**
    * Track the duration of generation.
+   *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning. Use createTracker() on the config result to obtain a fresh
+   * tracker for a new execution.
    *
    * Ideally this would not include overhead time such as network communication.
    *
@@ -61,6 +75,9 @@ export interface LDAIConfigTracker {
   /**
    * Track information about token usage.
    *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
+   *
    * @param tokens Token usage information.
    * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
@@ -69,12 +86,18 @@ export interface LDAIConfigTracker {
   /**
    * Generation was successful.
    *
+   * At-most-once per execution: subsequent calls (including trackError) on the
+   * same tracker are dropped with a warning.
+   *
    * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
   trackSuccess(graphKey?: string): void;
 
   /**
    * An error was encountered during generation.
+   *
+   * At-most-once per execution: subsequent calls (including trackSuccess) on the
+   * same tracker are dropped with a warning.
    *
    * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
@@ -83,6 +106,9 @@ export interface LDAIConfigTracker {
   /**
    * Track sentiment about the generation.
    *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
+   *
    * @param feedback Feedback about the generation.
    * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
@@ -90,6 +116,9 @@ export interface LDAIConfigTracker {
 
   /**
    * Track the time to first token for this generation.
+   *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
    *
    * @param timeToFirstTokenMs The duration in milliseconds.
    * @param graphKey When provided, associates this metric with the specified agent graph key.

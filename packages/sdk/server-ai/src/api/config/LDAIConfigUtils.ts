@@ -82,14 +82,15 @@ export class LDAIConfigUtils {
   /**
    * Converts a LaunchDarkly flag value to the appropriate AI configuration type.
    *
+   * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param tracker The tracker to add to the config
+   * @param trackerFactory A factory function that creates a new tracker for each execution
    * @returns The appropriate AI configuration type
    */
   static fromFlagValue(
     key: string,
     flagValue: LDAIConfigFlagValue,
-    tracker: LDAIConfigTracker,
+    trackerFactory: () => LDAIConfigTracker,
   ): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
@@ -97,12 +98,12 @@ export class LDAIConfigUtils {
 
     switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(key, flagValue, tracker);
+        return this.toAgentConfig(key, flagValue, trackerFactory);
       case 'judge':
-        return this.toJudgeConfig(key, flagValue, tracker);
+        return this.toJudgeConfig(key, flagValue, trackerFactory);
       case 'completion':
       default:
-        return this.toCompletionConfig(key, flagValue, tracker);
+        return this.toCompletionConfig(key, flagValue, trackerFactory);
     }
   }
 
@@ -118,13 +119,13 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          tracker: undefined,
+          createTracker: undefined,
         } as LDAIAgentConfig;
       case 'judge':
         return {
           key,
           enabled: false,
-          tracker: undefined,
+          createTracker: undefined,
         } as LDAIJudgeConfig;
       case 'completion':
       default:
@@ -132,7 +133,7 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          tracker: undefined,
+          createTracker: undefined,
         } as LDAICompletionConfig;
     }
   }
@@ -156,18 +157,19 @@ export class LDAIConfigUtils {
   /**
    * Creates a completion config from flag value data.
    *
+   * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param tracker The tracker to add to the config
+   * @param trackerFactory A factory function that creates a new tracker for each execution
    * @returns A completion configuration
    */
   static toCompletionConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
-    tracker: LDAIConfigTracker,
+    trackerFactory: () => LDAIConfigTracker,
   ): LDAICompletionConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
-      tracker,
+      createTracker: trackerFactory,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
@@ -176,18 +178,19 @@ export class LDAIConfigUtils {
   /**
    * Creates an agent config from flag value data.
    *
+   * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param tracker The tracker to add to the config
+   * @param trackerFactory A factory function that creates a new tracker for each execution
    * @returns An agent configuration
    */
   static toAgentConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
-    tracker: LDAIConfigTracker,
+    trackerFactory: () => LDAIConfigTracker,
   ): LDAIAgentConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
-      tracker,
+      createTracker: trackerFactory,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
     };
@@ -196,14 +199,15 @@ export class LDAIConfigUtils {
   /**
    * Creates a judge config from flag value data.
    *
+   * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param tracker The tracker to add to the config
+   * @param trackerFactory A factory function that creates a new tracker for each execution
    * @returns A judge configuration
    */
   static toJudgeConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
-    tracker: LDAIConfigTracker,
+    trackerFactory: () => LDAIConfigTracker,
   ): LDAIJudgeConfig {
     // Prioritize evaluationMetricKey, fallback to first valid (non-empty, non-whitespace) value in evaluationMetricKeys
     let evaluationMetricKey: string | undefined;
@@ -218,7 +222,7 @@ export class LDAIConfigUtils {
 
     return {
       ...this._toBaseConfig(key, flagValue),
-      tracker,
+      createTracker: trackerFactory,
       messages: flagValue.messages,
       evaluationMetricKey,
     };

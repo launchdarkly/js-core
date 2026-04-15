@@ -47,14 +47,14 @@ describe('Judge', () => {
       ],
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
-      tracker: mockTracker,
+      createTracker: () => mockTracker,
       evaluationMetricKey: 'relevance',
     };
   });
 
   describe('constructor', () => {
     it('initializes with proper configuration', () => {
-      const judge = new Judge(judgeConfig, mockTracker, mockProvider, mockLogger);
+      const judge = new Judge(judgeConfig, mockProvider, mockLogger);
 
       expect(judge).toBeDefined();
     });
@@ -64,7 +64,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockTracker, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, mockLogger);
     });
 
     it('evaluates AI response successfully', async () => {
@@ -209,12 +209,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithoutMetrics = new Judge(
-        configWithoutMetrics,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockProvider, mockLogger);
 
       const result = await judgeWithoutMetrics.evaluate('test input', 'test output');
 
@@ -231,12 +226,7 @@ describe('Judge', () => {
         evaluationMetricKey: 'relevance',
         evaluationMetricKeys: undefined,
       };
-      const judgeWithSingleKey = new Judge(
-        configWithSingleKey,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithSingleKey = new Judge(configWithSingleKey, mockProvider, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -275,12 +265,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithLegacyKeys = new Judge(
-        configWithLegacyKeys,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockProvider, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -319,12 +304,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['', '   ', 'relevance', 'accuracy'],
       };
-      const judgeWithInvalidKeys = new Judge(
-        configWithInvalidKeys,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockProvider, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -364,7 +344,7 @@ describe('Judge', () => {
         evaluationMetricKey: 'helpfulness',
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithBoth = new Judge(configWithBoth, mockTracker, mockProvider, mockLogger);
+      const judgeWithBoth = new Judge(configWithBoth, mockProvider, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -402,12 +382,7 @@ describe('Judge', () => {
         ...judgeConfig,
         messages: undefined,
       };
-      const judgeWithoutMessages = new Judge(
-        configWithoutMessages,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithoutMessages = new Judge(configWithoutMessages, mockProvider, mockLogger);
 
       const result = await judgeWithoutMessages.evaluate('test input', 'test output');
 
@@ -511,7 +486,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockTracker, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, mockLogger);
     });
 
     it('evaluates messages and response successfully', async () => {
@@ -596,7 +571,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockTracker, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, mockLogger);
     });
 
     it('constructs evaluation messages correctly', () => {
@@ -621,7 +596,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockTracker, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, mockLogger);
     });
 
     it('parses valid evaluation response correctly', () => {
@@ -633,7 +608,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({
         relevance: { score: 0.8, reasoning: 'Good' },
@@ -647,7 +622,7 @@ describe('Judge', () => {
         relevance: { score: 0.8, reasoning: 'Good' },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
     });
@@ -661,7 +636,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
     });
@@ -675,7 +650,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -693,7 +668,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -711,7 +686,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -729,7 +704,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -744,12 +719,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithEmptyKeys = new Judge(
-        configWithEmptyKeys,
-        mockTracker,
-        mockProvider,
-        mockLogger,
-      );
+      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockProvider, mockLogger);
 
       const result = await judgeWithEmptyKeys.evaluate('test input', 'test output');
 
@@ -769,7 +739,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -787,7 +757,7 @@ describe('Judge', () => {
         },
       };
 
-      const result = parseResponse(responseData, 'relevance');
+      const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
