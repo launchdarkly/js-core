@@ -1,5 +1,5 @@
 {
-  "name": "@internal/react-sdk-example-vercel-edge",
+  "name": "@launchdarkly/react-sdk-example-vercel-edge",
   "private": true,
   "scripts": {
     "dev": "next dev",

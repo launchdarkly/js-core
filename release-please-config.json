@@ -187,6 +187,11 @@
           "type": "json",
           "path": "/packages/sdk/react/examples/vercel-edge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/vercel-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/vercel/examples/complete/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/vercel-server-sdk']"
         }
       ]
     },
