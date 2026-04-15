@@ -464,7 +464,14 @@ describe('agentConfig method', () => {
       key,
       1,
     );
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'agent', variables);
+    expect(evaluateSpy).toHaveBeenCalledWith(
+      key,
+      testContext,
+      defaultValue,
+      'agent',
+      variables,
+      undefined,
+    );
     expect(result).toBe(mockConfig);
     evaluateSpy.mockRestore();
   });
