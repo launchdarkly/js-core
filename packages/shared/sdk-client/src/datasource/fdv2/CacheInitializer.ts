@@ -3,13 +3,7 @@ import { Context, Crypto, internal, LDLogger, Storage } from '@launchdarkly/js-s
 import { readFreshness } from '../../storage/freshness';
 import { loadCachedFlags } from '../../storage/loadCachedFlags';
 import { Flag } from '../../types';
-import {
-  changeSet,
-  errorInfoFromUnknown,
-  FDv2SourceResult,
-  interrupted,
-  shutdown,
-} from './FDv2SourceResult';
+import { changeSet, FDv2SourceResult, shutdown } from './FDv2SourceResult';
 import { Initializer } from './Initializer';
 import { InitializerFactory } from './SourceManager';
 
@@ -50,13 +44,13 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
 
   if (!storage) {
     logger?.debug('No storage available for cache initializer');
-    return interrupted(errorInfoFromUnknown('No storage available'), false);
+    return changeSet({ version: 0, type: 'none', updates: [] }, false);
   }
 
   const cached = await loadCachedFlags(storage, crypto, environmentNamespace, context, logger);
   if (!cached) {
     logger?.debug('Cache miss for context');
-    return interrupted(errorInfoFromUnknown('Cache miss'), false);
+    return changeSet({ version: 0, type: 'none', updates: [] }, false);
   }
 
   const updates: internal.Update[] = Object.entries(cached.flags).map(

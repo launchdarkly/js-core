@@ -76,7 +76,7 @@ export function makePayload(
 ): internal.Payload {
   return {
     version: 1,
-    state: opts.state ?? 'test-selector',
+    ...('state' in opts ? { state: opts.state } : { state: 'test-selector' }),
     type: opts.type ?? 'full',
     updates: [],
   };

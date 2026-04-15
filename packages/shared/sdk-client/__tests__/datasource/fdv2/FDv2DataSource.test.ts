@@ -92,6 +92,48 @@ it('resolves start() when all initializers exhausted but data was received', asy
   ds.close();
 });
 
+it('skips transfer-none initializer results without calling dataCallback', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const nonePayload = makePayload({ type: 'none' });
+  const fullPayload = makePayload({ state: 'selector' });
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeInitFactory(makeMockInitializer(changeSet(fullPayload, false))),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  await ds.start();
+
+  expect(dataCallback).toHaveBeenCalledTimes(1);
+  expect(dataCallback).toHaveBeenCalledWith(fullPayload);
+  ds.close();
+});
+
+it('does not mark data received for transfer-none initializer results', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const nonePayload = makePayload({ type: 'none' });
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(nonePayload, false)))],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted');
+  expect(dataCallback).not.toHaveBeenCalled();
+  ds.close();
+});
+
 it('continues past initializer errors', async () => {
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();
