@@ -21,11 +21,13 @@ import {
   LDMessage,
 } from './api/config';
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
+import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './api/graph';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
+import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
 import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
 
 /**
@@ -38,6 +40,7 @@ const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
 const TRACK_USAGE_CREATE_JUDGE = '$ld:ai:usage:create-judge';
 const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
 const TRACK_USAGE_AGENT_CONFIGS = '$ld:ai:usage:agent-configs';
+const TRACK_USAGE_AGENT_GRAPH = '$ld:ai:usage:agent-graph';
 
 const INIT_TRACK_CONTEXT: LDContext = {
   kind: 'ld_ai',
@@ -392,5 +395,113 @@ export class LDAIClientImpl implements LDAIClient {
 
   createTracker(token: string, context: LDContext): LDAIConfigTracker {
     return LDAIConfigTrackerImpl.fromResumptionToken(token, this._ldClient, context);
+  }
+
+  async agentGraph(
+    graphKey: string,
+    context: LDContext,
+  ): Promise<{ enabled: false } | { enabled: true; graph: AgentGraphDefinition }> {
+    this._ldClient.track(TRACK_USAGE_AGENT_GRAPH, context, graphKey, 1);
+
+    const disabled = { enabled: false as const };
+
+    // Step 1: Fetch the graph flag value
+    const defaultGraphValue: LDAgentGraphFlagValue = { root: '' };
+    const graphFlagValue = (await this._ldClient.variation(
+      graphKey,
+      context,
+      defaultGraphValue,
+    )) as LDAgentGraphFlagValue;
+
+    // Step 2: Validate - graph must be fetchable (has a root)
+    if (!graphFlagValue.root) {
+      this._logger?.debug(`agentGraph: graph "${graphKey}" is not fetchable or has no root node.`);
+      return disabled;
+    }
+
+    // Step 3: Validate - collect all node keys and check connectivity from root
+    const allKeys = AgentGraphDefinition.collectAllKeys(graphFlagValue);
+    const reachableKeys = this._collectReachableKeys(graphFlagValue);
+
+    const unreachableKey = [...allKeys].find((key) => !reachableKeys.has(key));
+    if (unreachableKey) {
+      this._logger?.debug(
+        `agentGraph: graph "${graphKey}" has unconnected node "${unreachableKey}" that is not reachable from the root.`,
+      );
+      return disabled;
+    }
+
+    // Step 4: Validate - fetch all child agent configs
+    const agentConfigs: Record<string, LDAIAgentConfig> = {};
+    const fetchResults = await Promise.all(
+      [...allKeys].map(async (key) => {
+        const config = await this._agentConfigInternal(key, context);
+        return { key, config };
+      }),
+    );
+
+    const disabledResult = fetchResults.find(({ config }) => !config.enabled);
+    if (disabledResult) {
+      this._logger?.debug(
+        `agentGraph: agent config "${disabledResult.key}" in graph "${graphKey}" is not enabled or could not be fetched.`,
+      );
+      return disabled;
+    }
+    fetchResults.forEach(({ key, config }) => {
+      agentConfigs[key] = config;
+    });
+
+    // Build the node map
+    const nodes = AgentGraphDefinition.buildNodes(graphFlagValue, agentConfigs);
+
+    // eslint-disable-next-line no-underscore-dangle
+    const variationKey = graphFlagValue._ldMeta?.variationKey;
+    // eslint-disable-next-line no-underscore-dangle
+    const version = graphFlagValue._ldMeta?.version ?? 1;
+    const ldClient = this._ldClient;
+
+    const graph = new AgentGraphDefinition(
+      graphFlagValue,
+      context,
+      nodes,
+      graphKey,
+      () => new LDGraphTrackerImpl(ldClient, graphKey, version, context, variationKey),
+    );
+
+    return { enabled: true, graph };
+  }
+
+  createGraphTracker(token: string, context: LDContext): LDGraphTracker {
+    return LDGraphTrackerImpl.fromResumptionToken(token, this._ldClient, context);
+  }
+
+  /**
+   * Fetches a single agent config without tracking usage (used internally by agentGraph).
+   */
+  private async _agentConfigInternal(key: string, context: LDContext): Promise<LDAIAgentConfig> {
+    const config = await this._evaluate(key, context, disabledAIConfig, 'agent');
+    return config as LDAIAgentConfig;
+  }
+
+  /**
+   * Returns the set of all node keys reachable from the root via BFS.
+   */
+  private _collectReachableKeys(graph: LDAgentGraphFlagValue): Set<string> {
+    const visited = new Set<string>();
+    const queue: string[] = [graph.root];
+    visited.add(graph.root);
+
+    while (queue.length > 0) {
+      const key = queue.shift()!;
+      const edges = graph.edges?.[key] ?? [];
+      edges.forEach((edge) => {
+        if (!visited.has(edge.key)) {
+          visited.add(edge.key);
+          queue.push(edge.key);
+        }
+      });
+    }
+
+    return visited;
   }
 }

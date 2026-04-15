@@ -11,6 +11,7 @@ import {
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
 } from './config';
+import { AgentGraphDefinition, LDGraphTracker } from './graph';
 import { Judge } from './judge/Judge';
 import { SupportedAIProvider } from './providers';
 
@@ -337,4 +338,52 @@ export interface LDAIClient {
    * @returns A reconstructed AIConfigTracker with the original runId preserved.
    */
   createTracker(token: string, context: LDContext): LDAIConfigTracker;
+
+  /**
+   * Fetches an agent graph configuration from LaunchDarkly and returns an
+   * {@link AgentGraphDefinition} that can be traversed and tracked.
+   *
+   * The method validates that:
+   * - The graph flag can be evaluated.
+   * - A single root node is present.
+   * - All nodes in the graph are reachable from the root (no disconnected nodes).
+   * - Every referenced agent config can be fetched and is enabled.
+   *
+   * If any validation check fails, `{ enabled: false }` is returned and, when the
+   * logger level is DEBUG, a warning is emitted describing the failure.
+   *
+   * @param graphKey The LaunchDarkly flag key for the agent graph configuration.
+   * @param context The LaunchDarkly context used for flag evaluation and tracking.
+   *
+   * @returns A promise that resolves to `{ enabled: false }` when the graph is
+   *   invalid or disabled, or `{ enabled: true, graph: AgentGraphDefinition }` otherwise.
+   *
+   * @example
+   * ```typescript
+   * const result = await aiClient.agentGraph('my-agent-graph', context);
+   * if (result.enabled) {
+   *   const tracker = result.graph.createTracker();
+   *   result.graph.traverse((node, ctx) => {
+   *     // build your provider-specific node here
+   *   });
+   *   tracker.trackInvocationSuccess();
+   * }
+   * ```
+   */
+  agentGraph(
+    graphKey: string,
+    context: LDContext,
+  ): Promise<{ enabled: false } | { enabled: true; graph: AgentGraphDefinition }>;
+
+  /**
+   * Reconstructs an {@link LDGraphTracker} from a resumption token, preserving
+   * the original `runId` so events from a resumed session are correlated correctly.
+   *
+   * **Security note:** The token encodes the flag variation key and version.
+   * Keep it server-side; do not expose it to untrusted clients.
+   *
+   * @param token URL-safe Base64-encoded token from {@link LDGraphTracker.resumptionToken}.
+   * @param context LDContext to associate with the reconstructed tracker.
+   */
+  createGraphTracker(token: string, context: LDContext): LDGraphTracker;
 }
