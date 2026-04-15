@@ -47,8 +47,15 @@ function makeDefinition(
     nodes,
     graph.root,
     () =>
-      // eslint-disable-next-line no-underscore-dangle
-      new LDGraphTrackerImpl(mockLdClient, randomUUID(), graph.root, undefined, graph._ldMeta?.version ?? 1, testContext),
+      new LDGraphTrackerImpl(
+        mockLdClient,
+        randomUUID(),
+        graph.root,
+        undefined,
+        // eslint-disable-next-line no-underscore-dangle
+        graph._ldMeta?.version ?? 1,
+        testContext,
+      ),
   );
 }
 

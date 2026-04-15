@@ -38,7 +38,14 @@ it('returns correct track data with variationKey', () => {
 });
 
 it('omits variationKey when not provided', () => {
-  const tracker = new LDGraphTrackerImpl(mockLdClient, 'some-run-id', graphKey, undefined, version, testContext);
+  const tracker = new LDGraphTrackerImpl(
+    mockLdClient,
+    'some-run-id',
+    graphKey,
+    undefined,
+    version,
+    testContext,
+  );
   const data = tracker.getTrackData();
   expect(data.variationKey).toBeUndefined();
   expect(data.graphKey).toBe(graphKey);
@@ -65,7 +72,14 @@ it('encodes a resumption token with correct field order', () => {
 });
 
 it('omits variationKey from token when not set', () => {
-  const tracker = new LDGraphTrackerImpl(mockLdClient, 'run-abc', graphKey, undefined, version, testContext);
+  const tracker = new LDGraphTrackerImpl(
+    mockLdClient,
+    'run-abc',
+    graphKey,
+    undefined,
+    version,
+    testContext,
+  );
   const token = tracker.resumptionToken;
   const decoded = Buffer.from(token, 'base64url').toString('utf8');
   expect(decoded).toBe('{"runId":"run-abc","graphKey":"my-agent-graph","version":2}');
