@@ -465,7 +465,7 @@ export class LDAIClientImpl implements LDAIClient {
       context,
       nodes,
       graphKey,
-      () => new LDGraphTrackerImpl(ldClient, graphKey, version, context, variationKey),
+      () => new LDGraphTrackerImpl(ldClient, randomUUID(), graphKey, variationKey, version, context),
     );
 
     return { enabled: true, graph };

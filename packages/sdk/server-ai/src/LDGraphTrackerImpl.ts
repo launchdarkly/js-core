@@ -1,5 +1,3 @@
-import { randomUUID } from 'crypto';
-
 import type { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import type { LDGraphTracker } from './api/graph/LDGraphTracker';
@@ -15,20 +13,16 @@ import type { LDClientMin } from './LDClientMin';
  * a resumption token via {@link LDGraphTrackerImpl.fromResumptionToken}.
  */
 export class LDGraphTrackerImpl implements LDGraphTracker {
-  private readonly _runId: string;
-
   private _summary: LDGraphMetricSummary = {};
 
   constructor(
     private readonly _ldClient: LDClientMin,
+    private readonly _runId: string,
     private readonly _graphKey: string,
+    private readonly _variationKey: string | undefined,
     private readonly _version: number,
     private readonly _context: LDContext,
-    private readonly _variationKey?: string,
-    runId?: string,
-  ) {
-    this._runId = runId ?? randomUUID();
-  }
+  ) {}
 
   /**
    * Reconstructs an {@link LDGraphTrackerImpl} from a resumption token, preserving
@@ -50,11 +44,11 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     const data = JSON.parse(json) as LDGraphTrackData;
     return new LDGraphTrackerImpl(
       ldClient,
+      data.runId,
       data.graphKey,
+      data.variationKey,
       data.version,
       context,
-      data.variationKey,
-      data.runId,
     );
   }
 

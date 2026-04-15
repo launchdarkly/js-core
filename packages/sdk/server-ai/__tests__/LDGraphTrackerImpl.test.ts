@@ -16,8 +16,8 @@ const graphKey = 'my-agent-graph';
 const variationKey = 'v1';
 const version = 2;
 
-const makeTracker = (runId?: string) =>
-  new LDGraphTrackerImpl(mockLdClient, graphKey, version, testContext, variationKey, runId);
+const makeTracker = (runId = 'test-run-id') =>
+  new LDGraphTrackerImpl(mockLdClient, runId, graphKey, variationKey, version, testContext);
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -38,19 +38,12 @@ it('returns correct track data with variationKey', () => {
 });
 
 it('omits variationKey when not provided', () => {
-  const tracker = new LDGraphTrackerImpl(mockLdClient, graphKey, version, testContext);
+  const tracker = new LDGraphTrackerImpl(mockLdClient, 'some-run-id', graphKey, undefined, version, testContext);
   const data = tracker.getTrackData();
   expect(data.variationKey).toBeUndefined();
   expect(data.graphKey).toBe(graphKey);
   expect(data.version).toBe(version);
-  expect(typeof data.runId).toBe('string');
-});
-
-it('generates a runId when none is provided', () => {
-  const tracker = makeTracker();
-  const { runId } = tracker.getTrackData();
-  // UUID v4 pattern
-  expect(runId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  expect(data.runId).toBe('some-run-id');
 });
 
 it('uses provided runId', () => {
@@ -72,14 +65,7 @@ it('encodes a resumption token with correct field order', () => {
 });
 
 it('omits variationKey from token when not set', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    version,
-    testContext,
-    undefined,
-    'run-abc',
-  );
+  const tracker = new LDGraphTrackerImpl(mockLdClient, 'run-abc', graphKey, undefined, version, testContext);
   const token = tracker.resumptionToken;
   const decoded = Buffer.from(token, 'base64url').toString('utf8');
   expect(decoded).toBe('{"runId":"run-abc","graphKey":"my-agent-graph","version":2}');
