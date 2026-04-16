@@ -77,10 +77,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   }
 
   trackJudgeResult(result: LDJudgeResult): void {
-    if (!result.sampled) {
-      return;
-    }
-    if (!result.success) {
+    if (!result.sampled || !result.success) {
       return;
     }
     if (result.metricKey !== undefined && result.score !== undefined) {
