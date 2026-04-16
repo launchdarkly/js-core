@@ -279,7 +279,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   /**
    * Starts the client and returns a promise that resolves to the initialization result.
    *
-   * This method is idempotent — calling it multiple times returns the same promise.
+   * This method is idempotent - calling it multiple times returns the same promise.
    *
    * @param options Optional configuration. See {@link LDStartOptions}.
    * @returns A promise that resolves to the initialization result.
