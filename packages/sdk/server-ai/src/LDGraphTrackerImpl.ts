@@ -1,7 +1,7 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDGraphMetricSummary, LDGraphTracker } from './api/graph/LDGraphTracker';
-import { JudgeResponse } from './api/judge/types';
+import { LDJudgeResult } from './api/judge/types';
 import { LDTokenUsage } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
 
@@ -76,14 +76,20 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     this._ldClient.track('$ld:ai:graph:path', this._context, { ...this.getTrackData(), path }, 1);
   }
 
-  trackJudgeResponse(response: JudgeResponse): void {
-    const trackData = response.judgeConfigKey
-      ? { ...this.getTrackData(), judgeConfigKey: response.judgeConfigKey }
-      : this.getTrackData();
+  trackJudgeResult(result: LDJudgeResult): void {
+    if (!result.sampled) {
+      return;
+    }
+    if (!result.success) {
+      return;
+    }
+    if (result.metricKey !== undefined && result.score !== undefined) {
+      const trackData = result.judgeConfigKey
+        ? { ...this.getTrackData(), judgeConfigKey: result.judgeConfigKey }
+        : this.getTrackData();
 
-    Object.entries(response.evals).forEach(([metricKey, evalScore]) => {
-      this._ldClient.track(metricKey, this._context, trackData, evalScore.score);
-    });
+      this._ldClient.track(result.metricKey, this._context, trackData, result.score);
+    }
   }
 
   trackRedirect(sourceKey: string, redirectedTarget: string): void {

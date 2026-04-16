@@ -17,25 +17,21 @@ export interface StructuredResponse {
 }
 
 /**
- * Score and reasoning for a single evaluation metric.
+ * Flat result from a judge evaluation containing score, reasoning, and metadata.
  */
-export interface EvalScore {
-  /** Score between 0.0 and 1.0 indicating the evaluation result for this metric */
-  score: number;
-  /** Reasoning behind the provided score for this metric */
-  reasoning: string;
-}
-
-/**
- * Response from a judge evaluation containing scores and reasoning for multiple metrics.
- */
-export interface JudgeResponse {
-  /** The key of the judge configuration that was used to generate this response */
+export interface LDJudgeResult {
+  /** The key of the judge configuration that was used to generate this result */
   judgeConfigKey?: string;
-  /** Dictionary where keys are metric names and values contain score and reasoning */
-  evals: Record<string, EvalScore>;
   /** Whether the evaluation completed successfully */
   success: boolean;
   /** Error message if evaluation failed */
-  error?: string;
+  errorMessage?: string;
+  /** Whether this evaluation was sampled (i.e. actually run). False when skipped by sampling. */
+  sampled: boolean;
+  /** Score between 0.0 and 1.0 indicating the evaluation result */
+  score?: number;
+  /** Reasoning behind the provided score */
+  reasoning?: string;
+  /** The metric key for this evaluation */
+  metricKey?: string;
 }

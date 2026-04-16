@@ -140,7 +140,7 @@ it('tracks path', () => {
   );
 });
 
-it('tracks judge response', () => {
+it('tracks judge result', () => {
   const tracker = new LDGraphTrackerImpl(
     mockLdClient,
     graphKey,
@@ -148,15 +148,14 @@ it('tracks judge response', () => {
     version,
     testContext,
   );
-  const response = {
+  tracker.trackJudgeResult({
     judgeConfigKey: 'my-judge',
-    evals: {
-      relevance: { score: 0.9, reasoning: 'Relevant' },
-      accuracy: { score: 0.85, reasoning: 'Accurate' },
-    },
     success: true,
-  };
-  tracker.trackJudgeResponse(response);
+    sampled: true,
+    score: 0.9,
+    reasoning: 'Relevant',
+    metricKey: 'relevance',
+  });
 
   expect(mockTrack).toHaveBeenCalledWith(
     'relevance',
@@ -164,15 +163,9 @@ it('tracks judge response', () => {
     { ...getExpectedTrackData(), judgeConfigKey: 'my-judge' },
     0.9,
   );
-  expect(mockTrack).toHaveBeenCalledWith(
-    'accuracy',
-    testContext,
-    { ...getExpectedTrackData(), judgeConfigKey: 'my-judge' },
-    0.85,
-  );
 });
 
-it('tracks judge response without judgeConfigKey', () => {
+it('tracks judge result without judgeConfigKey', () => {
   const tracker = new LDGraphTrackerImpl(
     mockLdClient,
     graphKey,
@@ -180,13 +173,51 @@ it('tracks judge response without judgeConfigKey', () => {
     version,
     testContext,
   );
-  const response = {
-    evals: { relevance: { score: 0.7, reasoning: 'Somewhat relevant' } },
+  tracker.trackJudgeResult({
     success: true,
-  };
-  tracker.trackJudgeResponse(response);
+    sampled: true,
+    score: 0.7,
+    reasoning: 'Somewhat relevant',
+    metricKey: 'relevance',
+  });
 
   expect(mockTrack).toHaveBeenCalledWith('relevance', testContext, getExpectedTrackData(), 0.7);
+});
+
+it('does not track judge result when not sampled', () => {
+  const tracker = new LDGraphTrackerImpl(
+    mockLdClient,
+    graphKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  tracker.trackJudgeResult({
+    judgeConfigKey: 'my-judge',
+    success: false,
+    sampled: false,
+  });
+
+  expect(mockTrack).not.toHaveBeenCalled();
+});
+
+it('does not track judge result when success is false', () => {
+  const tracker = new LDGraphTrackerImpl(
+    mockLdClient,
+    graphKey,
+    variationKey,
+    version,
+    testContext,
+  );
+  tracker.trackJudgeResult({
+    judgeConfigKey: 'my-judge',
+    success: false,
+    sampled: true,
+    score: 0.9,
+    metricKey: 'relevance',
+  });
+
+  expect(mockTrack).not.toHaveBeenCalled();
 });
 
 it('tracks redirect', () => {

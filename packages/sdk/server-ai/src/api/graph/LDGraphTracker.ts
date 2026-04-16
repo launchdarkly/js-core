@@ -1,4 +1,4 @@
-import { JudgeResponse } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { LDTokenUsage } from '../metrics';
 
 /**
@@ -83,11 +83,13 @@ export interface LDGraphTracker {
   trackPath(path: string[]): void;
 
   /**
-   * Track judge responses for the final graph output.
+   * Track a judge evaluation result for the final graph output.
    *
-   * @param response Judge response containing evaluation scores.
+   * No event is emitted when the result was not sampled (result.sampled is false).
+   *
+   * @param result Judge result containing score, reasoning, and metadata.
    */
-  trackJudgeResponse(response: JudgeResponse): void;
+  trackJudgeResult(result: LDJudgeResult): void;
 
   /**
    * Track when a node redirects to a different target than originally specified.

@@ -1,4 +1,4 @@
-import { EvalScore, JudgeResponse } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
@@ -116,18 +116,14 @@ export interface LDAIConfigTracker {
   trackTimeToFirstToken(timeToFirstTokenMs: number): void;
 
   /**
-   * Track evaluation scores for multiple metrics.
+   * Track a judge evaluation result.
    *
-   * @param scores Record mapping metric keys to their evaluation scores
-   */
-  trackEvalScores(scores: Record<string, EvalScore>): void;
-
-  /**
-   * Track a judge response containing evaluation scores and judge configuration key.
+   * No event is emitted when the result was not sampled (result.sampled is false).
    *
-   * @param response Judge response containing evaluation scores and judge configuration key
+   * @param result Judge result containing score, reasoning, and metadata
+   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
-  trackJudgeResponse(response: JudgeResponse): void;
+  trackJudgeResult(result: LDJudgeResult, graphKey?: string): void;
 
   /**
    * Track a single tool invocation.
