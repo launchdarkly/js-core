@@ -1,2 +1,2 @@
 export { Judge } from './Judge';
-export type { EvalScore, JudgeResponse, StructuredResponse } from './types';
+export type { LDJudgeResult, StructuredResponse } from './types';

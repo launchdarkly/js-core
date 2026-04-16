@@ -2,7 +2,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
-import { JudgeResponse } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -54,10 +54,8 @@ export class TrackedChat {
     ) {
       response.evaluations = this._evaluateWithJudges(this.messages, response).then(
         (evaluations) => {
-          evaluations.forEach((judgeResponse) => {
-            if (judgeResponse?.success) {
-              tracker.trackJudgeResponse(judgeResponse);
-            }
+          evaluations.forEach((judgeResult) => {
+            tracker.trackJudgeResult(judgeResult);
           });
           return evaluations;
         },
@@ -79,7 +77,7 @@ export class TrackedChat {
   private async _evaluateWithJudges(
     messages: LDMessage[],
     response: ChatResponse,
-  ): Promise<Array<JudgeResponse | undefined>> {
+  ): Promise<LDJudgeResult[]> {
     const judgeConfigs = this.aiConfig.judgeConfiguration!.judges;
 
     // Start all judge evaluations in parallel
@@ -89,7 +87,12 @@ export class TrackedChat {
         this._logger?.warn(
           `Judge configuration is not enabled for ${judgeConfig.key} in ${this.aiConfig.key}`,
         );
-        return undefined;
+        const result: LDJudgeResult = {
+          success: false,
+          sampled: true,
+          errorMessage: `Judge configuration is not enabled for ${judgeConfig.key}`,
+        };
+        return result;
       }
 
       return judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
@@ -98,7 +101,17 @@ export class TrackedChat {
     // ensure all evaluations complete even if some fail
     const results = await Promise.allSettled(evaluationPromises);
 
-    return results.map((result) => (result.status === 'fulfilled' ? result.value : undefined));
+    return results.map((settled) => {
+      if (settled.status === 'fulfilled') {
+        return settled.value;
+      }
+      const result: LDJudgeResult = {
+        success: false,
+        sampled: true,
+        errorMessage: 'Judge evaluation failed',
+      };
+      return result;
+    });
   }
 
   /**

@@ -98,13 +98,11 @@ describe('Judge', () => {
       );
 
       expect(result).toEqual({
-        evals: {
-          relevance: {
-            score: 0.8,
-            reasoning: 'The response is relevant to the question',
-          },
-        },
+        score: 0.8,
+        reasoning: 'The response is relevant to the question',
+        metricKey: 'relevance',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
 
@@ -148,12 +146,11 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output');
 
       expect(result).toBeDefined();
-      expect(result?.evals).toHaveProperty('relevance');
-      expect(result?.evals.relevance.score).toBe(0.85);
-      expect(result?.judgeConfigKey).toBe('test-judge');
-      expect(result?.success).toBe(true);
-      // Verify the evaluationMetricKey from config is used in the result
-      expect(Object.keys(result?.evals || {})).toContain(judgeConfig.evaluationMetricKey);
+      expect(result.score).toBe(0.85);
+      expect(result.metricKey).toBe('relevance');
+      expect(result.judgeConfigKey).toBe('test-judge');
+      expect(result.success).toBe(true);
+      expect(result.sampled).toBe(true);
     });
 
     it('handles sampling rate correctly', async () => {
@@ -183,18 +180,23 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output', 0.5);
 
       expect(result).toBeDefined();
+      expect(result.sampled).toBe(true);
       expect(mockProvider.invokeStructuredModel).toHaveBeenCalled();
 
       Math.random = originalRandom;
     });
 
-    it('returns undefined when not sampled', async () => {
+    it('returns unsampled result when skipped by sampling', async () => {
       const originalRandom = Math.random;
       Math.random = jest.fn().mockReturnValue(0.8);
 
       const result = await judge.evaluate('test input', 'test output', 0.5);
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        success: false,
+        sampled: false,
+        judgeConfigKey: 'test-judge',
+      });
       expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Judge evaluation skipped due to sampling rate: 0.5',
@@ -203,7 +205,7 @@ describe('Judge', () => {
       Math.random = originalRandom;
     });
 
-    it('returns undefined when evaluationMetricKey and evaluationMetricKeys are both missing', async () => {
+    it('returns error result when evaluationMetricKey and evaluationMetricKeys are both missing', async () => {
       const configWithoutMetrics: LDAIJudgeConfig = {
         ...judgeConfig,
         evaluationMetricKey: undefined,
@@ -213,7 +215,12 @@ describe('Judge', () => {
 
       const result = await judgeWithoutMetrics.evaluate('test input', 'test output');
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        success: false,
+        sampled: true,
+        errorMessage: 'Judge configuration is missing required evaluation metric key',
+        judgeConfigKey: 'test-judge',
+      });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Judge configuration is missing required evaluation metric key',
         mockTrackData,
@@ -251,10 +258,11 @@ describe('Judge', () => {
       const result = await judgeWithSingleKey.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant' },
-        },
+        score: 0.8,
+        reasoning: 'The response is relevant',
+        metricKey: 'relevance',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
@@ -290,10 +298,11 @@ describe('Judge', () => {
       const result = await judgeWithLegacyKeys.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant' },
-        },
+        score: 0.8,
+        reasoning: 'The response is relevant',
+        metricKey: 'relevance',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
@@ -330,10 +339,11 @@ describe('Judge', () => {
 
       // Should skip empty and whitespace strings, use first valid value
       expect(result).toEqual({
-        evals: {
-          relevance: { score: 0.8, reasoning: 'The response is relevant' },
-        },
+        score: 0.8,
+        reasoning: 'The response is relevant',
+        metricKey: 'relevance',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
@@ -369,15 +379,16 @@ describe('Judge', () => {
       const result = await judgeWithBoth.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {
-          helpfulness: { score: 0.7, reasoning: 'The response is helpful' },
-        },
+        score: 0.7,
+        reasoning: 'The response is helpful',
+        metricKey: 'helpfulness',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
 
-    it('returns undefined when messages are missing', async () => {
+    it('returns error result when messages are missing', async () => {
       const configWithoutMessages: LDAIJudgeConfig = {
         ...judgeConfig,
         messages: undefined,
@@ -386,14 +397,19 @@ describe('Judge', () => {
 
       const result = await judgeWithoutMessages.evaluate('test input', 'test output');
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        success: false,
+        sampled: true,
+        errorMessage: 'Judge configuration must include messages',
+        judgeConfigKey: 'test-judge',
+      });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Judge configuration must include messages',
         mockTrackData,
       );
     });
 
-    it('returns empty evaluations with success false when expected metric is missing', async () => {
+    it('returns result with success false when expected metric is missing', async () => {
       const mockStructuredResponse: StructuredResponse = {
         data: {
           evaluations: {
@@ -417,13 +433,13 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {},
         success: false,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
 
-    it('returns empty evaluations when response structure is malformed', async () => {
+    it('returns result with success false when response structure is malformed', async () => {
       const mockStructuredResponse: StructuredResponse = {
         data: {
           relevance: { score: 0.8, reasoning: 'Good' },
@@ -447,8 +463,8 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {},
         success: false,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
     });
@@ -460,9 +476,9 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {},
         success: false,
-        error: 'Provider error',
+        sampled: true,
+        errorMessage: 'Provider error',
         judgeConfigKey: 'test-judge',
       });
       expect(mockLogger.error).toHaveBeenCalledWith('Judge evaluation failed:', error);
@@ -474,9 +490,9 @@ describe('Judge', () => {
       const result = await judge.evaluate('test input', 'test output');
 
       expect(result).toEqual({
-        evals: {},
         success: false,
-        error: 'Unknown error',
+        sampled: true,
+        errorMessage: 'Unknown error',
         judgeConfigKey: 'test-judge',
       });
     });
@@ -522,13 +538,11 @@ describe('Judge', () => {
       const result = await judge.evaluateMessages(messages, response);
 
       expect(result).toEqual({
-        evals: {
-          relevance: {
-            score: 0.8,
-            reasoning: 'The response is relevant to the question',
-          },
-        },
+        score: 0.8,
+        reasoning: 'The response is relevant to the question',
+        metricKey: 'relevance',
         success: true,
+        sampled: true,
         judgeConfigKey: 'test-judge',
       });
 
@@ -560,7 +574,11 @@ describe('Judge', () => {
 
       const result = await judge.evaluateMessages(messages, response, 0.5);
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        success: false,
+        sampled: false,
+        judgeConfigKey: 'test-judge',
+      });
       expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
 
       Math.random = originalRandom;
@@ -611,11 +629,12 @@ describe('Judge', () => {
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
       expect(result).toEqual({
-        relevance: { score: 0.8, reasoning: 'Good' },
+        score: 0.8,
+        reasoning: 'Good',
       });
     });
 
-    it('returns empty object for invalid response data', () => {
+    it('returns undefined for invalid response data', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
       const responseData = {
@@ -624,7 +643,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
     });
 
     it('handles missing score or reasoning fields', () => {
@@ -638,7 +657,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
     });
 
     it('handles invalid score values out of range', () => {
@@ -652,7 +671,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid score evaluated for relevance: 1.5'),
         mockTrackData,
@@ -670,7 +689,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid score evaluated for relevance: -0.1'),
         mockTrackData,
@@ -688,7 +707,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid reasoning evaluated for relevance: 123'),
         mockTrackData,
@@ -706,7 +725,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Missing evaluation for metric key: relevance',
         mockTrackData,
@@ -723,7 +742,12 @@ describe('Judge', () => {
 
       const result = await judgeWithEmptyKeys.evaluate('test input', 'test output');
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({
+        success: false,
+        sampled: true,
+        errorMessage: 'Judge configuration is missing required evaluation metric key',
+        judgeConfigKey: 'test-judge',
+      });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Judge configuration is missing required evaluation metric key',
         mockTrackData,
@@ -741,7 +765,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Missing evaluation for metric key: relevance',
         mockTrackData,
@@ -759,7 +783,7 @@ describe('Judge', () => {
 
       const result = parseResponse(responseData, 'relevance', mockTracker);
 
-      expect(result).toEqual({});
+      expect(result).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Missing evaluation for metric key: relevance',
         mockTrackData,

@@ -841,8 +841,8 @@ describe('trackMetricsOf', () => {
   });
 });
 
-describe('trackJudgeResponse', () => {
-  it('tracks evaluation metric key with score', () => {
+describe('trackJudgeResult', () => {
+  it('tracks metric key with score', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -854,15 +854,14 @@ describe('trackJudgeResponse', () => {
       testContext,
     );
 
-    const judgeResponse = {
+    tracker.trackJudgeResult({
       judgeConfigKey: 'test-judge',
-      evals: {
-        relevance: { score: 0.8, reasoning: 'The response is relevant' },
-      },
       success: true,
-    };
-
-    tracker.trackJudgeResponse(judgeResponse);
+      sampled: true,
+      score: 0.8,
+      reasoning: 'The response is relevant',
+      metricKey: 'relevance',
+    });
 
     expect(mockTrack).toHaveBeenCalledWith(
       'relevance',
@@ -872,7 +871,7 @@ describe('trackJudgeResponse', () => {
     );
   });
 
-  it('tracks multiple evaluation metrics when present', () => {
+  it('does not track when sampled is false', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -884,29 +883,38 @@ describe('trackJudgeResponse', () => {
       testContext,
     );
 
-    const judgeResponse = {
+    tracker.trackJudgeResult({
       judgeConfigKey: 'test-judge',
-      evals: {
-        relevance: { score: 0.8, reasoning: 'Relevant' },
-        accuracy: { score: 0.9, reasoning: 'Accurate' },
-      },
-      success: true,
-    };
+      success: false,
+      sampled: false,
+      score: 0.8,
+      metricKey: 'relevance',
+    });
 
-    tracker.trackJudgeResponse(judgeResponse);
+    expect(mockTrack).not.toHaveBeenCalled();
+  });
 
-    expect(mockTrack).toHaveBeenCalledWith(
-      'relevance',
+  it('does not track when success is false', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
       testContext,
-      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
-      0.8,
     );
-    expect(mockTrack).toHaveBeenCalledWith(
-      'accuracy',
-      testContext,
-      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
-      0.9,
-    );
+
+    tracker.trackJudgeResult({
+      judgeConfigKey: 'test-judge',
+      success: false,
+      sampled: true,
+      score: 0.8,
+      metricKey: 'relevance',
+    });
+
+    expect(mockTrack).not.toHaveBeenCalled();
   });
 });
 
