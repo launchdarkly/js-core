@@ -7,7 +7,7 @@ import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
-import { defaultJudgeResult, LDJudgeResult, StructuredResponse } from './types';
+import { LDJudgeResult, StructuredResponse } from './types';
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -60,8 +60,11 @@ export class Judge {
    * @returns Promise that resolves to evaluation results
    */
   async evaluate(input: string, output: string, samplingRate: number = 1): Promise<LDJudgeResult> {
-    const result = defaultJudgeResult();
-    result.judgeConfigKey = this._aiConfig.key;
+    const result: LDJudgeResult = {
+      success: false,
+      sampled: false,
+      judgeConfigKey: this._aiConfig.key,
+    };
 
     const tracker = this._aiConfig.createTracker!();
     try {

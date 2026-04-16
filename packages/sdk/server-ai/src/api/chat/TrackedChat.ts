@@ -2,7 +2,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
-import { defaultJudgeResult, LDJudgeResult } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -87,9 +87,11 @@ export class TrackedChat {
         this._logger?.warn(
           `Judge configuration is not enabled for ${judgeConfig.key} in ${this.aiConfig.key}`,
         );
-        const result = defaultJudgeResult();
-        result.sampled = true;
-        result.errorMessage = `Judge configuration is not enabled for ${judgeConfig.key}`;
+        const result: LDJudgeResult = {
+          success: false,
+          sampled: true,
+          errorMessage: `Judge configuration is not enabled for ${judgeConfig.key}`,
+        };
         return result;
       }
 
@@ -103,9 +105,11 @@ export class TrackedChat {
       if (settled.status === 'fulfilled') {
         return settled.value;
       }
-      const result = defaultJudgeResult();
-      result.sampled = true;
-      result.errorMessage = 'Judge evaluation failed';
+      const result: LDJudgeResult = {
+        success: false,
+        sampled: true,
+        errorMessage: 'Judge evaluation failed',
+      };
       return result;
     });
   }

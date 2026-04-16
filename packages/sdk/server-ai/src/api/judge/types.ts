@@ -35,13 +35,3 @@ export interface LDJudgeResult {
   /** Reasoning behind the provided score */
   reasoning?: string;
 }
-
-/**
- * Creates an LDJudgeResult with default values (success: false, sampled: false).
- */
-export function defaultJudgeResult(): LDJudgeResult {
-  return {
-    success: false,
-    sampled: false,
-  };
-}
