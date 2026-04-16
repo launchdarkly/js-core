@@ -69,3 +69,25 @@ This SDK now uses the **mobile key** by default instead of the client-side ID. I
 - **Enable flags for mobile SDKs:** By default, flags are only available to server-side SDKs. For the Electron SDK (using the mobile key) to evaluate a flag, you must make that flag available to **SDKs using Mobile Key** in the LaunchDarkly UI. When creating a new flag, check the appropriate box in the "Create flag" dialog; for existing flags, use the **Advanced controls** section in the flag’s right sidebar. See [Make flags available to client-side and mobile SDKs](https://launchdarkly.com/docs/home/flags/new#make-flags-available-to-client-side-and-mobile-sdks) in the LaunchDarkly docs.
 
 - **Secure Mode:** Mobile key–based SDKs do not support [Secure Mode](https://docs.launchdarkly.com/sdk/features/secure-mode). If your application depends on Secure Mode (for example, to verify flag values in a trusted backend), you must use the client-side ID with `useClientSideId: true` instead of the mobile key.
+
+## Multiple environments (namespace option)
+
+This SDK supports running multiple client instances in the same Electron app. Each client can target a different LaunchDarkly environment by using a different credential (mobile key or client-side ID).
+
+If you need multiple clients with the **same** credential (e.g., separate flag state for different windows), you must provide a unique `namespace` for each:
+
+```typescript
+const clientA = createClient(mobileKey, contextA, { namespace: 'window-main' });
+const clientB = createClient(mobileKey, contextB, { namespace: 'window-settings' });
+
+await clientA.start();
+await clientB.start();
+```
+
+The namespace isolates IPC channels between clients. Without a namespace, two clients sharing the same credential will collide on IPC handlers.
+
+Renderer clients must also pass the matching namespace:
+
+```typescript
+const rendererClient = createRendererClient(mobileKey, 'window-main');
+```

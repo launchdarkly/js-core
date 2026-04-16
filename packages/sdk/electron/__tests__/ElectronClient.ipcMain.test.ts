@@ -6,14 +6,14 @@ import type {
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
   LDIdentifyOptions,
-  LDLogger,
 } from '@launchdarkly/js-client-sdk-common';
 
 import { ElectronClient } from '../src/ElectronClient';
-import { getIPCChannelName } from '../src/ElectronIPC';
+import { deriveNamespace, getIPCChannelName } from '../src/ElectronIPC';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
 import ElectronInfo from '../src/platform/ElectronInfo';
+import { createMockLogger } from './testHelpers';
 
 type MockIpcMain = IpcMain & {
   getHandler: (eventName: string) => Function | undefined;
@@ -63,7 +63,7 @@ const mockPort: MockPort = {
 };
 
 const getEventName = (baseName: Parameters<typeof getIPCChannelName>[1]) =>
-  getIPCChannelName(clientSideId, baseName);
+  getIPCChannelName(deriveNamespace(clientSideId), baseName);
 
 const DEFAULT_INITIAL_CONTEXT = { kind: 'user' as const, key: 'test-user' };
 
@@ -72,12 +72,7 @@ beforeEach(() => {
 });
 
 describe('given an initialized ElectronClient', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
     initialConnectionMode: 'offline',
@@ -514,12 +509,7 @@ describe('given an initialized ElectronClient', () => {
 });
 
 describe('close()', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   it('removes all ipcMain listeners and handlers for the client so channels are no longer registered', async () => {
     const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {

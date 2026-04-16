@@ -118,4 +118,10 @@ export interface ElectronOptions extends LDOptionsBase {
    * in future versions of this sdk. Please use mobile key instead.
    */
   useClientSideId?: boolean;
+
+  /**
+   * An optional namespace to isolate this client's IPC channels
+   * from other clients using the same credential in the same process.
+   */
+  namespace?: string;
 }

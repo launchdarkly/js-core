@@ -13,6 +13,7 @@ import type {
 } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDClientBridge } from '../bridge/LDClientBridge';
+import { deriveNamespace } from '../ElectronIPC';
 import type { LDRendererClient } from './LDRendererClient';
 
 export class ElectronRendererClient implements LDRendererClient {
@@ -21,9 +22,10 @@ export class ElectronRendererClient implements LDRendererClient {
   // Keep a set of callback handles to support closing this client.
   private readonly _callbacks: Set<string> = new Set();
 
-  constructor(clientSideId: string) {
+  constructor(clientSideId: string, namespace?: string) {
+    const derivedNs = deriveNamespace(clientSideId, namespace);
     this._ldClientBridge = (globalThis.window as any)?.ldClientBridge?.(
-      clientSideId,
+      derivedNs,
     ) as LDClientBridge;
     if (!this._ldClientBridge) {
       throw new Error(
