@@ -63,7 +63,7 @@ export interface LDGraphTracker {
 
   /**
    * Tracks the total duration of the graph execution in milliseconds.
-   * Emits event `$ld:ai:duration:total` with the duration as the metric value.
+   * Emits event `$ld:ai:graph:duration:total` with the duration as the metric value.
    * At-most-once: subsequent calls are dropped with a warning.
    *
    * @param durationMs Duration in milliseconds.

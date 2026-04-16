@@ -173,7 +173,7 @@ it('trackDuration sets durationMs and emits event', () => {
   tracker.trackDuration(1234);
   expect(tracker.getSummary().durationMs).toBe(1234);
   expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:duration:total',
+    '$ld:ai:graph:duration:total',
     testContext,
     tracker.getTrackData(),
     1234,

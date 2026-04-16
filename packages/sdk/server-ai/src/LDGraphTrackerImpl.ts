@@ -112,7 +112,12 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
       return;
     }
     this._summary.durationMs = durationMs;
-    this._ldClient.track('$ld:ai:duration:total', this._context, this.getTrackData(), durationMs);
+    this._ldClient.track(
+      '$ld:ai:graph:duration:total',
+      this._context,
+      this.getTrackData(),
+      durationMs,
+    );
   }
 
   trackTotalTokens(tokens: LDTokenUsage): void {
