@@ -43,9 +43,7 @@ function makeDefinition(
   const nodes = AgentGraphDefinition.buildNodes(graph, agentConfigs);
   return new AgentGraphDefinition(
     graph,
-    testContext,
     nodes,
-    graph.root,
     () =>
       new LDGraphTrackerImpl(
         mockLdClient,

@@ -82,6 +82,19 @@ it('returns { enabled: false } when a node is unconnected (not reachable from ro
   expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('unconnected node'));
 });
 
+it('returns { enabled: false } when the graph contains a cycle', async () => {
+  const client = makeClient();
+  // A → B → A forms a cycle
+  const graphValue = makeGraphFlagValue('a', {
+    a: [{ key: 'b' }],
+    b: [{ key: 'a' }],
+  });
+  mockVariation.mockResolvedValueOnce(graphValue);
+  const result = await client.agentGraph('my-graph', testContext);
+  expect(result.enabled).toBe(false);
+  expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('cycle'));
+});
+
 it('returns { enabled: false } when a child agent config is disabled', async () => {
   const client = makeClient();
   const graphValue = makeGraphFlagValue('root', { root: [{ key: 'child' }] });

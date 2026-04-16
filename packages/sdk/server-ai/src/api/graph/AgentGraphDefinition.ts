@@ -1,5 +1,3 @@
-import type { LDContext } from '@launchdarkly/js-server-sdk-common';
-
 import type { LDAIAgentConfig } from '../config';
 import { AgentGraphNode } from './AgentGraphNode';
 import type { LDGraphTracker } from './LDGraphTracker';
@@ -24,9 +22,7 @@ export type TraversalFn = (
 export class AgentGraphDefinition {
   constructor(
     private readonly _agentGraph: LDAgentGraphFlagValue,
-    private readonly _context: LDContext,
     private readonly _nodes: Record<string, AgentGraphNode>,
-    private readonly _graphKey: string,
     private readonly _createTracker: () => LDGraphTracker,
   ) {}
 
@@ -228,26 +224,45 @@ export class AgentGraphDefinition {
   }
 
   /**
-   * Computes the longest-path depth for every node reachable from the root.
-   * Handles cycles by only updating a node's depth when a longer path is found.
+   * Computes the longest-path depth for every node reachable from the root using
+   * Kahn's topological sort + dynamic programming.
+   *
+   * Assumes the graph is a DAG — cycles are detected and rejected by
+   * {@link LDAIClientImpl.agentGraph} before an AgentGraphDefinition is constructed.
    */
   private _computeLongestPathDepths(): Record<string, number> {
+    const nodeKeys = Object.keys(this._nodes);
+    const inDegree: Record<string, number> = {};
     const depths: Record<string, number> = {};
-    // Queue entries are [nodeKey, depth]
-    const queue: Array<[string, number]> = [[this._agentGraph.root, 0]];
+
+    nodeKeys.forEach((key) => {
+      inDegree[key] = 0;
+      depths[key] = 0;
+    });
+
+    nodeKeys.forEach((key) => {
+      this._nodes[key].getEdges().forEach((edge) => {
+        if (edge.key in inDegree) {
+          inDegree[edge.key] += 1;
+        }
+      });
+    });
+
+    // Start with all nodes that have no incoming edges
+    const queue: string[] = nodeKeys.filter((key) => inDegree[key] === 0);
 
     while (queue.length > 0) {
-      const [key, depth] = queue.shift()!;
-
-      // Only update (and continue traversal) if this path is longer
-      if (depths[key] === undefined || depth > depths[key]) {
-        depths[key] = depth;
-
-        const node = this._nodes[key];
-        node?.getEdges().forEach((edge) => {
-          queue.push([edge.key, depth + 1]);
-        });
-      }
+      const key = queue.shift()!;
+      this._nodes[key].getEdges().forEach((edge) => {
+        if (!(edge.key in depths)) {
+          return;
+        }
+        depths[edge.key] = Math.max(depths[edge.key], depths[key] + 1);
+        inDegree[edge.key] -= 1;
+        if (inDegree[edge.key] === 0) {
+          queue.push(edge.key);
+        }
+      });
     }
 
     return depths;

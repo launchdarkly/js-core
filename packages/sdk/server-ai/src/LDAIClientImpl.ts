@@ -431,7 +431,13 @@ export class LDAIClientImpl implements LDAIClient {
       return disabled;
     }
 
-    // Step 4: Validate - fetch all child agent configs
+    // Step 4: Validate - graph must be acyclic (cycles cause reverseTraverse to hang)
+    if (this._hasCycle(graphFlagValue)) {
+      this._logger?.debug(`agentGraph: graph "${graphKey}" contains a cycle and cannot be used.`);
+      return disabled;
+    }
+
+    // Step 5: Validate - fetch all child agent configs
     const agentConfigs: Record<string, LDAIAgentConfig> = {};
     const fetchResults = await Promise.all(
       [...allKeys].map(async (key) => {
@@ -462,9 +468,7 @@ export class LDAIClientImpl implements LDAIClient {
 
     const graph = new AgentGraphDefinition(
       graphFlagValue,
-      context,
       nodes,
-      graphKey,
       () =>
         new LDGraphTrackerImpl(ldClient, randomUUID(), graphKey, variationKey, version, context),
     );
@@ -482,6 +486,37 @@ export class LDAIClientImpl implements LDAIClient {
   private async _agentConfigInternal(key: string, context: LDContext): Promise<LDAIAgentConfig> {
     const config = await this._evaluate(key, context, disabledAIConfig, 'agent');
     return config as LDAIAgentConfig;
+  }
+
+  /**
+   * Returns true if the graph contains a cycle, using DFS with three-color marking.
+   */
+  private _hasCycle(graph: LDAgentGraphFlagValue): boolean {
+    const color: Record<string, 'gray' | 'black'> = {};
+
+    const dfs = (key: string): boolean => {
+      color[key] = 'gray';
+      const edges = graph.edges?.[key] ?? [];
+      const foundCycle = edges.some((edge) => {
+        if (color[edge.key] === 'gray') {
+          return true;
+        }
+        if (color[edge.key] === 'black') {
+          return false;
+        }
+        return dfs(edge.key);
+      });
+      color[key] = 'black';
+      return foundCycle;
+    };
+
+    const allKeys = AgentGraphDefinition.collectAllKeys(graph);
+    return [...allKeys].some((key) => {
+      if (!color[key]) {
+        return dfs(key);
+      }
+      return false;
+    });
   }
 
   /**
