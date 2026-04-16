@@ -933,7 +933,7 @@ describe('trackToolCall', () => {
     );
   });
 
-  it('includes graphKey when provided', () => {
+  it('includes graphKey when set on constructor', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -943,9 +943,10 @@ describe('trackToolCall', () => {
       modelName,
       providerName,
       testContext,
+      'my-graph',
     );
 
-    tracker.trackToolCall('my-tool', 'my-graph');
+    tracker.trackToolCall('my-tool');
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:tool_call',
@@ -993,8 +994,8 @@ describe('trackToolCalls', () => {
   });
 });
 
-describe('graphKey parameter support', () => {
-  it('includes graphKey in trackDuration event', () => {
+describe('graphKey constructor support', () => {
+  it('includes graphKey in trackDuration event when set on constructor', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -1004,9 +1005,10 @@ describe('graphKey parameter support', () => {
       modelName,
       providerName,
       testContext,
+      'my-graph',
     );
 
-    tracker.trackDuration(1000, 'my-graph');
+    tracker.trackDuration(1000);
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:duration:total',
@@ -1016,7 +1018,7 @@ describe('graphKey parameter support', () => {
     );
   });
 
-  it('includes graphKey in trackSuccess event', () => {
+  it('includes graphKey in trackSuccess event when set on constructor', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -1026,9 +1028,10 @@ describe('graphKey parameter support', () => {
       modelName,
       providerName,
       testContext,
+      'my-graph',
     );
 
-    tracker.trackSuccess('my-graph');
+    tracker.trackSuccess();
 
     expect(mockTrack).toHaveBeenCalledWith(
       '$ld:ai:generation:success',
@@ -1038,7 +1041,7 @@ describe('graphKey parameter support', () => {
     );
   });
 
-  it('does not include graphKey when not provided', () => {
+  it('does not include graphKey when not set on constructor', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
       testRunId,
@@ -1058,6 +1061,41 @@ describe('graphKey parameter support', () => {
       getExpectedTrackData(),
       1,
     );
+  });
+
+  it('includes graphKey in getTrackData when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    expect(tracker.getTrackData()).toEqual({
+      ...getExpectedTrackData(),
+      graphKey: 'my-graph',
+    });
+  });
+
+  it('does not include graphKey in getTrackData when not set', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    expect(tracker.getTrackData()).toEqual(getExpectedTrackData());
+    expect('graphKey' in tracker.getTrackData()).toBe(false);
   });
 });
 
@@ -1310,5 +1348,97 @@ describe('fromResumptionToken', () => {
       expect.objectContaining({ runId: testRunId }),
       1,
     );
+  });
+
+  it('includes graphKey in resumption token when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey,
+      version,
+      graphKey: 'my-graph',
+    });
+  });
+
+  it('does not include graphKey in resumption token when not set', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey,
+      version,
+    });
+    expect('graphKey' in decoded).toBe(false);
+  });
+
+  it('reconstructs tracker with graphKey from resumption token', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect(reconstructed.getTrackData().graphKey).toBe('my-graph');
+  });
+
+  it('reconstructed tracker without graphKey does not include graphKey in track data', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect('graphKey' in reconstructed.getTrackData()).toBe(false);
   });
 });

@@ -139,7 +139,14 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.agentConfig(key, testContext, defaultValue, variables);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'agent', variables);
+    expect(evaluateSpy).toHaveBeenCalledWith(
+      key,
+      testContext,
+      defaultValue,
+      'agent',
+      variables,
+      undefined,
+    );
     expect(result.instructions).toBe(
       'You are a helpful assistant. Your name is John and your score is 42',
     );
@@ -464,7 +471,14 @@ describe('agentConfig method', () => {
       key,
       1,
     );
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'agent', variables);
+    expect(evaluateSpy).toHaveBeenCalledWith(
+      key,
+      testContext,
+      defaultValue,
+      'agent',
+      variables,
+      undefined,
+    );
     expect(result).toBe(mockConfig);
     evaluateSpy.mockRestore();
   });

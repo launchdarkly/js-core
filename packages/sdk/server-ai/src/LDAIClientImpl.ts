@@ -74,6 +74,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIConfigDefaultKind,
     mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
+    graphKey?: string,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
@@ -101,6 +102,7 @@ export class LDAIClientImpl implements LDAIClient {
         value.model?.name ?? '',
         value.provider?.name ?? '',
         context,
+        graphKey,
       );
 
     const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
@@ -217,6 +219,17 @@ export class LDAIClientImpl implements LDAIClient {
     return this._judgeConfig(key, context, defaultValue ?? disabledAIConfig, variables);
   }
 
+  private async _agentConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+    graphKey?: string,
+  ): Promise<LDAIAgentConfig> {
+    const config = await this._evaluate(key, context, defaultValue, 'agent', variables, graphKey);
+    return config as LDAIAgentConfig;
+  }
+
   async agentConfig(
     key: string,
     context: LDContext,
@@ -224,14 +237,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
-    const config = await this._evaluate(
-      key,
-      context,
-      defaultValue ?? disabledAIConfig,
-      'agent',
-      variables,
-    );
-    return config as LDAIAgentConfig;
+    return this._agentConfig(key, context, defaultValue ?? disabledAIConfig, variables);
   }
 
   /**
@@ -261,14 +267,13 @@ export class LDAIClientImpl implements LDAIClient {
 
     await Promise.all(
       agentConfigs.map(async (config) => {
-        const agent = await this._evaluate(
+        const agent = await this._agentConfig(
           config.key,
           context,
           config.defaultValue ?? disabledAIConfig,
-          'agent',
           config.variables,
         );
-        agents[config.key as T[number]['key']] = agent as LDAIAgentConfig;
+        agents[config.key as T[number]['key']] = agent;
       }),
     );
 
