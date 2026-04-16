@@ -87,12 +87,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.durationMs = duration;
-    this._ldClient.track(
-      '$ld:ai:duration:total',
-      this._context,
-      this.getTrackData(),
-      duration,
-    );
+    this._ldClient.track('$ld:ai:duration:total', this._context, this.getTrackData(), duration);
   }
 
   async trackDurationOf<TRes>(func: () => Promise<TRes>): Promise<TRes> {
@@ -142,12 +137,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackToolCall(toolKey: string): void {
-    this._ldClient.track(
-      '$ld:ai:tool_call',
-      this._context,
-      { ...this.getTrackData(), toolKey },
-      1,
-    );
+    this._ldClient.track('$ld:ai:tool_call', this._context, { ...this.getTrackData(), toolKey }, 1);
   }
 
   trackToolCalls(toolKeys: string[]): void {
@@ -165,19 +155,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
     this._trackedMetrics.feedback = feedback;
     if (feedback.kind === LDFeedbackKind.Positive) {
-      this._ldClient.track(
-        '$ld:ai:feedback:user:positive',
-        this._context,
-        this.getTrackData(),
-        1,
-      );
+      this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this.getTrackData(), 1);
     } else if (feedback.kind === LDFeedbackKind.Negative) {
-      this._ldClient.track(
-        '$ld:ai:feedback:user:negative',
-        this._context,
-        this.getTrackData(),
-        1,
-      );
+      this._ldClient.track('$ld:ai:feedback:user:negative', this._context, this.getTrackData(), 1);
     }
   }
 
@@ -189,12 +169,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.success = true;
-    this._ldClient.track(
-      '$ld:ai:generation:success',
-      this._context,
-      this.getTrackData(),
-      1,
-    );
+    this._ldClient.track('$ld:ai:generation:success', this._context, this.getTrackData(), 1);
   }
 
   trackError(): void {
