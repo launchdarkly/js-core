@@ -119,7 +119,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     );
   }
 
-  trackJudgeResult(result: LDJudgeResult, graphKey?: string) {
+  trackJudgeResult(result: LDJudgeResult) {
     if (!result.sampled || !result.success) {
       return;
     }
@@ -127,7 +127,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       this._ldClient.track(
         result.metricKey,
         this._context,
-        { ...this.getTrackData(graphKey), judgeConfigKey: result.judgeConfigKey },
+        { ...this.getTrackData(), judgeConfigKey: result.judgeConfigKey },
         result.score,
       );
     }

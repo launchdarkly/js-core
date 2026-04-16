@@ -121,9 +121,8 @@ export interface LDAIConfigTracker {
    * No event is emitted when the result was not sampled (result.sampled is false).
    *
    * @param result Judge result containing score, reasoning, and metadata
-   * @param graphKey When provided, associates this metric with the specified agent graph key.
    */
-  trackJudgeResult(result: LDJudgeResult, graphKey?: string): void;
+  trackJudgeResult(result: LDJudgeResult): void;
 
   /**
    * Track a single tool invocation.
