@@ -2,7 +2,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
-import { LDJudgeResult } from '../judge/types';
+import { defaultJudgeResult, LDJudgeResult } from '../judge/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -87,11 +87,10 @@ export class TrackedChat {
         this._logger?.warn(
           `Judge configuration is not enabled for ${judgeConfig.key} in ${this.aiConfig.key}`,
         );
-        return {
-          success: false,
-          sampled: true,
-          errorMessage: `Judge configuration is not enabled for ${judgeConfig.key}`,
-        } as LDJudgeResult;
+        const result = defaultJudgeResult();
+        result.sampled = true;
+        result.errorMessage = `Judge configuration is not enabled for ${judgeConfig.key}`;
+        return result;
       }
 
       return judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
@@ -100,11 +99,15 @@ export class TrackedChat {
     // ensure all evaluations complete even if some fail
     const results = await Promise.allSettled(evaluationPromises);
 
-    return results.map((result) =>
-      result.status === 'fulfilled'
-        ? result.value
-        : { success: false, sampled: true, errorMessage: 'Judge evaluation failed' },
-    );
+    return results.map((settled) => {
+      if (settled.status === 'fulfilled') {
+        return settled.value;
+      }
+      const result = defaultJudgeResult();
+      result.sampled = true;
+      result.errorMessage = 'Judge evaluation failed';
+      return result;
+    });
   }
 
   /**

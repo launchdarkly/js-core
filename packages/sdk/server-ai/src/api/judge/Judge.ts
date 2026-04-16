@@ -7,7 +7,7 @@ import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
-import { LDJudgeResult, StructuredResponse } from './types';
+import { defaultJudgeResult, LDJudgeResult, StructuredResponse } from './types';
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -60,6 +60,9 @@ export class Judge {
    * @returns Promise that resolves to evaluation results; always returns a result, never undefined
    */
   async evaluate(input: string, output: string, samplingRate: number = 1): Promise<LDJudgeResult> {
+    const result = defaultJudgeResult();
+    result.judgeConfigKey = this._aiConfig.key;
+
     const tracker = this._aiConfig.createTracker!();
     try {
       const evaluationMetricKey = this._getEvaluationMetricKey();
@@ -68,41 +71,31 @@ export class Judge {
           'Judge configuration is missing required evaluation metric key',
           tracker.getTrackData(),
         );
-        return {
-          success: false,
-          sampled: true,
-          errorMessage: 'Judge configuration is missing required evaluation metric key',
-          judgeConfigKey: this._aiConfig.key,
-        };
+        result.sampled = true;
+        result.errorMessage = 'Judge configuration is missing required evaluation metric key';
+        return result;
       }
 
       if (!this._aiConfig.messages) {
         this._logger?.warn('Judge configuration must include messages', tracker.getTrackData());
-        return {
-          success: false,
-          sampled: true,
-          errorMessage: 'Judge configuration must include messages',
-          judgeConfigKey: this._aiConfig.key,
-        };
+        result.sampled = true;
+        result.errorMessage = 'Judge configuration must include messages';
+        return result;
       }
 
       if (Math.random() > samplingRate) {
         this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${samplingRate}`);
-        return {
-          success: false,
-          sampled: false,
-          judgeConfigKey: this._aiConfig.key,
-        };
+        return result;
       }
+
+      result.sampled = true;
 
       const messages = this._constructEvaluationMessages(input, output);
 
       const response = await tracker.trackMetricsOf(
-        (result: StructuredResponse) => result.metrics,
+        (r: StructuredResponse) => r.metrics,
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
       );
-
-      let { success } = response.metrics;
 
       const evalResult = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
 
@@ -111,23 +104,19 @@ export class Judge {
           'Judge evaluation did not return the expected evaluation',
           tracker.getTrackData(),
         );
-        success = false;
+        return result;
       }
 
-      return {
-        success: evalResult ? success : false,
-        sampled: true,
-        judgeConfigKey: this._aiConfig.key,
-        ...(evalResult ?? {}),
-      };
+      result.success = response.metrics.success;
+      result.score = evalResult.score;
+      result.reasoning = evalResult.reasoning;
+      result.metricKey = evaluationMetricKey;
+      return result;
     } catch (error) {
       this._logger?.error('Judge evaluation failed:', error);
-      return {
-        success: false,
-        sampled: true,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        judgeConfigKey: this._aiConfig.key,
-      };
+      result.sampled = true;
+      result.errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return result;
     }
   }
 
@@ -188,13 +177,13 @@ export class Judge {
 
   /**
    * Parses the structured evaluation response from the AI provider.
-   * Returns the flat score/reasoning/metricKey fields, or undefined if parsing fails.
+   * Returns score and reasoning, or undefined if parsing fails.
    */
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
     evaluationMetricKey: string,
     tracker: LDAIConfigTracker,
-  ): { score: number; reasoning: string; metricKey: string } | undefined {
+  ): { score: number; reasoning: string } | undefined {
     const evaluations = data.evaluations as Record<string, unknown>;
 
     if (!data.evaluations || typeof data.evaluations !== 'object') {
@@ -233,7 +222,6 @@ export class Judge {
     return {
       score: evalData.score,
       reasoning: evalData.reasoning,
-      metricKey: evaluationMetricKey,
     };
   }
 }

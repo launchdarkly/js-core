@@ -631,7 +631,6 @@ describe('Judge', () => {
       expect(result).toEqual({
         score: 0.8,
         reasoning: 'Good',
-        metricKey: 'relevance',
       });
     });
 

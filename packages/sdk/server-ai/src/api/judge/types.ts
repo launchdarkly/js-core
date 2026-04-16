@@ -35,3 +35,13 @@ export interface LDJudgeResult {
   /** The metric key for this evaluation */
   metricKey?: string;
 }
+
+/**
+ * Creates an LDJudgeResult with default values (success: false, sampled: false).
+ */
+export function defaultJudgeResult(): LDJudgeResult {
+  return {
+    success: false,
+    sampled: false,
+  };
+}
