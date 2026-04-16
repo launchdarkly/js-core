@@ -3,8 +3,6 @@
  * Not exported - only used internally by Judge.
  *
  * The schema is a fixed shape: top-level score and reasoning.
- * The judge config's evaluationMetricKey is only used when keying the result,
- * not in the schema itself.
  */
 class EvaluationSchemaBuilder {
   static build(): Record<string, unknown> {
