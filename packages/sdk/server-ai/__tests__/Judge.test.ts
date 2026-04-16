@@ -415,6 +415,9 @@ describe('Judge', () => {
         sampled: true,
         judgeConfigKey: 'test-judge',
       });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Could not parse evaluation response for judge "test-judge": {}',
+      );
     });
 
     it('returns result with success false when response structure is malformed', async () => {
@@ -445,6 +448,9 @@ describe('Judge', () => {
         sampled: true,
         judgeConfigKey: 'test-judge',
       });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not parse evaluation response for judge "test-judge"'),
+      );
     });
 
     it('handles provider errors gracefully', async () => {
@@ -633,7 +639,6 @@ describe('Judge', () => {
       const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid score: 1.5'));
     });
 
     it('handles negative score values', () => {
@@ -644,7 +649,6 @@ describe('Judge', () => {
       const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid score: -0.1'));
     });
 
     it('handles invalid reasoning type', () => {
@@ -655,7 +659,6 @@ describe('Judge', () => {
       const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith('Invalid reasoning: must be a string');
     });
 
     it('handles empty evaluationMetricKeys array fallback', async () => {

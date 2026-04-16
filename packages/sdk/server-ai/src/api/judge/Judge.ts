@@ -5,8 +5,25 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import { ChatResponse } from '../chat/types';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
-import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
 import { LDJudgeResult, StructuredResponse } from './types';
+
+const EVALUATION_SCHEMA: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    score: {
+      type: 'number',
+      minimum: 0,
+      maximum: 1,
+      description: 'Score between 0.0 and 1.0.',
+    },
+    reasoning: {
+      type: 'string',
+      description: 'Reasoning behind the score.',
+    },
+  },
+  required: ['score', 'reasoning'],
+  additionalProperties: false,
+};
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -16,7 +33,6 @@ import { LDJudgeResult, StructuredResponse } from './types';
  */
 export class Judge {
   private readonly _logger?: LDLogger;
-  private readonly _evaluationResponseStructure: Record<string, unknown>;
 
   constructor(
     private readonly _aiConfig: LDAIJudgeConfig,
@@ -24,7 +40,6 @@ export class Judge {
     logger?: LDLogger,
   ) {
     this._logger = logger;
-    this._evaluationResponseStructure = EvaluationSchemaBuilder.build();
   }
 
   /**
@@ -95,15 +110,14 @@ export class Judge {
 
       const response = await tracker.trackMetricsOf(
         (r: StructuredResponse) => r.metrics,
-        () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
+        () => this._aiProvider.invokeStructuredModel(messages, EVALUATION_SCHEMA),
       );
 
       const evalResult = this._parseEvaluationResponse(response.data);
 
       if (!evalResult) {
         this._logger?.warn(
-          'Judge evaluation did not return the expected evaluation',
-          tracker.getTrackData(),
+          `Could not parse evaluation response for judge "${this._aiConfig.key}": ${JSON.stringify(response.data)}`,
         );
         return result;
       }
@@ -186,19 +200,14 @@ export class Judge {
     data: Record<string, unknown>,
   ): { score: number; reasoning: string } | undefined {
     if (!data || typeof data !== 'object') {
-      this._logger?.warn('Invalid response: missing or invalid evaluation');
       return undefined;
     }
 
     if (typeof data.score !== 'number' || data.score < 0 || data.score > 1) {
-      this._logger?.warn(
-        `Invalid score: ${data.score}. Score must be a number between 0 and 1 inclusive`,
-      );
       return undefined;
     }
 
     if (typeof data.reasoning !== 'string') {
-      this._logger?.warn('Invalid reasoning: must be a string');
       return undefined;
     }
 
