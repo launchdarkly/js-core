@@ -28,12 +28,12 @@ export interface LDJudgeResult {
   errorMessage?: string;
   /** Whether this evaluation was sampled (i.e. actually run). False when skipped by sampling. */
   sampled: boolean;
+  /** The metric key for this evaluation */
+  metricKey?: string;
   /** Score between 0.0 and 1.0 indicating the evaluation result */
   score?: number;
   /** Reasoning behind the provided score */
   reasoning?: string;
-  /** The metric key for this evaluation */
-  metricKey?: string;
 }
 
 /**
