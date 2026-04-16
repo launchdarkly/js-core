@@ -1,5 +1,6 @@
 import {
   LDClient as CommonClient,
+  LDStartOptions as CommonLDStartOptions,
   FDv2ConnectionMode,
   LDContext,
   LDIdentifyResult,
@@ -9,18 +10,11 @@ import {
 
 import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOptions';
 
-export interface LDStartOptions extends LDWaitForInitializationOptions {
-  /**
-   * Optional bootstrap data to use for the identify operation. If {@link LDIdentifyOptions.bootstrap} is provided, it will be ignored.
-   */
-  bootstrap?: unknown;
-
-  /**
-   * Optional identify options to use for the identify operation. See {@link LDIdentifyOptions} for more information.
-   *
-   * @remarks
-   * Since the first identify option should never be sheddable, we omit the sheddable option from the interface to avoid confusion.
-   */
+/**
+ * Browser-specific start options that extend the common start options
+ * with browser-specific identify options (see {@link LDIdentifyOptions}).
+ */
+export interface LDStartOptions extends CommonLDStartOptions {
   identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
 }
 

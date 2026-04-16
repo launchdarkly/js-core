@@ -42,6 +42,7 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
+  LDStartOptions,
   LDContext,
   LDContextStrict,
 } from './api';

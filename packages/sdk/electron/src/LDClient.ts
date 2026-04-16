@@ -4,23 +4,11 @@ import type {
   LDContext,
   LDIdentifyOptions,
   LDIdentifyResult,
-  LDWaitForInitializationOptions,
+  LDStartOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
 
-export interface LDStartOptions extends LDWaitForInitializationOptions {
-  /**
-   * Optional bootstrap data to use for the identify operation. If
-   * {@link LDIdentifyOptions.bootstrap} is provided in identifyOptions, it takes precedence.
-   */
-  bootstrap?: unknown;
-
-  /**
-   * Optional identify options to use for the first identify. Since the first identify is not
-   * sheddable, the sheddable option is omitted from this type.
-   */
-  identifyOptions?: Omit<LDIdentifyOptions, 'sheddable'>;
-}
+export type { LDStartOptions };
 
 export interface LDClient extends Omit<LDClientBase, 'identify'> {
   /**

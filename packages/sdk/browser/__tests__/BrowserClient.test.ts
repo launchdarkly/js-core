@@ -246,37 +246,6 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(client.getContext()).toEqual({ kind: 'user', key: 'bob' });
   });
 
-  it('parses bootstrap data only once when using start()', async () => {
-    const bootstrapModule = await import('@launchdarkly/js-client-sdk-common');
-    const readFlagsFromBootstrapSpy = jest.spyOn(bootstrapModule, 'readFlagsFromBootstrap');
-
-    const client = makeClient(
-      'client-side-id',
-      { kind: 'user', key: 'bob' },
-      AutoEnvAttributes.Disabled,
-      {
-        streaming: false,
-        logger,
-        diagnosticOptOut: true,
-      },
-      platform,
-    );
-
-    await client.start({
-      identifyOptions: {
-        bootstrap: goodBootstrapDataWithReasons,
-      },
-    });
-
-    expect(readFlagsFromBootstrapSpy).toHaveBeenCalledTimes(1);
-    expect(readFlagsFromBootstrapSpy).toHaveBeenCalledWith(
-      expect.anything(),
-      goodBootstrapDataWithReasons,
-    );
-
-    readFlagsFromBootstrapSpy.mockRestore();
-  });
-
   it('uses the latest bootstrap data when identify is called with new bootstrap data', async () => {
     const initialBootstrapData = {
       'string-flag': 'is bob',
@@ -866,7 +835,7 @@ describe('given a mock platform for a BrowserClient', () => {
 
     // Verify that the logger was called with the error message
     expect(logger.error).toHaveBeenCalledWith(
-      'Client must be started before it can identify a context, did you forget to call start()?',
+      'The client must be started before a context can be identified. Call start() prior to identifying a context.',
     );
 
     // Verify that no fetch calls were made

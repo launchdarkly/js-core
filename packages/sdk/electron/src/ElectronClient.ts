@@ -23,7 +23,6 @@ import {
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   mobileFdv1Endpoints,
-  readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from './ElectronDataManager';
@@ -43,10 +42,6 @@ import ElectronPlatform from './platform/ElectronPlatform';
 const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(['error', 'warn', 'info', 'debug']);
 
 export class ElectronClient extends LDClientImpl {
-  private readonly _initialContext: LDContext;
-
-  private _startPromise?: Promise<LDWaitForInitializationResult>;
-
   private readonly _plugins: LDPlugin[];
 
   private _ipcNamespace?: string;
@@ -93,6 +88,8 @@ export class ElectronClient extends LDClientImpl {
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedElectronOptions.plugins),
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
+      requiresStart: true,
+      initialContext,
     };
 
     const platform = new ElectronPlatform(logger, options);
@@ -125,7 +122,6 @@ export class ElectronClient extends LDClientImpl {
       internalOptions,
     );
 
-    this._initialContext = initialContext;
     this._plugins = validatedElectronOptions.plugins;
     this.setEventSendingEnabled(!this.isOffline(), false);
 
@@ -142,76 +138,15 @@ export class ElectronClient extends LDClientImpl {
     internal.safeRegisterPlugins(this.logger, this.environmentMetadata, client, this._plugins);
   }
 
-  start(options?: LDStartOptions): Promise<LDWaitForInitializationResult> {
-    if (this.initializeResult !== undefined) {
-      return Promise.resolve(this.initializeResult);
-    }
-    if (this._startPromise) {
-      return this._startPromise;
-    }
-    if (!this._initialContext) {
-      this.logger.error('Initial context not set');
-      return Promise.resolve({ status: 'failed', error: new Error('Initial context not set') });
-    }
-
-    const identifyOptions: LDIdentifyOptions = {
-      ...(options?.identifyOptions ?? {}),
-      sheddable: false,
-    };
-
-    if (
-      options?.bootstrap !== undefined &&
-      options?.bootstrap !== null &&
-      !identifyOptions.bootstrap
-    ) {
-      identifyOptions.bootstrap = options.bootstrap;
-    }
-
-    if (identifyOptions.bootstrap) {
-      try {
-        if (!identifyOptions.bootstrapParsed) {
-          identifyOptions.bootstrapParsed = readFlagsFromBootstrap(
-            this.logger,
-            identifyOptions.bootstrap,
-          );
-        }
-        this.presetFlags(identifyOptions.bootstrapParsed!);
-      } catch (error) {
-        this.logger.error('Failed to bootstrap data', error);
-      }
-    }
-
-    if (!this.initializedPromise) {
-      this.initializedPromise = new Promise((resolve) => {
-        this.initResolve = resolve;
-      });
-    }
-
-    this._startPromise = this.promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
-
-    this.identifyResult(this._initialContext, identifyOptions);
-    return this._startPromise;
-  }
-
   override async identifyResult(
-    pristineContext: LDContext,
+    context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    if (!this._startPromise) {
-      this.logger.error(
-        'Client must be started before it can identify a context, did you forget to call start()?',
-      );
-      return { status: 'error', error: new Error('Identify called before start') };
-    }
-
-    const identifyOptionsWithUpdatedDefaults = {
-      ...identifyOptions,
-    };
-    if (identifyOptions?.sheddable === undefined) {
-      identifyOptionsWithUpdatedDefaults.sheddable = true;
-    }
-
-    return super.identifyResult(pristineContext, identifyOptionsWithUpdatedDefaults);
+    const options =
+      identifyOptions?.sheddable === undefined
+        ? { ...identifyOptions, sheddable: true }
+        : identifyOptions;
+    return super.identifyResult(context, options);
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
