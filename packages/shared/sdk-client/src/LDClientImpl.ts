@@ -331,7 +331,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       });
     }
 
-    this.startPromise = this._promiseWithTimeout(this.initializedPromise!, options?.timeout ?? 5);
+    this.startPromise = this._promiseWithTimeout(
+      this.initializedPromise!,
+      options?.timeout ?? 5,
+      'start',
+    );
 
     this.identifyResult(this.initialContext!, identifyOptions);
     return this.startPromise;
@@ -544,8 +548,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   private _promiseWithTimeout(
     basePromise: Promise<LDWaitForInitializationResult>,
     timeout: number,
+    label: string = 'waitForInitialization',
   ): Promise<LDWaitForInitializationResult> {
-    const cancelableTimeout = cancelableTimedPromise(timeout, 'waitForInitialization');
+    const cancelableTimeout = cancelableTimedPromise(timeout, label);
     return Promise.race([
       basePromise.then((res: LDWaitForInitializationResult) => {
         cancelableTimeout.cancel();
