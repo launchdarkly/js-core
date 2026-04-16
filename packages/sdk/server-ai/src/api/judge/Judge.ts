@@ -110,11 +110,13 @@ export class Judge {
         return result;
       }
 
-      result.success = response.metrics.success;
-      result.score = evalResult.score;
-      result.reasoning = evalResult.reasoning;
-      result.metricKey = evaluationMetricKey;
-      return result;
+      return {
+        ...result,
+        success: response.metrics.success,
+        score: evalResult.score,
+        reasoning: evalResult.reasoning,
+        metricKey: evaluationMetricKey,
+      };
     } catch (error) {
       this._logger?.error('Judge evaluation failed:', error);
       result.sampled = true;
