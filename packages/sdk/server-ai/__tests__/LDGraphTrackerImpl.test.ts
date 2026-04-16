@@ -165,25 +165,25 @@ it('drops trackInvocationFailure after trackInvocationSuccess and warns', () => 
 });
 
 // ---------------------------------------------------------------------------
-// trackLatency – at-most-once
+// trackDuration – at-most-once
 // ---------------------------------------------------------------------------
 
-it('trackLatency sets durationMs and emits event', () => {
+it('trackDuration sets durationMs and emits event', () => {
   const tracker = makeTracker('r');
-  tracker.trackLatency(1234);
+  tracker.trackDuration(1234);
   expect(tracker.getSummary().durationMs).toBe(1234);
   expect(mockTrack).toHaveBeenCalledWith(
-    '$ld:ai:graph:latency',
+    '$ld:ai:duration:total',
     testContext,
     tracker.getTrackData(),
     1234,
   );
 });
 
-it('drops second trackLatency call and warns', () => {
+it('drops second trackDuration call and warns', () => {
   const tracker = makeTracker('r');
-  tracker.trackLatency(100);
-  tracker.trackLatency(200);
+  tracker.trackDuration(100);
+  tracker.trackDuration(200);
   expect(mockTrack).toHaveBeenCalledTimes(1);
   expect(tracker.getSummary().durationMs).toBe(100);
   expect(mockWarn).toHaveBeenCalled();
