@@ -313,12 +313,12 @@ it('traverse handles a single-node graph', () => {
 // reverseTraverse
 // ---------------------------------------------------------------------------
 
-it('reverseTraverse processes terminal nodes before root', () => {
+it('reverseTraverse processes terminal nodes before their parents, root last', () => {
   //    root
   //   /    \
-  //  a      b    ← depth 1
+  //  a      b    ← mid-level
   //  |
-  //  c           ← depth 2 (deepest)
+  //  c           ← terminal (deepest)
   const graph = makeGraph('root', {
     root: [{ key: 'a' }, { key: 'b' }],
     a: [{ key: 'c' }],
@@ -335,10 +335,11 @@ it('reverseTraverse processes terminal nodes before root', () => {
     order.push(node.getKey());
   });
 
-  expect(order[0]).toBe('c'); // deepest first
-  expect(order[order.length - 1]).toBe('root'); // root last
-  // c must appear before a (c is deeper than a)
+  expect(order[order.length - 1]).toBe('root'); // root always last
+  // c must appear before a (c is a descendant of a)
   expect(order.indexOf('c')).toBeLessThan(order.indexOf('a'));
+  // all four nodes visited
+  expect(order.sort()).toEqual(['a', 'b', 'c', 'root']);
 });
 
 it('reverseTraverse stores fn return values in execution context', () => {
@@ -360,13 +361,9 @@ it('reverseTraverse stores fn return values in execution context', () => {
   expect(contextWhenRootRuns[0]).toHaveProperty('child', 'result-of-child');
 });
 
-it('reverseTraverse uses longest path for depth when a node has multiple parents', () => {
-  // root → a → c
-  // root → b → c  (c has two parents, but depth is same from either path)
-  //
-  // More importantly, longest-path: root → a → d → c gives c depth 3
-  // while root → b → c gives c depth 2
-  // So c should appear before b and a in reverse traversal.
+it('reverseTraverse visits a node with multiple parents only once', () => {
+  // root → a → d → c
+  // root → b → c   ← c has two parents
   const graph = makeGraph('root', {
     root: [{ key: 'a' }, { key: 'b' }],
     a: [{ key: 'd' }],
@@ -386,10 +383,32 @@ it('reverseTraverse uses longest path for depth when a node has multiple parents
     order.push(node.getKey());
   });
 
-  // c has depth 3 (via root → a → d → c), so it should come before d (depth 2)
-  expect(order.indexOf('c')).toBeLessThan(order.indexOf('d'));
+  // c is the only terminal — it goes first
+  expect(order[0]).toBe('c');
   // root is always last
   expect(order[order.length - 1]).toBe('root');
+  // every node visited exactly once
+  expect(order.sort()).toEqual(['a', 'b', 'c', 'd', 'root']);
+});
+
+it('reverseTraverse visits each node once on a cyclic graph', () => {
+  // A → B → A (no terminals)
+  const graph = makeGraph('a', {
+    a: [{ key: 'b' }],
+    b: [{ key: 'a' }],
+  });
+  const def = makeDefinition(graph, {
+    a: makeAgentConfig('a'),
+    b: makeAgentConfig('b'),
+  });
+
+  const visited: string[] = [];
+  def.reverseTraverse((node) => {
+    visited.push(node.getKey());
+  });
+
+  // No terminals → returns without visiting anything (same as Python)
+  expect(visited).toEqual([]);
 });
 
 // ---------------------------------------------------------------------------

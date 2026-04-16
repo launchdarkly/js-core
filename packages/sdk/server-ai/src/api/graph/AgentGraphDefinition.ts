@@ -142,6 +142,8 @@ export class AgentGraphDefinition {
    * The value returned by `fn` is stored in the mutable `executionContext` under
    * the node's key, making upstream results available to downstream nodes.
    *
+   * Cyclic graphs are handled safely — each node is visited at most once.
+   *
    * @param fn Callback invoked for each node. Its return value is added to
    *   `executionContext` keyed by the node's config key.
    * @param initialExecutionContext Optional initial context to seed the traversal.
@@ -175,11 +177,13 @@ export class AgentGraphDefinition {
   }
 
   /**
-   * Traverses the graph breadth-first from the terminal nodes up to the root.
+   * Traverses the graph from terminal nodes up to the root.
    *
-   * Uses the longest path to each node to determine its depth, so nodes that can
-   * be reached via multiple paths of different lengths are processed at the deepest
-   * level. All nodes at the same depth are processed before moving to the next level.
+   * Uses BFS upward via parent edges so that each node is processed only after
+   * all of its reachable descendants have been processed. The root is always
+   * visited last. Cyclic graphs are handled safely — each node is visited at
+   * most once; if the graph has no terminal nodes, this method returns without
+   * invoking `fn`.
    *
    * The value returned by `fn` is stored in the mutable `executionContext` under
    * the node's key.
@@ -189,18 +193,50 @@ export class AgentGraphDefinition {
    * @param initialExecutionContext Optional initial context to seed the traversal.
    */
   reverseTraverse(fn: TraversalFn, initialExecutionContext: Record<string, unknown> = {}): void {
+    const terminals = this.terminalNodes();
+    if (terminals.length === 0) {
+      return;
+    }
+
     const executionContext = { ...initialExecutionContext };
-    const depths = this._computeLongestPathDepths();
+    const rootKey = this._agentGraph.root;
+    const visited = new Set<string>();
+    let queue: AgentGraphNode[] = terminals;
 
-    // Sort nodes by depth descending so the deepest (terminal) nodes go first
-    const sortedNodes = Object.values(this._nodes).sort(
-      (a, b) => (depths[b.getKey()] ?? 0) - (depths[a.getKey()] ?? 0),
-    );
+    while (queue.length > 0) {
+      const nextQueue: AgentGraphNode[] = [];
 
-    sortedNodes.forEach((node) => {
-      const result = fn(node, executionContext);
-      executionContext[node.getKey()] = result;
-    });
+      queue.forEach((node) => {
+        const key = node.getKey();
+        if (visited.has(key)) {
+          return;
+        }
+        visited.add(key);
+
+        // Defer the root so it is always processed last
+        if (key === rootKey) {
+          return;
+        }
+
+        const result = fn(node, executionContext);
+        executionContext[key] = result;
+
+        this.getParentNodes(key).forEach((parent) => {
+          if (!visited.has(parent.getKey())) {
+            nextQueue.push(parent);
+          }
+        });
+      });
+
+      queue = nextQueue;
+    }
+
+    // Root is always last — only invoke if it was reached during traversal
+    const root = this._nodes[rootKey];
+    if (root && visited.has(rootKey)) {
+      const result = fn(root, executionContext);
+      executionContext[rootKey] = result;
+    }
   }
 
   /**
@@ -221,50 +257,5 @@ export class AgentGraphDefinition {
     }
 
     return keys;
-  }
-
-  /**
-   * Computes the longest-path depth for every node reachable from the root using
-   * Kahn's topological sort + dynamic programming.
-   *
-   * Assumes the graph is a DAG — cycles are detected and rejected by
-   * {@link LDAIClientImpl.agentGraph} before an AgentGraphDefinition is constructed.
-   */
-  private _computeLongestPathDepths(): Record<string, number> {
-    const nodeKeys = Object.keys(this._nodes);
-    const inDegree: Record<string, number> = {};
-    const depths: Record<string, number> = {};
-
-    nodeKeys.forEach((key) => {
-      inDegree[key] = 0;
-      depths[key] = 0;
-    });
-
-    nodeKeys.forEach((key) => {
-      this._nodes[key].getEdges().forEach((edge) => {
-        if (edge.key in inDegree) {
-          inDegree[edge.key] += 1;
-        }
-      });
-    });
-
-    // Start with all nodes that have no incoming edges
-    const queue: string[] = nodeKeys.filter((key) => inDegree[key] === 0);
-
-    while (queue.length > 0) {
-      const key = queue.shift()!;
-      this._nodes[key].getEdges().forEach((edge) => {
-        if (!(edge.key in depths)) {
-          return;
-        }
-        depths[edge.key] = Math.max(depths[edge.key], depths[key] + 1);
-        inDegree[edge.key] -= 1;
-        if (inDegree[edge.key] === 0) {
-          queue.push(edge.key);
-        }
-      });
-    }
-
-    return depths;
   }
 }

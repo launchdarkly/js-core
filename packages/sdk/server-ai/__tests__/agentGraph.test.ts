@@ -82,17 +82,27 @@ it('returns { enabled: false } when a node is unconnected (not reachable from ro
   expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('unconnected node'));
 });
 
-it('returns { enabled: false } when the graph contains a cycle', async () => {
+it('returns { enabled: true } and traverses a cyclic graph (each node visited once)', async () => {
   const client = makeClient();
-  // A → B → A forms a cycle
+  // A → B → A forms a cycle; both nodes are reachable from A so validation passes
   const graphValue = makeGraphFlagValue('a', {
     a: [{ key: 'b' }],
     b: [{ key: 'a' }],
   });
-  mockVariation.mockResolvedValueOnce(graphValue);
+  mockVariation
+    .mockResolvedValueOnce(graphValue)
+    .mockResolvedValue(makeAgentFlagValue('agent', true));
+
   const result = await client.agentGraph('my-graph', testContext);
-  expect(result.enabled).toBe(false);
-  expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('cycle'));
+  expect(result.enabled).toBe(true);
+  if (result.enabled) {
+    const visited: string[] = [];
+    result.graph.traverse((node) => {
+      visited.push(node.getKey());
+    });
+    // Each node visited exactly once despite the cycle
+    expect(visited.sort()).toEqual(['a', 'b']);
+  }
 });
 
 it('returns { enabled: false } when a child agent config is disabled', async () => {
