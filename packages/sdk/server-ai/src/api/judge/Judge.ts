@@ -57,7 +57,7 @@ export class Judge {
    * @param input The input prompt or question that was provided to the AI
    * @param output The AI-generated response to be evaluated
    * @param samplingRate Sampling rate (0-1) to determine if evaluation should be processed (defaults to 1)
-   * @returns Promise that resolves to evaluation results; always returns a result, never undefined
+   * @returns Promise that resolves to evaluation results
    */
   async evaluate(input: string, output: string, samplingRate: number = 1): Promise<LDJudgeResult> {
     const result = defaultJudgeResult();
@@ -126,7 +126,7 @@ export class Judge {
    * @param messages Array of messages representing the conversation history
    * @param response The AI response to be evaluated
    * @param samplingRatio Sampling ratio (0-1) to determine if evaluation should be processed (defaults to 1)
-   * @returns Promise that resolves to evaluation results; always returns a result, never undefined
+   * @returns Promise that resolves to evaluation results
    */
   async evaluateMessages(
     messages: LDMessage[],

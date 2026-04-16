@@ -17,7 +17,7 @@ export interface StructuredResponse {
 }
 
 /**
- * Flat result from a judge evaluation containing score, reasoning, and metadata.
+ * Result from a judge evaluation containing score, reasoning, and metadata.
  */
 export interface LDJudgeResult {
   /** The key of the judge configuration that was used to generate this result */
