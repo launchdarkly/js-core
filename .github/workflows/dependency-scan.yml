@@ -1,3 +1,12 @@
+# Dependency Scan — License Compliance
+#
+# Generates a CycloneDX SBOM via cdxgen and evaluates it against an OPA/Rego
+# license policy. This checks for disallowed licenses (e.g. GPL in a
+# proprietary SDK) — it does NOT check for CVEs or security vulnerabilities.
+# Vulnerability scanning is handled separately by dependency-review-action.
+#
+# See: SDK-2170, SEC-7263
+
 name: Dependency Scan
 
 on:
@@ -11,6 +20,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # The shared generate-sbom action runs cdxgen, which internally invokes
+      # `yarn install` to resolve the dependency tree. This repo uses Yarn 3.x
+      # via corepack (packageManager field in package.json), so corepack must
+      # be enabled before cdxgen runs. Without this, cdxgen falls back to
+      # system yarn (1.x), fails silently, and produces a 0-component BOM.
+      - name: Setup Node with corepack
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20.x
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install
 
       - name: Generate SBOM
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
@@ -28,3 +53,15 @@ jobs:
         uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
         with:
           artifacts-pattern: bom-*
+
+      # Guard against silent regression: if cdxgen fails to resolve
+      # dependencies (e.g. corepack not enabled), the BOM will contain
+      # 0 components and the policy evaluation vacuously passes.
+      - name: Verify SBOM contains components
+        run: |
+          COMPONENT_COUNT=$(jq '.components | length' bom.json)
+          echo "SBOM contains $COMPONENT_COUNT components"
+          if [ "$COMPONENT_COUNT" -eq 0 ]; then
+            echo "::error::SBOM contains 0 components — the scan produced nothing. Check that corepack is enabled and dependencies are installed."
+            exit 1
+          fi
