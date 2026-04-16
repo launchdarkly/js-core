@@ -7,7 +7,7 @@ import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
-import { EvalScore, JudgeResponse, StructuredResponse } from './types';
+import { LDJudgeResult, StructuredResponse } from './types';
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -57,13 +57,15 @@ export class Judge {
    * @param input The input prompt or question that was provided to the AI
    * @param output The AI-generated response to be evaluated
    * @param samplingRate Sampling rate (0-1) to determine if evaluation should be processed (defaults to 1)
-   * @returns Promise that resolves to evaluation results or undefined if not sampled
+   * @returns Promise that resolves to evaluation results
    */
-  async evaluate(
-    input: string,
-    output: string,
-    samplingRate: number = 1,
-  ): Promise<JudgeResponse | undefined> {
+  async evaluate(input: string, output: string, samplingRate: number = 1): Promise<LDJudgeResult> {
+    const result: LDJudgeResult = {
+      success: false,
+      sampled: false,
+      judgeConfigKey: this._aiConfig.key,
+    };
+
     const tracker = this._aiConfig.createTracker!();
     try {
       const evaluationMetricKey = this._getEvaluationMetricKey();
@@ -72,51 +74,54 @@ export class Judge {
           'Judge configuration is missing required evaluation metric key',
           tracker.getTrackData(),
         );
-        return undefined;
+        result.sampled = true;
+        result.errorMessage = 'Judge configuration is missing required evaluation metric key';
+        return result;
       }
 
       if (!this._aiConfig.messages) {
         this._logger?.warn('Judge configuration must include messages', tracker.getTrackData());
-        return undefined;
+        result.sampled = true;
+        result.errorMessage = 'Judge configuration must include messages';
+        return result;
       }
 
       if (Math.random() > samplingRate) {
         this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${samplingRate}`);
-        return undefined;
+        return result;
       }
+
+      result.sampled = true;
 
       const messages = this._constructEvaluationMessages(input, output);
 
       const response = await tracker.trackMetricsOf(
-        (result: StructuredResponse) => result.metrics,
+        (r: StructuredResponse) => r.metrics,
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
       );
 
-      let { success } = response.metrics;
+      const evalResult = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
 
-      const evals = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
-
-      if (!evals[evaluationMetricKey]) {
+      if (!evalResult) {
         this._logger?.warn(
           'Judge evaluation did not return the expected evaluation',
           tracker.getTrackData(),
         );
-        success = false;
+        return result;
       }
 
       return {
-        evals,
-        success,
-        judgeConfigKey: this._aiConfig.key,
+        ...result,
+        success: response.metrics.success,
+        score: evalResult.score,
+        reasoning: evalResult.reasoning,
+        metricKey: evaluationMetricKey,
       };
     } catch (error) {
       this._logger?.error('Judge evaluation failed:', error);
-      return {
-        evals: {},
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        judgeConfigKey: this._aiConfig.key,
-      };
+      result.sampled = true;
+      result.errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return result;
     }
   }
 
@@ -126,13 +131,13 @@ export class Judge {
    * @param messages Array of messages representing the conversation history
    * @param response The AI response to be evaluated
    * @param samplingRatio Sampling ratio (0-1) to determine if evaluation should be processed (defaults to 1)
-   * @returns Promise that resolves to evaluation results or undefined if not sampled
+   * @returns Promise that resolves to evaluation results
    */
   async evaluateMessages(
     messages: LDMessage[],
     response: ChatResponse,
     samplingRatio: number = 1,
-  ): Promise<JudgeResponse | undefined> {
+  ): Promise<LDJudgeResult> {
     const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
     const output = response.message.content;
 
@@ -177,18 +182,18 @@ export class Judge {
 
   /**
    * Parses the structured evaluation response from the AI provider.
+   * Returns score and reasoning, or undefined if parsing fails.
    */
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
     evaluationMetricKey: string,
     tracker: LDAIConfigTracker,
-  ): Record<string, EvalScore> {
+  ): { score: number; reasoning: string } | undefined {
     const evaluations = data.evaluations as Record<string, unknown>;
-    const results: Record<string, EvalScore> = {};
 
     if (!data.evaluations || typeof data.evaluations !== 'object') {
       this._logger?.warn('Invalid response: missing or invalid evaluations object');
-      return results;
+      return undefined;
     }
 
     const evaluation = evaluations[evaluationMetricKey];
@@ -198,7 +203,7 @@ export class Judge {
         `Missing evaluation for metric key: ${evaluationMetricKey}`,
         tracker.getTrackData(),
       );
-      return results;
+      return undefined;
     }
 
     const evalData = evaluation as Record<string, unknown>;
@@ -208,7 +213,7 @@ export class Judge {
         `Invalid score evaluated for ${evaluationMetricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
         tracker.getTrackData(),
       );
-      return results;
+      return undefined;
     }
 
     if (typeof evalData.reasoning !== 'string') {
@@ -216,14 +221,12 @@ export class Judge {
         `Invalid reasoning evaluated for ${evaluationMetricKey}: ${evalData.reasoning}. Reasoning must be a string`,
         tracker.getTrackData(),
       );
-      return results;
+      return undefined;
     }
 
-    results[evaluationMetricKey] = {
+    return {
       score: evalData.score,
       reasoning: evalData.reasoning,
     };
-
-    return results;
   }
 }
