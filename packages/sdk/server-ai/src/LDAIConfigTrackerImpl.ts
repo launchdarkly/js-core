@@ -25,9 +25,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _modelName: string,
     private _providerName: string,
     private _context: LDContext,
+    private _graphKey?: string,
   ) {}
 
-  getTrackData(graphKey?: string): {
+  getTrackData(): {
     runId: string;
     configKey: string;
     variationKey: string;
@@ -43,7 +44,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
-      ...(graphKey !== undefined ? { graphKey } : {}),
+      ...(this._graphKey !== undefined ? { graphKey: this._graphKey } : {}),
     };
   }
 
@@ -53,6 +54,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       configKey: this._configKey,
       variationKey: this._variationKey,
       version: this._version,
+      ...(this._graphKey !== undefined ? { graphKey: this._graphKey } : {}),
     });
     return Buffer.from(json).toString('base64url');
   }
@@ -73,10 +75,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       '',
       '',
       context,
+      payload.graphKey,
     );
   }
 
-  trackDuration(duration: number, graphKey?: string): void {
+  trackDuration(duration: number): void {
     if (this._trackedMetrics.durationMs !== undefined) {
       this._ldClient.logger?.warn(
         'Duration has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -84,15 +87,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.durationMs = duration;
-    this._ldClient.track(
-      '$ld:ai:duration:total',
-      this._context,
-      this.getTrackData(graphKey),
-      duration,
-    );
+    this._ldClient.track('$ld:ai:duration:total', this._context, this.getTrackData(), duration);
   }
 
-  async trackDurationOf<TRes>(func: () => Promise<TRes>, graphKey?: string): Promise<TRes> {
+  async trackDurationOf<TRes>(func: () => Promise<TRes>): Promise<TRes> {
     const startTime = Date.now();
     try {
       // Be sure to await here so that we can track the duration of the function and also handle errors.
@@ -101,11 +99,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     } finally {
       const endTime = Date.now();
       const duration = endTime - startTime; // duration in milliseconds
-      this.trackDuration(duration, graphKey);
+      this.trackDuration(duration);
     }
   }
 
-  trackTimeToFirstToken(timeToFirstTokenMs: number, graphKey?: string) {
+  trackTimeToFirstToken(timeToFirstTokenMs: number) {
     if (this._trackedMetrics.timeToFirstTokenMs !== undefined) {
       this._ldClient.logger?.warn(
         'Time to first token has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -116,44 +114,39 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     this._ldClient.track(
       '$ld:ai:tokens:ttf',
       this._context,
-      this.getTrackData(graphKey),
+      this.getTrackData(),
       timeToFirstTokenMs,
     );
   }
 
-  trackEvalScores(scores: Record<string, EvalScore>, graphKey?: string) {
+  trackEvalScores(scores: Record<string, EvalScore>) {
     Object.entries(scores).forEach(([metricKey, evalScore]) => {
-      this._ldClient.track(metricKey, this._context, this.getTrackData(graphKey), evalScore.score);
+      this._ldClient.track(metricKey, this._context, this.getTrackData(), evalScore.score);
     });
   }
 
-  trackJudgeResponse(response: JudgeResponse, graphKey?: string) {
+  trackJudgeResponse(response: JudgeResponse) {
     Object.entries(response.evals).forEach(([metricKey, evalScore]) => {
       this._ldClient.track(
         metricKey,
         this._context,
-        { ...this.getTrackData(graphKey), judgeConfigKey: response.judgeConfigKey },
+        { ...this.getTrackData(), judgeConfigKey: response.judgeConfigKey },
         evalScore.score,
       );
     });
   }
 
-  trackToolCall(toolKey: string, graphKey?: string): void {
-    this._ldClient.track(
-      '$ld:ai:tool_call',
-      this._context,
-      { ...this.getTrackData(graphKey), toolKey },
-      1,
-    );
+  trackToolCall(toolKey: string): void {
+    this._ldClient.track('$ld:ai:tool_call', this._context, { ...this.getTrackData(), toolKey }, 1);
   }
 
-  trackToolCalls(toolKeys: string[], graphKey?: string): void {
+  trackToolCalls(toolKeys: string[]): void {
     toolKeys.forEach((toolKey) => {
-      this.trackToolCall(toolKey, graphKey);
+      this.trackToolCall(toolKey);
     });
   }
 
-  trackFeedback(feedback: { kind: LDFeedbackKind }, graphKey?: string): void {
+  trackFeedback(feedback: { kind: LDFeedbackKind }): void {
     if (this._trackedMetrics.feedback !== undefined) {
       this._ldClient.logger?.warn(
         'Feedback has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -162,23 +155,13 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
     this._trackedMetrics.feedback = feedback;
     if (feedback.kind === LDFeedbackKind.Positive) {
-      this._ldClient.track(
-        '$ld:ai:feedback:user:positive',
-        this._context,
-        this.getTrackData(graphKey),
-        1,
-      );
+      this._ldClient.track('$ld:ai:feedback:user:positive', this._context, this.getTrackData(), 1);
     } else if (feedback.kind === LDFeedbackKind.Negative) {
-      this._ldClient.track(
-        '$ld:ai:feedback:user:negative',
-        this._context,
-        this.getTrackData(graphKey),
-        1,
-      );
+      this._ldClient.track('$ld:ai:feedback:user:negative', this._context, this.getTrackData(), 1);
     }
   }
 
-  trackSuccess(graphKey?: string): void {
+  trackSuccess(): void {
     if (this._trackedMetrics.success !== undefined) {
       this._ldClient.logger?.warn(
         'Generation result has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -186,15 +169,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.success = true;
-    this._ldClient.track(
-      '$ld:ai:generation:success',
-      this._context,
-      this.getTrackData(graphKey),
-      1,
-    );
+    this._ldClient.track('$ld:ai:generation:success', this._context, this.getTrackData(), 1);
   }
 
-  trackError(graphKey?: string): void {
+  trackError(): void {
     if (this._trackedMetrics.success !== undefined) {
       this._ldClient.logger?.warn(
         'Generation result has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -202,20 +180,19 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.success = false;
-    this._ldClient.track('$ld:ai:generation:error', this._context, this.getTrackData(graphKey), 1);
+    this._ldClient.track('$ld:ai:generation:error', this._context, this.getTrackData(), 1);
   }
 
   async trackMetricsOf<TRes>(
     metricsExtractor: (result: TRes) => LDAIMetrics,
     func: () => Promise<TRes>,
-    graphKey?: string,
   ): Promise<TRes> {
     let result: TRes;
 
     try {
-      result = await this.trackDurationOf(func, graphKey);
+      result = await this.trackDurationOf(func);
     } catch (err) {
-      this.trackError(graphKey);
+      this.trackError();
       throw err;
     }
 
@@ -224,14 +201,14 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
     // Track success/error based on metrics
     if (metrics.success) {
-      this.trackSuccess(graphKey);
+      this.trackSuccess();
     } else {
-      this.trackError(graphKey);
+      this.trackError();
     }
 
     // Track token usage if available
     if (metrics.usage) {
-      this.trackTokens(metrics.usage, graphKey);
+      this.trackTokens(metrics.usage);
     }
 
     return result;
@@ -240,7 +217,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackStreamMetricsOf<TStream>(
     streamCreator: () => TStream,
     metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
-    graphKey?: string,
   ): TStream {
     const startTime = Date.now();
 
@@ -249,14 +225,14 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       const stream = streamCreator();
 
       // Start background metrics tracking (fire and forget)
-      this._trackStreamMetricsInBackground(stream, metricsExtractor, startTime, graphKey);
+      this._trackStreamMetricsInBackground(stream, metricsExtractor, startTime);
 
       // Return stream immediately for consumption
       return stream;
     } catch (error) {
       // Track error if stream creation fails
-      this.trackDuration(Date.now() - startTime, graphKey);
-      this.trackError(graphKey);
+      this.trackDuration(Date.now() - startTime);
+      this.trackError();
       throw error;
     }
   }
@@ -265,7 +241,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     stream: TStream,
     metricsExtractor: (stream: TStream) => Promise<LDAIMetrics>,
     startTime: number,
-    graphKey?: string,
   ): Promise<void> {
     try {
       // Wait for metrics to be available
@@ -273,21 +248,21 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
 
       // Track success/error based on metrics
       if (metrics.success) {
-        this.trackSuccess(graphKey);
+        this.trackSuccess();
       } else {
-        this.trackError(graphKey);
+        this.trackError();
       }
 
       // Track token usage if available
       if (metrics.usage) {
-        this.trackTokens(metrics.usage, graphKey);
+        this.trackTokens(metrics.usage);
       }
     } catch (error) {
       // If metrics extraction fails, track error
-      this.trackError(graphKey);
+      this.trackError();
     } finally {
       // Track duration regardless of success/error
-      this.trackDuration(Date.now() - startTime, graphKey);
+      this.trackDuration(Date.now() - startTime);
     }
   }
 
@@ -362,7 +337,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
-  trackTokens(tokens: LDTokenUsage, graphKey?: string): void {
+  trackTokens(tokens: LDTokenUsage): void {
     if (this._trackedMetrics.tokens !== undefined) {
       this._ldClient.logger?.warn(
         'Token usage has already been tracked for this execution. Use createTracker() for a new execution.',
@@ -370,7 +345,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     this._trackedMetrics.tokens = tokens;
-    const trackData = this.getTrackData(graphKey);
+    const trackData = this.getTrackData();
     if (tokens.total > 0) {
       this._ldClient.track('$ld:ai:tokens:total', this._context, trackData, tokens.total);
     }
