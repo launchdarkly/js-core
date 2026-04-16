@@ -1,31 +1,13 @@
 /**
- * Internal class for building dynamic evaluation response schemas.
- * Not exported - only used internally by TrackedJudge.
+ * Internal class for building evaluation response schemas.
+ * Not exported - only used internally by Judge.
+ *
+ * The schema is a fixed shape: top-level score and reasoning.
+ * The judge config's evaluationMetricKey is only used when keying the result,
+ * not in the schema itself.
  */
 class EvaluationSchemaBuilder {
-  static build(evaluationMetricKey?: string): Record<string, unknown> {
-    if (!evaluationMetricKey) {
-      return {};
-    }
-    return {
-      type: 'object',
-      properties: {
-        evaluations: {
-          type: 'object',
-          description: `Object containing evaluation results for ${evaluationMetricKey} metric`,
-          properties: {
-            [evaluationMetricKey]: this._buildKeySchema(evaluationMetricKey),
-          },
-          required: [evaluationMetricKey],
-          additionalProperties: false,
-        },
-      },
-      required: ['evaluations'],
-      additionalProperties: false,
-    } as const;
-  }
-
-  private static _buildKeySchema(key: string) {
+  static build(): Record<string, unknown> {
     return {
       type: 'object',
       properties: {
@@ -33,11 +15,11 @@ class EvaluationSchemaBuilder {
           type: 'number',
           minimum: 0,
           maximum: 1,
-          description: `Score between 0.0 and 1.0 for ${key}`,
+          description: 'Score between 0.0 and 1.0.',
         },
         reasoning: {
           type: 'string',
-          description: `Reasoning behind the score for ${key}`,
+          description: 'Reasoning behind the score.',
         },
       },
       required: ['score', 'reasoning'],

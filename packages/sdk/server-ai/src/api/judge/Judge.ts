@@ -3,7 +3,6 @@ import Mustache from 'mustache';
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
-import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
@@ -25,8 +24,7 @@ export class Judge {
     logger?: LDLogger,
   ) {
     this._logger = logger;
-    const evaluationMetricKey = this._getEvaluationMetricKey();
-    this._evaluationResponseStructure = EvaluationSchemaBuilder.build(evaluationMetricKey);
+    this._evaluationResponseStructure = EvaluationSchemaBuilder.build();
   }
 
   /**
@@ -100,7 +98,7 @@ export class Judge {
         () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
       );
 
-      const evalResult = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
+      const evalResult = this._parseEvaluationResponse(response.data);
 
       if (!evalResult) {
         this._logger?.warn(
@@ -181,52 +179,32 @@ export class Judge {
   }
 
   /**
-   * Parses the structured evaluation response from the AI provider.
+   * Parses the structured evaluation response. Expects top-level {score, reasoning}.
    * Returns score and reasoning, or undefined if parsing fails.
    */
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
-    evaluationMetricKey: string,
-    tracker: LDAIConfigTracker,
   ): { score: number; reasoning: string } | undefined {
-    const evaluations = data.evaluations as Record<string, unknown>;
-
-    if (!data.evaluations || typeof data.evaluations !== 'object') {
-      this._logger?.warn('Invalid response: missing or invalid evaluations object');
+    if (!data || typeof data !== 'object') {
+      this._logger?.warn('Invalid response: missing or invalid evaluation');
       return undefined;
     }
 
-    const evaluation = evaluations[evaluationMetricKey];
-
-    if (!evaluation || typeof evaluation !== 'object') {
+    if (typeof data.score !== 'number' || data.score < 0 || data.score > 1) {
       this._logger?.warn(
-        `Missing evaluation for metric key: ${evaluationMetricKey}`,
-        tracker.getTrackData(),
+        `Invalid score: ${data.score}. Score must be a number between 0 and 1 inclusive`,
       );
       return undefined;
     }
 
-    const evalData = evaluation as Record<string, unknown>;
-
-    if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
-      this._logger?.warn(
-        `Invalid score evaluated for ${evaluationMetricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
-        tracker.getTrackData(),
-      );
-      return undefined;
-    }
-
-    if (typeof evalData.reasoning !== 'string') {
-      this._logger?.warn(
-        `Invalid reasoning evaluated for ${evaluationMetricKey}: ${evalData.reasoning}. Reasoning must be a string`,
-        tracker.getTrackData(),
-      );
+    if (typeof data.reasoning !== 'string') {
+      this._logger?.warn('Invalid reasoning: must be a string');
       return undefined;
     }
 
     return {
-      score: evalData.score,
-      reasoning: evalData.reasoning,
+      score: data.score,
+      reasoning: data.reasoning,
     };
   }
 }
