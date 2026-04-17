@@ -70,14 +70,12 @@ describe('Judge', () => {
     it('evaluates AI response successfully', async () => {
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant to the question',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant to the question',
         }),
         metrics: {
           success: true,
@@ -125,14 +123,12 @@ describe('Judge', () => {
     it('returns evaluation result with correct evaluationMetricKey for tracker integration', async () => {
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.85, reasoning: 'Highly relevant response' },
-          },
+          score: 0.85,
+          reasoning: 'Highly relevant response',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.85, reasoning: 'Highly relevant response' },
-          },
+          score: 0.85,
+          reasoning: 'Highly relevant response',
         }),
         metrics: {
           success: true,
@@ -159,14 +155,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'Good' },
-          },
+          score: 0.8,
+          reasoning: 'Good',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'Good' },
-          },
+          score: 0.8,
+          reasoning: 'Good',
         }),
         metrics: {
           success: true,
@@ -237,14 +231,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         }),
         metrics: {
           success: true,
@@ -277,14 +269,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         }),
         metrics: {
           success: true,
@@ -317,14 +307,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant',
         }),
         metrics: {
           success: true,
@@ -358,14 +346,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            helpfulness: { score: 0.7, reasoning: 'The response is helpful' },
-          },
+          score: 0.7,
+          reasoning: 'The response is helpful',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            helpfulness: { score: 0.7, reasoning: 'The response is helpful' },
-          },
+          score: 0.7,
+          reasoning: 'The response is helpful',
         }),
         metrics: {
           success: true,
@@ -409,18 +395,10 @@ describe('Judge', () => {
       );
     });
 
-    it('returns result with success false when expected metric is missing', async () => {
+    it('returns result with success false when response has no score or reasoning', async () => {
       const mockStructuredResponse: StructuredResponse = {
-        data: {
-          evaluations: {
-            accuracy: { score: 0.9, reasoning: 'Accurate' },
-          },
-        },
-        rawResponse: JSON.stringify({
-          evaluations: {
-            accuracy: { score: 0.9, reasoning: 'Accurate' },
-          },
-        }),
+        data: {},
+        rawResponse: '{}',
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -437,19 +415,23 @@ describe('Judge', () => {
         sampled: true,
         judgeConfigKey: 'test-judge',
       });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Could not parse evaluation response: {}',
+        mockTrackData,
+      );
     });
 
     it('returns result with success false when response structure is malformed', async () => {
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          relevance: { score: 0.8, reasoning: 'Good' },
-          accuracy: { score: 0.9, reasoning: 'Accurate' },
-          helpfulness: { score: 0.7, reasoning: 'Helpful' },
+          evaluations: {
+            relevance: { score: 0.8, reasoning: 'Good' },
+          },
         },
         rawResponse: JSON.stringify({
-          relevance: { score: 0.8, reasoning: 'Good' },
-          accuracy: { score: 0.9, reasoning: 'Accurate' },
-          helpfulness: { score: 0.7, reasoning: 'Helpful' },
+          evaluations: {
+            relevance: { score: 0.8, reasoning: 'Good' },
+          },
         }),
         metrics: {
           success: true,
@@ -467,6 +449,10 @@ describe('Judge', () => {
         sampled: true,
         judgeConfigKey: 'test-judge',
       });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not parse evaluation response:'),
+        mockTrackData,
+      );
     });
 
     it('handles provider errors gracefully', async () => {
@@ -517,14 +503,12 @@ describe('Judge', () => {
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant to the question',
         },
         rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'The response is relevant to the question' },
-          },
+          score: 0.8,
+          reasoning: 'The response is relevant to the question',
         }),
         metrics: {
           success: true,
@@ -620,13 +604,9 @@ describe('Judge', () => {
     it('parses valid evaluation response correctly', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: { score: 0.8, reasoning: 'Good' },
-        },
-      };
+      const responseData = { score: 0.8, reasoning: 'Good' };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse(responseData);
 
       expect(result).toEqual({
         score: 0.8,
@@ -634,28 +614,21 @@ describe('Judge', () => {
       });
     });
 
-    it('returns undefined for invalid response data', () => {
+    it('returns undefined for empty response data', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        relevance: { score: 0.8, reasoning: 'Good' },
-      };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse({});
 
       expect(result).toBeUndefined();
     });
 
-    it('handles missing score or reasoning fields', () => {
+    it('handles missing reasoning field', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: { score: 0.8 },
-        },
-      };
+      const responseData = { score: 0.8 };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
     });
@@ -663,73 +636,31 @@ describe('Judge', () => {
     it('handles invalid score values out of range', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: { score: 1.5, reasoning: 'Good' },
-        },
-      };
+      const responseData = { score: 1.5, reasoning: 'Good' };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid score evaluated for relevance: 1.5'),
-        mockTrackData,
-      );
     });
 
     it('handles negative score values', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: { score: -0.1, reasoning: 'Good' },
-        },
-      };
+      const responseData = { score: -0.1, reasoning: 'Good' };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid score evaluated for relevance: -0.1'),
-        mockTrackData,
-      );
     });
 
     it('handles invalid reasoning type', () => {
       // eslint-disable-next-line no-underscore-dangle
       const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: { score: 0.8, reasoning: 123 },
-        },
-      };
+      const responseData = { score: 0.8, reasoning: 123 };
 
-      const result = parseResponse(responseData, 'relevance', mockTracker);
+      const result = parseResponse(responseData);
 
       expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid reasoning evaluated for relevance: 123'),
-        mockTrackData,
-      );
-    });
-
-    it('handles missing evaluation when key does not exist in response', () => {
-      // eslint-disable-next-line no-underscore-dangle
-      const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          accuracy: { score: 0.9, reasoning: 'Accurate' },
-        },
-      };
-
-      const result = parseResponse(responseData, 'relevance', mockTracker);
-
-      expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Missing evaluation for metric key: relevance',
-        mockTrackData,
-      );
     });
 
     it('handles empty evaluationMetricKeys array fallback', async () => {
@@ -750,42 +681,6 @@ describe('Judge', () => {
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Judge configuration is missing required evaluation metric key',
-        mockTrackData,
-      );
-    });
-
-    it('handles evaluation value that is not an object', () => {
-      // eslint-disable-next-line no-underscore-dangle
-      const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: 'not an object',
-        },
-      };
-
-      const result = parseResponse(responseData, 'relevance', mockTracker);
-
-      expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Missing evaluation for metric key: relevance',
-        mockTrackData,
-      );
-    });
-
-    it('handles null evaluation value', () => {
-      // eslint-disable-next-line no-underscore-dangle
-      const parseResponse = (judge as any)._parseEvaluationResponse.bind(judge);
-      const responseData = {
-        evaluations: {
-          relevance: null,
-        },
-      };
-
-      const result = parseResponse(responseData, 'relevance', mockTracker);
-
-      expect(result).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Missing evaluation for metric key: relevance',
         mockTrackData,
       );
     });
