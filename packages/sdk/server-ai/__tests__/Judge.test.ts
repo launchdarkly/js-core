@@ -416,7 +416,7 @@ describe('Judge', () => {
         judgeConfigKey: 'test-judge',
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Could not parse evaluation response for judge "test-judge": {}',
+        'Could not parse evaluation response: {}',
         mockTrackData,
       );
     });
@@ -450,7 +450,7 @@ describe('Judge', () => {
         judgeConfigKey: 'test-judge',
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Could not parse evaluation response for judge "test-judge"'),
+        expect.stringContaining('Could not parse evaluation response:'),
         mockTrackData,
       );
     });
