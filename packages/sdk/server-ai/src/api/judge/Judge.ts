@@ -3,11 +3,27 @@ import Mustache from 'mustache';
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
-import { LDAIConfigTracker } from '../config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
-import { EvaluationSchemaBuilder } from './EvaluationSchemaBuilder';
 import { LDJudgeResult, StructuredResponse } from './types';
+
+const EVALUATION_SCHEMA = {
+  type: 'object',
+  properties: {
+    score: {
+      type: 'number',
+      minimum: 0,
+      maximum: 1,
+      description: 'Score between 0.0 and 1.0.',
+    },
+    reasoning: {
+      type: 'string',
+      description: 'Reasoning behind the score.',
+    },
+  },
+  required: ['score', 'reasoning'],
+  additionalProperties: false,
+} as const;
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -17,7 +33,6 @@ import { LDJudgeResult, StructuredResponse } from './types';
  */
 export class Judge {
   private readonly _logger?: LDLogger;
-  private readonly _evaluationResponseStructure: Record<string, unknown>;
 
   constructor(
     private readonly _aiConfig: LDAIJudgeConfig,
@@ -25,8 +40,6 @@ export class Judge {
     logger?: LDLogger,
   ) {
     this._logger = logger;
-    const evaluationMetricKey = this._getEvaluationMetricKey();
-    this._evaluationResponseStructure = EvaluationSchemaBuilder.build(evaluationMetricKey);
   }
 
   /**
@@ -97,14 +110,14 @@ export class Judge {
 
       const response = await tracker.trackMetricsOf(
         (r: StructuredResponse) => r.metrics,
-        () => this._aiProvider.invokeStructuredModel(messages, this._evaluationResponseStructure),
+        () => this._aiProvider.invokeStructuredModel(messages, EVALUATION_SCHEMA),
       );
 
-      const evalResult = this._parseEvaluationResponse(response.data, evaluationMetricKey, tracker);
+      const evalResult = this._parseEvaluationResponse(response.data);
 
       if (!evalResult) {
         this._logger?.warn(
-          'Judge evaluation did not return the expected evaluation',
+          `Could not parse evaluation response: ${JSON.stringify(response.data)}`,
           tracker.getTrackData(),
         );
         return result;
@@ -181,52 +194,27 @@ export class Judge {
   }
 
   /**
-   * Parses the structured evaluation response from the AI provider.
+   * Parses the structured evaluation response. Expects top-level {score, reasoning}.
    * Returns score and reasoning, or undefined if parsing fails.
    */
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
-    evaluationMetricKey: string,
-    tracker: LDAIConfigTracker,
   ): { score: number; reasoning: string } | undefined {
-    const evaluations = data.evaluations as Record<string, unknown>;
-
-    if (!data.evaluations || typeof data.evaluations !== 'object') {
-      this._logger?.warn('Invalid response: missing or invalid evaluations object');
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
       return undefined;
     }
 
-    const evaluation = evaluations[evaluationMetricKey];
-
-    if (!evaluation || typeof evaluation !== 'object') {
-      this._logger?.warn(
-        `Missing evaluation for metric key: ${evaluationMetricKey}`,
-        tracker.getTrackData(),
-      );
+    if (typeof data.score !== 'number' || data.score < 0 || data.score > 1) {
       return undefined;
     }
 
-    const evalData = evaluation as Record<string, unknown>;
-
-    if (typeof evalData.score !== 'number' || evalData.score < 0 || evalData.score > 1) {
-      this._logger?.warn(
-        `Invalid score evaluated for ${evaluationMetricKey}: ${evalData.score}. Score must be a number between 0 and 1 inclusive`,
-        tracker.getTrackData(),
-      );
-      return undefined;
-    }
-
-    if (typeof evalData.reasoning !== 'string') {
-      this._logger?.warn(
-        `Invalid reasoning evaluated for ${evaluationMetricKey}: ${evalData.reasoning}. Reasoning must be a string`,
-        tracker.getTrackData(),
-      );
+    if (typeof data.reasoning !== 'string') {
       return undefined;
     }
 
     return {
-      score: evalData.score,
-      reasoning: evalData.reasoning,
+      score: data.score,
+      reasoning: data.reasoning,
     };
   }
 }
