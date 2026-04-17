@@ -9,15 +9,18 @@ import {
   createFDv2DataManagerBase,
   FDv2ConnectionMode,
   FlagManager,
+  Hook,
   internal,
   LDIdentifyOptions as LDBaseIdentifyOptions,
   LDClientImpl,
   LDContext,
   LDEmitter,
   LDEmitterEventName,
+  LDFlagValue,
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDWaitForInitializationOptions,
   MODE_TABLE,
   Platform,
   resolveForegroundMode,
@@ -30,7 +33,7 @@ import { BrowserIdentifyOptions as LDIdentifyOptions } from './BrowserIdentifyOp
 import { registerStateDetection } from './BrowserStateDetector';
 import GoalManager from './goals/GoalManager';
 import { Goal, isClick } from './goals/Goals';
-import { LDClient } from './LDClient';
+import { LDClient, LDStartOptions } from './LDClient';
 import { LDPlugin } from './LDPlugin';
 import validateBrowserOptions, { BrowserOptions, filterToBaseOptionsWithDefaults } from './options';
 import BrowserPlatform from './platform/BrowserPlatform';
@@ -290,7 +293,7 @@ export function makeClient(
   options: BrowserOptions = {},
   overridePlatform?: Platform,
 ): LDClient {
-  const client = new BrowserClientImpl(
+  const impl = new BrowserClientImpl(
     clientSideId,
     initialContext,
     autoEnvAttributes,
@@ -298,7 +301,46 @@ export function makeClient(
     overridePlatform,
   );
 
-  client.registerPlugins(client);
+  // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
+  // In the future we should consider updating the common SDK code to not use inheritance and instead compose
+  // the leaf-implementation.
+  // Using an object with PIMPL here also allows us to completely hide the underlying implementation, where with a class
+  // it is trivial to access what should be protected (or even private) fields.
+  const client: LDClient = {
+    variation: (key: string, defaultValue?: LDFlagValue) => impl.variation(key, defaultValue),
+    variationDetail: (key: string, defaultValue?: LDFlagValue) =>
+      impl.variationDetail(key, defaultValue),
+    boolVariation: (key: string, defaultValue: boolean) => impl.boolVariation(key, defaultValue),
+    boolVariationDetail: (key: string, defaultValue: boolean) =>
+      impl.boolVariationDetail(key, defaultValue),
+    numberVariation: (key: string, defaultValue: number) => impl.numberVariation(key, defaultValue),
+    numberVariationDetail: (key: string, defaultValue: number) =>
+      impl.numberVariationDetail(key, defaultValue),
+    stringVariation: (key: string, defaultValue: string) => impl.stringVariation(key, defaultValue),
+    stringVariationDetail: (key: string, defaultValue: string) =>
+      impl.stringVariationDetail(key, defaultValue),
+    jsonVariation: (key: string, defaultValue: unknown) => impl.jsonVariation(key, defaultValue),
+    jsonVariationDetail: (key: string, defaultValue: unknown) =>
+      impl.jsonVariationDetail(key, defaultValue),
+    track: (key: string, data?: any, metricValue?: number) => impl.track(key, data, metricValue),
+    on: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.on(key, callback),
+    off: (key: LDEmitterEventName, callback: (...args: any[]) => void) => impl.off(key, callback),
+    flush: () => impl.flush(),
+    setConnectionMode: (mode?: FDv2ConnectionMode) => impl.setConnectionMode(mode),
+    setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
+    identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
+      impl.identify(pristineContext, identifyOptions),
+    getContext: () => impl.getContext(),
+    close: () => impl.close(),
+    allFlags: () => impl.allFlags(),
+    addHook: (hook: Hook) => impl.addHook(hook),
+    waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
+      impl.waitForInitialization(waitOptions),
+    logger: impl.logger,
+    start: (startOptions?: LDStartOptions) => impl.start(startOptions),
+  };
+
+  impl.registerPlugins(client);
 
   return client;
 }
