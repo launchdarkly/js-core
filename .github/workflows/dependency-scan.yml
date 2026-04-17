@@ -35,10 +35,13 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies (skip platform-specific optionals)
-        run: yarn install
+        run: |
+          yarn config set supportedArchitectures.os --json '[]'
+          yarn config set supportedArchitectures.cpu --json '[]'
+          yarn config set supportedArchitectures.libc --json '[]'
+          yarn install
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
-          YARN_SUPPORTED_ARCHITECTURES: '{"os":[],"cpu":[],"libc":[]}'
 
       - name: Generate SBOM
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
