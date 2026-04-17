@@ -34,16 +34,16 @@ jobs:
       - name: Enable corepack
         run: corepack enable
 
-      - name: Install dependencies
+      - name: Install dependencies (skip platform-specific optionals)
         run: yarn install
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+          YARN_SUPPORTED_ARCHITECTURES: '{"os":[],"cpu":[],"libc":[]}'
 
       - name: Generate SBOM
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
         with:
           types: 'nodejs'
-          omit-optional: 'true'
 
   evaluate-policy:
     runs-on: ubuntu-latest
