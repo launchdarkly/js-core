@@ -413,7 +413,13 @@ export class LDAIClientImpl implements LDAIClient {
       defaultGraphValue,
     )) as LDAgentGraphFlagValue;
 
-    // Step 2: Validate - graph must be fetchable (has a root)
+    // Step 2: Validate - graph must be enabled and have a root
+    // eslint-disable-next-line no-underscore-dangle
+    if (graphFlagValue._ldMeta?.enabled === false) {
+      this._logger?.debug(`agentGraph: graph "${graphKey}" is disabled.`);
+      return disabled;
+    }
+
     if (!graphFlagValue.root) {
       this._logger?.debug(`agentGraph: graph "${graphKey}" is not fetchable or has no root node.`);
       return disabled;

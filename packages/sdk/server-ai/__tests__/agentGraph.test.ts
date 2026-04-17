@@ -55,6 +55,20 @@ function makeAgentFlagValue(key: string, enabled = true) {
 // agentGraph – disabled / validation failures
 // ---------------------------------------------------------------------------
 
+it('returns { enabled: false } when _ldMeta.enabled is false', async () => {
+  const client = makeClient();
+  mockVariation.mockResolvedValueOnce({ _ldMeta: { enabled: false }, root: 'root' });
+  const result = await client.agentGraph('my-graph', testContext);
+  expect(result.enabled).toBe(false);
+});
+
+it('logs debug when graph is disabled via _ldMeta.enabled', async () => {
+  const client = makeClient();
+  mockVariation.mockResolvedValueOnce({ _ldMeta: { enabled: false }, root: 'root' });
+  await client.agentGraph('my-graph', testContext);
+  expect(mockDebug).toHaveBeenCalledWith(expect.stringContaining('disabled'));
+});
+
 it('returns { enabled: false } when graph flag has no root', async () => {
   const client = makeClient();
   mockVariation.mockResolvedValueOnce({ root: '' }); // no root
