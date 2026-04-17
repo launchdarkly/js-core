@@ -7,7 +7,7 @@ import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { AIProvider } from '../providers/AIProvider';
 import { LDJudgeResult, StructuredResponse } from './types';
 
-const EVALUATION_SCHEMA: Record<string, unknown> = {
+const EVALUATION_SCHEMA = {
   type: 'object',
   properties: {
     score: {
@@ -23,7 +23,7 @@ const EVALUATION_SCHEMA: Record<string, unknown> = {
   },
   required: ['score', 'reasoning'],
   additionalProperties: false,
-};
+} as const;
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -200,7 +200,7 @@ export class Judge {
   private _parseEvaluationResponse(
     data: Record<string, unknown>,
   ): { score: number; reasoning: string } | undefined {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
       return undefined;
     }
 
