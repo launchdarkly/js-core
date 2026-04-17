@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.16.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.15.2...react-native-client-sdk-v10.16.0) (2026-04-17)
+
+
+### Features
+
+* Add experimental FDv2 support for React Native. ([#1243](https://github.com/launchdarkly/js-core/issues/1243)) ([7ed2c08](https://github.com/launchdarkly/js-core/commit/7ed2c085cd35d35ffd6f48becb5a60f03b07ad1c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.24.0 to 1.25.0
+
 ## [10.15.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.15.1...react-native-client-sdk-v10.15.2) (2026-04-14)
 
 
