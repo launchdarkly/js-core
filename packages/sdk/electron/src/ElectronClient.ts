@@ -14,7 +14,6 @@ import {
   LDContext,
   LDEmitter,
   LDEmitterEventName,
-  LDFlagValue,
   LDHeaders,
   LDIdentifyOptions,
   LDIdentifyResult,
@@ -35,7 +34,7 @@ import {
   IpcEventSubscription,
 } from './ElectronIPC';
 import type { ElectronOptions } from './ElectronOptions';
-import type { LDClient, LDStartOptions } from './LDClient';
+import type { LDClient } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
 import validateOptions, { filterToBaseOptions } from './options';
 import ElectronPlatform from './platform/ElectronPlatform';
@@ -133,8 +132,7 @@ export class ElectronClient extends LDClientImpl {
   }
 
   /**
-   * Registers plugins with the given client. Called from makeClient with the facade
-   * so plugins receive the public API (single identify that returns LDIdentifyResult).
+   * Registers plugins with the given client.
    */
   registerPluginsWith(client: LDClient): void {
     internal.safeRegisterPlugins(this.logger, this.environmentMetadata, client, this._plugins);
@@ -399,57 +397,14 @@ export class ElectronClient extends LDClientImpl {
   }
 }
 
-/**
- * Builds the LaunchDarkly client facade (PIMPL). Exposes a single identify method that returns
- * identify results. Plugins are registered with the facade.
- */
 export function makeClient(
   credential: string,
   initialContext: LDContext,
   options: ElectronOptions = {},
 ): LDClient {
-  const impl = new ElectronClient(credential, initialContext, options);
+  const client = new ElectronClient(credential, initialContext, options);
 
-  const client: LDClient = {
-    variation: (key: string, defaultValue?: LDFlagValue) => impl.variation(key, defaultValue),
-    variationDetail: (key: string, defaultValue?: LDFlagValue) =>
-      impl.variationDetail(key, defaultValue),
-    boolVariation: (key: string, defaultValue: boolean) => impl.boolVariation(key, defaultValue),
-    boolVariationDetail: (key: string, defaultValue: boolean) =>
-      impl.boolVariationDetail(key, defaultValue),
-    numberVariation: (key: string, defaultValue: number) => impl.numberVariation(key, defaultValue),
-    numberVariationDetail: (key: string, defaultValue: number) =>
-      impl.numberVariationDetail(key, defaultValue),
-    stringVariation: (key: string, defaultValue: string) => impl.stringVariation(key, defaultValue),
-    stringVariationDetail: (key: string, defaultValue: string) =>
-      impl.stringVariationDetail(key, defaultValue),
-    jsonVariation: (key: string, defaultValue: unknown) => impl.jsonVariation(key, defaultValue),
-    jsonVariationDetail: (key: string, defaultValue: unknown) =>
-      impl.jsonVariationDetail(key, defaultValue),
-    track: (key: string, data?: unknown, metricValue?: number) =>
-      impl.track(key, data, metricValue),
-    on: (key: string, callback: (...args: unknown[]) => void) =>
-      impl.on(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
-    off: (key: string, callback: (...args: unknown[]) => void) =>
-      impl.off(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
-    flush: () => impl.flush(),
-    identify: (ctx: LDContext, identifyOptions?: LDIdentifyOptions) =>
-      impl.identify(ctx, identifyOptions),
-    getContext: () => impl.getContext(),
-    close: () => impl.close(),
-    allFlags: () => impl.allFlags(),
-    addHook: (hook: Parameters<LDClient['addHook']>[0]) => impl.addHook(hook),
-    waitForInitialization: (waitOptions?: Parameters<LDClient['waitForInitialization']>[0]) =>
-      impl.waitForInitialization(waitOptions),
-    logger: impl.logger,
-    start: (startOptions?: LDStartOptions) => impl.start(startOptions),
-    setConnectionMode: (mode: Parameters<LDClient['setConnectionMode']>[0]) =>
-      impl.setConnectionMode(mode),
-    getConnectionMode: () => impl.getConnectionMode(),
-    isOffline: () => impl.isOffline(),
-  };
-
-  impl.registerPluginsWith(client);
+  client.registerPluginsWith(client);
 
   return client;
 }
