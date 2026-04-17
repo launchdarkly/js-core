@@ -43,6 +43,7 @@ jobs:
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
         with:
           types: 'nodejs'
+          omit-optional: 'true'
 
   evaluate-policy:
     runs-on: ubuntu-latest
