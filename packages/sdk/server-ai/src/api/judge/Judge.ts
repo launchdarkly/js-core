@@ -118,6 +118,7 @@ export class Judge {
       if (!evalResult) {
         this._logger?.warn(
           `Could not parse evaluation response for judge "${this._aiConfig.key}": ${JSON.stringify(response.data)}`,
+          tracker.getTrackData(),
         );
         return result;
       }

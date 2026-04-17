@@ -417,6 +417,7 @@ describe('Judge', () => {
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Could not parse evaluation response for judge "test-judge": {}',
+        mockTrackData,
       );
     });
 
@@ -450,6 +451,7 @@ describe('Judge', () => {
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not parse evaluation response for judge "test-judge"'),
+        mockTrackData,
       );
     });
 
