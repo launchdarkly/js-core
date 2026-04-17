@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@launchdarkly/react-sdk": "0.2.0",
+    "@launchdarkly/react-sdk": "0.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.5.0...js-client-sdk-v4.6.0) (2026-04-17)
+
+
+### Features
+
+* adding start() method to common client sdk package ([#1244](https://github.com/launchdarkly/js-core/issues/1244)) ([7f5f468](https://github.com/launchdarkly/js-core/commit/7f5f468f93eaa4655d1432af5e7bf8819104700a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.24.0 to 1.25.0
+
 ## [4.5.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.4.1...js-client-sdk-v4.5.0) (2026-04-14)
 
 

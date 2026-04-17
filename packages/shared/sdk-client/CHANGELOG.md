@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.25.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.24.0...js-client-sdk-common-v1.25.0) (2026-04-17)
+
+
+### Features
+
+* Add experimental FDv2 support for React Native. ([#1243](https://github.com/launchdarkly/js-core/issues/1243)) ([7ed2c08](https://github.com/launchdarkly/js-core/commit/7ed2c085cd35d35ffd6f48becb5a60f03b07ad1c))
+* adding start() method to common client sdk package ([#1244](https://github.com/launchdarkly/js-core/issues/1244)) ([7f5f468](https://github.com/launchdarkly/js-core/commit/7f5f468f93eaa4655d1432af5e7bf8819104700a))
+
+
+### Bug Fixes
+
+* FDv2 -- cache initializer returns transfer-none on cache miss ([#1275](https://github.com/launchdarkly/js-core/issues/1275)) ([7bf3c31](https://github.com/launchdarkly/js-core/commit/7bf3c3122dc01146988d3722ff659f011967ea3d))
+
 ## [1.24.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.23.0...js-client-sdk-common-v1.24.0) (2026-04-14)
 
 
