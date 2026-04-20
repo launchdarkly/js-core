@@ -231,15 +231,6 @@ export default class ReactNativeLDClient extends LDClientImpl {
     );
   }
 
-  /**
-   * Identifies a context to LaunchDarkly.
-   *
-   * This override preserves backward compatibility by throwing on error or timeout,
-   * matching the behavior consumers expect from the React Native SDK.
-   *
-   * @param context The LDContext object.
-   * @param identifyOptions Optional configuration. See {@link LDIdentifyOptions}.
-   */
   override async identify(
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,

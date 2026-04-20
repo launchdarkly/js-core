@@ -213,7 +213,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
 
@@ -227,7 +227,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [{ data: JSON.stringify(defaultPutResponse) }];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT).then();
 
@@ -245,7 +245,7 @@ describe('sdk-client waitForInitialization', () => {
     simulatedEvents = [];
 
     const waitPromise = ldc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = ldc.identifyResult(carContext);
+    const identifyPromise = ldc.identify(carContext);
 
     jest.advanceTimersByTimeAsync(10 * 1000 + 1).then();
 
@@ -279,7 +279,7 @@ describe('sdk-client waitForInitialization', () => {
     );
 
     const waitPromise = errorLdc.waitForInitialization({ timeout: 10 });
-    const identifyPromise = errorLdc.identifyResult(carContext);
+    const identifyPromise = errorLdc.identify(carContext);
 
     // Advance timers to allow error handler to be set up and error to propagate
     await jest.advanceTimersByTimeAsync(DEFAULT_IDENTIFY_TIMEOUT);

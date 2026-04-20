@@ -5,8 +5,8 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
- * React Native-specific LDClient type that preserves backward compatibility
- * by declaring `identify()` as returning `Promise<void>` (throws on error/timeout).
+ * React Native LDClient type. Overrides `identify()` to return `Promise<void>` and throw on
+ * error/timeout to maintain backward compatibility with existing React Native consumers.
  */
 export type LDClient = Omit<CommonClient, 'identify'> & {
   /**

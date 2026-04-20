@@ -18,7 +18,6 @@ import {
 import {
   Hook,
   LDClient,
-  LDClientIdentifyResult,
   LDContext,
   LDContextStrict,
   LDIdentifyError,
@@ -67,7 +66,7 @@ const { ClientMessages, ErrorKinds } = internal;
 
 const DEFAULT_IDENTIFY_TIMEOUT_SECONDS = 5;
 
-export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
+export default class LDClientImpl implements LDClient {
   private readonly _config: Configuration;
   private readonly _diagnosticsManager?: internal.DiagnosticsManager;
   private _eventProcessor?: internal.EventProcessor;
@@ -462,16 +461,6 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       }, identifyTimeout * 1000);
     });
     return Promise.race([callSitePromise, timeoutPromise]);
-  }
-
-  /**
-   * @deprecated Use {@link identify} instead, which now returns `Promise<LDIdentifyResult>`.
-   */
-  async identifyResult(
-    pristineContext: LDContext,
-    identifyOptions?: LDIdentifyOptions,
-  ): Promise<LDIdentifyResult> {
-    return this.identify(pristineContext, identifyOptions);
   }
 
   /**
