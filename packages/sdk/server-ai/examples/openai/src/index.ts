@@ -66,7 +66,7 @@ async function main() {
   }
 
   const tracker = aiConfig.createTracker!();
-  const completion = await tracker.trackMetricsOf(OpenAIProvider.createAIMetrics, async () =>
+  const completion = await tracker.trackMetricsOf(OpenAIProvider.getAIMetricsFromResponse, async () =>
     client.chat.completions.create({
       messages: aiConfig.messages || [],
       model: aiConfig.model?.name || 'gpt-4',
