@@ -50,6 +50,7 @@
     "packages/sdk/server-ai/examples/chat-observability",
     "packages/sdk/server-ai/examples/openai-observability",
     "packages/sdk/server-ai/examples/vercel-ai",
+    "packages/sdk/server-ai/examples/agent-graph-traversal",
     "packages/telemetry/browser-telemetry",
     "packages/sdk/combined-browser",
     "packages/sdk/shopify-oxygen",

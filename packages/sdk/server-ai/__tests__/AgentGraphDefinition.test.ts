@@ -1,19 +1,6 @@
-import { randomUUID } from 'crypto';
-
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
-
 import { LDAIAgentConfig } from '../src/api/config';
 import { AgentGraphDefinition } from '../src/api/graph/AgentGraphDefinition';
 import { LDAgentGraphFlagValue, LDGraphEdge } from '../src/api/graph/types';
-import { LDClientMin } from '../src/LDClientMin';
-import { LDGraphTrackerImpl } from '../src/LDGraphTrackerImpl';
-
-const mockLdClient: LDClientMin = {
-  track: jest.fn(),
-  variation: jest.fn(),
-};
-
-const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
 // ---------------------------------------------------------------------------
 // Helper builders
@@ -39,22 +26,10 @@ function makeGraph(
 function makeDefinition(
   graph: LDAgentGraphFlagValue,
   agentConfigs: Record<string, LDAIAgentConfig>,
+  enabled = true,
 ): AgentGraphDefinition {
   const nodes = AgentGraphDefinition.buildNodes(graph, agentConfigs);
-  return new AgentGraphDefinition(
-    graph,
-    nodes,
-    () =>
-      new LDGraphTrackerImpl(
-        mockLdClient,
-        randomUUID(),
-        graph.root,
-        undefined,
-        // eslint-disable-next-line no-underscore-dangle
-        graph._ldMeta?.version ?? 1,
-        testContext,
-      ),
-  );
+  return new AgentGraphDefinition(graph, nodes, enabled);
 }
 
 // ---------------------------------------------------------------------------
@@ -117,23 +92,16 @@ it('collectAllKeys works for a graph with no edges', () => {
 });
 
 // ---------------------------------------------------------------------------
-// enabled / isEnabled
+// enabled
 // ---------------------------------------------------------------------------
 
-it('enabled returns true when _ldMeta.enabled is absent', () => {
-  const graph: LDAgentGraphFlagValue = { root: 'r' };
-  const def = makeDefinition(graph, { r: makeAgentConfig('r') });
-  expect(def.enabled).toBe(true);
-  expect(def.isEnabled()).toBe(true);
-});
+it('enabled reflects the value passed at construction', () => {
+  const graph = makeGraph('r');
+  const enabled = makeDefinition(graph, { r: makeAgentConfig('r') }, true);
+  expect(enabled.enabled).toBe(true);
 
-it('enabled reflects _ldMeta.enabled', () => {
-  const graph: LDAgentGraphFlagValue = {
-    _ldMeta: { enabled: false },
-    root: 'r',
-  };
-  const def = makeDefinition(graph, { r: makeAgentConfig('r') });
-  expect(def.enabled).toBe(false);
+  const disabled = makeDefinition(graph, { r: makeAgentConfig('r') }, false);
+  expect(disabled.enabled).toBe(false);
 });
 
 // ---------------------------------------------------------------------------
@@ -419,24 +387,4 @@ it('getConfig returns the raw flag value', () => {
   const graph = makeGraph('root', {}, 'var-key', 5);
   const def = makeDefinition(graph, { root: makeAgentConfig('root') });
   expect(def.getConfig()).toBe(graph);
-});
-
-// ---------------------------------------------------------------------------
-// createTracker
-// ---------------------------------------------------------------------------
-
-it('createTracker returns an LDGraphTracker', () => {
-  const graph = makeGraph('root', {}, 'var-1', 3);
-  const def = makeDefinition(graph, { root: makeAgentConfig('root') });
-  const tracker = def.createTracker();
-  expect(tracker).toBeDefined();
-  expect(typeof tracker.trackInvocationSuccess).toBe('function');
-});
-
-it('createTracker produces a fresh tracker each call (different runIds)', () => {
-  const graph = makeGraph('root');
-  const def = makeDefinition(graph, { root: makeAgentConfig('root') });
-  const t1 = def.createTracker();
-  const t2 = def.createTracker();
-  expect(t1.getTrackData().runId).not.toBe(t2.getTrackData().runId);
 });
