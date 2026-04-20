@@ -833,3 +833,83 @@ describe('optional default values', () => {
     expect(result.enabled).toBe(false);
   });
 });
+
+describe('tools map support', () => {
+  it('includes tools map in completion config from flag variation', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const mockVariation = {
+      model: { name: 'example-model' },
+      tools: {
+        'web-search-tool': {
+          name: 'web-search-tool',
+          type: 'function',
+          parameters: { type: 'object', properties: {}, required: [] },
+          customParameters: { 'some-custom-parameter': 'some-custom-value' },
+        },
+      },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toEqual(mockVariation.tools);
+  });
+
+  it('includes tools map in agent config from flag variation', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+    const defaultValue: LDAIAgentConfigDefault = { enabled: false };
+    const mockVariation = {
+      model: { name: 'example-model' },
+      instructions: 'You are a helpful agent.',
+      tools: {
+        'search-tool': {
+          name: 'search-tool',
+          type: 'function',
+          customParameters: { maxResults: 10 },
+        },
+      },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toEqual(mockVariation.tools);
+  });
+
+  it('uses tools from defaults when completion config flag has no tools', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultTools = {
+      'default-tool': { name: 'default-tool', type: 'function', customParameters: { priority: 'high' } },
+    };
+    const defaultValue: LDAICompletionConfigDefault = { enabled: true, tools: defaultTools };
+    mockLdClient.variation.mockResolvedValue(defaultValue.constructor
+      ? { _ldMeta: { enabled: true, mode: 'completion', variationKey: '' }, tools: defaultTools }
+      : defaultValue,
+    );
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toEqual(defaultTools);
+  });
+
+  it('returns undefined tools when no tools are configured', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const mockVariation = {
+      model: { name: 'example-model' },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toBeUndefined();
+  });
+});
