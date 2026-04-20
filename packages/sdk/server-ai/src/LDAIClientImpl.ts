@@ -446,7 +446,7 @@ export class LDAIClientImpl implements LDAIClient {
     const agentConfigs: Record<string, LDAIAgentConfig> = {};
     const fetchResults = await Promise.all(
       [...allKeys].map(async (key) => {
-        const config = await this._agentConfigInternal(key, context, graphKey, variables);
+        const config = await this._agentConfig(key, context, disabledAIConfig, variables, graphKey);
         return { key, config };
       }),
     );
@@ -468,26 +468,6 @@ export class LDAIClientImpl implements LDAIClient {
 
   createGraphTracker(token: string, context: LDContext): LDGraphTracker {
     return LDGraphTrackerImpl.fromResumptionToken(token, this._ldClient, context);
-  }
-
-  /**
-   * Fetches a single agent config without tracking usage (used internally by agentGraph).
-   */
-  private async _agentConfigInternal(
-    key: string,
-    context: LDContext,
-    graphKey?: string,
-    variables?: Record<string, unknown>,
-  ): Promise<LDAIAgentConfig> {
-    const config = await this._evaluate(
-      key,
-      context,
-      disabledAIConfig,
-      'agent',
-      variables,
-      graphKey,
-    );
-    return config as LDAIAgentConfig;
   }
 
   /**
