@@ -12,7 +12,7 @@ const esmPath = 'dist/esm/index.js';
 // the second array item is a function to include all js-core packages in the bundle so they
 // are not imported or required as separate npm packages
 const external = [
-  // @rollup/plugin-typescript needs explicit externalization of tslib.
+  // @rollup/plugin-typescript needs tslib bundled, so exclude it from the node_modules external pattern.
   /node_modules(?!.*tslib)/,
   (id: string) => !id.includes('js-core'),
 ];
