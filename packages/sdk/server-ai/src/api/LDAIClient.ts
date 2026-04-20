@@ -341,39 +341,36 @@ export interface LDAIClient {
 
   /**
    * Fetches an agent graph configuration from LaunchDarkly and returns an
-   * {@link AgentGraphDefinition} that can be traversed and tracked.
+   * {@link AgentGraphDefinition}.
    *
-   * The method validates that:
+   * When the graph is enabled the method validates that:
    * - The graph flag can be evaluated.
    * - A single root node is present.
    * - All nodes in the graph are reachable from the root (no disconnected nodes).
    * - Every referenced agent config can be fetched and is enabled.
    *
-   * If any validation check fails, `{ enabled: false }` is returned and, when the
-   * logger level is DEBUG, a warning is emitted describing the failure.
+   * If any validation check fails, the returned definition has
+   * {@link AgentGraphDefinition.enabled | enabled} set to `false` with an empty
+   * node collection. When the logger level is DEBUG, a message describing the
+   * failure is emitted.
    *
    * @param graphKey The LaunchDarkly flag key for the agent graph configuration.
    * @param context The LaunchDarkly context used for flag evaluation and tracking.
    *
-   * @returns A promise that resolves to `{ enabled: false }` when the graph is
-   *   invalid or disabled, or `{ enabled: true, graph: AgentGraphDefinition }` otherwise.
+   * @returns A promise that resolves to an {@link AgentGraphDefinition}. Check
+   *   {@link AgentGraphDefinition.enabled | enabled} before traversing.
    *
    * @example
    * ```typescript
-   * const result = await aiClient.agentGraph('my-agent-graph', context);
-   * if (result.enabled) {
-   *   const tracker = result.graph.createTracker();
-   *   result.graph.traverse((node, ctx) => {
+   * const graph = await aiClient.agentGraph('my-agent-graph', context);
+   * if (graph.enabled) {
+   *   graph.traverse((node, ctx) => {
    *     // build your provider-specific node here
    *   });
-   *   tracker.trackInvocationSuccess();
    * }
    * ```
    */
-  agentGraph(
-    graphKey: string,
-    context: LDContext,
-  ): Promise<{ enabled: false } | { enabled: true; graph: AgentGraphDefinition }>;
+  agentGraph(graphKey: string, context: LDContext): Promise<AgentGraphDefinition>;
 
   /**
    * Reconstructs an {@link LDGraphTracker} from a resumption token, preserving

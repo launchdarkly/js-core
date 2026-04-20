@@ -12,7 +12,7 @@ import type { LDGraphMetricSummary, LDGraphTrackData } from './types';
  *
  * @example
  * ```typescript
- * const tracker = graph.createTracker();
+ * const tracker = graphDefinition.createTracker();
  * try {
  *   // ... execute graph ...
  *   tracker.trackInvocationSuccess();

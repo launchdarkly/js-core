@@ -9,8 +9,8 @@ import type { LDClientMin } from './LDClientMin';
 /**
  * Concrete implementation of {@link LDGraphTracker}.
  *
- * Instantiate via {@link AgentGraphDefinition.createTracker} or reconstruct from
- * a resumption token via {@link LDGraphTrackerImpl.fromResumptionToken}.
+ * Construct directly or reconstruct from a resumption token via
+ * {@link LDGraphTrackerImpl.fromResumptionToken}.
  */
 export class LDGraphTrackerImpl implements LDGraphTracker {
   private _summary: LDGraphMetricSummary = {};

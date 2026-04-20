@@ -397,15 +397,9 @@ export class LDAIClientImpl implements LDAIClient {
     return LDAIConfigTrackerImpl.fromResumptionToken(token, this._ldClient, context);
   }
 
-  async agentGraph(
-    graphKey: string,
-    context: LDContext,
-  ): Promise<{ enabled: false } | { enabled: true; graph: AgentGraphDefinition }> {
+  async agentGraph(graphKey: string, context: LDContext): Promise<AgentGraphDefinition> {
     this._ldClient.track(TRACK_USAGE_AGENT_GRAPH, context, graphKey, 1);
 
-    const disabled = { enabled: false as const };
-
-    // Step 1: Fetch the graph flag value
     const defaultGraphValue: LDAgentGraphFlagValue = { root: '' };
     const graphFlagValue = (await this._ldClient.variation(
       graphKey,
@@ -413,7 +407,16 @@ export class LDAIClientImpl implements LDAIClient {
       defaultGraphValue,
     )) as LDAgentGraphFlagValue;
 
-    // Step 2: Validate - graph must be enabled and have a root
+    // eslint-disable-next-line no-underscore-dangle
+    const variationKey = graphFlagValue._ldMeta?.variationKey;
+    // eslint-disable-next-line no-underscore-dangle
+    const version = graphFlagValue._ldMeta?.version ?? 1;
+    const ldClient = this._ldClient;
+    const trackerFactory = () =>
+      new LDGraphTrackerImpl(ldClient, randomUUID(), graphKey, variationKey, version, context);
+
+    const disabled = new AgentGraphDefinition(graphFlagValue, {}, false, trackerFactory);
+
     // eslint-disable-next-line no-underscore-dangle
     if (graphFlagValue._ldMeta?.enabled === false) {
       this._logger?.debug(`agentGraph: graph "${graphKey}" is disabled.`);
@@ -425,7 +428,6 @@ export class LDAIClientImpl implements LDAIClient {
       return disabled;
     }
 
-    // Step 3: Validate - collect all node keys and check connectivity from root
     const allKeys = AgentGraphDefinition.collectAllKeys(graphFlagValue);
     const reachableKeys = this._collectReachableKeys(graphFlagValue);
 
@@ -437,7 +439,6 @@ export class LDAIClientImpl implements LDAIClient {
       return disabled;
     }
 
-    // Step 4: Validate - fetch all child agent configs
     const agentConfigs: Record<string, LDAIAgentConfig> = {};
     const fetchResults = await Promise.all(
       [...allKeys].map(async (key) => {
@@ -457,23 +458,8 @@ export class LDAIClientImpl implements LDAIClient {
       agentConfigs[key] = config;
     });
 
-    // Build the node map
     const nodes = AgentGraphDefinition.buildNodes(graphFlagValue, agentConfigs);
-
-    // eslint-disable-next-line no-underscore-dangle
-    const variationKey = graphFlagValue._ldMeta?.variationKey;
-    // eslint-disable-next-line no-underscore-dangle
-    const version = graphFlagValue._ldMeta?.version ?? 1;
-    const ldClient = this._ldClient;
-
-    const graph = new AgentGraphDefinition(
-      graphFlagValue,
-      nodes,
-      () =>
-        new LDGraphTrackerImpl(ldClient, randomUUID(), graphKey, variationKey, version, context),
-    );
-
-    return { enabled: true, graph };
+    return new AgentGraphDefinition(graphFlagValue, nodes, true, trackerFactory);
   }
 
   createGraphTracker(token: string, context: LDContext): LDGraphTracker {

@@ -15,14 +15,17 @@ export type TraversalFn = (
  * Encapsulates an agent graph configuration and its pre-built node collection.
  *
  * Provides graph-level orchestration including relationship queries (parent/child),
- * breadth-first traversal in both forward and reverse directions, and tracker creation.
+ * breadth-first traversal in both forward and reverse directions, and graph tracker creation.
  *
- * Obtain an instance via {@link LDAIClient.agentGraph}.
+ * Obtain an instance via {@link LDAIClient.agentGraph}. When the graph is disabled
+ * or invalid, the returned instance has {@link enabled} set to `false` and an
+ * empty node collection.
  */
 export class AgentGraphDefinition {
   constructor(
     private readonly _agentGraph: LDAgentGraphFlagValue,
     private readonly _nodes: Record<string, AgentGraphNode>,
+    readonly enabled: boolean,
     private readonly _createTracker: () => LDGraphTracker,
   ) {}
 
@@ -50,22 +53,6 @@ export class AgentGraphDefinition {
     });
 
     return nodes;
-  }
-
-  /**
-   * Whether the graph is enabled. Always `true` for a successfully constructed definition
-   * (disabled graphs are not surfaced as AgentGraphDefinition instances).
-   */
-  get enabled(): boolean {
-    // eslint-disable-next-line no-underscore-dangle
-    return this._agentGraph._ldMeta?.enabled ?? true;
-  }
-
-  /**
-   * Returns whether the graph is enabled.
-   */
-  isEnabled(): boolean {
-    return this.enabled;
   }
 
   /**
