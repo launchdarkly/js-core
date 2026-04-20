@@ -1,6 +1,19 @@
+import { randomUUID } from 'crypto';
+
+import { LDContext } from '@launchdarkly/js-server-sdk-common';
+
 import { LDAIAgentConfig } from '../src/api/config';
 import { AgentGraphDefinition } from '../src/api/graph/AgentGraphDefinition';
 import { LDAgentGraphFlagValue, LDGraphEdge } from '../src/api/graph/types';
+import { LDClientMin } from '../src/LDClientMin';
+import { LDGraphTrackerImpl } from '../src/LDGraphTrackerImpl';
+
+const mockLdClient: LDClientMin = {
+  track: jest.fn(),
+  variation: jest.fn(),
+};
+
+const testContext: LDContext = { kind: 'user', key: 'test-user' };
 
 // ---------------------------------------------------------------------------
 // Helper builders
@@ -29,7 +42,18 @@ function makeDefinition(
   enabled = true,
 ): AgentGraphDefinition {
   const nodes = AgentGraphDefinition.buildNodes(graph, agentConfigs);
-  return new AgentGraphDefinition(graph, nodes, enabled);
+  return new AgentGraphDefinition(graph, nodes, enabled, () =>
+    new LDGraphTrackerImpl(
+      mockLdClient,
+      randomUUID(),
+      graph.root,
+      // eslint-disable-next-line no-underscore-dangle
+      graph._ldMeta?.variationKey,
+      // eslint-disable-next-line no-underscore-dangle
+      graph._ldMeta?.version ?? 1,
+      testContext,
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
