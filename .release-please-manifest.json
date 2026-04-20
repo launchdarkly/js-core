@@ -5,7 +5,7 @@
   "packages/sdk/akamai-base": "3.0.19",
   "packages/sdk/akamai-edgekv": "1.4.21",
   "packages/sdk/browser": "4.6.0",
-  "packages/sdk/cloudflare": "2.7.19",
+  "packages/sdk/cloudflare": "2.7.20",
   "packages/sdk/combined-browser": "0.1.15",
   "packages/sdk/fastly": "0.2.10",
   "packages/sdk/react-native": "10.16.0",
