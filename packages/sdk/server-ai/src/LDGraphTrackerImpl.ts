@@ -86,7 +86,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackInvocationSuccess(): void {
     if (this._summary.success !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackInvocationSuccess already called for this run — dropping duplicate call.',
+        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
       );
       return;
     }
@@ -97,7 +97,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackInvocationFailure(): void {
     if (this._summary.success !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackInvocationFailure already called for this run — dropping duplicate call.',
+        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
       );
       return;
     }

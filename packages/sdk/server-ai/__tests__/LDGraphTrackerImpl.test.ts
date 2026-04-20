@@ -149,7 +149,9 @@ it('drops second trackInvocationSuccess call and warns', () => {
   tracker.trackInvocationSuccess();
   tracker.trackInvocationSuccess();
   expect(mockTrack).toHaveBeenCalledTimes(1);
-  expect(mockWarn).toHaveBeenCalled();
+  expect(mockWarn).toHaveBeenCalledWith(
+    expect.stringContaining('invocation success/failure already recorded for this run'),
+  );
 });
 
 it('drops trackInvocationFailure after trackInvocationSuccess and warns', () => {
@@ -157,7 +159,9 @@ it('drops trackInvocationFailure after trackInvocationSuccess and warns', () => 
   tracker.trackInvocationSuccess();
   tracker.trackInvocationFailure();
   expect(mockTrack).toHaveBeenCalledTimes(1);
-  expect(mockWarn).toHaveBeenCalled();
+  expect(mockWarn).toHaveBeenCalledWith(
+    expect.stringContaining('invocation success/failure already recorded for this run'),
+  );
 });
 
 // ---------------------------------------------------------------------------
