@@ -51,7 +51,9 @@ function forwardTraversalExample(graph: ReturnType<typeof Object.create>): void 
     // in executionContext by the time they run.
     const childKeys = node.getEdges().map((e) => e.key);
     const ready = childKeys.filter((k) => executionContext[k]);
-    console.log(`  built ${agent}  children: [${childKeys.join(', ') || 'none'}]  pre-built: [${ready.join(', ') || 'none'}]`);
+    console.log(
+      `  built ${agent}  children: [${childKeys.join(', ') || 'none'}]  pre-built: [${ready.join(', ') || 'none'}]`,
+    );
 
     // Store the built agent so descendants can reference it.
     return agent;
@@ -106,7 +108,14 @@ async function main() {
 
   console.log(`\n=== Graph: ${GRAPH_KEY} ===`);
   console.log(`Root : ${graph.rootNode().getKey()}`);
-  console.log(`Terminals: ${graph.terminalNodes().map((n) => n.getKey()).join(', ') || '(none — cyclic graph)'}`);
+  console.log(
+    `Terminals: ${
+      graph
+        .terminalNodes()
+        .map((n) => n.getKey())
+        .join(', ') || '(none — cyclic graph)'
+    }`,
+  );
 
   forwardTraversalExample(graph);
   reverseTraversalExample(graph);

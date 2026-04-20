@@ -479,7 +479,14 @@ export class LDAIClientImpl implements LDAIClient {
     graphKey?: string,
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
-    const config = await this._evaluate(key, context, disabledAIConfig, 'agent', variables, graphKey);
+    const config = await this._evaluate(
+      key,
+      context,
+      disabledAIConfig,
+      'agent',
+      variables,
+      graphKey,
+    );
     return config as LDAIAgentConfig;
   }
 

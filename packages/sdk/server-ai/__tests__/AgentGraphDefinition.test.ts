@@ -42,17 +42,21 @@ function makeDefinition(
   enabled = true,
 ): AgentGraphDefinition {
   const nodes = AgentGraphDefinition.buildNodes(graph, agentConfigs);
-  return new AgentGraphDefinition(graph, nodes, enabled, () =>
-    new LDGraphTrackerImpl(
-      mockLdClient,
-      randomUUID(),
-      graph.root,
-      // eslint-disable-next-line no-underscore-dangle
-      graph._ldMeta?.variationKey,
-      // eslint-disable-next-line no-underscore-dangle
-      graph._ldMeta?.version ?? 1,
-      testContext,
-    ),
+  return new AgentGraphDefinition(
+    graph,
+    nodes,
+    enabled,
+    () =>
+      new LDGraphTrackerImpl(
+        mockLdClient,
+        randomUUID(),
+        graph.root,
+        // eslint-disable-next-line no-underscore-dangle
+        graph._ldMeta?.variationKey,
+        // eslint-disable-next-line no-underscore-dangle
+        graph._ldMeta?.version ?? 1,
+        testContext,
+      ),
   );
 }
 
