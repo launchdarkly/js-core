@@ -124,12 +124,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       return;
     }
     if (result.metricKey !== undefined && result.score !== undefined) {
-      this._ldClient.track(
-        result.metricKey,
-        this._context,
-        { ...this.getTrackData(), judgeConfigKey: result.judgeConfigKey },
-        result.score,
-      );
+      const trackData = result.judgeConfigKey
+        ? { ...this.getTrackData(), judgeConfigKey: result.judgeConfigKey }
+        : this.getTrackData();
+      this._ldClient.track(result.metricKey, this._context, trackData, result.score);
     }
   }
 
