@@ -11,6 +11,7 @@ import {
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
 } from './config';
+import { AgentGraphDefinition, LDGraphTracker } from './graph';
 import { Judge } from './judge/Judge';
 import { SupportedAIProvider } from './providers';
 
@@ -337,4 +338,55 @@ export interface LDAIClient {
    * @returns A reconstructed AIConfigTracker with the original runId preserved.
    */
   createTracker(token: string, context: LDContext): LDAIConfigTracker;
+
+  /**
+   * Fetches an agent graph configuration from LaunchDarkly and returns an
+   * {@link AgentGraphDefinition}.
+   *
+   * When the graph is enabled the method validates that:
+   * - The graph flag can be evaluated.
+   * - A single root node is present.
+   * - All nodes in the graph are reachable from the root (no disconnected nodes).
+   * - Every referenced agent config can be fetched and is enabled.
+   *
+   * If any validation check fails, the returned definition has
+   * {@link AgentGraphDefinition.enabled | enabled} set to `false` with an empty
+   * node collection. When the logger level is DEBUG, a message describing the
+   * failure is emitted.
+   *
+   * @param graphKey The LaunchDarkly flag key for the agent graph configuration.
+   * @param context The LaunchDarkly context used for flag evaluation and tracking.
+   * @param variables Optional key-value pairs used for Mustache template interpolation
+   *   in each node's agent config instructions. Applied uniformly to all nodes.
+   *
+   * @returns A promise that resolves to an {@link AgentGraphDefinition}. Check
+   *   {@link AgentGraphDefinition.enabled | enabled} before traversing.
+   *
+   * @example
+   * ```typescript
+   * const graph = await aiClient.agentGraph('my-agent-graph', context, { userName: 'Sandy' });
+   * if (graph.enabled) {
+   *   graph.traverse((node, ctx) => {
+   *     // build your provider-specific node here
+   *   });
+   * }
+   * ```
+   */
+  agentGraph(
+    graphKey: string,
+    context: LDContext,
+    variables?: Record<string, unknown>,
+  ): Promise<AgentGraphDefinition>;
+
+  /**
+   * Reconstructs an {@link LDGraphTracker} from a resumption token, preserving
+   * the original `runId` so events from a resumed session are correlated correctly.
+   *
+   * **Security note:** The token encodes the flag variation key and version.
+   * Keep it server-side; do not expose it to untrusted clients.
+   *
+   * @param token URL-safe Base64-encoded token from {@link LDGraphTracker.resumptionToken}.
+   * @param context LDContext to associate with the reconstructed tracker.
+   */
+  createGraphTracker(token: string, context: LDContext): LDGraphTracker;
 }
