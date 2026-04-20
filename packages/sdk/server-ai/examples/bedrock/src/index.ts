@@ -48,7 +48,7 @@ async function main() {
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.config(
+  const aiConfig = await aiClient.completionConfig(
     aiConfigKey!,
     context,
     {

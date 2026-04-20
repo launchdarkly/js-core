@@ -66,13 +66,15 @@ async function main() {
   }
 
   const tracker = aiConfig.createTracker!();
-  const completion = await tracker.trackMetricsOf(OpenAIProvider.createAIMetrics, async () =>
-    client.chat.completions.create({
-      messages: aiConfig.messages || [],
-      model: aiConfig.model?.name || 'gpt-4',
-      temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
-      max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
-    }),
+  const completion = await tracker.trackMetricsOf(
+    OpenAIProvider.getAIMetricsFromResponse,
+    async () =>
+      client.chat.completions.create({
+        messages: aiConfig.messages || [],
+        model: aiConfig.model?.name || 'gpt-4',
+        temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+        max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
+      }),
   );
 
   console.log('AI Response:', completion.choices[0]?.message.content);
