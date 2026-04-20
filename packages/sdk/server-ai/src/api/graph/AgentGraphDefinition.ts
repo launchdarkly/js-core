@@ -172,6 +172,11 @@ export class AgentGraphDefinition {
    * most once; if the graph has no terminal nodes, this method returns without
    * invoking `fn`.
    *
+   * **Ordering note:** Within a single BFS level (nodes at the same depth from a
+   * terminal) the visit order is not strictly guaranteed. The guarantee is only
+   * that a node is visited before any of its ancestors — not that siblings at the
+   * same depth are visited in a specific order relative to each other.
+   *
    * The value returned by `fn` is stored in the mutable `executionContext` under
    * the node's key.
    *

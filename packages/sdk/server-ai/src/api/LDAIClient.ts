@@ -356,13 +356,15 @@ export interface LDAIClient {
    *
    * @param graphKey The LaunchDarkly flag key for the agent graph configuration.
    * @param context The LaunchDarkly context used for flag evaluation and tracking.
+   * @param variables Optional key-value pairs used for Mustache template interpolation
+   *   in each node's agent config instructions. Applied uniformly to all nodes.
    *
    * @returns A promise that resolves to an {@link AgentGraphDefinition}. Check
    *   {@link AgentGraphDefinition.enabled | enabled} before traversing.
    *
    * @example
    * ```typescript
-   * const graph = await aiClient.agentGraph('my-agent-graph', context);
+   * const graph = await aiClient.agentGraph('my-agent-graph', context, { userName: 'Sandy' });
    * if (graph.enabled) {
    *   graph.traverse((node, ctx) => {
    *     // build your provider-specific node here
@@ -370,7 +372,11 @@ export interface LDAIClient {
    * }
    * ```
    */
-  agentGraph(graphKey: string, context: LDContext): Promise<AgentGraphDefinition>;
+  agentGraph(
+    graphKey: string,
+    context: LDContext,
+    variables?: Record<string, unknown>,
+  ): Promise<AgentGraphDefinition>;
 
   /**
    * Reconstructs an {@link LDGraphTracker} from a resumption token, preserving
