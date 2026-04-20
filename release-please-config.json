@@ -167,6 +167,11 @@
           "type": "json",
           "path": "/packages/sdk/server-ai/examples/chat-observability/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/agent-graph-traversal/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         }
       ]
     },
@@ -255,6 +260,11 @@
         {
           "type": "json",
           "path": "examples/chat-observability/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/agent-graph-traversal/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         }
       ]

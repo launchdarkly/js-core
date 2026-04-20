@@ -1,65 +1,129 @@
-import { LDContext } from '@launchdarkly/js-server-sdk-common';
+import type { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { LDGraphMetricSummary, LDGraphTracker } from './api/graph/LDGraphTracker';
-import { LDJudgeResult } from './api/judge/types';
-import { LDTokenUsage } from './api/metrics';
-import { LDClientMin } from './LDClientMin';
+import type { LDGraphTracker } from './api/graph/LDGraphTracker';
+import type { LDGraphMetricSummary, LDGraphTrackData } from './api/graph/types';
+import type { LDJudgeResult } from './api/judge/types';
+import type { LDTokenUsage } from './api/metrics';
+import type { LDClientMin } from './LDClientMin';
 
+/**
+ * Concrete implementation of {@link LDGraphTracker}.
+ *
+ * Construct directly or reconstruct from a resumption token via
+ * {@link LDGraphTrackerImpl.fromResumptionToken}.
+ */
 export class LDGraphTrackerImpl implements LDGraphTracker {
-  private _trackedMetrics: LDGraphMetricSummary = {};
+  private _summary: LDGraphMetricSummary = {};
 
   constructor(
-    private _ldClient: LDClientMin,
-    private _graphKey: string,
-    private _variationKey: string,
-    private _version: number,
-    private _context: LDContext,
+    private readonly _ldClient: LDClientMin,
+    private readonly _runId: string,
+    private readonly _graphKey: string,
+    private readonly _variationKey: string | undefined,
+    private readonly _version: number,
+    private readonly _context: LDContext,
   ) {}
 
-  getTrackData(): {
-    variationKey: string;
-    graphKey: string;
-    version: number;
-  } {
-    return {
-      variationKey: this._variationKey,
+  /**
+   * Reconstructs an {@link LDGraphTrackerImpl} from a resumption token, preserving
+   * the original `runId` so all events continue to be correlated under the same run.
+   *
+   * **Security note:** The token contains the flag variation key and version.
+   * Do not pass the raw token to untrusted clients.
+   *
+   * @param token URL-safe Base64-encoded token produced by {@link LDGraphTrackerImpl.resumptionToken}.
+   * @param ldClient LaunchDarkly client instance.
+   * @param context LDContext for the new tracker.
+   */
+  static fromResumptionToken(
+    token: string,
+    ldClient: LDClientMin,
+    context: LDContext,
+  ): LDGraphTrackerImpl {
+    const json = Buffer.from(token, 'base64url').toString('utf8');
+    const data = JSON.parse(json) as LDGraphTrackData;
+    return new LDGraphTrackerImpl(
+      ldClient,
+      data.runId,
+      data.graphKey,
+      data.variationKey,
+      data.version,
+      context,
+    );
+  }
+
+  getTrackData(): LDGraphTrackData {
+    const data: LDGraphTrackData = {
+      runId: this._runId,
       graphKey: this._graphKey,
       version: this._version,
     };
+    if (this._variationKey !== undefined) {
+      data.variationKey = this._variationKey;
+    }
+    return data;
+  }
+
+  getSummary(): LDGraphMetricSummary {
+    return { ...this._summary };
+  }
+
+  get resumptionToken(): string {
+    // Keys must appear in exact spec-defined order:
+    // runId, graphKey, variationKey (omitted if absent), version
+    const parts: string[] = [
+      `"runId":${JSON.stringify(this._runId)}`,
+      `"graphKey":${JSON.stringify(this._graphKey)}`,
+    ];
+    if (this._variationKey !== undefined) {
+      parts.push(`"variationKey":${JSON.stringify(this._variationKey)}`);
+    }
+    parts.push(`"version":${this._version}`);
+    const json = `{${parts.join(',')}}`;
+    return Buffer.from(json).toString('base64url');
   }
 
   trackInvocationSuccess(): void {
-    if (this._trackedMetrics.success !== undefined) {
+    if (this._summary.success !== undefined) {
+      this._ldClient.logger?.warn(
+        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
+      );
       return;
     }
-    this._trackedMetrics.success = true;
+    this._summary.success = true;
     this._ldClient.track('$ld:ai:graph:invocation_success', this._context, this.getTrackData(), 1);
   }
 
   trackInvocationFailure(): void {
-    if (this._trackedMetrics.success !== undefined) {
+    if (this._summary.success !== undefined) {
+      this._ldClient.logger?.warn(
+        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
+      );
       return;
     }
-    this._trackedMetrics.success = false;
+    this._summary.success = false;
     this._ldClient.track('$ld:ai:graph:invocation_failure', this._context, this.getTrackData(), 1);
   }
 
   trackLatency(durationMs: number): void {
-    if (this._trackedMetrics.durationMs !== undefined) {
+    if (this._summary.durationMs !== undefined) {
+      this._ldClient.logger?.warn(
+        'LDGraphTracker: trackLatency already called for this run — dropping duplicate call.',
+      );
       return;
     }
-    this._trackedMetrics.durationMs = durationMs;
+    this._summary.durationMs = durationMs;
     this._ldClient.track('$ld:ai:graph:latency', this._context, this.getTrackData(), durationMs);
   }
 
   trackTotalTokens(tokens: LDTokenUsage): void {
-    if (this._trackedMetrics.tokens !== undefined) {
+    if (this._summary.tokens !== undefined) {
+      this._ldClient.logger?.warn(
+        'LDGraphTracker: trackTotalTokens already called for this run — dropping duplicate call.',
+      );
       return;
     }
-    if (tokens.total <= 0) {
-      return;
-    }
-    this._trackedMetrics.tokens = tokens;
+    this._summary.tokens = { ...tokens };
     this._ldClient.track(
       '$ld:ai:graph:total_tokens',
       this._context,
@@ -69,10 +133,13 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   }
 
   trackPath(path: string[]): void {
-    if (this._trackedMetrics.path !== undefined) {
+    if (this._summary.path !== undefined) {
+      this._ldClient.logger?.warn(
+        'LDGraphTracker: trackPath already called for this run — dropping duplicate call.',
+      );
       return;
     }
-    this._trackedMetrics.path = path;
+    this._summary.path = [...path];
     this._ldClient.track('$ld:ai:graph:path', this._context, { ...this.getTrackData(), path }, 1);
   }
 
@@ -114,9 +181,5 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
       { ...this.getTrackData(), sourceKey, targetKey },
       1,
     );
-  }
-
-  getSummary(): LDGraphMetricSummary {
-    return { ...this._trackedMetrics };
   }
 }

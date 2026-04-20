@@ -4,446 +4,351 @@ import { LDClientMin } from '../src/LDClientMin';
 import { LDGraphTrackerImpl } from '../src/LDGraphTrackerImpl';
 
 const mockTrack = jest.fn();
+const mockWarn = jest.fn();
 const mockLdClient: LDClientMin = {
   track: mockTrack,
   variation: jest.fn(),
+  logger: { warn: mockWarn, error: jest.fn(), info: jest.fn(), debug: jest.fn() },
 };
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
-const graphKey = 'test-graph';
+const graphKey = 'my-agent-graph';
 const variationKey = 'v1';
 const version = 2;
 
-const getExpectedTrackData = () => ({
-  graphKey,
-  variationKey,
-  version,
-});
+const makeTracker = (runId = 'test-run-id') =>
+  new LDGraphTrackerImpl(mockLdClient, runId, graphKey, variationKey, version, testContext);
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it('returns track data', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+// ---------------------------------------------------------------------------
+// getTrackData
+// ---------------------------------------------------------------------------
 
-  expect(tracker.getTrackData()).toEqual(getExpectedTrackData());
+it('returns correct track data with variationKey', () => {
+  const tracker = makeTracker('fixed-run-id');
+  expect(tracker.getTrackData()).toEqual({
+    runId: 'fixed-run-id',
+    graphKey,
+    version,
+    variationKey,
+  });
 });
 
-it('tracks invocation success', () => {
+it('omits variationKey when not provided', () => {
   const tracker = new LDGraphTrackerImpl(
     mockLdClient,
+    'some-run-id',
     graphKey,
-    variationKey,
+    undefined,
     version,
     testContext,
   );
-  tracker.trackInvocationSuccess();
+  const data = tracker.getTrackData();
+  expect(data.variationKey).toBeUndefined();
+  expect(data.graphKey).toBe(graphKey);
+  expect(data.version).toBe(version);
+  expect(data.runId).toBe('some-run-id');
+});
 
+it('uses provided runId', () => {
+  const tracker = makeTracker('my-custom-run-id');
+  expect(tracker.getTrackData().runId).toBe('my-custom-run-id');
+});
+
+// ---------------------------------------------------------------------------
+// resumptionToken round-trip
+// ---------------------------------------------------------------------------
+
+it('encodes a resumption token with correct field order', () => {
+  const tracker = makeTracker('550e8400-e29b-41d4-a716-446655440000');
+  const token = tracker.resumptionToken;
+  const decoded = Buffer.from(token, 'base64url').toString('utf8');
+  expect(decoded).toBe(
+    '{"runId":"550e8400-e29b-41d4-a716-446655440000","graphKey":"my-agent-graph","variationKey":"v1","version":2}',
+  );
+});
+
+it('omits variationKey from token when not set', () => {
+  const tracker = new LDGraphTrackerImpl(
+    mockLdClient,
+    'run-abc',
+    graphKey,
+    undefined,
+    version,
+    testContext,
+  );
+  const token = tracker.resumptionToken;
+  const decoded = Buffer.from(token, 'base64url').toString('utf8');
+  expect(decoded).toBe('{"runId":"run-abc","graphKey":"my-agent-graph","version":2}');
+});
+
+it('fromResumptionToken reconstructs the tracker with original runId', () => {
+  const original = makeTracker('orig-run-id');
+  const token = original.resumptionToken;
+
+  const reconstructed = LDGraphTrackerImpl.fromResumptionToken(token, mockLdClient, testContext);
+  expect(reconstructed.getTrackData()).toEqual({
+    runId: 'orig-run-id',
+    graphKey,
+    version,
+    variationKey,
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getSummary
+// ---------------------------------------------------------------------------
+
+it('returns an empty summary initially', () => {
+  const tracker = makeTracker('r');
+  expect(tracker.getSummary()).toEqual({});
+});
+
+it('returns a copy of the summary (not a reference)', () => {
+  const tracker = makeTracker('r');
+  tracker.trackInvocationSuccess();
+  const summary1 = tracker.getSummary();
+  const summary2 = tracker.getSummary();
+  expect(summary1).not.toBe(summary2);
+  expect(summary1).toEqual(summary2);
+});
+
+// ---------------------------------------------------------------------------
+// trackInvocationSuccess / trackInvocationFailure – at-most-once
+// ---------------------------------------------------------------------------
+
+it('trackInvocationSuccess sets success=true and emits event', () => {
+  const tracker = makeTracker('r');
+  tracker.trackInvocationSuccess();
+  expect(tracker.getSummary().success).toBe(true);
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:invocation_success',
     testContext,
-    getExpectedTrackData(),
+    tracker.getTrackData(),
     1,
   );
 });
 
-it('tracks invocation failure', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('trackInvocationFailure sets success=false and emits event', () => {
+  const tracker = makeTracker('r');
   tracker.trackInvocationFailure();
-
+  expect(tracker.getSummary().success).toBe(false);
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:invocation_failure',
     testContext,
-    getExpectedTrackData(),
+    tracker.getTrackData(),
     1,
   );
 });
 
-it('tracks latency', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
+it('drops second trackInvocationSuccess call and warns', () => {
+  const tracker = makeTracker('r');
+  tracker.trackInvocationSuccess();
+  tracker.trackInvocationSuccess();
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(mockWarn).toHaveBeenCalledWith(
+    expect.stringContaining('invocation success/failure already recorded for this run'),
   );
-  tracker.trackLatency(1500);
+});
 
+it('drops trackInvocationFailure after trackInvocationSuccess and warns', () => {
+  const tracker = makeTracker('r');
+  tracker.trackInvocationSuccess();
+  tracker.trackInvocationFailure();
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(mockWarn).toHaveBeenCalledWith(
+    expect.stringContaining('invocation success/failure already recorded for this run'),
+  );
+});
+
+// ---------------------------------------------------------------------------
+// trackLatency – at-most-once
+// ---------------------------------------------------------------------------
+
+it('trackLatency sets durationMs and emits event', () => {
+  const tracker = makeTracker('r');
+  tracker.trackLatency(1234);
+  expect(tracker.getSummary().durationMs).toBe(1234);
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:latency',
     testContext,
-    getExpectedTrackData(),
-    1500,
+    tracker.getTrackData(),
+    1234,
   );
 });
 
-it('tracks total tokens', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-  tracker.trackTotalTokens({ total: 200, input: 80, output: 120 });
+it('drops second trackLatency call and warns', () => {
+  const tracker = makeTracker('r');
+  tracker.trackLatency(100);
+  tracker.trackLatency(200);
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(tracker.getSummary().durationMs).toBe(100);
+  expect(mockWarn).toHaveBeenCalled();
+});
 
+// ---------------------------------------------------------------------------
+// trackTotalTokens – at-most-once
+// ---------------------------------------------------------------------------
+
+it('trackTotalTokens sets tokens and emits event with total as metric value', () => {
+  const tracker = makeTracker('r');
+  const tokens = { total: 500, input: 200, output: 300 };
+  tracker.trackTotalTokens(tokens);
+  expect(tracker.getSummary().tokens).toEqual(tokens);
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:total_tokens',
     testContext,
-    getExpectedTrackData(),
-    200,
+    tracker.getTrackData(),
+    500,
   );
 });
 
-it('does not track total tokens when total is zero', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-  tracker.trackTotalTokens({ total: 0, input: 0, output: 0 });
-
-  expect(mockTrack).not.toHaveBeenCalled();
+it('drops second trackTotalTokens call and warns', () => {
+  const tracker = makeTracker('r');
+  tracker.trackTotalTokens({ total: 100, input: 50, output: 50 });
+  tracker.trackTotalTokens({ total: 200, input: 100, output: 100 });
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(tracker.getSummary().tokens?.total).toBe(100);
+  expect(mockWarn).toHaveBeenCalled();
 });
 
-it('tracks path', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-  const path = ['node-a', 'node-b', 'node-c'];
+// ---------------------------------------------------------------------------
+// trackPath – at-most-once
+// ---------------------------------------------------------------------------
+
+it('trackPath sets path and emits event with path in data payload', () => {
+  const tracker = makeTracker('r');
+  const path = ['root-agent', 'research-agent', 'write-agent'];
   tracker.trackPath(path);
-
+  expect(tracker.getSummary().path).toEqual(path);
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:path',
     testContext,
-    { ...getExpectedTrackData(), path },
+    { ...tracker.getTrackData(), path },
     1,
   );
 });
 
-it('tracks judge result', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('drops second trackPath call and warns', () => {
+  const tracker = makeTracker('r');
+  tracker.trackPath(['a', 'b']);
+  tracker.trackPath(['c', 'd']);
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(tracker.getSummary().path).toEqual(['a', 'b']);
+  expect(mockWarn).toHaveBeenCalled();
+});
+
+// ---------------------------------------------------------------------------
+// trackJudgeResult – NOT at-most-once
+// ---------------------------------------------------------------------------
+
+it('trackJudgeResult emits an event for a sampled, successful result', () => {
+  const tracker = makeTracker('r');
   tracker.trackJudgeResult({
-    judgeConfigKey: 'my-judge',
+    judgeConfigKey: 'judge-1',
+    metricKey: 'relevance-score',
+    score: 0.9,
+    reasoning: 'good',
     success: true,
     sampled: true,
-    score: 0.9,
-    reasoning: 'Relevant',
-    metricKey: 'relevance',
   });
-
+  expect(mockTrack).toHaveBeenCalledTimes(1);
   expect(mockTrack).toHaveBeenCalledWith(
-    'relevance',
+    'relevance-score',
     testContext,
-    { ...getExpectedTrackData(), judgeConfigKey: 'my-judge' },
+    { ...tracker.getTrackData(), judgeConfigKey: 'judge-1' },
     0.9,
   );
 });
 
-it('tracks judge result without judgeConfigKey', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('trackJudgeResult emits event without judgeConfigKey', () => {
+  const tracker = makeTracker('r');
   tracker.trackJudgeResult({
+    metricKey: 'relevance-score',
+    score: 0.7,
     success: true,
     sampled: true,
-    score: 0.7,
-    reasoning: 'Somewhat relevant',
-    metricKey: 'relevance',
   });
-
-  expect(mockTrack).toHaveBeenCalledWith('relevance', testContext, getExpectedTrackData(), 0.7);
+  expect(mockTrack).toHaveBeenCalledWith(
+    'relevance-score',
+    testContext,
+    tracker.getTrackData(),
+    0.7,
+  );
 });
 
-it('does not track judge result when not sampled', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-  tracker.trackJudgeResult({
-    judgeConfigKey: 'my-judge',
-    success: false,
-    sampled: false,
-  });
+it('trackJudgeResult can fire multiple times', () => {
+  const tracker = makeTracker('r');
+  tracker.trackJudgeResult({ metricKey: 'relevance', score: 0.5, success: true, sampled: true });
+  tracker.trackJudgeResult({ metricKey: 'relevance', score: 0.7, success: true, sampled: true });
+  expect(mockTrack).toHaveBeenCalledTimes(2);
+  expect(mockWarn).not.toHaveBeenCalled();
+});
 
+it('trackJudgeResult does not emit when not sampled', () => {
+  const tracker = makeTracker('r');
+  tracker.trackJudgeResult({ judgeConfigKey: 'j', success: false, sampled: false });
   expect(mockTrack).not.toHaveBeenCalled();
 });
 
-it('does not track judge result when success is false', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('trackJudgeResult does not emit when success is false', () => {
+  const tracker = makeTracker('r');
   tracker.trackJudgeResult({
-    judgeConfigKey: 'my-judge',
+    judgeConfigKey: 'j',
+    metricKey: 'relevance',
+    score: 0.9,
     success: false,
     sampled: true,
-    score: 0.9,
-    metricKey: 'relevance',
   });
-
   expect(mockTrack).not.toHaveBeenCalled();
 });
 
-it('tracks redirect', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-  tracker.trackRedirect('agent-a', 'agent-b');
+// ---------------------------------------------------------------------------
+// Edge-level methods – multi-fire, NOT at-most-once
+// ---------------------------------------------------------------------------
 
+it('trackRedirect emits event with sourceKey and redirectedTarget', () => {
+  const tracker = makeTracker('r');
+  tracker.trackRedirect('source-agent', 'redirected-agent');
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:redirect',
     testContext,
-    { ...getExpectedTrackData(), sourceKey: 'agent-a', redirectedTarget: 'agent-b' },
+    { ...tracker.getTrackData(), sourceKey: 'source-agent', redirectedTarget: 'redirected-agent' },
     1,
   );
 });
 
-it('tracks handoff success', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('trackHandoffSuccess emits event with sourceKey and targetKey', () => {
+  const tracker = makeTracker('r');
   tracker.trackHandoffSuccess('agent-a', 'agent-b');
-
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:handoff_success',
     testContext,
-    { ...getExpectedTrackData(), sourceKey: 'agent-a', targetKey: 'agent-b' },
+    { ...tracker.getTrackData(), sourceKey: 'agent-a', targetKey: 'agent-b' },
     1,
   );
 });
 
-it('tracks handoff failure', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
+it('trackHandoffFailure emits event with sourceKey and targetKey', () => {
+  const tracker = makeTracker('r');
   tracker.trackHandoffFailure('agent-a', 'agent-b');
-
   expect(mockTrack).toHaveBeenCalledWith(
     '$ld:ai:graph:handoff_failure',
     testContext,
-    { ...getExpectedTrackData(), sourceKey: 'agent-a', targetKey: 'agent-b' },
+    { ...tracker.getTrackData(), sourceKey: 'agent-a', targetKey: 'agent-b' },
     1,
   );
 });
 
-it('returns empty summary when no metrics tracked', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-
-  expect(tracker.getSummary()).toEqual({});
-});
-
-it('summarizes tracked graph metrics', () => {
-  const tracker = new LDGraphTrackerImpl(
-    mockLdClient,
-    graphKey,
-    variationKey,
-    version,
-    testContext,
-  );
-
-  tracker.trackInvocationSuccess();
-  tracker.trackLatency(2000);
-  tracker.trackTotalTokens({ total: 300, input: 100, output: 200 });
-  tracker.trackPath(['node-a', 'node-b']);
-
-  expect(tracker.getSummary()).toEqual({
-    success: true,
-    durationMs: 2000,
-    tokens: { total: 300, input: 100, output: 200 },
-    path: ['node-a', 'node-b'],
-  });
-});
-
-describe('at-most-once semantics for graph-level metrics', () => {
-  it('drops duplicate trackInvocationSuccess calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackInvocationSuccess();
-    tracker.trackInvocationSuccess();
-
-    expect(mockTrack).toHaveBeenCalledTimes(1);
-  });
-
-  it('drops trackInvocationFailure after trackInvocationSuccess', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackInvocationSuccess();
-    tracker.trackInvocationFailure();
-
-    expect(mockTrack).toHaveBeenCalledTimes(1);
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:graph:invocation_success',
-      expect.anything(),
-      expect.anything(),
-      expect.anything(),
-    );
-  });
-
-  it('drops duplicate trackLatency calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackLatency(1000);
-    tracker.trackLatency(2000);
-
-    expect(mockTrack).toHaveBeenCalledTimes(1);
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:graph:latency',
-      testContext,
-      getExpectedTrackData(),
-      1000,
-    );
-  });
-
-  it('drops duplicate trackTotalTokens calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackTotalTokens({ total: 100, input: 40, output: 60 });
-    tracker.trackTotalTokens({ total: 200, input: 80, output: 120 });
-
-    expect(mockTrack).toHaveBeenCalledTimes(1);
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:graph:total_tokens',
-      testContext,
-      getExpectedTrackData(),
-      100,
-    );
-  });
-
-  it('drops duplicate trackPath calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackPath(['node-a']);
-    tracker.trackPath(['node-b', 'node-c']);
-
-    expect(mockTrack).toHaveBeenCalledTimes(1);
-    expect(mockTrack).toHaveBeenCalledWith(
-      '$ld:ai:graph:path',
-      testContext,
-      { ...getExpectedTrackData(), path: ['node-a'] },
-      1,
-    );
-  });
-});
-
-describe('edge-level methods can be called multiple times', () => {
-  it('allows multiple trackRedirect calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackRedirect('a', 'b');
-    tracker.trackRedirect('b', 'c');
-
-    expect(mockTrack).toHaveBeenCalledTimes(2);
-  });
-
-  it('allows multiple trackHandoffSuccess calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackHandoffSuccess('a', 'b');
-    tracker.trackHandoffSuccess('b', 'c');
-
-    expect(mockTrack).toHaveBeenCalledTimes(2);
-  });
-
-  it('allows multiple trackHandoffFailure calls', () => {
-    const tracker = new LDGraphTrackerImpl(
-      mockLdClient,
-      graphKey,
-      variationKey,
-      version,
-      testContext,
-    );
-    tracker.trackHandoffFailure('a', 'b');
-    tracker.trackHandoffFailure('b', 'c');
-
-    expect(mockTrack).toHaveBeenCalledTimes(2);
-  });
+it('edge-level methods can fire multiple times without warning', () => {
+  const tracker = makeTracker('r');
+  tracker.trackHandoffSuccess('a', 'b');
+  tracker.trackHandoffSuccess('a', 'b');
+  tracker.trackRedirect('a', 'c');
+  tracker.trackHandoffFailure('x', 'y');
+  expect(mockTrack).toHaveBeenCalledTimes(4);
+  expect(mockWarn).not.toHaveBeenCalled();
 });
