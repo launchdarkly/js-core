@@ -1,4 +1,3 @@
-import type { LDJudgeResult } from '../judge/types';
 import type { LDTokenUsage } from '../metrics';
 import type { LDGraphMetricSummary, LDGraphTrackData } from './types';
 
@@ -89,15 +88,6 @@ export interface LDGraphTracker {
    * @param path An ordered array of agent config keys representing the execution path.
    */
   trackPath(path: string[]): void;
-
-  /**
-   * Tracks a judge evaluation result for the final graph output.
-   * Emits one LDClient.track call when the result was sampled and successful.
-   * Not subject to at-most-once constraints.
-   *
-   * @param result Judge result containing score, reasoning, and metadata.
-   */
-  trackJudgeResult(result: LDJudgeResult): void;
 
   // -------------------------------------------------------------------------
   // Edge-level tracking methods (multi-fire, not at-most-once)

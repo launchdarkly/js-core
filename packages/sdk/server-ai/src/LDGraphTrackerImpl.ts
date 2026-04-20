@@ -2,7 +2,6 @@ import type { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import type { LDGraphTracker } from './api/graph/LDGraphTracker';
 import type { LDGraphMetricSummary, LDGraphTrackData } from './api/graph/types';
-import type { LDJudgeResult } from './api/judge/types';
 import type { LDTokenUsage } from './api/metrics';
 import type { LDClientMin } from './LDClientMin';
 
@@ -141,19 +140,6 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     }
     this._summary.path = [...path];
     this._ldClient.track('$ld:ai:graph:path', this._context, { ...this.getTrackData(), path }, 1);
-  }
-
-  trackJudgeResult(result: LDJudgeResult): void {
-    if (!result.sampled || !result.success) {
-      return;
-    }
-    if (result.metricKey !== undefined && result.score !== undefined) {
-      const trackData = result.judgeConfigKey
-        ? { ...this.getTrackData(), judgeConfigKey: result.judgeConfigKey }
-        : this.getTrackData();
-
-      this._ldClient.track(result.metricKey, this._context, trackData, result.score);
-    }
   }
 
   trackRedirect(sourceKey: string, redirectedTarget: string): void {
