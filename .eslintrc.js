@@ -8,7 +8,6 @@ module.exports = {
   parserOptions: {
     project: [
       './packages/sdk/svelte/tsconfig.eslint.json',
-      './packages/sdk/server-ai/examples/*/tsconfig.eslint.json',
       './tsconfig.eslint.json',
     ],
     tsconfigRootDir: __dirname,
@@ -20,6 +19,8 @@ module.exports = {
     '**/react-native/example/**',
     '**/electron/example/**',
     '**/svelte/.svelte-kit/**',
+    '**/server-ai/examples/chat-judge/**',
+    '**/server-ai/examples/direct-judge/**',
     '**/fromExternal/**',
   ],
   rules: {
