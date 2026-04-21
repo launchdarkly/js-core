@@ -14,8 +14,6 @@ const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enab
     id: 'ld-rn-fdv2-test-app',
     version: '0.0.1',
   },
-  baseUri: 'http://192.168.7.152:3002/proxy-poll',
-  streamUri: 'http://192.168.7.152:3001/proxy',
   // @ts-ignore dataSystem is @internal
   dataSystem: {},
 });
