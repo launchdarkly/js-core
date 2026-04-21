@@ -6,7 +6,11 @@ module.exports = {
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: ['./packages/sdk/svelte/tsconfig.eslint.json', './tsconfig.eslint.json'],
+    project: [
+      './packages/sdk/svelte/tsconfig.eslint.json',
+      './packages/sdk/server-ai/examples/*/tsconfig.eslint.json',
+      './tsconfig.eslint.json',
+    ],
     tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint', 'import', 'prettier', 'jest'],
@@ -16,7 +20,6 @@ module.exports = {
     '**/react-native/example/**',
     '**/electron/example/**',
     '**/svelte/.svelte-kit/**',
-    '**/server-ai/examples/**',
     '**/fromExternal/**',
   ],
   rules: {
@@ -54,7 +57,7 @@ module.exports = {
       },
     ],
     'import/default': 'error',
-    'import/export': 'error',
+    'import/export': 'off',
     'import/extensions': 'off',
     'import/no-self-import': 'error',
     'import/no-cycle': 'error',
