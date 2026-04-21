@@ -1,5 +1,14 @@
 {
-  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]
 }
