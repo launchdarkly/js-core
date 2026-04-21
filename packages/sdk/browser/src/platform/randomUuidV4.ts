@@ -36,7 +36,7 @@ const nodes = {
 };
 
 function getRandom128bit(): number[] {
-  if (crypto && crypto.getRandomValues) {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const typedArray = new Uint8Array(16);
     crypto.getRandomValues(typedArray);
     return [...typedArray.values()];

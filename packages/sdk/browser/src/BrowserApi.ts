@@ -50,13 +50,13 @@ export function addWindowEventListener(
   listener: (this: Document, ev: Event) => any,
   options?: boolean | AddEventListenerOptions,
 ): () => void {
-  if (isDocument()) {
+  if (isWindow()) {
     window.addEventListener(type, listener, options);
     return () => {
       window.removeEventListener(type, listener, options);
     };
   }
-  // No document, so no need to unregister anything.
+  // No window, so no need to unregister anything.
   return () => {};
 }
 
