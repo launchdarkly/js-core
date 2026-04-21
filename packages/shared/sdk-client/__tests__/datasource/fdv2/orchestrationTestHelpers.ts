@@ -150,9 +150,13 @@ export function makeMockSynchronizer(
 }
 
 export function makeInitFactory(init: Initializer): InitializerFactory {
-  return jest.fn(() => init);
+  return { create: jest.fn(() => init) };
+}
+
+export function makeCacheInitFactory(init: Initializer): InitializerFactory {
+  return { create: jest.fn(() => init), isCache: true };
 }
 
 export function makeSyncFactory(sync: Synchronizer): SynchronizerFactory {
-  return jest.fn(() => sync);
+  return { create: jest.fn(() => sync) };
 }

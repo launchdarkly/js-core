@@ -91,6 +91,17 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   let initResolve: (() => void) | undefined;
   let initReject: ((err: Error) => void) | undefined;
 
+  // When every initializer is a cache initializer and there are no
+  // synchronizers, the cache is the only possible data source. A cache miss
+  // in that configuration must not fail initialization -- there is nowhere
+  // else for data to come from, and reporting an error would be meaningless.
+  // Mirrors the Android SDK's InitializerFromCache / hasAvailableSources
+  // behavior.
+  const cacheOnlyDataSystem =
+    initializerFactories.length > 0 &&
+    initializerFactories.every((f) => f.isCache === true) &&
+    synchronizerSlots.length === 0;
+
   const sourceManager = createSourceManager(
     initializerFactories,
     synchronizerSlots,
@@ -184,7 +195,8 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
 
     // All initializers exhausted.
-    if (dataReceived) {
+    if (dataReceived || cacheOnlyDataSystem) {
+      statusManager.requestStateUpdate('VALID');
       markInitialized();
     }
   }

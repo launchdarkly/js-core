@@ -301,8 +301,10 @@ export function createFDv2DataManagerBase(
           config.useReport,
         );
 
-      const fdv1SyncFactory = () =>
-        createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger);
+      const fdv1SyncFactory = {
+        create: () =>
+          createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger),
+      };
 
       synchronizerSlots.push(createSynchronizerSlot(fdv1SyncFactory, { isFDv1Fallback: true }));
     }
