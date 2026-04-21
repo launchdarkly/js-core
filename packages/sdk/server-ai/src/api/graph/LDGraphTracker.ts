@@ -15,7 +15,7 @@ import type { LDGraphMetricSummary, LDGraphTrackData } from './types';
  * try {
  *   // ... execute graph ...
  *   tracker.trackInvocationSuccess();
- *   tracker.trackLatency(durationMs);
+ *   tracker.trackDuration(durationMs);
  * } catch {
  *   tracker.trackInvocationFailure();
  * }
@@ -62,13 +62,13 @@ export interface LDGraphTracker {
   trackInvocationFailure(): void;
 
   /**
-   * Tracks the total latency of the graph execution in milliseconds.
-   * Emits event `$ld:ai:graph:latency` with the duration as the metric value.
+   * Tracks the total duration of the graph execution in milliseconds.
+   * Emits event `$ld:ai:graph:duration:total` with the duration as the metric value.
    * At-most-once: subsequent calls are dropped with a warning.
    *
    * @param durationMs Duration in milliseconds.
    */
-  trackLatency(durationMs: number): void;
+  trackDuration(durationMs: number): void;
 
   /**
    * Tracks aggregate token usage across the entire graph invocation.

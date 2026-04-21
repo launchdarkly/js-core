@@ -104,15 +104,20 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     this._ldClient.track('$ld:ai:graph:invocation_failure', this._context, this.getTrackData(), 1);
   }
 
-  trackLatency(durationMs: number): void {
+  trackDuration(durationMs: number): void {
     if (this._summary.durationMs !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackLatency already called for this run — dropping duplicate call.',
+        'LDGraphTracker: trackDuration already called for this run — dropping duplicate call.',
       );
       return;
     }
     this._summary.durationMs = durationMs;
-    this._ldClient.track('$ld:ai:graph:latency', this._context, this.getTrackData(), durationMs);
+    this._ldClient.track(
+      '$ld:ai:graph:duration:total',
+      this._context,
+      this.getTrackData(),
+      durationMs,
+    );
   }
 
   trackTotalTokens(tokens: LDTokenUsage): void {
