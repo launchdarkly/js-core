@@ -6,7 +6,12 @@
 ### ⚠ BREAKING CHANGES
 
 * Flatten JudgeResponse and EvalScore into new LDJudgeResult ([#1284](https://github.com/launchdarkly/js-core/issues/1284))
+* `LDAIConfigTracker.trackJudgeResponse()` and `trackEvalScores()` methods removed; replaced by `trackJudgeResult()` ([#1284](https://github.com/launchdarkly/js-core/issues/1284))
+* `Judge.evaluate()` and `Judge.evaluateMessages()` now always return `LDJudgeResult` (never `undefined`); check `result.sampled` to determine if evaluation was performed ([#1284](https://github.com/launchdarkly/js-core/issues/1284))
 * Add per-execution runId, at-most-once tracking, and cross-process tracker resumption ([#1270](https://github.com/launchdarkly/js-core/issues/1270))
+* `config.tracker` property on AI config objects replaced with `config.createTracker()` factory function ([#1270](https://github.com/launchdarkly/js-core/issues/1270))
+* `TrackedChat` and `Judge` constructors no longer accept a tracker parameter; tracker is now created on-demand via `createTracker()` ([#1270](https://github.com/launchdarkly/js-core/issues/1270))
+* `TrackedChat.getTracker()` and `Judge.getTracker()` methods removed ([#1270](https://github.com/launchdarkly/js-core/issues/1270))
 
 ### Features
 
@@ -14,6 +19,8 @@
 * Flatten JudgeResponse and EvalScore into new LDJudgeResult ([#1284](https://github.com/launchdarkly/js-core/issues/1284)) ([aba1221](https://github.com/launchdarkly/js-core/commit/aba1221d3b3d9f4eff44d805ed1c5e9f4d088e4a))
 * Implement agent graph definitions ([#1282](https://github.com/launchdarkly/js-core/issues/1282)) ([e7d08e5](https://github.com/launchdarkly/js-core/commit/e7d08e5e3b84020e543fd54d40a8530ddc514f20))
 * simplify evaluation schema to flat score/reasoning shape ([#1286](https://github.com/launchdarkly/js-core/issues/1286)) ([c132e9f](https://github.com/launchdarkly/js-core/commit/c132e9f44c8113cc5b795edfa6330f26c38081a6))
+* Add `LDAIClient.createTracker()` and `createGraphTracker()` methods to continue tracking a run from a separate process ([#1270](https://github.com/launchdarkly/js-core/issues/1270)) ([fc25ab7](https://github.com/launchdarkly/js-core/commit/fc25ab7bd9577dbd1ea9826547793366a4e6814b))
+* Add `LDAIConfigTracker.trackToolCall()` and `trackToolCalls()` methods ([#1270](https://github.com/launchdarkly/js-core/issues/1270)) ([fc25ab7](https://github.com/launchdarkly/js-core/commit/fc25ab7bd9577dbd1ea9826547793366a4e6814b))
 
 
 ### Bug Fixes
