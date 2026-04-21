@@ -91,7 +91,7 @@ export function fallbackUuidV4(): string {
 }
 
 export default function randomUuidV4(): string {
-  if (typeof crypto !== undefined && typeof crypto.randomUUID === 'function') {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
 

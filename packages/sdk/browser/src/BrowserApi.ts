@@ -5,11 +5,11 @@
  */
 
 export function isDocument() {
-  return typeof document !== undefined;
+  return typeof document !== 'undefined';
 }
 
 export function isWindow() {
-  return typeof window !== undefined;
+  return typeof window !== 'undefined';
 }
 
 /**
@@ -91,7 +91,7 @@ export function getLocationHash(): string {
 }
 
 export function getCrypto(): Crypto {
-  if (typeof crypto !== undefined) {
+  if (typeof crypto !== 'undefined') {
     return crypto;
   }
   // This would indicate running in an environment that doesn't have window.crypto or self.crypto.
