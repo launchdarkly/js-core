@@ -92,7 +92,8 @@ const userMessage = new HumanMessage('What is the capital of France?');
 const allMessages = [...LangChainProvider.convertMessagesToLangChain(configMessages), userMessage];
 
 // Track the model call with LaunchDarkly tracking
-const response = await aiConfig.tracker.trackMetricsOf(
+const tracker = aiConfig.createTracker();
+const response = await tracker.trackMetricsOf(
   LangChainProvider.getAIMetricsFromResponse,
   () => llm.invoke(allMessages)
 );

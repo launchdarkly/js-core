@@ -92,7 +92,8 @@ const userMessage = { role: 'user', content: 'What is the capital of France?' };
 const allMessages = [...configMessages, userMessage];
 
 // Track the model call with LaunchDarkly tracking
-const response = await aiConfig.tracker.trackMetricsOf(
+const tracker = aiConfig.createTracker();
+const response = await tracker.trackMetricsOf(
   VercelProvider.getAIMetricsFromResponse,
   () => generateText({ model, messages: allMessages })
 );

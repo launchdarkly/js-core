@@ -210,7 +210,8 @@ export class OpenAIProvider extends AIProvider {
    * @returns LDAIMetrics with success status and token usage
    *
    * @example
-   * const response = await aiConfig.tracker.trackMetricsOf(
+   * const tracker = aiConfig.createTracker();
+   * const response = await tracker.trackMetricsOf(
    *   OpenAIProvider.getAIMetricsFromResponse,
    *   () => client.chat.completions.create(config)
    * );
