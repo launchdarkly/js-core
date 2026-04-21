@@ -179,6 +179,7 @@ export function createSourceManager(
 
     blockCurrentSynchronizer() {
       if (synchronizerIndex >= 0 && synchronizerIndex < synchronizerSlots.length) {
+        // eslint-disable-next-line no-param-reassign
         synchronizerSlots[synchronizerIndex].state = 'blocked';
       }
     },
@@ -189,6 +190,7 @@ export function createSourceManager(
 
     fdv1Fallback() {
       synchronizerSlots.forEach((slot) => {
+        // eslint-disable-next-line no-param-reassign
         slot.state = slot.isFDv1Fallback ? 'available' : 'blocked';
       });
       synchronizerIndex = -1;

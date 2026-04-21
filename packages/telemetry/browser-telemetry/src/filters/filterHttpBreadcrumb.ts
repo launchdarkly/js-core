@@ -14,6 +14,7 @@ export default function filterHttpBreadcrumb(
   if (crumb.data?.url) {
     // Re-assigning for performance. The contract of the function is clear that the input
     // data is modified.
+    // eslint-disable-next-line no-param-reassign
     crumb.data.url = filterUrl(options.urlFilters, crumb.data.url);
   }
 }

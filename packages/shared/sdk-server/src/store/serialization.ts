@@ -1,3 +1,7 @@
+// The deserialization will be updating parameter values, so we don't need this
+// warning in this file.
+
+/* eslint-disable no-param-reassign */
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { VersionedData } from '../api/interfaces';

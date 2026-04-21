@@ -24,6 +24,7 @@ module.exports = {
     '**/fromExternal/**',
   ],
   rules: {
+    'no-param-reassign': 'error',
     'eqeqeq': ['error', 'always', { null: 'ignore' }],
     'prefer-const': ['error', { ignoreReadBeforeAssign: true }],
     'no-var': 'error',

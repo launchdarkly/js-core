@@ -32,6 +32,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 /* eslint-disable no-underscore-dangle */
+/* eslint-disable no-param-reassign */
 
 /**
  * Source context information.
