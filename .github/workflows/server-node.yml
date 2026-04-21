@@ -32,6 +32,8 @@ jobs:
           workspace_name: '@launchdarkly/node-server-sdk'
           workspace_path: packages/sdk/server-node
       - name: Install contract test service dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: yarn workspace @launchdarkly/node-server-sdk-contract-tests install --no-immutable
       - name: Build shared contract test utils (server)
         run: yarn workspace @launchdarkly/js-contract-test-utils build:server
