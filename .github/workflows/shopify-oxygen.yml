@@ -27,6 +27,8 @@ jobs:
           workspace_name: '@launchdarkly/shopify-oxygen-sdk'
           workspace_path: packages/sdk/shopify-oxygen
       - name: Install contract test service dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: yarn workspace @launchdarkly/shopify-oxygen-contract-tests install --no-immutable
       - name: Build shared contract test utils
         run: yarn workspace @launchdarkly/js-contract-test-utils build:server
