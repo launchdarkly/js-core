@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.32](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.31...browser-telemetry-v1.0.32) (2026-04-21)
+
+
+### Bug Fixes
+
+* correct typeof comparisons in browser SDK ([#1301](https://github.com/launchdarkly/js-core/issues/1301)) ([f4bd636](https://github.com/launchdarkly/js-core/commit/f4bd6369e03353f38abfdf1b4b8ef90aa7c79ffb))
+* **js-client-sdk:** better `undefined` handling ([#1303](https://github.com/launchdarkly/js-core/issues/1303)) ([4818678](https://github.com/launchdarkly/js-core/commit/4818678282bc6aa54aca00c2d1cb02d2a6b14bf8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-client-sdk bumped from 4.6.0 to 4.6.1
+
 ## [1.0.31](https://github.com/launchdarkly/js-core/compare/browser-telemetry-v1.0.30...browser-telemetry-v1.0.31) (2026-04-17)
 
 

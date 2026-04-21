@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.6.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.6.0...js-client-sdk-v4.6.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* correct typeof comparisons in browser SDK ([#1301](https://github.com/launchdarkly/js-core/issues/1301)) ([f4bd636](https://github.com/launchdarkly/js-core/commit/f4bd6369e03353f38abfdf1b4b8ef90aa7c79ffb))
+* **js-client-sdk:** better `undefined` handling ([#1303](https://github.com/launchdarkly/js-core/issues/1303)) ([4818678](https://github.com/launchdarkly/js-core/commit/4818678282bc6aa54aca00c2d1cb02d2a6b14bf8))
+
 ## [4.6.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.5.0...js-client-sdk-v4.6.0) (2026-04-17)
 
 
