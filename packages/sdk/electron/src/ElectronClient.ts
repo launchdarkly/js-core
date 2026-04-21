@@ -201,24 +201,20 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'allFlags'), (event) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.allFlags();
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'boolVariation'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'boolVariationDetail'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.boolVariationDetail(key, defaultValue);
     });
 
     ipcMain.handle(getIPCChannelName(namespace, 'flush'), (_event) => this.flush());
 
     ipcMain.on(getIPCChannelName(namespace, 'getContext'), (event) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getContext();
     });
 
@@ -233,53 +229,44 @@ export class ElectronClient extends LDClientImpl {
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'jsonVariation'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'jsonVariationDetail'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.jsonVariationDetail(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'numberVariation'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.numberVariation(key, defaultValue);
     });
 
     ipcMain.on(
       getIPCChannelName(namespace, 'numberVariationDetail'),
       (event, key, defaultValue) => {
-        // eslint-disable-next-line no-param-reassign
         event.returnValue = this.numberVariationDetail(key, defaultValue);
       },
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'stringVariation'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.stringVariation(key, defaultValue);
     });
 
     ipcMain.on(
       getIPCChannelName(namespace, 'stringVariationDetail'),
       (event, key, defaultValue) => {
-        // eslint-disable-next-line no-param-reassign
         event.returnValue = this.stringVariationDetail(key, defaultValue);
       },
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'track'), (event, key, data, metricValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.track(key, data, metricValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'variation'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'variationDetail'), (event, key, defaultValue) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.variationDetail(key, defaultValue);
     });
 
@@ -288,12 +275,10 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'getConnectionMode'), (event) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.getConnectionMode();
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'isOffline'), (event) => {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = this.isOffline();
     });
   }
@@ -343,14 +328,12 @@ export class ElectronClient extends LDClientImpl {
   private _applyRemove(event: IpcMainEvent, callbackId: string): void {
     const eventName = this._ipcCallbackIdToEventName!.get(callbackId);
     if (!eventName) {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = false;
       return;
     }
     const entry = this._ipcEventSubscriptions!.get(eventName);
     const port = entry?.ports.get(callbackId);
     if (!entry || !port) {
-      // eslint-disable-next-line no-param-reassign
       event.returnValue = false;
       return;
     }
@@ -361,7 +344,6 @@ export class ElectronClient extends LDClientImpl {
       this.off(eventName, entry.broadcastCallback);
       this._ipcEventSubscriptions!.delete(eventName);
     }
-    // eslint-disable-next-line no-param-reassign
     event.returnValue = true;
   }
 

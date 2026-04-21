@@ -24,17 +24,13 @@
 /* eslint-disable func-names */
 /* eslint-disable no-shadow-restricted-names */
 /* eslint-disable prefer-destructuring */
-/* eslint-disable no-param-reassign */
 /* eslint-disable no-cond-assign */
 /* eslint-disable consistent-return */
 /* eslint-disable no-empty */
-/* eslint-disable no-plusplus */
 /* eslint-disable prefer-rest-params */
 /* eslint-disable no-useless-escape */
-/* eslint-disable no-restricted-syntax */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-use-before-define */
-/* eslint-disable no-continue */
 /* eslint-disable no-underscore-dangle */
 
 /**
@@ -805,6 +801,7 @@ export interface StackTrace {
       const inlineScriptBlocks = [];
       let parts: any;
 
+      // eslint-disable-next-line no-restricted-syntax
       for (const s in scripts) {
         if (_has(scripts, s) && !scripts[s].src) {
           inlineScriptBlocks.push(scripts[s]);

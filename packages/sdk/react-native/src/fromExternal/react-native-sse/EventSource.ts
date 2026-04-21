@@ -278,7 +278,6 @@ export default class EventSource<E extends string = never> {
     let retry = 0;
     let line = '';
 
-    // eslint-disable-next-line no-plusplus
     for (let i = 0; i < parts.length; i++) {
       line = parts[i].replace(/^(\s|\u00A0)+|(\s|\u00A0)+$/g, '');
       if (line.indexOf('event') === 0) {

@@ -41,7 +41,6 @@ export class AIProviderFactory {
     const providersToTry = this._getProvidersToTry(defaultAiProvider, providerName);
 
     // Try each provider in order
-    // eslint-disable-next-line no-restricted-syntax
     for (const providerType of providersToTry) {
       logger?.debug(
         `Attempting to create AIProvider for: ${aiConfig.provider?.name} with provider type: ${providerType}`,

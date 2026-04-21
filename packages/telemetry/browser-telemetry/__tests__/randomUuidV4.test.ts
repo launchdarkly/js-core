@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { fallbackUuidV4, formatDataAsUuidV4 } from '../src/randomUuidV4';
 
 it('formats conformant UUID', () => {

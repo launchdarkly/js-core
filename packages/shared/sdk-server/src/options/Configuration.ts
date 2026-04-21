@@ -356,7 +356,6 @@ export default class Configuration {
   constructor(options: LDOptions = {}, internalOptions: ServerInternalOptions = {}) {
     // The default will handle undefined, but not null.
     // Because we can be called from JS we need to be extra defensive.
-    // eslint-disable-next-line no-param-reassign
     options = options || {};
     // If there isn't a valid logger from the platform, then logs would go nowhere.
     this.logger = options.logger;

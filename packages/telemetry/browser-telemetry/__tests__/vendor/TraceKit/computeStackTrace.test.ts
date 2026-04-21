@@ -6,7 +6,6 @@
 import { getTraceKit } from '../../../src/vendor/TraceKit';
 import * as CapturedExceptions from './CapturedExceptions';
 
-/* eslint-disable no-plusplus */
 /* eslint-disable no-useless-escape */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 

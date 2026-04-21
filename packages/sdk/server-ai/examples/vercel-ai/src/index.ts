@@ -106,7 +106,6 @@ async function main() {
     );
 
     // Consume the stream immediately - no await needed before this!
-    // eslint-disable-next-line no-restricted-syntax
     for await (const textPart of streamResult.textStream) {
       process.stdout.write(textPart);
     }
