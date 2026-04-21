@@ -25,6 +25,7 @@
     "packages/sdk/react/examples/vercel-edge",
     "packages/sdk/react-native",
     "packages/sdk/react-native/example",
+    "packages/sdk/react-native/example-fdv2",
     "packages/sdk/react-native/contract-tests/entity",
     "packages/sdk/vercel",
     "packages/sdk/svelte",

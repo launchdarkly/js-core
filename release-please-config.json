@@ -122,6 +122,11 @@
           "type": "json",
           "path": "example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-native-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "example-fdv2/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-native-client-sdk']"
         }
       ]
     },

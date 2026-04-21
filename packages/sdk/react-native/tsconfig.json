@@ -27,6 +27,7 @@
     "dist",
     "docs",
     "example",
+    "example-fdv2",
     "node_modules",
     "babel.config.js",
     "jest.config.ts",
