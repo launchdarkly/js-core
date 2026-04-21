@@ -3,7 +3,6 @@ import type { Crypto, Hmac } from '@launchdarkly/js-client-sdk-common';
 import PlatformHasher from './PlatformHasher';
 import { SupportedHashAlgorithm } from './types';
 
-/* eslint-disable no-bitwise */
 /**
  * To avoid dependencies on uuid, this is good enough for now.
  * Ripped from the react-native repo:

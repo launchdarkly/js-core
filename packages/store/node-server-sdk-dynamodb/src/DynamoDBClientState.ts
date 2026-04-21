@@ -64,7 +64,6 @@ export default class DynamoDBClientState {
   async query(params: QueryCommandInput): Promise<Record<string, AttributeValue>[]> {
     const records: Record<string, AttributeValue>[] = [];
     // Using a generator here is a substantial ergonomic improvement.
-    // eslint-disable-next-line no-restricted-syntax
     for await (const page of paginateQuery({ client: this._client }, params)) {
       if (page.Items) {
         records.push(...page.Items);

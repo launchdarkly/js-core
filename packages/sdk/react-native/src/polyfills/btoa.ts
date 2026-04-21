@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 import { fromByteArray } from 'base64-js';
 
 import toUtf8Array from './toUtf8Array';

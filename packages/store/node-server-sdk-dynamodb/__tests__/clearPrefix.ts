@@ -16,7 +16,6 @@ export default async function clearPrefix(table: string, prefix?: string) {
   const deleteOps: WriteRequest[] = [];
 
   // Using a generator here is a substantial ergonomic improvement and this is a test file.
-  // eslint-disable-next-line no-restricted-syntax
   for await (const page of paginateScan(
     { client },
     {

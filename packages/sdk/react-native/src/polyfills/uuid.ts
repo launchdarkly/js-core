@@ -1,4 +1,3 @@
-/* eslint-disable no-bitwise */
 /**
  * To avoid dependencies on uuid, this is good enough for now.
  * Ripped from the react-native repo:

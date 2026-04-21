@@ -1,6 +1,3 @@
-/* eslint-disable no-plusplus */
-/* eslint-disable no-bitwise */
-
 // Originally from: https://github.com/google/closure-library/blob/a1f5a029c1b32eb4793a2d920aa52abc085e1bf7/closure/goog/crypt/crypt.js
 
 // Once React Native versions uniformly support TextEncoder this code can be removed.
