@@ -1,4 +1,4 @@
-import { fallbackUuidV4, formatDataAsUuidV4 } from '../../src/platform/randomUuidV4';
+import randomUuidV4, { fallbackUuidV4, formatDataAsUuidV4 } from '../../src/platform/randomUuidV4';
 
 it('formats conformant UUID', () => {
   // For this test we remove the random component and just inspect the variant and version.
@@ -25,4 +25,20 @@ it('formats conformant UUID', () => {
   expect(specifierA).toEqual(0x8);
   expect(specifierB).toEqual(0x8);
   expect(specifierC).toEqual(0x8);
+});
+
+it('falls back when crypto.randomUUID is unavailable', () => {
+  const original = globalThis.crypto;
+  Object.defineProperty(globalThis, 'crypto', {
+    value: { getRandomValues: original.getRandomValues.bind(original) },
+    configurable: true,
+  });
+
+  try {
+    const uuid = randomUuidV4();
+    expect(uuid).toHaveLength(36);
+    expect(uuid[14]).toEqual('4');
+  } finally {
+    Object.defineProperty(globalThis, 'crypto', { value: original, configurable: true });
+  }
 });

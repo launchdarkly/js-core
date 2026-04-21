@@ -28,7 +28,7 @@ module.exports = {
     'eqeqeq': ['error', 'always', { null: 'ignore' }],
     'prefer-const': ['error', { ignoreReadBeforeAssign: true }],
     'no-var': 'error',
-    'valid-typeof': 'off',
+    'valid-typeof': 'error',
     'no-restricted-syntax': [
       'error',
       { selector: 'ForInStatement', message: 'Use Object.{keys,values,entries} instead.' },
