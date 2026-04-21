@@ -30,7 +30,7 @@ yarn && yarn build
 2. Create an `.env` file in this directory (`example-fdv2/`) with your mobile key:
 
 ```shell
-MOBILE_KEY=mob-your-mobile-key-here
+LAUNCHDARKLY_MOBILE_KEY=mob-your-mobile-key-here
 ```
 
 3. Update the flag key in `src/welcome.tsx` if needed (defaults to `sample-feature`).

@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { type FDv2ConnectionMode } from '@launchdarkly/js-client-sdk-common';
-import { useBoolVariation, useLDClient } from '@launchdarkly/react-native-client-sdk';
+import {
+  type FDv2ConnectionMode,
+  useBoolVariation,
+  useLDClient,
+} from '@launchdarkly/react-native-client-sdk';
 
 const connectionModes: { label: string; mode?: FDv2ConnectionMode }[] = [
   { label: 'Streaming', mode: 'streaming' },

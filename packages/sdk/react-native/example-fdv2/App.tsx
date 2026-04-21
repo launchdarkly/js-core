@@ -1,4 +1,4 @@
-import { MOBILE_KEY } from '@env';
+import { LAUNCHDARKLY_MOBILE_KEY } from '@env';
 
 import {
   AutoEnvAttributes,
@@ -8,7 +8,7 @@ import {
 
 import Welcome from './src/welcome';
 
-const featureClient = new ReactNativeLDClient(MOBILE_KEY, AutoEnvAttributes.Enabled, {
+const featureClient = new ReactNativeLDClient(LAUNCHDARKLY_MOBILE_KEY, AutoEnvAttributes.Enabled, {
   debug: true,
   applicationInfo: {
     id: 'ld-rn-fdv2-test-app',
