@@ -1,5 +1,6 @@
 {
   "name": "@launchdarkly/react-native-example-fdv2",
+  "private": true,
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
@@ -9,7 +10,7 @@
     "web": "expo start --web --clear"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "workspace:^",
+    "@launchdarkly/react-native-client-sdk": "10.15.2",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "expo": "52.0.14",
     "expo-status-bar": "~1.11.1",
