@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.17.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.8...server-sdk-ai-v0.17.0) (2026-04-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Flatten JudgeResponse and EvalScore into new LDJudgeResult ([#1284](https://github.com/launchdarkly/js-core/issues/1284))
+* Add per-execution runId, at-most-once tracking, and cross-process tracker resumption ([#1270](https://github.com/launchdarkly/js-core/issues/1270))
+
+### Features
+
+* Add per-execution runId, at-most-once tracking, and cross-process tracker resumption ([#1270](https://github.com/launchdarkly/js-core/issues/1270)) ([fc25ab7](https://github.com/launchdarkly/js-core/commit/fc25ab7bd9577dbd1ea9826547793366a4e6814b))
+* Flatten JudgeResponse and EvalScore into new LDJudgeResult ([#1284](https://github.com/launchdarkly/js-core/issues/1284)) ([aba1221](https://github.com/launchdarkly/js-core/commit/aba1221d3b3d9f4eff44d805ed1c5e9f4d088e4a))
+* Implement agent graph definitions ([#1282](https://github.com/launchdarkly/js-core/issues/1282)) ([e7d08e5](https://github.com/launchdarkly/js-core/commit/e7d08e5e3b84020e543fd54d40a8530ddc514f20))
+* simplify evaluation schema to flat score/reasoning shape ([#1286](https://github.com/launchdarkly/js-core/issues/1286)) ([c132e9f](https://github.com/launchdarkly/js-core/commit/c132e9f44c8113cc5b795edfa6330f26c38081a6))
+
+
+### Bug Fixes
+
+* Add support for graph metric tracking ([#1269](https://github.com/launchdarkly/js-core/issues/1269)) ([034a89d](https://github.com/launchdarkly/js-core/commit/034a89d3a8d8b718aecb459190f94f6e2ab14a3d))
+
 ## [0.16.8](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.16.7...server-sdk-ai-v0.16.8) (2026-04-14)
 
 
