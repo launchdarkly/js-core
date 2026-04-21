@@ -20,6 +20,7 @@ import {
   type LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDTimeoutError,
+  type LDWaitForInitializationResult,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   MOBILE_TRANSITION_TABLE,
   mobileFdv1Endpoints,
@@ -246,6 +247,16 @@ export default class ReactNativeLDClient extends LDClientImpl {
       throw timeoutError;
     }
     return result;
+  }
+
+  /**
+   * Protect against trying to use start() in RN.
+   *
+   * @internal
+   **/
+
+  override start(): Promise<LDWaitForInitializationResult> {
+    throw new Error('start() is not supported in the React Native SDK. Use identify() directly.');
   }
 
   override async close(): Promise<void> {
