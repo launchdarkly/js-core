@@ -1,0 +1,19 @@
+{
+  "name": "@launchdarkly/server-sdk-ai-agent-graph-traversal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK agent graph traversal",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "9.10.11",
+    "@launchdarkly/server-sdk-ai": "0.16.8"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "20.1.4",
+    "typescript": "^5.5.3"
+  }
+}

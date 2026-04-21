@@ -10,6 +10,7 @@ export * from './LDIdentifyOptions';
 export * from './LDInspection';
 export * from './LDIdentifyResult';
 export * from './LDPlugin';
+export * from './LDStartOptions';
 export * from './LDWaitForInitialization';
 export * from './LDContext';
 export * from './datasource';

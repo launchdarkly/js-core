@@ -1,4 +1,5 @@
 import Mustache from 'mustache';
+import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
@@ -13,17 +14,20 @@ import {
   LDAIConfigDefaultKind,
   LDAIConfigKind,
   LDAIConfigMode,
+  LDAIConfigTracker,
   LDAIJudgeConfig,
   LDAIJudgeConfigDefault,
   LDJudge,
   LDMessage,
 } from './api/config';
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
+import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './api/graph';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
+import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
 import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
 
 /**
@@ -36,6 +40,7 @@ const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
 const TRACK_USAGE_CREATE_JUDGE = '$ld:ai:usage:create-judge';
 const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
 const TRACK_USAGE_AGENT_CONFIGS = '$ld:ai:usage:agent-configs';
+const TRACK_USAGE_AGENT_GRAPH = '$ld:ai:usage:agent-graph';
 
 const INIT_TRACK_CONTEXT: LDContext = {
   kind: 'ld_ai',
@@ -72,6 +77,7 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIConfigDefaultKind,
     mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
+    graphKey?: string,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
@@ -87,19 +93,22 @@ export class LDAIClientImpl implements LDAIClient {
       return LDAIConfigUtils.createDisabledConfig(key, mode);
     }
 
-    const tracker = new LDAIConfigTrackerImpl(
-      this._ldClient,
-      key,
-      // eslint-disable-next-line no-underscore-dangle
-      value._ldMeta?.variationKey ?? '',
-      // eslint-disable-next-line no-underscore-dangle
-      value._ldMeta?.version ?? 1,
-      value.model?.name ?? '',
-      value.provider?.name ?? '',
-      context,
-    );
+    const trackerFactory = () =>
+      new LDAIConfigTrackerImpl(
+        this._ldClient,
+        randomUUID(),
+        key,
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.variationKey ?? '',
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.version ?? 1,
+        value.model?.name ?? '',
+        value.provider?.name ?? '',
+        context,
+        graphKey,
+      );
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, tracker);
+    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
@@ -213,6 +222,17 @@ export class LDAIClientImpl implements LDAIClient {
     return this._judgeConfig(key, context, defaultValue ?? disabledAIConfig, variables);
   }
 
+  private async _agentConfig(
+    key: string,
+    context: LDContext,
+    defaultValue: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+    graphKey?: string,
+  ): Promise<LDAIAgentConfig> {
+    const config = await this._evaluate(key, context, defaultValue, 'agent', variables, graphKey);
+    return config as LDAIAgentConfig;
+  }
+
   async agentConfig(
     key: string,
     context: LDContext,
@@ -220,14 +240,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
-    const config = await this._evaluate(
-      key,
-      context,
-      defaultValue ?? disabledAIConfig,
-      'agent',
-      variables,
-    );
-    return config as LDAIAgentConfig;
+    return this._agentConfig(key, context, defaultValue ?? disabledAIConfig, variables);
   }
 
   /**
@@ -257,14 +270,13 @@ export class LDAIClientImpl implements LDAIClient {
 
     await Promise.all(
       agentConfigs.map(async (config) => {
-        const agent = await this._evaluate(
+        const agent = await this._agentConfig(
           config.key,
           context,
           config.defaultValue ?? disabledAIConfig,
-          'agent',
           config.variables,
         );
-        agents[config.key as T[number]['key']] = agent as LDAIAgentConfig;
+        agents[config.key as T[number]['key']] = agent;
       }),
     );
 
@@ -296,7 +308,7 @@ export class LDAIClientImpl implements LDAIClient {
       variables,
     );
 
-    if (!config.enabled || !config.tracker) {
+    if (!config.enabled) {
       this._logger?.info(`Chat configuration is disabled: ${key}`);
       return undefined;
     }
@@ -313,7 +325,7 @@ export class LDAIClientImpl implements LDAIClient {
       defaultAiProvider,
     );
 
-    return new TrackedChat(config, config.tracker, provider, judges, this._logger);
+    return new TrackedChat(config, provider, judges, this._logger);
   }
 
   async createJudge(
@@ -351,7 +363,7 @@ export class LDAIClientImpl implements LDAIClient {
         extendedVariables,
       );
 
-      if (!judgeConfig.enabled || !judgeConfig.tracker) {
+      if (!judgeConfig.enabled) {
         this._logger?.info(`Judge configuration is disabled: ${key}`);
         return undefined;
       }
@@ -361,7 +373,7 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      return new Judge(judgeConfig, judgeConfig.tracker, provider, this._logger);
+      return new Judge(judgeConfig, provider, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;
@@ -379,5 +391,104 @@ export class LDAIClientImpl implements LDAIClient {
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined> {
     return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  }
+
+  createTracker(token: string, context: LDContext): LDAIConfigTracker {
+    return LDAIConfigTrackerImpl.fromResumptionToken(token, this._ldClient, context);
+  }
+
+  async agentGraph(
+    graphKey: string,
+    context: LDContext,
+    variables?: Record<string, unknown>,
+  ): Promise<AgentGraphDefinition> {
+    this._ldClient.track(TRACK_USAGE_AGENT_GRAPH, context, graphKey, 1);
+
+    const defaultGraphValue: LDAgentGraphFlagValue = { root: '' };
+    const graphFlagValue = (await this._ldClient.variation(
+      graphKey,
+      context,
+      defaultGraphValue,
+    )) as LDAgentGraphFlagValue;
+
+    // eslint-disable-next-line no-underscore-dangle
+    const variationKey = graphFlagValue._ldMeta?.variationKey;
+    // eslint-disable-next-line no-underscore-dangle
+    const version = graphFlagValue._ldMeta?.version ?? 1;
+    const ldClient = this._ldClient;
+    const trackerFactory = () =>
+      new LDGraphTrackerImpl(ldClient, randomUUID(), graphKey, variationKey, version, context);
+
+    const disabled = new AgentGraphDefinition(graphFlagValue, {}, false, trackerFactory);
+
+    // eslint-disable-next-line no-underscore-dangle
+    if (graphFlagValue._ldMeta?.enabled === false) {
+      this._logger?.debug(`agentGraph: graph "${graphKey}" is disabled.`);
+      return disabled;
+    }
+
+    if (!graphFlagValue.root) {
+      this._logger?.debug(`agentGraph: graph "${graphKey}" is not fetchable or has no root node.`);
+      return disabled;
+    }
+
+    const allKeys = AgentGraphDefinition.collectAllKeys(graphFlagValue);
+    const reachableKeys = this._collectReachableKeys(graphFlagValue);
+
+    const unreachableKey = [...allKeys].find((key) => !reachableKeys.has(key));
+    if (unreachableKey) {
+      this._logger?.debug(
+        `agentGraph: graph "${graphKey}" has unconnected node "${unreachableKey}" that is not reachable from the root.`,
+      );
+      return disabled;
+    }
+
+    const agentConfigs: Record<string, LDAIAgentConfig> = {};
+    const fetchResults = await Promise.all(
+      [...allKeys].map(async (key) => {
+        const config = await this._agentConfig(key, context, disabledAIConfig, variables, graphKey);
+        return { key, config };
+      }),
+    );
+
+    const disabledResult = fetchResults.find(({ config }) => !config.enabled);
+    if (disabledResult) {
+      this._logger?.debug(
+        `agentGraph: agent config "${disabledResult.key}" in graph "${graphKey}" is not enabled or could not be fetched.`,
+      );
+      return disabled;
+    }
+    fetchResults.forEach(({ key, config }) => {
+      agentConfigs[key] = config;
+    });
+
+    const nodes = AgentGraphDefinition.buildNodes(graphFlagValue, agentConfigs);
+    return new AgentGraphDefinition(graphFlagValue, nodes, true, trackerFactory);
+  }
+
+  createGraphTracker(token: string, context: LDContext): LDGraphTracker {
+    return LDGraphTrackerImpl.fromResumptionToken(token, this._ldClient, context);
+  }
+
+  /**
+   * Returns the set of all node keys reachable from the root via BFS.
+   */
+  private _collectReachableKeys(graph: LDAgentGraphFlagValue): Set<string> {
+    const visited = new Set<string>();
+    const queue: string[] = [graph.root];
+    visited.add(graph.root);
+
+    while (queue.length > 0) {
+      const key = queue.shift()!;
+      const edges = graph.edges?.[key] ?? [];
+      edges.forEach((edge) => {
+        if (!visited.has(edge.key)) {
+          visited.add(edge.key);
+          queue.push(edge.key);
+        }
+      });
+    }
+
+    return visited;
   }
 }

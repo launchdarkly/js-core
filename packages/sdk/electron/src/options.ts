@@ -27,6 +27,7 @@ export interface ValidatedOptions {
   plugins: LDPlugin[];
   enableIPC: boolean;
   useClientSideId: boolean;
+  namespace?: string;
 }
 
 const optDefaults: ValidatedOptions = {
@@ -37,6 +38,7 @@ const optDefaults: ValidatedOptions = {
   plugins: [],
   enableIPC: true,
   useClientSideId: false,
+  namespace: undefined,
 };
 
 const validators: { [Property in keyof ElectronOptions]: TypeValidator | undefined } = {
@@ -47,6 +49,7 @@ const validators: { [Property in keyof ElectronOptions]: TypeValidator | undefin
   plugins: TypeValidators.createTypeArray('LDPlugin[]', {}),
   enableIPC: TypeValidators.Boolean,
   useClientSideId: TypeValidators.Boolean,
+  namespace: TypeValidators.String,
 };
 
 export function filterToBaseOptions(opts: ElectronOptions): LDOptionsBase {

@@ -1,4 +1,4 @@
-import { EvalScore, JudgeResponse } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 
 /**
@@ -39,14 +39,29 @@ export interface LDAIConfigTracker {
    * Get the data for tracking.
    */
   getTrackData(): {
-    variationKey: string;
+    runId: string;
     configKey: string;
+    variationKey: string;
     version: number;
     modelName: string;
     providerName: string;
+    graphKey?: string;
   };
+
+  /**
+   * A URL-safe Base64-encoded token that encodes the tracker's runId, configKey,
+   * variationKey, and version. Pass this to AIClient.createTracker() to reconstruct
+   * the tracker across process boundaries (e.g. for associating deferred feedback
+   * with the original invocation).
+   */
+  readonly resumptionToken: string;
+
   /**
    * Track the duration of generation.
+   *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning. Use createTracker() on the config result to obtain a fresh
+   * tracker for a new execution.
    *
    * Ideally this would not include overhead time such as network communication.
    *
@@ -57,22 +72,34 @@ export interface LDAIConfigTracker {
   /**
    * Track information about token usage.
    *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
+   *
    * @param tokens Token usage information.
    */
   trackTokens(tokens: LDTokenUsage): void;
 
   /**
    * Generation was successful.
+   *
+   * At-most-once per execution: subsequent calls (including trackError) on the
+   * same tracker are dropped with a warning.
    */
   trackSuccess(): void;
 
   /**
    * An error was encountered during generation.
+   *
+   * At-most-once per execution: subsequent calls (including trackSuccess) on the
+   * same tracker are dropped with a warning.
    */
   trackError(): void;
 
   /**
    * Track sentiment about the generation.
+   *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
    *
    * @param feedback Feedback about the generation.
    */
@@ -81,23 +108,35 @@ export interface LDAIConfigTracker {
   /**
    * Track the time to first token for this generation.
    *
+   * At-most-once per execution: subsequent calls on the same tracker are dropped
+   * with a warning.
+   *
    * @param timeToFirstTokenMs The duration in milliseconds.
    */
   trackTimeToFirstToken(timeToFirstTokenMs: number): void;
 
   /**
-   * Track evaluation scores for multiple metrics.
+   * Track a judge evaluation result.
    *
-   * @param scores Record mapping metric keys to their evaluation scores
+   * No event is emitted when the result was not sampled (result.sampled is false).
+   *
+   * @param result Judge result containing score, reasoning, and metadata
    */
-  trackEvalScores(scores: Record<string, EvalScore>): void;
+  trackJudgeResult(result: LDJudgeResult): void;
 
   /**
-   * Track a judge response containing evaluation scores and judge configuration key.
+   * Track a single tool invocation.
    *
-   * @param response Judge response containing evaluation scores and judge configuration key
+   * @param toolKey The identifier of the tool that was invoked.
    */
-  trackJudgeResponse(response: JudgeResponse): void;
+  trackToolCall(toolKey: string): void;
+
+  /**
+   * Track multiple tool invocations.
+   *
+   * @param toolKeys The identifiers of the tools that were invoked.
+   */
+  trackToolCalls(toolKeys: string[]): void;
 
   /**
    * Track the duration of execution of the provided function.

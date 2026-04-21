@@ -68,7 +68,7 @@ async function main() {
     { example_type: 'provider_observability_demo' },
   );
 
-  if (!aiConfig.enabled || !aiConfig.tracker) {
+  if (!aiConfig.enabled) {
     console.log('*** AI configuration is not enabled');
     ldClient.close();
     process.exit(0);
@@ -76,15 +76,14 @@ async function main() {
 
   try {
     // ── 4. Call OpenAI and track metrics with the provider's extractor ──
-    const completion = await aiConfig.tracker.trackMetricsOf(
-      OpenAIProvider.getAIMetricsFromResponse,
-      () =>
-        openai.chat.completions.create({
-          messages: aiConfig.messages || [],
-          model: aiConfig.model?.name || 'gpt-4',
-          temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
-          max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
-        }),
+    const tracker = aiConfig.createTracker!();
+    const completion = await tracker.trackMetricsOf(OpenAIProvider.getAIMetricsFromResponse, () =>
+      openai.chat.completions.create({
+        messages: aiConfig.messages || [],
+        model: aiConfig.model?.name || 'gpt-4',
+        temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+        max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
+      }),
     );
 
     console.log('AI Response:', completion.choices[0]?.message.content);

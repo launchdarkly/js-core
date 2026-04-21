@@ -65,13 +65,13 @@ async function main() {
     console.log('Input:', input);
     console.log('Output:', output);
 
-    const judgeResponse = await judge.evaluate(input, output);
+    const judgeResult = await judge.evaluate(input, output);
 
-    // Track the judge evaluation scores on the tracker for the aiConfig you are evaluating.
+    // Track the judge result on the tracker for the aiConfig you are evaluating.
     // Example:
-    // aiConfig.tracker.trackEvalScores(judgeResponse?.evals);
+    // aiConfig.tracker.trackJudgeResult(judgeResult);
 
-    console.log('Judge Response:', judgeResponse);
+    console.log('Judge Result:', judgeResult);
 
     console.log('Success.');
   } catch (err) {

@@ -21,6 +21,20 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.7.20](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.19...cloudflare-server-sdk-v2.7.20) (2026-04-20)
+
+
+### Bug Fixes
+
+* **cloudflare:** bundle tslib with esm module ([#1292](https://github.com/launchdarkly/js-core/issues/1292)) ([d7ed722](https://github.com/launchdarkly/js-core/commit/d7ed7229d277e6ff96929c279279d85b094d596f))
+
+## [2.7.19](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.18...cloudflare-server-sdk-v2.7.19) (2026-04-17)
+
+
+### Bug Fixes
+
+* remove `rollup-plugin-dts` dependency ([#1288](https://github.com/launchdarkly/js-core/issues/1288)) ([ea64b82](https://github.com/launchdarkly/js-core/commit/ea64b82a2c9d93d5c94fbc6e972cd9b5646b7cf1))
+
 ## [2.7.18](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.17...cloudflare-server-sdk-v2.7.18) (2026-04-14)
 
 

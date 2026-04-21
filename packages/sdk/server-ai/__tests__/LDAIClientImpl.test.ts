@@ -85,7 +85,7 @@ describe('config evaluation', () => {
       { role: 'system', content: 'Hello John' },
       { role: 'user', content: 'Score: 42' },
     ]);
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -139,11 +139,18 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.agentConfig(key, testContext, defaultValue, variables);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'agent', variables);
+    expect(evaluateSpy).toHaveBeenCalledWith(
+      key,
+      testContext,
+      defaultValue,
+      'agent',
+      variables,
+      undefined,
+    );
     expect(result.instructions).toBe(
       'You are a helpful assistant. Your name is John and your score is 42',
     );
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -176,7 +183,7 @@ describe('config evaluation', () => {
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
     // Should use first value from evaluationMetricKeys
     expect(result.evaluationMetricKey).toBe('relevance');
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -208,7 +215,7 @@ describe('config evaluation', () => {
 
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
     expect(result.evaluationMetricKey).toBe('relevance');
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -241,7 +248,7 @@ describe('config evaluation', () => {
 
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
     expect(result.evaluationMetricKey).toBe('helpfulness');
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -275,7 +282,7 @@ describe('config evaluation', () => {
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
     // Empty string should be treated as invalid, so should fall back to first value in evaluationMetricKeys
     expect(result.evaluationMetricKey).toBe('relevance');
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -308,7 +315,7 @@ describe('config evaluation', () => {
     expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
     // Should skip empty and whitespace strings, use first valid value
     expect(result.evaluationMetricKey).toBe('relevance');
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
     evaluateSpy.mockRestore();
   });
@@ -331,7 +338,7 @@ describe('config evaluation', () => {
     const result = await client.completionConfig(key, testContext, defaultValue);
 
     expect(result.enabled).toBe(false);
-    expect(result.tracker).toBeUndefined();
+    expect(result.createTracker).toBeUndefined();
   });
 
   it('handles missing metadata mode by defaulting to completion mode', async () => {
@@ -352,7 +359,7 @@ describe('config evaluation', () => {
     const result = await client.completionConfig(key, testContext, defaultValue);
 
     expect(result.enabled).toBe(false);
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.messages).toEqual([{ role: 'system', content: 'Hello' }]);
     expect(result.model).toEqual({ name: 'example-provider', parameters: { name: 'imagination' } });
   });
@@ -381,7 +388,7 @@ describe('config evaluation', () => {
     expect(result.model).toEqual(defaultValue.model);
     expect(result.messages).toEqual(defaultValue.messages);
     expect(result.provider).toEqual(defaultValue.provider);
-    expect(result.tracker).toBeDefined();
+    expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(defaultValue.enabled);
     expect(mockLdClient.variation).toHaveBeenCalledWith(
       key,
@@ -408,7 +415,7 @@ describe('completionConfig method', () => {
     const mockConfig = {
       model: { name: 'test-model' },
       messages: [],
-      tracker: {} as any,
+      createTracker: () => ({}) as any,
       enabled: true,
     };
 
@@ -449,7 +456,7 @@ describe('agentConfig method', () => {
     const mockConfig = {
       model: { name: 'test-model' },
       instructions: 'You are a helpful assistant.',
-      tracker: {} as any,
+      createTracker: () => ({}) as any,
       enabled: true,
     };
 
@@ -464,7 +471,14 @@ describe('agentConfig method', () => {
       key,
       1,
     );
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'agent', variables);
+    expect(evaluateSpy).toHaveBeenCalledWith(
+      key,
+      testContext,
+      defaultValue,
+      'agent',
+      variables,
+      undefined,
+    );
     expect(result).toBe(mockConfig);
     evaluateSpy.mockRestore();
   });
@@ -527,7 +541,7 @@ describe('agents method', () => {
         },
         provider: { name: 'openai' },
         instructions: 'You are a research assistant specializing in climate change.',
-        tracker: expect.any(Object),
+        createTracker: expect.any(Function),
         enabled: true,
       },
       'writing-agent': {
@@ -538,7 +552,7 @@ describe('agents method', () => {
         },
         provider: { name: 'anthropic' },
         instructions: 'You are a writing assistant with academic style.',
-        tracker: expect.any(Object),
+        createTracker: expect.any(Function),
         enabled: true,
       },
     });
@@ -582,7 +596,7 @@ describe('judgeConfig method', () => {
       provider: { name: 'openai' },
       evaluationMetricKeys: ['relevance'],
       messages: [{ role: 'system' as const, content: 'You are a judge for {{metric}}.' }],
-      tracker: {} as any,
+      createTracker: () => ({}) as any,
       toVercelAISDK: jest.fn(),
     };
 
@@ -631,6 +645,7 @@ describe('createJudge method', () => {
       enabled: false,
     };
 
+    const mockTrackerInstance = {} as any;
     const mockJudgeConfig = {
       key: 'test-judge',
       enabled: true,
@@ -638,7 +653,7 @@ describe('createJudge method', () => {
       provider: { name: 'openai' },
       evaluationMetricKeys: ['relevance', 'accuracy'],
       messages: [{ role: 'system' as const, content: 'You are a judge.' }],
-      tracker: {} as any,
+      createTracker: () => mockTrackerInstance,
       toVercelAISDK: jest.fn(),
     };
 
@@ -658,12 +673,7 @@ describe('createJudge method', () => {
       response_to_evaluate: '{{response_to_evaluate}}',
     });
     expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
-    expect(Judge).toHaveBeenCalledWith(
-      mockJudgeConfig,
-      mockJudgeConfig.tracker,
-      mockProvider,
-      undefined,
-    );
+    expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, undefined);
     expect(result).toBe(mockJudge);
     judgeConfigSpy.mockRestore();
   });
@@ -706,7 +716,7 @@ describe('createJudge method', () => {
       provider: { name: 'openai' },
       evaluationMetricKeys: ['relevance'],
       messages: [{ role: 'system' as const, content: 'You are a judge.' }],
-      tracker: {} as any,
+      createTracker: () => ({}) as any,
       toVercelAISDK: jest.fn(),
     };
 
@@ -738,6 +748,30 @@ describe('createJudge method', () => {
 
     expect(result).toBeUndefined();
     judgeConfigSpy.mockRestore();
+  });
+});
+
+describe('createTracker method', () => {
+  it('reconstructs a tracker from a resumption token', () => {
+    const client = new LDAIClientImpl(mockLdClient);
+
+    // Build a token manually: { runId, configKey, variationKey, version }
+    const payload = JSON.stringify({
+      runId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      configKey: 'my-config',
+      variationKey: 'v1',
+      version: 3,
+    });
+    const token = Buffer.from(payload).toString('base64url');
+
+    const tracker = client.createTracker(token, testContext);
+
+    expect(tracker.getTrackData()).toMatchObject({
+      runId: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+      configKey: 'my-config',
+      variationKey: 'v1',
+      version: 3,
+    });
   });
 });
 

@@ -13,6 +13,6 @@ export type {
 
 export type { LDRendererClient };
 
-export function createRendererClient(clientSideId: string): LDRendererClient {
-  return new ElectronRendererClient(clientSideId);
+export function createRendererClient(clientSideId: string, namespace?: string): LDRendererClient {
+  return new ElectronRendererClient(clientSideId, namespace);
 }

@@ -119,11 +119,6 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   //   }
   // }
 
-  // NOTE: we may want need to discuss this at some point. Right now, we are
-  // running this suite of tests because the way we register our IPC bridge listern
-  // using the client side id. The problem with this is that we cannot be registering
-  // the same listener multiple times. In order to support registering multiple clients,
-  // we will need to change the way we hash the listener name.
   cf.enableIPC = false;
 
   // TODO: we might need this

@@ -10,6 +10,7 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { Hook, type LDOptions } from '../api';
+import { LDContext } from '../api/LDContext';
 import { LDInspection } from '../api/LDInspection';
 import type {
   InternalDataSystemOptions,
@@ -26,6 +27,17 @@ export interface LDClientInternalOptions extends internal.LDInternalOptions {
   credentialType: 'clientSideId' | 'mobileKey';
   getLegacyStorageKeys?: () => string[];
   dataSystemDefaults?: PlatformDataSystemDefaults;
+
+  /**
+   * When true, the SDK requires `start()` to be called before `identify()`.
+   * Set this value to `true` to use the new initialization pattern.
+   */
+  requiresStart?: boolean;
+
+  /**
+   * The initial context to use when starting the client.
+   */
+  initialContext?: LDContext;
 }
 
 export interface Configuration {

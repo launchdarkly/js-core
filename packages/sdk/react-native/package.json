@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-native-client-sdk",
-  "version": "10.15.2",
+  "version": "10.16.0",
   "description": "React Native LaunchDarkly SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react-native",
   "repository": {
@@ -41,7 +41,7 @@
     "react-native": "*"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.24.0",
+    "@launchdarkly/js-client-sdk-common": "1.25.0",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "base64-js": "^1.5.1"
   },
@@ -53,8 +53,6 @@
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-airbnb-typescript": "^17.1.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",

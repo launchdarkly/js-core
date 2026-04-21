@@ -4,11 +4,18 @@ import { LDFeedbackKind } from '../src/api/metrics';
 import { LDAIConfigTrackerImpl } from '../src/LDAIConfigTrackerImpl';
 import { LDClientMin } from '../src/LDClientMin';
 
+const testRunId = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+jest.mock('node:crypto', () => ({
+  randomUUID: jest.fn(() => testRunId),
+}));
+
 const mockTrack = jest.fn();
 const mockVariation = jest.fn();
+const mockWarn = jest.fn();
 const mockLdClient: LDClientMin = {
   track: mockTrack,
   variation: mockVariation,
+  logger: { warn: mockWarn, error: jest.fn(), info: jest.fn(), debug: jest.fn() } as any,
 };
 
 const testContext: LDContext = { kind: 'user', key: 'test-user' };
@@ -24,6 +31,7 @@ const getExpectedTrackData = () => ({
   version,
   modelName,
   providerName,
+  runId: testRunId,
 });
 
 beforeEach(() => {
@@ -33,6 +41,7 @@ beforeEach(() => {
 it('tracks duration', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -53,6 +62,7 @@ it('tracks duration', () => {
 it('tracks duration of async function', async () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -76,6 +86,7 @@ it('tracks duration of async function', async () => {
 it('tracks time to first token', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -96,6 +107,7 @@ it('tracks time to first token', () => {
 it('tracks positive feedback', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -116,6 +128,7 @@ it('tracks positive feedback', () => {
 it('tracks negative feedback', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -136,6 +149,7 @@ it('tracks negative feedback', () => {
 it('tracks success', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -156,6 +170,7 @@ it('tracks success', () => {
 it('tracks OpenAI usage', async () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -223,6 +238,7 @@ it('tracks OpenAI usage', async () => {
 it('tracks error when OpenAI metrics function throws', async () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -264,6 +280,7 @@ it('tracks error when OpenAI metrics function throws', async () => {
 it('tracks Bedrock conversation with successful response', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -334,6 +351,7 @@ it('tracks Bedrock conversation with successful response', () => {
 it('tracks Bedrock conversation with error response', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -369,6 +387,7 @@ describe('Vercel AI SDK generateText', () => {
   it('tracks Vercel AI SDK usage', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -436,6 +455,7 @@ describe('Vercel AI SDK generateText', () => {
   it('tracks error when Vercel AI SDK metrics function throws', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -478,6 +498,7 @@ describe('Vercel AI SDK generateText', () => {
 it('tracks tokens', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -521,6 +542,7 @@ it('tracks tokens', () => {
 it('only tracks non-zero token counts', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -560,6 +582,7 @@ it('only tracks non-zero token counts', () => {
 it('returns empty summary when no metrics tracked', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -576,6 +599,7 @@ it('returns empty summary when no metrics tracked', () => {
 it('summarizes tracked metrics', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -612,6 +636,7 @@ it('summarizes tracked metrics', () => {
 it('tracks duration when async function throws', async () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -639,6 +664,7 @@ it('tracks duration when async function throws', async () => {
 it('tracks error', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
+    testRunId,
     configKey,
     variationKey,
     version,
@@ -660,6 +686,7 @@ describe('trackMetricsOf', () => {
   it('tracks success and token usage from metrics', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -715,6 +742,7 @@ describe('trackMetricsOf', () => {
   it('tracks failure when metrics indicate failure', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -745,6 +773,7 @@ describe('trackMetricsOf', () => {
   it('tracks failure when operation throws', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -774,6 +803,7 @@ describe('trackMetricsOf', () => {
   it('tracks metrics without token usage', async () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -811,10 +841,11 @@ describe('trackMetricsOf', () => {
   });
 });
 
-describe('trackJudgeResponse', () => {
-  it('tracks evaluation metric key with score', () => {
+describe('trackJudgeResult', () => {
+  it('tracks metric key with score', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -823,15 +854,14 @@ describe('trackJudgeResponse', () => {
       testContext,
     );
 
-    const judgeResponse = {
+    tracker.trackJudgeResult({
       judgeConfigKey: 'test-judge',
-      evals: {
-        relevance: { score: 0.8, reasoning: 'The response is relevant' },
-      },
       success: true,
-    };
-
-    tracker.trackJudgeResponse(judgeResponse);
+      sampled: true,
+      score: 0.8,
+      reasoning: 'The response is relevant',
+      metricKey: 'relevance',
+    });
 
     expect(mockTrack).toHaveBeenCalledWith(
       'relevance',
@@ -841,9 +871,10 @@ describe('trackJudgeResponse', () => {
     );
   });
 
-  it('tracks multiple evaluation metrics when present', () => {
+  it('does not track when sampled is false', () => {
     const tracker = new LDAIConfigTrackerImpl(
       mockLdClient,
+      testRunId,
       configKey,
       variationKey,
       version,
@@ -852,28 +883,570 @@ describe('trackJudgeResponse', () => {
       testContext,
     );
 
-    const judgeResponse = {
+    tracker.trackJudgeResult({
       judgeConfigKey: 'test-judge',
-      evals: {
-        relevance: { score: 0.8, reasoning: 'Relevant' },
-        accuracy: { score: 0.9, reasoning: 'Accurate' },
-      },
-      success: true,
-    };
+      success: false,
+      sampled: false,
+      score: 0.8,
+      metricKey: 'relevance',
+    });
 
-    tracker.trackJudgeResponse(judgeResponse);
+    expect(mockTrack).not.toHaveBeenCalled();
+  });
+
+  it('does not track when success is false', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackJudgeResult({
+      judgeConfigKey: 'test-judge',
+      success: false,
+      sampled: true,
+      score: 0.8,
+      metricKey: 'relevance',
+    });
+
+    expect(mockTrack).not.toHaveBeenCalled();
+  });
+});
+
+describe('trackToolCall', () => {
+  it('tracks a single tool call', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackToolCall('my-tool');
 
     expect(mockTrack).toHaveBeenCalledWith(
-      'relevance',
+      '$ld:ai:tool_call',
       testContext,
-      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
-      0.8,
+      { ...getExpectedTrackData(), toolKey: 'my-tool' },
+      1,
+    );
+  });
+
+  it('includes graphKey when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    tracker.trackToolCall('my-tool');
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph', toolKey: 'my-tool' },
+      1,
+    );
+  });
+});
+
+describe('trackToolCalls', () => {
+  it('tracks multiple tool calls', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackToolCalls(['tool-a', 'tool-b', 'tool-c']);
+
+    expect(mockTrack).toHaveBeenCalledTimes(3);
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-a' },
+      1,
     );
     expect(mockTrack).toHaveBeenCalledWith(
-      'accuracy',
+      '$ld:ai:tool_call',
       testContext,
-      { ...getExpectedTrackData(), judgeConfigKey: 'test-judge' },
-      0.9,
+      { ...getExpectedTrackData(), toolKey: 'tool-b' },
+      1,
     );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-c' },
+      1,
+    );
+  });
+});
+
+describe('graphKey constructor support', () => {
+  it('includes graphKey in trackDuration event when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    tracker.trackDuration(1000);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:duration:total',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph' },
+      1000,
+    );
+  });
+
+  it('includes graphKey in trackSuccess event when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    tracker.trackSuccess();
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      { ...getExpectedTrackData(), graphKey: 'my-graph' },
+      1,
+    );
+  });
+
+  it('does not include graphKey when not set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    tracker.trackSuccess();
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      getExpectedTrackData(),
+      1,
+    );
+  });
+
+  it('includes graphKey in getTrackData when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    expect(tracker.getTrackData()).toEqual({
+      ...getExpectedTrackData(),
+      graphKey: 'my-graph',
+    });
+  });
+
+  it('does not include graphKey in getTrackData when not set', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    expect(tracker.getTrackData()).toEqual(getExpectedTrackData());
+    expect('graphKey' in tracker.getTrackData()).toBe(false);
+  });
+});
+
+describe('at-most-once semantics', () => {
+  it('drops duplicate trackDuration call with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackDuration(1000);
+    tracker.trackDuration(2000);
+
+    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining('Duration'));
+  });
+
+  it('drops duplicate trackSuccess call with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackSuccess();
+    tracker.trackSuccess();
+
+    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops trackError call after trackSuccess with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackSuccess();
+    tracker.trackError();
+
+    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops duplicate trackFeedback call with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackFeedback({ kind: LDFeedbackKind.Positive });
+    tracker.trackFeedback({ kind: LDFeedbackKind.Negative });
+
+    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops duplicate trackTokens call with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackTokens({ total: 100, input: 50, output: 50 });
+    tracker.trackTokens({ total: 200, input: 100, output: 100 });
+
+    // First call tracks 3 events (total, input, output), second is dropped
+    expect(mockTrack).toHaveBeenCalledTimes(3);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops duplicate trackTimeToFirstToken call with warning', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+    tracker.trackTimeToFirstToken(100);
+    tracker.trackTimeToFirstToken(200);
+
+    expect(mockTrack).toHaveBeenCalledTimes(1);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('resumptionToken', () => {
+  it('encodes runId, configKey, variationKey, and version as URL-safe Base64 JSON', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey,
+      version,
+    });
+  });
+
+  it('includes empty variationKey explicitly when not set', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      '',
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey: '',
+      version,
+    });
+    expect('variationKey' in decoded).toBe(true);
+  });
+
+  it('uses URL-safe Base64 encoding (no + / or = characters)', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const token = tracker.resumptionToken;
+    expect(token).not.toMatch(/[+/=]/);
+  });
+});
+
+describe('fromResumptionToken', () => {
+  it('reconstructs tracker with original runId', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect(reconstructed.getTrackData().runId).toBe(testRunId);
+    expect(reconstructed.getTrackData().configKey).toBe(configKey);
+    expect(reconstructed.getTrackData().variationKey).toBe(variationKey);
+    expect(reconstructed.getTrackData().version).toBe(version);
+  });
+
+  it('reconstructs tracker with empty variationKey when none was set', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      '',
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect(reconstructed.getTrackData().variationKey).toBe('');
+  });
+
+  it('reconstructed tracker emits track events with original runId', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    reconstructed.trackSuccess();
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:generation:success',
+      testContext,
+      expect.objectContaining({ runId: testRunId }),
+      1,
+    );
+  });
+
+  it('includes graphKey in resumption token when set on constructor', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey,
+      version,
+      graphKey: 'my-graph',
+    });
+  });
+
+  it('does not include graphKey in resumption token when not set', () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const token = tracker.resumptionToken;
+    const decoded = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+
+    expect(decoded).toEqual({
+      runId: testRunId,
+      configKey,
+      variationKey,
+      version,
+    });
+    expect('graphKey' in decoded).toBe(false);
+  });
+
+  it('reconstructs tracker with graphKey from resumption token', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+      'my-graph',
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect(reconstructed.getTrackData().graphKey).toBe('my-graph');
+  });
+
+  it('reconstructed tracker without graphKey does not include graphKey in track data', () => {
+    const original = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+      original.resumptionToken,
+      mockLdClient,
+      testContext,
+    );
+
+    expect('graphKey' in reconstructed.getTrackData()).toBe(false);
   });
 });

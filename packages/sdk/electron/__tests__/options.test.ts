@@ -1,15 +1,9 @@
-import { LDLogger } from '@launchdarkly/js-client-sdk-common';
-
 import { ElectronOptions } from '../src/ElectronOptions';
 import validateOptions, { filterToBaseOptions } from '../src/options';
+import { createMockLogger } from './testHelpers';
 
 it('logs no warnings when all configuration is valid', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   validateOptions(
     {
@@ -19,6 +13,7 @@ it('logs no warnings when all configuration is valid', () => {
       initialConnectionMode: 'streaming',
       enableIPC: true,
       plugins: [],
+      namespace: 'test-ns',
     },
     logger,
   );
@@ -30,12 +25,7 @@ it('logs no warnings when all configuration is valid', () => {
 });
 
 it('warns for invalid configuration', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   validateOptions(
     {
@@ -77,12 +67,7 @@ it('warns for invalid configuration', () => {
 });
 
 it('applies default options', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
   const opts = validateOptions({}, logger);
 
   expect(opts.proxyOptions).toBeUndefined();
@@ -92,6 +77,7 @@ it('applies default options', () => {
   expect(opts.plugins).toEqual([]);
   expect(opts.enableIPC).toEqual(true);
   expect(opts.useClientSideId).toEqual(false);
+  expect(opts.namespace).toBeUndefined();
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();
@@ -99,25 +85,39 @@ it('applies default options', () => {
   expect(logger.error).not.toHaveBeenCalled();
 });
 
+it('applies namespace when set', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({ namespace: 'my-ns' }, logger);
+
+  expect(opts.namespace).toEqual('my-ns');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('warns for invalid namespace type', () => {
+  const logger = createMockLogger();
+
+  validateOptions(
+    {
+      // @ts-ignore
+      namespace: 42,
+    },
+    logger,
+  );
+
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "namespace" should be of type string, got number, using default value',
+  );
+});
+
 it('applies useClientSideId when set to true', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
   const opts = validateOptions({ useClientSideId: true }, logger);
 
   expect(opts.useClientSideId).toEqual(true);
 });
 
 it('warns for invalid useClientSideId type', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   validateOptions(
     {
@@ -133,12 +133,7 @@ it('warns for invalid useClientSideId type', () => {
 });
 
 it('filters to base options', () => {
-  const logger: LDLogger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const logger = createMockLogger();
 
   const opts: ElectronOptions = {
     debug: false,
@@ -149,6 +144,7 @@ it('filters to base options', () => {
     enableIPC: true,
     plugins: [],
     useClientSideId: true,
+    namespace: 'test-ns',
   };
 
   const baseOpts = filterToBaseOptions(opts);

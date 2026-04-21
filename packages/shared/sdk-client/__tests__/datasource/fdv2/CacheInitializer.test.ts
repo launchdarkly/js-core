@@ -135,31 +135,33 @@ describe('CacheInitializer', () => {
     }
   });
 
-  it('returns interrupted on cache miss', async () => {
+  it('returns transfer-none on cache miss', async () => {
     const storage = makeMemoryStorage();
 
     const initializer = createInitializer(storage, crypto, context);
     const result = await initializer.run();
 
-    expect(result.type).toBe('status');
-    if (result.type === 'status') {
-      expect(result.state).toBe('interrupted');
+    expect(result.type).toBe('changeSet');
+    if (result.type === 'changeSet') {
+      expect(result.payload.type).toBe('none');
+      expect(result.payload.updates).toHaveLength(0);
     }
   });
 
-  it('returns interrupted when storage is undefined', async () => {
+  it('returns transfer-none when storage is undefined', async () => {
     const logger = makeMockLogger();
     const initializer = createInitializer(undefined, crypto, context, logger);
     const result = await initializer.run();
 
-    expect(result.type).toBe('status');
-    if (result.type === 'status') {
-      expect(result.state).toBe('interrupted');
+    expect(result.type).toBe('changeSet');
+    if (result.type === 'changeSet') {
+      expect(result.payload.type).toBe('none');
+      expect(result.payload.updates).toHaveLength(0);
     }
     expect(logger.debug).toHaveBeenCalledWith('No storage available for cache initializer');
   });
 
-  it('returns interrupted on corrupt JSON (treated as cache miss)', async () => {
+  it('returns transfer-none on corrupt JSON (treated as cache miss)', async () => {
     const storage = makeMemoryStorage();
     const storageKey = await namespaceForContextData(crypto, TEST_NAMESPACE, context);
     await storage.set(storageKey, 'not valid json!!!');
@@ -167,9 +169,10 @@ describe('CacheInitializer', () => {
     const initializer = createInitializer(storage, crypto, context);
     const result = await initializer.run();
 
-    expect(result.type).toBe('status');
-    if (result.type === 'status') {
-      expect(result.state).toBe('interrupted');
+    expect(result.type).toBe('changeSet');
+    if (result.type === 'changeSet') {
+      expect(result.payload.type).toBe('none');
+      expect(result.payload.updates).toHaveLength(0);
     }
   });
 

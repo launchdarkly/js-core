@@ -60,13 +60,14 @@ async function main() {
     myVariable: 'My User Defined Variable',
   });
 
-  if (!aiConfig.enabled || !aiConfig.tracker) {
+  if (!aiConfig.enabled) {
     console.log('*** AI configuration is not enabled');
     process.exit(0);
   }
 
-  const completion = await aiConfig.tracker.trackMetricsOf(
-    OpenAIProvider.createAIMetrics,
+  const tracker = aiConfig.createTracker!();
+  const completion = await tracker.trackMetricsOf(
+    OpenAIProvider.getAIMetricsFromResponse,
     async () =>
       client.chat.completions.create({
         messages: aiConfig.messages || [],

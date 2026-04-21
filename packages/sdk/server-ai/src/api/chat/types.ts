@@ -1,5 +1,5 @@
 import { LDMessage } from '../config/types';
-import { JudgeResponse } from '../judge/types';
+import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics } from '../metrics/LDAIMetrics';
 
 /**
@@ -20,5 +20,5 @@ export interface ChatResponse {
    * Promise that resolves to judge evaluation results.
    * Only present when judges are configured for evaluation.
    */
-  evaluations?: Promise<Array<JudgeResponse | undefined>>;
+  evaluations?: Promise<LDJudgeResult[]>;
 }
