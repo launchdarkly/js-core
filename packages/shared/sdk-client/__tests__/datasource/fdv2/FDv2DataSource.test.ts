@@ -193,6 +193,31 @@ it('does not overwrite an error status when a later initializer fails after data
   ds.close();
 });
 
+it('rejects when a cache initializer is followed by a non-cache initializer and neither delivers data', async () => {
+  // Cache initializer misses (transfer-none) and a non-cache initializer
+  // also returns transfer-none. Because the chain includes a non-cache
+  // initializer, cacheOnlyDataSystem is false and the exhaustion branch
+  // must NOT complete initialization successfully.
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const nonePayload = makePayload({ type: 'none' });
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted');
+  expect(dataCallback).not.toHaveBeenCalled();
+  ds.close();
+});
+
 it('rejects when a cache initializer returns transfer-none but synchronizers exist', async () => {
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();

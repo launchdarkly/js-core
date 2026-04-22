@@ -197,9 +197,12 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     // All initializers exhausted.
     if (cacheOnlyDataSystem) {
       // Cache-only data system with no synchronizer to produce a VALID
-      // status on its own. Set VALID here so the data source reports ready
-      // even on a cache miss.
-      statusManager.requestStateUpdate('VALID');
+      // status on its own. On a cache miss, nothing else has asserted
+      // VALID yet, so do it here. On a cache hit, applyChangeSet already
+      // asserted VALID -- skip the redundant call for idempotence.
+      if (!dataReceived) {
+        statusManager.requestStateUpdate('VALID');
+      }
       markInitialized();
     } else if (dataReceived) {
       // At least one initializer delivered data. Do not overwrite any
