@@ -193,6 +193,62 @@ it('does not overwrite an error status when a later initializer fails after data
   ds.close();
 });
 
+it('rejects start() when close() is called before cache-only initialization runs', async () => {
+  // Race: close() happens before the runInitializers microtask starts.
+  // The cache-only success path must not fire a spurious VALID or resolve
+  // the start() promise; it must reject with "closed before initialization".
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const nonePayload = makePayload({ type: 'none' });
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  const startPromise = ds.start().catch((e) => e);
+  ds.close();
+  const error = await startPromise;
+
+  expect(error).toBeInstanceOf(Error);
+  expect((error as Error).message).toContain('closed before initialization');
+  expect(statusManager.requestStateUpdate).not.toHaveBeenCalledWith('VALID');
+});
+
+it('does not overwrite error status when a cache-only initializer reports interrupted', async () => {
+  // Latent guard: even though the default CacheInitializer never emits
+  // interrupted/terminal_error, a custom cache-marked factory could.
+  // The cache-only exhaustion branch must not overwrite the reported
+  // error status with VALID.
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeCacheInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), false))),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  // Initialization still completes (cache-only mode is always ready) but
+  // without overriding the reported error status.
+  await ds.start();
+
+  expect(statusManager.reportError).toHaveBeenCalled();
+  expect(statusManager.requestStateUpdate).not.toHaveBeenCalledWith('VALID');
+  ds.close();
+});
+
 it('rejects when a cache initializer is followed by a non-cache initializer and neither delivers data', async () => {
   // Cache initializer misses (transfer-none) and a non-cache initializer
   // also returns transfer-none. Because the chain includes a non-cache

@@ -145,6 +145,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   // The orchestration loops intentionally use await-in-loop for sequential
   // state machine processing — one result at a time.
   async function runInitializers(): Promise<void> {
+    // Tracks whether any initializer reported interrupted/terminal_error.
+    // Used below so the cache-only exhaustion branch does not overwrite
+    // that error status with VALID.
+    let errorReportedDuringInit = false;
+
     while (!closed) {
       const initializer = sourceManager.getNextInitializerAndSetActive();
       if (initializer === undefined) {
@@ -181,6 +186,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           case 'terminal_error':
             logger?.warn(`Initializer failed: ${result.errorInfo?.message ?? 'unknown error'}`);
             reportStatusError(result);
+            errorReportedDuringInit = true;
             break;
           case 'shutdown':
             return;
@@ -194,13 +200,23 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       }
     }
 
+    // close() between the last loop iteration and the exhaustion branch.
+    // Exit without marking initialized or emitting a spurious VALID; the
+    // start() promise will be rejected by the post-orchestration handler
+    // with "closed before initialization completed."
+    if (closed) {
+      return;
+    }
+
     // All initializers exhausted.
     if (cacheOnlyDataSystem) {
       // Cache-only data system with no synchronizer to produce a VALID
-      // status on its own. On a cache miss, nothing else has asserted
-      // VALID yet, so do it here. On a cache hit, applyChangeSet already
-      // asserted VALID -- skip the redundant call for idempotence.
-      if (!dataReceived) {
+      // status on its own. On a cache miss with no errors, nothing else
+      // has asserted VALID yet, so do it here. Skip the update if:
+      //   - dataReceived (cache hit): applyChangeSet already asserted VALID.
+      //   - errorReportedDuringInit: reportError set an error status that
+      //     must not be silently overwritten.
+      if (!dataReceived && !errorReportedDuringInit) {
         statusManager.requestStateUpdate('VALID');
       }
       markInitialized();
