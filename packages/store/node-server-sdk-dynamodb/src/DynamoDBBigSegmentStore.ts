@@ -56,7 +56,7 @@ export default class DynamoDBBigSegmentStore implements interfaces.BigSegmentSto
     if (data) {
       const attr = data[ATTR_SYNC_ON];
       if (attr && attr.N) {
-        return { lastUpToDate: parseInt(attr.N!, 10) };
+        return { lastUpToDate: parseInt(attr.N, 10) };
       }
     }
     return {};

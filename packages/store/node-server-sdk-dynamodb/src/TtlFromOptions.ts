@@ -17,5 +17,5 @@ export default function TtlFromOptions(options?: LDDynamoDBOptions): number {
   if (options?.cacheTTL === undefined || options.cacheTTL === null) {
     return DEFAULT_CACHE_TTL_S;
   }
-  return options!.cacheTTL;
+  return options.cacheTTL;
 }
