@@ -214,7 +214,11 @@ export class LangChainProvider extends AIProvider {
     // Extract token usage if available
     let usage: LDTokenUsage | undefined;
     if (response?.response_metadata?.tokenUsage) {
-      const { tokenUsage } = response.response_metadata;
+      const tokenUsage = response.response_metadata.tokenUsage as {
+        totalTokens?: number;
+        promptTokens?: number;
+        completionTokens?: number;
+      };
       usage = {
         total: tokenUsage.totalTokens || 0,
         input: tokenUsage.promptTokens || 0,
