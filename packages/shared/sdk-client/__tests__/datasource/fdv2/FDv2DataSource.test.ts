@@ -157,6 +157,42 @@ it('resolves start() when only initializer is a cache initializer that returns t
   ds.close();
 });
 
+it('does not overwrite an error status when a later initializer fails after data was received', async () => {
+  // Scenario: initializer 1 delivers a payload without a selector (data
+  // received, status VALID). Initializer 2 errors, which reports an error
+  // status. When the chain exhausts with dataReceived=true, the orchestrator
+  // must NOT re-assert VALID, because doing so would silently overwrite the
+  // error status from the failed initializer.
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+  const payloadNoSelector = makePayload({ state: '' });
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, false))),
+      makeInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), false))),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+
+  expect(dataCallback).toHaveBeenCalledWith(payloadNoSelector);
+  expect(statusManager.reportError).toHaveBeenCalled();
+  // Exactly one VALID request: from applyChangeSet on the first initializer.
+  // No second VALID from the exhaustion branch.
+  const validCalls = statusManager.requestStateUpdate.mock.calls.filter(
+    (args) => args[0] === 'VALID',
+  );
+  expect(validCalls).toHaveLength(1);
+  ds.close();
+});
+
 it('rejects when a cache initializer returns transfer-none but synchronizers exist', async () => {
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();
