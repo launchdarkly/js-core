@@ -37,7 +37,7 @@ export default class DynamoDBClientState {
   private _owned: boolean;
 
   constructor(options?: LDDynamoDBOptions) {
-    this._prefix = options?.prefix ? `${options!.prefix}:` : DEFAULT_PREFIX;
+    this._prefix = options?.prefix ? `${options.prefix}:` : DEFAULT_PREFIX;
 
     // We track if we own the client so that we can destroy clients that we own.
     if (options?.dynamoDBClient) {
@@ -75,8 +75,8 @@ export default class DynamoDBClientState {
   async batchWrite(table: string, params: WriteRequest[]) {
     const batches: WriteRequest[][] = [];
     // Split into batches of at most 25 commands.
-    while (params.length) {
-      batches.push(params.splice(0, WRITE_BATCH_SIZE));
+    for (let i = 0; i < params.length; i += WRITE_BATCH_SIZE) {
+      batches.push(params.slice(i, i + WRITE_BATCH_SIZE));
     }
 
     // Execute all the batches and wait for them to complete.
