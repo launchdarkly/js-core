@@ -18,8 +18,8 @@ export default class VersionedDataKinds {
   };
 
   static getKeyFromPath(kind: VersionedDataKind, path: string): string | undefined {
-    return path.startsWith(kind.streamApiPath)
-      ? path.substring(kind.streamApiPath.length)
-      : undefined;
+    return path.startsWith(kind.streamApiPath) ?
+        path.substring(kind.streamApiPath.length) :
+      undefined;
   }
 }

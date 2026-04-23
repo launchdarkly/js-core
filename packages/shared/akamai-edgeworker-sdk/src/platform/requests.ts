@@ -1,5 +1,4 @@
 /* eslint-disable max-classes-per-file */
-import { Headers, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -8,6 +7,7 @@ import type {
   Requests,
   Response,
 } from '@launchdarkly/js-server-sdk-common';
+import { Headers, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 
 class NoopResponse implements Response {
   headers: Headers;

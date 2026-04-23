@@ -1,12 +1,11 @@
 export type { AsyncQueue } from './AsyncQueue';
 export { createAsyncQueue } from './AsyncQueue';
-
 export type { CacheInitializerConfig } from './CacheInitializer';
 export { createCacheInitializerFactory } from './CacheInitializer';
-
+export { calculatePollDelay } from './calculatePollDelay';
+export { createFDv1PollingSynchronizer } from './FDv1PollingSynchronizer';
 export type { FDv2PollResponse, FDv2Requestor } from './FDv2Requestor';
 export { makeFDv2Requestor } from './FDv2Requestor';
-
 export type {
   ChangeSetResult,
   FDv2SourceResult,
@@ -24,17 +23,12 @@ export {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
-
 export type { Initializer } from './Initializer';
-export type { Synchronizer } from './Synchronizer';
-
-export { calculatePollDelay } from './calculatePollDelay';
 export { poll } from './PollingBase';
 export { createPollingInitializer } from './PollingInitializer';
-export { createFDv1PollingSynchronizer } from './FDv1PollingSynchronizer';
 export { createPollingSynchronizer } from './PollingSynchronizer';
-
 export type { PingHandler, StreamingFDv2Base } from './StreamingFDv2Base';
 export { createStreamingBase } from './StreamingFDv2Base';
 export { createStreamingInitializer } from './StreamingInitializerFDv2';
 export { createStreamingSynchronizer } from './StreamingSynchronizerFDv2';
+export type { Synchronizer } from './Synchronizer';

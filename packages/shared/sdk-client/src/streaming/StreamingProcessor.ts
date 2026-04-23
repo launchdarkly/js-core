@@ -64,9 +64,9 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     if (_dataSourceConfig.useReport && !_requests.getEventSourceCapabilities().customMethod) {
       path = _dataSourceConfig.paths.pathPing(encoding, _plainContextString);
     } else {
-      path = _dataSourceConfig.useReport
-        ? _dataSourceConfig.paths.pathReport(encoding, _plainContextString)
-        : _dataSourceConfig.paths.pathGet(encoding, _plainContextString);
+      path = _dataSourceConfig.useReport ?
+          _dataSourceConfig.paths.pathReport(encoding, _plainContextString) :
+          _dataSourceConfig.paths.pathGet(encoding, _plainContextString);
     }
     const parameters: { key: string; value: string }[] = [
       ...(_dataSourceConfig.queryParameters ?? []),

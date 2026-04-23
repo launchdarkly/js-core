@@ -56,9 +56,9 @@ export function createDataSourceStatusManager(
 
   function updateState(requestedState: DataSourceState, isError = false) {
     const newState =
-      requestedState === 'INTERRUPTED' && state === 'INITIALIZING' // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
-        ? 'INITIALIZING'
-        : requestedState;
+      requestedState === 'INTERRUPTED' && state === 'INITIALIZING' ? // don't go to interrupted from initializing (recoverable errors when initializing are not noteworthy)
+        'INITIALIZING' :
+        requestedState;
 
     const changedState = state !== newState;
     if (changedState) {

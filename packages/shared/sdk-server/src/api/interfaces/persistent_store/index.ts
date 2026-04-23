@@ -6,9 +6,9 @@ import SerializedItemDescriptor from './SerializedItemDescriptor';
 
 export {
   ItemDescriptor,
+  KeyedItem,
+  KindKeyedStore,
   PersistentDataStore,
   PersistentStoreDataKind,
   SerializedItemDescriptor,
-  KeyedItem,
-  KindKeyedStore,
 };

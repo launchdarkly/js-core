@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
-import { initAi } from '@launchdarkly/server-sdk-ai';
 import type { AgentGraphNode } from '@launchdarkly/server-sdk-ai';
+import { initAi } from '@launchdarkly/server-sdk-ai';
 
 const GRAPH_KEY = process.env.LAUNCHDARKLY_GRAPH_KEY || 'sample-graph';
 

@@ -1,5 +1,5 @@
-import { ipcMain } from 'electron';
 import type { IpcMainEvent, MessagePortMain } from 'electron';
+import { ipcMain } from 'electron';
 
 import {
   AutoEnvAttributes,
@@ -81,10 +81,10 @@ export class ElectronClient extends LDClientImpl {
     const { useClientSideId } = validatedElectronOptions;
 
     const internalOptions: LDClientInternalOptions = {
-      analyticsEventPath: useClientSideId ? `/events/bulk/${credential}` : `/mobile`,
-      diagnosticEventPath: useClientSideId
-        ? `/events/diagnostic/${credential}`
-        : `/mobile/events/diagnostic`,
+      analyticsEventPath: useClientSideId ? `/events/bulk/${credential}` : '/mobile',
+      diagnosticEventPath: useClientSideId ?
+        `/events/diagnostic/${credential}` :
+        '/mobile/events/diagnostic',
       highTimeoutThreshold: 15,
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedElectronOptions.plugins),
@@ -145,9 +145,9 @@ export class ElectronClient extends LDClientImpl {
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     const options =
-      identifyOptions?.sheddable === undefined
-        ? { ...identifyOptions, sheddable: true }
-        : identifyOptions;
+      identifyOptions?.sheddable === undefined ?
+          { ...identifyOptions, sheddable: true } :
+        identifyOptions;
     return super.identifyResult(context, options);
   }
 

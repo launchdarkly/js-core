@@ -109,11 +109,11 @@ describe('given an empty store', () => {
 
   it('completely replaces previous data when calling init()', async () => {
     const flags = [
-      { key: 'first', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
-      { key: 'second', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
+      { key: 'first', item: { version: 1, serializedItem: '{"version":1}', deleted: false } },
+      { key: 'second', item: { version: 1, serializedItem: '{"version":1}', deleted: false } },
     ];
     const segments = [
-      { key: 'first', item: { version: 2, serializedItem: `{"version":2}`, deleted: false } },
+      { key: 'first', item: { version: 2, serializedItem: '{"version":2}', deleted: false } },
     ];
 
     await facade.init([
@@ -143,10 +143,10 @@ describe('given an empty store', () => {
     ]);
 
     const newFlags = [
-      { key: 'first', item: { version: 2, serializedItem: `{"version":2}`, deleted: false } },
+      { key: 'first', item: { version: 2, serializedItem: '{"version":2}', deleted: false } },
     ];
     const newSegments = [
-      { key: 'first', item: { version: 3, serializedItem: `{"version":3}`, deleted: false } },
+      { key: 'first', item: { version: 3, serializedItem: '{"version":3}', deleted: false } },
     ];
 
     await facade.init([
@@ -265,7 +265,7 @@ describe('given a store with basic data', () => {
     expect(result).toEqual({
       version: 10,
       deleted: false,
-      serializedItem: `{"key":"foo","version":10}`,
+      serializedItem: '{"key":"foo","version":10}',
     });
   });
 
@@ -328,7 +328,7 @@ describe('given a store with basic data', () => {
 });
 
 it('it can calculate size', () => {
-  const stringPayload = `{"key":"foo","version":10}`;
+  const stringPayload = '{"key":"foo","version":10}';
 
   expect(
     calculateSize({

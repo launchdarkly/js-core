@@ -1,4 +1,4 @@
-import { derived, type Readable, readonly, writable, type Writable } from 'svelte/store';
+import { derived, type Readable, readonly, type Writable, writable } from 'svelte/store';
 
 import {
   createClient,

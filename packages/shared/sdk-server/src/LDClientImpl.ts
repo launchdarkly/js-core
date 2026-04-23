@@ -116,18 +116,18 @@ function constructFDv1(
   dataSourceErrorHandler: (e: any) => void,
   hooks: Hook[],
 ): {
-  config: Configuration;
-  logger: LDLogger | undefined;
-  evaluator: Evaluator;
-  featureStore: LDFeatureStore;
-  updateProcessor: subsystem.LDStreamProcessor | undefined;
-  eventProcessor: subsystem.LDEventProcessor;
-  bigSegmentsManager: BigSegmentsManager;
-  hookRunner: HookRunner;
-  onError: (err: Error) => void;
-  onFailed: (err: Error) => void;
-  onReady: () => void;
-} {
+    config: Configuration;
+    logger: LDLogger | undefined;
+    evaluator: Evaluator;
+    featureStore: LDFeatureStore;
+    updateProcessor: subsystem.LDStreamProcessor | undefined;
+    eventProcessor: subsystem.LDEventProcessor;
+    bigSegmentsManager: BigSegmentsManager;
+    hookRunner: HookRunner;
+    onError: (err: Error) => void;
+    onFailed: (err: Error) => void;
+    onReady: () => void;
+  } {
   const { onUpdate, hasEventListeners } = callbacks;
 
   const hookRunner = new HookRunner(config.logger, hooks);
@@ -191,25 +191,25 @@ function constructFDv1(
     put: initSuccess,
   });
   const makeDefaultProcessor = () =>
-    config.stream
-      ? new StreamingProcessor(
-          clientContext,
-          '/all',
-          [],
-          listeners,
-          baseHeaders,
-          diagnosticsManager,
-          dataSourceErrorHandler,
-          config.streamInitialReconnectDelay,
-        )
-      : new PollingProcessor(
-          new Requestor(config, platform.requests, baseHeaders),
-          config.pollInterval,
-          dataSourceUpdates,
-          config.logger,
-          initSuccess,
-          dataSourceErrorHandler,
-        );
+    config.stream ?
+      new StreamingProcessor(
+        clientContext,
+        '/all',
+        [],
+        listeners,
+        baseHeaders,
+        diagnosticsManager,
+        dataSourceErrorHandler,
+        config.streamInitialReconnectDelay,
+      ) :
+      new PollingProcessor(
+        new Requestor(config, platform.requests, baseHeaders),
+        config.pollInterval,
+        dataSourceUpdates,
+        config.logger,
+        initSuccess,
+        dataSourceErrorHandler,
+      );
 
   let updateProcessor: subsystem.LDStreamProcessor | undefined;
   if (!(config.offline || config.useLdd)) {
@@ -245,19 +245,19 @@ function constructFDv2(
   initSuccess: () => void,
   hooks: Hook[],
 ): {
-  config: Configuration;
-  logger: LDLogger | undefined;
-  evaluator: Evaluator;
-  featureStore: LDTransactionalFeatureStore;
-  dataSource: subsystem.DataSource | undefined;
-  payloadListener: ((payload: any) => void) | undefined;
-  eventProcessor: subsystem.LDEventProcessor;
-  bigSegmentsManager: BigSegmentsManager;
-  hookRunner: HookRunner;
-  onError: (err: Error) => void;
-  onFailed: (err: Error) => void;
-  onReady: () => void;
-} {
+    config: Configuration;
+    logger: LDLogger | undefined;
+    evaluator: Evaluator;
+    featureStore: LDTransactionalFeatureStore;
+    dataSource: subsystem.DataSource | undefined;
+    payloadListener: ((payload: any) => void) | undefined;
+    eventProcessor: subsystem.LDEventProcessor;
+    bigSegmentsManager: BigSegmentsManager;
+    hookRunner: HookRunner;
+    onError: (err: Error) => void;
+    onFailed: (err: Error) => void;
+    onReady: () => void;
+  } {
   const { onUpdate, hasEventListeners } = callbacks;
 
   const hookRunner = new HookRunner(config.logger, hooks);
@@ -649,7 +649,7 @@ export default class LDClientImpl implements LDClient {
     ) {
       this._logger?.warn(
         'The waitForInitialization function was called without a timeout specified.' +
-          ' In a future version a default timeout will be applied.',
+        ' In a future version a default timeout will be applied.',
       );
     }
     if (
@@ -659,8 +659,8 @@ export default class LDClientImpl implements LDClient {
     ) {
       this._logger?.warn(
         'The waitForInitialization function was called with a timeout greater than ' +
-          `${HIGH_TIMEOUT_THRESHOLD} seconds. We recommend a timeout of less than ` +
-          `${HIGH_TIMEOUT_THRESHOLD} seconds.`,
+        `${HIGH_TIMEOUT_THRESHOLD} seconds. We recommend a timeout of less than ` +
+        `${HIGH_TIMEOUT_THRESHOLD} seconds.`,
       );
     }
 
@@ -1069,12 +1069,12 @@ export default class LDClientImpl implements LDClient {
           if (storeInitialized) {
             this._logger?.warn(
               'Called allFlagsState before client initialization; using last known' +
-                ' values from data store',
+              ' values from data store',
             );
           } else {
             this._logger?.warn(
               'Called allFlagsState before client initialization. Data store not available; ' +
-                'returning empty state',
+              'returning empty state',
             );
             valid = false;
           }
@@ -1262,14 +1262,14 @@ export default class LDClientImpl implements LDClient {
         if (storeInitialized) {
           this._logger?.warn(
             'Variation called before LaunchDarkly client initialization completed' +
-              " (did you wait for the 'ready' event?) - using last known values from feature store",
+            " (did you wait for the 'ready' event?) - using last known values from feature store",
           );
           this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }
         this._logger?.warn(
           'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-            "'ready' event?) - using default value",
+          "'ready' event?) - using default value",
         );
         cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
       });

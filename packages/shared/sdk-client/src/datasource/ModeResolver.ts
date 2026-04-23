@@ -76,8 +76,8 @@ const DESKTOP_TRANSITION_TABLE: ModeResolutionTable = [
 ];
 
 export {
-  resolveConnectionMode,
-  MOBILE_TRANSITION_TABLE,
   BROWSER_TRANSITION_TABLE,
   DESKTOP_TRANSITION_TABLE,
+  MOBILE_TRANSITION_TABLE,
+  resolveConnectionMode,
 };

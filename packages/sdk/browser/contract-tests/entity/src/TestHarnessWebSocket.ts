@@ -12,7 +12,7 @@ export default class TestHarnessWebSocket {
   constructor(private readonly _url: string) {}
 
   connect() {
-    this._logger.info(`Connecting to web socket.`);
+    this._logger.info('Connecting to web socket.');
     this._ws = new WebSocket(this._url, ['v1']);
     this._ws.onopen = () => {
       this._logger.info('Connected to websocket.');
@@ -24,7 +24,7 @@ export default class TestHarnessWebSocket {
       }, 1000);
     };
     this._ws.onerror = (err) => {
-      this._logger.info(`error:`, err);
+      this._logger.info('error:', err);
     };
 
     this._ws.onmessage = async (msg) => {

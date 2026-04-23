@@ -139,7 +139,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
@@ -155,13 +155,13 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+          return '/meval';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       baseHeaders,
@@ -365,7 +365,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
@@ -379,13 +379,13 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+          return '/meval';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       baseHeaders,
@@ -425,7 +425,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
@@ -439,13 +439,13 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+          return '/meval';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       baseHeaders,
@@ -479,7 +479,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
@@ -493,13 +493,13 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+          return '/meval';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       baseHeaders,
@@ -540,7 +540,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
@@ -554,13 +554,13 @@ describe('given a MobileDataManager with mocked dependencies', () => {
           return `/meval/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/meval`;
+          return '/meval';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       baseHeaders,

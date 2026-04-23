@@ -36,18 +36,18 @@ export default class BigSegmentsManager {
     );
 
     this._staleTimeMs =
-      (TypeValidators.Number.is(config.staleAfter) && config.staleAfter > 0
-        ? config.staleAfter
-        : DEFAULT_STALE_AFTER_SECONDS) * 1000;
+      (TypeValidators.Number.is(config.staleAfter) && config.staleAfter > 0 ?
+        config.staleAfter :
+        DEFAULT_STALE_AFTER_SECONDS) * 1000;
 
     const pollIntervalMs =
-      (TypeValidators.Number.is(config.statusPollInterval) && config.statusPollInterval > 0
-        ? config.statusPollInterval
-        : DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
+      (TypeValidators.Number.is(config.statusPollInterval) && config.statusPollInterval > 0 ?
+        config.statusPollInterval :
+        DEFAULT_STATUS_POLL_INTERVAL_SECONDS) * 1000;
 
-    this._pollHandle = _store
-      ? setInterval(() => this._pollStoreAndUpdateStatus(), pollIntervalMs)
-      : null;
+    this._pollHandle = _store ?
+        setInterval(() => this._pollStoreAndUpdateStatus(), pollIntervalMs) :
+      null;
 
     if (_store) {
       this._cache = new LruCache({

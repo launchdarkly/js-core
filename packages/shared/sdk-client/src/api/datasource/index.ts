@@ -1,25 +1,25 @@
-export type { default as FDv2ConnectionMode } from './FDv2ConnectionMode';
 export type {
+  CacheDataSourceEntry,
+  DataSourceEntry,
   EndpointConfig,
   FDv1FallbackConfig,
-  CacheDataSourceEntry,
+  InitializerEntry,
   PollingDataSourceEntry,
   StreamingDataSourceEntry,
-  InitializerEntry,
   SynchronizerEntry,
-  DataSourceEntry,
 } from './DataSourceEntry';
-export type { ModeDefinition } from './ModeDefinition';
+export type { default as FDv2ConnectionMode } from './FDv2ConnectionMode';
 export type {
-  LDClientDataSystemOptions,
   AutomaticModeSwitchingConfig,
+  LDClientDataSystemOptions,
   ManualModeSwitching,
 } from './LDClientDataSystemOptions';
+export type { ModeDefinition } from './ModeDefinition';
 export type {
-  LifecycleState,
-  ModeState,
   ConfiguredMode,
+  LifecycleState,
   ModeResolution,
   ModeResolutionEntry,
   ModeResolutionTable,
+  ModeState,
 } from './ModeResolution';

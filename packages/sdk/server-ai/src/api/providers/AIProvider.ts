@@ -18,6 +18,7 @@ export abstract class AIProvider {
   constructor(logger?: LDLogger) {
     this.logger = logger;
   }
+
   /**
    * Invoke the chat model with an array of messages.
    * This method should convert messages to provider format, invoke the model,

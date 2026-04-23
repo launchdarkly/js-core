@@ -12,4 +12,4 @@ export const context = createContext<ReactContext>({
 
 const { Provider, Consumer } = context;
 
-export { Provider, Consumer };
+export { Consumer, Provider };

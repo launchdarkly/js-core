@@ -49,7 +49,7 @@ export function createLDServerWrapper(
   if (!isServer()) {
     throw new Error(
       'createLDServerWrapper must only be called on the server. ' +
-        'Ensure this module is not imported from client components.',
+      'Ensure this module is not imported from client components.',
     );
   }
 
@@ -124,7 +124,7 @@ export function useLDServerSession(): LDServerSession | null {
   if (!isServer()) {
     throw new Error(
       'useLDServerSession must only be called on the server. ' +
-        'Ensure this module is not imported from client components.',
+      'Ensure this module is not imported from client components.',
     );
   }
 

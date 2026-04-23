@@ -109,9 +109,9 @@ export default class EventSummarizer implements LDEventSummarizer {
       features,
       kind: 'summary',
       context:
-        this._context !== undefined && this._singleContext
-          ? this._contextFilter?.filter(this._context)
-          : undefined,
+        this._context !== undefined && this._singleContext ?
+            this._contextFilter?.filter(this._context) :
+          undefined,
     };
     this._clearSummary();
     return event;

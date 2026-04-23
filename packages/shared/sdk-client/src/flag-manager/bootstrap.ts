@@ -17,7 +17,7 @@ export function readFlagsFromBootstrap(
   if (!metadata && keys.length) {
     logger.warn(
       'LaunchDarkly client was initialized with bootstrap data that did not include flag' +
-        ' metadata. Events may not be sent correctly.',
+      ' metadata. Events may not be sent correctly.',
     );
   }
   if (data[validKey] === false) {
