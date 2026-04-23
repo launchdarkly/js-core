@@ -5,10 +5,10 @@ import ServiceEndpoints, { getEventsUri, getPollingUri, getStreamingUri } from '
 
 export {
   ApplicationTags,
-  ClientContext,
-  getEventsUri,
-  getPollingUri,
-  getStreamingUri,
   OptionMessages,
   ServiceEndpoints,
+  ClientContext,
+  getStreamingUri,
+  getPollingUri,
+  getEventsUri,
 };

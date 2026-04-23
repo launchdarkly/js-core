@@ -147,7 +147,7 @@ export class CompositeDataSource implements DataSource {
 
                   // this error indicates we should fallback to only using FDv1 synchronizers
                   if (err instanceof LDFlagDeliveryFallbackError) {
-                    this._logger?.debug('Falling back to FDv1');
+                    this._logger?.debug(`Falling back to FDv1`);
                     this._syncFactories = this._fdv1Synchronizers;
                   }
                 }
@@ -190,7 +190,7 @@ export class CompositeDataSource implements DataSource {
             transition: 'stop',
             err: {
               name: 'ExhaustedDataSources',
-              message: 'CompositeDataSource has exhausted all configured initializers and synchronizers.',
+              message: `CompositeDataSource has exhausted all configured initializers and synchronizers.`,
             },
           });
         }

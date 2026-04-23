@@ -14,24 +14,25 @@ import {
 } from './datasource';
 
 export * from './api';
-export * from './errors';
-export * as internal from './internal';
+export * from './validators';
 export * from './logging';
 export * from './options';
 export * from './utils';
-export * from './validators';
+
+export * as internal from './internal';
+export * from './errors';
 
 export {
   AttributeReference,
-  Backoff,
-  CompositeDataSource,
   Context,
   ContextFilter,
+  CompositeDataSource,
   DataSourceErrorKind,
+  Backoff,
   DefaultBackoff,
-  LDFileDataSourceError,
-  LDFlagDeliveryFallbackError,
   LDPollingError,
   LDStreamingError,
   StreamingErrorHandler,
+  LDFileDataSourceError,
+  LDFlagDeliveryFallbackError,
 };
