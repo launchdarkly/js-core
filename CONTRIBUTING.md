@@ -174,7 +174,6 @@ flowchart LR
 
     %% Telemetry packages
     node-otel[telemetry/node-server-sdk-otel]
-    browser-telemetry[telemetry/browser-telemetry]
 
     %% Tooling packages
     jest[tooling/jest]
@@ -209,7 +208,6 @@ flowchart LR
     
     %% Dependencies for telemetry packages
     server-node --> node-otel
-    browser --> browser-telemetry
     
     %% Dependencies for tooling packages
     react-native -.-> jest
@@ -217,7 +215,7 @@ flowchart LR
     class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker shared
     class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen sdk
     class redis,dynamodb store
-    class node-otel,browser-telemetry telemetry
+    class node-otel telemetry
     class jest tooling
 ```
 

@@ -22,7 +22,6 @@ on:
           - packages/telemetry/node-server-sdk-otel
           - packages/sdk/browser
           - packages/sdk/server-ai
-          - packages/telemetry/browser-telemetry
           - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron

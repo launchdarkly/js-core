@@ -19,7 +19,6 @@
   "packages/shared/sdk-server-edge": "2.6.17",
   "packages/store/node-server-sdk-dynamodb": "6.2.24",
   "packages/store/node-server-sdk-redis": "4.2.23",
-  "packages/telemetry/browser-telemetry": "1.0.33",
   "packages/telemetry/node-server-sdk-otel": "1.3.11",
   "packages/tooling/jest": "1.0.11",
   "packages/sdk/shopify-oxygen": "0.1.8",
