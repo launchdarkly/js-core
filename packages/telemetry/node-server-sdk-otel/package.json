@@ -25,7 +25,7 @@
     "clean": "npx tsc --build --clean",
     "check": "yarn && yarn lint:fix && yarn lint && tsc && yarn test",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "npx eslint . --ext .ts --fix"
   },
   "license": "Apache-2.0",
   "peerDependencies": {

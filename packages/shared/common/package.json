@@ -36,7 +36,7 @@
     "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "npx eslint . --ext .ts --fix",
     "check": "yarn && yarn lint:fix && yarn lint && tsc && yarn test"
   },
   "license": "Apache-2.0",

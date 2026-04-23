@@ -33,7 +33,7 @@
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
     "coverage": "yarn test --coverage",
     "check": "yarn lint:fix && yarn lint && yarn build && yarn test && yarn doc",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common": "2.18.5",

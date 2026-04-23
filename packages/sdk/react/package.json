@@ -22,7 +22,7 @@
     "build": "tsup",
     "test": "npx jest --ci",
     "lint": "eslint . --ext .ts,.tsx",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "type": "module",
   "exports": {

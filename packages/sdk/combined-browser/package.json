@@ -42,7 +42,7 @@
     "test": "npx jest --runInBand",
     "coverage": "yarn test --coverage",
     "check": "yarn lint:fix && yarn lint && yarn build && yarn test",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk": "4.6.3",

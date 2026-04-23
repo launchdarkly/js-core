@@ -55,6 +55,7 @@ module.exports = {
 
     ...stylisticConfig.rules,
     '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+    '@stylistic/operator-linebreak': ['error', 'after'],
     'simple-import-sort/imports': ['error', {
       groups: [
         ['^\\u0000'],

@@ -11,14 +11,14 @@ import shouldSample from './sampling';
 
 export {
   ClientMessages,
+  EventProcessor,
+  EventProcessorOptions,
   InputCustomEvent,
   InputEvalEvent,
   InputEvent,
   InputIdentifyEvent,
   InputMigrationEvent,
-  EventProcessor,
-  EventProcessorOptions,
-  shouldSample,
-  NullEventProcessor,
   LDInternalOptions,
+  NullEventProcessor,
+  shouldSample,
 };

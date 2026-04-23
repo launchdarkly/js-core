@@ -68,8 +68,8 @@ export class DefaultBackoff {
     // If the last successful connection was active for more than the RESET_INTERVAL, then we
     // return to the initial retry delay.
     if (
-      this._activeSince !== undefined &&
-      timeStampMs - this._activeSince > this._retryResetIntervalMillis
+      this._activeSince !== undefined
+      && timeStampMs - this._activeSince > this._retryResetIntervalMillis
     ) {
       this._retryCount = 0;
     }
