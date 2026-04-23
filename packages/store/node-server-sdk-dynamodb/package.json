@@ -33,17 +33,13 @@
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
     "@launchdarkly/node-server-sdk": "9.10.12",
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
-    "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"

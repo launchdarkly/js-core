@@ -1,9 +1,18 @@
+const stylistic = require('@stylistic/eslint-plugin');
+
+const stylisticConfig = stylistic.configs.customize({
+  semi: true,
+  arrowParens: true,
+  braceStyle: '1tbs',
+  quoteProps: 'as-needed',
+});
+
 module.exports = {
   env: {
     node: true,
     'jest/globals': true,
   },
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
@@ -12,8 +21,9 @@ module.exports = {
     ],
     tsconfigRootDir: __dirname,
   },
-  plugins: ['@typescript-eslint', 'import', 'prettier', 'jest'],
+  plugins: ['@typescript-eslint', '@stylistic', 'simple-import-sort', 'import', 'jest'],
   ignorePatterns: [
+    '**/node_modules/**',
     '**/dist/**',
     '**/vercel/examples/**',
     '**/react-native/example/**',
@@ -42,7 +52,18 @@ module.exports = {
       'error',
       { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^__' },
     ],
-    'prettier/prettier': ['error'],
+
+    ...stylisticConfig.rules,
+    '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+    'simple-import-sort/imports': ['error', {
+      groups: [
+        ['^\\u0000'],
+        ['^node:', '^(?!@launchdarkly)(?!\\.)'],
+        ['^@launchdarkly'],
+        ['^\\.'],
+      ],
+    }],
+    'simple-import-sort/exports': 'error',
     'class-methods-use-this': 'off',
     'import/no-extraneous-dependencies': [
       'error',
