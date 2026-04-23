@@ -109,7 +109,7 @@ beforeEach(() => {
   });
   mockCreateStreamingInitializer.mockReturnValue({ close: jest.fn() });
   mockCreateStreamingSynchronizer.mockReturnValue({ close: jest.fn() });
-  mockCreateCacheInitializerFactory.mockReturnValue(jest.fn());
+  mockCreateCacheInitializerFactory.mockReturnValue({ create: jest.fn(), isCache: true });
   mockMakeFDv2Requestor.mockReturnValue({ poll: jest.fn() });
 });
 
@@ -124,7 +124,7 @@ it('creates a PollingInitializer for a polling initializer entry', () => {
 
   expect(factory).toBeDefined();
   const selectorGetter = () => 'some-selector';
-  factory!(selectorGetter);
+  factory!.create(selectorGetter);
   expect(mockCreatePollingInitializer).toHaveBeenCalledWith(
     ctx.requestor,
     ctx.logger,
@@ -141,7 +141,7 @@ it('creates a StreamingInitializer for a streaming initializer entry', () => {
 
   expect(factory).toBeDefined();
   const selectorGetter = () => 'some-selector';
-  factory!(selectorGetter);
+  factory!.create(selectorGetter);
   expect(mockCreateStreamingBase).toHaveBeenCalledWith(
     expect.objectContaining({
       requests: ctx.requests,
@@ -169,6 +169,7 @@ it('creates a CacheInitializer for a cache initializer entry', () => {
     logger: ctx.logger,
   });
   expect(factory).toBe(mockCreateCacheInitializerFactory.mock.results[0].value);
+  expect(factory!.isCache).toBe(true);
 });
 
 it('returns undefined for an unknown initializer entry type', () => {
@@ -196,7 +197,7 @@ it('creates a PollingSynchronizer slot for a polling synchronizer entry', () => 
   // Invoke the factory that was passed to createSynchronizerSlot
   const factoryArg = mockCreateSynchronizerSlot.mock.calls[0][0];
   const selectorGetter = () => 'sel';
-  factoryArg(selectorGetter);
+  factoryArg.create(selectorGetter);
   expect(mockCreatePollingSynchronizer).toHaveBeenCalledWith(
     ctx.requestor,
     ctx.logger,
@@ -218,7 +219,7 @@ it('creates a StreamingSynchronizer slot for a streaming synchronizer entry', ()
   // Invoke the factory that was passed to createSynchronizerSlot
   const factoryArg = mockCreateSynchronizerSlot.mock.calls[0][0];
   const selectorGetter = () => 'sel';
-  factoryArg(selectorGetter);
+  factoryArg.create(selectorGetter);
   expect(mockCreateStreamingBase).toHaveBeenCalledWith(
     expect.objectContaining({
       requests: ctx.requests,
@@ -255,7 +256,7 @@ it('creates a new requestor when polling entry has endpoint overrides', () => {
   expect(factory).toBeDefined();
 
   const selectorGetter = () => undefined;
-  factory!(selectorGetter);
+  factory!.create(selectorGetter);
 
   expect(mockMakeFDv2Requestor).toHaveBeenCalledWith(
     ctx.plainContextString,
@@ -288,7 +289,7 @@ it('uses per-entry pollInterval override for polling synchronizer', () => {
 
   const factoryArg = mockCreateSynchronizerSlot.mock.calls[0][0];
   const selectorGetter = () => undefined;
-  factoryArg(selectorGetter);
+  factoryArg.create(selectorGetter);
 
   expect(mockCreatePollingSynchronizer).toHaveBeenCalledWith(
     ctx.requestor,
@@ -307,7 +308,7 @@ it('uses per-entry initialReconnectDelay override for streaming initializer', ()
 
   const factory = provider.createInitializerFactory(entry, ctx);
   expect(factory).toBeDefined();
-  factory!(() => undefined);
+  factory!.create(() => undefined);
 
   expect(mockCreateStreamingBase).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -328,7 +329,7 @@ it('ping handler uses the factory selector getter, not a stale reference', () =>
 
   let currentSelector: string | undefined = 'selector-v1';
   const selectorGetter = () => currentSelector;
-  factory!(selectorGetter);
+  factory!.create(selectorGetter);
 
   // Extract the pingHandler from the createStreamingBase call
   const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];
@@ -352,7 +353,7 @@ it('ping handler uses per-entry endpoint-overridden requestor', () => {
 
   const factory = provider.createInitializerFactory(entry, ctx);
   expect(factory).toBeDefined();
-  factory!(() => undefined);
+  factory!.create(() => undefined);
 
   // Extract the pingHandler from the createStreamingBase call
   const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];

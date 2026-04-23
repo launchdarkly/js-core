@@ -2,20 +2,39 @@ import { Initializer } from './Initializer';
 import { Synchronizer } from './Synchronizer';
 
 /**
- * Factory function that creates an {@link Initializer} instance.
- *
- * @param selectorGetter Returns the current selector (basis) string, or
- *   `undefined` if no selector is available.
+ * Factory that creates an {@link Initializer} instance and carries optional
+ * metadata about the kind of initializer it produces.
  */
-export type InitializerFactory = (selectorGetter: () => string | undefined) => Initializer;
+export interface InitializerFactory {
+  /**
+   * Create an {@link Initializer} instance.
+   *
+   * @param selectorGetter Returns the current selector (basis) string, or
+   *   `undefined` if no selector is available.
+   */
+  create(selectorGetter: () => string | undefined): Initializer;
+
+  /**
+   * True if this factory produces a cache initializer. Used by the data
+   * source orchestrator to distinguish cache-only data systems (where a
+   * cache miss should still complete initialization) from general
+   * initializer chains.
+   */
+  readonly isCache?: boolean;
+}
 
 /**
- * Factory function that creates a {@link Synchronizer} instance.
- *
- * @param selectorGetter Returns the current selector (basis) string, or
- *   `undefined` if no selector is available.
+ * Factory that creates a {@link Synchronizer} instance.
  */
-export type SynchronizerFactory = (selectorGetter: () => string | undefined) => Synchronizer;
+export interface SynchronizerFactory {
+  /**
+   * Create a {@link Synchronizer} instance.
+   *
+   * @param selectorGetter Returns the current selector (basis) string, or
+   *   `undefined` if no selector is available.
+   */
+  create(selectorGetter: () => string | undefined): Synchronizer;
+}
 
 /**
  * State of a synchronizer slot.
@@ -144,7 +163,7 @@ export function createSourceManager(
       }
 
       closeActiveSource();
-      const initializer = initializerFactories[initializerIndex](selectorGetter);
+      const initializer = initializerFactories[initializerIndex].create(selectorGetter);
       activeSource = initializer;
       return initializer;
     },
@@ -167,7 +186,7 @@ export function createSourceManager(
         const candidate = synchronizerSlots[synchronizerIndex];
         if (candidate.state === 'available') {
           closeActiveSource();
-          const synchronizer = candidate.factory(selectorGetter);
+          const synchronizer = candidate.factory.create(selectorGetter);
           activeSource = synchronizer;
           return synchronizer;
         }

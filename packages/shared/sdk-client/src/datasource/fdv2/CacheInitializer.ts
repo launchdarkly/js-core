@@ -90,22 +90,25 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
  * @internal
  */
 export function createCacheInitializerFactory(config: CacheInitializerConfig): InitializerFactory {
-  // The selectorGetter is ignored — cache data has no selector.
-  return (_selectorGetter: () => string | undefined): Initializer => {
-    let shutdownResolve: ((result: FDv2SourceResult) => void) | undefined;
-    const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
-      shutdownResolve = resolve;
-    });
+  return {
+    isCache: true,
+    // The selectorGetter is ignored -- cache data has no selector.
+    create(_selectorGetter: () => string | undefined): Initializer {
+      let shutdownResolve: ((result: FDv2SourceResult) => void) | undefined;
+      const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {
+        shutdownResolve = resolve;
+      });
 
-    return {
-      async run(): Promise<FDv2SourceResult> {
-        return Promise.race([shutdownPromise, loadFromCache(config)]);
-      },
+      return {
+        async run(): Promise<FDv2SourceResult> {
+          return Promise.race([shutdownPromise, loadFromCache(config)]);
+        },
 
-      close(): void {
-        shutdownResolve?.(shutdown());
-        shutdownResolve = undefined;
-      },
-    };
+        close(): void {
+          shutdownResolve?.(shutdown());
+          shutdownResolve = undefined;
+        },
+      };
+    },
   };
 }

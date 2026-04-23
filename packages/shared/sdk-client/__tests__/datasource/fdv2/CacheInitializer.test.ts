@@ -39,7 +39,7 @@ function createInitializer(
     context,
     logger,
   });
-  return factory(noSelector);
+  return factory.create(noSelector);
 }
 
 describe('CacheInitializer', () => {
@@ -49,6 +49,16 @@ describe('CacheInitializer', () => {
   beforeEach(() => {
     crypto = makeMockCrypto();
     context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+  });
+
+  it('returns a factory marked as a cache initializer', () => {
+    const factory = createCacheInitializerFactory({
+      storage: makeMemoryStorage(),
+      crypto,
+      environmentNamespace: TEST_NAMESPACE,
+      context,
+    });
+    expect(factory.isCache).toBe(true);
   });
 
   it('returns a changeSet with cached flags when cache is present', async () => {
@@ -234,7 +244,7 @@ describe('CacheInitializer', () => {
       context,
     });
 
-    const initializer = factory(selectorGetter);
+    const initializer = factory.create(selectorGetter);
     const result = await initializer.run();
 
     expect(result.type).toBe('changeSet');

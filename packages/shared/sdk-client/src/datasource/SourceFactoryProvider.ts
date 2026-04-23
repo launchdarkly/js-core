@@ -190,13 +190,15 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
       switch (entry.type) {
         case 'polling': {
           const requestor = resolvePollingRequestor(ctx, entry.endpoints);
-          return (sg: () => string | undefined) =>
-            createPollingInitializer(requestor, ctx.logger, sg);
+          return {
+            create: (sg) => createPollingInitializer(requestor, ctx.logger, sg),
+          };
         }
 
         case 'streaming':
-          return (sg: () => string | undefined) =>
-            createStreamingInitializer(buildStreamingBase(entry, ctx, sg));
+          return {
+            create: (sg) => createStreamingInitializer(buildStreamingBase(entry, ctx, sg)),
+          };
 
         case 'cache':
           return createCacheInitializerFactory({
@@ -220,16 +222,15 @@ export function createDefaultSourceFactoryProvider(): SourceFactoryProvider {
         case 'polling': {
           const intervalMs = (entry.pollInterval ?? ctx.polling.intervalSeconds) * 1000;
           const requestor = resolvePollingRequestor(ctx, entry.endpoints);
-          const factory = (sg: () => string | undefined) =>
-            createPollingSynchronizer(requestor, ctx.logger, sg, intervalMs);
-          return createSynchronizerSlot(factory);
+          return createSynchronizerSlot({
+            create: (sg) => createPollingSynchronizer(requestor, ctx.logger, sg, intervalMs),
+          });
         }
 
-        case 'streaming': {
-          const factory = (sg: () => string | undefined) =>
-            createStreamingSynchronizer(buildStreamingBase(entry, ctx, sg));
-          return createSynchronizerSlot(factory);
-        }
+        case 'streaming':
+          return createSynchronizerSlot({
+            create: (sg) => createStreamingSynchronizer(buildStreamingBase(entry, ctx, sg)),
+          });
 
         default:
           return undefined;

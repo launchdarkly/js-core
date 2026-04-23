@@ -15,7 +15,7 @@ import {
 // -- createSynchronizerSlot --
 
 it('creates an available synchronizer slot by default', () => {
-  const factory: SynchronizerFactory = jest.fn();
+  const factory: SynchronizerFactory = { create: jest.fn() };
   const slot = createSynchronizerSlot(factory);
 
   expect(slot.state).toBe('available');
@@ -23,7 +23,7 @@ it('creates an available synchronizer slot by default', () => {
 });
 
 it('creates a blocked synchronizer slot for FDv1 fallback', () => {
-  const factory: SynchronizerFactory = jest.fn();
+  const factory: SynchronizerFactory = { create: jest.fn() };
   const slot = createSynchronizerSlot(factory, { isFDv1Fallback: true });
 
   expect(slot.state).toBe('blocked');
@@ -31,7 +31,7 @@ it('creates a blocked synchronizer slot for FDv1 fallback', () => {
 });
 
 it('allows overriding synchronizer slot initial state', () => {
-  const factory: SynchronizerFactory = jest.fn();
+  const factory: SynchronizerFactory = { create: jest.fn() };
   const slot = createSynchronizerSlot(factory, {
     isFDv1Fallback: true,
     initialState: 'available',
@@ -52,10 +52,10 @@ it('iterates initializers in order', () => {
   const manager = createSourceManager([factory1, factory2], [], () => undefined);
 
   expect(manager.getNextInitializerAndSetActive()).toBe(init1);
-  expect(factory1).toHaveBeenCalledWith(expect.any(Function));
+  expect(factory1.create).toHaveBeenCalledWith(expect.any(Function));
 
   expect(manager.getNextInitializerAndSetActive()).toBe(init2);
-  expect(factory2).toHaveBeenCalledWith(expect.any(Function));
+  expect(factory2.create).toHaveBeenCalledWith(expect.any(Function));
 });
 
 it('returns undefined when all initializers are exhausted', () => {
@@ -90,11 +90,12 @@ it('closes the previous active source when getting next initializer', () => {
 
 it('passes selectorGetter to initializer factories', () => {
   const selectorGetter = () => 'test-selector';
-  const factory = jest.fn(() => makeMockInitializer());
+  const factoryCreate = jest.fn(() => makeMockInitializer());
+  const factory = { create: factoryCreate };
   const manager = createSourceManager([factory], [], selectorGetter);
 
   manager.getNextInitializerAndSetActive();
-  expect(factory).toHaveBeenCalledWith(selectorGetter);
+  expect(factoryCreate).toHaveBeenCalledWith(selectorGetter);
 });
 
 // -- synchronizers --
@@ -140,8 +141,9 @@ it('returns undefined when all synchronizers are blocked', () => {
 it('wraps around to find available synchronizers', () => {
   const sync1a = makeMockSynchronizer();
   const sync1b = makeMockSynchronizer();
-  const factory1 = jest.fn<Synchronizer, [() => string | undefined]>();
-  factory1.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+  const factory1Create = jest.fn<Synchronizer, [() => string | undefined]>();
+  factory1Create.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+  const factory1: SynchronizerFactory = { create: factory1Create };
   const sync2 = makeMockSynchronizer();
 
   const slots: SynchronizerSlot[] = [
@@ -163,8 +165,9 @@ it('wraps around and skips blocked synchronizers', () => {
   const sync1 = makeMockSynchronizer();
   const sync2a = makeMockSynchronizer();
   const sync2b = makeMockSynchronizer();
-  const factory2 = jest.fn<Synchronizer, [() => string | undefined]>();
-  factory2.mockReturnValueOnce(sync2a).mockReturnValueOnce(sync2b);
+  const factory2Create = jest.fn<Synchronizer, [() => string | undefined]>();
+  factory2Create.mockReturnValueOnce(sync2a).mockReturnValueOnce(sync2b);
+  const factory2: SynchronizerFactory = { create: factory2Create };
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot(makeSyncFactory(sync1)),
@@ -241,8 +244,9 @@ it('blocks the current synchronizer', () => {
 it('resetSourceIndex allows re-iteration from the beginning', () => {
   const sync1a = makeMockSynchronizer();
   const sync1b = makeMockSynchronizer();
-  const factory1 = jest.fn<Synchronizer, [() => string | undefined]>();
-  factory1.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+  const factory1Create = jest.fn<Synchronizer, [() => string | undefined]>();
+  factory1Create.mockReturnValueOnce(sync1a).mockReturnValueOnce(sync1b);
+  const factory1: SynchronizerFactory = { create: factory1Create };
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot(factory1),
@@ -300,14 +304,16 @@ it('fdv1Fallback resets synchronizer index so FDv1 slot is found', () => {
 });
 
 it('hasFDv1Fallback returns true when FDv1 slot exists', () => {
-  const slots: SynchronizerSlot[] = [createSynchronizerSlot(jest.fn(), { isFDv1Fallback: true })];
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: jest.fn() }, { isFDv1Fallback: true }),
+  ];
 
   const manager = createSourceManager([], slots, () => undefined);
   expect(manager.hasFDv1Fallback()).toBe(true);
 });
 
 it('hasFDv1Fallback returns false when no FDv1 slot exists', () => {
-  const slots: SynchronizerSlot[] = [createSynchronizerSlot(jest.fn())];
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: jest.fn() })];
 
   const manager = createSourceManager([], slots, () => undefined);
   expect(manager.hasFDv1Fallback()).toBe(false);
@@ -367,9 +373,9 @@ it('isPrimeSynchronizer returns true when first slot is blocked and second is fi
 
 it('counts available synchronizers excluding blocked ones', () => {
   const slots: SynchronizerSlot[] = [
-    createSynchronizerSlot(jest.fn()),
-    createSynchronizerSlot(jest.fn()),
-    createSynchronizerSlot(jest.fn(), { isFDv1Fallback: true }),
+    createSynchronizerSlot({ create: jest.fn() }),
+    createSynchronizerSlot({ create: jest.fn() }),
+    createSynchronizerSlot({ create: jest.fn() }, { isFDv1Fallback: true }),
   ];
 
   const manager = createSourceManager([], slots, () => undefined);
