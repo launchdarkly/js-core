@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
+import http from 'node:http';
+import util from 'node:util';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
 import express from 'express';
-import http from 'node:http';
-import util from 'node:util';
 import { WebSocketServer } from 'ws';
 
 export interface AdapterOptions {

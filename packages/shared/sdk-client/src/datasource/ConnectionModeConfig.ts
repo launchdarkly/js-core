@@ -103,11 +103,11 @@ const connectionModesValidator = recordOf(
 
 export type { ModeTable };
 export {
-  MODE_TABLE,
-  MODE_DEFINITION_DEFAULTS,
-  DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
   BACKGROUND_POLL_INTERVAL_SECONDS,
-  connectionModeValidator,
-  modeDefinitionValidators,
   connectionModesValidator,
+  connectionModeValidator,
+  DEFAULT_FDV1_FALLBACK_POLL_INTERVAL_SECONDS,
+  MODE_DEFINITION_DEFAULTS,
+  MODE_TABLE,
+  modeDefinitionValidators,
 };

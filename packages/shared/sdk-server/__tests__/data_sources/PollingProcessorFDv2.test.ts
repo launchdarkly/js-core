@@ -85,11 +85,11 @@ describe('given a polling processor', () => {
       },
       payload: {
         type: 'full',
-        state: `mockState`,
+        state: 'mockState',
         updates: [
           {
-            kind: `flag`,
-            key: `flagA`,
+            kind: 'flag',
+            key: 'flagA',
             version: 123,
             object: { objectFieldA: 'objectValueA' },
           },
@@ -122,17 +122,17 @@ describe('given a polling processor', () => {
       },
       payload: {
         type: 'full',
-        state: `FDv1Fallback`,
+        state: 'FDv1Fallback',
         updates: [
           {
-            kind: `flag`,
-            key: `flagA`,
+            kind: 'flag',
+            key: 'flagA',
             version: 456,
             object: { version: 456 },
           },
           {
-            kind: `segment`,
-            key: `segmentA`,
+            kind: 'segment',
+            key: 'segmentA',
             version: 789,
             object: { version: 789 },
           },
@@ -286,7 +286,7 @@ describe('given a polling processor with a short poll duration', () => {
     expect(mockStatusCallback).toHaveBeenNthCalledWith(
       2,
       subsystem.DataSourceState.Interrupted,
-      new LDPollingError(DataSourceErrorKind.ErrorResponse, `Malformed data in polling response`),
+      new LDPollingError(DataSourceErrorKind.ErrorResponse, 'Malformed data in polling response'),
     );
 
     expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -312,9 +312,9 @@ describe('given a polling processor with a short poll duration', () => {
         subsystem.DataSourceState.Closed,
         new LDPollingError(
           DataSourceErrorKind.ErrorResponse,
-          status === 401
-            ? `Received error ${status} (invalid SDK key) for polling request - giving up permanently`
-            : `Received error ${status} for polling request - giving up permanently`,
+          status === 401 ?
+            `Received error ${status} (invalid SDK key) for polling request - giving up permanently` :
+            `Received error ${status} for polling request - giving up permanently`,
           status as number,
           false,
         ),

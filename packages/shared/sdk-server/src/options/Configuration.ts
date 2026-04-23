@@ -137,9 +137,9 @@ function validateTypesAndNames(
   options: Options,
   defaults: Options,
 ): {
-  errors: string[];
-  validatedOptions: Options;
-} {
+    errors: string[];
+    validatedOptions: Options;
+  } {
   const errors: string[] = [];
   const validatedOptions: Options = { ...defaults };
   Object.keys(options).forEach((optionName) => {

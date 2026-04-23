@@ -1,6 +1,6 @@
 import { EdgeProvider, init, LDContext } from '@launchdarkly/akamai-server-base-sdk';
 
-export type { LDContext, EdgeProvider };
+export type { EdgeProvider, LDContext };
 
 const flagData = `
 {

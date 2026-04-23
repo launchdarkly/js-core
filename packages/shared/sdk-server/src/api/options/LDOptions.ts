@@ -129,11 +129,11 @@ export interface LDOptions {
   updateProcessor?:
     | object
     | ((
-        clientContext: LDClientContext,
-        dataSourceUpdates: LDDataSourceUpdates,
-        initSuccessHandler: VoidFunction,
-        errorHandler?: (e: Error) => void,
-      ) => subsystem.LDStreamProcessor);
+      clientContext: LDClientContext,
+      dataSourceUpdates: LDDataSourceUpdates,
+      initSuccessHandler: VoidFunction,
+      errorHandler?: (e: Error) => void,
+    ) => subsystem.LDStreamProcessor);
 
   /**
    * The interval in between flushes of the analytics events queue, in seconds.

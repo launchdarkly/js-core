@@ -52,10 +52,10 @@ export default class FileDataSourceFactory {
   }
 
   getFactory(): (
-    ldClientContext: LDClientContext,
-    featureStore: LDFeatureStore,
-    initSuccessHandler?: VoidFunction,
-    errorHandler?: FileDataSourceErrorHandler,
+  ldClientContext: LDClientContext,
+  featureStore: LDFeatureStore,
+  initSuccessHandler?: VoidFunction,
+  errorHandler?: FileDataSourceErrorHandler,
   ) => subsystem.LDStreamProcessor {
     return (ldClientContext, featureStore, initSuccessHandler, errorHandler) =>
       this.create(ldClientContext, featureStore, initSuccessHandler, errorHandler);

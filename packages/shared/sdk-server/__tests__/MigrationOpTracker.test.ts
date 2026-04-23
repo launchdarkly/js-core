@@ -378,7 +378,7 @@ it.each([
   [true, false, true, true],
 ])(
   'does not generate an event if latency measurement without correct invoked measurement' +
-    ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
+  ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
   (invoke_old, invoke_new, measure_old, measure_new) => {
     const tracker = new MigrationOpTracker(
       'flag',
@@ -415,7 +415,7 @@ it.each([
   [true, false, true, true],
 ])(
   'does not generate an event error measurement without correct invoked measurement' +
-    ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
+  ' invoke old: %p invoke new: %p measure old: %p measure new: %p',
   (invoke_old, invoke_new, measure_old, measure_new) => {
     const tracker = new MigrationOpTracker(
       'flag',
@@ -452,7 +452,7 @@ it.each([
   [false, true, false],
 ])(
   'does not generate an event if there is a consistency measurement but both origins were not invoked' +
-    ' invoke old: %p invoke new: %p consistent: %p',
+  ' invoke old: %p invoke new: %p consistent: %p',
   (invoke_old, invoke_new, consistent) => {
     const tracker = new MigrationOpTracker(
       'flag',

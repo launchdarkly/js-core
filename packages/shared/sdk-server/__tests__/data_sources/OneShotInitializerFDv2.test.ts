@@ -63,11 +63,11 @@ describe('given a one shot initializer', () => {
       initMetadata: undefined,
       payload: {
         type: 'full',
-        state: `mockState`,
+        state: 'mockState',
         updates: [
           {
-            kind: `flag`,
-            key: `flagA`,
+            kind: 'flag',
+            key: 'flagA',
             version: 123,
             object: { objectFieldA: 'objectValueA' },
           },

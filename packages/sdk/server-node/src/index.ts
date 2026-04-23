@@ -22,7 +22,7 @@ export { LDOptions };
 // So the below exports replace them with the Node specific variants.
 
 // These exports are explicit to override those from common.
-export { LDClient, BigSegmentStoreStatusProvider } from './api';
+export { BigSegmentStoreStatusProvider, LDClient } from './api';
 
 /**
  * Creates an instance of the LaunchDarkly client.

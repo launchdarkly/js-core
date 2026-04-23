@@ -17,15 +17,15 @@ export type LDMigrationOrigin = 'old' | 'new';
  */
 export type LDMigrationResult<TResult> =
   | {
-      success: true;
-      origin: LDMigrationOrigin;
-      result: TResult;
-    }
+    success: true;
+    origin: LDMigrationOrigin;
+    result: TResult;
+  }
   | {
-      success: false;
-      origin: LDMigrationOrigin;
-      error: any;
-    };
+    success: false;
+    origin: LDMigrationOrigin;
+    error: any;
+  };
 
 /**
  * Result of a migration read operation.

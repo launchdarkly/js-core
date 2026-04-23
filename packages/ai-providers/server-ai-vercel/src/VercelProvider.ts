@@ -1,6 +1,5 @@
 import { generateObject, generateText, jsonSchema, LanguageModel } from 'ai';
 
-import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
   ChatResponse,
   LDAIConfig,
@@ -10,6 +9,7 @@ import type {
   LDTokenUsage,
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 
 import type {
   ModelUsageTokens,

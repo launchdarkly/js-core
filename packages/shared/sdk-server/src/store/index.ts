@@ -7,8 +7,8 @@ import TransactionalFeatureStore from './TransactionalFeatureStore';
 export {
   AsyncStoreFacade,
   AsyncTransactionalStoreFacade,
-  PersistentDataStoreWrapper,
-  TransactionalFeatureStore,
   deserializePoll,
+  PersistentDataStoreWrapper,
   reviveFullPayload,
+  TransactionalFeatureStore,
 };

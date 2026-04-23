@@ -67,14 +67,14 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     if (internal.shouldSample(this._checkRatio ?? 1)) {
       try {
         const res = check();
-        this._consistencyCheck = res
-          ? LDConsistencyCheck.Consistent
-          : LDConsistencyCheck.Inconsistent;
+        this._consistencyCheck = res ?
+          LDConsistencyCheck.Consistent :
+          LDConsistencyCheck.Inconsistent;
       } catch (exception) {
         this._logger?.error(
           'Exception when executing consistency check function for migration' +
-            ` '${this._flagKey}' the consistency check will not be included in the generated migration` +
-            ` op event. Exception: ${exception}`,
+          ` '${this._flagKey}' the consistency check will not be included in the generated migration` +
+          ` op event. Exception: ${exception}`,
         );
       }
     }
@@ -109,7 +109,7 @@ export default class MigrationOpTracker implements LDMigrationTracker {
     if (!this._wasInvoked.old && !this._wasInvoked.new) {
       this._logger?.error(
         'The migration invoked neither the "old" or "new" implementation and' +
-          'an event cannot be generated',
+        'an event cannot be generated',
       );
       return undefined;
     }

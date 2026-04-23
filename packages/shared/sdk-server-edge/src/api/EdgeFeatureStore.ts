@@ -97,9 +97,9 @@ export class EdgeFeatureStore implements LDFeatureStore {
     }
 
     payload =
-      typeof providerData === 'string'
-        ? deserializePoll(providerData)
-        : reviveFullPayload(providerData);
+      typeof providerData === 'string' ?
+          deserializePoll(providerData) :
+          reviveFullPayload(providerData);
 
     if (!payload) {
       throw new Error(`Error deserializing ${this._rootKey}`);

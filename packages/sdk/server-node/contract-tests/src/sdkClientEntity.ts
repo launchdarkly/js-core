@@ -75,15 +75,15 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
     cf.bigSegments = {
       store: () => new BigSegmentTestStore(bigSegmentsOptions.callbackUri),
       userCacheSize: bigSegmentsOptions.userCacheSize,
-      userCacheTime: bigSegmentsOptions.userCacheTimeMs
-        ? bigSegmentsOptions.userCacheTimeMs / 1000
-        : undefined,
-      statusPollInterval: bigSegmentsOptions.statusPollIntervalMs
-        ? bigSegmentsOptions.statusPollIntervalMs / 1000
-        : undefined,
-      staleAfter: bigSegmentsOptions.staleAfterMs
-        ? bigSegmentsOptions.staleAfterMs / 1000
-        : undefined,
+      userCacheTime: bigSegmentsOptions.userCacheTimeMs ?
+        bigSegmentsOptions.userCacheTimeMs / 1000 :
+        undefined,
+      statusPollInterval: bigSegmentsOptions.statusPollIntervalMs ?
+        bigSegmentsOptions.statusPollIntervalMs / 1000 :
+        undefined,
+      staleAfter: bigSegmentsOptions.staleAfterMs ?
+        bigSegmentsOptions.staleAfterMs / 1000 :
+        undefined,
     };
   }
 
@@ -218,9 +218,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
   log.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+    options.configuration.startWaitTimeMs !== undefined ?
+      options.configuration.startWaitTimeMs :
+      5000;
   const client: LDClient = ld.init(
     options.configuration.credential || 'unknown-sdk-key',
     makeSdkConfig(options.configuration as ServerSDKConfigParams, options.tag),

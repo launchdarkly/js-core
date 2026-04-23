@@ -130,9 +130,9 @@ export function createFDv1PollingSynchronizer(
       resultQueue.put({
         type: 'status',
         state: 'interrupted',
-        errorInfo: requestError.status
-          ? errorInfoFromHttpError(requestError.status)
-          : errorInfoFromNetworkError(requestError.message),
+        errorInfo: requestError.status ?
+            errorInfoFromHttpError(requestError.status) :
+            errorInfoFromNetworkError(requestError.message),
         fdv1Fallback: false,
       });
     }

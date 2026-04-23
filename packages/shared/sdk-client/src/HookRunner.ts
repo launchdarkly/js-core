@@ -35,7 +35,7 @@ function getHookName(logger: LDLogger, hook: Hook): string {
   try {
     return hook.getMetadata().name || UNKNOWN_HOOK_NAME;
   } catch {
-    logger.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+    logger.error('Exception thrown getting metadata for hook. Unable to get hook name.');
     return UNKNOWN_HOOK_NAME;
   }
 }

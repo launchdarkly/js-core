@@ -8,17 +8,16 @@
 import ReactNativeLDClient from './ReactNativeLDClient';
 import RNOptions, { RNDataSystemOptions, RNStorage } from './RNOptions';
 
-export * from '@launchdarkly/js-client-sdk-common';
-
 export * from './hooks';
-export * from './provider';
 export * from './LDPlugin';
+export * from './provider';
+export * from '@launchdarkly/js-client-sdk-common';
 
 // Override the common type with a client specific one.
 // TODO: we will remove this once we major version this SDK.
 export type {
-  LDEvaluationDetailTyped,
   LDEvaluationDetail,
+  LDEvaluationDetailTyped,
 } from './hooks/variation/LDEvaluationDetail';
 
-export { ReactNativeLDClient, RNOptions as LDOptions, RNDataSystemOptions, RNStorage };
+export { RNOptions as LDOptions, ReactNativeLDClient, RNDataSystemOptions, RNStorage };

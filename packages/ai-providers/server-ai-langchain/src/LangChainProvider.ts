@@ -2,7 +2,6 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { initChatModel } from 'langchain/chat_models/universal';
 
-import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
   ChatResponse,
   LDAIConfig,
@@ -12,6 +11,7 @@ import type {
   LDTokenUsage,
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 
 let instrumentPromise: Promise<void> | undefined;
 
@@ -61,7 +61,7 @@ export class LangChainProvider extends AIProvider {
       } catch {
         logger?.debug(
           'OpenTelemetry instrumentation not available for LangChain provider. ' +
-            'Install @traceloop/instrumentation-langchain to enable automatic tracing.',
+          'Install @traceloop/instrumentation-langchain to enable automatic tracing.',
         );
       }
     })();

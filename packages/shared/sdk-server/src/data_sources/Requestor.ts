@@ -47,18 +47,18 @@ export default class Requestor implements LDFeatureRequestor {
     requestUrl: string,
     options: Options,
   ): Promise<{
-    res: Response;
-    body: string;
-  }> {
+      res: Response;
+      body: string;
+    }> {
     const cacheEntry = this._eTagCache[requestUrl];
     const cachedETag = cacheEntry?.etag;
 
-    const updatedOptions = cachedETag
-      ? {
+    const updatedOptions = cachedETag ?
+        {
           ...options,
           headers: { ...options.headers, 'if-none-match': cachedETag },
-        }
-      : options;
+        } :
+      options;
 
     const res = await this._requests.fetch(requestUrl, updatedOptions);
 
@@ -89,10 +89,10 @@ export default class Requestor implements LDFeatureRequestor {
       const { res, body } = await this._requestWithETagCache(uri, options);
       this._logger?.debug(`Requestor got (possibly cached) body: ${JSON.stringify(body)}`);
 
-      if (res.headers.get(`x-ld-fd-fallback`) === `true`) {
+      if (res.headers.get('x-ld-fd-fallback') === 'true') {
         const err = new LDFlagDeliveryFallbackError(
           DataSourceErrorKind.ErrorResponse,
-          `Response header indicates to fallback to FDv1.`,
+          'Response header indicates to fallback to FDv1.',
           res.status,
         );
         return cb(err, undefined, undefined);

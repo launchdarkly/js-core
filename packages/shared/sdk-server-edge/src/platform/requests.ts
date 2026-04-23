@@ -1,4 +1,3 @@
-import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -7,6 +6,7 @@ import type {
   Requests,
   Response,
 } from '@launchdarkly/js-server-sdk-common';
+import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 
 export default class EdgeRequests implements Requests {
   fetch(url: string, options: Options = {}): Promise<Response> {

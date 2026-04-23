@@ -12,7 +12,7 @@ import validateOptions, { LDOptions, LDOptionsInternal } from './utils/validateO
 
 export * from '@launchdarkly/js-server-sdk-common';
 export { EdgeFeatureStore };
-export type { LDClient, LDOptions, EdgeProvider, Cache };
+export type { Cache, EdgeProvider, LDClient, LDOptions };
 
 /**
  * Do not use this function directly.

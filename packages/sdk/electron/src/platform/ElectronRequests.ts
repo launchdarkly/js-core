@@ -128,11 +128,10 @@ export default class ElectronRequests implements platform.Requests {
     // Note this does not affect SSE as the event source is not using this fetch implementation.
     if (options.method?.toLowerCase() === 'get') {
       headers['accept-encoding'] = 'gzip';
-    }
-    // For post requests we are going to support compressed post bodies if the
-    // enableEventCompression config setting is true and the compressBodyIfPossible
-    // option is true.
-    else if (
+    } else if (
+      // For post requests we are going to support compressed post bodies if the
+      // enableEventCompression config setting is true and the compressBodyIfPossible
+      // option is true.
       this._enableBodyCompression &&
       !!options.compressBodyIfPossible &&
       options.method?.toLowerCase() === 'post' &&

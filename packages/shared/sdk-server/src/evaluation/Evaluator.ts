@@ -247,7 +247,7 @@ export default class Evaluator {
           prereqResult = EvalResult.forError(
             ErrorKinds.MalformedFlag,
             `Prerequisite of ${flag.key} causing a circular reference.` +
-              ' This is probably a temporary condition due to an incomplete update.',
+            ' This is probably a temporary condition due to an incomplete update.',
           );
           iterCb(true);
           return;
@@ -349,7 +349,7 @@ export default class Evaluator {
                 errorResult = EvalResult.forError(
                   ErrorKinds.MalformedFlag,
                   `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                    'This is probably a temporary condition due to an incomplete update',
+                  'This is probably a temporary condition due to an incomplete update',
                 );
                 // There was an error, so stop checking further segments.
                 iterCb(true);

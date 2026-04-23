@@ -123,8 +123,8 @@ export interface PollingDataSourceConfiguration {
  */
 export interface StandardDataSourceOptions
   extends
-    Omit<StreamingDataSourceConfiguration, 'type'>,
-    Omit<PollingDataSourceConfiguration, 'type'> {
+  Omit<StreamingDataSourceConfiguration, 'type'>,
+  Omit<PollingDataSourceConfiguration, 'type'> {
   dataSourceOptionsType: 'standard';
 }
 

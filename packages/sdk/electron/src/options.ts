@@ -14,6 +14,7 @@ class ConnectionModeValidator implements TypeValidator {
   is(u: unknown): u is ConnectionMode {
     return u === 'offline' || u === 'streaming' || u === 'polling';
   }
+
   getType(): string {
     return 'ConnectionMode (offline | streaming | polling)';
   }

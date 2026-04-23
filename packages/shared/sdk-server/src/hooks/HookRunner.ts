@@ -85,7 +85,7 @@ export default class HookRunner {
     try {
       return hook?.getMetadata().name ?? UNKNOWN_HOOK_NAME;
     } catch {
-      this._logger?.error(`Exception thrown getting metadata for hook. Unable to get hook name.`);
+      this._logger?.error('Exception thrown getting metadata for hook. Unable to get hook name.');
       return UNKNOWN_HOOK_NAME;
     }
   }
@@ -129,9 +129,9 @@ export default class HookRunner {
     methodName: string,
     environmentId?: string,
   ): {
-    hooks: Hook[];
-    hookContext: EvaluationSeriesContext;
-  } {
+      hooks: Hook[];
+      hookContext: EvaluationSeriesContext;
+    } {
     // Copy the hooks to use a consistent set during evaluation. Hooks could be added and we want
     // to ensure all correct stages for any give hook execute. Not for instance the afterEvaluation
     // stage without beforeEvaluation having been called on that hook.

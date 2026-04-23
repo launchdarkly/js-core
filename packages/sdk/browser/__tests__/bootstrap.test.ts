@@ -121,7 +121,7 @@ it('can read old bootstrap data', () => {
   expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).toHaveBeenCalledWith(
     'LaunchDarkly client was initialized with bootstrap data that did not' +
-      ' include flag metadata. Events may not be sent correctly.',
+    ' include flag metadata. Events may not be sent correctly.',
   );
   expect(logger.warn).toHaveBeenCalledTimes(1);
   expect(logger.error).not.toHaveBeenCalled();
@@ -143,7 +143,7 @@ it('can handle invalid bootstrap data', () => {
   expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).toHaveBeenCalledWith(
     'LaunchDarkly bootstrap data is not available because the back end' +
-      ' could not read the flags.',
+    ' could not read the flags.',
   );
   expect(logger.warn).toHaveBeenCalledTimes(1);
   expect(logger.error).not.toHaveBeenCalled();

@@ -1,2 +1,2 @@
-export * from './useVariation';
 export * from './useTypedVariation';
+export * from './useVariation';

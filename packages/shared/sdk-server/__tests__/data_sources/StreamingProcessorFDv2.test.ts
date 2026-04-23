@@ -248,11 +248,11 @@ describe('given a stream processor with mock event source', () => {
       },
       payload: {
         type: 'full',
-        state: `mockState`,
+        state: 'mockState',
         updates: [
           {
-            kind: `flag`,
-            key: `flagA`,
+            kind: 'flag',
+            key: 'flagA',
             version: 123,
             object: { objectFieldA: 'objectValueA' },
           },

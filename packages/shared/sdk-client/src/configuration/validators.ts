@@ -48,13 +48,13 @@ export default function createValidators(
     hooks: TypeValidators.createTypeArray('Hook[]', {}),
     inspectors: TypeValidators.createTypeArray('LDInspection', {}),
     cleanOldPersistentData: TypeValidators.Boolean,
-    dataSystem: options?.dataSystemDefaults
-      ? validatorOf(dataSystemValidators, {
+    dataSystem: options?.dataSystemDefaults ?
+        validatorOf(dataSystemValidators, {
           defaults: {
             ...options.dataSystemDefaults,
             connectionModes: MODE_TABLE,
           } as unknown as Record<string, unknown>,
-        })
-      : TypeValidators.Object,
+        }) :
+      TypeValidators.Object,
   };
 }
