@@ -170,9 +170,8 @@ export default class BrowserTelemetryImpl implements BrowserTelemetry {
       collector.register(this as BrowserTelemetry, this._sessionId),
     );
 
-    const impl = this;
     const inspectors: BrowserTelemetryInspector[] = [];
-    makeInspectors(_options, inspectors, impl);
+    makeInspectors(_options, inspectors, this);
     this._inspectorInstances.push(...inspectors);
   }
 

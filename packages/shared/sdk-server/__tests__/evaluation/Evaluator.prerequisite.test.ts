@@ -131,7 +131,7 @@ describe('given a flag payload with prerequisites', () => {
 
   it('can track prerequisites for a basic prereq', async () => {
     const res = await evaluator.evaluate(
-      testPayload?.flags['has-prereq-depth-1']!,
+      testPayload.flags['has-prereq-depth-1']!,
       Context.fromLDContext({ kind: 'user', key: 'bob' }),
       new EventFactory(true),
     );
@@ -143,7 +143,7 @@ describe('given a flag payload with prerequisites', () => {
 
   it('can track prerequisites for a prereq of a prereq', async () => {
     const res = await evaluator.evaluate(
-      testPayload?.flags['has-prereq-depth-2']!,
+      testPayload.flags['has-prereq-depth-2']!,
       Context.fromLDContext({ kind: 'user', key: 'bob' }),
       new EventFactory(true),
     );
@@ -155,7 +155,7 @@ describe('given a flag payload with prerequisites', () => {
 
   it('can track prerequisites for a flag with multiple prereqs with and without additional prereqs', async () => {
     const res = await evaluator.evaluate(
-      testPayload?.flags['has-prereq-depth-3']!,
+      testPayload.flags['has-prereq-depth-3']!,
       Context.fromLDContext({ kind: 'user', key: 'bob' }),
       new EventFactory(true),
     );
@@ -168,7 +168,7 @@ describe('given a flag payload with prerequisites', () => {
   it('has can handle a prerequisite failure', async () => {
     testPayload.flags['is-prereq'].on = false;
     const res = await evaluator.evaluate(
-      testPayload?.flags['has-prereq-depth-3']!,
+      testPayload.flags['has-prereq-depth-3']!,
       Context.fromLDContext({ kind: 'user', key: 'bob' }),
       new EventFactory(true),
     );
