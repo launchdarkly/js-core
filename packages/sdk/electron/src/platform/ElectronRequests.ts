@@ -122,7 +122,7 @@ export default class ElectronRequests implements platform.Requests {
     const impl = isSecure ? https : http;
 
     const headers = { ...options.headers };
-    let bodyData: String | Buffer | undefined = options.body;
+    let bodyData: string | Buffer | undefined = options.body;
 
     // For get requests we are going to automatically support compressed responses.
     // Note this does not affect SSE as the event source is not using this fetch implementation.

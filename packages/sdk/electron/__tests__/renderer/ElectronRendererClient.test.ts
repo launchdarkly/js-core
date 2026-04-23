@@ -217,7 +217,7 @@ describe('given an instance of ElectronRendererClient', () => {
     const clientForSyncClose = new ElectronRendererClient(clientSideId);
     const syncCloseId = 'sync-close-id';
     (ldClientBridge.addEventHandler as jest.Mock).mockImplementation(
-      (_eventName: string, _cb: Function, onClose?: () => void) => {
+      (_eventName: string, _cb: (...args: any[]) => void, onClose?: () => void) => {
         onClose?.();
         return syncCloseId;
       },

@@ -133,10 +133,12 @@ class LDClientNode extends LDClientImpl implements LDClient {
     return this.emitter.getMaxListeners();
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   listeners(eventName: string | symbol): Function[] {
     return this.emitter.listeners(eventName);
   }
 
+  // eslint-disable-next-line @typescript-eslint/ban-types
   rawListeners(eventName: string | symbol): Function[] {
     return this.emitter.rawListeners(eventName);
   }

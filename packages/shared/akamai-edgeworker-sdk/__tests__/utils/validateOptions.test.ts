@@ -35,7 +35,7 @@ const mockOptions = ({
   } as LDOptionsInternal;
 };
 
-const expectError = (callback: Function, expectedError: Error) => {
+const expectError = (callback: (...args: any[]) => void, expectedError: Error) => {
   expect.assertions(1);
   try {
     callback();
