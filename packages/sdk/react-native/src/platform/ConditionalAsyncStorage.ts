@@ -21,14 +21,23 @@ export default function getAsyncStorage(logger: LDLogger): any {
   try {
     return require('@react-native-async-storage/async-storage').default;
   } catch (e) {
-    // Use a mock if async-storage is unavailable
+    // Use an in-memory fallback if async-storage is unavailable.
+    // This preserves session-level persistence (flag caching, generated keys,
+    // context index) but data will not survive app restarts.
     logger.warn(
-      'AsyncStorage is not available, generated keys and context caches will not be persisted. Please see https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/interfaces/LDOptions.html#storage for more information.',
+      'AsyncStorage is not available. Using in-memory storage as a fallback - cached flags, generated keys, and context data will not persist across app restarts. Please see https://launchdarkly.github.io/js-core/packages/sdk/react-native/docs/interfaces/LDOptions.html#storage for more information.',
     );
+    const memoryStore = new Map<string, string>();
     return {
-      getItem: (_key: string) => Promise.resolve(null),
-      setItem: (_key: string, _value: string) => Promise.resolve(),
-      removeItem: (_key: string) => Promise.resolve(),
+      getItem: (key: string) => Promise.resolve(memoryStore.get(key) ?? null),
+      setItem: (key: string, value: string) => {
+        memoryStore.set(key, value);
+        return Promise.resolve();
+      },
+      removeItem: (key: string) => {
+        memoryStore.delete(key);
+        return Promise.resolve();
+      },
     };
   }
 }
