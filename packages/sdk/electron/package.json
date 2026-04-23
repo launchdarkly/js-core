@@ -45,7 +45,7 @@
   "scripts": {
     "build": "tsup",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "yarn lint --fix",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest"
   },
   "peerDependencies": {

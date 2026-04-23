@@ -26,7 +26,7 @@
   "scripts": {
     "build": "tsup-node",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint --fix",
+    "lint:fix": "npx eslint . --ext .ts --fix",
     "check": "yarn lint:fix && yarn lint && yarn build && yarn test",
     "test": "jest"
   },

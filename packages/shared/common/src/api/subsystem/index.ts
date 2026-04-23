@@ -7,12 +7,12 @@ import { LDStreamProcessor } from './LDStreamProcessor';
 export {
   DataSource,
   DataSourceState,
-  LDDataSourceFactory,
-  LDEventProcessor,
   LDContextDeduplicator,
-  LDEventSender,
+  LDDataSourceFactory,
   LDDeliveryStatus,
-  LDEventType,
+  LDEventProcessor,
+  LDEventSender,
   LDEventSenderResult,
+  LDEventType,
   LDStreamProcessor,
 };

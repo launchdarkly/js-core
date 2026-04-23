@@ -8,7 +8,7 @@
     "build": "tsc",
     "lint": "npx eslint . --ext .ts",
     "start": "yarn build && node ./dist/index.js",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "npx eslint . --ext .ts --fix"
   },
   "dependencies": {
     "@launchdarkly/node-server-sdk": "9.10.11",

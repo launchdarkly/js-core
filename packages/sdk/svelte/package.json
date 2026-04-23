@@ -42,7 +42,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "peerDependencies": {
     "svelte": "^4.0.0"

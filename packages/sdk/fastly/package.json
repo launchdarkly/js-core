@@ -43,7 +43,7 @@
     "test": "npx jest --runInBand",
     "coverage": "yarn test --coverage",
     "check": "yarn lint:fix && yarn lint && yarn build && yarn test",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "dependencies": {
     "@fastly/js-compute": "^3.30.1",
