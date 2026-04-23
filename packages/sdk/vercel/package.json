@@ -30,10 +30,10 @@
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "eslint . --ext .ts",
-    "prettier": "prettier --write '**/*.@(js|ts|tsx|json|css)' --ignore-path ../../../.prettierignore",
     "test": "NODE_OPTIONS=\"--experimental-vm-modules --no-warnings\" jest --ci --runInBand",
     "coverage": "yarn test --coverage",
-    "check": "yarn prettier && yarn lint && yarn build && yarn test"
+    "check": "yarn lint:fix && yarn lint && yarn build && yarn test",
+    "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common-edge": "2.6.17",
@@ -41,19 +41,15 @@
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/crypto-js": "^4.1.1",
     "@types/jest": "^29.5.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
-    "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
-    "prettier": "^3.0.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
     "typedoc": "0.25.0",
