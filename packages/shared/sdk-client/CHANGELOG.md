@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.26.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.25.0...js-client-sdk-common-v1.26.0) (2026-04-23)
+
+
+### Features
+
+* support waitForNetworkResults in FDv2 data manager ([#1280](https://github.com/launchdarkly/js-core/issues/1280)) ([df7fa9e](https://github.com/launchdarkly/js-core/commit/df7fa9e571703132ffa697e8a005f31d7ab866dd))
+
+
+### Bug Fixes
+
+* FDv2 Only -- Adjust the behavior of initialization when only cache initializers are available. ([#1304](https://github.com/launchdarkly/js-core/issues/1304)) ([9a2b25a](https://github.com/launchdarkly/js-core/commit/9a2b25afd1507b2b6e42b85a32edea7a40be8bb0))
+* migrate anonymous context namespace to general namespace ([#1312](https://github.com/launchdarkly/js-core/issues/1312)) ([afbed0f](https://github.com/launchdarkly/js-core/commit/afbed0f299808f21dd4a8aa5159fe8d31879e1b9))
+
 ## [1.25.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.24.0...js-client-sdk-common-v1.25.0) (2026-04-17)
 
 
