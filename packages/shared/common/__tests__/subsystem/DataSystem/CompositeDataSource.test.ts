@@ -409,7 +409,7 @@ it('falls back to FDv1 synchronizers when FDv1 fallback error is reported', asyn
             DataSourceState.Closed,
             new LDFlagDeliveryFallbackError(
               DataSourceErrorKind.ErrorResponse,
-              'Response header indicates to fallback to FDv1',
+              `Response header indicates to fallback to FDv1`,
               403,
             ),
           );
@@ -656,7 +656,7 @@ it('it reports DataSourceState Closed when all synchronizers report Closed with 
   expect(statusCallback).toHaveBeenNthCalledWith(5, DataSourceState.Interrupted, expect.anything()); // sync2 closed with unrecoverable error
   expect(statusCallback).toHaveBeenNthCalledWith(6, DataSourceState.Closed, {
     name: 'ExhaustedDataSources',
-    message: 'CompositeDataSource has exhausted all configured initializers and synchronizers.',
+    message: `CompositeDataSource has exhausted all configured initializers and synchronizers.`,
   });
 });
 

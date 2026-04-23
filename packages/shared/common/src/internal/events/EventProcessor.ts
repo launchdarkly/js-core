@@ -218,9 +218,9 @@ export default class EventProcessor implements LDEventProcessor {
   async flush(): Promise<void> {
     if (this._shutdown) {
       throw new LDInvalidSDKKeyError(
-        'Events cannot be posted because a permanent error has been encountered. '
-        + 'This is most likely an invalid SDK key. The specific error information '
-        + 'is logged independently.',
+        'Events cannot be posted because a permanent error has been encountered. ' +
+          'This is most likely an invalid SDK key. The specific error information ' +
+          'is logged independently.',
       );
     }
 
@@ -423,10 +423,10 @@ export default class EventProcessor implements LDEventProcessor {
 
   private _shouldDebugEvent(event: InputEvent) {
     return (
-      isFeature(event)
-      && event.debugEventsUntilDate
-      && event.debugEventsUntilDate > this._lastKnownPastTime
-      && event.debugEventsUntilDate > Date.now()
+      isFeature(event) &&
+      event.debugEventsUntilDate &&
+      event.debugEventsUntilDate > this._lastKnownPastTime &&
+      event.debugEventsUntilDate > Date.now()
     );
   }
 

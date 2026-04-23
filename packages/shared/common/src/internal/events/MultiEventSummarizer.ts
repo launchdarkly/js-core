@@ -10,7 +10,6 @@ export default class MultiEventSummarizer implements LDMultiEventSummarizer {
     private readonly _contextFilter: ContextFilter,
     private readonly _logger?: LDLogger,
   ) {}
-
   private _summarizers: Record<string, EventSummarizer> = {};
 
   summarizeEvent(event: InputEvent) {

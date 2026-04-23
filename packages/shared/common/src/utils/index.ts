@@ -12,19 +12,19 @@ import { VoidFunction } from './VoidFunction';
 
 export {
   base64UrlEncode,
-  cancelableTimedPromise,
-  type CancelableTimeout,
   clone,
   debounce,
   deepCompact,
   defaultHeaders,
   fastDeepEqual,
   httpErrorMessage,
-  LDHeaders,
   noop,
-  secondsToMillis,
+  LDHeaders,
   shouldRetry,
+  secondsToMillis,
   sleep,
   timedPromise,
   VoidFunction,
+  type CancelableTimeout,
+  cancelableTimedPromise,
 };

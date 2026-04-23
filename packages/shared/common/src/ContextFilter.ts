@@ -141,8 +141,8 @@ export default class ContextFilter {
     kind: string,
     redactAnonymousAttributes: boolean,
   ): any {
-    const redactAllAttributes
-      = this._allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
+    const redactAllAttributes =
+      this._allAttributesPrivate || (redactAnonymousAttributes && single.anonymous === true);
     const { cloned, excluded } = cloneWithRedactions(
       single,
       this._getAttributesToFilter(context, single, kind, redactAllAttributes),
