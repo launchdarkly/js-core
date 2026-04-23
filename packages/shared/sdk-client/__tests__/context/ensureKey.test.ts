@@ -102,4 +102,41 @@ describe('ensureKey', () => {
     const c = await ensureKey(context, mockPlatform);
     expect(c.key).toEqual('random1');
   });
+
+  it('should migrate anonymous key from legacy namespace', async () => {
+    const stored: Record<string, string> = {
+      LaunchDarkly_AnonymousKeys_org: 'migrated-key',
+    };
+    (mockPlatform.storage.get as jest.Mock).mockImplementation(
+      (key: string) => stored[key] ?? null,
+    );
+    (mockPlatform.storage.set as jest.Mock).mockImplementation((key: string, value: string) => {
+      stored[key] = value;
+    });
+    (mockPlatform.storage.clear as jest.Mock).mockImplementation((key: string) => {
+      delete stored[key];
+    });
+
+    const context: LDContext = { kind: 'org', anonymous: true };
+    const c = await ensureKey(context, mockPlatform);
+
+    expect(c.key).toEqual('migrated-key');
+    expect(mockPlatform.storage.set).toHaveBeenCalledWith(
+      'LaunchDarkly_ContextKeys_org',
+      'migrated-key',
+    );
+    expect(mockPlatform.storage.clear).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
+  });
+
+  it('should use new namespace key when it already exists', async () => {
+    (mockPlatform.storage.get as jest.Mock).mockImplementation((key: string) =>
+      key === 'LaunchDarkly_ContextKeys_org' ? 'new-ns-key' : undefined,
+    );
+
+    const context: LDContext = { kind: 'org', anonymous: true };
+    const c = await ensureKey(context, mockPlatform);
+
+    expect(c.key).toEqual('new-ns-key');
+    expect(mockPlatform.storage.clear).not.toHaveBeenCalled();
+  });
 });

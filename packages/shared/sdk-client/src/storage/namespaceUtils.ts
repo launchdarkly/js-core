@@ -28,12 +28,9 @@ export async function namespaceForEnvironment(crypto: Crypto, sdkKey: string): P
 }
 
 /**
- * @deprecated prefer {@link namespaceForGeneratedContextKey}. At one time we only generated keys for
- * anonymous contexts and they were namespaced in LaunchDarkly_AnonymousKeys.  Eventually we started
- * generating context keys for non-anonymous contexts such as for the Auto Environment Attributes
- * feature and those were namespaced in LaunchDarkly_ContextKeys.  This function can be removed
- * when the data under the LaunchDarkly_AnonymousKeys namespace is merged with data under the
- * LaunchDarkly_ContextKeys namespace.
+ * @deprecated Used only for migration in ensureKey. Data stored under LaunchDarkly_AnonymousKeys
+ * is now migrated to LaunchDarkly_ContextKeys on first access. This function can be removed once
+ * all clients have had the chance to run the migration.
  */
 export async function namespaceForAnonymousGeneratedContextKey(kind: string): Promise<string> {
   return concatNamespacesAndValues([

@@ -89,4 +89,80 @@ describe('getOrGenerateKey', () => {
       expect(k).toEqual('test-org-key-2');
     });
   });
+
+  describe('legacy key migration', () => {
+    it('migrates key from legacy location to new location', async () => {
+      const stored: Record<string, string> = {
+        LaunchDarkly_AnonymousKeys_org: 'existing-org-key',
+      };
+      (storage.get as jest.Mock).mockImplementation((key: string) => stored[key] ?? null);
+      (storage.set as jest.Mock).mockImplementation((key: string, value: string) => {
+        stored[key] = value;
+      });
+      (storage.clear as jest.Mock).mockImplementation((key: string) => {
+        delete stored[key];
+      });
+
+      const k = await getOrGenerateKey(
+        'LaunchDarkly_ContextKeys_org',
+        mockPlatform,
+        'LaunchDarkly_AnonymousKeys_org',
+      );
+
+      expect(k).toEqual('existing-org-key');
+      expect(crypto.randomUUID).not.toHaveBeenCalled();
+      expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org', 'existing-org-key');
+      expect(storage.clear).toHaveBeenCalledWith('LaunchDarkly_AnonymousKeys_org');
+    });
+
+    it('does not clear legacy key when set silently fails', async () => {
+      (storage.get as jest.Mock).mockImplementation((key: string) =>
+        key === 'LaunchDarkly_AnonymousKeys_org' ? 'existing-org-key' : null,
+      );
+      // set is a no-op, simulating a silent storage failure
+      (storage.set as jest.Mock).mockResolvedValue(undefined);
+
+      const k = await getOrGenerateKey(
+        'LaunchDarkly_ContextKeys_org',
+        mockPlatform,
+        'LaunchDarkly_AnonymousKeys_org',
+      );
+
+      expect(k).toEqual('existing-org-key');
+      expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org', 'existing-org-key');
+      expect(storage.clear).not.toHaveBeenCalled();
+    });
+
+    it('does not check legacy key when new key already exists', async () => {
+      (storage.get as jest.Mock).mockImplementation((key: string) =>
+        key === 'LaunchDarkly_ContextKeys_org' ? 'new-org-key' : 'legacy-org-key',
+      );
+
+      const k = await getOrGenerateKey(
+        'LaunchDarkly_ContextKeys_org',
+        mockPlatform,
+        'LaunchDarkly_AnonymousKeys_org',
+      );
+
+      expect(k).toEqual('new-org-key');
+      expect(storage.get).toHaveBeenCalledTimes(1);
+      expect(storage.get).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org');
+      expect(storage.clear).not.toHaveBeenCalled();
+    });
+
+    it('generates new key when neither new nor legacy key exists', async () => {
+      (storage.get as jest.Mock).mockResolvedValue(null);
+
+      const k = await getOrGenerateKey(
+        'LaunchDarkly_ContextKeys_org',
+        mockPlatform,
+        'LaunchDarkly_AnonymousKeys_org',
+      );
+
+      expect(k).toEqual('test-org-key-1');
+      expect(crypto.randomUUID).toHaveBeenCalled();
+      expect(storage.set).toHaveBeenCalledWith('LaunchDarkly_ContextKeys_org', 'test-org-key-1');
+      expect(storage.clear).not.toHaveBeenCalled();
+    });
+  });
 });
