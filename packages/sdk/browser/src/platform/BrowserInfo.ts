@@ -12,7 +12,7 @@ export default class BrowserInfo implements Info {
   sdkData(): SdkData {
     const data: SdkData = {
       name: '@launchdarkly/js-client-sdk',
-      version: '4.6.1', // x-release-please-version
+      version: '4.6.2', // x-release-please-version
       userAgentBase: 'JSClient',
     };
 
