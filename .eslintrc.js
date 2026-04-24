@@ -32,6 +32,7 @@ module.exports = {
     '**/server-ai/examples/chat-judge/**',
     '**/server-ai/examples/direct-judge/**',
     '**/fromExternal/**',
+    '**/next-env.d.ts',
   ],
   rules: {
     'no-param-reassign': 'error',
