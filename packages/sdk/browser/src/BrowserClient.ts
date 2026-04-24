@@ -279,12 +279,12 @@ class BrowserClientImpl extends LDClientImpl {
     this.dataManager.setAutomaticStreamingState?.(hasListeners);
   }
 
-  override on(eventName: LDEmitterEventName, listener: Function): void {
+  override on(eventName: LDEmitterEventName, listener: (...args: any[]) => void): void {
     super.on(eventName, listener);
     this._updateAutomaticStreamingState();
   }
 
-  override off(eventName: LDEmitterEventName, listener: Function): void {
+  override off(eventName: LDEmitterEventName, listener: (...args: any[]) => void): void {
     super.off(eventName, listener);
     this._updateAutomaticStreamingState();
   }

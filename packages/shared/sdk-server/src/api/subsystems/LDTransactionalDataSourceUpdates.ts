@@ -23,6 +23,6 @@ export interface LDTransactionalDataSourceUpdates extends LDDataSourceUpdates {
     data: LDFeatureStoreDataStorage,
     callback: () => void,
     initMetadata?: internal.InitMetadata,
-    selector?: String,
+    selector?: string,
   ): void;
 }

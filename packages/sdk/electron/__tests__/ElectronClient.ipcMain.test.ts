@@ -16,19 +16,21 @@ import ElectronInfo from '../src/platform/ElectronInfo';
 import { createMockLogger } from './testHelpers';
 
 type MockIpcMain = IpcMain & {
-  getHandler: (eventName: string) => Function | undefined;
+  getHandler: (eventName: string) => ((...args: any[]) => void) | undefined;
   removeAllListeners: (channel: string) => void;
   removeHandler: (channel: string) => void;
 };
-type MockPort = { postMessage: Function; close: Function };
+type MockPort = { postMessage: (...args: any[]) => void; close: (...args: any[]) => void };
 type MockIpcEvent = { returnValue?: any; ports?: MockPort[] };
 
 jest.mock('electron', () => {
-  const handlers = new Map<string, Function>();
+  const handlers = new Map<string, (...args: any[]) => void>();
   return {
     ipcMain: {
-      on: (eventName: string, handler: Function) => handlers.set(eventName, handler),
-      handle: (eventName: string, handler: Function) => handlers.set(eventName, handler),
+      on: (eventName: string, handler: (...args: any[]) => void) =>
+        handlers.set(eventName, handler),
+      handle: (eventName: string, handler: (...args: any[]) => void) =>
+        handlers.set(eventName, handler),
       getHandler: (eventName: string) => handlers.get(eventName),
       removeAllListeners: (channel: string) => handlers.delete(channel),
       removeHandler: (channel: string) => handlers.delete(channel),

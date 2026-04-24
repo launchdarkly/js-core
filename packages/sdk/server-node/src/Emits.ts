@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type EventableConstructor<T = {}> = new (...args: any[]) => T;
 export type Eventable = EventableConstructor<{ emitter: EventEmitter }>;
 
@@ -50,10 +51,12 @@ export function Emits<TBase extends Eventable>(Base: TBase) {
       return this.emitter.getMaxListeners();
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     listeners(eventName: string | symbol): Function[] {
       return this.emitter.listeners(eventName);
     }
 
+    // eslint-disable-next-line @typescript-eslint/ban-types
     rawListeners(eventName: string | symbol): Function[] {
       return this.emitter.rawListeners(eventName);
     }

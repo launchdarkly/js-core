@@ -50,7 +50,7 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
     data: LDFeatureStoreDataStorage,
     callback: () => void,
     initMetadata?: internal.InitMetadata,
-    selector?: String,
+    selector?: string,
   ): void {
     const checkForChanges = this._hasEventListeners();
     const doApplyChanges = (oldData: LDFeatureStoreDataStorage) => {

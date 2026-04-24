@@ -56,18 +56,19 @@ function createMockEventSourceThatDeliversPut(putData: object) {
   });
 }
 
-const handlers = new Map<string, Function>();
-const mockOn = jest.fn((eventName: string, handler: Function) => {
+const handlers = new Map<string, (...args: any[]) => void>();
+const mockOn = jest.fn((eventName: string, handler: (...args: any[]) => void) => {
   handlers.set(eventName, handler);
 });
-const mockHandle = jest.fn((eventName: string, handler: Function) => {
+const mockHandle = jest.fn((eventName: string, handler: (...args: any[]) => void) => {
   handlers.set(eventName, handler);
 });
 
 jest.mock('electron', () => ({
   ipcMain: {
-    on: (eventName: string, handler: Function) => mockOn(eventName, handler),
-    handle: (eventName: string, handler: Function) => mockHandle(eventName, handler),
+    on: (eventName: string, handler: (...args: any[]) => void) => mockOn(eventName, handler),
+    handle: (eventName: string, handler: (...args: any[]) => void) =>
+      mockHandle(eventName, handler),
     getHandler: (eventName: string) => handlers.get(eventName),
     removeAllListeners: (channel: string) => handlers.delete(channel),
     removeHandler: (channel: string) => handlers.delete(channel),
