@@ -1,4 +1,6 @@
-const stylistic = require('@stylistic/eslint-plugin');
+import stylistic from '@stylistic/eslint-plugin';
+
+const __dirname = import.meta.dirname;
 
 const stylisticConfig = stylistic.configs.customize({
   semi: true,
@@ -7,7 +9,7 @@ const stylisticConfig = stylistic.configs.customize({
   quoteProps: 'as-needed',
 });
 
-module.exports = {
+export default {
   env: {
     node: true,
     'jest/globals': true,
