@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { LDIsomorphicClientProvider } from '@launchdarkly/react-sdk';
 import type { LDReactProviderOptions } from '@launchdarkly/react-sdk';
+import { LDIsomorphicClientProvider } from '@launchdarkly/react-sdk';
 
 import { LDServerSession } from './LDClient';
 

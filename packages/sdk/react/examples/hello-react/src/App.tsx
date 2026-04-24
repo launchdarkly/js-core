@@ -1,6 +1,6 @@
-import { useBoolVariation, useInitializationStatus } from '@launchdarkly/react-sdk';
-
 import './App.css';
+
+import { useBoolVariation, useInitializationStatus } from '@launchdarkly/react-sdk';
 
 // Set FLAG_KEY to the feature flag key you want to evaluate.
 const FLAG_KEY = import.meta.env.LAUNCHDARKLY_FLAG_KEY ?? 'sample-feature';
