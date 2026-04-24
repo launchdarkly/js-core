@@ -43,7 +43,7 @@ export default class ApplicationTags {
           if (!valid) {
             logger?.warn(message);
           } else if (key === 'versionName') {
-            tags[`application-version-name`] = [value];
+            tags['application-version-name'] = [value];
           } else {
             tags[`application-${key}`] = [value];
           }

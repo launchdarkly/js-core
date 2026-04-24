@@ -10,7 +10,7 @@ export function safeGetName<TClient, THook>(
   try {
     return plugin.getMetadata().name || UNKNOWN_PLUGIN_NAME;
   } catch {
-    logger.error(`Exception thrown getting metadata for plugin. Unable to get plugin name.`);
+    logger.error('Exception thrown getting metadata for plugin. Unable to get plugin name.');
     return UNKNOWN_PLUGIN_NAME;
   }
 }

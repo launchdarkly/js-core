@@ -218,7 +218,7 @@ describe('given an event sender', () => {
       eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
     );
 
-    const errorMessage = `Received error 413 for event posting - giving up permanently`;
+    const errorMessage = 'Received error 413 for event posting - giving up permanently';
 
     const { status, error } = eventSenderResult;
 
