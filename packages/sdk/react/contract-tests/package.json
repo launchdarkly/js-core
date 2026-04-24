@@ -19,12 +19,14 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^4.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^8.45.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
     "playwright": "^1.49.1",
     "typescript": "^5"
   }
