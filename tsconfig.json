@@ -68,9 +68,6 @@
       "path": "./packages/sdk/server-ai/tsconfig.ref.json"
     },
     {
-      "path": "./packages/telemetry/browser-telemetry/tsconfig.ref.json"
-    },
-    {
       "path": "./packages/sdk/fastly/tsconfig.ref.json"
     },
     {
