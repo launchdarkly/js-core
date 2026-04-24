@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.24.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.1...js-sdk-common-v2.24.2) (2026-04-24)
+
+
+### Bug Fixes
+
+* enabling eslint `ban-types` rule and fixed string typing ([#1313](https://github.com/launchdarkly/js-core/issues/1313)) ([f6d907f](https://github.com/launchdarkly/js-core/commit/f6d907f1a65abd0b41827f3c827e6dad896b16b1))
+
 ## [2.24.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.0...js-sdk-common-v2.24.1) (2026-04-14)
 
 

@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.18.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.4...js-server-sdk-common-v2.18.5) (2026-04-24)
+
+
+### Bug Fixes
+
+* enabling eslint `ban-types` rule and fixed string typing ([#1313](https://github.com/launchdarkly/js-core/issues/1313)) ([f6d907f](https://github.com/launchdarkly/js-core/commit/f6d907f1a65abd0b41827f3c827e6dad896b16b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.1 to 2.24.2
+
 ## [2.18.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.3...js-server-sdk-common-v2.18.4) (2026-04-14)
 
 

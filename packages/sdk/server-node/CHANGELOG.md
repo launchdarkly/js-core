@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.10.12](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.11...node-server-sdk-v9.10.12) (2026-04-24)
+
+
+### Bug Fixes
+
+* enabling eslint `ban-types` rule and fixed string typing ([#1313](https://github.com/launchdarkly/js-core/issues/1313)) ([f6d907f](https://github.com/launchdarkly/js-core/commit/f6d907f1a65abd0b41827f3c827e6dad896b16b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.4 to 2.18.5
+
 ## [9.10.11](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.10...node-server-sdk-v9.10.11) (2026-04-14)
 
 
