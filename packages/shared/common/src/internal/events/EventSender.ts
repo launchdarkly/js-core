@@ -18,6 +18,7 @@ export default class EventSender implements LDEventSender {
   private _defaultHeaders: {
     [key: string]: string;
   };
+
   private _diagnosticEventsUri: string;
   private _eventsUri: string;
   private _requests: Requests;
