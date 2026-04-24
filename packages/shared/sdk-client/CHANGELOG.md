@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.26.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.0...js-client-sdk-common-v1.26.1) (2026-04-24)
+
+
+### Bug Fixes
+
+* enabling eslint `ban-types` rule and fixed string typing ([#1313](https://github.com/launchdarkly/js-core/issues/1313)) ([f6d907f](https://github.com/launchdarkly/js-core/commit/f6d907f1a65abd0b41827f3c827e6dad896b16b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.1 to 2.24.2
+
 ## [1.26.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.25.0...js-client-sdk-common-v1.26.0) (2026-04-23)
 
 

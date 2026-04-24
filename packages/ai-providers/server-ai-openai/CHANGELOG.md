@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.6](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.5.5...server-sdk-ai-openai-v0.5.6) (2026-04-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.4 to 2.18.5
+    * @launchdarkly/server-sdk-ai bumped from ^0.17.0 to ^0.17.1
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.17.0 to ^0.17.1
+
 ## [0.5.5](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.5.4...server-sdk-ai-openai-v0.5.5) (2026-04-21)
 
 

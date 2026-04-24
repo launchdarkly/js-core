@@ -10,7 +10,7 @@
     "web": "expo start --web --clear"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "10.17.0",
+    "@launchdarkly/react-native-client-sdk": "10.17.1",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "expo": "52.0.14",
     "expo-status-bar": "~1.11.1",
