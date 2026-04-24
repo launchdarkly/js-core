@@ -25,9 +25,9 @@ export default class ClientPool {
         switch (command) {
           case 'evaluate': {
             const { flagKey, context, defaultValue, detail } = rest.evaluate;
-            const evaluation = detail
-              ? await client.variationDetail(flagKey, context, defaultValue)
-              : await client.variation(flagKey, context, defaultValue);
+            const evaluation = detail ?
+                await client.variationDetail(flagKey, context, defaultValue) :
+                await client.variation(flagKey, context, defaultValue);
             res.status(200);
             res.json({ value: evaluation });
             break;

@@ -133,9 +133,9 @@ export async function poll(
       logger?.error(`Polling request failed with HTTP error: ${response.status}`);
 
       const recoverable = response.status <= 0 || isHttpRecoverable(response.status);
-      return recoverable
-        ? interrupted(errorInfo, fdv1Fallback)
-        : terminalError(errorInfo, fdv1Fallback);
+      return recoverable ?
+          interrupted(errorInfo, fdv1Fallback) :
+          terminalError(errorInfo, fdv1Fallback);
     }
 
     // Successful response — process FDv2 events

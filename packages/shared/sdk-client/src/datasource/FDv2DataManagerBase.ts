@@ -140,9 +140,9 @@ export function createFDv2DataManagerBase(
   const endpoints = fdv2Endpoints();
 
   // Merge user-provided connection mode overrides into the mode table.
-  const effectiveModeTable: ModeTable = config.dataSystem?.connectionModes
-    ? { ...modeTable, ...config.dataSystem.connectionModes }
-    : modeTable;
+  const effectiveModeTable: ModeTable = config.dataSystem?.connectionModes ?
+      { ...modeTable, ...config.dataSystem.connectionModes } :
+    modeTable;
 
   // --- Mutable state ---
   let selector: string | undefined;
@@ -246,9 +246,9 @@ export function createFDv2DataManagerBase(
     ctx: SourceFactoryContext,
     includeInitializers: boolean,
   ): {
-    initializerFactories: InitializerFactory[];
-    synchronizerSlots: SynchronizerSlot[];
-  } {
+      initializerFactories: InitializerFactory[];
+      synchronizerSlots: SynchronizerSlot[];
+    } {
     const initializerFactories: InitializerFactory[] = [];
     if (includeInitializers) {
       modeDef.initializers
@@ -284,17 +284,17 @@ export function createFDv2DataManagerBase(
       const fallbackPollIntervalMs = (fallbackConfig?.pollInterval ?? config.pollInterval) * 1000;
 
       const fallbackServiceEndpoints =
-        fallbackConfig?.endpoints?.pollingBaseUri || fallbackConfig?.endpoints?.streamingBaseUri
-          ? new ServiceEndpoints(
-              fallbackConfig.endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
-              fallbackConfig.endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
-              ctx.serviceEndpoints.events,
-              ctx.serviceEndpoints.analyticsEventPath,
-              ctx.serviceEndpoints.diagnosticEventPath,
-              ctx.serviceEndpoints.includeAuthorizationHeader,
-              ctx.serviceEndpoints.payloadFilterKey,
-            )
-          : ctx.serviceEndpoints;
+        fallbackConfig?.endpoints?.pollingBaseUri || fallbackConfig?.endpoints?.streamingBaseUri ?
+          new ServiceEndpoints(
+            fallbackConfig.endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
+            fallbackConfig.endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
+            ctx.serviceEndpoints.events,
+            ctx.serviceEndpoints.analyticsEventPath,
+            ctx.serviceEndpoints.diagnosticEventPath,
+            ctx.serviceEndpoints.includeAuthorizationHeader,
+            ctx.serviceEndpoints.payloadFilterKey,
+          ) :
+          ctx.serviceEndpoints;
 
       const fdv1RequestorFactory = () =>
         makeRequestor(

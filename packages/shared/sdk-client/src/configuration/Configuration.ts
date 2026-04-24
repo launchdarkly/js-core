@@ -131,6 +131,7 @@ export default class ConfigurationImpl implements Configuration {
     name?: string;
     versionName?: string;
   };
+
   public readonly bootstrap?: LDFlagSet;
 
   // TODO: implement requestHeaderTransform
@@ -158,6 +159,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly getImplementationHooks: (
     environmentMetadata: LDPluginEnvironmentMetadata,
   ) => Hook[];
+
   public readonly dataSystem?: InternalDataSystemOptions;
 
   // Allow indexing Configuration by a string

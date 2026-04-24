@@ -114,9 +114,9 @@ function resolveForegroundMode(
 }
 
 export {
-  dataSystemValidators,
-  resolveForegroundMode,
   BROWSER_DATA_SYSTEM_DEFAULTS,
-  MOBILE_DATA_SYSTEM_DEFAULTS,
+  dataSystemValidators,
   DESKTOP_DATA_SYSTEM_DEFAULTS,
+  MOBILE_DATA_SYSTEM_DEFAULTS,
+  resolveForegroundMode,
 };

@@ -271,7 +271,7 @@ describe('FlagPersistence tests', () => {
     const contextIndexKey = await namespaceForContextIndex(TEST_NAMESPACE);
 
     const indexData = await memoryStorage.get(contextIndexKey);
-    expect(indexData).toContain(`"timestamp":2`);
+    expect(indexData).toContain('"timestamp":2');
   });
 
   test('upsert updates persistence', async () => {

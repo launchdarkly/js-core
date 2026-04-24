@@ -8,7 +8,7 @@ import ConfigurationImpl, {
 export {
   Configuration,
   ConfigurationImpl,
-  LDClientInternalOptions,
   DEFAULT_POLLING,
   DEFAULT_STREAM,
+  LDClientInternalOptions,
 };

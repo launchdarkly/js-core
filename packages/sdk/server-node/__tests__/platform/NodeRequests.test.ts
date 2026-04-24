@@ -36,9 +36,9 @@ beforeEach(() => {
       resolve({
         method: req.method,
         body:
-          req.headers['content-encoding'] === 'gzip'
-            ? Buffer.concat(chunks)
-            : Buffer.concat(chunks).toString(),
+          req.headers['content-encoding'] === 'gzip' ?
+              Buffer.concat(chunks) :
+              Buffer.concat(chunks).toString(),
         headers: req.headers,
       });
     });

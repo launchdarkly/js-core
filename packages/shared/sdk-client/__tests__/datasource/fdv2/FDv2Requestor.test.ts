@@ -33,9 +33,9 @@ function makeRequests(
   value: string = '{}',
   statusCode: number = 200,
 ): {
-  requests: Requests;
-  fetch: jest.Mock;
-} {
+    requests: Requests;
+    fetch: jest.Mock;
+  } {
   const { response } = mockResponse(value, statusCode);
   const fetch = jest.fn().mockResolvedValue(response);
   return {

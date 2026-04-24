@@ -20,7 +20,6 @@ import Observability, { ObserveOptions } from '@launchdarkly/observability';
 import SessionReplay, { RecordOptions } from '@launchdarkly/session-replay';
 
 export * from '@launchdarkly/js-client-sdk';
-
 export { LDObserve, ObserveOptions } from '@launchdarkly/observability';
 export { LDRecord, RecordOptions } from '@launchdarkly/session-replay';
 

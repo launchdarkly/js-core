@@ -14,7 +14,7 @@ import { Flags } from '../types';
 export type PollingErrorHandler = (err: LDPollingError) => void;
 
 function reportClosed(logger?: LDLogger) {
-  logger?.debug(`Poll completed after the processor was closed. Skipping processing.`);
+  logger?.debug('Poll completed after the processor was closed. Skipping processing.');
 }
 
 /**

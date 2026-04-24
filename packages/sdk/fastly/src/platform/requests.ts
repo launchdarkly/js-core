@@ -1,5 +1,4 @@
 /// <reference types="@fastly/js-compute" />
-import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -8,6 +7,7 @@ import type {
   Requests,
   Response,
 } from '@launchdarkly/js-server-sdk-common';
+import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 
 export default class EdgeRequests implements Requests {
   eventsBackend: string;

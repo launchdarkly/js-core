@@ -40,6 +40,7 @@ export default class TestDataManager extends BaseDataManager {
       diagnosticsManager,
     );
   }
+
   override async identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,
@@ -117,13 +118,13 @@ export function makeTestDataManagerFactory(
           return `/msdk/evalx/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
         },
         pathReport(_encoding: Encoding, _plainContextString: string): string {
-          return `/msdk/evalx/context`;
+          return '/msdk/evalx/context';
         },
         pathPost(_encoding: Encoding, _plainContextString: string): string {
           throw new Error('Post unsupported.');
         },
         pathPing(_encoding: Encoding, _plainContextString: string): string {
-          return `/mping`;
+          return '/mping';
         },
       }),
       () => ({

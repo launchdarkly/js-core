@@ -81,10 +81,10 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
   ) {
     // this is a short term error and will be removed once FDv2 adoption is sufficient.
-    if (err.headers?.[`x-ld-fd-fallback`] === `true`) {
+    if (err.headers?.['x-ld-fd-fallback'] === 'true') {
       const fallbackErr = new LDFlagDeliveryFallbackError(
         DataSourceErrorKind.ErrorResponse,
-        `Response header indicates to fallback to FDv1`,
+        'Response header indicates to fallback to FDv1',
         err.status,
       );
       statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
@@ -117,9 +117,9 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     statusCallback(subsystemCommon.DataSourceState.Initializing);
 
     const selector = selectorGetter?.();
-    const params = selector
-      ? [...this._parameters, { key: 'basis', value: selector }] // if selector exists add basis parameter
-      : this._parameters; // otherwise use params as is
+    const params = selector ?
+        [...this._parameters, { key: 'basis', value: selector }] : // if selector exists add basis parameter
+      this._parameters; // otherwise use params as is
 
     const uri = getStreamingUri(this._serviceEndpoints, this._streamUriPath, params);
     this._logger?.debug(`Streaming processor opening event source to uri: ${uri}`);

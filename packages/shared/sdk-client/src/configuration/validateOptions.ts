@@ -235,9 +235,9 @@ export function anyOf(...validators: TypeValidator[]): CompoundValidator {
     validate(value: unknown, name: string, logger?: LDLogger, defaults?: unknown) {
       const match = validators.find((v) => v.is(value));
       if (match) {
-        return isCompoundValidator(match)
-          ? match.validate(value, name, logger, defaults)
-          : { value };
+        return isCompoundValidator(match) ?
+            match.validate(value, name, logger, defaults) :
+            { value };
       }
       logger?.warn(OptionMessages.wrongOptionType(name, this.getType(), typeof value));
       return undefined;

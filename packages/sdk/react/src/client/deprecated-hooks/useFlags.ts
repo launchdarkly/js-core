@@ -51,9 +51,9 @@ function toFlagsProxy<T extends LDFlagSet>(client: LDReactClient, rawFlags: T): 
         return cache.get(prop as string);
       }
 
-      const pristineKey = useCamelCase
-        ? (flagKeyMap[prop as string] ?? (prop as string))
-        : (prop as string);
+      const pristineKey = useCamelCase ?
+          (flagKeyMap[prop as string] ?? (prop as string)) :
+          (prop as string);
       const result = client.variation(pristineKey, currentValue);
       cache.set(prop as string, result);
       return result;

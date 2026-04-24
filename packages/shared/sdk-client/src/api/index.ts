@@ -1,16 +1,16 @@
 import ConnectionMode from './ConnectionMode';
 
-export * from './LDOptions';
+export * from './integrations';
 export * from './LDClient';
 export * from './LDEvaluationDetail';
-export * from './integrations';
+export * from './LDOptions';
 
 export { ConnectionMode };
+export * from './datasource';
+export * from './LDContext';
 export * from './LDIdentifyOptions';
-export * from './LDInspection';
 export * from './LDIdentifyResult';
+export * from './LDInspection';
 export * from './LDPlugin';
 export * from './LDStartOptions';
 export * from './LDWaitForInitialization';
-export * from './LDContext';
-export * from './datasource';

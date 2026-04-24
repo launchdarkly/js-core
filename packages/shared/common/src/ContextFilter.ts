@@ -129,9 +129,9 @@ export default class ContextFilter {
     redactAllAttributes: boolean,
   ) {
     return (
-      redactAllAttributes
-        ? Object.keys(single).map((k) => new AttributeReference(k, true))
-        : [...this._privateAttributes, ...context.privateAttributes(kind)]
+      redactAllAttributes ?
+          Object.keys(single).map((k) => new AttributeReference(k, true)) :
+          [...this._privateAttributes, ...context.privateAttributes(kind)]
     ).filter((attr) => !protectedAttributes.some((protectedAttr) => protectedAttr.compare(attr)));
   }
 

@@ -1,6 +1,5 @@
 import { OpenAI } from 'openai';
 
-import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
   ChatResponse,
   LDAIConfig,
@@ -10,6 +9,7 @@ import type {
   LDTokenUsage,
   StructuredResponse,
 } from '@launchdarkly/server-sdk-ai';
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 
 let instrumentPromise: Promise<void> | undefined;
 
@@ -71,7 +71,7 @@ export class OpenAIProvider extends AIProvider {
       } catch {
         logger?.debug(
           'OpenTelemetry instrumentation not available for OpenAI provider. ' +
-            'Install @traceloop/instrumentation-openai to enable automatic tracing.',
+          'Install @traceloop/instrumentation-openai to enable automatic tracing.',
         );
       }
     })();

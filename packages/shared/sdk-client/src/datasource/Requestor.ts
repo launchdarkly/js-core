@@ -53,9 +53,9 @@ export function makeRequestor(
     body = plainContextString; // context is in body for REPORT
   }
 
-  const path = useReport
-    ? paths.pathReport(encoding, plainContextString)
-    : paths.pathGet(encoding, plainContextString);
+  const path = useReport ?
+      paths.pathReport(encoding, plainContextString) :
+      paths.pathGet(encoding, plainContextString);
 
   const parameters: { key: string; value: string }[] = [...(baseQueryParams ?? [])];
   if (withReasons) {

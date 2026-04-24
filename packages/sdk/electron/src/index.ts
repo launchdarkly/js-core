@@ -10,8 +10,8 @@ export * from './LDCommon';
 export { resetElectronStorage } from './platform/ElectronStorage';
 
 export type {
-  ElectronOptions as LDOptions,
   LDClient,
+  ElectronOptions as LDOptions,
   LDPlugin,
   LDProxyOptions,
   LDStartOptions,

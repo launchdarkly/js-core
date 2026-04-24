@@ -1,7 +1,7 @@
 import {
+  EventSource as LDEventSource,
   EventSourceCapabilities,
   EventSourceInitDict,
-  EventSource as LDEventSource,
   Options,
   Requests,
   Response,

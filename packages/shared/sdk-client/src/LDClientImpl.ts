@@ -258,9 +258,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     // code.  We are returned the unchecked context so that if a consumer identifies with an invalid context
     // and then calls getContext, they get back the same context they provided, without any assertion about
     // validity.
-    return this._activeContextTracker.hasContext()
-      ? clone<LDContextStrict>(this._activeContextTracker.getUnwrappedContext())
-      : undefined;
+    return this._activeContextTracker.hasContext() ?
+        clone<LDContextStrict>(this._activeContextTracker.getUnwrappedContext()) :
+      undefined;
   }
 
   protected getInternalContext(): Context | undefined {
@@ -398,8 +398,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (identifyTimeout > this._highTimeoutThreshold) {
       this.logger.warn(
         'The identify function was called with a timeout greater than ' +
-          `${this._highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
-          `${this._highTimeoutThreshold} seconds.`,
+        `${this._highTimeoutThreshold} seconds. We recommend a timeout of less than ` +
+        `${this._highTimeoutThreshold} seconds.`,
       );
     }
 
@@ -700,6 +700,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     );
     return value;
   }
+
   variationDetail(flagKey: string, defaultValue?: LDFlagValue): LDEvaluationDetail {
     return this._hookRunner.withEvaluation(
       flagKey,

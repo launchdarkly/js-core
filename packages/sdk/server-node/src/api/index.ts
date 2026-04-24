@@ -1,2 +1,2 @@
-export * from './LDClient';
 export * from './interfaces';
+export * from './LDClient';

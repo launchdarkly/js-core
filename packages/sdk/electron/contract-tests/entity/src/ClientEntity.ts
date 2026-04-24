@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
+import { app } from 'electron';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
@@ -12,12 +12,12 @@ import {
   resetElectronStorage,
 } from '@launchdarkly/electron-client-sdk';
 import {
+  ClientSideTestHook as TestHook,
   CommandParams,
   CommandType,
   CreateInstanceParams,
   makeLogger,
   SDKConfigParams,
-  ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
 
@@ -267,9 +267,9 @@ export async function createEntity(options: CreateInstanceParams) {
 
   const timeoutMs =
     options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+    options.configuration.startWaitTimeMs !== undefined ?
+      options.configuration.startWaitTimeMs :
+      5000;
   const sdkConfig = makeSdkConfig(options.configuration, options.tag);
   const initialContext =
     options.configuration.clientSide?.initialUser ||

@@ -11,13 +11,13 @@ import {
   FlagManager,
   Hook,
   internal,
-  LDIdentifyOptions as LDBaseIdentifyOptions,
   LDClientImpl,
   LDContext,
   LDEmitter,
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
+  LDIdentifyOptions as LDBaseIdentifyOptions,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
@@ -239,9 +239,9 @@ class BrowserClientImpl extends LDClientImpl {
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     const options =
-      identifyOptions?.sheddable === undefined
-        ? { ...identifyOptions, sheddable: true }
-        : identifyOptions;
+      identifyOptions?.sheddable === undefined ?
+          { ...identifyOptions, sheddable: true } :
+        identifyOptions;
     const res = await super.identifyResult(context, options);
     // Ensure that we do not start the goal manager if start() is not called.
     if (this.startPromise) {
@@ -254,14 +254,14 @@ class BrowserClientImpl extends LDClientImpl {
     if (!this.dataManager.setConnectionMode) {
       this.logger.warn(
         'setConnectionMode requires the FDv2 data system (dataSystem option). ' +
-          'The call has no effect without it.',
+        'The call has no effect without it.',
       );
       return;
     }
     if (mode !== undefined && !(mode in MODE_TABLE)) {
       this.logger.warn(
         `setConnectionMode called with invalid mode '${mode}'. ` +
-          `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
+        `Valid modes: ${Object.keys(MODE_TABLE).join(', ')}.`,
       );
       return;
     }
