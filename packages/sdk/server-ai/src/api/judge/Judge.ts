@@ -1,5 +1,3 @@
-import Mustache from 'mustache';
-
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
@@ -187,10 +185,13 @@ export class Judge {
   }
 
   /**
-   * Interpolates message content with variables using Mustache templating.
+   * Use string replacement to prevent context attributes like {{=[ ]=}} from
+   * influencing judge template parsing.
    */
   private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    return Mustache.render(content, variables, undefined, { escape: (item: any) => item });
+    return content.replace(/\{\{(\w+)\}\}/g, (match, key) =>
+      Object.prototype.hasOwnProperty.call(variables, key) ? variables[key] : match,
+    );
   }
 
   /**
