@@ -43,7 +43,6 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@langchain/community": "^1.1.27",
     "@langchain/core": "^1.1.41",
     "@launchdarkly/server-sdk-ai": "^0.17.0",
     "@opentelemetry/api": "^1.9.0",
@@ -65,12 +64,11 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
-    "@langchain/community": "^0.2.0 || ^0.3.0 || ^1.0.0",
-    "@langchain/core": "^0.2.0 || ^0.3.0 || ^1.0.0",
+    "@langchain/core": "^1.0.0",
     "@launchdarkly/server-sdk-ai": "^0.17.0",
     "@opentelemetry/api": "^1.0.0",
-    "@traceloop/instrumentation-langchain": "^0.22.0 || ^0.26.0",
-    "langchain": "^0.2.0 || ^0.3.0 || ^1.0.0"
+    "@traceloop/instrumentation-langchain": "^0.26.0",
+    "langchain": "^1.0.0"
   },
   "peerDependenciesMeta": {
     "@opentelemetry/api": {
