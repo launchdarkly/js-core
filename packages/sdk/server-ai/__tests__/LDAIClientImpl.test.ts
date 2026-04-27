@@ -885,12 +885,17 @@ describe('tools map support', () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-flag';
     const defaultTools = {
-      'default-tool': { name: 'default-tool', type: 'function', customParameters: { priority: 'high' } },
+      'default-tool': {
+        name: 'default-tool',
+        type: 'function',
+        customParameters: { priority: 'high' },
+      },
     };
     const defaultValue: LDAICompletionConfigDefault = { enabled: true, tools: defaultTools };
-    mockLdClient.variation.mockResolvedValue(defaultValue.constructor
-      ? { _ldMeta: { enabled: true, mode: 'completion', variationKey: '' }, tools: defaultTools }
-      : defaultValue,
+    mockLdClient.variation.mockResolvedValue(
+      defaultValue.constructor
+        ? { _ldMeta: { enabled: true, mode: 'completion', variationKey: '' }, tools: defaultTools }
+        : defaultValue,
     );
 
     const result = await client.completionConfig(key, testContext, defaultValue);
