@@ -305,7 +305,7 @@
   "plugins": [
     {
       "type": "node-workspace",
-      "updatePeerDependencies": false
+      "updatePeerDependencies": true
     }
   ]
 }
