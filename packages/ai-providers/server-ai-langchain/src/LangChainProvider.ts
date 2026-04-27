@@ -219,18 +219,6 @@ export class LangChainProvider extends AIProvider {
         input: response.usage_metadata.input_tokens,
         output: response.usage_metadata.output_tokens,
       };
-    } else if (response?.response_metadata?.tokenUsage) {
-      // Fallback for providers that still populate the legacy OpenAI-specific path
-      const tokenUsage = response.response_metadata.tokenUsage as {
-        totalTokens?: number;
-        promptTokens?: number;
-        completionTokens?: number;
-      };
-      usage = {
-        total: tokenUsage.totalTokens ?? 0,
-        input: tokenUsage.promptTokens ?? 0,
-        output: tokenUsage.completionTokens ?? 0,
-      };
     }
 
     // LangChain responses that complete successfully are considered successful by default
