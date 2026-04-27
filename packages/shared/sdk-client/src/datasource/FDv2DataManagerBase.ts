@@ -157,6 +157,14 @@ export function createFDv2DataManagerBase(
   let closed = false;
   let flushCallback: (() => void) | undefined;
 
+  /**
+   * The minimum data availability required before the identify promise
+   * resolves. Maps from the public `waitForNetworkResults` option:
+   * - `'cached'` -- resolve as soon as any data (e.g. from cache) is delivered
+   * - `'fresh'`  -- wait for network data with a selector (REFRESHED state)
+   */
+  let minimumDataAvailability: 'cached' | 'fresh' = 'fresh';
+
   // Explicit connection mode override — bypasses transition table entirely.
   let connectionModeOverride: FDv2ConnectionMode | undefined;
 
@@ -301,8 +309,10 @@ export function createFDv2DataManagerBase(
           config.useReport,
         );
 
-      const fdv1SyncFactory = () =>
-        createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger);
+      const fdv1SyncFactory = {
+        create: () =>
+          createFDv1PollingSynchronizer(fdv1RequestorFactory(), fallbackPollIntervalMs, logger),
+      };
 
       synchronizerSlots.push(createSynchronizerSlot(fdv1SyncFactory, { isFDv1Fallback: true }));
     }
@@ -329,11 +339,22 @@ export function createFDv2DataManagerBase(
 
     const descriptors = flagEvalPayloadToItemDescriptors(payload.updates ?? []);
     // Flag updates and change events happen synchronously inside applyChanges.
-    // The returned promise is only for async cache persistence — we intentionally
+    // The returned promise is only for async cache persistence -- we intentionally
     // do not await it so the data source pipeline is not blocked by storage I/O.
     flagManager.applyChanges(context, descriptors, payload.type).catch((e) => {
       logger.warn(`${logTag} Failed to persist flag cache: ${e}`);
     });
+
+    // When the minimum data availability is 'cached', resolve the identify
+    // promise as soon as any data (e.g. from cache) has been delivered. The
+    // data source continues its initialization pipeline normally --
+    // subsequent changesets update flags and fire change events.
+    if (minimumDataAvailability === 'cached' && !initialized && pendingIdentifyResolve) {
+      initialized = true;
+      pendingIdentifyResolve();
+      pendingIdentifyResolve = undefined;
+      pendingIdentifyReject = undefined;
+    }
   }
 
   /**
@@ -470,6 +491,7 @@ export function createFDv2DataManagerBase(
       selector = undefined;
       initialized = false;
       bootstrapped = false;
+      minimumDataAvailability = identifyOptions?.waitForNetworkResults ? 'fresh' : 'cached';
       identifiedContext = context;
       pendingIdentifyResolve = identifyResolve;
       pendingIdentifyReject = identifyReject;

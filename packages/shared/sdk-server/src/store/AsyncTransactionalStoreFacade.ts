@@ -66,7 +66,7 @@ export default class AsyncTransactionalStoreFacade {
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     initMetadata?: internal.InitMetadata,
-    selector?: String,
+    selector?: string,
   ): Promise<void> {
     return promisify((cb) => {
       this._store.applyChanges(basis, data, cb, initMetadata, selector);

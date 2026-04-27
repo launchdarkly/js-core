@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-langchain",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "LaunchDarkly AI SDK LangChain Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-langchain",
   "repository": {
@@ -44,7 +44,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@langchain/core": "^1.1.41",
-    "@launchdarkly/server-sdk-ai": "^0.17.0",
+    "@launchdarkly/server-sdk-ai": "^0.17.1",
     "@opentelemetry/api": "^1.9.0",
     "@traceloop/instrumentation-langchain": "^0.26.0",
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",

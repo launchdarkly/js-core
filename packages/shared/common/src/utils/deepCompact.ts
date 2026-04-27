@@ -8,7 +8,7 @@ import isEmptyObject from './isEmptyObject';
  * @param obj
  * @param ignoreKeys
  */
-const deepCompact = <T extends Object>(obj?: T, ignoreKeys?: string[]) => {
+const deepCompact = <T extends object>(obj?: T, ignoreKeys?: string[]) => {
   if (!obj) {
     return obj;
   }

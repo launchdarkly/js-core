@@ -568,11 +568,11 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     });
   }
 
-  on(eventName: EventName, listener: Function): void {
+  on(eventName: EventName, listener: (...args: any[]) => void): void {
     this.emitter.on(eventName, listener);
   }
 
-  off(eventName: EventName, listener: Function): void {
+  off(eventName: EventName, listener: (...args: any[]) => void): void {
     this.emitter.off(eventName, listener);
   }
 

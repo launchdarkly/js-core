@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-sdk",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "LaunchDarkly SDK for React frameworks",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
   "repository": {
@@ -67,8 +67,8 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "^4.6.1",
-    "@launchdarkly/js-server-sdk-common": "^2.18.4"
+    "@launchdarkly/js-client-sdk": "^4.6.3",
+    "@launchdarkly/js-server-sdk-common": "^2.18.5"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

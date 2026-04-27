@@ -21,11 +21,11 @@ export type EventName =
  * a system to allow listeners which have counts independent of the primary listener counts.
  */
 export default class LDEmitter {
-  private _listeners: Map<EventName, Function[]> = new Map();
+  private _listeners: Map<EventName, ((...args: any[]) => void)[]> = new Map();
 
   constructor(private _logger?: LDLogger) {}
 
-  on(name: EventName, listener: Function) {
+  on(name: EventName, listener: (...args: any[]) => void) {
     if (typeof name !== 'string') {
       this._logger?.warn('Only string event names are supported.');
       return;
@@ -43,7 +43,7 @@ export default class LDEmitter {
    * @param name
    * @param listener Optional. If unspecified, all listeners for the event will be removed.
    */
-  off(name: EventName, listener?: Function) {
+  off(name: EventName, listener?: (...args: any[]) => void) {
     const existingListeners = this._listeners.get(name);
     if (!existingListeners) {
       return;
@@ -64,7 +64,7 @@ export default class LDEmitter {
     this._listeners.delete(name);
   }
 
-  private _invokeListener(listener: Function, name: EventName, ...detail: any[]) {
+  private _invokeListener(listener: (...args: any[]) => void, name: EventName, ...detail: any[]) {
     try {
       listener(...detail);
     } catch (err) {

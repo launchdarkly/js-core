@@ -1,5 +1,28 @@
 # Changelog
 
+## [10.17.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.0...react-native-client-sdk-v10.17.1) (2026-04-24)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.26.0 to 1.26.1
+
+## [10.17.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.16.0...react-native-client-sdk-v10.17.0) (2026-04-23)
+
+
+### Features
+
+* **react-native:** no storage fallback to in-memory map ([#1281](https://github.com/launchdarkly/js-core/issues/1281)) ([cc86eab](https://github.com/launchdarkly/js-core/commit/cc86eabe18fd524472c7cf36847c0d757aecc6d1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.25.0 to 1.26.0
+
 ## [10.16.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.15.2...react-native-client-sdk-v10.16.0) (2026-04-17)
 
 

@@ -277,7 +277,6 @@
     "packages/tooling/jest": {
       "release-as": "1.0.0"
     },
-    "packages/telemetry/browser-telemetry": {},
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
     },

@@ -86,6 +86,20 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [2.0.19](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.18...akamai-edgeworker-sdk-common-v2.0.19) (2026-04-24)
+
+
+### Bug Fixes
+
+* enabling eslint `ban-types` rule and fixed string typing ([#1313](https://github.com/launchdarkly/js-core/issues/1313)) ([f6d907f](https://github.com/launchdarkly/js-core/commit/f6d907f1a65abd0b41827f3c827e6dad896b16b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.18.4 to ^2.18.5
+
 ## [2.0.18](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.17...akamai-edgeworker-sdk-common-v2.0.18) (2026-04-14)
 
 

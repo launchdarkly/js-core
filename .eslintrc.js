@@ -37,10 +37,7 @@ module.exports = {
     ],
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',
-    '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/no-var-requires': 'off',
-    '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
-    '@typescript-eslint/no-this-alias': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
       { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^__' },

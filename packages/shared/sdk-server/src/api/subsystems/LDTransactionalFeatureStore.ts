@@ -32,7 +32,7 @@ export interface LDTransactionalFeatureStore extends LDFeatureStore {
     data: LDFeatureStoreDataStorage,
     callback: () => void,
     initMetadata?: internal.InitMetadata,
-    selector?: String,
+    selector?: string,
   ): void;
 
   /**

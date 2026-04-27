@@ -46,6 +46,22 @@ export interface LDProviderConfig {
 }
 
 // ============================================================================
+// Tool Types
+// ============================================================================
+
+/**
+ * Configuration for a single tool entry in the root-level tools map.
+ * Separate from model.parameters.tools[] which is the LLM-passable array.
+ */
+export interface LDTool {
+  name: string;
+  description?: string;
+  type?: string;
+  parameters?: { [index: string]: unknown };
+  customParameters?: { [index: string]: unknown };
+}
+
+// ============================================================================
 // Judge Types
 // ============================================================================
 
@@ -129,6 +145,10 @@ export interface LDAIAgentConfigDefault extends LDAIConfigDefault {
    * References judge AI Configs that should evaluate this AI Config.
    */
   judgeConfiguration?: LDJudgeConfiguration;
+  /**
+   * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
+   */
+  tools?: { [toolName: string]: LDTool };
 }
 
 /**
@@ -144,6 +164,10 @@ export interface LDAICompletionConfigDefault extends LDAIConfigDefault {
    * References judge AI Configs that should evaluate this AI Config.
    */
   judgeConfiguration?: LDJudgeConfiguration;
+  /**
+   * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
+   */
+  tools?: { [toolName: string]: LDTool };
 }
 
 /**
@@ -192,6 +216,10 @@ export interface LDAIAgentConfig extends LDAIConfig {
    * References judge AI Configs that should evaluate this AI Config.
    */
   judgeConfiguration?: LDJudgeConfiguration;
+  /**
+   * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
+   */
+  tools?: { [toolName: string]: LDTool };
 }
 
 /**
@@ -207,6 +235,10 @@ export interface LDAICompletionConfig extends LDAIConfig {
    * References judge AI Configs that should evaluate this AI Config.
    */
   judgeConfiguration?: LDJudgeConfiguration;
+  /**
+   * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
+   */
+  tools?: { [toolName: string]: LDTool };
 }
 
 /**

@@ -19,7 +19,7 @@ const port = 8000;
 const clientPool = new ClientPool();
 
 if (debugging) {
-  app.use((req: Request, res: Response, next: Function) => {
+  app.use((req: Request, res: Response, next: (...args: any[]) => void) => {
     console.debug('request', req.method, req.url);
     if (req.body) {
       console.debug('request', JSON.stringify(req.body, null, 2));

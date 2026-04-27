@@ -93,8 +93,10 @@ function makeFlagManager() {
 
 function makeSourceFactoryProvider() {
   return {
-    createInitializerFactory: jest.fn((_entry: any) => jest.fn()),
-    createSynchronizerSlot: jest.fn((_entry: any) => createSynchronizerSlot(jest.fn())),
+    createInitializerFactory: jest.fn((entry: any) =>
+      entry?.type === 'cache' ? { create: jest.fn(), isCache: true } : { create: jest.fn() },
+    ),
+    createSynchronizerSlot: jest.fn((_entry: any) => createSynchronizerSlot({ create: jest.fn() })),
   };
 }
 
@@ -983,7 +985,7 @@ it('uses per-mode fdv1Fallback pollInterval from MODE_TABLE for background mode'
   const dsConfig = capturedDataSourceConfigs[0];
   const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
   // Invoke the factory to trigger createFDv1PollingSynchronizer.
-  fdv1Slot.factory(() => undefined);
+  fdv1Slot.factory.create(() => undefined);
 
   // The FDv1 fallback synchronizer should use background's default (3600s = 3600000ms).
   expect(createFDv1PollingSynchronizer).toHaveBeenCalledWith(
@@ -1018,6 +1020,25 @@ it('resolves identify immediately when initial mode has no sources', async () =>
   expect(resolve).toHaveBeenCalledTimes(1);
   // No data source should have been created.
   expect(mockCreateFDv2DataSource).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+it('builds offline mode with a cache-marked initializer factory and no synchronizers', async () => {
+  // Verifies that the offline mode passes an isCache-marked factory to the
+  // data source. FDv2DataSource is responsible for recognizing this
+  // cache-only configuration and completing initialization on a cache miss.
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'offline' }));
+
+  const { resolve, reject } = await identifyManager(manager);
+
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(reject).not.toHaveBeenCalled();
+
+  const dsConfig = capturedDataSourceConfigs[0];
+  expect(dsConfig.synchronizerSlots).toEqual([]);
+  expect(dsConfig.initializerFactories).toHaveLength(1);
+  expect(dsConfig.initializerFactories[0].isCache).toBe(true);
 
   manager.close();
 });
