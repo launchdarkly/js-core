@@ -285,8 +285,8 @@ describe('sdk-client object', () => {
     const carContext = { kind: 'car' };
 
     // @ts-expect-error - invalid context
-    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
-    expect(logger.error).toHaveBeenCalledTimes(1);
+    const result = await ldc.identify(carContext);
+    expect(result).toEqual(expect.objectContaining({ status: 'error', error: expect.any(Error) }));
     expect(ldc.getContext()).toBeUndefined();
   });
 
@@ -294,8 +294,8 @@ describe('sdk-client object', () => {
     const carContext = { kind: 'multi', user: { name: 'test' } };
 
     // @ts-ignore - invalid context
-    await expect(ldc.identify(carContext)).rejects.toThrow(/no key/);
-    expect(logger.error).toHaveBeenCalledTimes(1);
+    const result = await ldc.identify(carContext);
+    expect(result).toEqual(expect.objectContaining({ status: 'error', error: expect.any(Error) }));
     expect(ldc.getContext()).toBeUndefined();
   });
 
@@ -310,7 +310,8 @@ describe('sdk-client object', () => {
 
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
-    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    const result = await ldc.identify(carContext);
+    expect(result).toEqual(expect.objectContaining({ status: 'error' }));
     expect(logger.error).toHaveBeenCalledTimes(2);
     expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringMatching(/^error:.*test-error/));
     expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
@@ -430,7 +431,8 @@ describe('sdk-client object', () => {
     const spyListener = jest.fn();
     ldc.on('dataSourceStatus', spyListener);
     const changePromise = onDataSourceChangePromise(2);
-    await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
+    const identifyResult = await ldc.identify(carContext);
+    expect(identifyResult).toEqual(expect.objectContaining({ status: 'error' }));
     await changePromise;
 
     expect(spyListener).toHaveBeenCalledTimes(2);

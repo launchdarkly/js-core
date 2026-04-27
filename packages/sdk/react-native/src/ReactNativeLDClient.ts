@@ -13,9 +13,14 @@ import {
   type LDClientDataSystemOptions,
   LDClientImpl,
   LDClientInternalOptions,
+  type LDContext,
   LDEmitter,
   LDHeaders,
+  type LDIdentifyOptions,
+  type LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  LDTimeoutError,
+  type LDWaitForInitializationResult,
   MOBILE_DATA_SYSTEM_DEFAULTS,
   MOBILE_TRANSITION_TABLE,
   mobileFdv1Endpoints,
@@ -225,6 +230,33 @@ export default class ReactNativeLDClient extends LDClientImpl {
       this,
       validatedRnOptions.plugins,
     );
+  }
+
+  override async identify(
+    context: LDContext,
+    identifyOptions?: LDIdentifyOptions,
+  ): Promise<LDIdentifyResult> {
+    const result = await super.identify(context, identifyOptions);
+    if (result.status === 'error') {
+      throw result.error;
+    } else if (result.status === 'timeout') {
+      const timeoutError = new LDTimeoutError(
+        `identify timed out after ${result.timeout} seconds.`,
+      );
+      this.logger.error(timeoutError.message);
+      throw timeoutError;
+    }
+    return result;
+  }
+
+  /**
+   * Protect against trying to use start() in RN.
+   *
+   * @internal
+   **/
+
+  override start(): Promise<LDWaitForInitializationResult> {
+    throw new Error('start() is not supported in the React Native SDK. Use identify() directly.');
   }
 
   override async close(): Promise<void> {

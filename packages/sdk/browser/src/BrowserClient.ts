@@ -230,11 +230,7 @@ class BrowserClientImpl extends LDClientImpl {
     }
   }
 
-  override async identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<void> {
-    return super.identify(context, identifyOptions);
-  }
-
-  override async identifyResult(
+  override async identify(
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
@@ -242,7 +238,7 @@ class BrowserClientImpl extends LDClientImpl {
       identifyOptions?.sheddable === undefined
         ? { ...identifyOptions, sheddable: true }
         : identifyOptions;
-    const res = await super.identifyResult(context, options);
+    const res = await super.identify(context, options);
     // Ensure that we do not start the goal manager if start() is not called.
     if (this.startPromise) {
       this._goalManager?.startTracking();
@@ -308,7 +304,6 @@ export function makeClient(
   // Return a PIMPL style implementation. This decouples the interface from the interface of the implementation.
   // In the future we should consider updating the common SDK code to not use inheritance and instead compose
   // the leaf-implementation.
-  // The purpose for this in the short-term is to have a signature for identify that is different than the class implementation.
   // Using an object with PIMPL here also allows us to completely hide the underlying implementation, where with a class
   // it is trivial to access what should be protected (or even private) fields.
   const client: LDClient = {
@@ -334,7 +329,7 @@ export function makeClient(
     setConnectionMode: (mode?: FDv2ConnectionMode) => impl.setConnectionMode(mode),
     setStreaming: (streaming?: boolean) => impl.setStreaming(streaming),
     identify: (pristineContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
-      impl.identifyResult(pristineContext, identifyOptions),
+      impl.identify(pristineContext, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),
     allFlags: () => impl.allFlags(),
