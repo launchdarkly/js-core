@@ -55,6 +55,7 @@ export interface LDProviderConfig {
  */
 export interface LDTool {
   name: string;
+  description?: string;
   type?: string;
   parameters?: { [index: string]: unknown };
   customParameters?: { [index: string]: unknown };
