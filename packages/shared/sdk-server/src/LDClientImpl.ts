@@ -28,6 +28,8 @@ import {
   LDMigrationStage,
   LDMigrationVariation,
   LDOptions,
+  LDScopedClient,
+  LDScopedClientOptions,
   LDTransactionalFeatureStore,
 } from './api';
 import { Hook } from './api/integrations/Hook';
@@ -42,6 +44,7 @@ import {
 import BigSegmentsManager from './BigSegmentsManager';
 import BigSegmentStoreStatusProvider from './BigSegmentStatusProviderImpl';
 import { createPluginEnvironmentMetadata } from './createPluginEnvironmentMetadata';
+import createScopedClient from './createScopedClient';
 import { createPayloadListener } from './data_sources/createPayloadListenerFDv2';
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
@@ -486,6 +489,8 @@ export default class LDClientImpl implements LDClient {
   private _updateProcessor?: subsystem.LDStreamProcessor;
 
   private _dataSource?: subsystem.DataSource;
+
+  private _reportedWrapperIdentities = new Map<string, Set<string>>();
 
   private _eventFactoryDefault = new EventFactory(false);
 
@@ -1160,6 +1165,28 @@ export default class LDClientImpl implements LDClient {
 
   addHook(hook: Hook): void {
     this._hookRunner.addHook(hook);
+  }
+
+  forContext(context: LDContext, options?: LDScopedClientOptions): LDScopedClient {
+    if (options?.wrapperName) {
+      const version = options.wrapperVersion ?? '';
+      const reportedVersions = this._reportedWrapperIdentities.get(options.wrapperName);
+      if (!reportedVersions?.has(version)) {
+        if (!reportedVersions) {
+          this._reportedWrapperIdentities.set(options.wrapperName, new Set([version]));
+        } else {
+          reportedVersions.add(version);
+        }
+        this._sendWrapperDiagnosticEvent(options.wrapperName, options.wrapperVersion);
+      }
+    }
+    return createScopedClient(this, context);
+  }
+
+  private _sendWrapperDiagnosticEvent(wrapperName: string, wrapperVersion?: string): void {
+    if (this._eventProcessor instanceof internal.EventProcessor) {
+      this._eventProcessor.sendScopedClientDiagnosticEvent(wrapperName, wrapperVersion);
+    }
   }
 
   private _variationInternal(

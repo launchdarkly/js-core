@@ -53,6 +53,27 @@ export function createLDServerWrapper(
     );
   }
 
+  if (client.forContext) {
+    const scoped = client.forContext(context, {
+      wrapperName: 'react-client-sdk',
+      wrapperVersion: '0.0.0', // x-release-please-version
+    });
+    return {
+      initialized: () => client.initialized(),
+      getContext: () => scoped.currentContext(),
+      boolVariation: scoped.boolVariation,
+      numberVariation: scoped.numberVariation,
+      stringVariation: scoped.stringVariation,
+      jsonVariation: scoped.jsonVariation,
+      boolVariationDetail: scoped.boolVariationDetail,
+      numberVariationDetail: scoped.numberVariationDetail,
+      stringVariationDetail: scoped.stringVariationDetail,
+      jsonVariationDetail: scoped.jsonVariationDetail,
+      allFlagsState: scoped.allFlagsState,
+    };
+  }
+
+  // Fallback for clients without forContext (e.g., edge SDKs)
   return {
     initialized: () => client.initialized(),
     getContext: () => context,

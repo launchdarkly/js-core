@@ -284,6 +284,7 @@
       "bump-minor-pre-major": true,
       "extra-files": [
         "src/client/LDReactClient.tsx",
+        "src/server/LDServerSession.ts",
         {
           "type": "json",
           "path": "examples/hello-react/package.json",
