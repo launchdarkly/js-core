@@ -76,12 +76,10 @@ describe('LangChainProvider', () => {
   describe('getAIMetricsFromResponse', () => {
     it('creates metrics with success=true and token usage', () => {
       const mockResponse = new AIMessage('Test response');
-      mockResponse.response_metadata = {
-        tokenUsage: {
-          totalTokens: 100,
-          promptTokens: 50,
-          completionTokens: 50,
-        },
+      mockResponse.usage_metadata = {
+        total_tokens: 100,
+        input_tokens: 50,
+        output_tokens: 50,
       };
 
       const result = LangChainProvider.getAIMetricsFromResponse(mockResponse);
