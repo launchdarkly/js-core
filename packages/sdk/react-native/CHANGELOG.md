@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.17.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.1...react-native-client-sdk-v10.17.2) (2026-04-27)
+
+
+### Bug Fixes
+
+* **react-native:** `package.json` should declare esm format ([#1322](https://github.com/launchdarkly/js-core/issues/1322)) ([149ae73](https://github.com/launchdarkly/js-core/commit/149ae73c623cf7ccac6f7d7346059a80e8044280))
+
 ## [10.17.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.0...react-native-client-sdk-v10.17.1) (2026-04-24)
 
 

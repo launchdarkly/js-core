@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.18.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.17.1...server-sdk-ai-v0.18.0) (2026-04-27)
+
+
+### Features
+
+* Add root-level tools map with customParameters to AI Config types ([#1295](https://github.com/launchdarkly/js-core/issues/1295)) ([487182b](https://github.com/launchdarkly/js-core/commit/487182b6a078b2aaf3868706d8f3c2709e8cc11c))
+
 ## [0.17.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.17.0...server-sdk-ai-v0.17.1) (2026-04-24)
 
 
