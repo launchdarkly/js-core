@@ -1,9 +1,9 @@
 import {
-  LDClient as CommonClient,
-  LDStartOptions as CommonLDStartOptions,
   FDv2ConnectionMode,
+  LDClient as CommonClient,
   LDContext,
   LDIdentifyResult,
+  LDStartOptions as CommonLDStartOptions,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';

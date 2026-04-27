@@ -8,6 +8,7 @@ import {
   SynchronizerEntry,
 } from '@launchdarkly/js-client-sdk';
 import {
+  ClientSideTestHook as TestHook,
   CommandParams,
   CommandType,
   CreateInstanceParams,
@@ -16,7 +17,6 @@ import {
   SDKConfigDataSynchronizer,
   SDKConfigModeDefinition,
   SDKConfigParams,
-  ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
 
@@ -123,9 +123,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
 
     if (options.dataSystem.connectionModeConfig) {
       const connMode = options.dataSystem.connectionModeConfig;
-      dataSystem.automaticModeSwitching = connMode.initialConnectionMode
-        ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
-        : false;
+      dataSystem.automaticModeSwitching = connMode.initialConnectionMode ?
+          { type: 'manual', initialConnectionMode: connMode.initialConnectionMode } :
+        false;
 
       if (connMode.customConnectionModes) {
         const connectionModes: Record<string, any> = {};
@@ -323,9 +323,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
 
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+    options.configuration.startWaitTimeMs !== undefined ?
+      options.configuration.startWaitTimeMs :
+      5000;
   const sdkConfig = makeSdkConfig(options.configuration, options.tag);
   const initialContext =
     options.configuration.clientSide?.initialUser ||

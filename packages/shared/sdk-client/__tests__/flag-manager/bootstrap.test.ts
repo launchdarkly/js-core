@@ -64,7 +64,7 @@ it('can read old bootstrap data without $flagsState', () => {
   });
   expect(logger.warn).toHaveBeenCalledWith(
     'LaunchDarkly client was initialized with bootstrap data that did not include flag' +
-      ' metadata. Events may not be sent correctly.',
+    ' metadata. Events may not be sent correctly.',
   );
 });
 

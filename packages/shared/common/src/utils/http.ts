@@ -30,9 +30,9 @@ export function defaultHeaders(
   }
 
   if (wrapperName) {
-    headers['x-launchdarkly-wrapper'] = wrapperVersion
-      ? `${wrapperName}/${wrapperVersion}`
-      : wrapperName;
+    headers['x-launchdarkly-wrapper'] = wrapperVersion ?
+      `${wrapperName}/${wrapperVersion}` :
+      wrapperName;
   }
 
   if (tags?.value) {

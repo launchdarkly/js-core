@@ -18,8 +18,8 @@ import { BrowserOptions as LDOptions } from './options';
 
 export * from './common';
 export type { LDClient, LDOptions, LDStartOptions };
-export type { BrowserDataSystemOptions } from './options';
 export type { LDPlugin } from './LDPlugin';
+export type { BrowserDataSystemOptions } from './options';
 
 /**
  * Creates an instance of the LaunchDarkly client. Note that the client will not be ready to

@@ -5,4 +5,4 @@ import {
 } from '../datasource/DataSourceConfig';
 import StreamingProcessor from './StreamingProcessor';
 
-export { DataSourcePaths, PollingDataSourceConfig, StreamingProcessor, StreamingDataSourceConfig };
+export { DataSourcePaths, PollingDataSourceConfig, StreamingDataSourceConfig, StreamingProcessor };

@@ -1,5 +1,5 @@
-import Mustache from 'mustache';
 import { randomUUID } from 'node:crypto';
+import Mustache from 'mustache';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 

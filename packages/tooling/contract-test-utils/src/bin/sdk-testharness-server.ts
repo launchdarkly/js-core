@@ -22,9 +22,9 @@ if (subcommand === 'adapter') {
   });
 } else {
   console.error(
-    subcommand
-      ? `Unknown subcommand: ${subcommand}`
-      : 'Usage: sdk-testharness-server <subcommand>\n\nSubcommands:\n  adapter   Start the REST↔WebSocket adapter',
+    subcommand ?
+      `Unknown subcommand: ${subcommand}` :
+      'Usage: sdk-testharness-server <subcommand>\n\nSubcommands:\n  adapter   Start the REST↔WebSocket adapter',
   );
   process.exit(1);
 }

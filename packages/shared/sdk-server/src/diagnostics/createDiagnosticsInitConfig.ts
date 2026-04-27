@@ -18,7 +18,7 @@ const createDiagnosticsInitConfig = (
     if (
       (isStandardOptions(config.dataSystem.dataSource) ||
         isPollingOnlyOptions(config.dataSystem.dataSource)) &&
-      config.dataSystem.dataSource.pollInterval
+        config.dataSystem.dataSource.pollInterval
     ) {
       pollingIntervalMillis = secondsToMillis(config.dataSystem.dataSource.pollInterval);
     }
@@ -31,7 +31,7 @@ const createDiagnosticsInitConfig = (
     if (
       (isStandardOptions(config.dataSystem.dataSource) ||
         isStreamingOnlyOptions(config.dataSystem.dataSource)) &&
-      config.dataSystem.dataSource.streamInitialReconnectDelay
+        config.dataSystem.dataSource.streamInitialReconnectDelay
     ) {
       reconnectTimeMillis = secondsToMillis(
         config.dataSystem.dataSource.streamInitialReconnectDelay,

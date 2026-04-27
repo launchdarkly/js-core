@@ -1,5 +1,5 @@
-import { ipcMain } from 'electron';
 import type { IpcMain } from 'electron';
+import { ipcMain } from 'electron';
 
 import type {
   LDContext,

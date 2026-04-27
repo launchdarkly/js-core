@@ -1,9 +1,20 @@
-module.exports = {
+import stylistic from '@stylistic/eslint-plugin';
+
+const __dirname = import.meta.dirname;
+
+const stylisticConfig = stylistic.configs.customize({
+  semi: true,
+  arrowParens: true,
+  braceStyle: '1tbs',
+  quoteProps: 'as-needed',
+});
+
+export default {
   env: {
     node: true,
     'jest/globals': true,
   },
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
@@ -12,8 +23,9 @@ module.exports = {
     ],
     tsconfigRootDir: __dirname,
   },
-  plugins: ['@typescript-eslint', 'import', 'prettier', 'jest'],
+  plugins: ['@typescript-eslint', '@stylistic', 'simple-import-sort', 'import', 'jest'],
   ignorePatterns: [
+    '**/node_modules/**',
     '**/dist/**',
     '**/vercel/examples/**',
     '**/react-native/example/**',
@@ -22,6 +34,7 @@ module.exports = {
     '**/server-ai/examples/chat-judge/**',
     '**/server-ai/examples/direct-judge/**',
     '**/fromExternal/**',
+    '**/next-env.d.ts',
   ],
   rules: {
     'no-param-reassign': 'error',
@@ -42,7 +55,20 @@ module.exports = {
       'error',
       { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^__' },
     ],
-    'prettier/prettier': ['error'],
+
+    ...stylisticConfig.rules,
+    '@stylistic/quotes': ['error', 'single', { avoidEscape: true }],
+    '@stylistic/operator-linebreak': ['error', 'after'],
+    '@stylistic/jsx-one-expression-per-line': 'off',
+    'simple-import-sort/imports': ['error', {
+      groups: [
+        ['^\\u0000'],
+        ['^node:', '^(?!@launchdarkly)(?!\\.)'],
+        ['^@launchdarkly'],
+        ['^\\.'],
+      ],
+    }],
+    'simple-import-sort/exports': 'error',
     'class-methods-use-this': 'off',
     'import/no-extraneous-dependencies': [
       'error',

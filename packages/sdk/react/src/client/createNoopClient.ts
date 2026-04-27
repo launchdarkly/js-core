@@ -45,9 +45,9 @@ export function createNoopClient(bootstrap?: object): LDReactClient {
   }
 
   function getDetail<T>(key: string, defaultValue: T, typeCheck?: (v: unknown) => v is T) {
-    const value = typeCheck
-      ? getVariation(key, defaultValue, typeCheck)
-      : getJsonVariation(key, defaultValue);
+    const value = typeCheck ?
+        getVariation(key, defaultValue, typeCheck) :
+        getJsonVariation(key, defaultValue);
     return {
       value,
       variationIndex: null,

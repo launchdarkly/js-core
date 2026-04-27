@@ -23,9 +23,11 @@ class MockDetector implements StateDetector {
   setApplicationStateListener(fn: (state: ApplicationState) => void): void {
     this.appStateListener = fn;
   }
+
   setNetworkStateListener(fn: (state: NetworkState) => void): void {
     this.networkStateListener = fn;
   }
+
   stopListening(): void {
     this.appStateListener = undefined;
     this.networkStateListener = undefined;

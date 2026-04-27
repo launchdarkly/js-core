@@ -41,7 +41,7 @@
     "test": "npx jest --ci --runInBand",
     "build": "npx tsc",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "npx eslint . --ext .ts --fix"
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -50,18 +50,16 @@
     "launchdarkly-eventsource": "2.2.0"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@stylistic/eslint-plugin": "^4.0.0",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
-    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
-    "prettier": "^3.0.0",
     "ts-jest": "^29.0.5",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"

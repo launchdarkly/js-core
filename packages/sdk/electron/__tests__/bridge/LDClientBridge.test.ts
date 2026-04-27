@@ -1,6 +1,7 @@
+import '../../src/bridge';
+
 import { ipcRenderer } from 'electron';
 
-import '../../src/bridge';
 import type { LDClientBridge } from '../../src/bridge/LDClientBridge';
 import { deriveNamespace } from '../../src/ElectronIPC';
 import type { LDContext } from '../../src/index';

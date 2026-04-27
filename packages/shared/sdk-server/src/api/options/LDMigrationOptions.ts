@@ -36,13 +36,13 @@ export enum LDExecution {
  */
 export type LDMethodResult<TResult> =
   | {
-      success: true;
-      result: TResult;
-    }
+    success: true;
+    result: TResult;
+  }
   | {
-      success: false;
-      error: any;
-    };
+    success: false;
+    error: any;
+  };
 
 /**
  * Configuration class for configuring serial execution of a migration.

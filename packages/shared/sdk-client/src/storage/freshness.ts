@@ -55,9 +55,9 @@ export async function readFreshness(
     if (currentHash === undefined || record.contextHash !== currentHash) {
       return undefined;
     }
-    return typeof record.timestamp === 'number' && !Number.isNaN(record.timestamp)
-      ? record.timestamp
-      : undefined;
+    return typeof record.timestamp === 'number' && !Number.isNaN(record.timestamp) ?
+      record.timestamp :
+      undefined;
   } catch (e: any) {
     logger?.warn(`Could not read freshness data from persistent storage: ${e.message}`);
     return undefined;

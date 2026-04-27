@@ -2,13 +2,13 @@ export { useInitializationStatus } from './useInitializationStatus';
 export { useLDClient } from './useLDClient';
 export {
   useBoolVariation,
-  useStringVariation,
-  useNumberVariation,
   useJsonVariation,
+  useNumberVariation,
+  useStringVariation,
 } from './useVariation';
 export {
   useBoolVariationDetail,
-  useStringVariationDetail,
-  useNumberVariationDetail,
   useJsonVariationDetail,
+  useNumberVariationDetail,
+  useStringVariationDetail,
 } from './useVariationDetail';

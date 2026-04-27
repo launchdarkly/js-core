@@ -1,10 +1,10 @@
 import {
+  ClientSideTestHook as TestHook,
   CommandParams,
   CommandType,
   CreateInstanceParams,
   makeLogger,
   SDKConfigParams,
-  ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
 import {
@@ -208,15 +208,15 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
 
   const timeout =
     options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+    options.configuration.startWaitTimeMs !== undefined ?
+      options.configuration.startWaitTimeMs :
+      5000;
 
   const sdkConfig = makeSdkConfig(options.configuration, options.tag);
 
-  const autoEnvAttributes = options.configuration.clientSide?.includeEnvironmentAttributes
-    ? AutoEnvAttributes.Enabled
-    : AutoEnvAttributes.Disabled;
+  const autoEnvAttributes = options.configuration.clientSide?.includeEnvironmentAttributes ?
+    AutoEnvAttributes.Enabled :
+    AutoEnvAttributes.Disabled;
 
   const initialContext =
     options.configuration.clientSide?.initialUser ||

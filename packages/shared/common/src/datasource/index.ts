@@ -12,8 +12,8 @@ import {
 export {
   Backoff,
   CompositeDataSource,
-  DefaultBackoff,
   DataSourceErrorKind,
+  DefaultBackoff,
   LDFileDataSourceError,
   LDFlagDeliveryFallbackError,
   LDPollingError,

@@ -1,4 +1,3 @@
-import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -6,6 +5,7 @@ import type {
   Options,
   platform,
 } from '@launchdarkly/js-server-sdk-common';
+import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
 
 import { OxygenCacheOptions } from '../utils/validateOptions';
 

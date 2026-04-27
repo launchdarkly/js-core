@@ -66,23 +66,20 @@
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc -- packages/shared/common' for example.",
     "build:doc": "npx typedoc --options $1/typedoc.json",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix",
+    "lint:fix": "npx eslint . --ext .ts --fix",
     "test": "echo Please run tests for individual packages.",
     "coverage": "npm run test -- --coverage",
     "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
-    "prettier": "npx prettier --write \"**/*.{js,ts,tsx,json,yaml,yml,md}\" --log-level warn",
-    "check": "yarn && yarn prettier && yarn lint && tsc && yarn build"
+    "check": "yarn && yarn lint && tsc && yarn build"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@stylistic/eslint-plugin": "^4.0.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.56.0",
-    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
-    "eslint-plugin-prettier": "^5.0.0",
-    "prettier": "^3.0.0",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },

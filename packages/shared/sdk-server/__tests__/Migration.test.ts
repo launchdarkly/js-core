@@ -74,7 +74,7 @@ describe('given an LDClient with test data', () => {
         if (!actualNonAuth) {
           return {
             pass: false,
-            message: () => `Expected no authoritative result, but did not receive one.`,
+            message: () => 'Expected no authoritative result, but did not receive one.',
           };
         }
         if (nonAuthoritative.origin !== actualNonAuth.origin) {
