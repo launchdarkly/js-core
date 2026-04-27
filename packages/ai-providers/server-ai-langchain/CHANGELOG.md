@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.5.6...server-sdk-ai-langchain-v0.6.0) (2026-04-27)
+
+
+### Features
+
+* Bump to LangChain 1.0 and drop community package requirement ([#1311](https://github.com/launchdarkly/js-core/issues/1311)) ([f5a1c29](https://github.com/launchdarkly/js-core/commit/f5a1c295e51ff07e9003109a873709ea14dad343))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.17.1 to ^0.18.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.17.0 to ^0.18.0
+
 ## [0.5.6](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.5.5...server-sdk-ai-langchain-v0.5.6) (2026-04-24)
 
 

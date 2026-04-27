@@ -22,7 +22,7 @@
     "test": "./build-run-detox.sh"
   },
   "dependencies": {
-    "@launchdarkly/react-native-client-sdk": "10.17.1",
+    "@launchdarkly/react-native-client-sdk": "10.17.2",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "expo": "52.0.14",
     "expo-status-bar": "~1.11.1",

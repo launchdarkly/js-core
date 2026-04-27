@@ -23,8 +23,8 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.30",
     "@launchdarkly/node-server-sdk": "9.10.12",
-    "@launchdarkly/server-sdk-ai": "0.17.1",
-    "@launchdarkly/server-sdk-ai-vercel": "0.5.6",
+    "@launchdarkly/server-sdk-ai": "0.18.0",
+    "@launchdarkly/server-sdk-ai-vercel": "0.5.7",
     "ai": "5.0.52",
     "zod": "^3.23.8"
   },
