@@ -881,7 +881,7 @@ describe('tools map support', () => {
     expect(result.tools).toEqual(mockVariation.tools);
   });
 
-  it('uses tools from defaults when completion config flag has no tools', async () => {
+  it('returns undefined tools when variation has no tools', async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-flag';
     const defaultTools = {
@@ -898,7 +898,7 @@ describe('tools map support', () => {
 
     const result = await client.completionConfig(key, testContext, defaultValue);
 
-    expect(result.tools).toEqual(defaultTools);
+    expect(result.tools).toBeUndefined();
   });
 
   it('returns undefined tools when no tools are configured', async () => {
