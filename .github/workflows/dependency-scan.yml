@@ -12,10 +12,25 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20.x
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install released package dependencies
+        run: yarn workspaces focus $(node scripts/released-packages.js)
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+          YARN_ENABLE_SCRIPTS: 'false'
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
       - name: Generate SBOM
         uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@0a54234f88a428df4163234dbb23ddb7fee8b8ec # main
         with:
           types: 'nodejs'
+          ensure-non-empty: 'true'
 
   evaluate-policy:
     runs-on: ubuntu-latest
