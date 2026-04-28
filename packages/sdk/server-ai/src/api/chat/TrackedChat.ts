@@ -12,6 +12,8 @@ import { ChatResponse } from './types';
  * by delegating to an AIProvider implementation.
  * This class handles conversation management and tracking, while delegating
  * the actual model invocation to the provider.
+ *
+ * Use `run()` as the primary entry point. `invoke()` is deprecated.
  */
 export class TrackedChat {
   protected messages: LDMessage[];
@@ -29,6 +31,9 @@ export class TrackedChat {
    * Invoke the chat model with a prompt string and return a ManagedResult.
    * This is the primary entry point for model invocation. Judge evaluations are
    * wired asynchronously and exposed via ManagedResult.evaluations.
+   *
+   * run() returns before ManagedResult.evaluations resolves. Awaiting evaluations
+   * guarantees both evaluation and tracking (tracker.trackJudgeResult) are complete.
    */
   async run(prompt: string): Promise<ManagedResult> {
     const tracker = this.aiConfig.createTracker!();
@@ -61,11 +66,31 @@ export class TrackedChat {
       resumptionToken: tracker.resumptionToken,
     };
 
-    // Evaluations are wired in the managed layer (PR 3). For now, resolve empty.
-    const evaluations: Promise<LDJudgeResult[]> = Promise.resolve([]);
+    const output = response.message.content;
+    // Build a single string of the input messages for judge evaluation
+    const inputText = this.messages
+      .slice(0, -1) // exclude the just-added assistant response
+      .map((m) => m.content)
+      .join('\r\n');
+
+    // Wire evaluation + tracking into a single Promise.
+    // run() returns before this resolves — awaiting evaluations guarantees
+    // both evaluation and tracking are complete.
+    const evaluator = this.aiConfig.evaluator;
+    let evaluations: Promise<LDJudgeResult[]>;
+    if (evaluator && evaluator.judgeConfiguration.judges.length > 0) {
+      evaluations = evaluator.evaluate(inputText, output).then((results) => {
+        results.forEach((judgeResult) => {
+          tracker.trackJudgeResult(judgeResult);
+        });
+        return results;
+      });
+    } else {
+      evaluations = Promise.resolve([]);
+    }
 
     return {
-      content: response.message.content,
+      content: output,
       metrics,
       evaluations,
     };
@@ -96,70 +121,8 @@ export class TrackedChat {
       () => this.provider.invokeModel(allMessages),
     );
 
-    if (
-      this.aiConfig.judgeConfiguration?.judges &&
-      this.aiConfig.judgeConfiguration.judges.length > 0
-    ) {
-      response.evaluations = this._evaluateWithJudges(this.messages, response).then(
-        (evaluations) => {
-          evaluations.forEach((judgeResult) => {
-            tracker.trackJudgeResult(judgeResult);
-          });
-          return evaluations;
-        },
-      );
-    }
-
     this.messages.push(response.message);
     return response;
-  }
-
-  /**
-   * Evaluates the response with all configured judges.
-   * Returns a promise that resolves to an array of evaluation results.
-   *
-   * @param messages Array of messages representing the conversation history
-   * @param response The AI response to be evaluated
-   * @returns Promise resolving to array of judge evaluation results
-   */
-  private async _evaluateWithJudges(
-    messages: LDMessage[],
-    response: ChatResponse,
-  ): Promise<LDJudgeResult[]> {
-    const judgeConfigs = this.aiConfig.judgeConfiguration!.judges;
-
-    // Start all judge evaluations in parallel
-    const evaluationPromises = judgeConfigs.map(async (judgeConfig) => {
-      const judge = this.judges[judgeConfig.key];
-      if (!judge) {
-        this._logger?.warn(
-          `Judge configuration is not enabled for ${judgeConfig.key} in ${this.aiConfig.key}`,
-        );
-        const result: LDJudgeResult = {
-          success: false,
-          sampled: true,
-          errorMessage: `Judge configuration is not enabled for ${judgeConfig.key}`,
-        };
-        return result;
-      }
-
-      return judge.evaluateMessages(messages, response, judgeConfig.samplingRate);
-    });
-
-    // ensure all evaluations complete even if some fail
-    const results = await Promise.allSettled(evaluationPromises);
-
-    return results.map((settled) => {
-      if (settled.status === 'fulfilled') {
-        return settled.value;
-      }
-      const result: LDJudgeResult = {
-        success: false,
-        sampled: true,
-        errorMessage: 'Judge evaluation failed',
-      };
-      return result;
-    });
   }
 
   /**
