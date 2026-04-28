@@ -11,6 +11,10 @@ import { StructuredResponse } from '../judge/types';
  *
  * Following the AICHAT spec recommendation to use base classes with non-abstract methods
  * for better extensibility and backwards compatibility.
+ *
+ * @deprecated Use the `Runner` interface instead. Provider implementations should
+ * implement `Runner` (and optionally `AgentGraphRunner`) rather than extending this
+ * abstract class. This class will be removed in a future major version.
  */
 export abstract class AIProvider {
   protected readonly logger?: LDLogger;
