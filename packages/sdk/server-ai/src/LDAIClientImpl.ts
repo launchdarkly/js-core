@@ -22,6 +22,7 @@ import {
 } from './api/config';
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
 import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './api/graph';
+import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
@@ -168,6 +169,26 @@ export class LDAIClientImpl implements LDAIClient {
     });
 
     return judges;
+  }
+
+  private async _buildEvaluator(
+    judgeConfigs: LDJudge[],
+    context: LDContext,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<Evaluator> {
+    if (judgeConfigs.length === 0) {
+      return Evaluator.noop();
+    }
+
+    const judgesRecord = await this._initializeJudges(
+      judgeConfigs,
+      context,
+      variables,
+      defaultAiProvider,
+    );
+    const judgesMap = new Map<string, Judge>(Object.entries(judgesRecord));
+    return new Evaluator(judgesMap, { judges: judgeConfigs }, this._logger);
   }
 
   private async _completionConfig(
@@ -318,14 +339,23 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const judges = await this._initializeJudges(
+    const evaluator = await this._buildEvaluator(
       config.judgeConfiguration?.judges ?? [],
       context,
       variables,
       defaultAiProvider,
     );
 
-    return new TrackedChat(config, provider, judges, this._logger);
+    // Attach the evaluator to the config for use by the managed layer
+    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
+
+    // Build the legacy judges record for TrackedChat backward compat
+    const judges: Record<string, Judge> = {};
+    evaluator.judges.forEach((judge, k) => {
+      judges[k] = judge;
+    });
+
+    return new TrackedChat(configWithEvaluator, provider, judges, this._logger);
   }
 
   async createJudge(
