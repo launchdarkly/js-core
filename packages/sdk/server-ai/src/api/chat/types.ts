@@ -1,9 +1,9 @@
 import { LDMessage } from '../config/types';
-import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics } from '../metrics/LDAIMetrics';
 
 /**
- * Chat response structure.
+ * Chat response structure returned by provider implementations.
+ * This is the runner-level type; evaluations belong in ManagedResult.
  */
 export interface ChatResponse {
   /**
@@ -15,10 +15,4 @@ export interface ChatResponse {
    * Metrics information including success status and token usage.
    */
   metrics: LDAIMetrics;
-
-  /**
-   * Promise that resolves to judge evaluation results.
-   * Only present when judges are configured for evaluation.
-   */
-  evaluations?: Promise<LDJudgeResult[]>;
 }
