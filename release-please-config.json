@@ -303,6 +303,9 @@
     },
     "packages/shared/openfeature-server-common": {
       "bump-minor-pre-major": true
+    },
+    "packages/sdk/openfeature-node-server": {
+      "bump-minor-pre-major": true
     }
   },
   "plugins": [

@@ -1,0 +1,72 @@
+{
+  "name": "@launchdarkly/openfeature-node-server",
+  "version": "1.2.0",
+  "description": "LaunchDarkly OpenFeature provider for the Node.js server SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/openfeature-node-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/src/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup-node && npx tsc --emitDeclarationOnly --declaration --outDir dist",
+    "lint": "npx eslint . --ext .ts",
+    "lint:fix": "yarn run lint --fix",
+    "test": "jest",
+    "check": "yarn lint && yarn build && yarn test"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "launchdarkly",
+    "openfeature",
+    "feature-flags"
+  ],
+  "author": "LaunchDarkly",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@launchdarkly/js-sdk-common": "2.24.2",
+    "@launchdarkly/openfeature-js-server-common": "0.1.0"
+  },
+  "peerDependencies": {
+    "@launchdarkly/node-server-sdk": "9.x",
+    "@openfeature/server-sdk": "^1.16.0"
+  },
+  "devDependencies": {
+    "@launchdarkly/node-server-sdk": "9.10.12",
+    "@openfeature/core": "^1.10.0",
+    "@openfeature/server-sdk": "^1.16.0",
+    "@types/jest": "^29.5.3",
+    "@typescript-eslint/eslint-plugin": "^6.20.0",
+    "@typescript-eslint/parser": "^6.20.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jest": "^27.6.3",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.6.1",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.1",
+    "tsup": "^8.5.1",
+    "typescript": "5.1.6"
+  }
+}

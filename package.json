@@ -58,7 +58,8 @@
     "packages/sdk/shopify-oxygen/contract-tests",
     "packages/sdk/shopify-oxygen/example",
     "packages/sdk/browser/example",
-    "packages/sdk/browser/example-fdv2"
+    "packages/sdk/browser/example-fdv2",
+    "packages/sdk/openfeature-node-server"
   ],
   "private": true,
   "scripts": {
