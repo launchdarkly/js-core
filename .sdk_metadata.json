@@ -186,6 +186,7 @@
         "experimentation": { "introduced": "2.9" },
         "flagChanges": { "introduced": "2.9" },
         "hooks": { "introduced": "3.7" },
+        "inlineContextCustomEvents": { "introduced": "4.0" },
         "perContextSummaryEvents": { "introduced": "3.8" },
         "pluginSupport": { "introduced": "3.7" },
         "privateAttrs": { "introduced": "2.9" },
