@@ -3,6 +3,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import { LDAICompletionConfig, LDMessage } from '../config/types';
 import { Judge } from '../judge/Judge';
 import { LDJudgeResult } from '../judge/types';
+import { LDAIMetricSummary, ManagedResult } from '../model/types';
 import { AIProvider } from '../providers/AIProvider';
 import { ChatResponse } from './types';
 
@@ -25,8 +26,55 @@ export class TrackedChat {
   }
 
   /**
+   * Invoke the chat model with a prompt string and return a ManagedResult.
+   * This is the primary entry point for model invocation. Judge evaluations are
+   * wired asynchronously and exposed via ManagedResult.evaluations.
+   */
+  async run(prompt: string): Promise<ManagedResult> {
+    const tracker = this.aiConfig.createTracker!();
+
+    // Convert prompt string to LDMessage with role 'user' and add to conversation history
+    const userMessage: LDMessage = {
+      role: 'user',
+      content: prompt,
+    };
+    this.messages.push(userMessage);
+
+    // Prepend config messages to conversation history for model invocation
+    const configMessages = this.aiConfig.messages || [];
+    const allMessages = [...configMessages, ...this.messages];
+
+    // Delegate to provider-specific implementation with tracking
+    const response = await tracker.trackMetricsOf(
+      (result: ChatResponse) => result.metrics,
+      () => this.provider.invokeModel(allMessages),
+    );
+
+    this.messages.push(response.message);
+
+    // Build the metric summary from response metrics + resumption token
+    const metrics: LDAIMetricSummary = {
+      success: response.metrics.success,
+      usage: response.metrics.usage,
+      toolCalls: response.metrics.toolCalls,
+      durationMs: response.metrics.durationMs,
+      resumptionToken: tracker.resumptionToken,
+    };
+
+    // Evaluations are wired in the managed layer (PR 3). For now, resolve empty.
+    const evaluations: Promise<LDJudgeResult[]> = Promise.resolve([]);
+
+    return {
+      content: response.message.content,
+      metrics,
+      evaluations,
+    };
+  }
+
+  /**
    * Invoke the chat model with a prompt string.
    * This method handles conversation management and tracking, delegating to the provider's invokeModel method.
+   * @deprecated Use `run()` instead.
    */
   async invoke(prompt: string): Promise<ChatResponse> {
     const tracker = this.aiConfig.createTracker!();

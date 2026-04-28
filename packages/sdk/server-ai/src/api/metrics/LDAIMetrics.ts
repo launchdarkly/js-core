@@ -15,4 +15,16 @@ export interface LDAIMetrics {
    * This will be undefined if no token usage data is available.
    */
   usage?: LDTokenUsage;
+
+  /**
+   * List of tool call identifiers made during the operation.
+   * This will be undefined if no tool calls were made.
+   */
+  toolCalls?: string[];
+
+  /**
+   * Duration of the operation in milliseconds.
+   * This will be undefined if duration was not tracked.
+   */
+  durationMs?: number;
 }
