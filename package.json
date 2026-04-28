@@ -9,6 +9,7 @@
     "packages/shared/sdk-server",
     "packages/shared/sdk-server-edge",
     "packages/shared/akamai-edgeworker-sdk",
+    "packages/shared/openfeature-server-common",
     "packages/sdk/server-node",
     "packages/sdk/server-node/contract-tests",
     "packages/sdk/cloudflare",

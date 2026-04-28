@@ -300,6 +300,9 @@
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         }
       ]
+    },
+    "packages/shared/openfeature-server-common": {
+      "bump-minor-pre-major": true
     }
   },
   "plugins": [
