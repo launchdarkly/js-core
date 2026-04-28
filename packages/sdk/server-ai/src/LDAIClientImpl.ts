@@ -410,6 +410,16 @@ export class LDAIClientImpl implements LDAIClient {
     }
   }
 
+  async createModel(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined> {
+    return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  }
+
   /**
    * @deprecated Use `createChat` instead. This method will be removed in a future version.
    */

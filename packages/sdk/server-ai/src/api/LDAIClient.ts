@@ -277,6 +277,25 @@ export interface LDAIClient {
   ): Promise<TrackedChat | undefined>;
 
   /**
+   * Creates and returns a new ManagedModel (TrackedChat) instance for chat interactions.
+   * This is the preferred replacement for `createChat()`.
+   *
+   * @param key The key identifying the AI chat configuration to use.
+   * @param context The standard LDContext used when evaluating flags.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * @param variables Dictionary of values for instruction interpolation.
+   * @param defaultAiProvider Optional default AI provider to use.
+   * @returns A promise that resolves to the TrackedChat instance, or undefined if disabled.
+   */
+  createModel(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<TrackedChat | undefined>;
+
+  /**
    * @deprecated Use `createChat` instead. This method will be removed in a future version.
    */
   initChat(
