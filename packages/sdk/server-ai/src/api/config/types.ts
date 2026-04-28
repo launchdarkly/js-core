@@ -1,3 +1,4 @@
+import type { Evaluator } from '../judge/Evaluator';
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 
 // ============================================================================
@@ -220,6 +221,11 @@ export interface LDAIAgentConfig extends LDAIConfig {
    * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
    */
   tools?: { [toolName: string]: LDTool };
+  /**
+   * Evaluator for this agent config. Populated by createAgent.
+   * Internal; not part of the flag value shape.
+   */
+  evaluator?: Evaluator;
 }
 
 /**
@@ -239,6 +245,11 @@ export interface LDAICompletionConfig extends LDAIConfig {
    * Root-level tools map keyed by tool name. Distinct from model.parameters.tools[].
    */
   tools?: { [toolName: string]: LDTool };
+  /**
+   * Evaluator for this completion config. Populated by createChat/createModel.
+   * Internal; not part of the flag value shape.
+   */
+  evaluator?: Evaluator;
 }
 
 /**
