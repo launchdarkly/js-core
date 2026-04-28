@@ -141,11 +141,9 @@ export class VercelProvider extends AIProvider {
   }
 
   /**
-   * Map LaunchDarkly provider names to LangChain provider names.
-   * This method enables seamless integration between LaunchDarkly's standardized
-   * provider naming and LangChain's naming conventions.
+   * Map LaunchDarkly provider names to Vercel AI SDK provider identifiers.
    */
-  static mapProvider(ldProviderName: string): string {
+  static mapProviderName(ldProviderName: string): string {
     const lowercasedName = ldProviderName.toLowerCase();
 
     const mapping: Record<string, string> = {
@@ -153,6 +151,13 @@ export class VercelProvider extends AIProvider {
     };
 
     return mapping[lowercasedName] || lowercasedName;
+  }
+
+  /**
+   * @deprecated Use {@link mapProviderName} instead.
+   */
+  static mapProvider(ldProviderName: string): string {
+    return VercelProvider.mapProviderName(ldProviderName);
   }
 
   /**
@@ -376,7 +381,7 @@ export class VercelProvider extends AIProvider {
    * @returns A Promise that resolves to a configured Vercel AI model
    */
   static async createVercelModel(aiConfig: LDAIConfig): Promise<LanguageModel> {
-    const providerName = VercelProvider.mapProvider(aiConfig.provider?.name || '');
+    const providerName = VercelProvider.mapProviderName(aiConfig.provider?.name || '');
     const modelName = aiConfig.model?.name || '';
 
     // Map provider names to their corresponding Vercel AI SDK imports
