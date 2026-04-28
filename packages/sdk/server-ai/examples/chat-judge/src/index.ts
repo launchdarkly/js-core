@@ -43,11 +43,11 @@ async function main() {
       enabled: false,
     };
 
-    const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, {
+    const model = await aiClient.createModel(aiConfigKey, context, defaultValue, {
       companyName: 'LaunchDarkly',
     });
 
-    if (!chat) {
+    if (!model) {
       console.log('*** AI chat configuration is not enabled');
       process.exit(0);
     }
@@ -56,15 +56,14 @@ async function main() {
     const userInput = 'How can LaunchDarkly help me?';
     console.log('User Input:', userInput);
 
-    // The invoke method will automatically evaluate the chat response with any judges defined
-    // in the AI config.
-    const chatResponse = await chat.invoke(userInput);
-    console.log('Chat Response:', chatResponse.message.content);
+    // The run() method invokes the model and returns a ManagedResult.
+    const result = await model.run(userInput);
+    console.log('Chat Response:', result.content);
 
     // Judge evaluations run asynchronously and do not block your application.
     // Results are automatically sent to LaunchDarkly for AI config metrics.
     // You only need to await if you want to access the evaluation results in your code.
-    const evalResults = await chatResponse.evaluations;
+    const evalResults = await result.evaluations;
     console.log('Judge results:', JSON.stringify(evalResults, null, 2));
 
     console.log('Success.');
