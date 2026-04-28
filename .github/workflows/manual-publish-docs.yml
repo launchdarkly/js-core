@@ -26,6 +26,7 @@ on:
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
           - packages/sdk/react
+          - packages/sdk/openfeature-node-server
 name: Publish Documentation
 jobs:
   build-publish:
