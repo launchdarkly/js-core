@@ -915,4 +915,91 @@ describe('tools map support', () => {
 
     expect(result.tools).toBeUndefined();
   });
+
+  it('parses tools from model.parameters.tools when root tools is absent', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const modelParamsTools = {
+      'web-search-tool': {
+        name: 'web-search-tool',
+        type: 'function',
+        parameters: { type: 'object', properties: {}, required: [] },
+      },
+    };
+    const mockVariation = {
+      model: { name: 'example-model', parameters: { tools: modelParamsTools } },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toEqual(modelParamsTools);
+  });
+
+  it('uses root tools over model.parameters.tools when both are present', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const rootTools = {
+      'root-tool': { name: 'root-tool', type: 'function' },
+    };
+    const modelParamsTools = {
+      'params-tool': { name: 'params-tool', type: 'function' },
+    };
+    const mockVariation = {
+      model: { name: 'example-model', parameters: { tools: modelParamsTools } },
+      tools: rootTools,
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toEqual(rootTools);
+  });
+
+  it('returns undefined when model.parameters.tools is an array', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const mockVariation = {
+      model: {
+        name: 'example-model',
+        parameters: {
+          tools: [{ type: 'function', function: { name: 'search', description: 'Search' } }],
+        },
+      },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toBeUndefined();
+  });
+
+  it('returns undefined when a model.parameters.tools entry is missing the name field', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+    const mockVariation = {
+      model: {
+        name: 'example-model',
+        parameters: {
+          tools: {
+            'valid-tool': { name: 'valid-tool', type: 'function' },
+            'invalid-tool': { type: 'function' },
+          },
+        },
+      },
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext, defaultValue);
+
+    expect(result.tools).toBeUndefined();
+  });
 });

@@ -143,6 +143,41 @@ export class LDAIConfigUtils {
     }
   }
 
+  private static _resolveTools(
+    flagValue: LDAIConfigFlagValue,
+  ): { [toolName: string]: LDTool } | undefined {
+    if (flagValue.tools !== undefined) {
+      return flagValue.tools;
+    }
+
+    const rawTools = flagValue.model?.parameters?.['tools'];
+
+    if (rawTools === null || rawTools === undefined || Array.isArray(rawTools)) {
+      return undefined;
+    }
+
+    if (typeof rawTools !== 'object') {
+      return undefined;
+    }
+
+    const toolsMap = rawTools as { [key: string]: unknown };
+    const result: { [toolName: string]: LDTool } = {};
+
+    for (const [toolName, toolValue] of Object.entries(toolsMap)) {
+      if (
+        toolValue === null ||
+        typeof toolValue !== 'object' ||
+        Array.isArray(toolValue) ||
+        typeof (toolValue as { name?: unknown }).name !== 'string'
+      ) {
+        return undefined;
+      }
+      result[toolName] = toolValue as LDTool;
+    }
+
+    return result;
+  }
+
   /**
    * Creates the base configuration that all config types share.
    *
@@ -177,7 +212,7 @@ export class LDAIConfigUtils {
       createTracker: trackerFactory,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
-      tools: flagValue.tools,
+      tools: this._resolveTools(flagValue),
     };
   }
 
@@ -199,7 +234,7 @@ export class LDAIConfigUtils {
       createTracker: trackerFactory,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
-      tools: flagValue.tools,
+      tools: this._resolveTools(flagValue),
     };
   }
 
