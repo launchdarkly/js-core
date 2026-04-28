@@ -1,5 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
+import { ManagedAgent } from './agent/ManagedAgent';
 import { TrackedChat } from './chat';
 import {
   LDAIAgentConfig,
@@ -294,6 +295,25 @@ export interface LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<TrackedChat | undefined>;
+
+  /**
+   * Creates and returns a new ManagedAgent instance for agent interactions.
+   * Evaluations are wired automatically and exposed on ManagedResult.evaluations.
+   *
+   * @param key The key identifying the agent AI config to use.
+   * @param context The standard LDContext used when evaluating flags.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * @param variables Dictionary of values for instruction interpolation.
+   * @param defaultAiProvider Optional default AI provider to use.
+   * @returns A promise that resolves to the ManagedAgent instance, or undefined if disabled.
+   */
+  createAgent(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedAgent | undefined>;
 
   /**
    * @deprecated Use `createChat` instead. This method will be removed in a future version.
