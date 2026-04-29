@@ -37,8 +37,7 @@
     "clean": "rimraf dist",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
-    "prettier": "prettier --write 'src/*.@(js|ts|tsx|json)'",
-    "check": "yarn && yarn prettier && yarn lint && tsc && yarn test"
+    "check": "yarn && yarn lint && tsc && yarn test"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -47,18 +46,14 @@
     "@rollup/plugin-node-resolve": "^15.0.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/plugin-typescript": "^11.1.1",
-    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.4.0",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.20.0",
     "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
-    "eslint-plugin-prettier": "^5.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
-    "prettier": "^3.0.0",
     "rimraf": "6.0.1",
     "rollup": "^3.23.0",
     "ts-jest": "^29.0.5",

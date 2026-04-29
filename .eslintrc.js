@@ -3,7 +3,7 @@ module.exports = {
     node: true,
     'jest/globals': true,
   },
-  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'prettier'],
+  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: [
@@ -12,7 +12,7 @@ module.exports = {
     ],
     tsconfigRootDir: __dirname,
   },
-  plugins: ['@typescript-eslint', 'import', 'prettier', 'jest'],
+  plugins: ['@typescript-eslint', 'import', 'jest'],
   ignorePatterns: [
     '**/dist/**',
     '**/vercel/examples/**',
@@ -42,7 +42,6 @@ module.exports = {
       'error',
       { ignoreRestSiblings: true, argsIgnorePattern: '^_', varsIgnorePattern: '^__' },
     ],
-    'prettier/prettier': ['error'],
     'class-methods-use-this': 'off',
     'import/no-extraneous-dependencies': [
       'error',
