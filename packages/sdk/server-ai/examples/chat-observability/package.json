@@ -8,10 +8,10 @@
     "start": "yarn build && node ./dist/index.js"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.10.12",
+    "@launchdarkly/node-server-sdk": "9.10.13",
     "@launchdarkly/observability-node": "^1.0.0",
-    "@launchdarkly/server-sdk-ai": "0.18.0",
-    "@launchdarkly/server-sdk-ai-openai": "0.5.7",
+    "@launchdarkly/server-sdk-ai": "0.18.1",
+    "@launchdarkly/server-sdk-ai-openai": "0.5.8",
     "dotenv": "^16.0.0",
     "openai": "^5.12.2"
   },

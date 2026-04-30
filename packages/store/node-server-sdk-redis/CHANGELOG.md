@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.2.25](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.24...node-server-sdk-redis-v4.2.25) (2026-04-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.10.12 to 9.10.13
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.4.3 to >=9.10.13
+
 ## [4.2.24](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.23...node-server-sdk-redis-v4.2.24) (2026-04-24)
 
 

@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.24.3](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.2...js-sdk-common-v2.24.3) (2026-04-30)
+
+
+### Bug Fixes
+
+* **common:** remove non-spec fields from FDv2 GoodbyeObject ([#1341](https://github.com/launchdarkly/js-core/issues/1341)) ([feb9aa7](https://github.com/launchdarkly/js-core/commit/feb9aa7f6217bc9b3a9794bc71867e14112ea928))
+
 ## [2.24.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.1...js-sdk-common-v2.24.2) (2026-04-24)
 
 
