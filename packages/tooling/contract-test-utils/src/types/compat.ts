@@ -10,7 +10,6 @@
  * A minimal LDContext type compatible with both client and server SDKs.
  * Contract test harness passes context objects through without deep inspection.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type LDContext = Record<string, any>;
 
 /**

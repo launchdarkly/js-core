@@ -35,16 +35,13 @@ function convertAttributes(
     return;
   }
   if (value instanceof Date) {
-    // eslint-disable-next-line no-param-reassign
     object[key] = value.toISOString();
   } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-    // eslint-disable-next-line no-param-reassign
     object[key] = {};
     Object.entries(value).forEach(([objectKey, objectValue]) => {
       convertAttributes(logger, objectKey, objectValue, object[key], [...visited, value]);
     });
   } else {
-    // eslint-disable-next-line no-param-reassign
     object[key] = value;
   }
 }

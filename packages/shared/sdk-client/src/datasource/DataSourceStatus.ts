@@ -98,7 +98,6 @@ export default interface DataSourceStatus {
 
 // This is a temporary compat for react native. We should remove this once we
 // major version react native SDK.
-// eslint-disable-next-line @typescript-eslint/no-redeclare
 export const DataSourceState: {
   readonly Initializing: 'INITIALIZING';
   readonly Valid: 'VALID';

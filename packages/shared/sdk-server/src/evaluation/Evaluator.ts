@@ -1,6 +1,3 @@
-/* eslint-disable class-methods-use-this */
-
-/* eslint-disable max-classes-per-file */
 import { Context, internal, LDEvaluationReason, Platform } from '@launchdarkly/js-sdk-common';
 
 import { BigSegmentStoreMembership } from '../api/interfaces';
@@ -266,10 +263,10 @@ export default class Evaluator {
             state,
             updatedVisitedFlags,
             (res) => {
-              // eslint-disable-next-line no-param-reassign
+               
               state.events ??= [];
               if (topLevel) {
-                // eslint-disable-next-line no-param-reassign
+                 
                 state.prerequisites ??= [];
 
                 state.prerequisites.push(prereqFlag.key);
@@ -564,7 +561,6 @@ export default class Evaluator {
     );
   }
 
-  // eslint-disable-next-line class-methods-use-this
   simpleSegmentMatchContext(
     segment: Segment,
     context: Context,
@@ -624,7 +620,7 @@ export default class Evaluator {
       // that probably means the data store was populated by an older SDK that doesn't know
       // about the generation property and therefore dropped it from the JSON data. We'll treat
       // that as a "not configured" condition.
-      // eslint-disable-next-line no-param-reassign
+       
       state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
         state.bigSegmentsStatus,
         'NOT_CONFIGURED',
@@ -649,25 +645,24 @@ export default class Evaluator {
     }
 
     this._queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
-      // eslint-disable-next-line no-param-reassign
+       
       state.bigSegmentsMembership = state.bigSegmentsMembership || {};
       if (result) {
         const [membership, status] = result;
-        // eslint-disable-next-line no-param-reassign
+         
         state.bigSegmentsMembership[keyForBigSegment] = membership;
-        // eslint-disable-next-line no-param-reassign
+         
         state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
           state.bigSegmentsStatus,
           status as BigSegmentStoreStatusString,
         );
       } else {
-        // eslint-disable-next-line no-param-reassign
+         
         state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
           state.bigSegmentsStatus,
           'NOT_CONFIGURED',
         );
       }
-      /* eslint-enable no-param-reassign */
       this.bigSegmentMatchContext(
         state.bigSegmentsMembership[keyForBigSegment],
         segment,

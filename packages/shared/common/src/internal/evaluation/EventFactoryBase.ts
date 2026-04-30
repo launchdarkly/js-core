@@ -60,13 +60,11 @@ export default class EventFactoryBase {
     );
   }
 
-  /* eslint-disable-next-line class-methods-use-this */
   identifyEvent(context: Context) {
     // Currently sampling for identify events is always 1.
     return new InputIdentifyEvent(context, 1);
   }
 
-  /* eslint-disable-next-line class-methods-use-this */
   customEvent(
     key: string,
     context: Context,

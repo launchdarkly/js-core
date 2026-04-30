@@ -37,7 +37,6 @@ const ensureKeyCommon = async (kind: string, c: LDContextCommon, platform: Platf
     const storageKey = await namespaceForGeneratedContextKey(kind);
     const legacyStorageKey = await namespaceForAnonymousGeneratedContextKey(kind);
     // This mutates a cloned copy of the original context from ensureyKey so this is safe.
-    // eslint-disable-next-line no-param-reassign
     c.key = await getOrGenerateKey(storageKey, platform, legacyStorageKey);
   }
 };

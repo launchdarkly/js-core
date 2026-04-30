@@ -145,7 +145,6 @@ describe.each<ConnectionMode>(['streaming', 'polling'])(
     });
 
     it('remains offline when temporarily offline', () => {
-      // eslint-disable-next-line no-new
       const connectionManager = new ConnectionManager(
         logger,
         {

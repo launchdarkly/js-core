@@ -58,17 +58,14 @@ export class RunnerFactory {
 
       switch (providerType) {
         case 'openai': {
-          // eslint-disable-next-line import/no-extraneous-dependencies
           module = await import('@launchdarkly/server-sdk-ai-openai' as any);
           return new module.OpenAIRunnerFactory(logger) as AIProvider;
         }
         case 'langchain': {
-          // eslint-disable-next-line import/no-extraneous-dependencies
           module = await import('@launchdarkly/server-sdk-ai-langchain' as any);
           return new module.LangChainRunnerFactory(logger) as AIProvider;
         }
         case 'vercel': {
-          // eslint-disable-next-line import/no-extraneous-dependencies
           module = await import('@launchdarkly/server-sdk-ai-vercel' as any);
           return new module.VercelRunnerFactory(logger) as AIProvider;
         }

@@ -126,7 +126,6 @@ export default function format(...args: any[]): string {
           if (nextChar in escapes && args.length) {
             const value = args.shift();
             // This rule is for math.
-            // eslint-disable-next-line no-unsafe-optional-chaining
             out += escapes[nextChar]?.(value);
           } else if (nextChar === '%') {
             out += '%';

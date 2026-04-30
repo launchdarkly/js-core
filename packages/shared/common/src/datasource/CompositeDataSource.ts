@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import { LDLogger } from '../api/logging';
 import { CallbackHandler } from '../api/subsystem/DataSystem/CallbackHandler';
 import {
@@ -108,7 +107,6 @@ export class CompositeDataSource implements DataSource {
     sanitizedStatusCallback(DataSourceState.Initializing);
 
     let lastTransition: Transition | undefined;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const {
         dataSource: currentDS,
@@ -238,6 +236,7 @@ export class CompositeDataSource implements DataSource {
       });
 
       // await transition triggered by internal data source or an external stop request
+      // eslint-disable-next-line no-await-in-loop
       let transitionRequest = await Promise.race([
         internalTransitionPromise,
         this._externalTransitionPromise,
@@ -270,6 +269,7 @@ export class CompositeDataSource implements DataSource {
         });
 
         // race the delayed transition and external transition requests to be responsive
+        // eslint-disable-next-line no-await-in-loop
         transitionRequest = await Promise.race([
           delayedTransition,
           this._externalTransitionPromise,

@@ -127,7 +127,6 @@ describe('RunnerFactory.createModel', () => {
 
     const getProviderSpy = jest
       .spyOn(RunnerFactory as any, '_getProviderFactory')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .mockImplementation(async (providerType: any) => {
         if (providerType === 'openai') {
           // openai package not installed

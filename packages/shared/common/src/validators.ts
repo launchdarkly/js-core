@@ -1,5 +1,3 @@
-/* eslint-disable class-methods-use-this */
-/* eslint-disable max-classes-per-file */
 
 // The classes here are static, but needs to be instantiated to
 // support the generic functionality. Which is why we do not care about using

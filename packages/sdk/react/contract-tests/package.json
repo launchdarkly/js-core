@@ -21,9 +21,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^8.45.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jest": "^27.6.3",
     "playwright": "^1.49.1",
     "typescript": "^5"
   }

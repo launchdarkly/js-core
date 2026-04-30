@@ -63,6 +63,5 @@ app.delete('/clients/:id', async (req: Request, res: Response) => {
 });
 
 server = app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log('Listening on port %d', port);
 });
