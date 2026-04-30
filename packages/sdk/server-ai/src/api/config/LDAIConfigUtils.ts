@@ -183,7 +183,9 @@ export class LDAIConfigUtils {
         Array.isArray(toolValue) ||
         typeof (toolValue as { name?: unknown }).name !== 'string'
       ) {
-        logger?.warn(`LaunchDarkly AI: Skipping tool "${toolName}" in model.parameters.tools: expected an object with a name string`);
+        logger?.warn(
+          `LaunchDarkly AI: Skipping tool "${toolName}" in model.parameters.tools: expected an object with a name string`,
+        );
         continue;
       }
       result[toolName] = toolValue as LDTool;
