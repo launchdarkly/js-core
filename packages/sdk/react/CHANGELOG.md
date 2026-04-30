@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/react-sdk-v0.2.5...react-sdk-v4.0.0) (2026-04-30)
+
+
+### Features
+
+* release-react-sdk-v4 ([#1238](https://github.com/launchdarkly/js-core/issues/1238)) ([a0eb24d](https://github.com/launchdarkly/js-core/commit/a0eb24d05e34237c852d039ead46f33e31a95c4c))
+
 ## [0.2.5](https://github.com/launchdarkly/js-core/compare/react-sdk-v0.2.4...react-sdk-v0.2.5) (2026-04-30)
 
 
