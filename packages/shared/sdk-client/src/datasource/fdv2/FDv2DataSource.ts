@@ -141,7 +141,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     return false;
   }
 
-  /* eslint-disable no-await-in-loop */
   // The orchestration loops intentionally use await-in-loop for sequential
   // state machine processing — one result at a time.
   async function runInitializers(): Promise<void> {
@@ -156,6 +155,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         break;
       }
 
+      // eslint-disable-next-line no-await-in-loop
       const result = await initializer.run();
       if (closed) {
         return;
@@ -266,6 +266,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
             );
           }
 
+          // eslint-disable-next-line no-await-in-loop
           const winner = await Promise.race(racers);
           if (closed) {
             return;
@@ -330,7 +331,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
   }
 
-  /* eslint-enable no-await-in-loop */
 
   async function runOrchestration(): Promise<void> {
     // No sources configured at all — nothing to wait for, immediately valid.

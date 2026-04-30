@@ -30,7 +30,6 @@ export interface CacheInitializerConfig {
  * The version is carried on the `Update` envelope, not on the object itself.
  */
 function flagToEvaluationResult(flag: Flag): Omit<Flag, 'version'> {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { version, ...evalResult } = flag;
   return evalResult;
 }

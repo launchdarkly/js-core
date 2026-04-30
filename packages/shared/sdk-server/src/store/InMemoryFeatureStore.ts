@@ -126,7 +126,6 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     return callback?.(this._initCalled);
   }
 
-  /* eslint-disable class-methods-use-this */
   close(): void {
     // For the memory store this is a no-op.
   }

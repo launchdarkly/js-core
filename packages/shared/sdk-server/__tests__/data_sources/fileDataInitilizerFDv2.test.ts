@@ -105,7 +105,7 @@ describe('FileDataInitializerFDv2', () => {
     };
 
     expect(() => {
-      /* eslint-disable-next-line no-new */
+      // eslint-disable-next-line no-new
       new FileDataInitializerFDv2(options, platform, logger);
     }).toThrow('FileDataInitializerFDv2: paths are required');
   });
@@ -122,7 +122,7 @@ describe('FileDataInitializerFDv2', () => {
     };
 
     expect(() => {
-      /* eslint-disable-next-line no-new */
+      // eslint-disable-next-line no-new
       new FileDataInitializerFDv2(options, platformWithoutFileSystem, logger);
     }).toThrow('FileDataInitializerFDv2: file system is required');
   });

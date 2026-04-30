@@ -42,7 +42,6 @@ it('calls allFlagsState with clientSideOnly and passes toJSON as bootstrap', asy
   expect(session.allFlagsState).toHaveBeenCalledWith({ clientSideOnly: true });
 
   // The async component returns a React element whose props contain the bootstrap data.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.bootstrap).toEqual({
     'my-flag': true,
@@ -64,7 +63,6 @@ it('passes session context to the client provider', async () => {
   });
 
   expect(session.getContext).toHaveBeenCalled();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.context).toEqual(context);
 });
@@ -78,7 +76,6 @@ it('forwards clientSideId to the client provider', async () => {
     children: React.createElement('div'),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.clientSideId).toBe('my-client-side-id');
 });
@@ -95,7 +92,6 @@ it('forwards options to the client provider', async () => {
     children: React.createElement('div'),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.options).toEqual(options);
 });
@@ -111,7 +107,6 @@ it('falls back to undefined bootstrap when allFlagsState throws', async () => {
     children: React.createElement('div'),
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.bootstrap).toBeUndefined();
 });
@@ -126,7 +121,6 @@ it('passes children to the client provider', async () => {
     children: child,
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const element = result as any;
   expect(element.props.children).toEqual(child);
 });

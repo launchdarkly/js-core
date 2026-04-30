@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import { Attributes, context, Span, trace } from '@opentelemetry/api';
 
 import {

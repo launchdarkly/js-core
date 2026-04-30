@@ -74,7 +74,7 @@ export default class Bucketer {
     // This is how this has worked in previous implementations, but it is not
     // ideal.
     // The maximum safe integer representation in JS is 2^53 - 1.
-    // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
+    // eslint-disable-next-line no-loss-of-precision
     return [hashVal / 0xfffffffffffffff, true];
   }
 }

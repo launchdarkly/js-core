@@ -35,7 +35,6 @@ export function startAdapter(options?: AdapterOptions) {
       }
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const send = (data: { [key: string]: unknown; reqId: string }): Promise<any> => {
       let resolver: (data: unknown) => void;
       const waiter = new Promise((resolve) => {

@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { Headers, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,

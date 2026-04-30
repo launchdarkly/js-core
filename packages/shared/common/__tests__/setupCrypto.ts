@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import { Hasher } from '../src/api';
 
 class MockHasher implements Hasher {

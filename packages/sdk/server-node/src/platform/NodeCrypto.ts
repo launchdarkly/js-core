@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import { createHash, createHmac, randomUUID } from 'crypto';
 
 import { platform } from '@launchdarkly/js-server-sdk-common';

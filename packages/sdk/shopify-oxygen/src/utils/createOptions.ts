@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
 
 import { OxygenLDOptions } from './validateOptions';

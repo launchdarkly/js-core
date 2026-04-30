@@ -498,7 +498,6 @@ describe('when setting different options', () => {
       withLogger({
         dataSystem: {
           dataSource: { dataSourceOptionsType: 'standard' },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           fdv1Fallback: null as any,
         },
       }),
@@ -512,7 +511,6 @@ describe('when setting different options', () => {
     const opts = withLogger({
       dataSystem: {
         dataSource: { dataSourceOptionsType: 'standard' },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fdv1Fallback: 'not an object' as any,
       },
     });
@@ -532,7 +530,6 @@ describe('when setting different options', () => {
     const opts = withLogger({
       dataSystem: {
         dataSource: { dataSourceOptionsType: 'standard' },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fdv1Fallback: { baseUri: 42 as any, pollInterval: 60 },
       },
     });
@@ -571,7 +568,6 @@ describe('when setting different options', () => {
     const opts = withLogger({
       dataSystem: {
         dataSource: { dataSourceOptionsType: 'standard' },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         fdv1Fallback: { baseUri: 'https://fallback.example', bogus: 'value' } as any,
       },
     });
