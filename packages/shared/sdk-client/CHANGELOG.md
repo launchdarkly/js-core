@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.26.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.1...js-client-sdk-common-v1.26.2) (2026-04-30)
+
+
+### Bug Fixes
+
+* **common:** remove non-spec fields from FDv2 GoodbyeObject ([#1341](https://github.com/launchdarkly/js-core/issues/1341)) ([feb9aa7](https://github.com/launchdarkly/js-core/commit/feb9aa7f6217bc9b3a9794bc71867e14112ea928))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.2 to 2.24.3
+
 ## [1.26.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.0...js-client-sdk-common-v1.26.1) (2026-04-24)
 
 

@@ -9,8 +9,8 @@
     "start": "yarn build && node ./dist/index.js"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.10.12",
-    "@launchdarkly/server-sdk-ai": "0.18.0"
+    "@launchdarkly/node-server-sdk": "9.10.13",
+    "@launchdarkly/server-sdk-ai": "0.18.1"
   },
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
