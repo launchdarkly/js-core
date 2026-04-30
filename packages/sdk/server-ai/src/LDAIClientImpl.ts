@@ -142,34 +142,6 @@ export class LDAIClientImpl implements LDAIClient {
     return config;
   }
 
-  private async _initializeJudges(
-    judgeConfigs: LDJudge[],
-    context: LDContext,
-    variables?: Record<string, unknown>,
-    defaultAiProvider?: SupportedAIProvider,
-  ): Promise<Map<string, Judge>> {
-    const judgePromises = judgeConfigs.map(async (judgeConfig) => {
-      const judge = await this.createJudge(
-        judgeConfig.key,
-        context,
-        undefined,
-        variables,
-        defaultAiProvider,
-      );
-      return judge ? ([judgeConfig.key, judge] as const) : null;
-    });
-
-    const results = await Promise.all(judgePromises);
-    const judges = new Map<string, Judge>();
-    results.forEach((entry) => {
-      if (entry) {
-        judges.set(entry[0], entry[1]);
-      }
-    });
-
-    return judges;
-  }
-
   private async _buildEvaluator(
     judgeConfigs: LDJudge[],
     context: LDContext,
@@ -180,13 +152,22 @@ export class LDAIClientImpl implements LDAIClient {
       return Evaluator.noop();
     }
 
-    const judgesMap = await this._initializeJudges(
-      judgeConfigs,
-      context,
-      variables,
-      defaultAiProvider,
-    );
-    return new Evaluator(judgesMap, { judges: judgeConfigs }, this._logger);
+    const judgeInstances = (
+      await Promise.all(
+        judgeConfigs.map((jc) =>
+          this._createJudgeInstance(
+            jc.key,
+            context,
+            undefined,
+            variables,
+            defaultAiProvider,
+            jc.samplingRate,
+          ),
+        ),
+      )
+    ).filter((j): j is Judge => j !== undefined);
+
+    return new Evaluator(judgeInstances, this._logger);
   }
 
   private async _completionConfig(
@@ -347,13 +328,7 @@ export class LDAIClientImpl implements LDAIClient {
     // Attach the evaluator to the config for use by the managed layer
     const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
 
-    // Build the legacy judges record for TrackedChat backward compat
-    const judges: Record<string, Judge> = {};
-    evaluator.judges.forEach((judge, k) => {
-      judges[k] = judge;
-    });
-
-    return new TrackedChat(configWithEvaluator, provider, judges, this._logger);
+    return new TrackedChat(configWithEvaluator, provider, {}, this._logger);
   }
 
   async createJudge(
@@ -362,9 +337,27 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
+    sampleRate: number = 1.0,
   ): Promise<Judge | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_JUDGE, context, key, 1);
+    return this._createJudgeInstance(
+      key,
+      context,
+      defaultValue,
+      variables,
+      defaultAiProvider,
+      sampleRate,
+    );
+  }
 
+  private async _createJudgeInstance(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+    sampleRate: number = 1.0,
+  ): Promise<Judge | undefined> {
     try {
       if (variables?.message_history !== undefined) {
         this._logger?.warn(
@@ -401,7 +394,7 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      return new Judge(judgeConfig, provider, this._logger);
+      return new Judge(judgeConfig, provider, sampleRate, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;
