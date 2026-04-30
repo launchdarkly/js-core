@@ -195,9 +195,6 @@ export class LDAIConfigUtils {
     }
 
     if (typeof rawTools !== 'object' || Array.isArray(rawTools)) {
-      logger?.warn(
-        `LaunchDarkly AI: Skipping model.parameters.tools: expected an object, got ${Array.isArray(rawTools) ? 'array' : typeof rawTools}`,
-      );
       return undefined;
     }
 
