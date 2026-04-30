@@ -489,6 +489,167 @@ it('falls back to FDv1 synchronizers when FDv1 fallback error is reported', asyn
   expect(statusCallback).toHaveBeenNthCalledWith(5, DataSourceState.Valid, undefined); // sync1 valid
 });
 
+// Per the FDv2 spec, the FDv1 Fallback Directive can arrive during the initializer phase.
+// When that happens the SDK must switch immediately to the FDv1 Fallback Synchronizer --
+// without trying remaining initializers or any FDv2 synchronizers.
+it('falls back to FDv1 from initializer phase, skipping remaining initializers and FDv2 syncs', async () => {
+  const mockInitializer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              `Response header indicates to fallback to FDv1`,
+              500,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockInitializer2: DataSource = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Closed, {
+            name: 'Error',
+            message: 'I should NOT be called due to FDv1 fallback from init1',
+          });
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Closed, {
+            name: 'Error',
+            message: 'I should NOT be called due to FDv1 fallback from init1',
+          });
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockFDv1Data = { key: 'FDv1Data' };
+  const mockFDv1Synchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid, null);
+          _dataCallback(true, mockFDv1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer1), makeDataSourceFactory(mockInitializer2)],
+    [makeDataSourceFactory(mockSynchronizer1)],
+    [makeDataSourceFactory(mockFDv1Synchronizer)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  let dataCallback;
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    dataCallback = jest.fn((_: boolean, data: any) => {
+      if (data === mockFDv1Data) {
+        resolve();
+      }
+    });
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  expect(mockInitializer1.start).toHaveBeenCalledTimes(1);
+  expect(mockInitializer2.start).not.toHaveBeenCalled();
+  expect(mockSynchronizer1.start).not.toHaveBeenCalled();
+  expect(mockFDv1Synchronizer.start).toHaveBeenCalledTimes(1);
+  expect(dataCallback).toHaveBeenCalledTimes(1);
+  expect(dataCallback).toHaveBeenCalledWith(true, mockFDv1Data);
+});
+
+// When the FDv1 Fallback Directive arrives but the SDK has not been configured with an
+// FDv1 fallback synchronizer, the data source must transition to a terminal Closed state
+// instead of looping or trying other FDv2 sources.
+it('terminates when FDv1 fallback is requested but no FDv1 fallback synchronizer is configured', async () => {
+  const mockSynchronizer1 = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              `Response header indicates to fallback to FDv1`,
+              500,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [],
+    [makeDataSourceFactory(mockSynchronizer1)],
+    [], // no FDv1 fallback synchronizer
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  const statusCallback = jest.fn();
+  const dataCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    statusCallback.mockImplementation((state: DataSourceState) => {
+      if (state === DataSourceState.Closed) {
+        resolve();
+      }
+    });
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  // The underlying synchronizer was started exactly once -- we did not loop trying other
+  // FDv2 sources after the directive arrived.
+  expect(mockSynchronizer1.start).toHaveBeenCalledTimes(1);
+  expect(dataCallback).not.toHaveBeenCalled();
+
+  // The terminal status is Closed (composite signals exhaustion when the FDv1 list is empty).
+  const lastCall = statusCallback.mock.calls[statusCallback.mock.calls.length - 1];
+  expect(lastCall[0]).toBe(DataSourceState.Closed);
+});
+
 it('reports error when all initializers fail', async () => {
   const mockInitializer1Error = {
     name: 'Error',

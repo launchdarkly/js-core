@@ -2,6 +2,7 @@ import {
   EventSource,
   EventSourceInitDict,
   Headers,
+  LDFlagDeliveryFallbackError,
   Options,
   Requests,
   Response,
@@ -167,5 +168,49 @@ describe('given a requestor', () => {
     });
 
     expect(res.headers).toEqual(testHeaders);
+  });
+
+  // Per the FDv2 spec, the FDv1 Fallback Directive can ride along on a successful 200
+  // response. The Requestor must surface both the body (so the consumer can apply the
+  // accompanying payload) and the fallback signal.
+  it('passes body and fallback signal to callback when a 200 carries the fallback header', async () => {
+    testStatus = 200;
+    testResponse = 'a response';
+    testHeaders = {
+      'x-ld-fd-fallback': 'true',
+    };
+
+    const res = await promisify<{
+      err: any;
+      body: any;
+      headers: any;
+      fallbackToFDv1: boolean | undefined;
+    }>((cb) => {
+      requestor.requestAllData((err, body, headers, fallbackToFDv1) =>
+        cb({ err, body, headers, fallbackToFDv1 }),
+      );
+    });
+
+    expect(res.err).toBeUndefined();
+    expect(res.body).toEqual(testResponse);
+    expect(res.fallbackToFDv1).toBe(true);
+  });
+
+  // When the directive arrives alongside an HTTP error, the Requestor should still surface
+  // the fallback signal so the consumer can switch to FDv1 instead of retrying.
+  it('returns an LDFlagDeliveryFallbackError and the fallback signal on an error response with the directive', async () => {
+    testStatus = 500;
+    testHeaders = {
+      'x-ld-fd-fallback': 'true',
+    };
+
+    const res = await promisify<{ err: any; fallbackToFDv1: boolean | undefined }>((cb) => {
+      requestor.requestAllData((err, _body, _headers, fallbackToFDv1) =>
+        cb({ err, fallbackToFDv1 }),
+      );
+    });
+
+    expect(res.err).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    expect(res.fallbackToFDv1).toBe(true);
   });
 });

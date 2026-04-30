@@ -144,13 +144,30 @@ export class CompositeDataSource implements DataSource {
                   // don't use this datasource's factory again
                   this._logger?.debug(`Culling data source due to err ${err}`);
                   cullDSFactory?.();
-
-                  // this error indicates we should fallback to only using FDv1 synchronizers
-                  if (err instanceof LDFlagDeliveryFallbackError) {
-                    this._logger?.debug(`Falling back to FDv1`);
-                    this._syncFactories = this._fdv1Synchronizers;
-                  }
                 }
+
+                // The FDv1 fallback directive is server-directed and one-way. As soon as we
+                // observe it, end any in-progress initializer phase and replace the FDv2
+                // synchronizers with the configured FDv1 fallback list. If no FDv1 fallback
+                // is configured, the synchronizer list becomes empty and the composite will
+                // terminate via the exhausted-sources path.
+                if (err instanceof LDFlagDeliveryFallbackError) {
+                  if (this._fdv1Synchronizers.length() > 0) {
+                    this._logger?.warn(`Falling back to FDv1`);
+                  } else {
+                    this._logger?.warn(
+                      `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
+                    );
+                  }
+                  this._syncFactories = this._fdv1Synchronizers;
+                  sanitizedStatusCallback(state, err);
+                  this._consumeCancelToken(cancelScheduledTransition);
+                  // switchToSync ends init phase and starts the FDv1 synchronizer list from
+                  // its head, bypassing any remaining initializers and FDv2 synchronizers.
+                  transitionResolve({ transition: 'switchToSync', err });
+                  return;
+                }
+
                 sanitizedStatusCallback(state, err);
                 this._consumeCancelToken(cancelScheduledTransition);
                 transitionResolve({ transition: 'fallback', err }); // unrecoverable error has occurred, so fallback
@@ -205,7 +222,13 @@ export class CompositeDataSource implements DataSource {
       // stop the underlying datasource before transitioning to next state
       currentDS?.stop();
 
-      if (transitionRequest.err && transitionRequest.transition !== 'stop') {
+      if (
+        transitionRequest.err &&
+        transitionRequest.transition !== 'stop' &&
+        // The server-directed FDv1 fallback is not an error retry -- the directive should be
+        // honored immediately so the FDv1 synchronizer can take over without delay.
+        !(transitionRequest.err instanceof LDFlagDeliveryFallbackError)
+      ) {
         // if the transition was due to an error we're not in the initializer phase, throttle the transition. Fallback between initializers is not throttled.
         const delay = this._initPhaseActive ? 0 : this._backoff.fail();
         const { promise, cancel: cancelDelay } = this._cancellableDelay(delay);

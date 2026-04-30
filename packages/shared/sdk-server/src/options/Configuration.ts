@@ -16,6 +16,7 @@ import { LDBigSegmentsOptions, LDOptions, LDProxyOptions, LDTLSOptions } from '.
 import { Hook } from '../api/integrations';
 import {
   DataSourceOptions,
+  FDv1FallbackConfiguration,
   isCustomOptions,
   isPollingOnlyOptions,
   isStandardOptions,
@@ -271,6 +272,7 @@ export interface DataSystemConfiguration {
   dataSource?: DataSourceOptions;
   featureStoreFactory: (clientContext: LDClientContext) => LDTransactionalFeatureStore;
   useLdd?: boolean;
+  fdv1Fallback?: FDv1FallbackConfiguration;
 }
 
 /**
@@ -381,6 +383,7 @@ export default class Configuration {
       this.dataSystem = {
         dataSource: validatedDSOptions.dataSource,
         useLdd: validatedDSOptions.useLdd,
+        fdv1Fallback: validatedDSOptions.fdv1Fallback,
         // @ts-ignore
         featureStoreFactory: (clientContext) => {
           if (validatedDSOptions.persistentStore === undefined) {

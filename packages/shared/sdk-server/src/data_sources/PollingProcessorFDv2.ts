@@ -73,7 +73,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
-    this._requestor.requestAllData((err, body, headers) => {
+    this._requestor.requestAllData((err, body, headers, fallbackToFDv1) => {
       if (this._stopped) {
         return;
       }
@@ -81,17 +81,33 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
+      // Helper to emit the terminal FDv1 fallback signal. Callers must `return` after
+      // invoking this; no further poll is scheduled.
+      const emitFallback = () => {
+        const fallbackErr =
+          err instanceof LDFlagDeliveryFallbackError
+            ? err
+            : new LDFlagDeliveryFallbackError(
+                DataSourceErrorKind.ErrorResponse,
+                err
+                  ? httpErrorMessage(err, 'polling request', 'falling back to FDv1')
+                  : `Response header indicates to fallback to FDv1`,
+                err?.status,
+              );
+        this._logger?.warn(fallbackErr.message);
+        statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+      };
+
       this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
-        const { status } = err;
-        // this is a short term error and will be removed once FDv2 adoption is sufficient.
-        if (err instanceof LDFlagDeliveryFallbackError) {
-          this._logger?.error(err.message);
-          statusCallback(subsystemCommon.DataSourceState.Closed, err);
-          // It is not recoverable, return and do not trigger another poll.
+        // The fallback directive can ride along on either an error or a successful response.
+        // Honor it before any other error handling so we always switch to FDv1 when asked.
+        if (fallbackToFDv1 || err instanceof LDFlagDeliveryFallbackError) {
+          emitFallback();
           return;
         }
 
+        const { status } = err;
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
@@ -170,6 +186,14 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             ),
           );
         }
+      }
+
+      // The fallback directive may ride along on a successful response. Apply the payload
+      // first (above) so evaluations can serve the server-provided data, then switch to
+      // FDv1 instead of scheduling another poll.
+      if (fallbackToFDv1) {
+        emitFallback();
+        return;
       }
 
       // schedule poll

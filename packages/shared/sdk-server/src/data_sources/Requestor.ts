@@ -34,9 +34,10 @@ export default class Requestor implements LDFeatureRequestor {
     baseHeaders: LDHeaders,
     private readonly _path: string = '/sdk/latest-all',
     private readonly _logger?: LDLogger,
+    serviceEndpointsOverride?: ServiceEndpoints,
   ) {
     this._headers = { ...baseHeaders };
-    this._serviceEndpoints = config.serviceEndpoints;
+    this._serviceEndpoints = serviceEndpointsOverride ?? config.serviceEndpoints;
   }
 
   /**
@@ -74,7 +75,7 @@ export default class Requestor implements LDFeatureRequestor {
   }
 
   async requestAllData(
-    cb: (err: any, body: any, headers: any) => void,
+    cb: (err: any, body: any, headers: any, fallbackToFDv1?: boolean) => void,
     queryParams: { key: string; value: string }[] = [],
   ) {
     const options: Options = {
@@ -89,30 +90,35 @@ export default class Requestor implements LDFeatureRequestor {
       const { res, body } = await this._requestWithETagCache(uri, options);
       this._logger?.debug(`Requestor got (possibly cached) body: ${JSON.stringify(body)}`);
 
-      if (res.headers.get(`x-ld-fd-fallback`) === `true`) {
-        const err = new LDFlagDeliveryFallbackError(
-          DataSourceErrorKind.ErrorResponse,
-          `Response header indicates to fallback to FDv1.`,
-          res.status,
-        );
-        return cb(err, undefined, undefined);
-      }
+      // Per the FDv2 spec, x-ld-fd-fallback signals that the SDK should switch to FDv1
+      // for the remainder of the lifetime. The signal can ride along on either a successful
+      // response or an error response -- in both cases callers must apply any accompanying
+      // payload before honoring the directive.
+      const fallbackToFDv1 = res.headers.get(`x-ld-fd-fallback`) === `true`;
+      const responseHeaders = Object.fromEntries(res.headers.entries());
 
       if (res.status !== 200 && res.status !== 304) {
-        const err = new LDPollingError(
-          DataSourceErrorKind.ErrorResponse,
-          `Unexpected status code: ${res.status}`,
-          res.status,
-        );
-        return cb(err, undefined, undefined);
+        const err = fallbackToFDv1
+          ? new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              `Response header indicates to fallback to FDv1.`,
+              res.status,
+            )
+          : new LDPollingError(
+              DataSourceErrorKind.ErrorResponse,
+              `Unexpected status code: ${res.status}`,
+              res.status,
+            );
+        return cb(err, undefined, responseHeaders, fallbackToFDv1);
       }
       return cb(
         undefined,
         res.status === 304 ? null : body,
-        Object.fromEntries(res.headers.entries()),
+        responseHeaders,
+        fallbackToFDv1,
       );
     } catch (err) {
-      return cb(err, undefined, undefined);
+      return cb(err, undefined, undefined, false);
     }
   }
 }

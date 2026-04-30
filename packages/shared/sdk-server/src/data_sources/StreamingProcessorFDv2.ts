@@ -124,6 +124,11 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     const uri = getStreamingUri(this._serviceEndpoints, this._streamUriPath, params);
     this._logger?.debug(`Streaming processor opening event source to uri: ${uri}`);
 
+    // Set when the most recent successful connection carried `x-ld-fd-fallback: true`. We
+    // finish applying the next payload before emitting the fallback signal so evaluations
+    // can serve the server-provided data while the FDv1 synchronizer takes over.
+    let fallbackRequested = false;
+
     const eventSource = this._requests.createEventSource(uri, {
       headers: this._headers,
       errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error, statusCallback),
@@ -158,6 +163,20 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     payloadReader.addPayloadListener((payload) => {
       this._logConnectionResult(true);
       dataCallback(payload.type === 'full', { initMetadata: this._initMetadata, payload });
+
+      // The server may signal FDv1 fallback alongside a valid streaming payload via the
+      // response headers on the initial connection. Apply the payload first (above) so
+      // evaluations can serve the server-provided data, then surface the directive so the
+      // CompositeDataSource can switch to the FDv1 synchronizer.
+      if (fallbackRequested) {
+        const fallbackErr = new LDFlagDeliveryFallbackError(
+          DataSourceErrorKind.ErrorResponse,
+          `Response header indicates to fallback to FDv1`,
+        );
+        this._logger?.warn(fallbackErr.message);
+        statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+        this.stop();
+      }
     });
 
     eventSource.onclose = () => {
@@ -172,6 +191,11 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     eventSource.onopen = (e) => {
       this._logger?.info('Opened LaunchDarkly stream connection');
       this._initMetadata = internal.initMetadataFromHeaders(e.headers);
+      // The fallback signal is captured here from the connection-open response headers and
+      // is honored by the payload listener above once the next payload has been applied.
+      if (e.headers?.[`x-ld-fd-fallback`] === `true`) {
+        fallbackRequested = true;
+      }
       statusCallback(subsystemCommon.DataSourceState.Valid);
     };
 

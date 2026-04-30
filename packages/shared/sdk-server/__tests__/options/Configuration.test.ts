@@ -472,4 +472,37 @@ describe('when setting different options', () => {
     expect(isStandardOptions(config.dataSystem!.dataSource)).toEqual(true);
     expect(logger(config).getCount()).toEqual(0);
   });
+
+  // The FDv1 Fallback Synchronizer is server-directed: callers configure it via
+  // `dataSystem.fdv1Fallback`, and the Configuration must surface the value unchanged so
+  // LDClientImpl can wire it up.
+  it('passes through the fdv1Fallback configuration', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          dataSource: { dataSourceOptionsType: 'standard' },
+          fdv1Fallback: { baseUri: 'https://fallback.example', pollInterval: 60 },
+        },
+      }),
+    );
+    expect(config.dataSystem!.fdv1Fallback).toEqual({
+      baseUri: 'https://fallback.example',
+      pollInterval: 60,
+    });
+  });
+
+  // Setting fdv1Fallback to null is the documented way to disable the FDv1 fallback. The
+  // Configuration must preserve the null so LDClientImpl can skip wiring the synchronizer.
+  it('preserves a null fdv1Fallback so the FDv1 fallback synchronizer can be opted out', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          dataSource: { dataSourceOptionsType: 'standard' },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          fdv1Fallback: null as any,
+        },
+      }),
+    );
+    expect(config.dataSystem!.fdv1Fallback).toBeNull();
+  });
 });

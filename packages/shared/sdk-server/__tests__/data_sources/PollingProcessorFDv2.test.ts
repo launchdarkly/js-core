@@ -1,3 +1,5 @@
+import { LDFlagDeliveryFallbackError } from '@launchdarkly/js-sdk-common';
+
 import { DataSourceErrorKind, LDPollingError, subsystem } from '../../src';
 import PollingProcessorFDv2 from '../../src/data_sources/PollingProcessorFDv2';
 import Requestor from '../../src/data_sources/Requestor';
@@ -140,6 +142,59 @@ describe('given a polling processor', () => {
         version: 1,
       },
     });
+  });
+
+  // Per the FDv2 spec, the fallback directive can ride along on a successful response.
+  // The processor must apply the payload first, then emit the fallback signal so that the
+  // CompositeDataSource can swap to the FDv1 synchronizer.
+  it('applies payload then signals fallback when fallback header rides along on a 200', async () => {
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers, true));
+
+    let dataCallback;
+    let resolveStatus: () => void = () => {};
+    const sawFallback = new Promise<void>((resolve) => {
+      resolveStatus = resolve;
+    });
+    const statusCallback = jest.fn((state, err) => {
+      if (state === subsystem.DataSourceState.Closed && err instanceof LDFlagDeliveryFallbackError) {
+        resolveStatus();
+      }
+    });
+
+    await new Promise<void>((resolve) => {
+      dataCallback = jest.fn(() => {
+        resolve();
+      });
+      processor.start(dataCallback, statusCallback);
+    });
+
+    await sawFallback;
+
+    // The server-provided data was applied before the fallback signal was emitted.
+    expect(dataCallback).toHaveBeenCalledTimes(1);
+    const lastCall = statusCallback.mock.calls[statusCallback.mock.calls.length - 1];
+    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
+    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+  });
+
+  // When the fallback directive arrives alongside an error response, the processor must
+  // emit the directive without scheduling a retry, even if the status would otherwise be
+  // recoverable.
+  it('signals fallback on an error response without retrying', async () => {
+    requestor.requestAllData = jest.fn((cb) =>
+      cb({ status: 500 }, undefined, headers, true),
+    );
+
+    const statusCallback = jest.fn();
+    processor.start(mockDataCallback, statusCallback);
+
+    // Wait for the synchronous fallback emission.
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+    const lastCall = statusCallback.mock.calls[statusCallback.mock.calls.length - 1];
+    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
+    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
   });
 
   it('uses selectorGetter when provided', async () => {
