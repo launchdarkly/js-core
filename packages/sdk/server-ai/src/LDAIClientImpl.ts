@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { TrackedChat } from './api/chat';
+import { ManagedModel } from './api/chat';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -25,7 +25,8 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
-import { AIProviderFactory, SupportedAIProvider } from './api/providers';
+import { RunnerResult } from './api/model/types';
+import { AIProvider, AIProviderFactory, Runner, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
@@ -50,6 +51,26 @@ const INIT_TRACK_CONTEXT: LDContext = {
 };
 
 const disabledAIConfig: LDAIConfigDefault = { enabled: false };
+
+/**
+ * Adapt a (deprecated) AIProvider to the Runner protocol.
+ * Prepends the AIConfig's configured messages to the user prompt so existing
+ * AIProvider-based flows preserve their system-prompt behavior under the
+ * stateless Runner contract.
+ */
+function runnerFromAIProvider(provider: AIProvider, config: LDAICompletionConfig): Runner {
+  return {
+    async run(input: string): Promise<RunnerResult> {
+      const messages: LDMessage[] = [...(config.messages ?? []), { role: 'user', content: input }];
+      const response = await provider.invokeModel(messages);
+      return {
+        content: response.message.content,
+        metrics: response.metrics,
+        raw: response,
+      };
+    },
+  };
+}
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
@@ -293,42 +314,17 @@ export class LDAIClientImpl implements LDAIClient {
     return this.agentConfigs(agentConfigs, context);
   }
 
+  /**
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
+   */
   async createChat(
     key: string,
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
-    const config = await this._completionConfig(
-      key,
-      context,
-      defaultValue ?? disabledAIConfig,
-      variables,
-    );
-
-    if (!config.enabled) {
-      this._logger?.info(`Chat configuration is disabled: ${key}`);
-      return undefined;
-    }
-
-    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
-    if (!provider) {
-      return undefined;
-    }
-
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
-      defaultAiProvider,
-    );
-
-    // Attach the evaluator to the config for use by the managed layer
-    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
-
-    return new TrackedChat(configWithEvaluator, provider, {}, this._logger);
+  ): Promise<ManagedModel | undefined> {
+    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   async createJudge(
@@ -407,12 +403,41 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  ): Promise<ManagedModel | undefined> {
+    this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
+    const config = await this._completionConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+    );
+
+    if (!config.enabled) {
+      this._logger?.info(`Chat configuration is disabled: ${key}`);
+      return undefined;
+    }
+
+    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
+    if (!provider) {
+      return undefined;
+    }
+
+    const evaluator = await this._buildEvaluator(
+      config.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
+    // Attach the evaluator to the config for use by the managed layer
+    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
+
+    const runner = runnerFromAIProvider(provider, configWithEvaluator);
+    return new ManagedModel(configWithEvaluator, runner, this._logger);
   }
 
   /**
-   * @deprecated Use `createChat` instead. This method will be removed in a future version.
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
    */
   async initChat(
     key: string,
@@ -420,8 +445,8 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  ): Promise<ManagedModel | undefined> {
+    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   createTracker(token: string, context: LDContext): LDAIConfigTracker {

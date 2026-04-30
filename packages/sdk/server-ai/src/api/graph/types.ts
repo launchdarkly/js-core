@@ -1,4 +1,4 @@
-import { LDTokenUsage } from '../metrics';
+import { LDAIMetrics, LDTokenUsage } from '../metrics';
 
 /**
  * Represents a directed edge in an agent graph, connecting a source node to a target node.
@@ -60,6 +60,58 @@ export interface LDGraphMetricSummary {
    * Execution path through the graph as an array of config keys. Absent if not yet tracked.
    */
   path?: string[];
+}
+
+/**
+ * Graph-level metrics for a completed graph run, as returned by a graph runner.
+ * Does NOT include handoffs or evaluations — those are managed-layer concerns.
+ */
+export interface GraphMetrics {
+  /**
+   * Whether the graph invocation succeeded.
+   */
+  success: boolean;
+
+  /**
+   * Execution path through the graph as an ordered array of config keys.
+   */
+  path: string[];
+
+  /**
+   * Total graph execution duration in milliseconds, if tracked.
+   */
+  durationMs?: number;
+
+  /**
+   * Aggregate token usage across the entire graph invocation, if available.
+   */
+  usage?: LDTokenUsage;
+
+  /**
+   * Per-node metrics keyed by agent config key.
+   */
+  nodeMetrics: Record<string, LDAIMetrics>;
+}
+
+/**
+ * The result returned by a graph runner invocation (provider-level).
+ * Does NOT include evaluations or handoffs.
+ */
+export interface AgentGraphRunnerResult {
+  /**
+   * The text content of the graph's final response.
+   */
+  content: string;
+
+  /**
+   * Graph-level metrics for this invocation.
+   */
+  metrics: GraphMetrics;
+
+  /**
+   * The raw response object from the provider, if available.
+   */
+  raw?: unknown;
 }
 
 /**
