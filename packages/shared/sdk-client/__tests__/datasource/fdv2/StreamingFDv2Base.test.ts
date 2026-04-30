@@ -125,8 +125,6 @@ it('produces a goodbye status result', async () => {
 
   simulateEvent(mockEventSource, 'goodbye', {
     reason: 'server restarting',
-    silent: false,
-    catastrophe: false,
   });
 
   const result = await base.takeResult();
@@ -416,8 +414,6 @@ it('produces results in order', async () => {
 
   simulateEvent(mockEventSource, 'goodbye', {
     reason: 'bye',
-    silent: false,
-    catastrophe: false,
   });
 
   const r1 = await base.takeResult();
