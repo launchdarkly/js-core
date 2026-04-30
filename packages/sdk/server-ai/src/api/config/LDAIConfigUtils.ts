@@ -146,6 +146,29 @@ export class LDAIConfigUtils {
     }
   }
 
+  private static _parseToolsMap(
+    toolsMap: { [key: string]: unknown },
+    logger: LDLogger | undefined,
+  ): { [toolName: string]: LDTool } {
+    const result: { [toolName: string]: LDTool } = {};
+    for (const [toolName, toolValue] of Object.entries(toolsMap)) {
+      if (toolValue === null || typeof toolValue !== 'object' || Array.isArray(toolValue)) {
+        logger?.warn(`LaunchDarkly AI: Skipping tool "${toolName}": expected an object`);
+        continue;
+      }
+      const toolObj = toolValue as { [key: string]: unknown };
+      result[toolName] = {
+        name: typeof toolObj['name'] === 'string' ? toolObj['name'] : toolName,
+        description:
+          typeof toolObj['description'] === 'string' ? toolObj['description'] : undefined,
+        type: typeof toolObj['type'] === 'string' ? toolObj['type'] : undefined,
+        parameters: toolObj['parameters'] as LDTool['parameters'],
+        customParameters: toolObj['customParameters'] as LDTool['customParameters'],
+      };
+    }
+    return result;
+  }
+
   private static _resolveTools(
     flagValue: LDAIConfigFlagValue,
     logger?: LDLogger,
@@ -157,7 +180,8 @@ export class LDAIConfigUtils {
         );
         return undefined;
       }
-      return flagValue.tools;
+      const parsed = this._parseToolsMap(flagValue.tools as { [key: string]: unknown }, logger);
+      return Object.keys(parsed).length > 0 ? parsed : undefined;
     }
 
     const rawTools = flagValue.model?.parameters?.['tools'];
@@ -173,25 +197,8 @@ export class LDAIConfigUtils {
       return undefined;
     }
 
-    const toolsMap = rawTools as { [key: string]: unknown };
-    const result: { [toolName: string]: LDTool } = {};
-
-    for (const [toolName, toolValue] of Object.entries(toolsMap)) {
-      if (
-        toolValue === null ||
-        typeof toolValue !== 'object' ||
-        Array.isArray(toolValue) ||
-        typeof (toolValue as { name?: unknown }).name !== 'string'
-      ) {
-        logger?.warn(
-          `LaunchDarkly AI: Skipping tool "${toolName}" in model.parameters.tools: expected an object with a name string`,
-        );
-        continue;
-      }
-      result[toolName] = toolValue as LDTool;
-    }
-
-    return Object.keys(result).length > 0 ? result : undefined;
+    const parsed = this._parseToolsMap(rawTools as { [key: string]: unknown }, logger);
+    return Object.keys(parsed).length > 0 ? parsed : undefined;
   }
 
   /**

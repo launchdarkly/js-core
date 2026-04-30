@@ -980,7 +980,7 @@ describe('tools map support', () => {
     expect(result.tools).toBeUndefined();
   });
 
-  it('returns undefined when a model.parameters.tools entry is missing the name field', async () => {
+  it('falls back to key name for model.parameters.tools entries missing the name field', async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-flag';
     const defaultValue: LDAICompletionConfigDefault = { enabled: false };
@@ -990,7 +990,7 @@ describe('tools map support', () => {
         parameters: {
           tools: {
             'valid-tool': { name: 'valid-tool', type: 'function' },
-            'invalid-tool': { type: 'function' },
+            'no-name-tool': { type: 'function' },
           },
         },
       },
@@ -1000,6 +1000,9 @@ describe('tools map support', () => {
 
     const result = await client.completionConfig(key, testContext, defaultValue);
 
-    expect(result.tools).toBeUndefined();
+    expect(result.tools).toBeDefined();
+    expect(result.tools!['valid-tool'].name).toBe('valid-tool');
+    expect(result.tools!['no-name-tool']).toBeDefined();
+    expect(result.tools!['no-name-tool'].name).toBe('no-name-tool');
   });
 });
