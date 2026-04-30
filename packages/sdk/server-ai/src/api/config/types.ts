@@ -223,7 +223,9 @@ export interface LDAIAgentConfig extends LDAIConfig {
   tools?: { [toolName: string]: LDTool };
   /**
    * Evaluator for this agent config. Populated by createAgent.
-   * Internal; not part of the flag value shape.
+   * Not part of the flag value shape.
+   *
+   * @internal
    */
   evaluator?: Evaluator;
 }
@@ -247,7 +249,9 @@ export interface LDAICompletionConfig extends LDAIConfig {
   tools?: { [toolName: string]: LDTool };
   /**
    * Evaluator for this completion config. Populated by createChat/createModel.
-   * Internal; not part of the flag value shape.
+   * Not part of the flag value shape.
+   *
+   * @internal
    */
   evaluator?: Evaluator;
 }

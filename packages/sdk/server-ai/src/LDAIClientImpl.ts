@@ -147,9 +147,7 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<Record<string, Judge>> {
-    const judges: Record<string, Judge> = {};
-
+  ): Promise<Map<string, Judge>> {
     const judgePromises = judgeConfigs.map(async (judgeConfig) => {
       const judge = await this.createJudge(
         judgeConfig.key,
@@ -158,13 +156,14 @@ export class LDAIClientImpl implements LDAIClient {
         variables,
         defaultAiProvider,
       );
-      return judge ? { key: judgeConfig.key, judge } : null;
+      return judge ? ([judgeConfig.key, judge] as const) : null;
     });
 
     const results = await Promise.all(judgePromises);
-    results.forEach((result) => {
-      if (result) {
-        judges[result.key] = result.judge;
+    const judges = new Map<string, Judge>();
+    results.forEach((entry) => {
+      if (entry) {
+        judges.set(entry[0], entry[1]);
       }
     });
 
@@ -181,13 +180,12 @@ export class LDAIClientImpl implements LDAIClient {
       return Evaluator.noop();
     }
 
-    const judgesRecord = await this._initializeJudges(
+    const judgesMap = await this._initializeJudges(
       judgeConfigs,
       context,
       variables,
       defaultAiProvider,
     );
-    const judgesMap = new Map<string, Judge>(Object.entries(judgesRecord));
     return new Evaluator(judgesMap, { judges: judgeConfigs }, this._logger);
   }
 

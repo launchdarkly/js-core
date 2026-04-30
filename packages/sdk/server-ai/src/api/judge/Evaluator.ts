@@ -11,6 +11,8 @@ import { LDJudgeResult } from './types';
  * The `Evaluator` is responsible only for running judges and returning results.
  * It does NOT call `tracker.trackJudgeResult` — that is the responsibility of
  * the managed layer (e.g., ManagedModel, ManagedAgent).
+ *
+ * @internal
  */
 export class Evaluator {
   constructor(
@@ -37,6 +39,8 @@ export class Evaluator {
    */
   async evaluate(input: string, output: string): Promise<LDJudgeResult[]> {
     if (this.judgeConfiguration.judges.length === 0) {
+      // Same behavior as Evaluator.noop().evaluate() — keep these aligned if
+      // the noop path ever becomes fancier (e.g., debug logging).
       return [];
     }
 
@@ -55,26 +59,15 @@ export class Evaluator {
           success: false,
           sampled: true,
           errorMessage: err instanceof Error ? err.message : 'Unknown error',
+          judgeConfigKey: judgeConfig.key,
         };
         return result;
       }
     });
 
-    const settled = await Promise.allSettled(evaluationPromises);
-
-    const results: LDJudgeResult[] = [];
-    settled.forEach((item) => {
-      if (item.status === 'fulfilled' && item.value !== null) {
-        results.push(item.value);
-      } else if (item.status === 'rejected') {
-        results.push({
-          success: false,
-          sampled: true,
-          errorMessage: 'Judge evaluation failed unexpectedly',
-        });
-      }
-    });
-
-    return results;
+    // The map callback above handles all errors internally and returns either
+    // a LDJudgeResult or null (missing judge). Promise.all is safe here.
+    const settled = await Promise.all(evaluationPromises);
+    return settled.filter((item): item is LDJudgeResult => item !== null);
   }
 }
