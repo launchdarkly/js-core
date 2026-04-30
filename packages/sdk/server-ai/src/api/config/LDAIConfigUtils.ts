@@ -174,7 +174,11 @@ export class LDAIConfigUtils {
     logger?: LDLogger,
   ): { [toolName: string]: LDTool } | undefined {
     if (flagValue.tools !== undefined) {
-      if (typeof flagValue.tools !== 'object' || Array.isArray(flagValue.tools)) {
+      if (
+        flagValue.tools === null ||
+        typeof flagValue.tools !== 'object' ||
+        Array.isArray(flagValue.tools)
+      ) {
         logger?.warn(
           `LaunchDarkly AI: Skipping tools: expected an object, got ${Array.isArray(flagValue.tools) ? 'array' : typeof flagValue.tools}`,
         );
