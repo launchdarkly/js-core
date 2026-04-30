@@ -66,8 +66,6 @@ export interface DeleteObject {
 
 export interface GoodbyeObject {
   reason: string;
-  silent: boolean;
-  catastrophe: boolean;
 }
 
 export interface ErrorObject {

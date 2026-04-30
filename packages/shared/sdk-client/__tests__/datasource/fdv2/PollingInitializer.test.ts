@@ -174,7 +174,7 @@ it('does not retry on goodbye result', async () => {
     },
     {
       event: 'goodbye',
-      data: { reason: 'server-shutdown', silent: false, catastrophe: false },
+      data: { reason: 'server-shutdown' },
     },
   ]);
   const requestor: FDv2Requestor = {

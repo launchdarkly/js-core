@@ -286,7 +286,7 @@ describe('given a goodbye event in the response', () => {
       },
       {
         event: 'goodbye',
-        data: { reason: 'server-shutdown', silent: false, catastrophe: false },
+        data: { reason: 'server-shutdown' },
       },
     ]);
     const requestor = makeRequestor({
