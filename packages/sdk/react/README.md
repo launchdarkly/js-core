@@ -6,18 +6,13 @@
 [![NPM][react-sdk-dm-badge]][react-sdk-npm-link]
 [![NPM][react-sdk-dt-badge]][react-sdk-npm-link]
 
-⚠️⚠️⚠️
-
-> [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility 
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](./CHANGELOG.md) before upgrading.
-
-☝️☝️☝️
-
 ## Getting started
-Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/react/react-web#get-started) for instructions on getting started with using the SDK.
+
+Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/react/react-web) for instructions on getting started with using the SDK.
+
+## Verifying SDK build provenance with the SLSA framework
+
+LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply-chain Levels for Software Artifacts) to help developers make their supply chain more secure by ensuring the authenticity and build integrity of our published SDK packages. To learn more, see the [provenance guide](../../../PROVENANCE.md).
 
 ## About LaunchDarkly
 

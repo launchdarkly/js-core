@@ -281,7 +281,7 @@
       "bump-minor-pre-major": true
     },
     "packages/sdk/react": {
-      "bump-minor-pre-major": true,
+      "release-as": "4.0.0",
       "extra-files": [
         "src/client/LDReactClient.tsx",
         {
