@@ -158,5 +158,6 @@ export interface SDKDataSystemInitializerParams {
 export interface SDKDataSystemParams {
   initializers?: SDKDataSystemInitializerParams[];
   synchronizers?: SDKDataSystemSynchronizerParams[];
+  fdv1Fallback?: SDKDataSourcePollingParams;
   payloadFilter?: string;
 }
