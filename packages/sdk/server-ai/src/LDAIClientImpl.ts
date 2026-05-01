@@ -108,7 +108,7 @@ export class LDAIClientImpl implements LDAIClient {
         graphKey,
       );
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, this._logger);
+    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
