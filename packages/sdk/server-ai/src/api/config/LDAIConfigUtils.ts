@@ -116,23 +116,29 @@ export class LDAIConfigUtils {
   /**
    * Creates a disabled configuration of the specified mode.
    *
+   * @param key The configuration key
    * @param mode The mode for the disabled config
+   * @param createTracker A factory function that creates a new tracker for each execution
    * @returns A disabled config of the appropriate type
    */
-  static createDisabledConfig(key: string, mode: LDAIConfigMode): LDAIConfigKind {
+  static createDisabledConfig(
+    key: string,
+    mode: LDAIConfigMode,
+    createTracker: () => LDAIConfigTracker,
+  ): LDAIConfigKind {
     switch (mode) {
       case 'agent':
         return {
           key,
           enabled: false,
-          createTracker: undefined as unknown as () => LDAIConfigTracker,
+          createTracker,
           evaluator: Evaluator.noop(),
         } as LDAIAgentConfig;
       case 'judge':
         return {
           key,
           enabled: false,
-          createTracker: undefined as unknown as () => LDAIConfigTracker,
+          createTracker,
         } as LDAIJudgeConfig;
       case 'completion':
       default:
@@ -140,7 +146,7 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          createTracker: undefined as unknown as () => LDAIConfigTracker,
+          createTracker,
           evaluator: Evaluator.noop(),
         } as LDAICompletionConfig;
     }

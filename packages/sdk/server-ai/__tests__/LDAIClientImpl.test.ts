@@ -339,7 +339,7 @@ describe('config evaluation', () => {
     const result = await client.completionConfig(key, testContext, defaultValue);
 
     expect(result.enabled).toBe(false);
-    expect(result.createTracker).toBeUndefined();
+    expect(result.createTracker).toBeInstanceOf(Function);
   });
 
   it('handles missing metadata mode by defaulting to completion mode', async () => {

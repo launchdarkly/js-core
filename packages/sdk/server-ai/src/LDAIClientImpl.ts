@@ -105,16 +105,6 @@ export class LDAIClientImpl implements LDAIClient {
 
     const value: LDAIConfigFlagValue = await this._ldClient.variation(key, context, ldFlagValue);
 
-    // Validate mode match
-    // eslint-disable-next-line no-underscore-dangle
-    const flagMode = value._ldMeta?.mode ?? 'completion';
-    if (flagMode !== mode) {
-      this._logger?.warn(
-        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
-      );
-      return LDAIConfigUtils.createDisabledConfig(key, mode);
-    }
-
     const trackerFactory = () =>
       new LDAIConfigTrackerImpl(
         this._ldClient,
@@ -129,6 +119,16 @@ export class LDAIClientImpl implements LDAIClient {
         context,
         graphKey,
       );
+
+    // Validate mode match
+    // eslint-disable-next-line no-underscore-dangle
+    const flagMode = value._ldMeta?.mode ?? 'completion';
+    if (flagMode !== mode) {
+      this._logger?.warn(
+        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
+      );
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory);
+    }
 
     const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
 
