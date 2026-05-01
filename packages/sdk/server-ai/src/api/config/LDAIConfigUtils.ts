@@ -1,5 +1,3 @@
-import { LDLogger } from '@launchdarkly/js-server-sdk-common';
-
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
@@ -98,7 +96,6 @@ export class LDAIConfigUtils {
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
-    logger?: LDLogger,
   ): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
@@ -106,12 +103,12 @@ export class LDAIConfigUtils {
 
     switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(key, flagValue, trackerFactory, logger);
+        return this.toAgentConfig(key, flagValue, trackerFactory);
       case 'judge':
         return this.toJudgeConfig(key, flagValue, trackerFactory);
       case 'completion':
       default:
-        return this.toCompletionConfig(key, flagValue, trackerFactory, logger);
+        return this.toCompletionConfig(key, flagValue, trackerFactory);
     }
   }
 
@@ -146,70 +143,26 @@ export class LDAIConfigUtils {
     }
   }
 
-  private static _parseToolsMap(
-    toolsMap: { [key: string]: unknown },
-    logger: LDLogger | undefined,
-  ): { [toolName: string]: LDTool } {
-    const result: { [toolName: string]: LDTool } = {};
-    for (const [toolName, toolValue] of Object.entries(toolsMap)) {
-      if (toolValue === null || typeof toolValue !== 'object' || Array.isArray(toolValue)) {
-        logger?.warn(`LaunchDarkly AI: Skipping tool "${toolName}": expected an object`);
-        continue;
-      }
-      const toolObj = toolValue as { [key: string]: unknown };
-      result[toolName] = {
-        name: typeof toolObj['name'] === 'string' ? toolObj['name'] : toolName,
-        description:
-          typeof toolObj['description'] === 'string' ? toolObj['description'] : undefined,
-        type: typeof toolObj['type'] === 'string' ? toolObj['type'] : undefined,
-        parameters:
-          toolObj['parameters'] !== null &&
-          typeof toolObj['parameters'] === 'object' &&
-          !Array.isArray(toolObj['parameters'])
-            ? (toolObj['parameters'] as LDTool['parameters'])
-            : undefined,
-        customParameters:
-          toolObj['customParameters'] !== null &&
-          typeof toolObj['customParameters'] === 'object' &&
-          !Array.isArray(toolObj['customParameters'])
-            ? (toolObj['customParameters'] as LDTool['customParameters'])
-            : undefined,
-      };
-    }
-    return result;
-  }
-
   private static _resolveTools(
     flagValue: LDAIConfigFlagValue,
-    logger?: LDLogger,
   ): { [toolName: string]: LDTool } | undefined {
     if (flagValue.tools !== undefined) {
-      if (
-        flagValue.tools === null ||
-        typeof flagValue.tools !== 'object' ||
-        Array.isArray(flagValue.tools)
-      ) {
-        logger?.warn(
-          `LaunchDarkly AI: Skipping tools: expected an object, got ${Array.isArray(flagValue.tools) ? 'array' : typeof flagValue.tools}`,
-        );
-        return undefined;
-      }
-      const parsed = this._parseToolsMap(flagValue.tools as { [key: string]: unknown }, logger);
-      return Object.keys(parsed).length > 0 ? parsed : undefined;
+      return flagValue.tools as { [toolName: string]: LDTool } | undefined;
     }
 
     const rawTools = flagValue.model?.parameters?.['tools'];
-
-    if (rawTools === null || rawTools === undefined) {
+    if (!Array.isArray(rawTools)) {
       return undefined;
     }
 
-    if (typeof rawTools !== 'object' || Array.isArray(rawTools)) {
-      return undefined;
+    const result: { [toolName: string]: LDTool } = {};
+    for (const entry of rawTools) {
+      const tool = entry as LDTool;
+      if (tool?.name) {
+        result[tool.name] = tool;
+      }
     }
-
-    const parsed = this._parseToolsMap(rawTools as { [key: string]: unknown }, logger);
-    return Object.keys(parsed).length > 0 ? parsed : undefined;
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 
   /**
@@ -240,14 +193,13 @@ export class LDAIConfigUtils {
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
-    logger?: LDLogger,
   ): LDAICompletionConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
-      tools: this._resolveTools(flagValue, logger),
+      tools: this._resolveTools(flagValue),
     };
   }
 
@@ -263,14 +215,13 @@ export class LDAIConfigUtils {
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
-    logger?: LDLogger,
   ): LDAIAgentConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
-      tools: this._resolveTools(flagValue, logger),
+      tools: this._resolveTools(flagValue),
     };
   }
 
