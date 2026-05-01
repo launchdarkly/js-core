@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
+import { ManagedAgent } from './api/agent/ManagedAgent';
 import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,
@@ -37,6 +38,7 @@ import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
 const TRACK_SDK_INFO = '$ld:ai:sdk:info';
 const TRACK_USAGE_COMPLETION_CONFIG = '$ld:ai:usage:completion-config';
 const TRACK_USAGE_CREATE_CHAT = '$ld:ai:usage:create-chat';
+const TRACK_USAGE_CREATE_AGENT = '$ld:ai:usage:create-agent';
 const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
 const TRACK_USAGE_CREATE_JUDGE = '$ld:ai:usage:create-judge';
 const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
@@ -50,6 +52,8 @@ const INIT_TRACK_CONTEXT: LDContext = {
 };
 
 const disabledAIConfig: LDAIConfigDefault = { enabled: false };
+
+
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
@@ -446,6 +450,44 @@ export class LDAIClientImpl implements LDAIClient {
     }
 
     return new ManagedModel(config, runner, this._logger);
+  }
+
+  async createAgent(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedAgent | undefined> {
+    this._ldClient.track(TRACK_USAGE_CREATE_AGENT, context, key, 1);
+
+    const config = await this._agentConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+    );
+
+    if (!config.enabled) {
+      this._logger?.info(`Agent configuration is disabled: ${key}`);
+      return undefined;
+    }
+
+    const evaluator = await this._buildEvaluator(
+      config.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
+    const configWithEvaluator: LDAIAgentConfig = { ...config, evaluator };
+
+    const runner = await RunnerFactory.createAgent(configWithEvaluator, undefined, this._logger, defaultAiProvider);
+    if (!runner) {
+      return undefined;
+    }
+
+    return new ManagedAgent(configWithEvaluator, runner, this._logger);
   }
 
   /**
