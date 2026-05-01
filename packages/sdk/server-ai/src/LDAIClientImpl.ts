@@ -167,7 +167,7 @@ export class LDAIClientImpl implements LDAIClient {
       )
     ).filter((j): j is Judge => j !== undefined);
 
-    return new Evaluator(judgeInstances, this._logger);
+    return new Evaluator(judgeInstances);
   }
 
   private async _completionConfig(

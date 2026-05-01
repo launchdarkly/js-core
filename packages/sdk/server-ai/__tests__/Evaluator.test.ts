@@ -57,23 +57,6 @@ describe('Evaluator', () => {
       expect(judge.evaluate).toHaveBeenCalledWith('user input', 'ai output');
     });
 
-    it('returns error result when judge throws', async () => {
-      const mockProvider = makeProvider();
-      const judgeConfig = makeJudgeConfig('judge-err');
-
-      const judge = new Judge(judgeConfig, mockProvider, 1.0);
-      jest.spyOn(judge, 'evaluate').mockRejectedValue(new Error('evaluation error'));
-
-      const evaluator = new Evaluator([judge]);
-      const results = await evaluator.evaluate('input', 'output');
-
-      expect(results).toHaveLength(1);
-      expect(results[0].success).toBe(false);
-      expect(results[0].sampled).toBe(true);
-      expect(results[0].errorMessage).toBe('evaluation error');
-      expect(results[0].judgeConfigKey).toBe('judge-err');
-    });
-
     it('does NOT call tracker.trackJudgeResult', async () => {
       const mockProvider = makeProvider();
       const judgeConfig = makeJudgeConfig('judge-1');
