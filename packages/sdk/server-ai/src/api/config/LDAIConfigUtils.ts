@@ -162,8 +162,18 @@ export class LDAIConfigUtils {
         description:
           typeof toolObj['description'] === 'string' ? toolObj['description'] : undefined,
         type: typeof toolObj['type'] === 'string' ? toolObj['type'] : undefined,
-        parameters: toolObj['parameters'] as LDTool['parameters'],
-        customParameters: toolObj['customParameters'] as LDTool['customParameters'],
+        parameters:
+          toolObj['parameters'] !== null &&
+          typeof toolObj['parameters'] === 'object' &&
+          !Array.isArray(toolObj['parameters'])
+            ? (toolObj['parameters'] as LDTool['parameters'])
+            : undefined,
+        customParameters:
+          toolObj['customParameters'] !== null &&
+          typeof toolObj['customParameters'] === 'object' &&
+          !Array.isArray(toolObj['customParameters'])
+            ? (toolObj['customParameters'] as LDTool['customParameters'])
+            : undefined,
       };
     }
     return result;
