@@ -1027,6 +1027,52 @@ describe('trackToolCalls', () => {
   });
 });
 
+describe('trackStreamMetricsOf', () => {
+  it('tracks tool calls from streaming metrics extractor', async () => {
+    const tracker = new LDAIConfigTrackerImpl(
+      mockLdClient,
+      testRunId,
+      configKey,
+      variationKey,
+      version,
+      modelName,
+      providerName,
+      testContext,
+    );
+
+    const mockStream = {};
+    const metricsExtractor = jest.fn().mockResolvedValue({
+      success: true,
+      toolCalls: ['tool-a', 'tool-b'],
+    });
+
+    tracker.trackStreamMetricsOf(
+      () => mockStream,
+      metricsExtractor,
+    );
+
+    // Flush promises so the background tracking completes
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const summary = tracker.getSummary();
+    expect(summary.toolCalls).toEqual(['tool-a', 'tool-b']);
+
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-a' },
+      1,
+    );
+    expect(mockTrack).toHaveBeenCalledWith(
+      '$ld:ai:tool_call',
+      testContext,
+      { ...getExpectedTrackData(), toolKey: 'tool-b' },
+      1,
+    );
+  });
+});
+
 describe('graphKey constructor support', () => {
   it('includes graphKey in trackDuration event when set on constructor', () => {
     const tracker = new LDAIConfigTrackerImpl(

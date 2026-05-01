@@ -263,6 +263,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       if (metrics.usage) {
         this.trackTokens(metrics.usage);
       }
+
+      // Track tool calls if available
+      if (metrics.toolCalls?.length) {
+        this.trackToolCalls(metrics.toolCalls);
+      }
     } catch (error) {
       // If metrics extraction fails, track error
       this.trackError();
