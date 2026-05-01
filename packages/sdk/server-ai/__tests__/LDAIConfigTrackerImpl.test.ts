@@ -579,7 +579,7 @@ it('only tracks non-zero token counts', () => {
   );
 });
 
-it('returns empty summary when no metrics tracked', () => {
+it('returns summary with resumptionToken immediately after construction', () => {
   const tracker = new LDAIConfigTrackerImpl(
     mockLdClient,
     testRunId,
@@ -593,7 +593,11 @@ it('returns empty summary when no metrics tracked', () => {
 
   const summary = tracker.getSummary();
 
-  expect(summary).toEqual({});
+  expect(summary.resumptionToken).toBe(tracker.resumptionToken);
+  expect(typeof summary.resumptionToken).toBe('string');
+  expect(summary.success).toBeUndefined();
+  expect(summary.tokens).toBeUndefined();
+  expect(summary.durationMs).toBeUndefined();
 });
 
 it('summarizes tracked metrics', () => {
@@ -620,6 +624,7 @@ it('summarizes tracked metrics', () => {
   const summary = tracker.getSummary();
 
   expect(summary).toEqual({
+    resumptionToken: tracker.resumptionToken,
     durationMs: 1000,
     tokens: {
       total: 100,
@@ -631,6 +636,26 @@ it('summarizes tracked metrics', () => {
     },
     success: true,
   });
+});
+
+it('accumulates toolCalls in getSummary after trackToolCall', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+  );
+
+  tracker.trackToolCall('tool-a');
+  tracker.trackToolCall('tool-b');
+
+  const summary = tracker.getSummary();
+
+  expect(summary.toolCalls).toEqual(['tool-a', 'tool-b']);
 });
 
 it('tracks duration when async function throws', async () => {

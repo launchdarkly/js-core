@@ -26,7 +26,9 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _providerName: string,
     private _context: LDContext,
     private _graphKey?: string,
-  ) {}
+  ) {
+    this._trackedMetrics.resumptionToken = this.resumptionToken;
+  }
 
   getTrackData(): {
     runId: string;
@@ -132,6 +134,10 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackToolCall(toolKey: string): void {
+    if (!this._trackedMetrics.toolCalls) {
+      this._trackedMetrics.toolCalls = [];
+    }
+    this._trackedMetrics.toolCalls.push(toolKey);
     this._ldClient.track('$ld:ai:tool_call', this._context, { ...this.getTrackData(), toolKey }, 1);
   }
 
@@ -204,6 +210,11 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     // Track token usage if available
     if (metrics.usage) {
       this.trackTokens(metrics.usage);
+    }
+
+    // Track tool calls if available
+    if (metrics.toolCalls?.length) {
+      this.trackToolCalls(metrics.toolCalls);
     }
 
     return result;

@@ -1,9 +1,9 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAICompletionConfig } from '../config/types';
-import { LDJudgeResult } from '../judge/types';
-import { LDAIMetricSummary, ManagedResult, RunnerResult } from '../model/types';
-import { Runner } from '../providers/Runner';
+import { LDAICompletionConfig } from './config/types';
+import { LDJudgeResult } from './judge/types';
+import { ManagedResult, RunnerResult } from './model/types';
+import { Runner } from './providers/Runner';
 
 /**
  * ManagedModel provides chat-completion invocation with automatic tracking and
@@ -40,13 +40,7 @@ export class ManagedModel {
       () => this.runner.run(prompt),
     );
 
-    const metrics: LDAIMetricSummary = {
-      success: result.metrics.success,
-      usage: result.metrics.usage,
-      toolCalls: result.metrics.toolCalls,
-      durationMs: result.metrics.durationMs,
-      resumptionToken: tracker.resumptionToken,
-    };
+    const metrics = tracker.getSummary();
 
     // Evaluations are wired in a follow-up PR. For now, resolve empty.
     const evaluations: Promise<LDJudgeResult[]> = Promise.resolve([]);

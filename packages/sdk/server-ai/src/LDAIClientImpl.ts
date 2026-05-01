@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedModel } from './api/chat';
+import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,

@@ -1,4 +1,4 @@
-import { ManagedModel } from '../src/api/chat/ManagedModel';
+import { ManagedModel } from '../src/api/ManagedModel';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAICompletionConfig } from '../src/api/config/types';
 import { RunnerResult } from '../src/api/model/types';
@@ -26,7 +26,8 @@ describe('ManagedModel', () => {
       trackOpenAIMetrics: jest.fn(),
       trackBedrockConverseMetrics: jest.fn(),
       trackVercelAIMetrics: jest.fn(),
-      getSummary: jest.fn(),
+      getSummary: jest.fn().mockReturnValue({}),
+      trackJudgeResult: jest.fn(),
       resumptionToken: 'resumption-token-123',
     } as any;
 
@@ -68,20 +69,23 @@ describe('ManagedModel', () => {
       raw: { providerSpecific: true },
     };
 
+    const expectedSummary = {
+      success: true,
+      tokens: { total: 12, input: 5, output: 7 },
+      toolCalls: ['tool-1'],
+      durationMs: 42,
+      resumptionToken: 'resumption-token-123',
+    };
+
     mockTracker.trackMetricsOf.mockImplementation(async (_extractor, func) => func());
+    mockTracker.getSummary.mockReturnValue(expectedSummary);
     mockRunner.run.mockResolvedValue(runnerResult);
 
     const model = new ManagedModel(aiConfig, mockRunner);
     const result = await model.run('say hi');
 
     expect(result.content).toBe('Hi there');
-    expect(result.metrics).toEqual({
-      success: true,
-      usage: { total: 12, input: 5, output: 7 },
-      toolCalls: ['tool-1'],
-      durationMs: 42,
-      resumptionToken: 'resumption-token-123',
-    });
+    expect(result.metrics).toEqual(expectedSummary);
     expect(result.raw).toEqual({ providerSpecific: true });
     await expect(result.evaluations).resolves.toEqual([]);
   });
