@@ -1,3 +1,4 @@
+import { Evaluator } from '../judge/Evaluator';
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
@@ -124,13 +125,14 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker: undefined as unknown as () => LDAIConfigTracker,
+          evaluator: Evaluator.noop(),
         } as LDAIAgentConfig;
       case 'judge':
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker: undefined as unknown as () => LDAIConfigTracker,
         } as LDAIJudgeConfig;
       case 'completion':
       default:
@@ -138,7 +140,8 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker: undefined as unknown as () => LDAIConfigTracker,
+          evaluator: Evaluator.noop(),
         } as LDAICompletionConfig;
     }
   }
@@ -175,6 +178,7 @@ export class LDAIConfigUtils {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
+      evaluator: Evaluator.noop(),
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: flagValue.tools,
@@ -197,6 +201,7 @@ export class LDAIConfigUtils {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
+      evaluator: Evaluator.noop(),
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: flagValue.tools,

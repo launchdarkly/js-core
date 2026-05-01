@@ -77,6 +77,7 @@ export interface LDAIClient {
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig>;
 
   /**
@@ -128,6 +129,7 @@ export interface LDAIClient {
     context: LDContext,
     defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig>;
 
   /**

@@ -5,6 +5,7 @@ import {
   LDAICompletionConfigDefault,
   LDAIJudgeConfigDefault,
 } from '../src/api/config/types';
+import { Evaluator } from '../src/api/judge/Evaluator';
 import { Judge } from '../src/api/judge/Judge';
 import { AIProviderFactory } from '../src/api/providers/AIProviderFactory';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
@@ -479,7 +480,8 @@ describe('agentConfig method', () => {
       variables,
       undefined,
     );
-    expect(result).toBe(mockConfig);
+    expect(result).toMatchObject(mockConfig);
+    expect(result.evaluator).toBeInstanceOf(Evaluator);
     evaluateSpy.mockRestore();
   });
 });
@@ -542,6 +544,7 @@ describe('agents method', () => {
         provider: { name: 'openai' },
         instructions: 'You are a research assistant specializing in climate change.',
         createTracker: expect.any(Function),
+        evaluator: expect.any(Evaluator),
         enabled: true,
       },
       'writing-agent': {
@@ -553,6 +556,7 @@ describe('agents method', () => {
         provider: { name: 'anthropic' },
         instructions: 'You are a writing assistant with academic style.',
         createTracker: expect.any(Function),
+        evaluator: expect.any(Evaluator),
         enabled: true,
       },
     });

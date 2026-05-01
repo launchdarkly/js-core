@@ -33,7 +33,7 @@ export class ManagedModel {
    * @returns Promise resolving to ManagedResult (before evaluations settle).
    */
   async run(prompt: string): Promise<ManagedResult> {
-    const tracker = this.aiConfig.createTracker!();
+    const tracker = this.aiConfig.createTracker();
 
     const result = await tracker.trackMetricsOf(
       (r: RunnerResult) => r.metrics,

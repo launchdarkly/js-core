@@ -196,9 +196,24 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig> {
-    const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
-    return config as LDAICompletionConfig;
+    const config = (await this._evaluate(
+      key,
+      context,
+      defaultValue,
+      'completion',
+      variables,
+    )) as LDAICompletionConfig;
+
+    const evaluator = await this._buildEvaluator(
+      config.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
+    return { ...config, evaluator };
   }
 
   async completionConfig(
@@ -206,9 +221,16 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
-    return this._completionConfig(key, context, defaultValue ?? disabledAIConfig, variables);
+    return this._completionConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+      defaultAiProvider,
+    );
   }
 
   /**
@@ -249,9 +271,25 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
     graphKey?: string,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig> {
-    const config = await this._evaluate(key, context, defaultValue, 'agent', variables, graphKey);
-    return config as LDAIAgentConfig;
+    const config = (await this._evaluate(
+      key,
+      context,
+      defaultValue,
+      'agent',
+      variables,
+      graphKey,
+    )) as LDAIAgentConfig;
+
+    const evaluator = await this._buildEvaluator(
+      config.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
+    return { ...config, evaluator };
   }
 
   async agentConfig(
@@ -259,9 +297,17 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
-    return this._agentConfig(key, context, defaultValue ?? disabledAIConfig, variables);
+    return this._agentConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+      undefined,
+      defaultAiProvider,
+    );
   }
 
   /**
@@ -410,6 +456,7 @@ export class LDAIClientImpl implements LDAIClient {
       context,
       defaultValue ?? disabledAIConfig,
       variables,
+      defaultAiProvider,
     );
 
     if (!config.enabled) {
@@ -422,18 +469,8 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
-      defaultAiProvider,
-    );
-
-    // Attach the evaluator to the config for use by the managed layer
-    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
-
-    const runner = runnerFromAIProvider(provider, configWithEvaluator);
-    return new ManagedModel(configWithEvaluator, runner, this._logger);
+    const runner = runnerFromAIProvider(provider, config);
+    return new ManagedModel(config, runner, this._logger);
   }
 
   /**
