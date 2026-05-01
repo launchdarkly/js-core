@@ -297,6 +297,8 @@ export interface LDAIClient {
    * @param variables Dictionary of values for instruction interpolation.
    * The variables `message_history` and `response_to_evaluate` are reserved for the judge and will be ignored.
    * @param defaultAiProvider Optional default AI provider to use.
+   * @param sampleRate Optional default sampling rate (0-1) baked into the Judge.
+   *   Used by `Judge.evaluate()` when no per-call rate is supplied. Defaults to 1.0.
    * @returns Promise that resolves to a Judge instance or undefined if disabled/unsupported
    *
    * @example
@@ -326,6 +328,7 @@ export interface LDAIClient {
     defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
+    sampleRate?: number,
   ): Promise<Judge | undefined>;
 
   /**

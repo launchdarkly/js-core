@@ -37,9 +37,18 @@ export class Judge {
   constructor(
     private readonly _aiConfig: LDAIJudgeConfig,
     private readonly _aiProvider: AIProvider,
+    private readonly _sampleRate: number = 1.0,
     logger?: LDLogger,
   ) {
     this._logger = logger;
+  }
+
+  /**
+   * The default sampling rate baked in at construction. Used by `evaluate` /
+   * `evaluateMessages` when no per-call rate is supplied.
+   */
+  get sampleRate(): number {
+    return this._sampleRate;
   }
 
   /**
@@ -69,10 +78,13 @@ export class Judge {
    *
    * @param input The input prompt or question that was provided to the AI
    * @param output The AI-generated response to be evaluated
-   * @param samplingRate Sampling rate (0-1) to determine if evaluation should be processed (defaults to 1)
+   * @param samplingRate Sampling rate (0-1) to determine if evaluation should be processed.
+   *   When omitted, the Judge's constructor-default rate is used. An explicit `0` overrides
+   *   the default — only `undefined` falls through.
    * @returns Promise that resolves to evaluation results
    */
-  async evaluate(input: string, output: string, samplingRate: number = 1): Promise<LDJudgeResult> {
+  async evaluate(input: string, output: string, samplingRate?: number): Promise<LDJudgeResult> {
+    const effectiveRate = samplingRate ?? this._sampleRate;
     const result: LDJudgeResult = {
       success: false,
       sampled: false,
@@ -99,8 +111,8 @@ export class Judge {
         return result;
       }
 
-      if (Math.random() > samplingRate) {
-        this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${samplingRate}`);
+      if (Math.random() > effectiveRate) {
+        this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${effectiveRate}`);
         return result;
       }
 
@@ -143,13 +155,14 @@ export class Judge {
    *
    * @param messages Array of messages representing the conversation history
    * @param response The AI response to be evaluated
-   * @param samplingRatio Sampling ratio (0-1) to determine if evaluation should be processed (defaults to 1)
+   * @param samplingRatio Sampling ratio (0-1). When omitted, the Judge's
+   *   constructor-default rate is used.
    * @returns Promise that resolves to evaluation results
    */
   async evaluateMessages(
     messages: LDMessage[],
     response: ChatResponse,
-    samplingRatio: number = 1,
+    samplingRatio?: number,
   ): Promise<LDJudgeResult> {
     const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
     const output = response.message.content;
