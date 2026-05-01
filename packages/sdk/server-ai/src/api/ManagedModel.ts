@@ -42,7 +42,7 @@ export class ManagedModel {
     const metrics = tracker.getSummary();
 
     const output = result.content;
-    const evaluations = this.aiConfig.evaluator!.evaluate(prompt, output).then((results) => {
+    const evaluations = this.aiConfig.evaluator.evaluate(prompt, output).then((results) => {
       results.forEach((judgeResult) => {
         tracker.trackJudgeResult(judgeResult);
       });

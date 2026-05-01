@@ -1,4 +1,4 @@
-import { ManagedModel } from '../src/api/chat/ManagedModel';
+import { ManagedModel } from '../src/api/ManagedModel';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAICompletionConfig } from '../src/api/config/types';
 import { Evaluator } from '../src/api/judge/Evaluator';
@@ -36,7 +36,9 @@ describe('ManagedModel.run() evaluations', () => {
       trackOpenAIMetrics: jest.fn(),
       trackBedrockConverseMetrics: jest.fn(),
       trackVercelAIMetrics: jest.fn(),
-      getSummary: jest.fn(),
+      getSummary: jest
+        .fn()
+        .mockReturnValue({ success: true, resumptionToken: 'test-resumption-token' }),
     } as any;
 
     aiConfig = {
@@ -46,6 +48,7 @@ describe('ManagedModel.run() evaluations', () => {
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       createTracker: () => mockTracker,
+      evaluator: Evaluator.noop(),
     };
   });
 
@@ -118,13 +121,6 @@ describe('ManagedModel.run() evaluations', () => {
     expect(result.metrics.success).toBe(true);
     expect(result.metrics.resumptionToken).toBe('test-resumption-token');
     expect(result.evaluations).toBeInstanceOf(Promise);
-  });
-
-  it('resolves to empty evaluations when no evaluator configured', async () => {
-    const model = new ManagedModel(aiConfig, mockRunner);
-    const result = await model.run('Hello');
-    const evaluations = await result.evaluations;
-    expect(evaluations).toEqual([]);
   });
 
   it('resolves to empty evaluations when evaluator is noop', async () => {
