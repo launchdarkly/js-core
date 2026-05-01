@@ -183,7 +183,7 @@ export class LangChainProvider extends AIProvider {
    * This method enables seamless integration between LaunchDarkly's standardized
    * provider naming and LangChain's naming conventions.
    */
-  static mapProvider(ldProviderName: string): string {
+  static mapProviderName(ldProviderName: string): string {
     const lowercasedName = ldProviderName.toLowerCase();
 
     const mapping: Record<string, string> = {
@@ -191,6 +191,13 @@ export class LangChainProvider extends AIProvider {
     };
 
     return mapping[lowercasedName] || lowercasedName;
+  }
+
+  /**
+   * @deprecated Use {@link mapProviderName} instead.
+   */
+  static mapProvider(ldProviderName: string): string {
+    return LangChainProvider.mapProviderName(ldProviderName);
   }
 
   /**
