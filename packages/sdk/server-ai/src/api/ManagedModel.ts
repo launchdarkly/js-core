@@ -1,7 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAICompletionConfig } from './config/types';
-import { LDJudgeResult } from './judge/types';
 import { ManagedResult, RunnerResult } from './model/types';
 import { Runner } from './providers/Runner';
 
@@ -43,18 +42,12 @@ export class ManagedModel {
     const metrics = tracker.getSummary();
 
     const output = result.content;
-    const evaluator = this.aiConfig.evaluator;
-    let evaluations: Promise<LDJudgeResult[]>;
-    if (evaluator) {
-      evaluations = evaluator.evaluate(prompt, output).then((results) => {
-        results.forEach((judgeResult) => {
-          tracker.trackJudgeResult(judgeResult);
-        });
-        return results;
+    const evaluations = this.aiConfig.evaluator!.evaluate(prompt, output).then((results) => {
+      results.forEach((judgeResult) => {
+        tracker.trackJudgeResult(judgeResult);
       });
-    } else {
-      evaluations = Promise.resolve([]);
-    }
+      return results;
+    });
 
     return {
       content: output,
