@@ -22,6 +22,7 @@ import {
 } from './api/config';
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
 import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './api/graph';
+import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { AIProviderFactory, SupportedAIProvider } from './api/providers';
@@ -141,33 +142,32 @@ export class LDAIClientImpl implements LDAIClient {
     return config;
   }
 
-  private async _initializeJudges(
+  private async _buildEvaluator(
     judgeConfigs: LDJudge[],
     context: LDContext,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<Record<string, Judge>> {
-    const judges: Record<string, Judge> = {};
+  ): Promise<Evaluator> {
+    if (judgeConfigs.length === 0) {
+      return Evaluator.noop();
+    }
 
-    const judgePromises = judgeConfigs.map(async (judgeConfig) => {
-      const judge = await this.createJudge(
-        judgeConfig.key,
-        context,
-        undefined,
-        variables,
-        defaultAiProvider,
-      );
-      return judge ? { key: judgeConfig.key, judge } : null;
-    });
+    const judgeInstances = (
+      await Promise.all(
+        judgeConfigs.map((jc) =>
+          this._createJudgeInstance(
+            jc.key,
+            context,
+            undefined,
+            variables,
+            defaultAiProvider,
+            jc.samplingRate,
+          ),
+        ),
+      )
+    ).filter((j): j is Judge => j !== undefined);
 
-    const results = await Promise.all(judgePromises);
-    results.forEach((result) => {
-      if (result) {
-        judges[result.key] = result.judge;
-      }
-    });
-
-    return judges;
+    return new Evaluator(judgeInstances);
   }
 
   private async _completionConfig(
@@ -318,14 +318,17 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const judges = await this._initializeJudges(
+    const evaluator = await this._buildEvaluator(
       config.judgeConfiguration?.judges ?? [],
       context,
       variables,
       defaultAiProvider,
     );
 
-    return new TrackedChat(config, provider, judges, this._logger);
+    // Attach the evaluator to the config for use by the managed layer
+    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
+
+    return new TrackedChat(configWithEvaluator, provider, {}, this._logger);
   }
 
   async createJudge(
@@ -334,9 +337,27 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue?: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
+    sampleRate: number = 1.0,
   ): Promise<Judge | undefined> {
     this._ldClient.track(TRACK_USAGE_CREATE_JUDGE, context, key, 1);
+    return this._createJudgeInstance(
+      key,
+      context,
+      defaultValue,
+      variables,
+      defaultAiProvider,
+      sampleRate,
+    );
+  }
 
+  private async _createJudgeInstance(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIJudgeConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+    sampleRate: number = 1.0,
+  ): Promise<Judge | undefined> {
     try {
       if (variables?.message_history !== undefined) {
         this._logger?.warn(
@@ -373,7 +394,7 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      return new Judge(judgeConfig, provider, this._logger);
+      return new Judge(judgeConfig, provider, sampleRate, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;

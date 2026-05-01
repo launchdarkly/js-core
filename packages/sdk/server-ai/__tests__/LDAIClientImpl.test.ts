@@ -673,7 +673,7 @@ describe('createJudge method', () => {
       response_to_evaluate: '{{response_to_evaluate}}',
     });
     expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
-    expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, undefined);
+    expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, undefined);
     expect(result).toBe(mockJudge);
     judgeConfigSpy.mockRestore();
   });

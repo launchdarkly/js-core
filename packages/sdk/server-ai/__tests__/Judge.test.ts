@@ -54,9 +54,68 @@ describe('Judge', () => {
 
   describe('constructor', () => {
     it('initializes with proper configuration', () => {
-      const judge = new Judge(judgeConfig, mockProvider, mockLogger);
+      const judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
 
       expect(judge).toBeDefined();
+    });
+
+    it('defaults sampleRate to 1.0 when omitted', () => {
+      const judge = new Judge(judgeConfig, mockProvider);
+      expect(judge.sampleRate).toBe(1.0);
+    });
+
+    it('exposes the sampleRate provided to the constructor', () => {
+      const judge = new Judge(judgeConfig, mockProvider, 0.25, mockLogger);
+      expect(judge.sampleRate).toBe(0.25);
+    });
+
+    it('honors a sampleRate of 0', () => {
+      const judge = new Judge(judgeConfig, mockProvider, 0, mockLogger);
+      expect(judge.sampleRate).toBe(0);
+    });
+  });
+
+  describe('sampling fallback in evaluate()', () => {
+    it('uses the constructor sampleRate when no per-call rate is supplied', async () => {
+      // Force sampling to skip: math.random() returns 0.6, sampleRate 0.5 → 0.6 > 0.5 → skip.
+      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.6);
+
+      const judge = new Judge(judgeConfig, mockProvider, 0.5, mockLogger);
+      const result = await judge.evaluate('input', 'output');
+
+      // Skipped due to sampling: sampled stays false (default), no provider call.
+      expect(result.sampled).toBe(false);
+      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+
+      randomSpy.mockRestore();
+    });
+
+    it('honors an explicit per-call samplingRate of 0 over the constructor default', async () => {
+      // Even with Math.random() at 0, samplingRate=0 means 0 > 0 is false — skip path is
+      // `Math.random() > rate`, so rate=0 + random=0 does NOT skip. Use random=0.5.
+      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+      // Constructor rate is 1.0 (would normally always sample); per-call 0 overrides to skip.
+      const judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      const result = await judge.evaluate('input', 'output', 0);
+
+      expect(result.sampled).toBe(false);
+      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+
+      randomSpy.mockRestore();
+    });
+
+    it('per-call samplingRate of undefined falls through to the constructor default', async () => {
+      // Constructor 0 (always skip), per-call undefined → effective rate 0.
+      const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+      const judge = new Judge(judgeConfig, mockProvider, 0, mockLogger);
+      const result = await judge.evaluate('input', 'output', undefined);
+
+      expect(result.sampled).toBe(false);
+      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+
+      randomSpy.mockRestore();
     });
   });
 
@@ -64,7 +123,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
     });
 
     it('evaluates AI response successfully', async () => {
@@ -205,7 +264,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockProvider, mockLogger);
+      const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockProvider, 1.0, mockLogger);
 
       const result = await judgeWithoutMetrics.evaluate('test input', 'test output');
 
@@ -227,7 +286,7 @@ describe('Judge', () => {
         evaluationMetricKey: 'relevance',
         evaluationMetricKeys: undefined,
       };
-      const judgeWithSingleKey = new Judge(configWithSingleKey, mockProvider, mockLogger);
+      const judgeWithSingleKey = new Judge(configWithSingleKey, mockProvider, 1.0, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -265,7 +324,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockProvider, mockLogger);
+      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockProvider, 1.0, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -303,7 +362,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['', '   ', 'relevance', 'accuracy'],
       };
-      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockProvider, mockLogger);
+      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockProvider, 1.0, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -342,7 +401,7 @@ describe('Judge', () => {
         evaluationMetricKey: 'helpfulness',
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithBoth = new Judge(configWithBoth, mockProvider, mockLogger);
+      const judgeWithBoth = new Judge(configWithBoth, mockProvider, 1.0, mockLogger);
 
       const mockStructuredResponse: StructuredResponse = {
         data: {
@@ -379,7 +438,7 @@ describe('Judge', () => {
         ...judgeConfig,
         messages: undefined,
       };
-      const judgeWithoutMessages = new Judge(configWithoutMessages, mockProvider, mockLogger);
+      const judgeWithoutMessages = new Judge(configWithoutMessages, mockProvider, 1.0, mockLogger);
 
       const result = await judgeWithoutMessages.evaluate('test input', 'test output');
 
@@ -488,7 +547,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
     });
 
     it('evaluates messages and response successfully', async () => {
@@ -573,7 +632,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
     });
 
     it('constructs evaluation messages correctly', () => {
@@ -598,7 +657,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, mockLogger);
+      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
     });
 
     it('parses valid evaluation response correctly', () => {
@@ -669,7 +728,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockProvider, mockLogger);
+      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockProvider, 1.0, mockLogger);
 
       const result = await judgeWithEmptyKeys.evaluate('test input', 'test output');
 
