@@ -1,35 +1,6 @@
 import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
-
-/**
- * Metrics which have been tracked.
- */
-export interface LDAIMetricSummary {
-  /**
-   * The duration of generation.
-   */
-  durationMs?: number;
-
-  /**
-   * Information about token usage.
-   */
-  tokens?: LDTokenUsage;
-
-  /**
-   * Was generation successful.
-   */
-  success?: boolean;
-
-  /**
-   * Any sentiment about the generation.
-   */
-  feedback?: { kind: LDFeedbackKind };
-
-  /**
-   * Time to first token for this generation.
-   */
-  timeToFirstTokenMs?: number;
-}
+import { LDAIMetricSummary } from '../model/types';
 
 /**
  * The LDAIConfigTracker is used to track various details about AI operations.

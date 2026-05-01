@@ -1,16 +1,16 @@
 import { LDJudgeResult } from '../judge/types';
-import { LDAIMetrics } from '../metrics/LDAIMetrics';
+import { LDAIMetrics, LDFeedbackKind } from '../metrics';
 import { LDTokenUsage } from '../metrics/LDTokenUsage';
 
 /**
- * Summary metrics returned in a ManagedResult or ManagedGraphResult.
+ * Summary metrics returned in a ManagedResult or from LDAIConfigTracker.getSummary().
  * Provides a flat view of the key metrics for the completed operation.
  */
 export interface LDAIMetricSummary {
   /**
    * Whether the AI operation was successful.
    */
-  success: boolean;
+  success?: boolean;
 
   /**
    * Token usage information, if available.
@@ -26,6 +26,16 @@ export interface LDAIMetricSummary {
    * Duration of the operation in milliseconds, if tracked.
    */
   durationMs?: number;
+
+  /**
+   * Time to first token in milliseconds, if tracked.
+   */
+  timeToFirstTokenMs?: number;
+
+  /**
+   * User feedback sentiment for this generation, if provided.
+   */
+  feedback?: { kind: LDFeedbackKind };
 
   /**
    * Resumption token for deferred feedback association.
