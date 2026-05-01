@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.19.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.18.1...server-sdk-ai-v0.19.0) (2026-05-01)
+
+
+### Features
+
+* Support fall back to model.parameters.tools when root tools absent ([#1330](https://github.com/launchdarkly/js-core/issues/1330)) ([2c65c61](https://github.com/launchdarkly/js-core/commit/2c65c61d1fd4df9b13d1e9b2f3bd055d4a77ec22))
+
 ## [0.18.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.18.0...server-sdk-ai-v0.18.1) (2026-04-30)
 
 
