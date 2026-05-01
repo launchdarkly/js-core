@@ -626,7 +626,7 @@ it('summarizes tracked metrics', () => {
   expect(summary).toEqual({
     resumptionToken: tracker.resumptionToken,
     durationMs: 1000,
-    tokens: {
+    usage: {
       total: 100,
       input: 40,
       output: 60,

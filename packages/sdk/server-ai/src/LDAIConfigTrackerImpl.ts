@@ -349,13 +349,13 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   }
 
   trackTokens(tokens: LDTokenUsage): void {
-    if (this._trackedMetrics.tokens !== undefined) {
+    if (this._trackedMetrics.usage !== undefined) {
       this._ldClient.logger?.warn(
         'Token usage has already been tracked for this execution. Use createTracker() for a new execution.',
       );
       return;
     }
-    this._trackedMetrics.tokens = tokens;
+    this._trackedMetrics.usage = tokens;
     const trackData = this.getTrackData();
     if (tokens.total > 0) {
       this._ldClient.track('$ld:ai:tokens:total', this._context, trackData, tokens.total);
