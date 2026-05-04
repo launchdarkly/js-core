@@ -102,9 +102,10 @@ it('fromResumptionToken reconstructs the tracker with original runId', () => {
 // getSummary
 // ---------------------------------------------------------------------------
 
-it('returns an empty summary initially', () => {
+it('returns a summary with only the resumption token initially', () => {
   const tracker = makeTracker('r');
-  expect(tracker.getSummary()).toEqual({});
+  const summary = tracker.getSummary();
+  expect(summary).toEqual({ resumptionToken: tracker.resumptionToken });
 });
 
 it('returns a copy of the summary (not a reference)', () => {

@@ -1,6 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { TrackedChat } from './chat';
+import { ManagedModel } from './ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -77,6 +77,7 @@ export interface LDAIClient {
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig>;
 
   /**
@@ -128,6 +129,7 @@ export interface LDAIClient {
     context: LDContext,
     defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig>;
 
   /**
@@ -234,10 +236,9 @@ export interface LDAIClient {
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
 
   /**
-   * Returns a TrackedChat instance for chat interactions.
-   * This method serves as the primary entry point for creating TrackedChat instances from configuration.
+   * Creates and returns a new ManagedModel instance for LLM model interactions.
    *
-   * @param key The key identifying the AI chat configuration to use.
+   * @param key The key identifying the AI completion configuration to use.
    * @param context The standard LDContext used when evaluating flags.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
    * When omitted or null, a disabled default is used.
@@ -245,7 +246,7 @@ export interface LDAIClient {
    * The variables will also be used for judge evaluation. For the judge only, the variables
    * `message_history` and `response_to_evaluate` are reserved and will be ignored.
    * @param defaultAiProvider Optional default AI provider to use.
-   * @returns A promise that resolves to the TrackedChat instance, or null if the configuration is disabled.
+   * @returns A promise that resolves to the ManagedModel instance, or undefined if the configuration is disabled.
    *
    * @example
    * ```
@@ -261,12 +262,23 @@ export interface LDAIClient {
    * };
    * const variables = { customerName: 'John' };
    *
-   * const chat = await client.createChat(key, context, defaultValue, variables);
-   * if (chat) {
-   *   const response = await chat.invoke("I need help with my order");
-   *   console.log(response.message.content);
+   * const model = await client.createModel(key, context, defaultValue, variables);
+   * if (model) {
+   *   const result = await model.run("I need help with my order");
+   *   console.log(result.content);
    * }
    * ```
+   */
+  createModel(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedModel | undefined>;
+
+  /**
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
    */
   createChat(
     key: string,
@@ -274,10 +286,10 @@ export interface LDAIClient {
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined>;
+  ): Promise<ManagedModel | undefined>;
 
   /**
-   * @deprecated Use `createChat` instead. This method will be removed in a future version.
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
    */
   initChat(
     key: string,
@@ -285,7 +297,7 @@ export interface LDAIClient {
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined>;
+  ): Promise<ManagedModel | undefined>;
 
   /**
    * Creates and returns a new Judge instance for AI evaluation.

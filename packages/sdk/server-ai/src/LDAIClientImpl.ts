@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { TrackedChat } from './api/chat';
+import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -25,7 +25,7 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
-import { AIProviderFactory, SupportedAIProvider } from './api/providers';
+import { RunnerFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
@@ -79,20 +79,11 @@ export class LDAIClientImpl implements LDAIClient {
     mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
     graphKey?: string,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
     const value: LDAIConfigFlagValue = await this._ldClient.variation(key, context, ldFlagValue);
-
-    // Validate mode match
-    // eslint-disable-next-line no-underscore-dangle
-    const flagMode = value._ldMeta?.mode ?? 'completion';
-    if (flagMode !== mode) {
-      this._logger?.warn(
-        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
-      );
-      return LDAIConfigUtils.createDisabledConfig(key, mode);
-    }
 
     const trackerFactory = () =>
       new LDAIConfigTrackerImpl(
@@ -109,7 +100,28 @@ export class LDAIClientImpl implements LDAIClient {
         graphKey,
       );
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
+    // Validate mode match
+    // eslint-disable-next-line no-underscore-dangle
+    const flagMode = value._ldMeta?.mode ?? 'completion';
+    let evaluator = Evaluator.noop();
+
+    if (flagMode !== mode) {
+      this._logger?.warn(
+        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
+      );
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
+    }
+
+    if (flagMode !== 'judge') {
+      evaluator = await this._buildEvaluator(
+        value.judgeConfiguration?.judges ?? [],
+        context,
+        variables,
+        defaultAiProvider,
+      );
+    }
+
+    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
@@ -175,9 +187,17 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig> {
-    const config = await this._evaluate(key, context, defaultValue, 'completion', variables);
-    return config as LDAICompletionConfig;
+    return (await this._evaluate(
+      key,
+      context,
+      defaultValue,
+      'completion',
+      variables,
+      undefined,
+      defaultAiProvider,
+    )) as LDAICompletionConfig;
   }
 
   async completionConfig(
@@ -185,9 +205,16 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig> {
     this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG, context, key, 1);
-    return this._completionConfig(key, context, defaultValue ?? disabledAIConfig, variables);
+    return this._completionConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+      defaultAiProvider,
+    );
   }
 
   /**
@@ -228,9 +255,17 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
     graphKey?: string,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig> {
-    const config = await this._evaluate(key, context, defaultValue, 'agent', variables, graphKey);
-    return config as LDAIAgentConfig;
+    return (await this._evaluate(
+      key,
+      context,
+      defaultValue,
+      'agent',
+      variables,
+      graphKey,
+      defaultAiProvider,
+    )) as LDAIAgentConfig;
   }
 
   async agentConfig(
@@ -238,9 +273,17 @@ export class LDAIClientImpl implements LDAIClient {
     context: LDContext,
     defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig> {
     this._ldClient.track(TRACK_USAGE_AGENT_CONFIG, context, key, 1);
-    return this._agentConfig(key, context, defaultValue ?? disabledAIConfig, variables);
+    return this._agentConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+      undefined,
+      defaultAiProvider,
+    );
   }
 
   /**
@@ -293,42 +336,17 @@ export class LDAIClientImpl implements LDAIClient {
     return this.agentConfigs(agentConfigs, context);
   }
 
+  /**
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
+   */
   async createChat(
     key: string,
     context: LDContext,
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
-    const config = await this._completionConfig(
-      key,
-      context,
-      defaultValue ?? disabledAIConfig,
-      variables,
-    );
-
-    if (!config.enabled) {
-      this._logger?.info(`Chat configuration is disabled: ${key}`);
-      return undefined;
-    }
-
-    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
-    if (!provider) {
-      return undefined;
-    }
-
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
-      defaultAiProvider,
-    );
-
-    // Attach the evaluator to the config for use by the managed layer
-    const configWithEvaluator: LDAICompletionConfig = { ...config, evaluator };
-
-    return new TrackedChat(configWithEvaluator, provider, {}, this._logger);
+  ): Promise<ManagedModel | undefined> {
+    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   async createJudge(
@@ -389,20 +407,49 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      const provider = await AIProviderFactory.create(judgeConfig, this._logger, defaultAiProvider);
-      if (!provider) {
+      const runner = await RunnerFactory.createModel(judgeConfig, this._logger, defaultAiProvider);
+      if (!runner) {
         return undefined;
       }
 
-      return new Judge(judgeConfig, provider, sampleRate, this._logger);
+      return new Judge(judgeConfig, runner, sampleRate, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;
     }
   }
 
+  async createModel(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedModel | undefined> {
+    this._ldClient.track(TRACK_USAGE_CREATE_CHAT, context, key, 1);
+    const config = await this._completionConfig(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      variables,
+      defaultAiProvider,
+    );
+
+    if (!config.enabled) {
+      this._logger?.info(`Completion configuration is disabled: ${key}`);
+      return undefined;
+    }
+
+    const runner = await RunnerFactory.createModel(config, this._logger, defaultAiProvider);
+    if (!runner) {
+      return undefined;
+    }
+
+    return new ManagedModel(config, runner, this._logger);
+  }
+
   /**
-   * @deprecated Use `createChat` instead. This method will be removed in a future version.
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
    */
   async initChat(
     key: string,
@@ -410,8 +457,8 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue?: LDAICompletionConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
-  ): Promise<TrackedChat | undefined> {
-    return this.createChat(key, context, defaultValue, variables, defaultAiProvider);
+  ): Promise<ManagedModel | undefined> {
+    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   createTracker(token: string, context: LDContext): LDAIConfigTracker {

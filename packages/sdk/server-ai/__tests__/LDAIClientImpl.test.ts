@@ -5,15 +5,16 @@ import {
   LDAICompletionConfigDefault,
   LDAIJudgeConfigDefault,
 } from '../src/api/config/types';
+import { Evaluator } from '../src/api/judge/Evaluator';
 import { Judge } from '../src/api/judge/Judge';
-import { AIProviderFactory } from '../src/api/providers/AIProviderFactory';
+import { RunnerFactory } from '../src/api/providers/RunnerFactory';
 import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 import { aiSdkLanguage, aiSdkName, aiSdkVersion } from '../src/sdkInfo';
 
-// Mock Judge and AIProviderFactory
+// Mock Judge and RunnerFactory
 jest.mock('../src/api/judge/Judge');
-jest.mock('../src/api/providers/AIProviderFactory');
+jest.mock('../src/api/providers/RunnerFactory');
 
 const mockLdClient: jest.Mocked<LDClientMin> = {
   variation: jest.fn(),
@@ -80,6 +81,8 @@ describe('config evaluation', () => {
       defaultValue,
       'completion',
       variables,
+      undefined,
+      undefined,
     );
     expect(result.messages).toEqual([
       { role: 'system', content: 'Hello John' },
@@ -145,6 +148,7 @@ describe('config evaluation', () => {
       defaultValue,
       'agent',
       variables,
+      undefined,
       undefined,
     );
     expect(result.instructions).toBe(
@@ -338,7 +342,7 @@ describe('config evaluation', () => {
     const result = await client.completionConfig(key, testContext, defaultValue);
 
     expect(result.enabled).toBe(false);
-    expect(result.createTracker).toBeUndefined();
+    expect(result.createTracker).toBeInstanceOf(Function);
   });
 
   it('handles missing metadata mode by defaulting to completion mode', async () => {
@@ -436,6 +440,8 @@ describe('completionConfig method', () => {
       defaultValue,
       'completion',
       variables,
+      undefined,
+      undefined,
     );
     expect(result).toBeDefined();
     evaluateSpy.mockRestore();
@@ -458,6 +464,7 @@ describe('agentConfig method', () => {
       instructions: 'You are a helpful assistant.',
       createTracker: () => ({}) as any,
       enabled: true,
+      evaluator: Evaluator.noop(),
     };
 
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
@@ -478,8 +485,10 @@ describe('agentConfig method', () => {
       'agent',
       variables,
       undefined,
+      undefined,
     );
-    expect(result).toBe(mockConfig);
+    expect(result).toMatchObject(mockConfig);
+    expect(result.evaluator).toBeInstanceOf(Evaluator);
     evaluateSpy.mockRestore();
   });
 });
@@ -542,6 +551,7 @@ describe('agents method', () => {
         provider: { name: 'openai' },
         instructions: 'You are a research assistant specializing in climate change.',
         createTracker: expect.any(Function),
+        evaluator: expect.any(Evaluator),
         enabled: true,
       },
       'writing-agent': {
@@ -553,6 +563,7 @@ describe('agents method', () => {
         provider: { name: 'anthropic' },
         instructions: 'You are a writing assistant with academic style.',
         createTracker: expect.any(Function),
+        evaluator: expect.any(Evaluator),
         enabled: true,
       },
     });
@@ -631,8 +642,8 @@ describe('createJudge method', () => {
       evaluateMessages: jest.fn(),
     } as any;
 
-    // Mock AIProviderFactory.create
-    (AIProviderFactory.create as jest.Mock).mockResolvedValue(mockProvider);
+    // Mock RunnerFactory.createModel
+    (RunnerFactory.createModel as jest.Mock).mockResolvedValue(mockProvider);
 
     // Mock Judge constructor
     (Judge as jest.MockedClass<typeof Judge>).mockImplementation(() => mockJudge);
@@ -672,7 +683,7 @@ describe('createJudge method', () => {
       message_history: '{{message_history}}',
       response_to_evaluate: '{{response_to_evaluate}}',
     });
-    expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(RunnerFactory.createModel).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
     expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, undefined);
     expect(result).toBe(mockJudge);
     judgeConfigSpy.mockRestore();
@@ -697,12 +708,12 @@ describe('createJudge method', () => {
     const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
-    expect(AIProviderFactory.create).not.toHaveBeenCalled();
+    expect(RunnerFactory.createModel).not.toHaveBeenCalled();
     expect(Judge).not.toHaveBeenCalled();
     judgeConfigSpy.mockRestore();
   });
 
-  it('returns undefined when AIProviderFactory.create fails', async () => {
+  it('returns undefined when RunnerFactory.createModel returns undefined', async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-judge';
     const defaultValue: LDAIJudgeConfigDefault = {
@@ -723,12 +734,12 @@ describe('createJudge method', () => {
     const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
     judgeConfigSpy.mockResolvedValue(mockJudgeConfig);
 
-    (AIProviderFactory.create as jest.Mock).mockResolvedValue(undefined);
+    (RunnerFactory.createModel as jest.Mock).mockResolvedValue(undefined);
 
     const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
-    expect(AIProviderFactory.create).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(RunnerFactory.createModel).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
     expect(Judge).not.toHaveBeenCalled();
     judgeConfigSpy.mockRestore();
   });

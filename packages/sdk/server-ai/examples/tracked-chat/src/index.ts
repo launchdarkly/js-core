@@ -46,12 +46,12 @@ async function main() {
   //     provider: { name: 'openai' },
   //     messages: [...]
   //   };
-  //   const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, { companyName: 'LaunchDarkly' });
-  const chat = await aiClient.createChat(aiConfigKey, context, undefined, {
+  //   const model = await aiClient.createModel(aiConfigKey, context, defaultValue, { companyName: 'LaunchDarkly' });
+  const model = await aiClient.createModel(aiConfigKey, context, undefined, {
     companyName: 'LaunchDarkly',
   });
 
-  if (!chat) {
+  if (!model) {
     console.log('*** AI chat configuration is not enabled');
     process.exit(0);
   }
@@ -62,9 +62,9 @@ async function main() {
     const userInput = 'Hello! Can you help me understand how your company can help me?';
     console.log('User Input:', userInput);
 
-    const response = await chat.invoke(userInput);
+    const result = await model.run(userInput);
 
-    console.log('AI Response:', response.message.content);
+    console.log('AI Response:', result.content);
 
     console.log('Success.');
   } catch (err) {

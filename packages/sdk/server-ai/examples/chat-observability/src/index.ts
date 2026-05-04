@@ -47,12 +47,12 @@ async function main() {
   //     provider: { name: 'openai' },
   //     messages: [...]
   //   };
-  //   const chat = await aiClient.createChat(aiConfigKey, context, defaultValue, { example_type: 'observability_demo' });
-  const chat = await aiClient.createChat(aiConfigKey, context, undefined, {
+  //   const model = await aiClient.createModel(aiConfigKey, context, defaultValue, { example_type: 'observability_demo' });
+  const model = await aiClient.createModel(aiConfigKey, context, undefined, {
     example_type: 'observability_demo',
   });
 
-  if (!chat) {
+  if (!model) {
     console.log('*** AI chat configuration is not enabled');
     ldClient.close();
     process.exit(0);
@@ -62,8 +62,8 @@ async function main() {
     const userInput = 'What is feature flagging in 2 sentences?';
     console.log('User Input:', userInput);
 
-    const response = await chat.invoke(userInput);
-    console.log('Chat Response:', response.message.content);
+    const result = await model.run(userInput);
+    console.log('Chat Response:', result.content);
 
     console.log('\nSuccess.');
   } catch (err) {

@@ -3,11 +3,11 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../src/api/config/types';
 import { Judge } from '../src/api/judge/Judge';
-import { StructuredResponse } from '../src/api/judge/types';
-import { AIProvider } from '../src/api/providers/AIProvider';
+import { RunnerResult } from '../src/api/model/types';
+import { Runner } from '../src/api/providers/Runner';
 
 describe('Judge', () => {
-  let mockProvider: jest.Mocked<AIProvider>;
+  let mockRunner: jest.Mocked<Runner>;
   let mockTracker: jest.Mocked<LDAIConfigTracker>;
   let mockLogger: jest.Mocked<LDLogger>;
   let judgeConfig: LDAIJudgeConfig;
@@ -19,8 +19,8 @@ describe('Judge', () => {
   };
 
   beforeEach(() => {
-    mockProvider = {
-      invokeStructuredModel: jest.fn(),
+    mockRunner = {
+      run: jest.fn(),
     } as any;
 
     mockTracker = {
@@ -54,23 +54,23 @@ describe('Judge', () => {
 
   describe('constructor', () => {
     it('initializes with proper configuration', () => {
-      const judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
 
       expect(judge).toBeDefined();
     });
 
     it('defaults sampleRate to 1.0 when omitted', () => {
-      const judge = new Judge(judgeConfig, mockProvider);
+      const judge = new Judge(judgeConfig, mockRunner);
       expect(judge.sampleRate).toBe(1.0);
     });
 
     it('exposes the sampleRate provided to the constructor', () => {
-      const judge = new Judge(judgeConfig, mockProvider, 0.25, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 0.25, mockLogger);
       expect(judge.sampleRate).toBe(0.25);
     });
 
     it('honors a sampleRate of 0', () => {
-      const judge = new Judge(judgeConfig, mockProvider, 0, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 0, mockLogger);
       expect(judge.sampleRate).toBe(0);
     });
   });
@@ -80,12 +80,12 @@ describe('Judge', () => {
       // Force sampling to skip: math.random() returns 0.6, sampleRate 0.5 → 0.6 > 0.5 → skip.
       const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.6);
 
-      const judge = new Judge(judgeConfig, mockProvider, 0.5, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 0.5, mockLogger);
       const result = await judge.evaluate('input', 'output');
 
-      // Skipped due to sampling: sampled stays false (default), no provider call.
+      // Skipped due to sampling: sampled stays false (default), no runner call.
       expect(result.sampled).toBe(false);
-      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+      expect(mockRunner.run).not.toHaveBeenCalled();
 
       randomSpy.mockRestore();
     });
@@ -96,11 +96,11 @@ describe('Judge', () => {
       const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
       // Constructor rate is 1.0 (would normally always sample); per-call 0 overrides to skip.
-      const judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
       const result = await judge.evaluate('input', 'output', 0);
 
       expect(result.sampled).toBe(false);
-      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+      expect(mockRunner.run).not.toHaveBeenCalled();
 
       randomSpy.mockRestore();
     });
@@ -109,11 +109,11 @@ describe('Judge', () => {
       // Constructor 0 (always skip), per-call undefined → effective rate 0.
       const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
-      const judge = new Judge(judgeConfig, mockProvider, 0, mockLogger);
+      const judge = new Judge(judgeConfig, mockRunner, 0, mockLogger);
       const result = await judge.evaluate('input', 'output', undefined);
 
       expect(result.sampled).toBe(false);
-      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+      expect(mockRunner.run).not.toHaveBeenCalled();
 
       randomSpy.mockRestore();
     });
@@ -123,19 +123,16 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
     });
 
     it('evaluates AI response successfully', async () => {
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'The response is relevant to the question',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'The response is relevant to the question',
-        }),
         metrics: {
           success: true,
           usage: {
@@ -147,7 +144,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluate(
         'What is the capital of France?',
@@ -163,7 +160,7 @@ describe('Judge', () => {
         judgeConfigKey: 'test-judge',
       });
 
-      expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(
+      expect(mockRunner.run).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             role: 'system',
@@ -175,20 +172,17 @@ describe('Judge', () => {
               'Evaluate and report scores for important metrics: Input: What is the capital of France?, Output: Paris is the capital of France.',
           }),
         ]),
-        expect.any(Object), // evaluation response structure
+        expect.any(Object), // evaluation schema
       );
     });
 
     it('returns evaluation result with correct evaluationMetricKey for tracker integration', async () => {
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.85,
           reasoning: 'Highly relevant response',
         },
-        rawResponse: JSON.stringify({
-          score: 0.85,
-          reasoning: 'Highly relevant response',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -196,7 +190,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluate('test input', 'test output');
 
@@ -212,15 +206,12 @@ describe('Judge', () => {
       const originalRandom = Math.random;
       Math.random = jest.fn().mockReturnValue(0.3);
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'Good',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'Good',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -228,13 +219,13 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluate('test input', 'test output', 0.5);
 
       expect(result).toBeDefined();
       expect(result.sampled).toBe(true);
-      expect(mockProvider.invokeStructuredModel).toHaveBeenCalled();
+      expect(mockRunner.run).toHaveBeenCalled();
 
       Math.random = originalRandom;
     });
@@ -250,7 +241,7 @@ describe('Judge', () => {
         sampled: false,
         judgeConfigKey: 'test-judge',
       });
-      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+      expect(mockRunner.run).not.toHaveBeenCalled();
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'Judge evaluation skipped due to sampling rate: 0.5',
       );
@@ -264,7 +255,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockProvider, 1.0, mockLogger);
+      const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockRunner, 1.0, mockLogger);
 
       const result = await judgeWithoutMetrics.evaluate('test input', 'test output');
 
@@ -286,17 +277,14 @@ describe('Judge', () => {
         evaluationMetricKey: 'relevance',
         evaluationMetricKeys: undefined,
       };
-      const judgeWithSingleKey = new Judge(configWithSingleKey, mockProvider, 1.0, mockLogger);
+      const judgeWithSingleKey = new Judge(configWithSingleKey, mockRunner, 1.0, mockLogger);
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'The response is relevant',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'The response is relevant',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -304,7 +292,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judgeWithSingleKey.evaluate('test input', 'test output');
 
@@ -324,17 +312,14 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockProvider, 1.0, mockLogger);
+      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockRunner, 1.0, mockLogger);
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'The response is relevant',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'The response is relevant',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -342,7 +327,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judgeWithLegacyKeys.evaluate('test input', 'test output');
 
@@ -362,17 +347,14 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: ['', '   ', 'relevance', 'accuracy'],
       };
-      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockProvider, 1.0, mockLogger);
+      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockRunner, 1.0, mockLogger);
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'The response is relevant',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'The response is relevant',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -380,7 +362,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judgeWithInvalidKeys.evaluate('test input', 'test output');
 
@@ -401,17 +383,14 @@ describe('Judge', () => {
         evaluationMetricKey: 'helpfulness',
         evaluationMetricKeys: ['relevance', 'accuracy'],
       };
-      const judgeWithBoth = new Judge(configWithBoth, mockProvider, 1.0, mockLogger);
+      const judgeWithBoth = new Judge(configWithBoth, mockRunner, 1.0, mockLogger);
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.7,
           reasoning: 'The response is helpful',
         },
-        rawResponse: JSON.stringify({
-          score: 0.7,
-          reasoning: 'The response is helpful',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -419,7 +398,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judgeWithBoth.evaluate('test input', 'test output');
 
@@ -438,7 +417,7 @@ describe('Judge', () => {
         ...judgeConfig,
         messages: undefined,
       };
-      const judgeWithoutMessages = new Judge(configWithoutMessages, mockProvider, 1.0, mockLogger);
+      const judgeWithoutMessages = new Judge(configWithoutMessages, mockRunner, 1.0, mockLogger);
 
       const result = await judgeWithoutMessages.evaluate('test input', 'test output');
 
@@ -454,10 +433,10 @@ describe('Judge', () => {
       );
     });
 
-    it('returns result with success false when response has no score or reasoning', async () => {
-      const mockStructuredResponse: StructuredResponse = {
-        data: {},
-        rawResponse: '{}',
+    it('returns result with success false when parsed is undefined or has no score/reasoning', async () => {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: undefined,
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -465,7 +444,33 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
+      const result = await judge.evaluate('test input', 'test output');
+
+      expect(result).toEqual({
+        success: false,
+        sampled: true,
+        judgeConfigKey: 'test-judge',
+      });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Could not parse evaluation response: undefined',
+        mockTrackData,
+      );
+    });
+
+    it('returns result with success false when parsed is an empty object', async () => {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {},
+        metrics: {
+          success: true,
+          usage: { total: 100, input: 50, output: 50 },
+        },
+      };
+
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluate('test input', 'test output');
 
@@ -481,17 +486,13 @@ describe('Judge', () => {
     });
 
     it('returns result with success false when response structure is malformed', async () => {
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           evaluations: {
             relevance: { score: 0.8, reasoning: 'Good' },
           },
         },
-        rawResponse: JSON.stringify({
-          evaluations: {
-            relevance: { score: 0.8, reasoning: 'Good' },
-          },
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -499,7 +500,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluate('test input', 'test output');
 
@@ -514,7 +515,7 @@ describe('Judge', () => {
       );
     });
 
-    it('handles provider errors gracefully', async () => {
+    it('handles runner errors gracefully', async () => {
       const error = new Error('Provider error');
       mockTracker.trackMetricsOf.mockRejectedValue(error);
 
@@ -547,7 +548,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
     });
 
     it('evaluates messages and response successfully', async () => {
@@ -560,15 +561,12 @@ describe('Judge', () => {
         metrics: { success: true },
       };
 
-      const mockStructuredResponse: StructuredResponse = {
-        data: {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
           score: 0.8,
           reasoning: 'The response is relevant to the question',
         },
-        rawResponse: JSON.stringify({
-          score: 0.8,
-          reasoning: 'The response is relevant to the question',
-        }),
         metrics: {
           success: true,
           usage: { total: 100, input: 50, output: 50 },
@@ -576,7 +574,7 @@ describe('Judge', () => {
       };
 
       mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockProvider.invokeStructuredModel.mockResolvedValue(mockStructuredResponse);
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
 
       const result = await judge.evaluateMessages(messages, response);
 
@@ -589,7 +587,7 @@ describe('Judge', () => {
         judgeConfigKey: 'test-judge',
       });
 
-      expect(mockProvider.invokeStructuredModel).toHaveBeenCalledWith(
+      expect(mockRunner.run).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             role: 'system',
@@ -601,7 +599,7 @@ describe('Judge', () => {
               'Evaluate and report scores for important metrics: Input: What is the capital of France?\r\nParis is the capital of France., Output: Paris is the capital of France.',
           }),
         ]),
-        expect.any(Object), // evaluation response structure
+        expect.any(Object), // evaluation schema
       );
     });
 
@@ -622,7 +620,7 @@ describe('Judge', () => {
         sampled: false,
         judgeConfigKey: 'test-judge',
       });
-      expect(mockProvider.invokeStructuredModel).not.toHaveBeenCalled();
+      expect(mockRunner.run).not.toHaveBeenCalled();
 
       Math.random = originalRandom;
     });
@@ -632,7 +630,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
     });
 
     it('constructs evaluation messages correctly', () => {
@@ -657,7 +655,7 @@ describe('Judge', () => {
     let judge: Judge;
 
     beforeEach(() => {
-      judge = new Judge(judgeConfig, mockProvider, 1.0, mockLogger);
+      judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
     });
 
     it('parses valid evaluation response correctly', () => {
@@ -728,7 +726,7 @@ describe('Judge', () => {
         evaluationMetricKey: undefined,
         evaluationMetricKeys: [],
       };
-      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockProvider, 1.0, mockLogger);
+      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockRunner, 1.0, mockLogger);
 
       const result = await judgeWithEmptyKeys.evaluate('test input', 'test output');
 
