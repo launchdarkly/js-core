@@ -130,6 +130,12 @@
         }
       ]
     },
+    "packages/sdk/node-client": {
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        "src/index.ts"
+      ]
+    },
     "packages/sdk/server-node": {
       "extra-files": [
         "src/platform/NodeInfo.ts",
