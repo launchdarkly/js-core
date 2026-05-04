@@ -25,8 +25,7 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
-import { RunnerResult } from './api/model/types';
-import { AIProvider, AIProviderFactory, Runner, SupportedAIProvider } from './api/providers';
+import { AIProviderFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
@@ -51,26 +50,6 @@ const INIT_TRACK_CONTEXT: LDContext = {
 };
 
 const disabledAIConfig: LDAIConfigDefault = { enabled: false };
-
-/**
- * Adapt a (deprecated) AIProvider to the Runner protocol.
- * Prepends the AIConfig's configured messages to the user prompt so existing
- * AIProvider-based flows preserve their system-prompt behavior under the
- * stateless Runner contract.
- */
-function runnerFromAIProvider(provider: AIProvider, config: LDAICompletionConfig): Runner {
-  return {
-    async run(input: string): Promise<RunnerResult> {
-      const messages: LDMessage[] = [...(config.messages ?? []), { role: 'user', content: input }];
-      const response = await provider.invokeModel(messages);
-      return {
-        content: response.message.content,
-        metrics: response.metrics,
-        raw: response,
-      };
-    },
-  };
-}
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
@@ -461,13 +440,9 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
-    if (!provider) {
-      return undefined;
-    }
-
-    const runner = runnerFromAIProvider(provider, config);
-    return new ManagedModel(config, runner, this._logger);
+    // Provider implementations will implement Runner directly once provider PRs land.
+    // AIProviderFactory wiring is intentionally omitted here until that migration is complete.
+    return undefined;
   }
 
   /**
