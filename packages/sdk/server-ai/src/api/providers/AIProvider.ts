@@ -11,10 +11,6 @@ import { StructuredResponse } from '../judge/types';
  *
  * Following the AICHAT spec recommendation to use base classes with non-abstract methods
  * for better extensibility and backwards compatibility.
- *
- * @deprecated Use the `Runner` interface instead. Provider implementations should
- * implement `Runner` (and optionally `AgentGraphRunner`) rather than extending this
- * abstract class. This class will be removed in a future major version.
  */
 export abstract class AIProvider {
   protected readonly logger?: LDLogger;
@@ -24,12 +20,11 @@ export abstract class AIProvider {
   }
   /**
    * Invoke the chat model with an array of messages.
-   * This method should convert messages to provider format, invoke the model,
-   * and return a ChatResponse with the result and metrics.
    *
    * Default implementation takes no action and returns a placeholder response.
    * Provider implementations should override this method.
    *
+   * @deprecated Use the `Runner` interface and its `run` method instead.
    * @param messages Array of LDMessage objects representing the conversation
    * @returns Promise that resolves to a ChatResponse containing the model's response
    */
@@ -53,12 +48,11 @@ export abstract class AIProvider {
 
   /**
    * Invoke the chat model with structured output support.
-   * This method should convert messages to provider format, invoke the model with
-   * structured output configuration, and return a structured response.
    *
    * Default implementation takes no action and returns a placeholder response.
    * Provider implementations should override this method.
    *
+   * @deprecated Use the `Runner` interface and its `run` method with `outputType` instead.
    * @param messages Array of LDMessage objects representing the conversation
    * @param responseStructure Dictionary of output configurations keyed by output name
    * @returns Promise that resolves to a structured response

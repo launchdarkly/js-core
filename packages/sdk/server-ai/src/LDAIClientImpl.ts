@@ -104,15 +104,15 @@ export class LDAIClientImpl implements LDAIClient {
     // Validate mode match
     // eslint-disable-next-line no-underscore-dangle
     const flagMode = value._ldMeta?.mode ?? 'completion';
+    let evaluator = Evaluator.noop();
 
     if (flagMode !== mode) {
       this._logger?.warn(
         `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
       );
-      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, Evaluator.noop());
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
     }
 
-    let evaluator = Evaluator.noop();
     if (flagMode !== 'judge') {
       evaluator = await this._buildEvaluator(
         value.judgeConfiguration?.judges ?? [],
@@ -437,7 +437,7 @@ export class LDAIClientImpl implements LDAIClient {
     );
 
     if (!config.enabled) {
-      this._logger?.info(`Chat configuration is disabled: ${key}`);
+      this._logger?.info(`Completion configuration is disabled: ${key}`);
       return undefined;
     }
 

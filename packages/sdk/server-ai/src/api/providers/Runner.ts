@@ -4,9 +4,6 @@ import { RunnerResult } from '../model/types';
 /**
  * Runner protocol for AI model providers.
  *
- * Providers implementing the Runner interface can be used with ManagedModel
- * and ManagedAgent without extending the deprecated AIProvider abstract class.
- *
  * A single Runner interface covers both chat (completion) and agent use cases.
  * For structured output (e.g., judge evaluation), pass an `outputType` schema
  * and access the parsed result via `RunnerResult.parsed`.

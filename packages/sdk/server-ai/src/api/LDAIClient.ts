@@ -236,9 +236,9 @@ export interface LDAIClient {
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
 
   /**
-   * Creates and returns a new ManagedModel instance for chat interactions.
+   * Creates and returns a new ManagedModel instance for LLM model interactions.
    *
-   * @param key The key identifying the AI chat configuration to use.
+   * @param key The key identifying the AI completion configuration to use.
    * @param context The standard LDContext used when evaluating flags.
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
    * When omitted or null, a disabled default is used.

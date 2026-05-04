@@ -40,7 +40,7 @@ export interface LDAgentGraphFlagValue {
 /**
  * Accumulated graph-level metrics collected by an LDGraphTracker.
  */
-export interface LDGraphMetricSummary {
+export interface LDAIGraphMetricSummary {
   /**
    * Whether the graph invocation succeeded. Absent if not yet tracked.
    */
@@ -60,13 +60,18 @@ export interface LDGraphMetricSummary {
    * Execution path through the graph as an array of config keys. Absent if not yet tracked.
    */
   path?: string[];
+
+  /**
+   * Resumption token for deferred feedback association.
+   */
+  resumptionToken?: string;
 }
 
 /**
  * Graph-level metrics for a completed graph run, as returned by a graph runner.
  * Does NOT include handoffs or evaluations — those are managed-layer concerns.
  */
-export interface GraphMetrics {
+export interface LDAIGraphMetrics {
   /**
    * Whether the graph invocation succeeded.
    */
@@ -106,7 +111,7 @@ export interface AgentGraphRunnerResult {
   /**
    * Graph-level metrics for this invocation.
    */
-  metrics: GraphMetrics;
+  metrics: LDAIGraphMetrics;
 
   /**
    * The raw response object from the provider, if available.
@@ -114,27 +119,3 @@ export interface AgentGraphRunnerResult {
   raw?: unknown;
 }
 
-/**
- * Tracking metadata returned by {@link LDGraphTracker.getTrackData}.
- */
-export interface LDGraphTrackData {
-  /**
-   * UUID v4 uniquely identifying this tracker and all events it emits.
-   */
-  runId: string;
-
-  /**
-   * The graph configuration key.
-   */
-  graphKey: string;
-
-  /**
-   * The variation key. Absent when a default config was used rather than a real flag evaluation.
-   */
-  variationKey?: string;
-
-  /**
-   * The version of the flag variation.
-   */
-  version: number;
-}
