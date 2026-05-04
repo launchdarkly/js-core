@@ -8,6 +8,7 @@
   "packages/sdk/cloudflare": "2.7.22",
   "packages/sdk/combined-browser": "0.1.19",
   "packages/sdk/fastly": "0.2.12",
+  "packages/sdk/node-client": "0.0.1",
   "packages/sdk/react-native": "10.17.3",
   "packages/sdk/server-ai": "0.19.0",
   "packages/sdk/server-node": "9.10.13",

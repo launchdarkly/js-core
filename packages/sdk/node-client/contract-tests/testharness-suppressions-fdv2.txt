@@ -1,0 +1,3 @@
+# Tests in this file will be skipped by the LaunchDarkly SDK test harness running
+# the FDv2-feature branch against the Node.js client-side SDK. Add a path per line.
+# Lines beginning with '#' are comments.
