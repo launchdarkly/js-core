@@ -1,13 +1,13 @@
 import { ManagedModel } from '../src/api/ManagedModel';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAICompletionConfig } from '../src/api/config/types';
-import { Evaluator } from '../src/api/judge/Evaluator';
 import { RunnerResult } from '../src/api/model/types';
 import { Runner } from '../src/api/providers/Runner';
 
 describe('ManagedModel', () => {
   let mockRunner: jest.Mocked<Runner>;
   let mockTracker: jest.Mocked<LDAIConfigTracker>;
+  let mockEvaluator: { evaluate: jest.Mock };
   let aiConfig: LDAICompletionConfig;
 
   beforeEach(() => {
@@ -32,6 +32,10 @@ describe('ManagedModel', () => {
       resumptionToken: 'resumption-token-123',
     } as any;
 
+    mockEvaluator = {
+      evaluate: jest.fn().mockResolvedValue([]),
+    };
+
     aiConfig = {
       key: 'test-config',
       enabled: true,
@@ -39,7 +43,7 @@ describe('ManagedModel', () => {
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       createTracker: () => mockTracker,
-      evaluator: Evaluator.noop(),
+      evaluator: mockEvaluator as any,
     };
   });
 

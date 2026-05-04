@@ -78,11 +78,10 @@ describe('RunnerFactory.createModel', () => {
   it('falls through to multi-provider packages when specific provider returns undefined', async () => {
     const runner = makeRunner();
 
-    let callCount = 0;
     const getProviderSpy = jest
       .spyOn(RunnerFactory as any, '_getProviderFactory')
-      .mockImplementation(async (providerType: string) => {
-        callCount += 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .mockImplementation(async (providerType: any) => {
         if (providerType === 'openai') {
           // openai package not installed
           return undefined;
@@ -107,6 +106,10 @@ describe('RunnerFactory.createModel', () => {
 // ---------------------------------------------------------------------------
 
 describe('RunnerFactory._withFallback', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('returns the first truthy result and does not call remaining factories', async () => {
     const runner = makeRunner();
     const factoryA: AIProvider = {
