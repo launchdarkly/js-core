@@ -27,7 +27,7 @@ jobs:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       - name: Generate SBOM
-        uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@84fb025c5a9bec35b22ba3cd992ea3f81c8f2886 # main
+        uses: launchdarkly/gh-actions/actions/dependency-scan/generate-sbom@653f554f9133b10194c473787f84b4e739bfa9a5 # main
         with:
           types: 'nodejs'
           ensure-non-empty: 'true'
@@ -40,6 +40,6 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Evaluate SBOM Policy
-        uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@84fb025c5a9bec35b22ba3cd992ea3f81c8f2886 # main
+        uses: launchdarkly/gh-actions/actions/dependency-scan/evaluate-policy@653f554f9133b10194c473787f84b4e739bfa9a5 # main
         with:
           artifacts-pattern: bom-*
