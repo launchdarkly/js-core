@@ -1,5 +1,5 @@
 import type { LDTokenUsage } from '../metrics';
-import type { LDGraphMetricSummary, LDGraphTrackData } from './types';
+import type { LDAIGraphMetricSummary } from './types';
 
 /**
  * Tracks graph-level and edge-level metrics for an agent graph invocation.
@@ -25,12 +25,17 @@ export interface LDGraphTracker {
   /**
    * Returns tracking metadata to be included in every LDClient.track call.
    */
-  getTrackData(): LDGraphTrackData;
+  getTrackData(): {
+    runId: string;
+    graphKey: string;
+    variationKey?: string;
+    version: number;
+  };
 
   /**
    * Returns a snapshot of all graph-level metrics tracked so far.
    */
-  getSummary(): LDGraphMetricSummary;
+  getSummary(): LDAIGraphMetricSummary;
 
   /**
    * A URL-safe Base64-encoded (RFC 4648, no padding) token encoding the tracker's

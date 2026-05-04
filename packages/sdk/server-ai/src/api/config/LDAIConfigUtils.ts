@@ -1,3 +1,4 @@
+import { Evaluator } from '../judge/Evaluator';
 import { LDAIConfigTracker } from './LDAIConfigTracker';
 import {
   LDAIAgentConfig,
@@ -90,12 +91,14 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator to attach to completion and agent configs
    * @returns The appropriate AI configuration type
    */
   static fromFlagValue(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
@@ -103,34 +106,43 @@ export class LDAIConfigUtils {
 
     switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(key, flagValue, trackerFactory);
+        return this.toAgentConfig(key, flagValue, trackerFactory, evaluator);
       case 'judge':
         return this.toJudgeConfig(key, flagValue, trackerFactory);
       case 'completion':
       default:
-        return this.toCompletionConfig(key, flagValue, trackerFactory);
+        return this.toCompletionConfig(key, flagValue, trackerFactory, evaluator);
     }
   }
 
   /**
    * Creates a disabled configuration of the specified mode.
    *
+   * @param key The configuration key
    * @param mode The mode for the disabled config
+   * @param createTracker A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator to attach to completion and agent configs
    * @returns A disabled config of the appropriate type
    */
-  static createDisabledConfig(key: string, mode: LDAIConfigMode): LDAIConfigKind {
+  static createDisabledConfig(
+    key: string,
+    mode: LDAIConfigMode,
+    createTracker: () => LDAIConfigTracker,
+    evaluator: Evaluator,
+  ): LDAIConfigKind {
     switch (mode) {
       case 'agent':
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker,
+          evaluator,
         } as LDAIAgentConfig;
       case 'judge':
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker,
         } as LDAIJudgeConfig;
       case 'completion':
       default:
@@ -138,7 +150,8 @@ export class LDAIConfigUtils {
         return {
           key,
           enabled: false,
-          createTracker: undefined,
+          createTracker,
+          evaluator,
         } as LDAICompletionConfig;
     }
   }
@@ -187,16 +200,19 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator for this completion config
    * @returns A completion configuration
    */
   static toCompletionConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAICompletionConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
+      evaluator,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: this._resolveTools(flagValue),
@@ -209,16 +225,19 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator for this agent config
    * @returns An agent configuration
    */
   static toAgentConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAIAgentConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
+      evaluator,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: this._resolveTools(flagValue),

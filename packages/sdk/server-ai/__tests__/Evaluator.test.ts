@@ -2,7 +2,7 @@ import { LDAIJudgeConfig } from '../src/api/config/types';
 import { Evaluator } from '../src/api/judge/Evaluator';
 import { Judge } from '../src/api/judge/Judge';
 import { LDJudgeResult } from '../src/api/judge/types';
-import { AIProvider } from '../src/api/providers/AIProvider';
+import { Runner } from '../src/api/providers/Runner';
 
 function makeJudgeConfig(key: string): LDAIJudgeConfig {
   return {
@@ -14,10 +14,9 @@ function makeJudgeConfig(key: string): LDAIJudgeConfig {
   };
 }
 
-function makeProvider(): jest.Mocked<AIProvider> {
+function makeRunner(): jest.Mocked<Runner> {
   return {
-    invokeModel: jest.fn(),
-    invokeStructuredModel: jest.fn(),
+    run: jest.fn(),
   } as any;
 }
 
@@ -32,7 +31,7 @@ describe('Evaluator', () => {
 
   describe('evaluate()', () => {
     it('calls each configured judge and returns results', async () => {
-      const mockProvider = makeProvider();
+      const mockRunner = makeRunner();
       const judgeConfig = makeJudgeConfig('judge-1');
 
       const mockResult: LDJudgeResult = {
@@ -44,7 +43,7 @@ describe('Evaluator', () => {
         judgeConfigKey: 'judge-1',
       };
 
-      const judge = new Judge(judgeConfig, mockProvider, 1.0);
+      const judge = new Judge(judgeConfig, mockRunner, 1.0);
       jest.spyOn(judge, 'evaluate').mockResolvedValue(mockResult);
 
       const evaluator = new Evaluator([judge]);
@@ -58,7 +57,7 @@ describe('Evaluator', () => {
     });
 
     it('does NOT call tracker.trackJudgeResult', async () => {
-      const mockProvider = makeProvider();
+      const mockRunner = makeRunner();
       const judgeConfig = makeJudgeConfig('judge-1');
 
       const mockResult: LDJudgeResult = {
@@ -69,7 +68,7 @@ describe('Evaluator', () => {
         metricKey: '$ld:ai:judge:quality',
       };
 
-      const judge = new Judge(judgeConfig, mockProvider, 1.0);
+      const judge = new Judge(judgeConfig, mockRunner, 1.0);
       jest.spyOn(judge, 'evaluate').mockResolvedValue(mockResult);
 
       const evaluator = new Evaluator([judge]);
@@ -83,9 +82,9 @@ describe('Evaluator', () => {
 
     it('runs multiple judges in parallel and returns all results', async () => {
       const makeJudge = (key: string, score: number): Judge => {
-        const mockProvider = makeProvider();
+        const mockRunner = makeRunner();
         const jc = makeJudgeConfig(key);
-        const j = new Judge(jc, mockProvider, 1.0);
+        const j = new Judge(jc, mockRunner, 1.0);
         jest.spyOn(j, 'evaluate').mockResolvedValue({
           success: true,
           sampled: true,

@@ -1,4 +1,4 @@
-import { LDTokenUsage } from '../metrics';
+import { LDAIMetrics, LDTokenUsage } from '../metrics';
 
 /**
  * Represents a directed edge in an agent graph, connecting a source node to a target node.
@@ -40,7 +40,7 @@ export interface LDAgentGraphFlagValue {
 /**
  * Accumulated graph-level metrics collected by an LDGraphTracker.
  */
-export interface LDGraphMetricSummary {
+export interface LDAIGraphMetricSummary {
   /**
    * Whether the graph invocation succeeded. Absent if not yet tracked.
    */
@@ -60,29 +60,62 @@ export interface LDGraphMetricSummary {
    * Execution path through the graph as an array of config keys. Absent if not yet tracked.
    */
   path?: string[];
+
+  /**
+   * Resumption token for deferred feedback association.
+   */
+  resumptionToken?: string;
 }
 
 /**
- * Tracking metadata returned by {@link LDGraphTracker.getTrackData}.
+ * Graph-level metrics for a completed graph run, as returned by a graph runner.
+ * Does NOT include handoffs or evaluations — those are managed-layer concerns.
  */
-export interface LDGraphTrackData {
+export interface LDAIGraphMetrics {
   /**
-   * UUID v4 uniquely identifying this tracker and all events it emits.
+   * Whether the graph invocation succeeded.
    */
-  runId: string;
+  success: boolean;
 
   /**
-   * The graph configuration key.
+   * Execution path through the graph as an ordered array of config keys.
    */
-  graphKey: string;
+  path: string[];
 
   /**
-   * The variation key. Absent when a default config was used rather than a real flag evaluation.
+   * Total graph execution duration in milliseconds, if tracked.
    */
-  variationKey?: string;
+  durationMs?: number;
 
   /**
-   * The version of the flag variation.
+   * Aggregate token usage across the entire graph invocation, if available.
    */
-  version: number;
+  usage?: LDTokenUsage;
+
+  /**
+   * Per-node metrics keyed by agent config key.
+   */
+  nodeMetrics: Record<string, LDAIMetrics>;
 }
+
+/**
+ * The result returned by a graph runner invocation (provider-level).
+ * Does NOT include evaluations or handoffs.
+ */
+export interface AgentGraphRunnerResult {
+  /**
+   * The text content of the graph's final response.
+   */
+  content: string;
+
+  /**
+   * Graph-level metrics for this invocation.
+   */
+  metrics: LDAIGraphMetrics;
+
+  /**
+   * The raw response object from the provider, if available.
+   */
+  raw?: unknown;
+}
+

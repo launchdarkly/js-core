@@ -4,8 +4,9 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
-import { AIProvider } from '../providers/AIProvider';
-import { LDJudgeResult, StructuredResponse } from './types';
+import { RunnerResult } from '../model/types';
+import { Runner } from '../providers/Runner';
+import { LDJudgeResult } from './types';
 
 const EVALUATION_SCHEMA = {
   type: 'object',
@@ -36,7 +37,7 @@ export class Judge {
 
   constructor(
     private readonly _aiConfig: LDAIJudgeConfig,
-    private readonly _aiProvider: AIProvider,
+    private readonly _runner: Runner,
     private readonly _sampleRate: number = 1.0,
     logger?: LDLogger,
   ) {
@@ -121,15 +122,15 @@ export class Judge {
       const messages = this._constructEvaluationMessages(input, output);
 
       const response = await tracker.trackMetricsOf(
-        (r: StructuredResponse) => r.metrics,
-        () => this._aiProvider.invokeStructuredModel(messages, EVALUATION_SCHEMA),
+        (r: RunnerResult) => r.metrics,
+        () => this._runner.run(messages, EVALUATION_SCHEMA),
       );
 
-      const evalResult = this._parseEvaluationResponse(response.data);
+      const evalResult = this._parseEvaluationResponse(response.parsed);
 
       if (!evalResult) {
         this._logger?.warn(
-          `Could not parse evaluation response: ${JSON.stringify(response.data)}`,
+          `Could not parse evaluation response: ${JSON.stringify(response.parsed)}`,
           tracker.getTrackData(),
         );
         return result;
@@ -178,10 +179,10 @@ export class Judge {
   }
 
   /**
-   * Returns the AI provider used by this judge.
+   * Returns the runner used by this judge.
    */
-  getProvider(): AIProvider {
-    return this._aiProvider;
+  getRunner(): Runner {
+    return this._runner;
   }
 
   /**
@@ -211,7 +212,7 @@ export class Judge {
    * Returns score and reasoning, or undefined if parsing fails.
    */
   private _parseEvaluationResponse(
-    data: Record<string, unknown>,
+    data: Record<string, unknown> | undefined,
   ): { score: number; reasoning: string } | undefined {
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       return undefined;
