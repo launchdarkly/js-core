@@ -1,7 +1,7 @@
 import type { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import type { LDGraphTracker } from './api/graph/LDGraphTracker';
-import type { LDGraphMetricSummary, LDGraphTrackData } from './api/graph/types';
+import type { LDAIGraphMetricSummary } from './api/graph/types';
 import type { LDTokenUsage } from './api/metrics';
 import type { LDClientMin } from './LDClientMin';
 
@@ -12,7 +12,7 @@ import type { LDClientMin } from './LDClientMin';
  * {@link LDGraphTrackerImpl.fromResumptionToken}.
  */
 export class LDGraphTrackerImpl implements LDGraphTracker {
-  private _summary: LDGraphMetricSummary = {};
+  private _summary: LDAIGraphMetricSummary = {};
 
   constructor(
     private readonly _ldClient: LDClientMin,
@@ -21,7 +21,9 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     private readonly _variationKey: string | undefined,
     private readonly _version: number,
     private readonly _context: LDContext,
-  ) {}
+  ) {
+    this._summary.resumptionToken = this.resumptionToken;
+  }
 
   /**
    * Reconstructs an {@link LDGraphTrackerImpl} from a resumption token, preserving
@@ -40,7 +42,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     context: LDContext,
   ): LDGraphTrackerImpl {
     const json = Buffer.from(token, 'base64url').toString('utf8');
-    const data = JSON.parse(json) as LDGraphTrackData;
+    const data = JSON.parse(json);
     return new LDGraphTrackerImpl(
       ldClient,
       data.runId,
@@ -51,19 +53,21 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     );
   }
 
-  getTrackData(): LDGraphTrackData {
-    const data: LDGraphTrackData = {
+  getTrackData(): {
+    runId: string;
+    graphKey: string;
+    variationKey?: string;
+    version: number;
+  } {
+    return {
       runId: this._runId,
       graphKey: this._graphKey,
       version: this._version,
+      ...(this._variationKey !== undefined ? { variationKey: this._variationKey } : {}),
     };
-    if (this._variationKey !== undefined) {
-      data.variationKey = this._variationKey;
-    }
-    return data;
   }
 
-  getSummary(): LDGraphMetricSummary {
+  getSummary(): LDAIGraphMetricSummary {
     return { ...this._summary };
   }
 

@@ -126,7 +126,7 @@ export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
    * new tracker with a fresh runId. Use createTracker() at the start of each
    * execution to obtain a tracker, then use it to record metrics for that run.
    */
-  createTracker?: () => LDAIConfigTracker;
+  createTracker: () => LDAIConfigTracker;
 }
 
 // ============================================================================
@@ -222,12 +222,12 @@ export interface LDAIAgentConfig extends LDAIConfig {
    */
   tools?: { [toolName: string]: LDTool };
   /**
-   * Evaluator for this agent config. Populated by createAgent.
+   * Evaluator for this agent config. Populated at evaluation time.
    * Not part of the flag value shape.
    *
    * @internal
    */
-  evaluator?: Evaluator;
+  evaluator: Evaluator;
 }
 
 /**
@@ -248,12 +248,12 @@ export interface LDAICompletionConfig extends LDAIConfig {
    */
   tools?: { [toolName: string]: LDTool };
   /**
-   * Evaluator for this completion config. Populated by createChat/createModel.
+   * Evaluator for this completion config. Populated at evaluation time.
    * Not part of the flag value shape.
    *
    * @internal
    */
-  evaluator?: Evaluator;
+  evaluator: Evaluator;
 }
 
 /**
