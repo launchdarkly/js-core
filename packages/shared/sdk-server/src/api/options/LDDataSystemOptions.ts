@@ -77,10 +77,10 @@ export interface LDDataSystemOptions {
    * of the FDv2 initializer/synchronizer chain configured via {@link dataSource}.
    *
    * If omitted, the SDK uses sensible defaults derived from the rest of the configuration.
-   * If explicitly set to `null` or `false`, no FDv1 fallback synchronizer is configured and
-   * the SDK will transition to a terminal Closed state when the directive is received.
+   * If explicitly set to `null`, no FDv1 fallback synchronizer is configured and the SDK
+   * will transition to a terminal Closed state when the directive is received.
    */
-  fdv1Fallback?: FDv1FallbackConfiguration;
+  fdv1Fallback?: FDv1FallbackConfiguration | null;
 }
 
 /**

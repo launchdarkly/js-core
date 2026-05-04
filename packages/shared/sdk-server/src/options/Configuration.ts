@@ -203,6 +203,62 @@ function validateEndpoints(options: LDOptions, validatedOptions: Options) {
   }
 }
 
+// Validators for fields inside dataSystem.fdv1Fallback. baseUri is an arbitrary string
+// (the polling endpoint URI) and pollInterval reuses the same minimum as the top-level
+// pollInterval option.
+const fdv1FallbackValidations: Record<string, TypeValidator> = {
+  baseUri: TypeValidators.String,
+  pollInterval: TypeValidators.numberWithMin(30),
+};
+
+function validateFDv1FallbackOptions(
+  options: FDv1FallbackConfiguration,
+): {
+  errors: string[];
+  validatedOptions: FDv1FallbackConfiguration;
+} {
+  const errors: string[] = [];
+  const validatedOptions: { [k: string]: any } = {};
+
+  Object.keys(options).forEach((optionName) => {
+    const optionValue = (options as { [k: string]: any })[optionName];
+    const validator = fdv1FallbackValidations[optionName];
+    if (!validator) {
+      // Unknown field on the fdv1Fallback object: drop it and warn so misconfigurations
+      // surface during development.
+      errors.push(OptionMessages.unknownOption(`dataSystem.fdv1Fallback.${optionName}`));
+      return;
+    }
+    if (!validator.is(optionValue)) {
+      if (validator instanceof NumberWithMinimum && TypeValidators.Number.is(optionValue)) {
+        const { min } = validator as NumberWithMinimum;
+        errors.push(
+          OptionMessages.optionBelowMinimum(
+            `dataSystem.fdv1Fallback.${optionName}`,
+            optionValue,
+            min,
+          ),
+        );
+        validatedOptions[optionName] = min;
+      } else {
+        errors.push(
+          OptionMessages.wrongOptionType(
+            `dataSystem.fdv1Fallback.${optionName}`,
+            validator.getType(),
+            typeof optionValue,
+          ),
+        );
+        // Drop the invalid value so the SDK falls back to defaults derived from the
+        // top-level configuration.
+      }
+    } else {
+      validatedOptions[optionName] = optionValue;
+    }
+  });
+
+  return { errors, validatedOptions: validatedOptions as FDv1FallbackConfiguration };
+}
+
 function validateDataSystemOptions(options: Options): {
   errors: string[];
   validatedOptions: Options;
@@ -219,6 +275,30 @@ function validateDataSystemOptions(options: Options): {
         typeof options.persistentStore,
       ),
     );
+  }
+
+  // fdv1Fallback may be: undefined (use defaults), null (opt out so the data source
+  // terminates on the directive), or an FDv1FallbackConfiguration object. Validate the
+  // fields of the object form; preserve null and undefined.
+  if (options.fdv1Fallback !== undefined && options.fdv1Fallback !== null) {
+    if (TypeValidators.Object.is(options.fdv1Fallback)) {
+      const { errors: fbErrors, validatedOptions: fbValidated } = validateFDv1FallbackOptions(
+        options.fdv1Fallback as FDv1FallbackConfiguration,
+      );
+      validatedOptions.fdv1Fallback = fbValidated;
+      allErrors.push(...fbErrors);
+    } else {
+      // Anything else (string, number, etc) is a misconfiguration. Drop it so the SDK
+      // falls back to default FDv1 fallback behavior.
+      validatedOptions.fdv1Fallback = undefined;
+      allErrors.push(
+        OptionMessages.wrongOptionType(
+          'dataSystem.fdv1Fallback',
+          'FDv1FallbackConfiguration',
+          typeof options.fdv1Fallback,
+        ),
+      );
+    }
   }
 
   if (options.dataSource) {
@@ -272,7 +352,7 @@ export interface DataSystemConfiguration {
   dataSource?: DataSourceOptions;
   featureStoreFactory: (clientContext: LDClientContext) => LDTransactionalFeatureStore;
   useLdd?: boolean;
-  fdv1Fallback?: FDv1FallbackConfiguration;
+  fdv1Fallback?: FDv1FallbackConfiguration | null;
 }
 
 /**
