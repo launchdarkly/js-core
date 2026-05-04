@@ -2,7 +2,16 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
 import { LDAIConfigKind, LDMessage } from '../config/types';
+import { AgentGraphDefinition } from '../graph/AgentGraphDefinition';
 import { StructuredResponse } from '../judge/types';
+import { AgentGraphRunner, Runner } from './Runner';
+
+/**
+ * A registry of callable tools keyed by tool name.
+ * Mirrors Python's `Dict[str, Callable]` — values are typically functions
+ * that the provider invokes when the model requests a tool call.
+ */
+export type ToolRegistry = Record<string, (...args: any[]) => unknown>;
 
 /**
  * Abstract base class for AI providers that implement chat model functionality.
@@ -76,11 +85,74 @@ export abstract class AIProvider {
     };
   }
 
+  // ============================================================================
+  // Factory instance methods (Python AIProvider pattern)
+  //
+  // Provider packages override these to return a configured Runner for the
+  // relevant mode. The default implementations log a warning and return
+  // undefined, mirroring Python's base-class behaviour.
+  // ============================================================================
+
+  /**
+   * Create a Runner for a completion or judge AI Config.
+   *
+   * Override in provider subclasses to return a configured {@link Runner}.
+   * Default implementation logs a warning and returns `undefined`.
+   *
+   * @param config The completion or judge AI configuration.
+   * @returns Promise resolving to a {@link Runner}, or `undefined` if this
+   *   provider does not support model creation.
+   */
+  async createModel(_config: LDAIConfigKind): Promise<Runner | undefined> {
+    this.logger?.warn('createModel not implemented by this provider');
+    return undefined;
+  }
+
+  /**
+   * Create a Runner for an agent AI Config.
+   *
+   * Override in provider subclasses to return a configured {@link Runner}.
+   * Default implementation logs a warning and returns `undefined`.
+   *
+   * @param config The agent AI configuration.
+   * @param tools Optional registry of callable tools.
+   * @returns Promise resolving to a {@link Runner}, or `undefined` if this
+   *   provider does not support agent creation.
+   */
+  async createAgent(_config: LDAIConfigKind, _tools?: ToolRegistry): Promise<Runner | undefined> {
+    this.logger?.warn('createAgent not implemented by this provider');
+    return undefined;
+  }
+
+  /**
+   * Create an AgentGraphRunner for an agent graph definition.
+   *
+   * Override in provider subclasses to return a configured {@link AgentGraphRunner}.
+   * Default implementation logs a warning and returns `undefined`.
+   *
+   * @param graphDef The agent graph definition.
+   * @param tools Optional registry of callable tools.
+   * @returns Promise resolving to an {@link AgentGraphRunner}, or `undefined` if
+   *   this provider does not support graph execution.
+   */
+  async createAgentGraph(
+    _graphDef: AgentGraphDefinition,
+    _tools?: ToolRegistry,
+  ): Promise<AgentGraphRunner | undefined> {
+    this.logger?.warn('createAgentGraph not implemented by this provider');
+    return undefined;
+  }
+
+  // ============================================================================
+  // Legacy static factory (retained for backward compatibility)
+  // ============================================================================
+
   /**
    * Static method that constructs an instance of the provider.
    * Each provider implementation must provide their own static create method
    * that accepts an AIConfig and returns a configured instance.
    *
+   * @deprecated Use the `createModel` factory method instead.
    * @param aiConfig The LaunchDarkly AI configuration
    * @param logger Optional logger for the provider
    * @returns Promise that resolves to a configured provider instance

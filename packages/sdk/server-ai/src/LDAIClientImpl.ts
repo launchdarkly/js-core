@@ -4,7 +4,6 @@ import { randomUUID } from 'node:crypto';
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ManagedModel } from './api/ManagedModel';
-import { Runner } from './api/providers/Runner';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -26,7 +25,7 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
-import { AIProviderFactory, SupportedAIProvider } from './api/providers';
+import { RunnerFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
 import { LDGraphTrackerImpl } from './LDGraphTrackerImpl';
@@ -408,12 +407,12 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      const provider = await AIProviderFactory.create(judgeConfig, this._logger, defaultAiProvider);
-      if (!provider) {
+      const runner = await RunnerFactory.createModel(judgeConfig, this._logger, defaultAiProvider);
+      if (!runner) {
         return undefined;
       }
 
-      return new Judge(judgeConfig, provider, sampleRate, this._logger);
+      return new Judge(judgeConfig, runner, sampleRate, this._logger);
     } catch (error) {
       this._logger?.error(`Failed to initialize judge ${key}:`, error);
       return undefined;
@@ -441,14 +440,12 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
-    if (!provider) {
+    const runner = await RunnerFactory.createModel(config, this._logger, defaultAiProvider);
+    if (!runner) {
       return undefined;
     }
 
-    // AIProvider will implement Runner directly once provider PRs (#1337-#1339) land.
-    // This cast is an explicit, understood interim state.
-    return new ManagedModel(config, provider as unknown as Runner, this._logger);
+    return new ManagedModel(config, runner, this._logger);
   }
 
   /**
