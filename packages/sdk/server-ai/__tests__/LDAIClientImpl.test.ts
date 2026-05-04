@@ -81,6 +81,8 @@ describe('config evaluation', () => {
       defaultValue,
       'completion',
       variables,
+      undefined,
+      undefined,
     );
     expect(result.messages).toEqual([
       { role: 'system', content: 'Hello John' },
@@ -146,6 +148,7 @@ describe('config evaluation', () => {
       defaultValue,
       'agent',
       variables,
+      undefined,
       undefined,
     );
     expect(result.instructions).toBe(
@@ -437,6 +440,8 @@ describe('completionConfig method', () => {
       defaultValue,
       'completion',
       variables,
+      undefined,
+      undefined,
     );
     expect(result).toBeDefined();
     evaluateSpy.mockRestore();
@@ -459,6 +464,7 @@ describe('agentConfig method', () => {
       instructions: 'You are a helpful assistant.',
       createTracker: () => ({}) as any,
       enabled: true,
+      evaluator: Evaluator.noop(),
     };
 
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
@@ -478,6 +484,7 @@ describe('agentConfig method', () => {
       defaultValue,
       'agent',
       variables,
+      undefined,
       undefined,
     );
     expect(result).toMatchObject(mockConfig);

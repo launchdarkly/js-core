@@ -91,12 +91,14 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator to attach to completion and agent configs
    * @returns The appropriate AI configuration type
    */
   static fromFlagValue(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAIConfigKind {
     // Determine the actual mode from flag value
     // eslint-disable-next-line no-underscore-dangle
@@ -104,12 +106,12 @@ export class LDAIConfigUtils {
 
     switch (flagValueMode) {
       case 'agent':
-        return this.toAgentConfig(key, flagValue, trackerFactory);
+        return this.toAgentConfig(key, flagValue, trackerFactory, evaluator);
       case 'judge':
         return this.toJudgeConfig(key, flagValue, trackerFactory);
       case 'completion':
       default:
-        return this.toCompletionConfig(key, flagValue, trackerFactory);
+        return this.toCompletionConfig(key, flagValue, trackerFactory, evaluator);
     }
   }
 
@@ -119,12 +121,14 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param mode The mode for the disabled config
    * @param createTracker A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator to attach to completion and agent configs
    * @returns A disabled config of the appropriate type
    */
   static createDisabledConfig(
     key: string,
     mode: LDAIConfigMode,
     createTracker: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAIConfigKind {
     switch (mode) {
       case 'agent':
@@ -132,7 +136,7 @@ export class LDAIConfigUtils {
           key,
           enabled: false,
           createTracker,
-          evaluator: Evaluator.noop(),
+          evaluator,
         } as LDAIAgentConfig;
       case 'judge':
         return {
@@ -147,7 +151,7 @@ export class LDAIConfigUtils {
           key,
           enabled: false,
           createTracker,
-          evaluator: Evaluator.noop(),
+          evaluator,
         } as LDAICompletionConfig;
     }
   }
@@ -174,17 +178,19 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator for this completion config
    * @returns A completion configuration
    */
   static toCompletionConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAICompletionConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
-      evaluator: Evaluator.noop(),
+      evaluator,
       messages: flagValue.messages,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: flagValue.tools,
@@ -197,17 +203,19 @@ export class LDAIConfigUtils {
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
    * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param evaluator The evaluator for this agent config
    * @returns An agent configuration
    */
   static toAgentConfig(
     key: string,
     flagValue: LDAIConfigFlagValue,
     trackerFactory: () => LDAIConfigTracker,
+    evaluator: Evaluator,
   ): LDAIAgentConfig {
     return {
       ...this._toBaseConfig(key, flagValue),
       createTracker: trackerFactory,
-      evaluator: Evaluator.noop(),
+      evaluator,
       instructions: flagValue.instructions,
       judgeConfiguration: flagValue.judgeConfiguration,
       tools: flagValue.tools,

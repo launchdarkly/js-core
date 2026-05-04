@@ -100,6 +100,7 @@ export class LDAIClientImpl implements LDAIClient {
     mode: LDAIConfigMode,
     variables?: Record<string, unknown>,
     graphKey?: string,
+    defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
@@ -120,6 +121,13 @@ export class LDAIClientImpl implements LDAIClient {
         graphKey,
       );
 
+    const evaluator = await this._buildEvaluator(
+      value.judgeConfiguration?.judges ?? [],
+      context,
+      variables,
+      defaultAiProvider,
+    );
+
     // Validate mode match
     // eslint-disable-next-line no-underscore-dangle
     const flagMode = value._ldMeta?.mode ?? 'completion';
@@ -127,10 +135,10 @@ export class LDAIClientImpl implements LDAIClient {
       this._logger?.warn(
         `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
       );
-      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory);
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
     }
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory);
+    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
@@ -198,22 +206,15 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAICompletionConfig> {
-    const config = (await this._evaluate(
+    return (await this._evaluate(
       key,
       context,
       defaultValue,
       'completion',
       variables,
-    )) as LDAICompletionConfig;
-
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
+      undefined,
       defaultAiProvider,
-    );
-
-    return { ...config, evaluator };
+    )) as LDAICompletionConfig;
   }
 
   async completionConfig(
@@ -273,23 +274,15 @@ export class LDAIClientImpl implements LDAIClient {
     graphKey?: string,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<LDAIAgentConfig> {
-    const config = (await this._evaluate(
+    return (await this._evaluate(
       key,
       context,
       defaultValue,
       'agent',
       variables,
       graphKey,
-    )) as LDAIAgentConfig;
-
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
       defaultAiProvider,
-    );
-
-    return { ...config, evaluator };
+    )) as LDAIAgentConfig;
   }
 
   async agentConfig(
