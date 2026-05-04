@@ -15,7 +15,7 @@ import {
   StandardResolutionReasons,
 } from '@openfeature/server-sdk';
 
-import type { LDLogger } from '@launchdarkly/js-sdk-common';
+import { createSafeLogger, type LDLogger } from '@launchdarkly/js-sdk-common';
 
 import type { OpenFeatureLDClientContract } from './OpenFeatureLDClientContract';
 import { translateContext } from './translateContext';
@@ -72,7 +72,7 @@ export abstract class BaseOpenFeatureProvider<
 
   protected constructor(config: BaseProviderConfig) {
     this.metadata = { name: config.providerName };
-    this._logger = config.logger;
+    this._logger = createSafeLogger(config.logger);
     this._initTimeoutSeconds = config.initTimeoutSeconds ?? 10;
   }
 

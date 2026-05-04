@@ -10,7 +10,5 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  // DTS is generated via tsc instead of rollup-dts because @openfeature/server-sdk
-  // re-exports from @openfeature/core as a peer dependency which confuses the DTS rollup.
-  dts: false,
+  dts: true,
 });

@@ -9,22 +9,22 @@
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
-  "types": "./dist/src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
     ".": {
       "require": {
-        "types": "./dist/src/index.d.ts",
+        "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       },
       "import": {
-        "types": "./dist/src/index.d.ts",
+        "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
       }
     }
   },
   "scripts": {
-    "build": "tsup-node && npx tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build": "tsup-node",
     "lint": "npx eslint . --ext .ts",
     "lint:fix": "yarn run lint --fix",
     "test": "jest",
@@ -41,7 +41,7 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.24.1"
+    "@launchdarkly/js-sdk-common": "2.24.3"
   },
   "peerDependencies": {
     "@openfeature/server-sdk": "^1.16.0"
