@@ -80,19 +80,24 @@ describe('given a one shot initializer', () => {
   });
 
   // Per the FDv2 spec, when the server returns the FDv1 fallback directive alongside a
-  // valid 200 response the SDK must apply the accompanying payload first, then surface the
-  // fallback signal so the CompositeDataSource can swap to the FDv1 synchronizer.
-  it('applies the payload before signalling fallback when fallback rides along on a 200', () => {
+  // valid 200 response the SDK must apply the accompanying payload AND surface the
+  // fallback signal atomically. The directive rides on the same data callback as the
+  // payload via `data.fallbackToFDv1`, so CompositeDataSource can swap its synchronizer
+  // list to FDv1 before its basis-during-init auto-transition fires. A separate status
+  // callback after the data callback would be silently dropped because the composite's
+  // callback handler disables itself on basis-during-init.
+  it('applies the payload and signals fallback atomically on a 200 + directive', () => {
     const dataCb = jest.fn();
     const statusCb = jest.fn();
     requestor.requestAllData = jest.fn((cb) => cb(undefined, jsonData, undefined, true));
     initializer.start(dataCb, statusCb);
 
-    // The server-provided data was applied to the data store via dataCallback.
+    // A single dataCallback invocation carries both the payload and the fallback marker.
     expect(dataCb).toHaveBeenCalledTimes(1);
     expect(dataCb).toHaveBeenCalledWith(
       true,
       expect.objectContaining({
+        fallbackToFDv1: true,
         payload: expect.objectContaining({
           type: 'full',
           state: 'mockState',
@@ -100,11 +105,12 @@ describe('given a one shot initializer', () => {
       }),
     );
 
-    // The Closed status carries an LDFlagDeliveryFallbackError so the composite swaps to
-    // the FDv1 synchronizer rather than treating this as an ordinary completion.
-    const lastCall = statusCb.mock.calls[statusCb.mock.calls.length - 1];
-    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
-    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    // No LDFlagDeliveryFallbackError must be emitted via status callback when the
+    // directive rides along on a payload -- the composite would have already disabled
+    // its callback handler by the time we tried to emit it.
+    statusCb.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDFlagDeliveryFallbackError);
+    });
   });
 
   // When the fallback signal arrives alongside an HTTP error, no payload can be applied

@@ -650,6 +650,238 @@ it('terminates when FDv1 fallback is requested but no FDv1 fallback synchronizer
   expect(lastCall[0]).toBe(DataSourceState.Closed);
 });
 
+// Regression for the bug where a data source delivered basis-during-init AND THEN emitted
+// LDFlagDeliveryFallbackError as a status callback: the auto-transition on basis would
+// disable the callback handler before the fallback signal was processed, leaving
+// `_syncFactories` pointing at the FDv2 list. The fix is to ride the directive on the data
+// callback itself (via `data.fallbackToFDv1`), so the swap to FDv1 is atomic with the
+// payload application.
+it('switches to FDv1 when an initializer delivers basis with fallbackToFDv1 marker', async () => {
+  const mockInitData = { fallbackToFDv1: true, payload: { key: 'init-payload' } };
+  const mockInitializer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          // Basis arrives with the directive attached. The composite must apply the payload
+          // (via dataCallback) AND swap synchronizer factories to FDv1 atomically; the
+          // FDv2 synchronizer below must NOT be started.
+          _dataCallback(true, mockInitData);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockFDv2Synchronizer = {
+    start: jest.fn().mockImplementation(() => {
+      throw new Error('FDv2 synchronizer should not be started after FDv1 fallback');
+    }),
+    stop: jest.fn(),
+  };
+
+  const mockFDv1Data = { key: 'FDv1Data' };
+  const mockFDv1Synchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid, null);
+          _dataCallback(true, mockFDv1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [makeDataSourceFactory(mockInitializer)],
+    [makeDataSourceFactory(mockFDv2Synchronizer)],
+    [makeDataSourceFactory(mockFDv1Synchronizer)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  const dataReceived: any[] = [];
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    const dataCallback = jest.fn((_: boolean, data: any) => {
+      dataReceived.push(data);
+      if (data === mockFDv1Data) {
+        resolve();
+      }
+    });
+    underTest.start(dataCallback, statusCallback);
+  });
+
+  // The composite forwarded the initializer's payload AND then ran the FDv1 synchronizer.
+  // FDv2 synchronizers must not have been started.
+  expect(mockInitializer.start).toHaveBeenCalledTimes(1);
+  expect(mockFDv2Synchronizer.start).not.toHaveBeenCalled();
+  expect(mockFDv1Synchronizer.start).toHaveBeenCalledTimes(1);
+
+  // The init payload was forwarded to the outer dataCallback before FDv1 took over.
+  expect(dataReceived[0]).toBe(mockInitData);
+  expect(dataReceived[1]).toBe(mockFDv1Data);
+});
+
+// Regression for the bug where a synchronizer delivered a payload with fallbackToFDv1 AND
+// THEN emitted an error: the basis-during-init auto-transition (or the error status path)
+// would disable the callback handler before the fallback signal was processed.
+it('switches to FDv1 when a synchronizer delivers a payload with fallbackToFDv1 marker', async () => {
+  const mockSynchronizerData = { fallbackToFDv1: true, payload: { key: 'sync-payload' } };
+  const mockSynchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid);
+          // Payload + directive on a single dataCallback invocation. There are no
+          // initializers configured here so this exercises the synchronizer-phase path.
+          _dataCallback(true, mockSynchronizerData);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const mockFDv1Data = { key: 'FDv1Data' };
+  const mockFDv1Synchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid, null);
+          _dataCallback(true, mockFDv1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [],
+    [makeDataSourceFactory(mockSynchronizer)],
+    [makeDataSourceFactory(mockFDv1Synchronizer)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  const dataReceived: any[] = [];
+  await new Promise<void>((resolve) => {
+    const dataCallback = jest.fn((_: boolean, data: any) => {
+      dataReceived.push(data);
+      if (data === mockFDv1Data) {
+        resolve();
+      }
+    });
+    underTest.start(dataCallback, jest.fn());
+  });
+
+  expect(mockSynchronizer.start).toHaveBeenCalledTimes(1);
+  expect(mockFDv1Synchronizer.start).toHaveBeenCalledTimes(1);
+  expect(dataReceived[0]).toBe(mockSynchronizerData);
+  expect(dataReceived[1]).toBe(mockFDv1Data);
+});
+
+// Regression: subsequent fallback signals after the FDv1 synchronizer is engaged must be
+// ignored so the composite does not loop replacing its synchronizer list with itself.
+// This guards against an FDv1 endpoint that erroneously echoes `x-ld-fd-fallback` -- the
+// circular DataSourceList for `_fdv1Synchronizers` would otherwise restart the same
+// FDv1 synchronizer indefinitely after each repeated directive.
+it('ignores subsequent FDv1 fallback signals once FDv1 fallback is engaged', async () => {
+  const mockFDv2Sync = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              'fallback from FDv2',
+              500,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  // The FDv1 fallback synchronizer continually delivers a basis with a fallback marker --
+  // this would loop indefinitely without the engagement guard, since `_fdv1Synchronizers`
+  // is a circular list and `switchToSync` restarts from its head.
+  const fdv1Data = { fallbackToFDv1: true, payload: { key: 'fdv1-data' } };
+  let fdv1StartCount = 0;
+  const mockFDv1Synchronizer = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          fdv1StartCount += 1;
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(DataSourceState.Valid, null);
+          _dataCallback(true, fdv1Data);
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  const underTest = new CompositeDataSource(
+    [],
+    [makeDataSourceFactory(mockFDv2Sync)],
+    [makeDataSourceFactory(mockFDv1Synchronizer)],
+    undefined,
+    makeTestTransitionConditions(),
+    makeZeroBackoff(),
+  );
+
+  const dataReceived: any[] = [];
+  const statusCallback = jest.fn();
+  // Wait for the FDv1 data callback so we know the FDv1 synchronizer ran. After that, we
+  // give the event loop a tick to confirm the FDv1 synchronizer is not restarted.
+  await new Promise<void>((resolve) => {
+    const dataCallback = jest.fn((_: boolean, data: any) => {
+      dataReceived.push(data);
+      if (data === fdv1Data) {
+        resolve();
+      }
+    });
+    underTest.start(dataCallback, statusCallback);
+  });
+  await new Promise<void>((resolve) => {
+    setImmediate(resolve);
+  });
+
+  // FDv1 was started exactly once -- the engagement guard prevented re-engagement when
+  // FDv1 itself echoed the directive.
+  expect(fdv1StartCount).toBe(1);
+  // The FDv1 payload was applied even though we ignored the (redundant) directive.
+  expect(dataReceived).toContain(fdv1Data);
+});
+
 it('reports error when all initializers fail', async () => {
   const mockInitializer1Error = {
     name: 'Error',

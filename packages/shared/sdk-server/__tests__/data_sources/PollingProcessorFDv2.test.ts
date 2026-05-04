@@ -145,21 +145,16 @@ describe('given a polling processor', () => {
   });
 
   // Per the FDv2 spec, the fallback directive can ride along on a successful response.
-  // The processor must apply the payload first, then emit the fallback signal so that the
-  // CompositeDataSource can swap to the FDv1 synchronizer.
-  it('applies payload then signals fallback when fallback header rides along on a 200', async () => {
+  // The processor must deliver the payload AND the directive atomically via the data
+  // callback (`data.fallbackToFDv1`) so CompositeDataSource can swap its synchronizer
+  // list to FDv1 before its basis-during-init auto-transition fires. A separate status
+  // callback after the data callback would be silently dropped because the composite's
+  // callback handler disables itself on basis-during-init.
+  it('attaches fallback marker to data callback when fallback header rides along on a 200', async () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers, true));
 
-    let dataCallback;
-    let resolveStatus: () => void = () => {};
-    const sawFallback = new Promise<void>((resolve) => {
-      resolveStatus = resolve;
-    });
-    const statusCallback = jest.fn((state, err) => {
-      if (state === subsystem.DataSourceState.Closed && err instanceof LDFlagDeliveryFallbackError) {
-        resolveStatus();
-      }
-    });
+    let dataCallback: jest.Mock = jest.fn();
+    const statusCallback = jest.fn();
 
     await new Promise<void>((resolve) => {
       dataCallback = jest.fn(() => {
@@ -168,13 +163,50 @@ describe('given a polling processor', () => {
       processor.start(dataCallback, statusCallback);
     });
 
-    await sawFallback;
-
-    // The server-provided data was applied before the fallback signal was emitted.
+    // A single dataCallback invocation carries both the payload and the fallback marker.
     expect(dataCallback).toHaveBeenCalledTimes(1);
-    const lastCall = statusCallback.mock.calls[statusCallback.mock.calls.length - 1];
-    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
-    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    expect(dataCallback).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({
+        fallbackToFDv1: true,
+        payload: expect.objectContaining({ type: 'full' }),
+      }),
+    );
+
+    // No LDFlagDeliveryFallbackError on the status callback path -- the composite would
+    // have disabled its handler before we got there.
+    statusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDFlagDeliveryFallbackError);
+    });
+
+    // No subsequent poll should be scheduled. requestAllData was only called once.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+  });
+
+  // Bug fix: when the polling response carries the fallback header AND the body is
+  // malformed, the processor previously emitted Interrupted/LDPollingError before the
+  // fallbackToFDv1 check could run. CompositeDataSource's CallbackHandler disables itself
+  // on that first error callback, silently dropping the subsequent fallback signal. The
+  // directive must be emitted FIRST so it isn't lost.
+  it('emits the fallback directive before the malformed-body error so it is not dropped', async () => {
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, '{not json', headers, true));
+
+    const dataCallback = jest.fn();
+    const statusCallback = jest.fn();
+    processor.start(dataCallback, statusCallback);
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    // The very first non-Initializing status update carries the LDFlagDeliveryFallbackError.
+    const errorCalls = statusCallback.mock.calls.filter(
+      (call: any[]) => call[0] !== subsystem.DataSourceState.Initializing,
+    );
+    expect(errorCalls.length).toBeGreaterThan(0);
+    expect(errorCalls[0][0]).toBe(subsystem.DataSourceState.Closed);
+    expect(errorCalls[0][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+
+    // The processor must not schedule another poll.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
 
   // When the fallback directive arrives alongside an error response, the processor must

@@ -109,18 +109,28 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
 
         statusCallback(subsystemCommon.DataSourceState.Valid);
 
+        // When the fallback directive rides along on a 200 response with a valid payload,
+        // the directive must be applied atomically with the data callback. CompositeData-
+        // Source disables its callback handler as soon as basis-during-init arrives, so a
+        // separate status callback emitted afterwards would be silently dropped. Instead,
+        // attach a fallbackToFDv1 marker to the data object: CompositeDataSource will swap
+        // its synchronizer list to FDv1 before resolving the switchToSync transition.
         payloadProcessor.addPayloadListener((payload) => {
-          dataCallback(payload.type === 'full', { initMetadata, payload });
+          const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+            initMetadata,
+            payload,
+          };
+          if (fallbackToFDv1) {
+            data.fallbackToFDv1 = true;
+            this._logger?.warn(`Response header indicates to fallback to FDv1`);
+          }
+          dataCallback(payload.type === 'full', data);
         });
 
         payloadProcessor.processEvents(parsed.events);
 
-        // Any accompanying payload has been applied. Honor the fallback directive (if any)
-        // before declaring the initializer Closed so the composite swaps to FDv1.
-        if (fallbackToFDv1) {
-          emitFallback();
-          return;
-        }
+        // The fallback directive (if any) was already attached to the data callback above,
+        // so CompositeDataSource has already taken over the transition. Just close out.
         statusCallback(subsystemCommon.DataSourceState.Closed);
       } catch (parseError: any) {
         // We could not parse this JSON. Report the problem.
@@ -128,7 +138,8 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         this._logger?.debug(`${parseError} - Body follows: ${body}`);
         if (fallbackToFDv1) {
           // Even when the accompanying body could not be parsed, the directive must still
-          // be honored so we don't get stuck retrying FDv2 indefinitely.
+          // be honored so we don't get stuck retrying FDv2 indefinitely. No payload was
+          // applied here so we can use the status callback path safely.
           emitFallback();
           return;
         }

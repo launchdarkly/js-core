@@ -156,8 +156,23 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             this._logger,
           );
 
+          // When the fallback directive rides along on a 200 response with a valid payload,
+          // the directive must be applied atomically with the data callback. CompositeData-
+          // Source disables its callback handler as soon as basis-during-init arrives or an
+          // error status is reported, so a separate status callback emitted afterwards
+          // would be silently dropped. Instead, attach a fallbackToFDv1 marker to the data
+          // object: CompositeDataSource will swap its synchronizer list to FDv1 before
+          // resolving the switchToSync transition.
           payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.type === 'full', { initMetadata, payload });
+            const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+              initMetadata,
+              payload,
+            };
+            if (fallbackToFDv1) {
+              data.fallbackToFDv1 = true;
+              this._logger?.warn(`Response header indicates to fallback to FDv1`);
+            }
+            dataCallback(payload.type === 'full', data);
           });
 
           this._logger?.debug(`Got body: ${body}`);
@@ -172,12 +187,30 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             processFDv1FlagsAndSegments(payloadProcessor, parsed);
           }
 
+          // The fallback directive (if any) was attached to the data callback above so
+          // CompositeDataSource has already taken over the transition. Skip the Valid
+          // status report and the next-poll scheduling in that case.
+          if (fallbackToFDv1) {
+            return;
+          }
+
           statusCallback(subsystemCommon.DataSourceState.Valid);
         } catch {
           // We could not parse this JSON. Report the problem and fallthrough to
           // start another poll.
           this._logger?.error('Response contained invalid data');
           this._logger?.debug(`${err} - Body follows: ${body}`);
+
+          // The fallback directive must be honored even when the body could not be parsed.
+          // Emit it BEFORE the generic Interrupted/LDPollingError status callback below --
+          // CompositeDataSource disables its callback handler on the first error status,
+          // so the LDFlagDeliveryFallbackError must be emitted first or the directive is
+          // silently dropped and the SDK retries FDv2 sources.
+          if (fallbackToFDv1) {
+            emitFallback();
+            return;
+          }
+
           statusCallback(
             subsystemCommon.DataSourceState.Interrupted,
             new LDPollingError(
@@ -186,12 +219,8 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             ),
           );
         }
-      }
-
-      // The fallback directive may ride along on a successful response. Apply the payload
-      // first (above) so evaluations can serve the server-provided data, then switch to
-      // FDv1 instead of scheduling another poll.
-      if (fallbackToFDv1) {
+      } else if (fallbackToFDv1) {
+        // 200/304 with no body but a fallback directive: emit the directive directly.
         emitFallback();
         return;
       }

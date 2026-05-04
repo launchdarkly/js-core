@@ -264,26 +264,32 @@ describe('given a stream processor with mock event source', () => {
   });
 
   // The server can signal FDv1 fallback alongside a valid streaming payload by setting the
-  // `x-ld-fd-fallback` header on the connection-open response. The processor must apply the
-  // payload first and then surface the directive so the CompositeDataSource can switch to
-  // the FDv1 synchronizer.
-  it('applies payload then signals fallback when fallback header rides along on open', () => {
+  // `x-ld-fd-fallback` header on the connection-open response. The processor must deliver
+  // both the payload and the fallback marker on the same data callback (`data.fallbackToFDv1`)
+  // so CompositeDataSource can swap its synchronizer list to FDv1 before its basis-during-
+  // init auto-transition fires. A separate status callback after the data callback would be
+  // silently dropped because the composite's callback handler disables itself.
+  it('attaches fallback marker to data callback when fallback header rides along on open', () => {
     mockEventSource.onopen({
       headers: { ...openHeaders, 'x-ld-fd-fallback': 'true' },
     });
     simulateEvents();
 
-    // The payload was delivered to the data callback before the fallback signal was emitted.
+    // A single dataCallback invocation carries both the payload and the fallback marker.
     expect(mockDataCallback).toHaveBeenCalledTimes(1);
-    expect(mockDataCallback).toHaveBeenCalledWith(true, expect.objectContaining({
-      payload: expect.objectContaining({ type: 'full' }),
-    }));
+    expect(mockDataCallback).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({
+        fallbackToFDv1: true,
+        payload: expect.objectContaining({ type: 'full' }),
+      }),
+    );
 
-    // The most recent status update is Closed with an LDFlagDeliveryFallbackError -- this is
-    // what triggers the CompositeDataSource swap to FDv1.
-    const lastCall = mockStatusCallback.mock.calls[mockStatusCallback.mock.calls.length - 1];
-    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
-    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    // No LDFlagDeliveryFallbackError on the status callback path -- the composite would
+    // have disabled its handler before we got there.
+    mockStatusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDFlagDeliveryFallbackError);
+    });
 
     // The processor must close the underlying stream so it doesn't keep consuming FDv2.
     expect(mockEventSource.close).toBeCalled();

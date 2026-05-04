@@ -41,6 +41,11 @@ export class CompositeDataSource implements DataSource {
   private _initFactories: DataSourceList<LDDataSourceFactory>;
   private _syncFactories: DataSourceList<LDDataSourceFactory>;
   private _fdv1Synchronizers: DataSourceList<LDDataSourceFactory>;
+  // Set after the server-directed FDv1 fallback has been engaged. The directive is
+  // one-way: subsequent fallback signals from the FDv1 synchronizer (e.g. if the FDv1
+  // endpoint were to echo `x-ld-fd-fallback`) are ignored so the data source does not
+  // loop replacing its synchronizer list with itself.
+  private _fdv1FallbackEngaged: boolean = false;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -123,6 +128,31 @@ export class CompositeDataSource implements DataSource {
             (basis: boolean, data: any) => {
               this._backoff.success();
               dataCallback(basis, data);
+
+              // The FDv1 fallback directive can ride along on the same data callback that
+              // delivers a payload (initializer or synchronizer phase). Apply the payload
+              // first (above), then swap the synchronizer list to FDv1 and transition.
+              // This is atomic with the data callback so the basis-during-init auto-
+              // transition below cannot race ahead and switch to the FDv2 synchronizer list.
+              // Once engaged, the directive is one-way -- ignore any subsequent occurrence
+              // (e.g. the FDv1 endpoint echoing the header) so we don't re-enter this branch.
+              if (data?.fallbackToFDv1 && !this._fdv1FallbackEngaged) {
+                if (this._fdv1Synchronizers.length() > 0) {
+                  this._logger?.warn(`Falling back to FDv1`);
+                } else {
+                  this._logger?.warn(
+                    `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
+                  );
+                }
+                this._fdv1FallbackEngaged = true;
+                this._syncFactories = this._fdv1Synchronizers;
+                callbackHandler.disable();
+                this._consumeCancelToken(cancelScheduledTransition);
+                sanitizedStatusCallback(DataSourceState.Interrupted);
+                transitionResolve({ transition: 'switchToSync' });
+                return;
+              }
+
               if (basis && this._initPhaseActive) {
                 // transition to sync if we get basis during init
                 callbackHandler.disable();
@@ -150,8 +180,11 @@ export class CompositeDataSource implements DataSource {
                 // observe it, end any in-progress initializer phase and replace the FDv2
                 // synchronizers with the configured FDv1 fallback list. If no FDv1 fallback
                 // is configured, the synchronizer list becomes empty and the composite will
-                // terminate via the exhausted-sources path.
-                if (err instanceof LDFlagDeliveryFallbackError) {
+                // terminate via the exhausted-sources path. Subsequent occurrences of the
+                // directive (e.g. if the FDv1 endpoint were to echo `x-ld-fd-fallback`) are
+                // ignored so the data source does not loop replacing its synchronizer list
+                // with itself.
+                if (err instanceof LDFlagDeliveryFallbackError && !this._fdv1FallbackEngaged) {
                   if (this._fdv1Synchronizers.length() > 0) {
                     this._logger?.warn(`Falling back to FDv1`);
                   } else {
@@ -159,6 +192,7 @@ export class CompositeDataSource implements DataSource {
                       `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
                     );
                   }
+                  this._fdv1FallbackEngaged = true;
                   this._syncFactories = this._fdv1Synchronizers;
                   sanitizedStatusCallback(state, err);
                   this._consumeCancelToken(cancelScheduledTransition);
@@ -272,6 +306,7 @@ export class CompositeDataSource implements DataSource {
     this._initFactories.reset();
     this._syncFactories.reset();
     this._fdv1Synchronizers.reset();
+    this._fdv1FallbackEngaged = false;
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;
     });
