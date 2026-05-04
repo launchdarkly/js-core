@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ManagedModel } from './api/ManagedModel';
+import { Runner } from './api/providers/Runner';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -440,9 +441,14 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    // Provider implementations will implement Runner directly once provider PRs land.
-    // AIProviderFactory wiring is intentionally omitted here until that migration is complete.
-    return undefined;
+    const provider = await AIProviderFactory.create(config, this._logger, defaultAiProvider);
+    if (!provider) {
+      return undefined;
+    }
+
+    // AIProvider will implement Runner directly once provider PRs (#1337-#1339) land.
+    // This cast is an explicit, understood interim state.
+    return new ManagedModel(config, provider as unknown as Runner, this._logger);
   }
 
   /**
