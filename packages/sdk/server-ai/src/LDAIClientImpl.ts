@@ -121,21 +121,25 @@ export class LDAIClientImpl implements LDAIClient {
         graphKey,
       );
 
-    const evaluator = await this._buildEvaluator(
-      value.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
-      defaultAiProvider,
-    );
-
     // Validate mode match
     // eslint-disable-next-line no-underscore-dangle
     const flagMode = value._ldMeta?.mode ?? 'completion';
+
     if (flagMode !== mode) {
       this._logger?.warn(
         `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
       );
-      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, Evaluator.noop());
+    }
+
+    let evaluator = Evaluator.noop();
+    if (flagMode !== 'judge') {
+      evaluator = await this._buildEvaluator(
+        value.judgeConfiguration?.judges ?? [],
+        context,
+        variables,
+        defaultAiProvider,
+      );
     }
 
     const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
