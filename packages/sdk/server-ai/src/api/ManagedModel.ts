@@ -1,13 +1,12 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAICompletionConfig } from './config/types';
-import { LDJudgeResult } from './judge/types';
 import { ManagedResult, RunnerResult } from './model/types';
 import { Runner } from './providers/Runner';
 
 /**
  * ManagedModel provides chat-completion invocation with automatic tracking and
- * (in a future PR) automatic judge evaluation.
+ * automatic judge evaluation.
  *
  * The class is stateless: each `run()` call sends the prompt directly to the
  * underlying `Runner` and returns a `ManagedResult`. Conversation history,
@@ -42,11 +41,22 @@ export class ManagedModel {
 
     const metrics = tracker.getSummary();
 
-    // Evaluations are wired in a follow-up PR. For now, resolve empty.
-    const evaluations: Promise<LDJudgeResult[]> = Promise.resolve([]);
+    const output = result.content;
+    const evaluations = this.aiConfig.evaluator
+      .evaluate(prompt, output)
+      .then((results) => {
+        results.forEach((judgeResult) => {
+          tracker.trackJudgeResult(judgeResult);
+        });
+        return results;
+      })
+      .catch((err) => {
+        this._logger?.warn('Judge evaluation failed unexpectedly:', err);
+        return [];
+      });
 
     return {
-      content: result.content,
+      content: output,
       metrics,
       raw: result.raw,
       parsed: result.parsed,
