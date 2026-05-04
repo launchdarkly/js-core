@@ -42,12 +42,18 @@ export class ManagedModel {
     const metrics = tracker.getSummary();
 
     const output = result.content;
-    const evaluations = this.aiConfig.evaluator.evaluate(prompt, output).then((results) => {
-      results.forEach((judgeResult) => {
-        tracker.trackJudgeResult(judgeResult);
+    const evaluations = this.aiConfig.evaluator
+      .evaluate(prompt, output)
+      .then((results) => {
+        results.forEach((judgeResult) => {
+          tracker.trackJudgeResult(judgeResult);
+        });
+        return results;
+      })
+      .catch((err) => {
+        this._logger?.warn('Judge evaluation failed unexpectedly:', err);
+        return [];
       });
-      return results;
-    });
 
     return {
       content: output,
