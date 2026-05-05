@@ -48,7 +48,7 @@ export class ManagedAgentGraph {
       path: runnerResult.metrics.path,
       durationMs: runnerResult.metrics.durationMs,
       tokens: runnerResult.metrics.usage,
-      nodeMetrics: this._buildNodeMetrics(runnerResult.metrics.nodeMetrics),
+      nodeMetrics: this._trackNodeMetrics(runnerResult.metrics.nodeMetrics),
       resumptionToken: graphTracker.resumptionToken,
     };
 
@@ -66,7 +66,7 @@ export class ManagedAgentGraph {
    * Converts per-node LDAIMetrics from the runner into LDAIMetricSummary by
    * creating a per-node tracker, firing tracking events, and calling getSummary().
    */
-  private _buildNodeMetrics(
+  private _trackNodeMetrics(
     nodeMetrics: Record<string, LDAIMetrics>,
   ): Record<string, LDAIMetricSummary> {
     const summaries: Record<string, LDAIMetricSummary> = {};
