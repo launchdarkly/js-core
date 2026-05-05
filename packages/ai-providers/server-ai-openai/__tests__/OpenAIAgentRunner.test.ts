@@ -122,6 +122,40 @@ describe('OpenAIAgentRunner', () => {
     expect(result.metrics.toolCalls).toEqual(['missing']);
   });
 
+  it('uses empty string when a tool returns undefined', async () => {
+    const create = mockOpenAI.chat.completions.create as jest.Mock;
+    create
+      .mockResolvedValueOnce({
+        choices: [
+          {
+            message: {
+              content: null,
+              tool_calls: [{ id: 'call_1', function: { name: 'voidTool', arguments: '{}' } }],
+            },
+          },
+        ],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      } as any)
+      .mockResolvedValueOnce({
+        choices: [{ message: { content: 'done', tool_calls: [] } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      } as any);
+
+    const toolDefs = [{ type: 'function', function: { name: 'voidTool', parameters: {} } }];
+    const config: LDAIAgentConfig = {
+      ...baseAgentConfig,
+      model: { name: 'gpt-4o', parameters: { tools: toolDefs } },
+    };
+    const voidTool = jest.fn().mockResolvedValue(undefined);
+    const runner = new OpenAIAgentRunner(mockOpenAI, config, { voidTool });
+    const result = await runner.run('go');
+
+    const secondCallMessages = (create.mock.calls[1][0] as any).messages;
+    const toolMsg = secondCallMessages.find((m: any) => m.role === 'tool');
+    expect(toolMsg.content).toBe('');
+    expect(result.metrics.success).toBe(true);
+  });
+
   it('returns success=false when MAX_ITERATIONS is exhausted without a final answer', async () => {
     const create = mockOpenAI.chat.completions.create as jest.Mock;
     // Always return a tool call — the loop never gets a clean final message.
