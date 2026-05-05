@@ -72,11 +72,5 @@ describe('OpenAIRunnerFactory', () => {
     });
   });
 
-  describe('create', () => {
-    it('creates an OpenAIRunnerFactory instance', async () => {
-      const f = await OpenAIRunnerFactory.create();
-      expect(f).toBeInstanceOf(OpenAIRunnerFactory);
-      expect(f.getClient()).toBeDefined();
-    });
-  });
+
 });

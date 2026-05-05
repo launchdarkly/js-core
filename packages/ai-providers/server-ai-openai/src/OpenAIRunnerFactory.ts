@@ -20,16 +20,8 @@ export class OpenAIRunnerFactory {
   constructor(logger?: LDLogger) {
     this._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     this._logger = logger;
-  }
-
-  /**
-   * Static convenience that ensures OpenTelemetry instrumentation is applied
-   * (when available) before constructing a factory.
-   */
-  static async create(logger?: LDLogger): Promise<OpenAIRunnerFactory> {
-    // eslint-disable-next-line no-underscore-dangle
-    await OpenAIRunnerFactory._ensureInstrumented(logger);
-    return new OpenAIRunnerFactory(logger);
+    // Fire-and-forget: OTel instrumentation is optional and must not block construction.
+    OpenAIRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
 
   /**
