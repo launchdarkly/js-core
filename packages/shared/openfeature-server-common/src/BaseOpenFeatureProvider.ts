@@ -187,8 +187,11 @@ export abstract class BaseOpenFeatureProvider<
   }
 
   async onClose(): Promise<void> {
-    await this._client?.flush();
-    this._client?.close();
+    try {
+      await this._client?.flush();
+    } finally {
+      this._client?.close();
+    }
   }
 
   track(
