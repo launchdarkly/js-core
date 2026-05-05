@@ -2,7 +2,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgentConfig } from './config/types';
 import { LDJudgeResult } from './judge/types';
-import { LDAIMetricSummary, ManagedResult, RunnerResult } from './model/types';
+import { ManagedResult, RunnerResult } from './model/types';
 import { Runner } from './providers/Runner';
 
 /**
@@ -40,13 +40,7 @@ export class ManagedAgent {
       () => this.runner.run(prompt),
     );
 
-    const metrics: LDAIMetricSummary = {
-      success: result.metrics.success,
-      usage: result.metrics.usage,
-      toolCalls: result.metrics.toolCalls,
-      durationMs: result.metrics.durationMs,
-      resumptionToken: tracker.resumptionToken,
-    };
+    const metrics = tracker.getSummary();
 
     const output = result.content;
     const evaluator = this.aiAgentConfig.evaluator;

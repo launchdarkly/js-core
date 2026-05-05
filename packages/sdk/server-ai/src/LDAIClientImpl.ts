@@ -466,6 +466,8 @@ export class LDAIClientImpl implements LDAIClient {
       context,
       defaultValue ?? disabledAIConfig,
       variables,
+      undefined,
+      defaultAiProvider,
     );
 
     if (!config.enabled) {
@@ -473,21 +475,12 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const evaluator = await this._buildEvaluator(
-      config.judgeConfiguration?.judges ?? [],
-      context,
-      variables,
-      defaultAiProvider,
-    );
-
-    const configWithEvaluator: LDAIAgentConfig = { ...config, evaluator };
-
-    const runner = await RunnerFactory.createAgent(configWithEvaluator, undefined, this._logger, defaultAiProvider);
+    const runner = await RunnerFactory.createAgent(config, undefined, this._logger, defaultAiProvider);
     if (!runner) {
       return undefined;
     }
 
-    return new ManagedAgent(configWithEvaluator, runner, this._logger);
+    return new ManagedAgent(config, runner, this._logger);
   }
 
   /**
