@@ -1,5 +1,3 @@
-import { OpenAI } from 'openai';
-
 import type { LDAIAgentConfig, LDAICompletionConfig } from '@launchdarkly/server-sdk-ai';
 
 import { OpenAIAgentRunner } from '../src/OpenAIAgentRunner';
@@ -13,12 +11,10 @@ jest.mock('openai', () => ({
 }));
 
 describe('OpenAIRunnerFactory', () => {
-  let mockOpenAI: jest.Mocked<OpenAI>;
   let factory: OpenAIRunnerFactory;
 
   beforeEach(() => {
-    mockOpenAI = new OpenAI() as jest.Mocked<OpenAI>;
-    factory = new OpenAIRunnerFactory(mockOpenAI);
+    factory = new OpenAIRunnerFactory();
   });
 
   describe('createModel', () => {
@@ -32,7 +28,7 @@ describe('OpenAIRunnerFactory', () => {
       const runner = factory.createModel(config);
 
       expect(runner).toBeInstanceOf(OpenAIModelRunner);
-      expect(runner.getClient()).toBe(mockOpenAI);
+      expect(runner.getClient()).toBe(factory.getClient());
     });
 
     it('builds a model runner from a minimal config', () => {
@@ -72,7 +68,7 @@ describe('OpenAIRunnerFactory', () => {
 
   describe('getClient', () => {
     it('returns the underlying OpenAI client', () => {
-      expect(factory.getClient()).toBe(mockOpenAI);
+      expect(factory.getClient()).toBeDefined();
     });
   });
 

@@ -2,7 +2,7 @@ import {
   convertMessagesToOpenAI,
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
-} from '../src/openaiHelper';
+} from '../src/OpenAIHelper';
 
 describe('convertMessagesToOpenAI', () => {
   it('converts LDMessages to OpenAI message dicts preserving role and content', () => {

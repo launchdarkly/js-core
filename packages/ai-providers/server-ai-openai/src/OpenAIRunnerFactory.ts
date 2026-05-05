@@ -17,8 +17,8 @@ export class OpenAIRunnerFactory {
   private _client: OpenAI;
   private _logger?: LDLogger;
 
-  constructor(client?: OpenAI, logger?: LDLogger) {
-    this._client = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  constructor(logger?: LDLogger) {
+    this._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     this._logger = logger;
   }
 
@@ -29,7 +29,7 @@ export class OpenAIRunnerFactory {
   static async create(logger?: LDLogger): Promise<OpenAIRunnerFactory> {
     // eslint-disable-next-line no-underscore-dangle
     await OpenAIRunnerFactory._ensureInstrumented(logger);
-    return new OpenAIRunnerFactory(undefined, logger);
+    return new OpenAIRunnerFactory(logger);
   }
 
   /**
