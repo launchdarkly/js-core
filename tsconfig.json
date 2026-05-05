@@ -20,6 +20,9 @@
       "path": "./packages/shared/akamai-edgeworker-sdk/tsconfig.ref.json"
     },
     {
+      "path": "./packages/shared/openfeature-server-common/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
     },
     {
