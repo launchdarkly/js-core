@@ -150,10 +150,24 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
         },
       },
       (errorKind: DataSourceErrorKind, message: string) => {
-        statusCallback(
-          subsystemCommon.DataSourceState.Interrupted,
-          new LDStreamingError(errorKind, message),
-        );
+        // If a parse error fires while the fallback directive is in flight, route it
+        // through the LDFlagDeliveryFallbackError path so CompositeDataSource still engages
+        // FDv1. Otherwise the directive would be lost: the composite's status handler would
+        // treat the LDStreamingError as an ordinary failure and fall through to the next
+        // FDv2 source.
+        if (fallbackRequested) {
+          const fallbackErr = new LDFlagDeliveryFallbackError(
+            DataSourceErrorKind.ErrorResponse,
+            `Response header indicates to fallback to FDv1`,
+          );
+          this._logger?.warn(fallbackErr.message);
+          statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+        } else {
+          statusCallback(
+            subsystemCommon.DataSourceState.Interrupted,
+            new LDStreamingError(errorKind, message),
+          );
+        }
 
         // parsing error was encountered, defensively close the data source
         this.stop();

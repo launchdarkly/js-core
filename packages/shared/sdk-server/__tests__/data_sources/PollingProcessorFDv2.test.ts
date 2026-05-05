@@ -144,12 +144,8 @@ describe('given a polling processor', () => {
     });
   });
 
-  // Per the FDv2 spec, the fallback directive can ride along on a successful response.
-  // The processor must deliver the payload AND the directive atomically via the data
-  // callback (`data.fallbackToFDv1`) so CompositeDataSource can swap its synchronizer
-  // list to FDv1 before its basis-during-init auto-transition fires. A separate status
-  // callback after the data callback would be silently dropped because the composite's
-  // callback handler disables itself on basis-during-init.
+  // On a 200 with the fallback header, the payload and the directive must arrive atomically
+  // on the same dataCallback so CompositeDataSource can swap to FDv1 without losing either.
   it('attaches fallback marker to data callback when fallback header rides along on a 200', async () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers, true));
 
@@ -183,11 +179,8 @@ describe('given a polling processor', () => {
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
 
-  // Bug fix: when the polling response carries the fallback header AND the body is
-  // malformed, the processor previously emitted Interrupted/LDPollingError before the
-  // fallbackToFDv1 check could run. CompositeDataSource's CallbackHandler disables itself
-  // on that first error callback, silently dropping the subsequent fallback signal. The
-  // directive must be emitted FIRST so it isn't lost.
+  // Malformed body + fallback header: the directive must be emitted before any
+  // Interrupted/LDPollingError so the composite can engage FDv1 instead of retrying.
   it('emits the fallback directive before the malformed-body error so it is not dropped', async () => {
     requestor.requestAllData = jest.fn((cb) => cb(undefined, '{not json', headers, true));
 
@@ -209,9 +202,47 @@ describe('given a polling processor', () => {
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
   });
 
-  // When the fallback directive arrives alongside an error response, the processor must
-  // emit the directive without scheduling a retry, even if the status would otherwise be
-  // recoverable.
+  // 200 + directive but the body parses to an event sequence that triggers an actionable
+  // PayloadProcessor error (e.g. payload-transferred without a preceding server-intent).
+  // The processor must still engage FDv1 -- the per-event error must not slip through as
+  // a generic LDPollingError that the composite would treat as an ordinary failure.
+  it('engages FDv1 when the PayloadProcessor reports an error and the directive is in flight', async () => {
+    // payload-transferred without a server-intent is a PROTOCOL_ERROR (actionable).
+    const protocolErrorEvents = {
+      events: [
+        {
+          event: 'payload-transferred',
+          data: { state: 'mockState', version: 1 },
+        },
+      ],
+    };
+    requestor.requestAllData = jest.fn((cb) =>
+      cb(undefined, JSON.stringify(protocolErrorEvents), headers, true),
+    );
+
+    const dataCallback = jest.fn();
+    const statusCallback = jest.fn();
+    processor.start(dataCallback, statusCallback);
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    // The terminal status emitted to the composite must be the FDv1-fallback error so that
+    // CompositeDataSource engages FDv1 instead of falling through to the next FDv2 source.
+    const errorCalls = statusCallback.mock.calls.filter(
+      (call: any[]) => call[1] !== undefined,
+    );
+    expect(errorCalls.length).toBeGreaterThan(0);
+    expect(errorCalls[errorCalls.length - 1][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+
+    // No LDPollingError must be reported -- that path would let the composite treat the
+    // failure as an ordinary error and fall through to the next FDv2 source.
+    statusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDPollingError);
+    });
+  });
+
+  // Error response + directive: emit the directive and don't reschedule a poll, even
+  // when the HTTP status would otherwise be recoverable.
   it('signals fallback on an error response without retrying', async () => {
     requestor.requestAllData = jest.fn((cb) =>
       cb({ status: 500 }, undefined, headers, true),

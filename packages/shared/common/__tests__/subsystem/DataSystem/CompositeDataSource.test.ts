@@ -650,12 +650,9 @@ it('terminates when FDv1 fallback is requested but no FDv1 fallback synchronizer
   expect(lastCall[0]).toBe(DataSourceState.Closed);
 });
 
-// Regression for the bug where a data source delivered basis-during-init AND THEN emitted
-// LDFlagDeliveryFallbackError as a status callback: the auto-transition on basis would
-// disable the callback handler before the fallback signal was processed, leaving
-// `_syncFactories` pointing at the FDv2 list. The fix is to ride the directive on the data
-// callback itself (via `data.fallbackToFDv1`), so the swap to FDv1 is atomic with the
-// payload application.
+// When an initializer delivers basis with `data.fallbackToFDv1`, the composite must apply
+// the payload AND swap to the FDv1 synchronizer atomically -- without starting any FDv2
+// synchronizer.
 it('switches to FDv1 when an initializer delivers basis with fallbackToFDv1 marker', async () => {
   const mockInitData = { fallbackToFDv1: true, payload: { key: 'init-payload' } };
   const mockInitializer = {
@@ -733,9 +730,8 @@ it('switches to FDv1 when an initializer delivers basis with fallbackToFDv1 mark
   expect(dataReceived[1]).toBe(mockFDv1Data);
 });
 
-// Regression for the bug where a synchronizer delivered a payload with fallbackToFDv1 AND
-// THEN emitted an error: the basis-during-init auto-transition (or the error status path)
-// would disable the callback handler before the fallback signal was processed.
+// Same atomic swap during synchronizer phase: a payload + directive on one dataCallback
+// must hand off to FDv1 instead of staying on the FDv2 synchronizer.
 it('switches to FDv1 when a synchronizer delivers a payload with fallbackToFDv1 marker', async () => {
   const mockSynchronizerData = { fallbackToFDv1: true, payload: { key: 'sync-payload' } };
   const mockSynchronizer = {
@@ -799,11 +795,8 @@ it('switches to FDv1 when a synchronizer delivers a payload with fallbackToFDv1 
   expect(dataReceived[1]).toBe(mockFDv1Data);
 });
 
-// Regression: subsequent fallback signals after the FDv1 synchronizer is engaged must be
-// ignored so the composite does not loop replacing its synchronizer list with itself.
-// This guards against an FDv1 endpoint that erroneously echoes `x-ld-fd-fallback` -- the
-// circular DataSourceList for `_fdv1Synchronizers` would otherwise restart the same
-// FDv1 synchronizer indefinitely after each repeated directive.
+// The FDv1 fallback list is circular, so re-engaging on a repeated directive would loop
+// restarting the same synchronizer. Once engaged, subsequent signals must be ignored.
 it('ignores subsequent FDv1 fallback signals once FDv1 fallback is engaged', async () => {
   const mockFDv2Sync = {
     start: jest

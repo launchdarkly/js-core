@@ -1,6 +1,6 @@
 import { LDFlagDeliveryFallbackError } from '@launchdarkly/js-sdk-common';
 
-import { subsystem } from '../../src';
+import { LDPollingError, subsystem } from '../../src';
 import OneShotInitializerFDv2 from '../../src/data_sources/OneShotInitializerFDv2';
 import Requestor from '../../src/data_sources/Requestor';
 import TestLogger from '../Logger';
@@ -79,13 +79,8 @@ describe('given a one shot initializer', () => {
     });
   });
 
-  // Per the FDv2 spec, when the server returns the FDv1 fallback directive alongside a
-  // valid 200 response the SDK must apply the accompanying payload AND surface the
-  // fallback signal atomically. The directive rides on the same data callback as the
-  // payload via `data.fallbackToFDv1`, so CompositeDataSource can swap its synchronizer
-  // list to FDv1 before its basis-during-init auto-transition fires. A separate status
-  // callback after the data callback would be silently dropped because the composite's
-  // callback handler disables itself on basis-during-init.
+  // On a 200 + directive, the payload and the directive must arrive atomically on the same
+  // dataCallback so the composite can swap to FDv1 without losing either.
   it('applies the payload and signals fallback atomically on a 200 + directive', () => {
     const dataCb = jest.fn();
     const statusCb = jest.fn();
@@ -113,8 +108,8 @@ describe('given a one shot initializer', () => {
     });
   });
 
-  // When the fallback signal arrives alongside an HTTP error, no payload can be applied
-  // but the directive must still be honored so we stop attempting FDv2 sources.
+  // Error response + directive: there is no payload to apply, but the directive must still
+  // engage FDv1 instead of being treated as an ordinary error.
   it('signals fallback when an error response carries the fallback directive', () => {
     const dataCb = jest.fn();
     const statusCb = jest.fn();
@@ -129,8 +124,36 @@ describe('given a one shot initializer', () => {
     expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
   });
 
-  // A malformed body that arrives with the fallback directive must not get stuck retrying
-  // FDv2 -- the directive is one-way and takes precedence over the parse failure.
+  // 200 + directive but the body parses to an event sequence that triggers an actionable
+  // PayloadProcessor error. The initializer must still engage FDv1 -- the per-event error
+  // must not slip through as a generic LDPollingError.
+  it('engages FDv1 when the PayloadProcessor reports an error and the directive is in flight', () => {
+    const dataCb = jest.fn();
+    const statusCb = jest.fn();
+    // payload-transferred without a server-intent triggers PROTOCOL_ERROR (actionable).
+    const protocolErrorEvents = {
+      events: [
+        {
+          event: 'payload-transferred',
+          data: { state: 'mockState', version: 1 },
+        },
+      ],
+    };
+    requestor.requestAllData = jest.fn((cb) =>
+      cb(undefined, JSON.stringify(protocolErrorEvents), undefined, true),
+    );
+    initializer.start(dataCb, statusCb);
+
+    // The terminal status emitted to the composite must be the FDv1-fallback error.
+    const errorCalls = statusCb.mock.calls.filter((call: any[]) => call[1] !== undefined);
+    expect(errorCalls.length).toBeGreaterThan(0);
+    expect(errorCalls[errorCalls.length - 1][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    statusCb.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDPollingError);
+    });
+  });
+
+  // Malformed body + directive: the parse failure must not suppress the directive.
   it('still signals fallback when the body cannot be parsed', () => {
     const dataCb = jest.fn();
     const statusCb = jest.fn();
