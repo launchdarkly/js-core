@@ -74,6 +74,7 @@ export class LangChainAgentRunner implements Runner {
     const toolCalls: string[] = [];
     const totalUsage: LDTokenUsage = { total: 0, input: 0, output: 0 };
     let response: AIMessage | undefined;
+    let completedNormally = false;
 
     try {
       for (let i = 0; i < MAX_ITERATIONS; i += 1) {
@@ -88,6 +89,7 @@ export class LangChainAgentRunner implements Runner {
 
         const requestedToolCalls = response?.tool_calls ?? [];
         if (requestedToolCalls.length === 0) {
+          completedNormally = true;
           break;
         }
 
@@ -110,9 +112,13 @@ export class LangChainAgentRunner implements Runner {
         }
       }
 
+      if (!completedNormally) {
+        this._logger?.warn(`LangChain agent did not complete normally after ${MAX_ITERATIONS} iterations.`);
+      }
+
       const finalContent = typeof response?.content === 'string' ? response.content : '';
       const metrics: LDAIMetrics = {
-        success: true,
+        success: completedNormally,
         usage: totalUsage,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };

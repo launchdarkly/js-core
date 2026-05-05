@@ -106,6 +106,26 @@ describe('LangChainAgentRunner', () => {
     expect(result.metrics.toolCalls).toEqual(['missing']);
   });
 
+  it('returns success=false when MAX_ITERATIONS is exhausted without a final answer', async () => {
+    const loopResponse = new AIMessage('');
+    loopResponse.tool_calls = [{ id: 'call_1', name: 'loop', args: {} }];
+    const llm = {
+      invoke: jest.fn().mockResolvedValue(loopResponse),
+      bindTools: jest.fn().mockReturnThis(),
+    };
+
+    const toolDefs = [{ type: 'function', function: { name: 'loop' } }];
+    const config: LDAIAgentConfig = {
+      ...baseAgentConfig,
+      model: { name: 'fake', parameters: { tools: toolDefs } },
+    };
+    const runner = new LangChainAgentRunner(llm as any, config, { loop: jest.fn().mockResolvedValue('') }, mockLogger);
+    const result = await runner.run('spin');
+
+    expect(result.metrics.success).toBe(false);
+    expect(llm.invoke).toHaveBeenCalledTimes(25);
+  });
+
   it('returns success=false when invoke throws', async () => {
     const err = new Error('boom');
     const llm = {
