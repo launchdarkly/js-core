@@ -158,6 +158,24 @@ it.each([
   },
 );
 
+it('resolveObjectEvaluation returns wrong-type fallback when the SDK value is null', async () => {
+  const client = new MockLDClient();
+  client.variationDetail.mockResolvedValue({
+    value: null,
+    variationIndex: 0,
+    reason: { kind: 'OFF' },
+  });
+  const provider = new TestProvider(baseConfig(new TestLogger()), client);
+
+  const result = await provider.resolveObjectEvaluation('flag', { a: 1 }, { targetingKey: 'u' });
+
+  expect(result).toEqual({
+    value: { a: 1 },
+    reason: StandardResolutionReasons.ERROR,
+    errorCode: ErrorCode.TYPE_MISMATCH,
+  });
+});
+
 it.each([
   ['CLIENT_NOT_READY', ErrorCode.PROVIDER_NOT_READY],
   ['MALFORMED_FLAG', ErrorCode.PARSE_ERROR],

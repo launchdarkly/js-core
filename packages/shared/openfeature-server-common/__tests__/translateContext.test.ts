@@ -216,3 +216,74 @@ it('allows references in different branches', () => {
   expect(translateContext(logger, evaluationContext)).toEqual(expectedContext);
   expect(logger.logs.length).toEqual(0);
 });
+
+it('falls back to user kind when kind is not a string and does not leak the invalid value', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, { targetingKey: 'the-key', kind: 42 as unknown as string }),
+  ).toEqual({
+    key: 'the-key',
+    kind: 'user',
+  });
+  expect(logger.logs).toEqual(["Specified 'kind' of context was not a string."]);
+});
+
+it('preserves other attributes when kind is non-string', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      targetingKey: 'the-key',
+      kind: 42 as unknown as string,
+      name: 'Sandy',
+      custom: 'value',
+    }),
+  ).toEqual({
+    key: 'the-key',
+    kind: 'user',
+    name: 'Sandy',
+    custom: 'value',
+  });
+  expect(logger.logs).toEqual(["Specified 'kind' of context was not a string."]);
+});
+
+it('preserves null attribute values without crashing', () => {
+  const logger = new TestLogger();
+  expect(translateContext(logger, { targetingKey: 'the-key', myAttr: null })).toEqual({
+    key: 'the-key',
+    kind: 'user',
+    myAttr: null,
+  });
+  expect(logger.logs.length).toEqual(0);
+});
+
+it('preserves null values inside nested structure attributes', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      targetingKey: 'the-key',
+      profile: { nickname: 'sandy', sponsor: null },
+    }),
+  ).toEqual({
+    key: 'the-key',
+    kind: 'user',
+    profile: { nickname: 'sandy', sponsor: null },
+  });
+  expect(logger.logs.length).toEqual(0);
+});
+
+it('logs an error and skips null sub-contexts in a multi-context without crashing', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      kind: 'multi',
+      organization: { targetingKey: 'org-key' },
+      user: null as unknown as Record<string, never>,
+    }),
+  ).toEqual({
+    kind: 'multi',
+    organization: { key: 'org-key' },
+  });
+  expect(logger.logs).toEqual([
+    'Top level attributes in a multi-kind context should be Structure types.',
+  ]);
+});

@@ -37,7 +37,7 @@ function convertAttributes(
   if (value instanceof Date) {
     // eslint-disable-next-line no-param-reassign
     object[key] = value.toISOString();
-  } else if (typeof value === 'object' && !Array.isArray(value)) {
+  } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
     // eslint-disable-next-line no-param-reassign
     object[key] = {};
     Object.entries(value).forEach(([objectKey, objectValue]) => {
@@ -83,7 +83,7 @@ function translateContextCommon(
 
   const convertedContext: LDContextCommon = { key: finalKey };
   Object.entries(inCommon).forEach(([key, value]) => {
-    if (key === 'targetingKey' || key === 'key') {
+    if (key === 'targetingKey' || key === 'key' || key === 'kind') {
       return;
     }
     if (key === 'privateAttributes') {
@@ -119,7 +119,7 @@ export function translateContext(logger: LDLogger, evalContext: EvaluationContex
       (acc: any, [key, value]: [string, EvaluationContextValue]) => {
         if (key === 'kind') {
           acc.kind = value;
-        } else if (typeof value === 'object' && !Array.isArray(value)) {
+        } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           const valueRecord = value as Record<string, EvaluationContextValue>;
           acc[key] = translateContextCommon(
             logger,
