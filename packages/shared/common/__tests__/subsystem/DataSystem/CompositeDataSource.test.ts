@@ -875,6 +875,98 @@ it('ignores subsequent FDv1 fallback signals once FDv1 fallback is engaged', asy
   expect(dataReceived).toContain(fdv1Data);
 });
 
+// The backoff bypass applies only to the initial engagement; subsequent
+// LDFlagDeliveryFallbackErrors from the FDv1 synchronizer must be throttled.
+it('throttles FDv1 retries with backoff after the initial engagement', async () => {
+  const mockFDv2Sync = {
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              'fallback from FDv2',
+              500,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  };
+
+  // Two FDv1 factories so the composite cycles through 'fallback' transitions instead
+  // of stopping after the first cull -- each cycle is a chance to (incorrectly) skip
+  // backoff. The tracking Backoff below counts fail() calls as the observable proxy.
+  const makeFDv1Sync = () => ({
+    start: jest
+      .fn()
+      .mockImplementation(
+        (
+          _dataCallback: (basis: boolean, data: any) => void,
+          _statusCallback: (status: DataSourceState, err?: any) => void,
+        ) => {
+          _statusCallback(DataSourceState.Initializing);
+          _statusCallback(
+            DataSourceState.Closed,
+            new LDFlagDeliveryFallbackError(
+              DataSourceErrorKind.ErrorResponse,
+              'fallback from FDv1',
+              500,
+            ),
+          );
+        },
+      ),
+    stop: jest.fn(),
+  });
+  const mockFDv1Sync1 = makeFDv1Sync();
+  const mockFDv1Sync2 = makeFDv1Sync();
+
+  let failCalls = 0;
+  let successCalls = 0;
+  const trackingBackoff: Backoff = {
+    success() {
+      successCalls += 1;
+      return 0;
+    },
+    fail() {
+      failCalls += 1;
+      return 0;
+    },
+  };
+
+  const underTest = new CompositeDataSource(
+    [],
+    [makeDataSourceFactory(mockFDv2Sync)],
+    [makeDataSourceFactory(mockFDv1Sync1), makeDataSourceFactory(mockFDv1Sync2)],
+    undefined,
+    makeTestTransitionConditions(),
+    trackingBackoff,
+  );
+
+  const statusCallback = jest.fn();
+  await new Promise<void>((resolve) => {
+    statusCallback.mockImplementation((state: DataSourceState) => {
+      if (state === DataSourceState.Closed) {
+        resolve();
+      }
+    });
+    underTest.start(jest.fn(), statusCallback);
+  });
+
+  expect(mockFDv2Sync.start).toHaveBeenCalledTimes(1);
+  expect(mockFDv1Sync1.start).toHaveBeenCalledTimes(1);
+  expect(mockFDv1Sync2.start).toHaveBeenCalledTimes(1);
+  // One fail() per post-engagement retry; the initial engagement is not counted.
+  expect(failCalls).toBe(2);
+  expect(successCalls).toBe(0);
+});
+
 it('reports error when all initializers fail', async () => {
   const mockInitializer1Error = {
     name: 'Error',

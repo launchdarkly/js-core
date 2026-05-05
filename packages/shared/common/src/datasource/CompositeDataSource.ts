@@ -246,12 +246,19 @@ export class CompositeDataSource implements DataSource {
       // stop the underlying datasource before transitioning to next state
       currentDS?.stop();
 
+      // Skip backoff only on the initial server-directed FDv1 engagement (a `switchToSync`
+      // transition resolved by `engageFDv1Fallback` carries an `LDFlagDeliveryFallbackError`).
+      // Any subsequent `LDFlagDeliveryFallbackError` is an ordinary retry from the FDv1
+      // synchronizer (or a follow-up FDv1 factory) and must be throttled like any other
+      // error retry.
+      const isInitialFDv1Engagement =
+        transitionRequest.transition === 'switchToSync' &&
+        transitionRequest.err instanceof LDFlagDeliveryFallbackError;
+
       if (
         transitionRequest.err &&
         transitionRequest.transition !== 'stop' &&
-        // The server-directed FDv1 fallback is not an error retry -- the directive should be
-        // honored immediately so the FDv1 synchronizer can take over without delay.
-        !(transitionRequest.err instanceof LDFlagDeliveryFallbackError)
+        !isInitialFDv1Engagement
       ) {
         // if the transition was due to an error we're not in the initializer phase, throttle the transition. Fallback between initializers is not throttled.
         const delay = this._initPhaseActive ? 0 : this._backoff.fail();
