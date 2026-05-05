@@ -1,5 +1,6 @@
 import { LanguageModel } from 'ai';
 
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type { LDAICompletionConfig, LDAIConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import type { VercelAIModelParameters } from './types';
@@ -13,11 +14,9 @@ import { VercelModelRunner } from './VercelModelRunner';
  * because the Vercel AI SDK is a thin model layer rather than an agent
  * framework.
  */
-export class VercelRunnerFactory {
-  private _logger?: LDLogger;
-
+export class VercelRunnerFactory extends AIProvider {
   constructor(logger?: LDLogger) {
-    this._logger = logger;
+    super(logger);
   }
 
   /**
@@ -26,7 +25,7 @@ export class VercelRunnerFactory {
   async createModel(config: LDAICompletionConfig): Promise<VercelModelRunner> {
     const model = await VercelRunnerFactory.createVercelModel(config);
     const parameters = VercelRunnerFactory.mapParameters(config.model?.parameters);
-    return new VercelModelRunner(model, config, parameters, this._logger);
+    return new VercelModelRunner(model, config, parameters, this.logger);
   }
 
   /**
