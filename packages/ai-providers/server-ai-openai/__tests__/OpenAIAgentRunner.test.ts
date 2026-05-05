@@ -122,6 +122,28 @@ describe('OpenAIAgentRunner', () => {
     expect(result.metrics.toolCalls).toEqual(['missing']);
   });
 
+  it('returns success=false when MAX_ITERATIONS is exhausted without a final answer', async () => {
+    const create = mockOpenAI.chat.completions.create as jest.Mock;
+    // Always return a tool call — the loop never gets a clean final message.
+    create.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: null,
+            tool_calls: [{ id: 'call_1', function: { name: 'loop', arguments: '{}' } }],
+          },
+        },
+      ],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    } as any);
+
+    const runner = new OpenAIAgentRunner(mockOpenAI, baseAgentConfig, { loop: jest.fn().mockResolvedValue('') });
+    const result = await runner.run('spin');
+
+    expect(result.metrics.success).toBe(false);
+    expect(create).toHaveBeenCalledTimes(25);
+  });
+
   it('returns an unsuccessful RunnerResult when the API call throws', async () => {
     (mockOpenAI.chat.completions.create as jest.Mock).mockRejectedValue(new Error('boom'));
 
