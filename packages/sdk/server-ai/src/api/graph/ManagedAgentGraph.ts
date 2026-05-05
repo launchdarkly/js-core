@@ -1,5 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
+import { LDAIMetrics } from '../metrics';
+import { LDAIMetricSummary } from '../model/types';
 import { LDJudgeResult } from '../judge/types';
 import { AgentGraphDefinition } from './AgentGraphDefinition';
 import { LDGraphTracker } from './LDGraphTracker';
@@ -45,8 +47,8 @@ export class ManagedAgentGraph {
       success: runnerResult.metrics.success,
       path: runnerResult.metrics.path,
       durationMs: runnerResult.metrics.durationMs,
-      usage: runnerResult.metrics.usage,
-      nodeMetrics: runnerResult.metrics.nodeMetrics,
+      tokens: runnerResult.metrics.usage,
+      nodeMetrics: this._buildNodeMetrics(runnerResult.metrics.nodeMetrics),
       resumptionToken: graphTracker.resumptionToken,
     };
 
@@ -58,6 +60,44 @@ export class ManagedAgentGraph {
       raw: runnerResult.raw,
       evaluations,
     };
+  }
+
+  /**
+   * Converts per-node LDAIMetrics from the runner into LDAIMetricSummary by
+   * creating a per-node tracker, firing tracking events, and calling getSummary().
+   */
+  private _buildNodeMetrics(
+    nodeMetrics: Record<string, LDAIMetrics>,
+  ): Record<string, LDAIMetricSummary> {
+    const summaries: Record<string, LDAIMetricSummary> = {};
+
+    for (const [nodeKey, metrics] of Object.entries(nodeMetrics)) {
+      const node = this._graphDefinition.getNode(nodeKey);
+      if (!node) {
+        this._logger?.warn(`ManagedAgentGraph: no node found for key "${nodeKey}", skipping metrics`);
+        continue;
+      }
+
+      const tracker = node.getConfig().createTracker!();
+      if (metrics.usage) {
+        tracker.trackTokens(metrics.usage);
+      }
+      if (metrics.durationMs !== undefined) {
+        tracker.trackDuration(metrics.durationMs);
+      }
+      if (metrics.toolCalls?.length) {
+        tracker.trackToolCalls(metrics.toolCalls);
+      }
+      if (metrics.success) {
+        tracker.trackSuccess();
+      } else {
+        tracker.trackError();
+      }
+
+      summaries[nodeKey] = tracker.getSummary();
+    }
+
+    return summaries;
   }
 
   /**

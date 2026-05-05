@@ -1,5 +1,6 @@
 import { LDJudgeResult } from '../judge/types';
 import { LDAIMetrics, LDTokenUsage } from '../metrics';
+import { LDAIMetricSummary } from '../model/types';
 
 /**
  * Represents a directed edge in an agent graph, connecting a source node to a target node.
@@ -147,12 +148,12 @@ export interface GraphMetricSummary {
   /**
    * Aggregate token usage across the entire graph invocation, if available.
    */
-  usage?: LDTokenUsage;
+  tokens?: LDTokenUsage;
 
   /**
-   * Per-node metrics keyed by agent config key.
+   * Per-node metric summaries keyed by agent config key.
    */
-  nodeMetrics: Record<string, LDAIMetrics>;
+  nodeMetrics: Record<string, LDAIMetricSummary>;
 
   /**
    * Resumption token for deferred feedback association.
