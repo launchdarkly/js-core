@@ -123,6 +123,29 @@ export class CompositeDataSource implements DataSource {
           let lastState: DataSourceState | undefined;
           let cancelScheduledTransition: () => void = () => {};
 
+          // Engages the FDv1 Fallback Directive: swaps the synchronizer list to FDv1 (or
+          // empties it when no FDv1 fallback is configured), reports the in-progress status
+          // through the sanitizer, cancels any pending scheduled transition, and resolves
+          // a switchToSync transition. The directive is one-way; the engagement flag is
+          // checked by the callers so we don't re-enter this branch on repeated signals.
+          const engageFDv1Fallback = (
+            statusToReport: DataSourceState,
+            err: unknown,
+          ) => {
+            if (this._fdv1Synchronizers.length() > 0) {
+              this._logger?.warn(`Falling back to FDv1`);
+            } else {
+              this._logger?.warn(
+                `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
+              );
+            }
+            this._fdv1FallbackEngaged = true;
+            this._syncFactories = this._fdv1Synchronizers;
+            sanitizedStatusCallback(statusToReport, err);
+            this._consumeCancelToken(cancelScheduledTransition);
+            transitionResolve({ transition: 'switchToSync', err: err as Error | undefined });
+          };
+
           // this callback handler can be disabled and ensures only one transition request occurs
           const callbackHandler = new CallbackHandler(
             (basis: boolean, data: any) => {
@@ -130,26 +153,11 @@ export class CompositeDataSource implements DataSource {
               dataCallback(basis, data);
 
               // The FDv1 fallback directive can ride along on the same data callback that
-              // delivers a payload (initializer or synchronizer phase). Apply the payload
-              // first (above), then swap the synchronizer list to FDv1 and transition.
-              // This is atomic with the data callback so the basis-during-init auto-
-              // transition below cannot race ahead and switch to the FDv2 synchronizer list.
-              // Once engaged, the directive is one-way -- ignore any subsequent occurrence
-              // (e.g. the FDv1 endpoint echoing the header) so we don't re-enter this branch.
+              // delivers a payload, so the swap to FDv1 is atomic with payload application.
+              // Once engaged, the directive is one-way -- subsequent signals are ignored.
               if (data?.fallbackToFDv1 && !this._fdv1FallbackEngaged) {
-                if (this._fdv1Synchronizers.length() > 0) {
-                  this._logger?.warn(`Falling back to FDv1`);
-                } else {
-                  this._logger?.warn(
-                    `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
-                  );
-                }
-                this._fdv1FallbackEngaged = true;
-                this._syncFactories = this._fdv1Synchronizers;
                 callbackHandler.disable();
-                this._consumeCancelToken(cancelScheduledTransition);
-                sanitizedStatusCallback(DataSourceState.Interrupted);
-                transitionResolve({ transition: 'switchToSync' });
+                engageFDv1Fallback(DataSourceState.Interrupted, undefined);
                 return;
               }
 
@@ -176,29 +184,11 @@ export class CompositeDataSource implements DataSource {
                   cullDSFactory?.();
                 }
 
-                // The FDv1 fallback directive is server-directed and one-way. As soon as we
-                // observe it, end any in-progress initializer phase and replace the FDv2
-                // synchronizers with the configured FDv1 fallback list. If no FDv1 fallback
-                // is configured, the synchronizer list becomes empty and the composite will
-                // terminate via the exhausted-sources path. Subsequent occurrences of the
-                // directive (e.g. if the FDv1 endpoint were to echo `x-ld-fd-fallback`) are
-                // ignored so the data source does not loop replacing its synchronizer list
-                // with itself.
+                // Status-callback path for the FDv1 Fallback Directive (used when the
+                // server-directed signal arrives without an accompanying payload, e.g. on
+                // an HTTP error or a malformed body).
                 if (err instanceof LDFlagDeliveryFallbackError && !this._fdv1FallbackEngaged) {
-                  if (this._fdv1Synchronizers.length() > 0) {
-                    this._logger?.warn(`Falling back to FDv1`);
-                  } else {
-                    this._logger?.warn(
-                      `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
-                    );
-                  }
-                  this._fdv1FallbackEngaged = true;
-                  this._syncFactories = this._fdv1Synchronizers;
-                  sanitizedStatusCallback(state, err);
-                  this._consumeCancelToken(cancelScheduledTransition);
-                  // switchToSync ends init phase and starts the FDv1 synchronizer list from
-                  // its head, bypassing any remaining initializers and FDv2 synchronizers.
-                  transitionResolve({ transition: 'switchToSync', err });
+                  engageFDv1Fallback(state, err);
                   return;
                 }
 
