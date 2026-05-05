@@ -106,6 +106,29 @@ describe('LangChainAgentRunner', () => {
     expect(result.metrics.toolCalls).toEqual(['missing']);
   });
 
+  it('uses empty string when a tool returns undefined', async () => {
+    const toolResponse = new AIMessage('');
+    toolResponse.tool_calls = [{ id: 'call_1', name: 'voidTool', args: {} }];
+    const finalResponse = new AIMessage('done');
+    const llm = {
+      invoke: jest.fn().mockResolvedValueOnce(toolResponse).mockResolvedValueOnce(finalResponse),
+      bindTools: jest.fn().mockReturnThis(),
+    };
+
+    const toolDefs = [{ type: 'function', function: { name: 'voidTool' } }];
+    const config: LDAIAgentConfig = {
+      ...baseAgentConfig,
+      model: { name: 'fake', parameters: { tools: toolDefs } },
+    };
+    const voidTool = jest.fn().mockResolvedValue(undefined);
+    const runner = new LangChainAgentRunner(llm as any, config, { voidTool }, mockLogger);
+    const result = await runner.run('go');
+
+    const toolMessageArg = llm.invoke.mock.calls[1][0].find((m: any) => m.constructor.name === 'ToolMessage');
+    expect(toolMessageArg.content).toBe('');
+    expect(result.metrics.success).toBe(true);
+  });
+
   it('returns success=false when MAX_ITERATIONS is exhausted without a final answer', async () => {
     const loopResponse = new AIMessage('');
     loopResponse.tool_calls = [{ id: 'call_1', name: 'loop', args: {} }];

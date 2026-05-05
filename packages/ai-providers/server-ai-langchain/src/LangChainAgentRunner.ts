@@ -147,7 +147,7 @@ export class LangChainAgentRunner implements Runner {
     }
     try {
       const result = await fn(args ?? {});
-      return typeof result === 'string' ? result : JSON.stringify(result);
+      return typeof result === 'string' ? result : (JSON.stringify(result) ?? '');
     } catch (error) {
       this._logger?.warn(`Tool '${name}' execution failed:`, error);
       return '';
