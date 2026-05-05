@@ -232,6 +232,20 @@ it('track passes undefined data when only the value is provided', () => {
   );
 });
 
+it('track with no event details passes undefined data and undefined metricValue', () => {
+  const client = new MockLDClient();
+  const provider = new TestProvider(baseConfig(new TestLogger()), client);
+
+  provider.track('event', { targetingKey: 'u' });
+
+  expect(client.track).toHaveBeenCalledWith(
+    'event',
+    { kind: 'user', key: 'u' },
+    undefined,
+    undefined,
+  );
+});
+
 it('track with empty event details passes undefined data and undefined metricValue', () => {
   const client = new MockLDClient();
   const provider = new TestProvider(baseConfig(new TestLogger()), client);
@@ -316,3 +330,4 @@ it('wraps a host logger that throws so flag evaluation does not crash', async ()
     }),
   ).resolves.toEqual({ value: true, variant: '0', reason: 'OFF' });
 });
+

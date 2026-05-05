@@ -194,13 +194,14 @@ export abstract class BaseOpenFeatureProvider<
   track(
     trackingEventName: string,
     context: EvaluationContext,
-    trackingEventDetails: TrackingEventDetails,
+    trackingEventDetails?: TrackingEventDetails,
   ): void {
     this._client?.track(
       trackingEventName,
       translateContext(this._logger, context),
-      translateTrackingEventDetails(trackingEventDetails),
+      trackingEventDetails ? translateTrackingEventDetails(trackingEventDetails) : undefined,
       trackingEventDetails?.value,
     );
   }
 }
+
