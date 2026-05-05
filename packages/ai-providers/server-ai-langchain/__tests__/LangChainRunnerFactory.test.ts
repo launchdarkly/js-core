@@ -75,10 +75,4 @@ describe('LangChainRunnerFactory', () => {
     });
   });
 
-  describe('create', () => {
-    it('creates a LangChainRunnerFactory instance', async () => {
-      const f = await LangChainRunnerFactory.create();
-      expect(f).toBeInstanceOf(LangChainRunnerFactory);
-    });
-  });
 });

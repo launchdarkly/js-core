@@ -22,16 +22,7 @@ export class LangChainRunnerFactory {
 
   constructor(logger?: LDLogger) {
     this._logger = logger;
-  }
-
-  /**
-   * Static convenience that ensures OpenTelemetry instrumentation is applied
-   * (when available) before constructing a factory.
-   */
-  static async create(logger?: LDLogger): Promise<LangChainRunnerFactory> {
-    // eslint-disable-next-line no-underscore-dangle
-    await LangChainRunnerFactory._ensureInstrumented(logger);
-    return new LangChainRunnerFactory(logger);
+    LangChainRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
 
   /**
