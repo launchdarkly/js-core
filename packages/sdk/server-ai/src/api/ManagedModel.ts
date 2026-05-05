@@ -46,6 +46,9 @@ export class ManagedModel {
       .evaluate(prompt, output)
       .then((results) => {
         results.forEach((judgeResult) => {
+          if (!judgeResult.sampled) {
+            return;
+          }
           tracker.trackJudgeResult(judgeResult);
         });
         return results;
