@@ -5,7 +5,7 @@ import {
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
   mapProviderName,
-} from '../src/langchainHelper';
+} from '../src/LangChainHelper';
 
 describe('convertMessagesToLangChain', () => {
   it('converts system, user, and assistant messages to LangChain instances', () => {

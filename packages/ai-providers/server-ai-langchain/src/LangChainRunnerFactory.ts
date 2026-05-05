@@ -9,7 +9,7 @@ import type {
 } from '@launchdarkly/server-sdk-ai';
 
 import { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
-import { mapProviderName } from './langchainHelper';
+import { mapProviderName } from './LangChainHelper';
 import { LangChainModelRunner } from './LangChainModelRunner';
 
 let instrumentPromise: Promise<void> | undefined;

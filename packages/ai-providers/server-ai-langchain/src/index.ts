@@ -7,7 +7,6 @@
  * @packageDocumentation
  */
 
-export * from './LangChainProvider';
 export { LangChainModelRunner } from './LangChainModelRunner';
 export { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
 export { LangChainRunnerFactory } from './LangChainRunnerFactory';
@@ -16,4 +15,4 @@ export {
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
   mapProviderName,
-} from './langchainHelper';
+} from './LangChainHelper';
