@@ -1,7 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIAgentConfig } from './config/types';
-import { LDJudgeResult } from './judge/types';
 import { ManagedResult, RunnerResult } from './model/types';
 import { Runner } from './providers/Runner';
 
@@ -43,24 +42,18 @@ export class ManagedAgent {
     const metrics = tracker.getSummary();
 
     const output = result.content;
-    const evaluator = this.aiAgentConfig.evaluator;
-    let evaluations: Promise<LDJudgeResult[]>;
-    if (evaluator) {
-      evaluations = evaluator
-        .evaluate(prompt, output)
-        .then((results) => {
-          results.forEach((judgeResult) => {
-            tracker.trackJudgeResult(judgeResult);
-          });
-          return results;
-        })
-        .catch((err) => {
-          this._logger?.warn('Judge evaluation failed unexpectedly:', err);
-          return [];
+    const evaluations = this.aiAgentConfig.evaluator
+      .evaluate(prompt, output)
+      .then((results) => {
+        results.forEach((judgeResult) => {
+          tracker.trackJudgeResult(judgeResult);
         });
-    } else {
-      evaluations = Promise.resolve([]);
-    }
+        return results;
+      })
+      .catch((err) => {
+        this._logger?.warn('Judge evaluation failed unexpectedly:', err);
+        return [];
+      });
 
     return {
       content: output,

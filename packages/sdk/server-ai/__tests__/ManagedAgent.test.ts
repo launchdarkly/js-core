@@ -46,6 +46,7 @@ describe('ManagedAgent', () => {
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       createTracker: () => mockTracker,
+      evaluator: Evaluator.noop(),
     };
   });
 
@@ -65,19 +66,8 @@ describe('ManagedAgent', () => {
     expect(mockRunner.run).toHaveBeenCalledWith('My question');
   });
 
-  it('resolves to empty evaluations when no evaluator configured', async () => {
-    const agent = new ManagedAgent(agentConfig, mockRunner);
-    const result = await agent.run('Hello');
-    const evaluations = await result.evaluations;
-    expect(evaluations).toEqual([]);
-  });
-
   it('resolves to empty evaluations with noop evaluator', async () => {
-    const configWithNoop: LDAIAgentConfig = {
-      ...agentConfig,
-      evaluator: Evaluator.noop(),
-    };
-    const agent = new ManagedAgent(configWithNoop, mockRunner);
+    const agent = new ManagedAgent(agentConfig, mockRunner);
     const result = await agent.run('Hello');
     const evaluations = await result.evaluations;
     expect(evaluations).toEqual([]);
