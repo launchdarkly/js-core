@@ -28,4 +28,5 @@ stats.html
 .env.local
 .env.*.local
 .claude/worktrees
+.claude/stacks
 .mcp.json
