@@ -67,10 +67,4 @@ describe('VercelRunnerFactory', () => {
     });
   });
 
-  describe('create', () => {
-    it('creates a VercelRunnerFactory instance', async () => {
-      const f = await VercelRunnerFactory.create();
-      expect(f).toBeInstanceOf(VercelRunnerFactory);
-    });
-  });
 });

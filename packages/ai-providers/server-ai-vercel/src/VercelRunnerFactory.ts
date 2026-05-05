@@ -21,13 +21,6 @@ export class VercelRunnerFactory {
   }
 
   /**
-   * Static convenience constructor matching the other provider factories.
-   */
-  static async create(logger?: LDLogger): Promise<VercelRunnerFactory> {
-    return new VercelRunnerFactory(logger);
-  }
-
-  /**
    * Create a model runner from a completion AI configuration.
    */
   async createModel(config: LDAICompletionConfig): Promise<VercelModelRunner> {
