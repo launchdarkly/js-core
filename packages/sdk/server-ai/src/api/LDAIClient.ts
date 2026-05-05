@@ -1,6 +1,6 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedAgent } from './agent/ManagedAgent';
+import { ManagedAgent } from './ManagedAgent';
 import { ManagedModel } from './ManagedModel';
 import {
   LDAIAgentConfig,

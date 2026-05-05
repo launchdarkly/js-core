@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedAgent } from './api/agent/ManagedAgent';
+import { ManagedAgent } from './api/ManagedAgent';
 import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,

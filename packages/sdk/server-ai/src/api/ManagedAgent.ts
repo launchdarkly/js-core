@@ -1,9 +1,9 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIAgentConfig } from '../config/types';
-import { LDJudgeResult } from '../judge/types';
-import { LDAIMetricSummary, ManagedResult, RunnerResult } from '../model/types';
-import { Runner } from '../providers/Runner';
+import { LDAIAgentConfig } from './config/types';
+import { LDJudgeResult } from './judge/types';
+import { LDAIMetricSummary, ManagedResult, RunnerResult } from './model/types';
+import { Runner } from './providers/Runner';
 
 /**
  * ManagedAgent provides agent invocation with automatic tracking and automatic
@@ -52,12 +52,18 @@ export class ManagedAgent {
     const evaluator = this.aiAgentConfig.evaluator;
     let evaluations: Promise<LDJudgeResult[]>;
     if (evaluator) {
-      evaluations = evaluator.evaluate(prompt, output).then((results) => {
-        results.forEach((judgeResult) => {
-          tracker.trackJudgeResult(judgeResult);
+      evaluations = evaluator
+        .evaluate(prompt, output)
+        .then((results) => {
+          results.forEach((judgeResult) => {
+            tracker.trackJudgeResult(judgeResult);
+          });
+          return results;
+        })
+        .catch((err) => {
+          this._logger?.warn('Judge evaluation failed unexpectedly:', err);
+          return [];
         });
-        return results;
-      });
     } else {
       evaluations = Promise.resolve([]);
     }
