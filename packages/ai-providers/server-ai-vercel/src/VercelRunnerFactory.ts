@@ -3,7 +3,7 @@ import { LanguageModel } from 'ai';
 import type { LDAICompletionConfig, LDAIConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import type { VercelAIModelParameters } from './types';
-import { mapProviderName } from './vercelHelper';
+import { mapProviderName } from './VercelHelper';
 import { VercelModelRunner } from './VercelModelRunner';
 
 /**

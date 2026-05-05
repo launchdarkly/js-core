@@ -1,4 +1,3 @@
-export { VercelProvider } from './VercelProvider';
 export { VercelModelRunner } from './VercelModelRunner';
 export { VercelRunnerFactory } from './VercelRunnerFactory';
 export {
@@ -7,7 +6,7 @@ export {
   getAIMetricsFromStream,
   mapProviderName,
   mapUsageDataToLDTokenUsage,
-} from './vercelHelper';
+} from './VercelHelper';
 export type {
   VercelAIModelParameters,
   VercelAISDKConfig,

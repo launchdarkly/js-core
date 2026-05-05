@@ -4,7 +4,7 @@ import {
   getAIMetricsFromStream,
   mapProviderName,
   mapUsageDataToLDTokenUsage,
-} from '../src/vercelHelper';
+} from '../src/VercelHelper';
 
 describe('convertMessagesToVercel', () => {
   it('passes role and content through unchanged', () => {
