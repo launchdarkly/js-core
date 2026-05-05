@@ -1,6 +1,8 @@
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { initChatModel } from 'langchain/chat_models/universal';
 
-import type { LDAIMetrics, LDMessage, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
+import type { LDAIConfig, LDAIMetrics, LDMessage, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
 
 /**
  * Convert LaunchDarkly messages to LangChain message instances.
@@ -19,6 +21,20 @@ export function convertMessagesToLangChain(
       default:
         throw new Error(`Unsupported message role: ${msg.role}`);
     }
+  });
+}
+
+/**
+ * Create a LangChain chat model from a LaunchDarkly AI configuration.
+ */
+export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
+  const modelName = aiConfig.model?.name || '';
+  const provider = aiConfig.provider?.name || '';
+  const parameters = aiConfig.model?.parameters || {};
+
+  return initChatModel(modelName, {
+    ...parameters,
+    modelProvider: mapProviderName(provider),
   });
 }
 

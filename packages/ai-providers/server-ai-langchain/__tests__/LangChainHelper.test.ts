@@ -1,11 +1,55 @@
 import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { initChatModel } from 'langchain/chat_models/universal';
 
 import {
   convertMessagesToLangChain,
+  createLangChainModel,
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
   mapProviderName,
 } from '../src/LangChainHelper';
+
+jest.mock('langchain/chat_models/universal', () => ({
+  initChatModel: jest.fn(),
+}));
+
+const mockInitChatModel = initChatModel as jest.MockedFunction<typeof initChatModel>;
+
+describe('createLangChainModel', () => {
+  const fakeLLM = { invoke: jest.fn() };
+
+  beforeEach(() => {
+    mockInitChatModel.mockReset();
+    mockInitChatModel.mockResolvedValue(fakeLLM as any);
+  });
+
+  it('calls initChatModel with model name and mapped provider', async () => {
+    await createLangChainModel({
+      key: 'cfg',
+      enabled: true,
+      provider: { name: 'openai' },
+      model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
+    });
+
+    expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
+      temperature: 0.5,
+      modelProvider: 'openai',
+    });
+  });
+
+  it('maps gemini to google-genai', async () => {
+    await createLangChainModel({
+      key: 'cfg',
+      enabled: true,
+      provider: { name: 'gemini' },
+      model: { name: 'gemini-2.0' },
+    });
+
+    expect(mockInitChatModel).toHaveBeenCalledWith('gemini-2.0', {
+      modelProvider: 'google-genai',
+    });
+  });
+});
 
 describe('convertMessagesToLangChain', () => {
   it('converts system, user, and assistant messages to LangChain instances', () => {

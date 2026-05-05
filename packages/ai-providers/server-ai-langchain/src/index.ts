@@ -12,6 +12,7 @@ export { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
 export { LangChainRunnerFactory } from './LangChainRunnerFactory';
 export {
   convertMessagesToLangChain,
+  createLangChainModel,
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
   mapProviderName,

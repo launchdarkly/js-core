@@ -1,16 +1,8 @@
-import { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import { initChatModel } from 'langchain/chat_models/universal';
-
 import { AIProvider } from '@launchdarkly/server-sdk-ai';
-import type {
-  LDAIAgentConfig,
-  LDAICompletionConfig,
-  LDAIConfig,
-  LDLogger,
-} from '@launchdarkly/server-sdk-ai';
+import type { LDAIAgentConfig, LDAICompletionConfig, LDAIConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
-import { mapProviderName } from './LangChainHelper';
+import { createLangChainModel } from './LangChainHelper';
 import { LangChainModelRunner } from './LangChainModelRunner';
 
 let instrumentPromise: Promise<void> | undefined;
@@ -28,7 +20,7 @@ export class LangChainRunnerFactory extends AIProvider {
    * Create a model runner from a completion AI configuration.
    */
   async createModel(config: LDAICompletionConfig): Promise<LangChainModelRunner> {
-    const llm = await LangChainRunnerFactory.createLangChainModel(config);
+    const llm = await createLangChainModel(config);
     return new LangChainModelRunner(llm, config, this.logger);
   }
 
@@ -47,23 +39,9 @@ export class LangChainRunnerFactory extends AIProvider {
       ...config,
       model: { ...(config.model ?? { name: '' }), parameters },
     };
-    const llm = await LangChainRunnerFactory.createLangChainModel(configForModel);
+    const llm = await createLangChainModel(configForModel);
 
     return new LangChainAgentRunner(llm, config, tools ?? {}, this.logger);
-  }
-
-  /**
-   * Create a LangChain model from an AI configuration.
-   */
-  static async createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
-    const modelName = aiConfig.model?.name || '';
-    const provider = aiConfig.provider?.name || '';
-    const parameters = aiConfig.model?.parameters || {};
-
-    return initChatModel(modelName, {
-      ...parameters,
-      modelProvider: mapProviderName(provider),
-    });
   }
 
   /**
