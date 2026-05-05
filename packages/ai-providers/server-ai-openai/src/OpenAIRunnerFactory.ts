@@ -1,5 +1,6 @@
 import { OpenAI } from 'openai';
 
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type { LDAIAgentConfig, LDAICompletionConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import { OpenAIAgentRunner, ToolRegistry } from './OpenAIAgentRunner';
@@ -13,13 +14,12 @@ let instrumentPromise: Promise<void> | undefined;
  * A single factory shares one `OpenAI` client across all runners it produces
  * so connection pooling and instrumentation are preserved.
  */
-export class OpenAIRunnerFactory {
+export class OpenAIRunnerFactory extends AIProvider {
   private _client: OpenAI;
-  private _logger?: LDLogger;
 
   constructor(logger?: LDLogger) {
+    super(logger);
     this._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-    this._logger = logger;
     // Fire-and-forget: OTel instrumentation is optional and must not block construction.
     OpenAIRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
@@ -27,8 +27,8 @@ export class OpenAIRunnerFactory {
   /**
    * Create a model runner from a completion AI configuration.
    */
-  createModel(config: LDAICompletionConfig): OpenAIModelRunner {
-    return new OpenAIModelRunner(this._client, config, this._logger);
+  async createModel(config: LDAICompletionConfig): Promise<OpenAIModelRunner> {
+    return new OpenAIModelRunner(this._client, config, this.logger);
   }
 
   /**
@@ -41,8 +41,8 @@ export class OpenAIRunnerFactory {
    *   Tool names referenced by the model that are not present here will be
    *   logged and return an empty result.
    */
-  createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): OpenAIAgentRunner {
-    return new OpenAIAgentRunner(this._client, config, tools ?? {}, this._logger);
+  async createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): Promise<OpenAIAgentRunner> {
+    return new OpenAIAgentRunner(this._client, config, tools ?? {}, this.logger);
   }
 
   /**

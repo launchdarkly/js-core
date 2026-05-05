@@ -18,27 +18,27 @@ describe('OpenAIRunnerFactory', () => {
   });
 
   describe('createModel', () => {
-    it('builds an OpenAIModelRunner that shares the factory client', () => {
+    it('builds an OpenAIModelRunner that shares the factory client', async () => {
       const config: LDAICompletionConfig = {
         key: 'completion',
         enabled: true,
         model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
       };
 
-      const runner = factory.createModel(config);
+      const runner = await factory.createModel(config);
 
       expect(runner).toBeInstanceOf(OpenAIModelRunner);
       expect(runner.getClient()).toBe(factory.getClient());
     });
 
-    it('builds a model runner from a minimal config', () => {
-      const runner = factory.createModel({ key: 'completion', enabled: true });
+    it('builds a model runner from a minimal config', async () => {
+      const runner = await factory.createModel({ key: 'completion', enabled: true });
       expect(runner).toBeInstanceOf(OpenAIModelRunner);
     });
   });
 
   describe('createAgent', () => {
-    it('builds an OpenAIAgentRunner without tools when none are configured', () => {
+    it('builds an OpenAIAgentRunner without tools when none are configured', async () => {
       const config: LDAIAgentConfig = {
         key: 'agent',
         enabled: true,
@@ -46,12 +46,12 @@ describe('OpenAIRunnerFactory', () => {
         instructions: 'be helpful',
       };
 
-      const runner = factory.createAgent(config);
+      const runner = await factory.createAgent(config);
 
       expect(runner).toBeInstanceOf(OpenAIAgentRunner);
     });
 
-    it('extracts tool definitions from model.parameters.tools', () => {
+    it('extracts tool definitions from model.parameters.tools', async () => {
       const tools = [{ type: 'function', function: { name: 'lookup' } }];
       const config: LDAIAgentConfig = {
         key: 'agent',
@@ -60,7 +60,7 @@ describe('OpenAIRunnerFactory', () => {
         instructions: 'be helpful',
       };
 
-      const runner = factory.createAgent(config, { lookup: () => 'ok' });
+      const runner = await factory.createAgent(config, { lookup: () => 'ok' });
 
       expect(runner).toBeInstanceOf(OpenAIAgentRunner);
     });
