@@ -1,6 +1,7 @@
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { initChatModel } from 'langchain/chat_models/universal';
 
+import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type {
   LDAIAgentConfig,
   LDAICompletionConfig,
@@ -17,11 +18,9 @@ let instrumentPromise: Promise<void> | undefined;
 /**
  * Factory for creating LangChain runners (chat completion and agent).
  */
-export class LangChainRunnerFactory {
-  private _logger?: LDLogger;
-
+export class LangChainRunnerFactory extends AIProvider {
   constructor(logger?: LDLogger) {
-    this._logger = logger;
+    super(logger);
     LangChainRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
 
@@ -30,7 +29,7 @@ export class LangChainRunnerFactory {
    */
   async createModel(config: LDAICompletionConfig): Promise<LangChainModelRunner> {
     const llm = await LangChainRunnerFactory.createLangChainModel(config);
-    return new LangChainModelRunner(llm, config, this._logger);
+    return new LangChainModelRunner(llm, config, this.logger);
   }
 
   /**
@@ -50,7 +49,7 @@ export class LangChainRunnerFactory {
     };
     const llm = await LangChainRunnerFactory.createLangChainModel(configForModel);
 
-    return new LangChainAgentRunner(llm, config, tools ?? {}, this._logger);
+    return new LangChainAgentRunner(llm, config, tools ?? {}, this.logger);
   }
 
   /**
