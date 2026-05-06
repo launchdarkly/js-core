@@ -1,4 +1,3 @@
-import { LDMessage } from '../config/types';
 import { AgentGraphRunnerResult } from '../graph/types';
 import { RunnerResult } from '../model/types';
 
@@ -11,15 +10,14 @@ import { RunnerResult } from '../model/types';
  */
 export interface Runner {
   /**
-   * Invoke the model with the given input.
+   * Invoke the model with the given input string.
    *
-   * @param input The input to the model. For agents this is a string prompt;
-   *   for model completions and judges this is an array of messages.
+   * @param input The string input to the model.
    * @param outputType Optional JSON schema for structured output. When provided,
    *   the model should return structured data accessible via `RunnerResult.parsed`.
    * @returns Promise resolving to a RunnerResult.
    */
-  run(input: string | LDMessage[], outputType?: Record<string, unknown>): Promise<RunnerResult>;
+  run(input: string, outputType?: Record<string, unknown>): Promise<RunnerResult>;
 }
 
 /**

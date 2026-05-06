@@ -12,8 +12,15 @@ import { LDAIClientImpl } from '../src/LDAIClientImpl';
 import { LDClientMin } from '../src/LDClientMin';
 import { aiSdkLanguage, aiSdkName, aiSdkVersion } from '../src/sdkInfo';
 
-// Mock Judge and RunnerFactory
-jest.mock('../src/api/judge/Judge');
+// Mock Judge and RunnerFactory. Preserve the real `stripLegacyJudgeMessages`
+// helper so the real `_judgeConfig` strip path can be exercised by tests.
+jest.mock('../src/api/judge/Judge', () => {
+  const actual = jest.requireActual('../src/api/judge/Judge');
+  return {
+    ...actual,
+    Judge: jest.fn(),
+  };
+});
 jest.mock('../src/api/providers/RunnerFactory');
 
 const mockLdClient: jest.Mocked<LDClientMin> = {
@@ -184,7 +191,10 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     // Should use first value from evaluationMetricKeys
     expect(result.evaluationMetricKey).toBe('relevance');
     expect(result.createTracker).toBeDefined();
@@ -217,7 +227,10 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     expect(result.evaluationMetricKey).toBe('relevance');
     expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
@@ -250,7 +263,10 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     expect(result.evaluationMetricKey).toBe('helpfulness');
     expect(result.createTracker).toBeDefined();
     expect(result.enabled).toBe(true);
@@ -283,7 +299,10 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     // Empty string should be treated as invalid, so should fall back to first value in evaluationMetricKeys
     expect(result.evaluationMetricKey).toBe('relevance');
     expect(result.createTracker).toBeDefined();
@@ -316,7 +335,10 @@ describe('config evaluation', () => {
     const evaluateSpy = jest.spyOn(client as any, '_evaluate');
     const result = await client.judgeConfig(key, testContext, defaultValue);
 
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', undefined);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
     // Should skip empty and whitespace strings, use first valid value
     expect(result.evaluationMetricKey).toBe('relevance');
     expect(result.createTracker).toBeDefined();
@@ -622,8 +644,44 @@ describe('judgeConfig method', () => {
       key,
       1,
     );
-    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', variables);
-    expect(result).toBe(mockJudgeConfig);
+    expect(evaluateSpy).toHaveBeenCalledWith(key, testContext, defaultValue, 'judge', {
+      ...variables,
+      message_history: '{{message_history}}',
+      response_to_evaluate: '{{response_to_evaluate}}',
+    });
+    // System messages without legacy template variables pass through unchanged.
+    expect(result).toMatchObject(mockJudgeConfig);
+    expect(result.messages).toEqual(mockJudgeConfig.messages);
+    evaluateSpy.mockRestore();
+  });
+
+  it('strips legacy judge template messages from the returned config', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = {
+      enabled: false,
+    };
+
+    const mockJudgeConfig = {
+      enabled: true,
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKey: 'relevance',
+      messages: [
+        { role: 'system' as const, content: 'You are a judge.' },
+        { role: 'assistant' as const, content: '{{message_history}}' },
+        { role: 'user' as const, content: 'Evaluate: {{response_to_evaluate}}' },
+      ],
+      createTracker: () => ({}) as any,
+      toVercelAISDK: jest.fn(),
+    };
+
+    const evaluateSpy = jest.spyOn(client as any, '_evaluate');
+    evaluateSpy.mockResolvedValue(mockJudgeConfig);
+
+    const result = await client.judgeConfig(key, testContext, defaultValue);
+
+    expect(result.messages).toEqual([{ role: 'system', content: 'You are a judge.' }]);
     evaluateSpy.mockRestore();
   });
 });
@@ -679,10 +737,7 @@ describe('createJudge method', () => {
       key,
       1,
     );
-    expect(judgeConfigSpy).toHaveBeenCalledWith(key, testContext, defaultValue, {
-      message_history: '{{message_history}}',
-      response_to_evaluate: '{{response_to_evaluate}}',
-    });
+    expect(judgeConfigSpy).toHaveBeenCalledWith(key, testContext, defaultValue, undefined);
     expect(RunnerFactory.createModel).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
     expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, undefined);
     expect(result).toBe(mockJudge);

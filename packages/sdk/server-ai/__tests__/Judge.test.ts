@@ -2,9 +2,73 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../src/api/config/types';
-import { Judge } from '../src/api/judge/Judge';
+import { Judge, stripLegacyJudgeMessages } from '../src/api/judge/Judge';
 import { RunnerResult } from '../src/api/model/types';
 import { Runner } from '../src/api/providers/Runner';
+
+describe('stripLegacyJudgeMessages', () => {
+  it('strips assistant messages containing {{message_history}}', () => {
+    const messages: LDMessage[] = [
+      { role: 'system', content: 'You are a judge.' },
+      { role: 'assistant', content: 'Here is the history: {{message_history}}' },
+    ];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toHaveLength(1);
+    expect(result[0].role).toBe('system');
+  });
+
+  it('strips user messages containing {{response_to_evaluate}}', () => {
+    const messages: LDMessage[] = [
+      { role: 'system', content: 'You are a judge.' },
+      { role: 'user', content: 'Evaluate: {{response_to_evaluate}}' },
+    ];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toHaveLength(1);
+    expect(result[0].role).toBe('system');
+  });
+
+  it('strips all legacy template messages from a typical legacy config', () => {
+    const messages: LDMessage[] = [
+      { role: 'system', content: 'You are a judge.' },
+      { role: 'assistant', content: '{{message_history}}' },
+      { role: 'user', content: '{{response_to_evaluate}}' },
+    ];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toHaveLength(1);
+    expect(result[0].role).toBe('system');
+  });
+
+  it('does not strip system messages even when they contain template variables', () => {
+    const messages: LDMessage[] = [
+      {
+        role: 'system',
+        content: 'Judge using {{message_history}} and {{response_to_evaluate}}.',
+      },
+    ];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toHaveLength(1);
+    expect(result[0].role).toBe('system');
+  });
+
+  it('leaves non-system messages without template variables untouched', () => {
+    const messages: LDMessage[] = [
+      { role: 'system', content: 'You are a judge.' },
+      { role: 'user', content: 'This is a regular message.' },
+    ];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns an empty array for an empty input', () => {
+    expect(stripLegacyJudgeMessages([])).toEqual([]);
+  });
+
+  it('passes a new-style system-only config through unchanged', () => {
+    const messages: LDMessage[] = [{ role: 'system', content: 'You are a judge.' }];
+    const result = stripLegacyJudgeMessages(messages);
+    expect(result).toEqual(messages);
+  });
+});
 
 describe('Judge', () => {
   let mockRunner: jest.Mocked<Runner>;
@@ -37,14 +101,7 @@ describe('Judge', () => {
     judgeConfig = {
       key: 'test-judge',
       enabled: true,
-      messages: [
-        { role: 'system', content: 'You are a helpful judge that evaluates AI responses.' },
-        {
-          role: 'user',
-          content:
-            'Evaluate and report scores for important metrics: Input: {{message_history}}, Output: {{response_to_evaluate}}',
-        },
-      ],
+      messages: [{ role: 'system', content: 'You are a helpful judge that evaluates AI responses.' }],
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       createTracker: () => mockTracker,
@@ -161,19 +218,31 @@ describe('Judge', () => {
       });
 
       expect(mockRunner.run).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            role: 'system',
-            content: 'You are a helpful judge that evaluates AI responses.',
-          }),
-          expect.objectContaining({
-            role: 'user',
-            content:
-              'Evaluate and report scores for important metrics: Input: What is the capital of France?, Output: Paris is the capital of France.',
-          }),
-        ]),
+        'MESSAGE HISTORY:\nWhat is the capital of France?\n\nRESPONSE TO EVALUATE:\nParis is the capital of France.',
         expect.any(Object), // evaluation schema
       );
+    });
+
+    it('passes a string input to the runner (not a message list)', async () => {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
+          score: 0.85,
+          reasoning: 'Good answer.',
+        },
+        metrics: { success: true },
+      };
+
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
+      await judge.evaluate('What is AI?', 'AI is artificial intelligence.');
+
+      expect(mockRunner.run).toHaveBeenCalledTimes(1);
+      const inputArg = mockRunner.run.mock.calls[0][0];
+      expect(typeof inputArg).toBe('string');
+      expect(inputArg).toContain('MESSAGE HISTORY:\nWhat is AI?');
+      expect(inputArg).toContain('RESPONSE TO EVALUATE:\nAI is artificial intelligence.');
     });
 
     it('returns evaluation result with correct evaluationMetricKey for tracker integration', async () => {
@@ -412,25 +481,29 @@ describe('Judge', () => {
       });
     });
 
-    it('returns error result when messages are missing', async () => {
+    it('proceeds (does not error early) when messages is undefined', async () => {
       const configWithoutMessages: LDAIJudgeConfig = {
         ...judgeConfig,
         messages: undefined,
       };
       const judgeWithoutMessages = new Judge(configWithoutMessages, mockRunner, 1.0, mockLogger);
 
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: {
+          score: 0.7,
+          reasoning: 'Acceptable response.',
+        },
+        metrics: { success: true },
+      };
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
       const result = await judgeWithoutMessages.evaluate('test input', 'test output');
 
-      expect(result).toEqual({
-        success: false,
-        sampled: true,
-        errorMessage: 'Judge configuration must include messages',
-        judgeConfigKey: 'test-judge',
-      });
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Judge configuration must include messages',
-        mockTrackData,
-      );
+      expect(result.sampled).toBe(true);
+      expect(result.success).toBe(true);
+      expect(mockRunner.run).toHaveBeenCalledTimes(1);
     });
 
     it('returns result with success false when parsed is undefined or has no score/reasoning', async () => {
@@ -588,17 +661,7 @@ describe('Judge', () => {
       });
 
       expect(mockRunner.run).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            role: 'system',
-            content: 'You are a helpful judge that evaluates AI responses.',
-          }),
-          expect.objectContaining({
-            role: 'user',
-            content:
-              'Evaluate and report scores for important metrics: Input: What is the capital of France?\r\nParis is the capital of France., Output: Paris is the capital of France.',
-          }),
-        ]),
+        'MESSAGE HISTORY:\nWhat is the capital of France?\r\nParis is the capital of France.\n\nRESPONSE TO EVALUATE:\nParis is the capital of France.',
         expect.any(Object), // evaluation schema
       );
     });
@@ -626,28 +689,19 @@ describe('Judge', () => {
     });
   });
 
-  describe('_constructEvaluationMessages', () => {
+  describe('_buildEvaluationInput', () => {
     let judge: Judge;
 
     beforeEach(() => {
       judge = new Judge(judgeConfig, mockRunner, 1.0, mockLogger);
     });
 
-    it('constructs evaluation messages correctly', () => {
+    it('builds the evaluation string in the expected format', () => {
       // eslint-disable-next-line no-underscore-dangle
-      const constructMessages = (judge as any)._constructEvaluationMessages.bind(judge);
-      const messages = constructMessages('test input', 'test output');
+      const buildInput = (judge as any)._buildEvaluationInput.bind(judge);
+      const input = buildInput('hello', 'world');
 
-      expect(messages).toHaveLength(2);
-      expect(messages[0]).toEqual({
-        role: 'system',
-        content: 'You are a helpful judge that evaluates AI responses.',
-      });
-      expect(messages[1]).toEqual({
-        role: 'user',
-        content:
-          'Evaluate and report scores for important metrics: Input: test input, Output: test output',
-      });
+      expect(input).toBe('MESSAGE HISTORY:\nhello\n\nRESPONSE TO EVALUATE:\nworld');
     });
   });
 

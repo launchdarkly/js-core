@@ -48,7 +48,7 @@ export class OpenAIAgentRunner implements Runner {
 
   async run(input: string, _outputType?: Record<string, unknown>): Promise<RunnerResult> {
     try {
-      const result = await this._agentRun(this._agent, String(input), { maxTurns: MAX_TURNS });
+      const result = await this._agentRun(this._agent, input, { maxTurns: MAX_TURNS });
 
       const toolCalls = getToolCallsFromRunItems(result.newItems ?? []).reduce(
         (acc: string[], fnName: string) => {
