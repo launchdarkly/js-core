@@ -18,8 +18,11 @@ let instrumentPromise: Promise<void> | undefined;
  * Factory for creating LangChain runners (chat completion and agent).
  */
 export class LangChainRunnerFactory extends AIProvider {
+  private _logger?: LDLogger;
+
   constructor(logger?: LDLogger) {
-    super(logger);
+    super();
+    this._logger = logger;
     // eslint-disable-next-line no-underscore-dangle
     LangChainRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
@@ -29,7 +32,7 @@ export class LangChainRunnerFactory extends AIProvider {
    */
   async createModel(config: LDAICompletionConfig): Promise<LangChainModelRunner> {
     const llm = await createLangChainModel(config);
-    return new LangChainModelRunner(llm, config, this.logger);
+    return new LangChainModelRunner(llm, config, this._logger);
   }
 
   /**
@@ -51,7 +54,7 @@ export class LangChainRunnerFactory extends AIProvider {
     };
     const llm = await createLangChainModel(configForModel);
 
-    const lcTools = buildStructuredTools(toolDefinitions, tools ?? {}, this.logger);
+    const lcTools = buildStructuredTools(toolDefinitions, tools ?? {}, this._logger);
     const instructions = config.instructions ?? '';
 
     const agent = createAgent({
@@ -60,7 +63,7 @@ export class LangChainRunnerFactory extends AIProvider {
       systemPrompt: instructions || undefined,
     });
 
-    return new LangChainAgentRunner(agent as any, this.logger);
+    return new LangChainAgentRunner(agent as any, this._logger);
   }
 
   /**

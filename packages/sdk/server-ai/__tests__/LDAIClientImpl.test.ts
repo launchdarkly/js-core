@@ -634,7 +634,7 @@ describe('createJudge method', () => {
 
   beforeEach(() => {
     mockProvider = {
-      invokeStructuredModel: jest.fn(),
+      run: jest.fn(),
     };
 
     mockJudge = {

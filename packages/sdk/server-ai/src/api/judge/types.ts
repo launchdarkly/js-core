@@ -1,21 +1,3 @@
-import { LDAIMetrics } from '../metrics/LDAIMetrics';
-
-/**
- * Structured response from AI models.
- */
-export interface StructuredResponse {
-  /** The structured data returned by the model */
-  data: Record<string, unknown>;
-
-  /** The raw response from the model */
-  rawResponse: string;
-
-  /**
-   * Metrics information including success status and token usage.
-   */
-  metrics: LDAIMetrics;
-}
-
 /**
  * Result from a judge evaluation containing score, reasoning, and metadata.
  */

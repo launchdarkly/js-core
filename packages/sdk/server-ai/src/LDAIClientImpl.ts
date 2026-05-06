@@ -221,18 +221,6 @@ export class LDAIClientImpl implements LDAIClient {
     );
   }
 
-  /**
-   * @deprecated Use `completionConfig` instead. This method will be removed in a future version.
-   */
-  async config(
-    key: string,
-    context: LDContext,
-    defaultValue?: LDAICompletionConfigDefault,
-    variables?: Record<string, unknown>,
-  ): Promise<LDAICompletionConfig> {
-    return this.completionConfig(key, context, defaultValue, variables);
-  }
-
   private async _judgeConfig(
     key: string,
     context: LDContext,
@@ -290,18 +278,6 @@ export class LDAIClientImpl implements LDAIClient {
     );
   }
 
-  /**
-   * @deprecated Use `agentConfig` instead. This method will be removed in a future version.
-   */
-  async agent(
-    key: string,
-    context: LDContext,
-    defaultValue?: LDAIAgentConfigDefault,
-    variables?: Record<string, unknown>,
-  ): Promise<LDAIAgentConfig> {
-    return this.agentConfig(key, context, defaultValue, variables);
-  }
-
   async agentConfigs<const T extends readonly LDAIAgentRequestConfig[]>(
     agentConfigs: T,
     context: LDContext,
@@ -328,29 +304,6 @@ export class LDAIClientImpl implements LDAIClient {
     );
 
     return agents;
-  }
-
-  /**
-   * @deprecated Use `agentConfigs` instead. This method will be removed in a future version.
-   */
-  async agents<const T extends readonly LDAIAgentRequestConfig[]>(
-    agentConfigs: T,
-    context: LDContext,
-  ): Promise<Record<T[number]['key'], LDAIAgentConfig>> {
-    return this.agentConfigs(agentConfigs, context);
-  }
-
-  /**
-   * @deprecated Use `createModel` instead. This method will be removed in a future version.
-   */
-  async createChat(
-    key: string,
-    context: LDContext,
-    defaultValue?: LDAICompletionConfigDefault,
-    variables?: Record<string, unknown>,
-    defaultAiProvider?: SupportedAIProvider,
-  ): Promise<ManagedModel | undefined> {
-    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   async createJudge(
@@ -481,19 +434,6 @@ export class LDAIClientImpl implements LDAIClient {
     }
 
     return new ManagedAgent(config, runner, this._logger);
-  }
-
-  /**
-   * @deprecated Use `createModel` instead. This method will be removed in a future version.
-   */
-  async initChat(
-    key: string,
-    context: LDContext,
-    defaultValue?: LDAICompletionConfigDefault,
-    variables?: Record<string, unknown>,
-    defaultAiProvider?: SupportedAIProvider,
-  ): Promise<ManagedModel | undefined> {
-    return this.createModel(key, context, defaultValue, variables, defaultAiProvider);
   }
 
   createTracker(token: string, context: LDContext): LDAIConfigTracker {

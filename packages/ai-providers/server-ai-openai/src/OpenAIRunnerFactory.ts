@@ -17,9 +17,11 @@ let instrumentPromise: Promise<void> | undefined;
  */
 export class OpenAIRunnerFactory extends AIProvider {
   private _client: OpenAI;
+  private _logger?: LDLogger;
 
   constructor(logger?: LDLogger) {
-    super(logger);
+    super();
+    this._logger = logger;
     this._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     // Fire-and-forget: OTel instrumentation is optional and must not block construction.
     // eslint-disable-next-line no-underscore-dangle
@@ -30,7 +32,7 @@ export class OpenAIRunnerFactory extends AIProvider {
    * Create a model runner from a completion AI configuration.
    */
   async createModel(config: LDAICompletionConfig): Promise<OpenAIModelRunner> {
-    return new OpenAIModelRunner(this._client, config, this.logger);
+    return new OpenAIModelRunner(this._client, config, this._logger);
   }
 
   /**
@@ -67,7 +69,12 @@ export class OpenAIRunnerFactory extends AIProvider {
     const parameters = mapParameterKeys({ ...(config.model?.parameters ?? {}) });
     delete parameters.tools;
 
-    const { agentTools, toolNameMap } = buildAgentTools(toolHelper, configTools, registry, this.logger);
+    const { agentTools, toolNameMap } = buildAgentTools(
+      toolHelper,
+      configTools,
+      registry,
+      this._logger,
+    );
     const agent = new Agent({
       name: 'ldai-agent',
       instructions: config.instructions || undefined,
@@ -76,7 +83,7 @@ export class OpenAIRunnerFactory extends AIProvider {
       modelSettings: parameters,
     });
 
-    return new OpenAIAgentRunner(agent, agentRun, toolNameMap, this.logger);
+    return new OpenAIAgentRunner(agent, agentRun, toolNameMap, this._logger);
   }
 
   /**
