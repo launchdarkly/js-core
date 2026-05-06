@@ -8,7 +8,7 @@ import { OpenAIProvider } from '@launchdarkly/server-sdk-ai-openai';
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
-// Snipped whatever start
+
 // Initialize OpenAI client
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // This is the default and can be omitted
