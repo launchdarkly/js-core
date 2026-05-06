@@ -14,7 +14,7 @@ We encourage pull requests and other contributions from the community. Before su
 
 ### Prerequisites
 
-A node environment of version 16 and npm or yarn are required to develop in this repository.
+A node environment of version 20 and npm or yarn are required to develop in this repository.
 
 This monorepo may contain projects that are not suitable for execution using node, and those
 projects will have specific environment prerequisites.
