@@ -1,5 +1,3 @@
-import { OpenAI } from 'openai';
-
 import type {
   LDAIAgentConfig,
   LDAIMetrics,
@@ -9,41 +7,74 @@ import type {
   RunnerResult,
 } from '@launchdarkly/server-sdk-ai';
 
-/**
- * Tool registry mapping tool names to their callable implementations.
- * The callable receives the parsed JSON arguments from the model and returns
- * a string (or value coercible to string) representing the tool result.
- */
-export type ToolRegistry = Record<string, (args: any) => unknown | Promise<unknown>>;
+import {
+  getAIUsageFromAgentResult,
+  getToolCallsFromRunItems,
+  isAgentToolInstance,
+  registryValueToAgentTool,
+} from './OpenAIHelper';
 
-const MAX_ITERATIONS = 25;
+/**
+ * Tool registry mapping tool names to their callable implementations or
+ * pre-built openai-agents tool instances (e.g. `webSearchTool()`).
+ */
+export type ToolRegistry = Record<string, ((...args: any[]) => unknown | Promise<unknown>) | unknown>;
+
+const MAX_TURNS = 25;
+
+const KNOWN_MODEL_SETTINGS = new Set([
+  'temperature',
+  'topP',
+  'top_p',
+  'maxTokens',
+  'max_tokens',
+  'frequencyPenalty',
+  'frequency_penalty',
+  'presencePenalty',
+  'presence_penalty',
+]);
+
+/**
+ * Map from snake_case parameter names (LD config) to camelCase (Agents SDK ModelSettings).
+ */
+const PARAM_KEY_MAP: Record<string, string> = {
+  top_p: 'topP',
+  max_tokens: 'maxTokens',
+  frequency_penalty: 'frequencyPenalty',
+  presence_penalty: 'presencePenalty',
+};
 
 /**
  * Runner implementation for a single OpenAI agent.
  *
- * Executes a tool-calling loop using the OpenAI Chat Completions API. Tool
- * definitions come from the LD AI config; tool implementations come from the
- * caller-supplied {@link ToolRegistry}. Returned by
- * {@link OpenAIRunnerFactory.createAgent}.
+ * Executes a single agent using the OpenAI Agents SDK (`@openai/agents`).
+ * Tool calling and the agentic loop are handled internally by the SDK's
+ * `run()` function. Returned by {@link OpenAIRunnerFactory.createAgent}.
+ *
+ * The Agent is constructed once (lazily on first `run()` call) and reused
+ * for subsequent invocations. The dynamic import of `@openai/agents` is
+ * also cached so the cost is paid only once.
+ *
+ * Requires `@openai/agents` to be installed.
  */
 export class OpenAIAgentRunner implements Runner {
-  private _client: OpenAI;
-  private _config: LDAIAgentConfig;
   private _modelName: string;
   private _parameters: Record<string, unknown>;
   private _instructions: string;
   private _toolDefinitions: any[];
   private _tools: ToolRegistry;
   private _logger?: LDLogger;
+  private _toolNameMap: Record<string, string> = {};
+
+  private _agent: any;
+  private _agentRun: any;
+  private _initPromise: Promise<boolean> | undefined;
 
   constructor(
-    client: OpenAI,
     config: LDAIAgentConfig,
     tools: ToolRegistry,
     logger?: LDLogger,
   ) {
-    this._client = client;
-    this._config = config;
     this._modelName = config.model?.name ?? '';
     const parameters: Record<string, unknown> = { ...(config.model?.parameters ?? {}) };
     this._toolDefinitions = (parameters.tools as any[] | undefined) ?? [];
@@ -55,86 +86,83 @@ export class OpenAIAgentRunner implements Runner {
   }
 
   /**
-   * Run the agent with the given prompt.
+   * Lazily import `@openai/agents` and construct the Agent. The result is
+   * cached so the Agent instance is reused across all `run()` calls.
    *
-   * @param input The user prompt to send to the agent.
-   * @param _outputType Reserved for future structured output support; currently
-   *   ignored by the agent runner.
+   * @returns `true` if initialisation succeeded, `false` if the SDK is unavailable.
    */
-  async run(input: string, _outputType?: Record<string, unknown>): Promise<RunnerResult> {
-    const messages: any[] = [];
-    if (this._instructions) {
-      messages.push({ role: 'system', content: this._instructions });
+  private _ensureAgent(): Promise<boolean> {
+    if (this._initPromise) {
+      return this._initPromise;
     }
-    messages.push({ role: 'user', content: input });
+    this._initPromise = this._init();
+    return this._initPromise;
+  }
 
-    const toolCalls: string[] = [];
-    const totalUsage: LDTokenUsage = { total: 0, input: 0, output: 0 };
-    let response: any;
-    let completedNormally = false;
+  private async _init(): Promise<boolean> {
+    let Agent: any;
+    let agentRun: any;
+    let toolHelper: any;
+    try {
+      const agents = await import('@openai/agents');
+      Agent = agents.Agent;
+      agentRun = agents.run;
+      toolHelper = agents.tool;
+    } catch (e) {
+      this._logger?.warn(
+        `@openai/agents is required for OpenAIAgentRunner.\n` +
+          `Install it with: npm install @openai/agents openai zod\n`,
+        e,
+      );
+      return false;
+    }
+
+    const agentTools = this._buildAgentTools(toolHelper);
+    const modelSettings = this._buildModelSettings();
+
+    this._agent = new Agent({
+      name: 'ldai-agent',
+      instructions: this._instructions || undefined,
+      model: this._modelName,
+      tools: agentTools,
+      modelSettings,
+    });
+    this._agentRun = agentRun;
+    return true;
+  }
+
+  async run(input: string, _outputType?: Record<string, unknown>): Promise<RunnerResult> {
+    const ready = await this._ensureAgent();
+    if (!ready) {
+      return { content: '', metrics: { success: false } };
+    }
 
     try {
-      for (let i = 0; i < MAX_ITERATIONS; i += 1) {
-        const params: any = {
-          ...this._parameters,
-          model: this._modelName,
-          messages,
-        };
-        if (this._toolDefinitions.length > 0) {
-          params.tools = this._toolDefinitions;
-        }
+      const result = await this._agentRun(this._agent, String(input), { maxTurns: MAX_TURNS });
 
-        // eslint-disable-next-line no-await-in-loop
-        response = await this._client.chat.completions.create(params);
-
-        if (response?.usage) {
-          totalUsage.total += response.usage.total_tokens || 0;
-          totalUsage.input += response.usage.prompt_tokens || 0;
-          totalUsage.output += response.usage.completion_tokens || 0;
-        }
-
-        const choice = response?.choices?.[0];
-        const message = choice?.message;
-        if (!message) {
-          break;
-        }
-
-        const requestedToolCalls = message.tool_calls ?? [];
-        if (requestedToolCalls.length === 0) {
-          completedNormally = true;
-          break;
-        }
-
-        messages.push(message);
-
-        // eslint-disable-next-line no-restricted-syntax
-        for (const tc of requestedToolCalls) {
-          const toolName = tc?.function?.name;
-          if (toolName) {
-            toolCalls.push(toolName);
+      const toolCalls = getToolCallsFromRunItems(result.newItems ?? []).reduce(
+        (acc: string[], fnName: string) => {
+          const ldName = this._toolNameMap[fnName];
+          if (ldName) {
+            acc.push(ldName);
           }
-          // eslint-disable-next-line no-await-in-loop
-          const toolResult = await this._executeTool(toolName, tc?.function?.arguments);
-          messages.push({
-            role: 'tool',
-            tool_call_id: tc.id,
-            content: toolResult,
-          });
-        }
-      }
+          return acc;
+        },
+        [],
+      );
 
-      if (!completedNormally) {
-        this._logger?.warn(`OpenAI agent did not complete normally after ${MAX_ITERATIONS} iterations.`);
-      }
-
-      const finalContent = response?.choices?.[0]?.message?.content || '';
+      const usage: LDTokenUsage | undefined = getAIUsageFromAgentResult(result);
       const metrics: LDAIMetrics = {
-        success: completedNormally,
-        usage: totalUsage,
+        success: true,
+        usage,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
 
-      return { content: finalContent, metrics, raw: response };
+      return {
+        content: String(result.finalOutput ?? ''),
+        metrics,
+        raw: result,
+      };
     } catch (error) {
       this._logger?.warn('OpenAI agent run failed:', error);
       return {
@@ -145,41 +173,55 @@ export class OpenAIAgentRunner implements Runner {
   }
 
   /**
-   * Get the underlying OpenAI client instance.
+   * Build tool instances from LD tool definitions and the caller's registry.
+   *
+   * Also populates `_toolNameMap` so observed tool-call names from the
+   * runtime can be translated back to their LD config keys for metric
+   * reporting.
    */
-  getClient(): OpenAI {
-    return this._client;
-  }
+  private _buildAgentTools(toolHelper: any): any[] {
+    const tools: any[] = [];
+    this._toolNameMap = {};
 
-  private async _executeTool(
-    name: string | undefined,
-    argsJson: string | undefined,
-  ): Promise<string> {
-    if (!name) {
-      return '';
-    }
-    const fn = this._tools[name];
-    if (!fn) {
+    for (const td of this._toolDefinitions) {
+      if (!td || typeof td !== 'object') {
+        continue;
+      }
+      const funcDef = td.function ?? td;
+      const name: string = funcDef?.name ?? '';
+      if (!name) {
+        continue;
+      }
+
+      const toolFn = this._tools[name];
+      if (toolFn !== undefined) {
+        if (isAgentToolInstance(toolFn)) {
+          const instanceName = (toolFn as any).name ?? name;
+          this._toolNameMap[instanceName] = name;
+        } else {
+          const fnName = (toolFn as any).name ?? name;
+          this._toolNameMap[fnName] = name;
+        }
+        tools.push(registryValueToAgentTool(toolFn, toolHelper, td));
+        continue;
+      }
+
       this._logger?.warn(
         `Tool '${name}' is defined in the AI config but was not found in ` +
-          `the tool registry; returning empty result.`,
+          `the tool registry; skipping.`,
       );
-      return '';
     }
-    let args: any = {};
-    if (argsJson) {
-      try {
-        args = JSON.parse(argsJson);
-      } catch (error) {
-        this._logger?.warn(`Failed to parse tool arguments for '${name}':`, error);
+    return tools;
+  }
+
+  private _buildModelSettings(): Record<string, unknown> | undefined {
+    const settings: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(this._parameters)) {
+      if (KNOWN_MODEL_SETTINGS.has(key)) {
+        const mappedKey = PARAM_KEY_MAP[key] ?? key;
+        settings[mappedKey] = value;
       }
     }
-    try {
-      const result = await fn(args);
-      return typeof result === 'string' ? result : (JSON.stringify(result) ?? '');
-    } catch (error) {
-      this._logger?.warn(`Tool '${name}' execution failed:`, error);
-      return '';
-    }
+    return Object.keys(settings).length > 0 ? settings : undefined;
   }
 }

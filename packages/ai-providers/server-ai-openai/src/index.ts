@@ -5,5 +5,9 @@ export {
   convertMessagesToOpenAI,
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
+  getAIUsageFromAgentResult,
+  getToolCallsFromRunItems,
+  isAgentToolInstance,
+  registryValueToAgentTool,
 } from './OpenAIHelper';
 export type { OpenAIChatMessage } from './OpenAIHelper';

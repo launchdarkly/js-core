@@ -34,15 +34,18 @@ export class OpenAIRunnerFactory extends AIProvider {
   /**
    * Create an agent runner from an agent AI configuration.
    *
+   * The returned runner uses the OpenAI Agents SDK (`@openai/agents`) which
+   * manages its own OpenAI client internally.
+   *
    * @param config The LaunchDarkly AI agent configuration. Tool definitions
    *   are sourced from `config.model.parameters.tools` (consistent with the
    *   completion path).
-   * @param tools Registry mapping tool names to their callable implementations.
-   *   Tool names referenced by the model that are not present here will be
-   *   logged and return an empty result.
+   * @param tools Registry mapping tool names to their callable implementations
+   *   or pre-built openai-agents tool instances. Tool names referenced by the
+   *   model that are not present here will be logged and skipped.
    */
   async createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): Promise<OpenAIAgentRunner> {
-    return new OpenAIAgentRunner(this._client, config, tools ?? {}, this.logger);
+    return new OpenAIAgentRunner(config, tools ?? {}, this.logger);
   }
 
   /**
