@@ -1,8 +1,8 @@
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
-import { DynamicStructuredTool } from '@langchain/core/tools';
+import { tool } from '@langchain/core/tools';
+import type { StructuredToolInterface } from '@langchain/core/tools';
 import { initChatModel } from 'langchain/chat_models/universal';
-import { z } from 'zod';
 
 import type {
   LDAIConfig,
@@ -84,31 +84,19 @@ export function getAIMetricsFromResponse(response: AIMessage): LDAIMetrics {
 }
 
 /**
- * Build a JSON Schema-style Zod object from an LD tool definition's parameters.
- * Falls back to a permissive passthrough schema when no parameters are defined.
+ * Extract JSON Schema from an LD tool definition's parameters.
+ * Falls back to an open object schema when no parameters are defined.
  */
-function buildInputSchema(toolDef: Record<string, any>): z.ZodObject<any> {
+function _getInputSchema(toolDef: Record<string, any>): Record<string, unknown> {
   const params = toolDef.function?.parameters ?? toolDef.parameters;
-  if (!params || typeof params !== 'object' || !params.properties) {
-    return z.object({}).passthrough();
+  if (params && typeof params === 'object' && params.properties) {
+    return params;
   }
-
-  const shape: Record<string, z.ZodTypeAny> = {};
-  const required: Set<string> = new Set(params.required ?? []);
-
-  for (const [key, _prop] of Object.entries(params.properties)) {
-    let field: z.ZodTypeAny = z.any();
-    if (!required.has(key)) {
-      field = field.optional();
-    }
-    shape[key] = field;
-  }
-
-  return z.object(shape).passthrough();
+  return { type: 'object', properties: {}, additionalProperties: true };
 }
 
 /**
- * Build LangChain DynamicStructuredTool instances from LD tool definitions
+ * Build LangChain StructuredTool instances from LD tool definitions
  * and a ToolRegistry. Tools missing from the registry are skipped with a
  * warning. Non-function built-in tools are also skipped.
  */
@@ -116,8 +104,8 @@ export function buildStructuredTools(
   toolDefinitions: any[],
   tools: ToolRegistry,
   logger?: LDLogger,
-): DynamicStructuredTool[] {
-  const result: DynamicStructuredTool[] = [];
+): StructuredToolInterface[] {
+  const result: StructuredToolInterface[] = [];
 
   for (const td of toolDefinitions) {
     if (typeof td !== 'object' || td === null) {
@@ -153,15 +141,17 @@ export function buildStructuredTools(
     const description = rawDesc.trim() || `Tool ${name}`;
 
     result.push(
-      new DynamicStructuredTool({
-        name,
-        description,
-        schema: buildInputSchema(td),
-        func: async (args: any) => {
+      tool(
+        async (args: any) => {
           const res = await fn(args ?? {});
           return typeof res === 'string' ? res : JSON.stringify(res);
         },
-      }),
+        {
+          name,
+          description,
+          schema: _getInputSchema(td) as any,
+        },
+      ),
     );
   }
 

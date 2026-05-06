@@ -109,7 +109,7 @@ describe('buildStructuredTools', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('builds a DynamicStructuredTool from a valid tool definition', () => {
+  it('builds a StructuredTool from a valid tool definition', () => {
     const toolDefs = [{ name: 'lookup', description: 'looks up a value' }];
     const registry = { lookup: jest.fn().mockReturnValue('result') };
 
