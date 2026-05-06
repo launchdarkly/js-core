@@ -15,7 +15,7 @@ alwaysApply: true
   - Tooling packages (development tools)
 
 ## Build Requirements
-- Node environment version 16 required, this is a minimum.
+- Node environment version 20 required, this is a minimum.
 - yarn required
 - Some projects may have specific environment prerequisites
 
