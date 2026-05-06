@@ -15,6 +15,7 @@ const baseConfig: LDAICompletionConfig = {
   key: 'completion',
   enabled: true,
   model: { name: 'fake' },
+  createTracker: jest.fn(),
 };
 
 describe('LangChainModelRunner', () => {

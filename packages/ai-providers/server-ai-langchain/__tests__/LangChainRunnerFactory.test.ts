@@ -37,6 +37,7 @@ describe('LangChainRunnerFactory', () => {
       enabled: true,
       provider: { name: 'openai' },
       model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
+      createTracker: jest.fn(),
     };
 
     const runner = await factory.createModel(config);
@@ -54,6 +55,7 @@ describe('LangChainRunnerFactory', () => {
       enabled: true,
       provider: { name: 'gemini' },
       model: { name: 'gemini-2.0' },
+      createTracker: jest.fn(),
     });
 
     expect(mockInitChatModel).toHaveBeenCalledWith('gemini-2.0', {
@@ -69,6 +71,7 @@ describe('LangChainRunnerFactory', () => {
       provider: { name: 'openai' },
       model: { name: 'gpt-4o', parameters: { temperature: 0.7, tools } },
       instructions: 'be helpful',
+      createTracker: jest.fn(),
     };
 
     const runner = await factory.createAgent(config, { lookup: () => 'ok' });
@@ -94,6 +97,7 @@ describe('LangChainRunnerFactory', () => {
       provider: { name: 'openai' },
       model: { name: 'gpt-4o' },
       instructions: '',
+      createTracker: jest.fn(),
     };
 
     await factory.createAgent(config);

@@ -21,6 +21,7 @@ const baseConfig: LDAICompletionConfig = {
   key: 'completion',
   enabled: true,
   model: { name: 'mock' },
+  createTracker: jest.fn(),
 };
 
 describe('VercelModelRunner', () => {

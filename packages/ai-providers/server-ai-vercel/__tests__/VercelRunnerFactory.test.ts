@@ -15,6 +15,7 @@ describe('VercelRunnerFactory', () => {
         enabled: true,
         provider: { name: 'openai' },
         model: { name: 'gpt-4o', parameters: { max_tokens: 100, temperature: 0.7 } },
+        createTracker: jest.fn(),
       });
 
       expect(runner).toBeInstanceOf(VercelModelRunner);
@@ -62,6 +63,7 @@ describe('VercelRunnerFactory', () => {
           enabled: true,
           provider: { name: 'unsupported' },
           model: { name: 'm' },
+          createTracker: jest.fn(),
         }),
       ).rejects.toThrow('Unsupported Vercel AI provider: unsupported');
     });
