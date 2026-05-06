@@ -17,5 +17,5 @@ The service will listen on http://localhost:8000. You can then run the test harn
 
 Suppression files for tests that are not yet supported or are known to differ:
 
-- `testharness-suppressions.txt` – used by the default contract test run
-- `testharness-suppressions-fdv2.txt` – used when running the harness from the feat/fdv2 branch
+- `testharness-suppressions.txt` – used when running the v2 test harness
+- `testharness-suppressions-fdv2.txt` – used when running the v3 test harness (FDv2 protocol)
