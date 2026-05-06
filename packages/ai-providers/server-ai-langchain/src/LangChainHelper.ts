@@ -40,7 +40,8 @@ export function convertMessagesToLangChain(
 export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
   const modelName = aiConfig.model?.name || '';
   const provider = aiConfig.provider?.name || '';
-  const parameters = aiConfig.model?.parameters || {};
+  const parameters = { ...(aiConfig.model?.parameters || {}) };
+  delete parameters.tools;
 
   return initChatModel(modelName, {
     ...parameters,
