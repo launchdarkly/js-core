@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.18.7](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.6...js-server-sdk-common-v2.18.7) (2026-05-06)
+
+
+### Bug Fixes
+
+* **server-node:** honor x-ld-fd-fallback directive in FDv2 initializer phase ([#1342](https://github.com/launchdarkly/js-core/issues/1342)) ([a80eaca](https://github.com/launchdarkly/js-core/commit/a80eacaafa6174e5f1b4fe21ba11534fdf1f92a8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.3 to 2.24.4
+
 ## [2.18.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.5...js-server-sdk-common-v2.18.6) (2026-04-30)
 
 

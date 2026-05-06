@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/browser",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "description": "LaunchDarkly SDK for JavaScript in Browsers with Observability",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/combined-browser",
   "repository": {
@@ -44,7 +44,7 @@
     "check": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.6.4",
+    "@launchdarkly/js-client-sdk": "4.6.5",
     "@launchdarkly/observability": "0.2.0",
     "@launchdarkly/session-replay": "0.2.0"
   },

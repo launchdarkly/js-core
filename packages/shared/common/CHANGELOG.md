@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.24.4](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.3...js-sdk-common-v2.24.4) (2026-05-06)
+
+
+### Bug Fixes
+
+* **server-node:** honor x-ld-fd-fallback directive in FDv2 initializer phase ([#1342](https://github.com/launchdarkly/js-core/issues/1342)) ([a80eaca](https://github.com/launchdarkly/js-core/commit/a80eacaafa6174e5f1b4fe21ba11534fdf1f92a8))
+
 ## [2.24.3](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.2...js-sdk-common-v2.24.3) (2026-04-30)
 
 

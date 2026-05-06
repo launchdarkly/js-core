@@ -1,7 +1,7 @@
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
 const name = '@launchdarkly/fastly-server-sdk';
-const version = '0.2.12'; // x-release-please-version
+const version = '0.2.13'; // x-release-please-version
 
 class FastlyPlatformInfo implements Info {
   platformData(): PlatformData {

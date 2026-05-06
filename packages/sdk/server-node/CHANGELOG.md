@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.10.14](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.13...node-server-sdk-v9.10.14) (2026-05-06)
+
+
+### Bug Fixes
+
+* **server-node:** honor x-ld-fd-fallback directive in FDv2 initializer phase ([#1342](https://github.com/launchdarkly/js-core/issues/1342)) ([a80eaca](https://github.com/launchdarkly/js-core/commit/a80eacaafa6174e5f1b4fe21ba11534fdf1f92a8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.6 to 2.18.7
+
 ## [9.10.13](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.12...node-server-sdk-v9.10.13) (2026-04-30)
 
 
