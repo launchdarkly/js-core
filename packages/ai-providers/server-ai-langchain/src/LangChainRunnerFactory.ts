@@ -1,8 +1,15 @@
+import { createAgent } from 'langchain';
+
 import { AIProvider } from '@launchdarkly/server-sdk-ai';
-import type { LDAIAgentConfig, LDAICompletionConfig, LDAIConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
+import type {
+  LDAIAgentConfig,
+  LDAICompletionConfig,
+  LDAIConfig,
+  LDLogger,
+} from '@launchdarkly/server-sdk-ai';
 
 import { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
-import { createLangChainModel } from './LangChainHelper';
+import { buildStructuredTools, createLangChainModel } from './LangChainHelper';
 import { LangChainModelRunner } from './LangChainModelRunner';
 
 let instrumentPromise: Promise<void> | undefined;
@@ -27,12 +34,14 @@ export class LangChainRunnerFactory extends AIProvider {
   /**
    * Create an agent runner from an agent AI configuration.
    *
-   * Tool definitions are sourced from `config.model.parameters.tools`. Tool
-   * names referenced by the model that are not present in `tools` will be
-   * logged and return an empty result.
+   * Uses LangChain's `createAgent` to build a compiled agent graph that
+   * handles the tool-calling loop internally. Tool definitions are sourced
+   * from `config.model.parameters.tools` and matched against the supplied
+   * `tools` registry.
    */
   async createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): Promise<LangChainAgentRunner> {
     const parameters = { ...(config.model?.parameters || {}) };
+    const toolDefinitions = (parameters.tools as any[] | undefined) ?? [];
     delete parameters.tools;
 
     const configForModel: LDAIConfig = {
@@ -41,7 +50,16 @@ export class LangChainRunnerFactory extends AIProvider {
     };
     const llm = await createLangChainModel(configForModel);
 
-    return new LangChainAgentRunner(llm, config, tools ?? {}, this.logger);
+    const lcTools = buildStructuredTools(toolDefinitions, tools ?? {}, this.logger);
+    const instructions = config.instructions ?? '';
+
+    const agent = createAgent({
+      model: llm,
+      tools: lcTools.length > 0 ? lcTools : undefined,
+      systemPrompt: instructions || undefined,
+    });
+
+    return new LangChainAgentRunner(agent as any, this.logger);
   }
 
   /**

@@ -1,8 +1,18 @@
-import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
+import { DynamicStructuredTool } from '@langchain/core/tools';
 import { initChatModel } from 'langchain/chat_models/universal';
+import { z } from 'zod';
 
-import type { LDAIConfig, LDAIMetrics, LDMessage, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
+import type {
+  LDAIConfig,
+  LDAIMetrics,
+  LDLogger,
+  LDMessage,
+  LDTokenUsage,
+} from '@launchdarkly/server-sdk-ai';
+
+import type { ToolRegistry } from './LangChainAgentRunner';
 
 /**
  * Convert LaunchDarkly messages to LangChain message instances.
@@ -71,4 +81,145 @@ export function getAIMetricsFromResponse(response: AIMessage): LDAIMetrics {
     success: true,
     usage: getAIUsageFromResponse(response),
   };
+}
+
+/**
+ * Build a JSON Schema-style Zod object from an LD tool definition's parameters.
+ * Falls back to a permissive passthrough schema when no parameters are defined.
+ */
+function buildInputSchema(toolDef: Record<string, any>): z.ZodObject<any> {
+  const params = toolDef.function?.parameters ?? toolDef.parameters;
+  if (!params || typeof params !== 'object' || !params.properties) {
+    return z.object({}).passthrough();
+  }
+
+  const shape: Record<string, z.ZodTypeAny> = {};
+  const required: Set<string> = new Set(params.required ?? []);
+
+  for (const [key, _prop] of Object.entries(params.properties)) {
+    let field: z.ZodTypeAny = z.any();
+    if (!required.has(key)) {
+      field = field.optional();
+    }
+    shape[key] = field;
+  }
+
+  return z.object(shape).passthrough();
+}
+
+/**
+ * Build LangChain DynamicStructuredTool instances from LD tool definitions
+ * and a ToolRegistry. Tools missing from the registry are skipped with a
+ * warning. Non-function built-in tools are also skipped.
+ */
+export function buildStructuredTools(
+  toolDefinitions: any[],
+  tools: ToolRegistry,
+  logger?: LDLogger,
+): DynamicStructuredTool[] {
+  const result: DynamicStructuredTool[] = [];
+
+  for (const td of toolDefinitions) {
+    if (typeof td !== 'object' || td === null) {
+      continue;
+    }
+
+    const toolType: string | undefined = td.type;
+    if (toolType && toolType !== 'function') {
+      logger?.warn(
+        `Built-in tool '${toolType}' is not reliably supported via LangChain and will be skipped. ` +
+          'Use a provider-specific runner to use built-in provider tools.',
+      );
+      continue;
+    }
+
+    const name: string | undefined = td.name ?? td.function?.name;
+    if (!name) {
+      continue;
+    }
+
+    const fn = tools[name];
+    if (!fn) {
+      logger?.warn(
+        `Tool '${name}' is defined in the AI config but was not found in ` +
+          `the tool registry; skipping.`,
+      );
+      continue;
+    }
+
+    const rawDesc: string =
+      (typeof td.description === 'string' ? td.description : '') ||
+      (typeof td.function?.description === 'string' ? td.function.description : '');
+    const description = rawDesc.trim() || `Tool ${name}`;
+
+    result.push(
+      new DynamicStructuredTool({
+        name,
+        description,
+        schema: buildInputSchema(td),
+        func: async (args: any) => {
+          const res = await fn(args ?? {});
+          return typeof res === 'string' ? res : JSON.stringify(res);
+        },
+      }),
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Extract tool-call names from a LangChain agent message list.
+ */
+export function extractToolCalls(messages: BaseMessage[]): string[] {
+  const toolCalls: string[] = [];
+  for (const msg of messages ?? []) {
+    const msgToolCalls = (msg as AIMessage).tool_calls;
+    if (!msgToolCalls) {
+      continue;
+    }
+    for (const tc of msgToolCalls) {
+      if (tc.name) {
+        toolCalls.push(tc.name);
+      }
+    }
+  }
+  return toolCalls;
+}
+
+/**
+ * Extract the string content of the last message in a list.
+ */
+export function extractLastMessageContent(messages: BaseMessage[]): string {
+  if (messages && messages.length > 0) {
+    const last = messages[messages.length - 1];
+    if (typeof last.content === 'string') {
+      return last.content;
+    }
+  }
+  return '';
+}
+
+/**
+ * Sum token usage across all messages in a LangChain agent result.
+ */
+export function sumTokenUsageFromMessages(messages: BaseMessage[]): LDTokenUsage | undefined {
+  let inputSum = 0;
+  let outputSum = 0;
+  let totalSum = 0;
+
+  for (const m of messages) {
+    const usage = getAIUsageFromResponse(m as AIMessage);
+    if (!usage) {
+      continue;
+    }
+    inputSum += usage.input;
+    outputSum += usage.output;
+    totalSum += usage.total;
+  }
+
+  if (inputSum === 0 && outputSum === 0 && totalSum === 0) {
+    return undefined;
+  }
+  return { total: totalSum, input: inputSum, output: outputSum };
 }

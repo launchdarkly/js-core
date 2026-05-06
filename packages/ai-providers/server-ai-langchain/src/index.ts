@@ -9,11 +9,16 @@
 
 export { LangChainModelRunner } from './LangChainModelRunner';
 export { LangChainAgentRunner, ToolRegistry } from './LangChainAgentRunner';
+export type { CompiledAgent } from './LangChainAgentRunner';
 export { LangChainRunnerFactory } from './LangChainRunnerFactory';
 export {
+  buildStructuredTools,
   convertMessagesToLangChain,
   createLangChainModel,
+  extractLastMessageContent,
+  extractToolCalls,
   getAIMetricsFromResponse,
   getAIUsageFromResponse,
   mapProviderName,
+  sumTokenUsageFromMessages,
 } from './LangChainHelper';
