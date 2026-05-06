@@ -1,5 +1,3 @@
-import type { LDAIAgentConfig } from '@launchdarkly/server-sdk-ai';
-
 import { OpenAIAgentRunner } from '../src/OpenAIAgentRunner';
 
 const mockRun = jest.fn();
