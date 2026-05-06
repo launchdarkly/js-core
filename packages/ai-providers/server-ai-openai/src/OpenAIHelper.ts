@@ -1,4 +1,6 @@
-import type { LDAIMetrics, LDMessage, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
+import type { LDAIMetrics, LDLogger, LDMessage, LDTool, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
+
+import type { ToolRegistry } from './OpenAIAgentRunner';
 
 /**
  * OpenAI chat completion message format.
@@ -130,21 +132,57 @@ export function isAgentToolInstance(value: unknown): boolean {
 export function registryValueToAgentTool(
   value: unknown,
   toolHelper: (opts: any) => any,
-  definition?: any,
+  definition?: LDTool,
 ): any {
   if (isAgentToolInstance(value)) {
     return value;
   }
   const fn = value as (...args: any[]) => any;
-  const funcDef = definition?.function ?? definition;
   return toolHelper({
-    name: funcDef?.name ?? fn.name ?? 'unknown',
-    description: funcDef?.description ?? '',
-    parameters: funcDef?.parameters ?? { type: 'object', properties: {}, additionalProperties: false },
+    name: definition?.name ?? fn.name ?? 'unknown',
+    description: definition?.description ?? '',
+    parameters: definition?.parameters ?? { type: 'object', properties: {}, additionalProperties: false },
     strict: false,
     execute: async (args: any) => {
       const result = await fn(args);
       return typeof result === 'string' ? result : JSON.stringify(result);
     },
   });
+}
+
+/**
+ * Build agent tools from the LaunchDarkly config tools map and a user-provided registry.
+ *
+ * Iterates over `configTools` (from `config.tools`), matches each against the
+ * `registry`, and wraps them into openai-agents compatible tool objects.
+ * Returns the tools array and a name mapping for tracking.
+ */
+export function buildAgentTools(
+  toolHelper: any,
+  configTools: { [toolName: string]: LDTool },
+  registry: ToolRegistry,
+  logger?: LDLogger,
+): { agentTools: any[]; toolNameMap: Record<string, string> } {
+  const agentTools: any[] = [];
+  const toolNameMap: Record<string, string> = {};
+
+  for (const [name, definition] of Object.entries(configTools)) {
+    const toolFn = registry[name];
+    if (toolFn !== undefined) {
+      if (isAgentToolInstance(toolFn)) {
+        const instanceName = (toolFn as any).name ?? name;
+        toolNameMap[instanceName] = name;
+      } else {
+        toolNameMap[name] = name;
+      }
+      agentTools.push(registryValueToAgentTool(toolFn, toolHelper, definition));
+      continue;
+    }
+
+    logger?.warn(
+      `Tool '${name}' is defined in the AI config but was not found in ` +
+        `the tool registry; skipping.`,
+    );
+  }
+  return { agentTools, toolNameMap };
 }

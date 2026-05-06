@@ -4,6 +4,7 @@ import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type { LDAIAgentConfig, LDAICompletionConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import { OpenAIAgentRunner, ToolRegistry } from './OpenAIAgentRunner';
+import { buildAgentTools } from './OpenAIHelper';
 import { OpenAIModelRunner } from './OpenAIModelRunner';
 
 let instrumentPromise: Promise<void> | undefined;
@@ -38,14 +39,43 @@ export class OpenAIRunnerFactory extends AIProvider {
    * manages its own OpenAI client internally.
    *
    * @param config The LaunchDarkly AI agent configuration. Tool definitions
-   *   are sourced from `config.model.parameters.tools` (consistent with the
-   *   completion path).
+   *   are sourced from `config.tools`.
    * @param tools Registry mapping tool names to their callable implementations
    *   or pre-built openai-agents tool instances. Tool names referenced by the
-   *   model that are not present here will be logged and skipped.
+   *   config that are not present here will be logged and skipped.
    */
   async createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): Promise<OpenAIAgentRunner> {
-    return new OpenAIAgentRunner(config, tools ?? {}, this.logger);
+    let Agent: any;
+    let agentRun: any;
+    let toolHelper: any;
+    try {
+      const agents = await import('@openai/agents');
+      Agent = agents.Agent;
+      agentRun = agents.run;
+      toolHelper = agents.tool;
+    } catch (e) {
+      throw new Error(
+        `@openai/agents is required for OpenAIAgentRunner.\n` +
+          `Install it with: npm install @openai/agents openai zod\n` +
+          `Cause: ${e instanceof Error ? e.message : e}`,
+      );
+    }
+
+    const registry = tools ?? {};
+    const configTools = config.tools ?? {};
+    const parameters: Record<string, unknown> = { ...(config.model?.parameters ?? {}) };
+    delete parameters.tools;
+
+    const { agentTools, toolNameMap } = buildAgentTools(toolHelper, configTools, registry, this.logger);
+    const agent = new Agent({
+      name: 'ldai-agent',
+      instructions: config.instructions || undefined,
+      model: config.model?.name ?? '',
+      tools: agentTools,
+      modelSettings: parameters,
+    });
+
+    return new OpenAIAgentRunner(agent, agentRun, toolNameMap, this.logger);
   }
 
   /**

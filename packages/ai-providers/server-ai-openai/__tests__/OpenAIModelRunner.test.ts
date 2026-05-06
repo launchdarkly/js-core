@@ -18,11 +18,11 @@ describe('OpenAIModelRunner', () => {
   let mockOpenAI: jest.Mocked<OpenAI>;
   let runner: OpenAIModelRunner;
 
-  const baseConfig: LDAICompletionConfig = {
+  const baseConfig = {
     key: 'completion',
     enabled: true,
     model: { name: 'gpt-3.5-turbo' },
-  };
+  } as LDAICompletionConfig;
 
   beforeEach(() => {
     mockOpenAI = new OpenAI() as jest.Mocked<OpenAI>;
