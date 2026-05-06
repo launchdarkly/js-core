@@ -31,84 +31,80 @@ describe('LangChainRunnerFactory', () => {
     mockCreateAgent.mockReturnValue(fakeCompiledAgent as any);
   });
 
-  describe('createModel', () => {
-    it('builds a LangChainModelRunner with model and parameters from the config', async () => {
-      const config: LDAICompletionConfig = {
-        key: 'completion',
-        enabled: true,
-        provider: { name: 'openai' },
-        model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
-      };
+  it('builds a LangChainModelRunner with model and parameters from the config', async () => {
+    const config: LDAICompletionConfig = {
+      key: 'completion',
+      enabled: true,
+      provider: { name: 'openai' },
+      model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
+    };
 
-      const runner = await factory.createModel(config);
+    const runner = await factory.createModel(config);
 
-      expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
-        temperature: 0.5,
-        modelProvider: 'openai',
-      });
-      expect(runner).toBeInstanceOf(LangChainModelRunner);
+    expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
+      temperature: 0.5,
+      modelProvider: 'openai',
+    });
+    expect(runner).toBeInstanceOf(LangChainModelRunner);
+  });
+
+  it('maps gemini provider to google-genai', async () => {
+    await factory.createModel({
+      key: 'completion',
+      enabled: true,
+      provider: { name: 'gemini' },
+      model: { name: 'gemini-2.0' },
     });
 
-    it('maps gemini provider to google-genai', async () => {
-      await factory.createModel({
-        key: 'completion',
-        enabled: true,
-        provider: { name: 'gemini' },
-        model: { name: 'gemini-2.0' },
-      });
-
-      expect(mockInitChatModel).toHaveBeenCalledWith('gemini-2.0', {
-        modelProvider: 'google-genai',
-      });
+    expect(mockInitChatModel).toHaveBeenCalledWith('gemini-2.0', {
+      modelProvider: 'google-genai',
     });
   });
 
-  describe('createAgent', () => {
-    it('strips tools from parameters and passes them to createAgent', async () => {
-      const tools = [{ name: 'lookup', description: 'looks up a value' }];
-      const config: LDAIAgentConfig = {
-        key: 'agent',
-        enabled: true,
-        provider: { name: 'openai' },
-        model: { name: 'gpt-4o', parameters: { temperature: 0.7, tools } },
-        instructions: 'be helpful',
-      };
+  it('strips tools from parameters and passes them to createAgent', async () => {
+    const tools = [{ name: 'lookup', description: 'looks up a value' }];
+    const config: LDAIAgentConfig = {
+      key: 'agent',
+      enabled: true,
+      provider: { name: 'openai' },
+      model: { name: 'gpt-4o', parameters: { temperature: 0.7, tools } },
+      instructions: 'be helpful',
+    };
 
-      const runner = await factory.createAgent(config, { lookup: () => 'ok' });
+    const runner = await factory.createAgent(config, { lookup: () => 'ok' });
 
-      expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
-        temperature: 0.7,
-        modelProvider: 'openai',
-      });
-      expect(mockCreateAgent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: fakeLLM,
-          systemPrompt: 'be helpful',
-        }),
-      );
-      expect(mockCreateAgent.mock.calls[0][0].tools).toHaveLength(1);
-      expect(runner).toBeInstanceOf(LangChainAgentRunner);
+    expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
+      temperature: 0.7,
+      modelProvider: 'openai',
     });
+    expect(mockCreateAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: fakeLLM,
+        systemPrompt: 'be helpful',
+      }),
+    );
+    expect(mockCreateAgent.mock.calls[0][0].tools).toHaveLength(1);
+    expect(runner).toBeInstanceOf(LangChainAgentRunner);
+  });
 
-    it('passes undefined tools to createAgent when no tool definitions exist', async () => {
-      const config: LDAIAgentConfig = {
-        key: 'agent',
-        enabled: true,
-        provider: { name: 'openai' },
-        model: { name: 'gpt-4o' },
-        instructions: '',
-      };
+  it('passes undefined tools to createAgent when no tool definitions exist', async () => {
+    const config: LDAIAgentConfig = {
+      key: 'agent',
+      enabled: true,
+      provider: { name: 'openai' },
+      model: { name: 'gpt-4o' },
+      instructions: '',
+    };
 
-      await factory.createAgent(config);
+    await factory.createAgent(config);
 
-      expect(mockCreateAgent).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: fakeLLM,
-          tools: undefined,
-          systemPrompt: undefined,
-        }),
-      );
-    });
+    expect(mockCreateAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: fakeLLM,
+        tools: undefined,
+        systemPrompt: undefined,
+      }),
+    );
   });
 
 });
