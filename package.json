@@ -48,6 +48,7 @@
     "packages/sdk/server-ai/examples/chat-judge",
     "packages/sdk/server-ai/examples/direct-judge",
     "packages/sdk/server-ai/examples/openai",
+    "packages/sdk/server-ai/examples/managed-agent",
     "packages/sdk/server-ai/examples/tracked-chat",
     "packages/sdk/server-ai/examples/chat-observability",
     "packages/sdk/server-ai/examples/openai-observability",

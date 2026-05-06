@@ -11,6 +11,11 @@
         },
         {
           "type": "json",
+          "path": "/packages/sdk/server-ai/examples/managed-agent/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-langchain']"
+        },
+        {
+          "type": "json",
           "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-langchain']"
         },
@@ -37,6 +42,11 @@
         },
         {
           "type": "json",
+          "path": "/packages/sdk/server-ai/examples/managed-agent/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
+        },
+        {
+          "type": "json",
           "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-vercel']"
         },
@@ -59,6 +69,11 @@
         {
           "type": "json",
           "path": "/packages/sdk/server-ai/examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-ai/examples/managed-agent/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai-openai']"
         },
         {
@@ -160,6 +175,11 @@
         },
         {
           "type": "json",
+          "path": "/packages/sdk/server-ai/examples/managed-agent/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
           "path": "/packages/sdk/server-ai/examples/chat-judge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         },
@@ -250,6 +270,11 @@
         {
           "type": "json",
           "path": "examples/tracked-chat/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
+        },
+        {
+          "type": "json",
+          "path": "examples/managed-agent/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/server-sdk-ai']"
         },
         {

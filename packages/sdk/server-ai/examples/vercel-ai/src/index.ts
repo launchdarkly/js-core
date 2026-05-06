@@ -4,7 +4,12 @@ import { generateText, streamText } from 'ai';
 
 import { init, type LDClient, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
-import { VercelProvider } from '@launchdarkly/server-sdk-ai-vercel';
+import {
+  convertMessagesToVercel,
+  getAIMetricsFromResponse,
+  getAIMetricsFromStream,
+  VercelRunnerFactory,
+} from '@launchdarkly/server-sdk-ai-vercel';
 
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY ?? '';
@@ -59,24 +64,22 @@ async function main() {
 
   console.log('Using model:', aiConfig.model?.name);
 
+  const model = openai(aiConfig.model?.name || 'gpt-4');
+  const parameters = VercelRunnerFactory.mapParameters(aiConfig.model?.parameters);
+
   try {
     const userMessage = {
       role: 'user' as const,
       content: 'What can you help me with?',
     };
 
-    // Example of using generateText (non-streaming)
     console.log('\n*** Generating text:');
 
-    // Convert config to Vercel AI SDK format
-    const vercelConfig = VercelProvider.toVercelAISDK(aiConfig, openai, {
-      nonInterpolatedMessages: [userMessage],
-    });
+    const messages = convertMessagesToVercel([...(aiConfig.messages || []), userMessage]);
 
-    // Call the model and track metrics for the ai config
     const tracker = aiConfig.createTracker!();
-    const result = await tracker.trackMetricsOf(VercelProvider.getAIMetricsFromResponse, () =>
-      generateText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
+    const result = await tracker.trackMetricsOf(getAIMetricsFromResponse, () =>
+      generateText({ ...parameters, model, messages }),
     );
 
     console.log('Response:', result.text);
@@ -91,21 +94,16 @@ async function main() {
       content: 'Count from 1 to 5.',
     };
 
-    // Example of using generateText (non-streaming)
     console.log('\n*** Streaming text:');
-    // Convert config to Vercel AI SDK format
-    const vercelConfig = VercelProvider.toVercelAISDK(aiConfig, openai, {
-      nonInterpolatedMessages: [userMessage],
-    });
 
-    // Stream is returned immediately (synchronously), metrics tracked in background
+    const messages = convertMessagesToVercel([...(aiConfig.messages || []), userMessage]);
+
     const streamTracker = aiConfig.createTracker!();
     const streamResult = streamTracker.trackStreamMetricsOf(
-      () => streamText({ ...vercelConfig, messages: vercelConfig.messages ?? [] }),
-      VercelProvider.getAIMetricsFromStream,
+      () => streamText({ ...parameters, model, messages }),
+      getAIMetricsFromStream,
     );
 
-    // Consume the stream immediately - no await needed before this!
     for await (const textPart of streamResult.textStream) {
       process.stdout.write(textPart);
     }
