@@ -3,7 +3,7 @@ import { OpenAI } from 'openai';
 
 import { init, LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
-import { OpenAIProvider } from '@launchdarkly/server-sdk-ai-openai';
+import { getAIMetricsFromResponse } from '@launchdarkly/server-sdk-ai-openai';
 
 // Environment variables
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
@@ -67,7 +67,7 @@ async function main() {
 
   const tracker = aiConfig.createTracker!();
   const completion = await tracker.trackMetricsOf(
-    OpenAIProvider.getAIMetricsFromResponse,
+    getAIMetricsFromResponse,
     async () =>
       client.chat.completions.create({
         messages: aiConfig.messages || [],
