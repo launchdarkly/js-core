@@ -11,7 +11,7 @@ import {
 /**
  * Tool registry mapping tool names to their callable implementations.
  */
-export type ToolRegistry = Record<string, (args: any) => unknown | Promise<unknown>>;
+export type ToolRegistry = Record<string, (args: any) => unknown>;
 
 /**
  * Minimal interface for a compiled LangChain agent (from `createAgent`).
