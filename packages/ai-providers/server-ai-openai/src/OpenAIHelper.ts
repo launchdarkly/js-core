@@ -117,8 +117,10 @@ export function getToolCallsFromRunItems(newItems: any[]): string[] {
     if (!raw) {
       continue;
     }
-    if (raw.type === 'function_call' && raw.name) {
-      result.push(raw.name);
+    if (raw.type === 'function_call') {
+      if (raw.name) {
+        result.push(raw.name);
+      }
     } else if (typeof raw.type === 'string') {
       if (raw.type === 'hosted_tool_call' && raw.name) {
         result.push(raw.name);
