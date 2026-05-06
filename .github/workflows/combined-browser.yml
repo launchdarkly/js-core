@@ -34,7 +34,7 @@ jobs:
           workspace_name: '@launchdarkly/browser'
           workspace_path: packages/sdk/combined-browser
       - name: Check package size
-        if: github.event_name == 'pull_request' && matrix.version == '21'
+        if: github.event_name == 'pull_request' && matrix.version == '22'
         uses: ./actions/package-size
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
