@@ -33,6 +33,7 @@ describe('createLangChainModel', () => {
       enabled: true,
       provider: { name: 'openai' },
       model: { name: 'gpt-4o', parameters: { temperature: 0.5 } },
+      createTracker: jest.fn(),
     });
 
     expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
@@ -47,6 +48,7 @@ describe('createLangChainModel', () => {
       enabled: true,
       provider: { name: 'gemini' },
       model: { name: 'gemini-2.0' },
+      createTracker: jest.fn(),
     });
 
     expect(mockInitChatModel).toHaveBeenCalledWith('gemini-2.0', {
