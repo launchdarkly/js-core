@@ -3,6 +3,7 @@ import {
   defaultHeaders,
   Info,
   internal,
+  LDFlagDeliveryFallbackError,
   LDLogger,
   LDStreamingError,
   subsystem,
@@ -262,6 +263,35 @@ describe('given a stream processor with mock event source', () => {
     });
   });
 
+  // When the connection-open response carries `x-ld-fd-fallback`, the next payload and
+  // the directive must arrive atomically on the same dataCallback so the composite can
+  // swap to FDv1 without losing either.
+  it('attaches fallback marker to data callback when fallback header rides along on open', () => {
+    mockEventSource.onopen({
+      headers: { ...openHeaders, 'x-ld-fd-fallback': 'true' },
+    });
+    simulateEvents();
+
+    // A single dataCallback invocation carries both the payload and the fallback marker.
+    expect(mockDataCallback).toHaveBeenCalledTimes(1);
+    expect(mockDataCallback).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({
+        fallbackToFDv1: true,
+        payload: expect.objectContaining({ type: 'full' }),
+      }),
+    );
+
+    // No LDFlagDeliveryFallbackError on the status callback path -- the composite would
+    // have disabled its handler before we got there.
+    mockStatusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDFlagDeliveryFallbackError);
+    });
+
+    // The processor must close the underlying stream so it doesn't keep consuming FDv2.
+    expect(mockEventSource.close).toBeCalled();
+  });
+
   it('passes error to callback if json data is malformed', async () => {
     simulateEvents({
       'server-intent': {
@@ -274,6 +304,30 @@ describe('given a stream processor with mock event source', () => {
       subsystem.DataSourceState.Interrupted,
       new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed data in EventStream.'),
     );
+  });
+
+  // Connection opened with the directive but a subsequent event triggers a parse error
+  // before any payload is emitted. The processor must engage FDv1 (LDFlagDeliveryFallbackError
+  // on Closed) rather than report an ordinary LDStreamingError that the composite would
+  // treat as a recoverable failure.
+  it('engages FDv1 when a parse error fires while the directive is in flight', () => {
+    mockEventSource.onopen({
+      headers: { ...openHeaders, 'x-ld-fd-fallback': 'true' },
+    });
+    simulateEvents({
+      'server-intent': {
+        data: '{"payloads": [{"intent INTENTIONAL CORRUPTION MUWAHAHAHA',
+      },
+    });
+
+    const lastCall = mockStatusCallback.mock.calls[mockStatusCallback.mock.calls.length - 1];
+    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
+    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+    // No LDStreamingError must be reported -- that path would let the composite treat the
+    // failure as an ordinary error.
+    mockStatusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDStreamingError);
+    });
   });
 
   it('calls error handler if event.data prop is missing', async () => {

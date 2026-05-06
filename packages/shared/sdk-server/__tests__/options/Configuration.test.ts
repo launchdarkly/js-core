@@ -472,4 +472,116 @@ describe('when setting different options', () => {
     expect(isStandardOptions(config.dataSystem!.dataSource)).toEqual(true);
     expect(logger(config).getCount()).toEqual(0);
   });
+
+  // The FDv1 Fallback Synchronizer is server-directed: callers configure it via
+  // `dataSystem.fdv1Fallback`, and the Configuration must surface the value unchanged so
+  // LDClientImpl can wire it up.
+  it('passes through the fdv1Fallback configuration', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          dataSource: { dataSourceOptionsType: 'standard' },
+          fdv1Fallback: { baseUri: 'https://fallback.example', pollInterval: 60 },
+        },
+      }),
+    );
+    expect(config.dataSystem!.fdv1Fallback).toEqual({
+      baseUri: 'https://fallback.example',
+      pollInterval: 60,
+    });
+  });
+
+  // Setting fdv1Fallback to null is the documented way to disable the FDv1 fallback. The
+  // Configuration must preserve the null so LDClientImpl can skip wiring the synchronizer.
+  it('preserves a null fdv1Fallback so the FDv1 fallback synchronizer can be opted out', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          dataSource: { dataSourceOptionsType: 'standard' },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          fdv1Fallback: null as any,
+        },
+      }),
+    );
+    expect(config.dataSystem!.fdv1Fallback).toBeNull();
+  });
+
+  // Misconfiguration: fdv1Fallback is not an object. The validator must drop the value
+  // (so the SDK falls back to defaults) and warn so the misconfiguration is visible.
+  it('drops fdv1Fallback and warns when it is not an object', () => {
+    const opts = withLogger({
+      dataSystem: {
+        dataSource: { dataSourceOptionsType: 'standard' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fdv1Fallback: 'not an object' as any,
+      },
+    });
+    const config = new Configuration(opts);
+    expect(config.dataSystem!.fdv1Fallback).toBeUndefined();
+    logger(opts).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSystem.fdv1Fallback" should be of type FDv1FallbackConfiguration/,
+      },
+    ]);
+  });
+
+  // Misconfiguration: a field on fdv1Fallback has the wrong type. The validator must drop
+  // that field and warn, while preserving any valid sibling fields.
+  it('drops fdv1Fallback fields with the wrong type and preserves valid siblings', () => {
+    const opts = withLogger({
+      dataSystem: {
+        dataSource: { dataSourceOptionsType: 'standard' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fdv1Fallback: { baseUri: 42 as any, pollInterval: 60 },
+      },
+    });
+    const config = new Configuration(opts);
+    expect(config.dataSystem!.fdv1Fallback).toEqual({ pollInterval: 60 });
+    logger(opts).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSystem.fdv1Fallback.baseUri" should be of type string/,
+      },
+    ]);
+  });
+
+  // Misconfiguration: fdv1Fallback.pollInterval below the minimum. The validator must
+  // clamp it to the minimum and warn.
+  it('clamps fdv1Fallback.pollInterval to the minimum and warns when below it', () => {
+    const opts = withLogger({
+      dataSystem: {
+        dataSource: { dataSourceOptionsType: 'standard' },
+        fdv1Fallback: { pollInterval: 5 },
+      },
+    });
+    const config = new Configuration(opts);
+    expect(config.dataSystem!.fdv1Fallback).toEqual({ pollInterval: 30 });
+    logger(opts).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSystem.fdv1Fallback.pollInterval".*minimum/,
+      },
+    ]);
+  });
+
+  // Misconfiguration: an unknown field on fdv1Fallback. The validator must warn so typos
+  // surface during development.
+  it('warns about unknown fdv1Fallback fields', () => {
+    const opts = withLogger({
+      dataSystem: {
+        dataSource: { dataSourceOptionsType: 'standard' },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fdv1Fallback: { baseUri: 'https://fallback.example', bogus: 'value' } as any,
+      },
+    });
+    const config = new Configuration(opts);
+    expect(config.dataSystem!.fdv1Fallback).toEqual({ baseUri: 'https://fallback.example' });
+    logger(opts).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Ignoring unknown config option "dataSystem.fdv1Fallback.bogus"/,
+      },
+    ]);
+  });
 });

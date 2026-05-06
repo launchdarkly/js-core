@@ -124,6 +124,11 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     const uri = getStreamingUri(this._serviceEndpoints, this._streamUriPath, params);
     this._logger?.debug(`Streaming processor opening event source to uri: ${uri}`);
 
+    // Set when the most recent successful connection carried `x-ld-fd-fallback: true`. We
+    // finish applying the next payload before emitting the fallback signal so evaluations
+    // can serve the server-provided data while the FDv1 synchronizer takes over.
+    let fallbackRequested = false;
+
     const eventSource = this._requests.createEventSource(uri, {
       headers: this._headers,
       errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error, statusCallback),
@@ -145,10 +150,24 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
         },
       },
       (errorKind: DataSourceErrorKind, message: string) => {
-        statusCallback(
-          subsystemCommon.DataSourceState.Interrupted,
-          new LDStreamingError(errorKind, message),
-        );
+        // If a parse error fires while the fallback directive is in flight, route it
+        // through the LDFlagDeliveryFallbackError path so CompositeDataSource still engages
+        // FDv1. Otherwise the directive would be lost: the composite's status handler would
+        // treat the LDStreamingError as an ordinary failure and fall through to the next
+        // FDv2 source.
+        if (fallbackRequested) {
+          const fallbackErr = new LDFlagDeliveryFallbackError(
+            DataSourceErrorKind.ErrorResponse,
+            `Response header indicates to fallback to FDv1`,
+          );
+          this._logger?.warn(fallbackErr.message);
+          statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+        } else {
+          statusCallback(
+            subsystemCommon.DataSourceState.Interrupted,
+            new LDStreamingError(errorKind, message),
+          );
+        }
 
         // parsing error was encountered, defensively close the data source
         this.stop();
@@ -157,7 +176,28 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     );
     payloadReader.addPayloadListener((payload) => {
       this._logConnectionResult(true);
-      dataCallback(payload.type === 'full', { initMetadata: this._initMetadata, payload });
+
+      // The server may signal FDv1 fallback alongside a valid streaming payload via the
+      // response headers on the initial connection. Attach a fallbackToFDv1 marker to the
+      // data callback so the directive is delivered atomically with the payload --
+      // CompositeDataSource will swap its synchronizer list to FDv1 before resolving the
+      // switchToSync transition. A separate status callback after the data callback would
+      // be silently dropped because the basis-during-init auto-transition disables the
+      // composite's callback handler.
+      const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+        initMetadata: this._initMetadata,
+        payload,
+      };
+      if (fallbackRequested) {
+        data.fallbackToFDv1 = true;
+        this._logger?.warn(`Response header indicates to fallback to FDv1`);
+      }
+      dataCallback(payload.type === 'full', data);
+
+      if (fallbackRequested) {
+        // Stop consuming the FDv2 stream now that the directive has been delivered.
+        this.stop();
+      }
     });
 
     eventSource.onclose = () => {
@@ -172,6 +212,11 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     eventSource.onopen = (e) => {
       this._logger?.info('Opened LaunchDarkly stream connection');
       this._initMetadata = internal.initMetadataFromHeaders(e.headers);
+      // The fallback signal is captured here from the connection-open response headers and
+      // is honored by the payload listener above once the next payload has been applied.
+      if (e.headers?.[`x-ld-fd-fallback`] === `true`) {
+        fallbackRequested = true;
+      }
       statusCallback(subsystemCommon.DataSourceState.Valid);
     };
 

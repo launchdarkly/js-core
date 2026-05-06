@@ -160,6 +160,16 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
     cf.dataSystem = {
       dataSource: dataSourceOptions,
     };
+
+    // FDv1Fallback configures the SDK's FDv1 Fallback Synchronizer -- engaged only in
+    // response to a server-directed FDv1 Fallback Directive, separate from the FDv2
+    // Primary/Fallback synchronizer chain configured above.
+    if (options.dataSystem.fdv1Fallback) {
+      cf.dataSystem.fdv1Fallback = {
+        baseUri: options.dataSystem.fdv1Fallback.baseUri,
+        pollInterval: maybeTime(options.dataSystem.fdv1Fallback.pollIntervalMs),
+      };
+    }
   }
 
   return cf;

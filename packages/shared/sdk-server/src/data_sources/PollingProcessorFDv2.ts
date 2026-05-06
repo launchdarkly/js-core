@@ -73,7 +73,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
-    this._requestor.requestAllData((err, body, headers) => {
+    this._requestor.requestAllData((err, body, headers, fallbackToFDv1) => {
       if (this._stopped) {
         return;
       }
@@ -81,17 +81,33 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
+      // Helper to emit the terminal FDv1 fallback signal. Callers must `return` after
+      // invoking this; no further poll is scheduled.
+      const emitFallback = () => {
+        const fallbackErr =
+          err instanceof LDFlagDeliveryFallbackError
+            ? err
+            : new LDFlagDeliveryFallbackError(
+                DataSourceErrorKind.ErrorResponse,
+                err
+                  ? httpErrorMessage(err, 'polling request', 'falling back to FDv1')
+                  : `Response header indicates to fallback to FDv1`,
+                err?.status,
+              );
+        this._logger?.warn(fallbackErr.message);
+        statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
+      };
+
       this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
       if (err) {
-        const { status } = err;
-        // this is a short term error and will be removed once FDv2 adoption is sufficient.
-        if (err instanceof LDFlagDeliveryFallbackError) {
-          this._logger?.error(err.message);
-          statusCallback(subsystemCommon.DataSourceState.Closed, err);
-          // It is not recoverable, return and do not trigger another poll.
+        // The fallback directive can ride along on either an error or a successful response.
+        // Honor it before any other error handling so we always switch to FDv1 when asked.
+        if (fallbackToFDv1 || err instanceof LDFlagDeliveryFallbackError) {
+          emitFallback();
           return;
         }
 
+        const { status } = err;
         if (status && !isHttpRecoverable(status)) {
           const message = httpErrorMessage(err, 'polling request');
           this._logger?.error(message);
@@ -132,6 +148,15 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
               },
             },
             (errorKind: DataSourceErrorKind, message: string) => {
+              // If a per-event error fires while the fallback directive is in flight, route
+              // it through the LDFlagDeliveryFallbackError path so CompositeDataSource still
+              // engages FDv1. Otherwise the directive would be lost: the composite's status
+              // handler would treat the LDPollingError as an ordinary failure and fall
+              // through to the next FDv2 source.
+              if (fallbackToFDv1) {
+                emitFallback();
+                return;
+              }
               statusCallback(
                 subsystemCommon.DataSourceState.Interrupted,
                 new LDPollingError(errorKind, message),
@@ -140,8 +165,23 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             this._logger,
           );
 
+          // When the fallback directive rides along on a 200 response with a valid payload,
+          // the directive must be applied atomically with the data callback. CompositeData-
+          // Source disables its callback handler as soon as basis-during-init arrives or an
+          // error status is reported, so a separate status callback emitted afterwards
+          // would be silently dropped. Instead, attach a fallbackToFDv1 marker to the data
+          // object: CompositeDataSource will swap its synchronizer list to FDv1 before
+          // resolving the switchToSync transition.
           payloadProcessor.addPayloadListener((payload) => {
-            dataCallback(payload.type === 'full', { initMetadata, payload });
+            const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+              initMetadata,
+              payload,
+            };
+            if (fallbackToFDv1) {
+              data.fallbackToFDv1 = true;
+              this._logger?.warn(`Response header indicates to fallback to FDv1`);
+            }
+            dataCallback(payload.type === 'full', data);
           });
 
           this._logger?.debug(`Got body: ${body}`);
@@ -156,12 +196,30 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             processFDv1FlagsAndSegments(payloadProcessor, parsed);
           }
 
+          // The fallback directive (if any) was attached to the data callback above so
+          // CompositeDataSource has already taken over the transition. Skip the Valid
+          // status report and the next-poll scheduling in that case.
+          if (fallbackToFDv1) {
+            return;
+          }
+
           statusCallback(subsystemCommon.DataSourceState.Valid);
         } catch {
           // We could not parse this JSON. Report the problem and fallthrough to
           // start another poll.
           this._logger?.error('Response contained invalid data');
           this._logger?.debug(`${err} - Body follows: ${body}`);
+
+          // The fallback directive must be honored even when the body could not be parsed.
+          // Emit it BEFORE the generic Interrupted/LDPollingError status callback below --
+          // CompositeDataSource disables its callback handler on the first error status,
+          // so the LDFlagDeliveryFallbackError must be emitted first or the directive is
+          // silently dropped and the SDK retries FDv2 sources.
+          if (fallbackToFDv1) {
+            emitFallback();
+            return;
+          }
+
           statusCallback(
             subsystemCommon.DataSourceState.Interrupted,
             new LDPollingError(
@@ -170,6 +228,10 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
             ),
           );
         }
+      } else if (fallbackToFDv1) {
+        // 200/304 with no body but a fallback directive: emit the directive directly.
+        emitFallback();
+        return;
       }
 
       // schedule poll

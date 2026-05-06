@@ -68,6 +68,34 @@ export interface LDDataSystemOptions {
    * store integration) that is populated by the relay. By default, this is false.
    */
   useLdd?: boolean;
+
+  /**
+   * Configuration for the SDK's FDv1 Fallback Synchronizer.
+   *
+   * The FDv1 Fallback Synchronizer is engaged only in response to a server-directed FDv1
+   * Fallback Directive (the `x-ld-fd-fallback: true` response header) -- it is independent
+   * of the FDv2 initializer/synchronizer chain configured via {@link dataSource}.
+   *
+   * If omitted, the SDK uses sensible defaults derived from the rest of the configuration.
+   * If explicitly set to `null`, no FDv1 fallback synchronizer is configured and the SDK
+   * will transition to a terminal Closed state when the directive is received.
+   */
+  fdv1Fallback?: FDv1FallbackConfiguration | null;
+}
+
+/**
+ * Configuration options for the FDv1 Fallback Synchronizer.
+ */
+export interface FDv1FallbackConfiguration {
+  /**
+   * Override the polling base URI used by the FDv1 Fallback Synchronizer. Defaults to the
+   * SDK's configured polling base URI.
+   */
+  baseUri?: string;
+  /**
+   * The interval between polls, in seconds. Defaults to the SDK's configured pollInterval.
+   */
+  pollInterval?: number;
 }
 
 export type DataSourceOptions =

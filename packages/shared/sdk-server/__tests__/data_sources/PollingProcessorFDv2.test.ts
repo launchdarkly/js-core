@@ -1,3 +1,5 @@
+import { LDFlagDeliveryFallbackError } from '@launchdarkly/js-sdk-common';
+
 import { DataSourceErrorKind, LDPollingError, subsystem } from '../../src';
 import PollingProcessorFDv2 from '../../src/data_sources/PollingProcessorFDv2';
 import Requestor from '../../src/data_sources/Requestor';
@@ -140,6 +142,122 @@ describe('given a polling processor', () => {
         version: 1,
       },
     });
+  });
+
+  // On a 200 with the fallback header, the payload and the directive must arrive atomically
+  // on the same dataCallback so CompositeDataSource can swap to FDv1 without losing either.
+  it('attaches fallback marker to data callback when fallback header rides along on a 200', async () => {
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, fdv2JsonData, headers, true));
+
+    let dataCallback: jest.Mock = jest.fn();
+    const statusCallback = jest.fn();
+
+    await new Promise<void>((resolve) => {
+      dataCallback = jest.fn(() => {
+        resolve();
+      });
+      processor.start(dataCallback, statusCallback);
+    });
+
+    // A single dataCallback invocation carries both the payload and the fallback marker.
+    expect(dataCallback).toHaveBeenCalledTimes(1);
+    expect(dataCallback).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({
+        fallbackToFDv1: true,
+        payload: expect.objectContaining({ type: 'full' }),
+      }),
+    );
+
+    // No LDFlagDeliveryFallbackError on the status callback path -- the composite would
+    // have disabled its handler before we got there.
+    statusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDFlagDeliveryFallbackError);
+    });
+
+    // No subsequent poll should be scheduled. requestAllData was only called once.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+  });
+
+  // Malformed body + fallback header: the directive must be emitted before any
+  // Interrupted/LDPollingError so the composite can engage FDv1 instead of retrying.
+  it('emits the fallback directive before the malformed-body error so it is not dropped', async () => {
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, '{not json', headers, true));
+
+    const dataCallback = jest.fn();
+    const statusCallback = jest.fn();
+    processor.start(dataCallback, statusCallback);
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    // The very first non-Initializing status update carries the LDFlagDeliveryFallbackError.
+    const errorCalls = statusCallback.mock.calls.filter(
+      (call: any[]) => call[0] !== subsystem.DataSourceState.Initializing,
+    );
+    expect(errorCalls.length).toBeGreaterThan(0);
+    expect(errorCalls[0][0]).toBe(subsystem.DataSourceState.Closed);
+    expect(errorCalls[0][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+
+    // The processor must not schedule another poll.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+  });
+
+  // 200 + directive but the body parses to an event sequence that triggers an actionable
+  // PayloadProcessor error (e.g. payload-transferred without a preceding server-intent).
+  // The processor must still engage FDv1 -- the per-event error must not slip through as
+  // a generic LDPollingError that the composite would treat as an ordinary failure.
+  it('engages FDv1 when the PayloadProcessor reports an error and the directive is in flight', async () => {
+    // payload-transferred without a server-intent is a PROTOCOL_ERROR (actionable).
+    const protocolErrorEvents = {
+      events: [
+        {
+          event: 'payload-transferred',
+          data: { state: 'mockState', version: 1 },
+        },
+      ],
+    };
+    requestor.requestAllData = jest.fn((cb) =>
+      cb(undefined, JSON.stringify(protocolErrorEvents), headers, true),
+    );
+
+    const dataCallback = jest.fn();
+    const statusCallback = jest.fn();
+    processor.start(dataCallback, statusCallback);
+
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    // The terminal status emitted to the composite must be the FDv1-fallback error so that
+    // CompositeDataSource engages FDv1 instead of falling through to the next FDv2 source.
+    const errorCalls = statusCallback.mock.calls.filter(
+      (call: any[]) => call[1] !== undefined,
+    );
+    expect(errorCalls.length).toBeGreaterThan(0);
+    expect(errorCalls[errorCalls.length - 1][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
+
+    // No LDPollingError must be reported -- that path would let the composite treat the
+    // failure as an ordinary error and fall through to the next FDv2 source.
+    statusCallback.mock.calls.forEach((call: any[]) => {
+      expect(call[1]).not.toBeInstanceOf(LDPollingError);
+    });
+  });
+
+  // Error response + directive: emit the directive and don't reschedule a poll, even
+  // when the HTTP status would otherwise be recoverable.
+  it('signals fallback on an error response without retrying', async () => {
+    requestor.requestAllData = jest.fn((cb) =>
+      cb({ status: 500 }, undefined, headers, true),
+    );
+
+    const statusCallback = jest.fn();
+    processor.start(mockDataCallback, statusCallback);
+
+    // Wait for the synchronous fallback emission.
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+    const lastCall = statusCallback.mock.calls[statusCallback.mock.calls.length - 1];
+    expect(lastCall[0]).toBe(subsystem.DataSourceState.Closed);
+    expect(lastCall[1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
   });
 
   it('uses selectorGetter when provided', async () => {

@@ -14,6 +14,7 @@ import {
   LDPluginEnvironmentMetadata,
   LDTimeoutError,
   Platform,
+  ServiceEndpoints,
   subsystem,
   TypeValidators,
 } from '@launchdarkly/js-sdk-common';
@@ -439,16 +440,43 @@ function constructFDv2(
       }
     }
 
-    // This is short term handling and will be removed once FDv2 adoption is sufficient.
-    fdv1FallbackSynchronizers.push(
-      () =>
-        new PollingProcessorFDv2(
-          new Requestor(config, platform.requests, baseHeaders, '/sdk/latest-all', config.logger),
-          config.pollInterval ?? DEFAULT_POLL_INTERVAL,
-          config.logger,
-          true,
-        ),
-    );
+    // FDv1 Fallback Synchronizer: engaged only in response to a server-directed FDv1
+    // Fallback Directive (the `x-ld-fd-fallback: true` response header). When configured
+    // explicitly via `dataSystem.fdv1Fallback`, those values take precedence over the
+    // top-level baseUri/pollInterval. Setting `dataSystem.fdv1Fallback` to `null` leaves
+    // the SDK without an FDv1 fallback so the data source terminates on the directive.
+    const fdv1FallbackConfig = dataSystem.fdv1Fallback;
+    if (fdv1FallbackConfig !== null) {
+      const fdv1FallbackPollInterval =
+        fdv1FallbackConfig?.pollInterval ?? config.pollInterval ?? DEFAULT_POLL_INTERVAL;
+      const fdv1FallbackEndpoints = fdv1FallbackConfig?.baseUri
+        ? new ServiceEndpoints(
+            config.serviceEndpoints.streaming,
+            fdv1FallbackConfig.baseUri,
+            config.serviceEndpoints.events,
+            config.serviceEndpoints.analyticsEventPath,
+            config.serviceEndpoints.diagnosticEventPath,
+            config.serviceEndpoints.includeAuthorizationHeader,
+            config.serviceEndpoints.payloadFilterKey,
+          )
+        : undefined;
+      fdv1FallbackSynchronizers.push(
+        () =>
+          new PollingProcessorFDv2(
+            new Requestor(
+              config,
+              platform.requests,
+              baseHeaders,
+              '/sdk/latest-all',
+              config.logger,
+              fdv1FallbackEndpoints,
+            ),
+            fdv1FallbackPollInterval,
+            config.logger,
+            true,
+          ),
+      );
+    }
 
     dataSource = new CompositeDataSource(
       initializers,
