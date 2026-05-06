@@ -127,12 +127,9 @@ describe('given a shared fakeTool mock', () => {
   it('wraps callable values using the tool helper with schema from definition', async () => {
     const fn = jest.fn().mockResolvedValue('result');
     const definition = {
-      type: 'function',
-      function: {
-        name: 'myTool',
-        description: 'Does stuff',
-        parameters: { type: 'object', properties: { x: { type: 'number' } } },
-      },
+      name: 'myTool',
+      description: 'Does stuff',
+      parameters: { type: 'object', properties: { x: { type: 'number' } } },
     };
 
     const wrapped = registryValueToAgentTool(fn, fakeTool, definition);
@@ -149,7 +146,7 @@ describe('given a shared fakeTool mock', () => {
 
   it('serializes non-string tool results to JSON', async () => {
     const fn = jest.fn().mockResolvedValue({ key: 'value' });
-    const definition = { function: { name: 'test' } };
+    const definition = { name: 'test' };
 
     let capturedExecute: any;
     fakeTool.mockImplementation((opts: any) => {

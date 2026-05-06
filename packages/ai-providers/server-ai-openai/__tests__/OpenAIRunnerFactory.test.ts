@@ -101,12 +101,12 @@ describe('OpenAIRunnerFactory', () => {
       );
     });
 
-    it('extracts tool definitions from model.parameters.tools', async () => {
-      const tools = [{ type: 'function', function: { name: 'lookup' } }];
+    it('extracts tool definitions from config.tools', async () => {
       const config = {
         key: 'agent',
         enabled: true,
-        model: { name: 'gpt-4o', parameters: { tools, temperature: 0.7 } },
+        model: { name: 'gpt-4o', parameters: { temperature: 0.7 } },
+        tools: { lookup: { name: 'lookup', description: 'look things up' } },
         instructions: 'be helpful',
       } as unknown as LDAIAgentConfig;
 
@@ -121,13 +121,11 @@ describe('OpenAIRunnerFactory', () => {
       const logger = { warn: (msg: string) => warnMessages.push(msg) } as any;
       const factoryWithLogger = new OpenAIRunnerFactory(logger);
 
-      const toolDefinitions = [
-        { type: 'function', function: { name: 'missing', parameters: { type: 'object' } } },
-      ];
       const config = {
         key: 'agent',
         enabled: true,
-        model: { name: 'gpt-4o', parameters: { tools: toolDefinitions } },
+        model: { name: 'gpt-4o' },
+        tools: { missing: { name: 'missing', description: 'not provided', parameters: { type: 'object' } } },
         instructions: '',
       } as unknown as LDAIAgentConfig;
 
@@ -138,13 +136,11 @@ describe('OpenAIRunnerFactory', () => {
 
     it('passes through pre-built agent tool instances without wrapping', async () => {
       const hostedTool = { name: 'web_search', type: 'web_search_tool' };
-      const toolDefinitions = [
-        { type: 'function', function: { name: 'web_search' } },
-      ];
       const config = {
         key: 'agent',
         enabled: true,
-        model: { name: 'gpt-4o', parameters: { tools: toolDefinitions } },
+        model: { name: 'gpt-4o' },
+        tools: { web_search: { name: 'web_search', description: 'search the web' } },
         instructions: '',
       } as unknown as LDAIAgentConfig;
 
