@@ -10,7 +10,7 @@
   - Tooling packages (development tools)
 
 ## Build Requirements
-- Node environment version 16 required (minimum)
+- Node environment version 20 required (minimum)
 - yarn required
 - Some projects may have specific environment prerequisites
 

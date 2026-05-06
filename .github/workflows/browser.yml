@@ -19,7 +19,7 @@ jobs:
     strategy:
       matrix:
         # Node versions to run on.
-        version: [18, 21]
+        version: [20, 22]
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -34,7 +34,7 @@ jobs:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
       - name: Check package size
-        if: github.event_name == 'pull_request' && matrix.version == '21'
+        if: github.event_name == 'pull_request' && matrix.version == '22'
         uses: ./actions/package-size
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
