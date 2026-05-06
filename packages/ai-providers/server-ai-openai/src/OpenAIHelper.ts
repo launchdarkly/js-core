@@ -46,6 +46,24 @@ export function getAIMetricsFromResponse(response: any): LDAIMetrics {
   };
 }
 
+/**
+ * Convert a snake_case string to camelCase.
+ */
+function _snakeToCamel(key: string): string {
+  return key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+/**
+ * Convert all snake_case keys in a record to camelCase.
+ */
+export function _mapParameterKeys(parameters: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(parameters)) {
+    result[_snakeToCamel(key)] = value;
+  }
+  return result;
+}
+
 // ============================================================================
 // OpenAI Agents SDK helpers
 // ============================================================================

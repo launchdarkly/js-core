@@ -4,7 +4,7 @@ import { AIProvider } from '@launchdarkly/server-sdk-ai';
 import type { LDAIAgentConfig, LDAICompletionConfig, LDLogger } from '@launchdarkly/server-sdk-ai';
 
 import { OpenAIAgentRunner, ToolRegistry } from './OpenAIAgentRunner';
-import { buildAgentTools } from './OpenAIHelper';
+import { _mapParameterKeys, buildAgentTools } from './OpenAIHelper';
 import { OpenAIModelRunner } from './OpenAIModelRunner';
 
 let instrumentPromise: Promise<void> | undefined;
@@ -63,7 +63,7 @@ export class OpenAIRunnerFactory extends AIProvider {
 
     const registry = tools ?? {};
     const configTools = config.tools ?? {};
-    const parameters: Record<string, unknown> = { ...(config.model?.parameters ?? {}) };
+    const parameters = _mapParameterKeys({ ...(config.model?.parameters ?? {}) });
     delete parameters.tools;
 
     const { agentTools, toolNameMap } = buildAgentTools(toolHelper, configTools, registry, this.logger);
