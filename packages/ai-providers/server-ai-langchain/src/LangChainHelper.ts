@@ -88,7 +88,7 @@ export function getAIMetricsFromResponse(response: AIMessage): LDAIMetrics {
  * Extract JSON Schema from an LD tool definition's parameters.
  * Falls back to an open object schema when no parameters are defined.
  */
-function _getInputSchema(toolDef: Record<string, any>): Record<string, unknown> {
+function getInputSchema(toolDef: Record<string, any>): Record<string, unknown> {
   const params = toolDef.function?.parameters ?? toolDef.parameters;
   if (params && typeof params === 'object' && params.properties) {
     return params;
@@ -150,7 +150,7 @@ export function buildStructuredTools(
         {
           name,
           description,
-          schema: _getInputSchema(td) as any,
+          schema: getInputSchema(td) as any,
         },
       ),
     );

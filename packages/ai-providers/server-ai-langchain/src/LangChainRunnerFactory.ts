@@ -20,6 +20,7 @@ let instrumentPromise: Promise<void> | undefined;
 export class LangChainRunnerFactory extends AIProvider {
   constructor(logger?: LDLogger) {
     super(logger);
+    // eslint-disable-next-line no-underscore-dangle
     LangChainRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }
 

@@ -116,7 +116,7 @@ it('returns true for non-callable objects passed to isAgentToolInstance', () => 
 });
 
 describe('given a shared fakeTool mock', () => {
-  const fakeTool = jest.fn((opts: any) => ({ ...opts, _wrapped: true }));
+  const fakeTool = jest.fn((opts: any) => ({ ...opts, wrapped: true }));
 
   it('passes through non-callable values without wrapping', () => {
     const hostedTool = { name: 'web_search', type: 'hosted' };
@@ -141,7 +141,7 @@ describe('given a shared fakeTool mock', () => {
         strict: false,
       }),
     );
-    expect(wrapped._wrapped).toBe(true);
+    expect(wrapped.wrapped).toBe(true);
   });
 
   it('serializes non-string tool results to JSON', async () => {
