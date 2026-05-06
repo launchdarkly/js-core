@@ -12,7 +12,7 @@ import type { LDClientMin } from './LDClientMin';
  * {@link LDGraphTrackerImpl.fromResumptionToken}.
  */
 export class LDGraphTrackerImpl implements LDGraphTracker {
-  private _summary: LDAIGraphMetricSummary = {};
+  private _summary: Partial<LDAIGraphMetricSummary> = {};
 
   constructor(
     private readonly _ldClient: LDClientMin,
@@ -67,7 +67,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
     };
   }
 
-  getSummary(): LDAIGraphMetricSummary {
+  getSummary(): Partial<LDAIGraphMetricSummary> {
     return { ...this._summary };
   }
 
