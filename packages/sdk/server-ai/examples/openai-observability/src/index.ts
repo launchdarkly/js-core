@@ -49,7 +49,7 @@ async function main() {
   const aiClient = initAi(ldClient);
 
   // ── 2. Import provider and OpenAI after instrumentation so OpenLLMetry can patch the client ──
-  const { OpenAIProvider } = await import('@launchdarkly/server-sdk-ai-openai');
+  const { getAIMetricsFromResponse } = await import('@launchdarkly/server-sdk-ai-openai');
   const { OpenAI } = await import('openai');
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
@@ -77,7 +77,7 @@ async function main() {
   try {
     // ── 4. Call OpenAI and track metrics with the provider's extractor ──
     const tracker = aiConfig.createTracker!();
-    const completion = await tracker.trackMetricsOf(OpenAIProvider.getAIMetricsFromResponse, () =>
+    const completion = await tracker.trackMetricsOf(getAIMetricsFromResponse, () =>
       openai.chat.completions.create({
         messages: aiConfig.messages || [],
         model: aiConfig.model?.name || 'gpt-4',
