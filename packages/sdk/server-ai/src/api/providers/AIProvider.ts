@@ -42,7 +42,7 @@ export abstract class AIProvider {
    *   provider does not support model creation.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createModel(config: LDAICompletionConfig | LDAIJudgeConfig): Promise<Runner | undefined> {
+  async createModel(_config: LDAICompletionConfig | LDAIJudgeConfig): Promise<Runner | undefined> {
     return undefined;
   }
 
@@ -58,7 +58,7 @@ export abstract class AIProvider {
    *   provider does not support agent creation.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createAgent(config: LDAIAgentConfig, tools?: ToolRegistry): Promise<Runner | undefined> {
+  async createAgent(_config: LDAIAgentConfig, _tools?: ToolRegistry): Promise<Runner | undefined> {
     return undefined;
   }
 
