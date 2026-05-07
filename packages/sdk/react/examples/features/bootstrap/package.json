@@ -10,7 +10,7 @@
     "react-dom": "^19"
   },
   "scripts": {
-    "start": "yarn build && tsx server/index.ts",
+    "start": "yarn build && tsx --env-file-if-exists=.env server/index.ts",
     "build": "vite build",
     "test": "playwright test",
     "tsc": "tsc"
