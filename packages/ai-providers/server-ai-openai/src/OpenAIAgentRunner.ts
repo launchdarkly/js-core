@@ -61,10 +61,10 @@ export class OpenAIAgentRunner implements Runner {
         [],
       );
 
-      const usage: LDTokenUsage | undefined = getAIUsageFromAgentResult(result);
+      const tokens: LDTokenUsage | undefined = getAIUsageFromAgentResult(result);
       const metrics: LDAIMetrics = {
         success: true,
-        usage,
+        tokens,
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
 

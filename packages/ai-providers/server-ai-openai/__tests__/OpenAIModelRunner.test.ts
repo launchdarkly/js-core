@@ -46,7 +46,7 @@ describe('OpenAIModelRunner', () => {
       expect(result.content).toBe('Hello there!');
       expect(result.metrics).toEqual({
         success: true,
-        usage: { total: 15, input: 10, output: 5 },
+        tokens: { total: 15, input: 10, output: 5 },
       });
       expect(result.raw).toBe(mockResponse);
       expect(result.parsed).toBeUndefined();

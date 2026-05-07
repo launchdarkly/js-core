@@ -14,7 +14,7 @@ export interface LDAIMetrics {
    * Token usage information for the operation.
    * This will be undefined if no token usage data is available.
    */
-  usage?: LDTokenUsage;
+  tokens?: LDTokenUsage;
 
   /**
    * List of tool call identifiers made during the operation.

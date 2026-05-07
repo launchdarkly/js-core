@@ -44,16 +44,16 @@ export function mapUsageDataToLDTokenUsage(usageData: ModelUsageTokens): LDToken
 export function getAIMetricsFromResponse(response: TextResponse): LDAIMetrics {
   const finishReason = response?.finishReason ?? 'unknown';
 
-  let usage: LDTokenUsage | undefined;
+  let tokens: LDTokenUsage | undefined;
   if (response?.totalUsage) {
-    usage = mapUsageDataToLDTokenUsage(response.totalUsage);
+    tokens = mapUsageDataToLDTokenUsage(response.totalUsage);
   } else if (response?.usage) {
-    usage = mapUsageDataToLDTokenUsage(response.usage);
+    tokens = mapUsageDataToLDTokenUsage(response.usage);
   }
 
   return {
     success: finishReason !== 'error',
-    usage,
+    tokens,
   };
 }
 
@@ -66,24 +66,24 @@ export function getAIMetricsFromResponse(response: TextResponse): LDAIMetrics {
 export async function getAIMetricsFromStream(stream: StreamResponse): Promise<LDAIMetrics> {
   const finishReason = (await stream.finishReason?.catch(() => 'error')) ?? 'unknown';
 
-  let usage: LDTokenUsage | undefined;
+  let tokens: LDTokenUsage | undefined;
 
   if (stream.totalUsage) {
     const usageData = await stream.totalUsage.catch(() => undefined);
     if (usageData) {
-      usage = mapUsageDataToLDTokenUsage(usageData);
+      tokens = mapUsageDataToLDTokenUsage(usageData);
     }
   }
 
-  if (!usage && stream.usage) {
+  if (!tokens && stream.usage) {
     const usageData = await stream.usage.catch(() => undefined);
     if (usageData) {
-      usage = mapUsageDataToLDTokenUsage(usageData);
+      tokens = mapUsageDataToLDTokenUsage(usageData);
     }
   }
 
   return {
     success: finishReason !== 'error',
-    usage,
+    tokens,
   };
 }

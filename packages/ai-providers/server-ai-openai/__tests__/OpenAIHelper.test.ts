@@ -41,7 +41,7 @@ it('returns success=true with usage extracted from the response', () => {
 
   expect(metrics).toEqual({
     success: true,
-    usage: { total: 3, input: 1, output: 2 },
+    tokens: { total: 3, input: 1, output: 2 },
   });
 });
 

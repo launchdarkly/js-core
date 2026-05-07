@@ -41,7 +41,7 @@ describe('LangChainModelRunner', () => {
     expect(result.content).toBe('hello');
     expect(result.metrics).toEqual({
       success: true,
-      usage: { total: 12, input: 7, output: 5 },
+      tokens: { total: 12, input: 7, output: 5 },
     });
     expect(result.raw).toBe(response);
   });

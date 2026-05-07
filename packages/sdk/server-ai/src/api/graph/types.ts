@@ -102,7 +102,7 @@ export interface LDAIGraphMetrics {
   /**
    * Aggregate token usage across the entire graph invocation, if available.
    */
-  usage?: LDTokenUsage;
+  tokens?: LDTokenUsage;
 
   /**
    * Per-node metrics keyed by agent config key.
