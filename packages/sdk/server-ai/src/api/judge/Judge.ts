@@ -1,5 +1,3 @@
-import Mustache from 'mustache';
-
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { ChatResponse } from '../chat/types';
@@ -25,6 +23,27 @@ const EVALUATION_SCHEMA = {
   required: ['score', 'reasoning'],
   additionalProperties: false,
 } as const;
+
+/**
+ * Remove legacy judge template messages from a message list.
+ *
+ * Strips any non-system message whose content contains `{{message_history}}`
+ * or `{{response_to_evaluate}}`. These were used by older judge configs to
+ * indicate where the SDK should interpolate the evaluated conversation; new
+ * configs omit them entirely and rely on the string input built by
+ * `Judge._buildEvaluationInput`.
+ *
+ * @param messages The raw message list from the judge AI config.
+ * @returns A new list with legacy template messages removed.
+ */
+export function stripLegacyJudgeMessages(messages: LDMessage[]): LDMessage[] {
+  return messages.filter(
+    (msg) =>
+      msg.role === 'system' ||
+      (!msg.content.includes('{{message_history}}') &&
+        !msg.content.includes('{{response_to_evaluate}}')),
+  );
+}
 
 /**
  * Judge implementation that handles evaluation functionality and conversation management.
@@ -105,13 +124,6 @@ export class Judge {
         return result;
       }
 
-      if (!this._aiConfig.messages) {
-        this._logger?.warn('Judge configuration must include messages', tracker.getTrackData());
-        result.sampled = true;
-        result.errorMessage = 'Judge configuration must include messages';
-        return result;
-      }
-
       if (Math.random() > effectiveRate) {
         this._logger?.debug(`Judge evaluation skipped due to sampling rate: ${effectiveRate}`);
         return result;
@@ -119,11 +131,11 @@ export class Judge {
 
       result.sampled = true;
 
-      const messages = this._constructEvaluationMessages(input, output);
+      const evaluationInput = this._buildEvaluationInput(input, output);
 
       const response = await tracker.trackMetricsOf(
         (r: RunnerResult) => r.metrics,
-        () => this._runner.run(messages, EVALUATION_SCHEMA),
+        () => this._runner.run(evaluationInput, EVALUATION_SCHEMA),
       );
 
       const evalResult = this._parseEvaluationResponse(response.parsed);
@@ -186,25 +198,13 @@ export class Judge {
   }
 
   /**
-   * Constructs evaluation messages by combining judge's config messages with input/output.
+   * Builds the evaluation input string passed to the runner.
+   *
+   * Combines the original prompt and the response into a single, well-known
+   * format the judge model is expected to evaluate.
    */
-  private _constructEvaluationMessages(input: string, output: string): LDMessage[] {
-    const messages: LDMessage[] = this._aiConfig.messages!.map((msg) => ({
-      ...msg,
-      content: this._interpolateMessage(msg.content, {
-        message_history: input,
-        response_to_evaluate: output,
-      }),
-    }));
-
-    return messages;
-  }
-
-  /**
-   * Interpolates message content with variables using Mustache templating.
-   */
-  private _interpolateMessage(content: string, variables: Record<string, string>): string {
-    return Mustache.render(content, variables, undefined, { escape: (item: any) => item });
+  private _buildEvaluationInput(input: string, output: string): string {
+    return `MESSAGE HISTORY:\n${input}\n\nRESPONSE TO EVALUATE:\n${output}`;
   }
 
   /**

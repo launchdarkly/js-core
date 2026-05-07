@@ -29,19 +29,20 @@ export class LangChainModelRunner implements Runner {
   }
 
   /**
-   * Run the LangChain model with the given prompt.
+   * Run the LangChain model with the given user prompt.
    *
-   * @param input The user prompt string or a pre-built message array to send to the model.
-   *   When a string is provided, config messages are prepended before the user prompt.
-   *   When an {@link LDMessage} array is provided, it is used as-is (config messages are
-   *   not prepended).
+   * Prepends any messages defined in the AI config (system prompt, etc.) before
+   * the user prompt.
+   *
+   * @param input The user prompt string.
    * @param outputType Optional JSON schema for structured output. When provided,
    *   the parsed result is exposed via {@link RunnerResult.parsed}.
    */
-  async run(input: string | LDMessage[], outputType?: Record<string, unknown>): Promise<RunnerResult> {
-    const messages: LDMessage[] = Array.isArray(input)
-      ? input
-      : [...(this._config.messages ?? []), { role: 'user', content: input }];
+  async run(input: string, outputType?: Record<string, unknown>): Promise<RunnerResult> {
+    const messages: LDMessage[] = [
+      ...(this._config.messages ?? []),
+      { role: 'user', content: input },
+    ];
 
     if (outputType !== undefined) {
       return this._runStructured(messages, outputType);

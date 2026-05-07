@@ -36,19 +36,20 @@ export class VercelModelRunner implements Runner {
   }
 
   /**
-   * Run the Vercel AI model with the given prompt.
+   * Run the Vercel AI model with the given user prompt.
    *
-   * @param input The user prompt string, or a pre-built message array. When a
-   *   string is supplied the config's system messages are prepended automatically.
-   *   When a `LDMessage[]` is supplied it is used as-is (config messages are NOT
-   *   prepended — the caller is responsible for the full message list).
+   * Prepends any messages defined in the AI config (system prompt, etc.) before
+   * the user prompt.
+   *
+   * @param input The user prompt string.
    * @param outputType Optional JSON schema for structured output. When provided,
    *   the parsed object is exposed via {@link RunnerResult.parsed}.
    */
-  async run(input: string | LDMessage[], outputType?: Record<string, unknown>): Promise<RunnerResult> {
-    const messages: LDMessage[] = Array.isArray(input)
-      ? input
-      : [...(this._config.messages ?? []), { role: 'user', content: input }];
+  async run(input: string, outputType?: Record<string, unknown>): Promise<RunnerResult> {
+    const messages: LDMessage[] = [
+      ...(this._config.messages ?? []),
+      { role: 'user', content: input },
+    ];
 
     if (outputType !== undefined) {
       return this._runStructured(messages, outputType);
