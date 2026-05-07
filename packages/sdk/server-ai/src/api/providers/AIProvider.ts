@@ -1,3 +1,5 @@
+import { LDLogger } from '@launchdarkly/js-server-sdk-common';
+
 import { LDAIAgentConfig, LDAICompletionConfig, LDAIJudgeConfig } from '../config/types';
 import { AgentGraphDefinition } from '../graph/AgentGraphDefinition';
 import { AgentGraphRunner, Runner } from './Runner';
@@ -23,6 +25,11 @@ export type ToolRegistry = Record<string, (...args: any[]) => unknown>;
  * actually support.
  */
 export abstract class AIProvider {
+  protected _logger?: LDLogger;
+
+  constructor(logger?: LDLogger) {
+    this._logger = logger;
+  }
   /**
    * Create a Runner for a completion or judge AI Config.
    *

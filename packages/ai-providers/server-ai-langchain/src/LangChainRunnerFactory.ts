@@ -18,11 +18,8 @@ let instrumentPromise: Promise<void> | undefined;
  * Factory for creating LangChain runners (chat completion and agent).
  */
 export class LangChainRunnerFactory extends AIProvider {
-  private _logger?: LDLogger;
-
   constructor(logger?: LDLogger) {
-    super();
-    this._logger = logger;
+    super(logger);
     // eslint-disable-next-line no-underscore-dangle
     LangChainRunnerFactory._ensureInstrumented(logger).catch(() => {});
   }

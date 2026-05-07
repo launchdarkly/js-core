@@ -15,11 +15,8 @@ import { VercelModelRunner } from './VercelModelRunner';
  * framework.
  */
 export class VercelRunnerFactory extends AIProvider {
-  private _logger?: LDLogger;
-
   constructor(logger?: LDLogger) {
-    super();
-    this._logger = logger;
+    super(logger);
   }
 
   /**

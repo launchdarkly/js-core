@@ -17,11 +17,9 @@ let instrumentPromise: Promise<void> | undefined;
  */
 export class OpenAIRunnerFactory extends AIProvider {
   private _client: OpenAI;
-  private _logger?: LDLogger;
 
   constructor(logger?: LDLogger) {
-    super();
-    this._logger = logger;
+    super(logger);
     this._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     // Fire-and-forget: OTel instrumentation is optional and must not block construction.
     // eslint-disable-next-line no-underscore-dangle
