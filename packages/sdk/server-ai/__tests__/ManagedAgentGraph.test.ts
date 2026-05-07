@@ -68,10 +68,10 @@ describe('ManagedAgentGraph', () => {
         success: true,
         path: ['node-a', 'node-b'],
         durationMs: 1500,
-        usage: { total: 100, input: 50, output: 50 },
+        tokens: { total: 100, input: 50, output: 50 },
         nodeMetrics: {
-          'node-a': { success: true, usage: { total: 40, input: 20, output: 20 } },
-          'node-b': { success: true, usage: { total: 60, input: 30, output: 30 } },
+          'node-a': { success: true, tokens: { total: 40, input: 20, output: 20 } },
+          'node-b': { success: true, tokens: { total: 60, input: 30, output: 30 } },
         },
       },
     };
@@ -103,7 +103,7 @@ describe('ManagedAgentGraph', () => {
         nodeMetrics: {
           n1: {
             success: true,
-            usage: { total: 10, input: 5, output: 5 },
+            tokens: { total: 10, input: 5, output: 5 },
             durationMs: 200,
             toolCalls: ['tool-a'],
           },

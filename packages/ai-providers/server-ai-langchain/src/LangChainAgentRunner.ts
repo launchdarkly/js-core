@@ -61,7 +61,7 @@ export class LangChainAgentRunner implements Runner {
 
       const metrics: LDAIMetrics = {
         success: true,
-        usage: sumTokenUsageFromMessages(messages),
+        tokens: sumTokenUsageFromMessages(messages),
         toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
       };
 

@@ -32,7 +32,7 @@ describe('OpenAIAgentRunner', () => {
     expect(result.content).toBe('Done');
     expect(result.metrics.success).toBe(true);
     expect(result.metrics.toolCalls).toBeUndefined();
-    expect(result.metrics.usage).toEqual({ total: 12, input: 8, output: 4 });
+    expect(result.metrics.tokens).toEqual({ total: 12, input: 8, output: 4 });
   });
 
   it('reports tool calls from newItems with LD config name mapping', async () => {
@@ -55,7 +55,7 @@ describe('OpenAIAgentRunner', () => {
 
     expect(result.content).toBe('The answer is 42.');
     expect(result.metrics.toolCalls).toEqual(['lookup']);
-    expect(result.metrics.usage).toEqual({ total: 28, input: 16, output: 12 });
+    expect(result.metrics.tokens).toEqual({ total: 28, input: 16, output: 12 });
   });
 
   it('returns an unsuccessful RunnerResult when the agent run throws', async () => {

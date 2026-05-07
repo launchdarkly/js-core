@@ -50,7 +50,7 @@ describe('ManagedModel', () => {
   it('passes the prompt directly to the runner without prepending config messages', async () => {
     const runnerResult: RunnerResult = {
       content: 'Response from model',
-      metrics: { success: true, usage: { total: 10, input: 4, output: 6 } },
+      metrics: { success: true, tokens: { total: 10, input: 4, output: 6 } },
     };
 
     mockTracker.trackMetricsOf.mockImplementation(async (_extractor, func) => func());
@@ -68,7 +68,7 @@ describe('ManagedModel', () => {
       content: 'Hi there',
       metrics: {
         success: true,
-        usage: { total: 12, input: 5, output: 7 },
+        tokens: { total: 12, input: 5, output: 7 },
         toolCalls: ['tool-1'],
         durationMs: 42,
       },
@@ -99,7 +99,7 @@ describe('ManagedModel', () => {
   it('forwards the runner result through tracker.trackMetricsOf', async () => {
     const runnerResult: RunnerResult = {
       content: 'tracked',
-      metrics: { success: true, usage: { total: 1, input: 1, output: 0 } },
+      metrics: { success: true, tokens: { total: 1, input: 1, output: 0 } },
     };
 
     mockTracker.trackMetricsOf.mockImplementation(async (_extractor, func) => func());
@@ -117,7 +117,7 @@ describe('ManagedModel', () => {
   it('does not retain conversation state across runs', async () => {
     const runnerResult: RunnerResult = {
       content: 'ok',
-      metrics: { success: true, usage: { total: 1, input: 1, output: 0 } },
+      metrics: { success: true, tokens: { total: 1, input: 1, output: 0 } },
     };
 
     mockTracker.trackMetricsOf.mockImplementation(async (_extractor, func) => func());

@@ -208,8 +208,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
 
     // Track token usage if available
-    if (metrics.usage) {
-      this.trackTokens(metrics.usage);
+    if (metrics.tokens) {
+      this.trackTokens(metrics.tokens);
     }
 
     // Track tool calls if available
@@ -260,8 +260,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       }
 
       // Track token usage if available
-      if (metrics.usage) {
-        this.trackTokens(metrics.usage);
+      if (metrics.tokens) {
+        this.trackTokens(metrics.tokens);
       }
 
       // Track tool calls if available

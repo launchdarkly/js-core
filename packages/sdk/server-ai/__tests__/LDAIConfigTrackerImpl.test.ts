@@ -723,7 +723,7 @@ describe('trackMetricsOf', () => {
     const mockResult = { response: 'test' };
     const mockMetrics = {
       success: true,
-      usage: { total: 100, input: 50, output: 50 },
+      tokens: { total: 100, input: 50, output: 50 },
     };
 
     const metricsExtractor = jest.fn().mockReturnValue(mockMetrics);

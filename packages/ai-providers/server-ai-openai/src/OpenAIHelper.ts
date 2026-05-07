@@ -42,7 +42,7 @@ export function getAIUsageFromResponse(response: any): LDTokenUsage | undefined 
 export function getAIMetricsFromResponse(response: any): LDAIMetrics {
   return {
     success: true,
-    usage: getAIUsageFromResponse(response),
+    tokens: getAIUsageFromResponse(response),
   };
 }
 

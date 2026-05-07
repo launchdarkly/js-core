@@ -51,7 +51,7 @@ describe('VercelModelRunner', () => {
       expect(out.content).toBe('Hi!');
       expect(out.metrics).toEqual({
         success: true,
-        usage: { total: 12, input: 7, output: 5 },
+        tokens: { total: 12, input: 7, output: 5 },
       });
       expect(out.raw).toBe(result);
     });
@@ -87,7 +87,7 @@ describe('VercelModelRunner', () => {
 
       const out = await runner.run('hello');
 
-      expect(out.metrics.usage).toEqual({ total: 100, input: 40, output: 60 });
+      expect(out.metrics.tokens).toEqual({ total: 100, input: 40, output: 60 });
     });
 
     it('returns success=false when generateText throws', async () => {
