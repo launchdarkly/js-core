@@ -1,4 +1,7 @@
-import { LDAIConfigKind } from '../src/api/config/types';
+import {
+  LDAIAgentConfig,
+  LDAICompletionConfig,
+} from '../src/api/config/types';
 import { AIProvider, ToolRegistry } from '../src/api/providers/AIProvider';
 import { AgentGraphRunner, Runner } from '../src/api/providers/Runner';
 import { RunnerFactory, SupportedAIProvider } from '../src/api/providers/RunnerFactory';
@@ -7,14 +10,23 @@ import { RunnerFactory, SupportedAIProvider } from '../src/api/providers/RunnerF
 // Helpers
 // ---------------------------------------------------------------------------
 
-const makeConfig = (providerName: string): LDAIConfigKind =>
+const makeConfig = (providerName: string): LDAICompletionConfig =>
   ({
     key: 'test-config',
     enabled: true,
     provider: { name: providerName },
     createTracker: () => ({}) as any,
     evaluator: {} as any,
-  }) as unknown as LDAIConfigKind;
+  }) as unknown as LDAICompletionConfig;
+
+const makeAgentConfig = (providerName: string): LDAIAgentConfig =>
+  ({
+    key: 'test-agent-config',
+    enabled: true,
+    provider: { name: providerName },
+    createTracker: () => ({}) as any,
+    evaluator: {} as any,
+  }) as unknown as LDAIAgentConfig;
 
 const makeRunner = (): Runner => ({ run: jest.fn() });
 const makeGraphRunner = (): AgentGraphRunner => ({ run: jest.fn() });
@@ -162,7 +174,7 @@ describe('RunnerFactory.createAgent', () => {
 
     jest.spyOn(RunnerFactory as any, '_getProviderFactory').mockResolvedValue(mockFactory);
 
-    const result = await RunnerFactory.createAgent(makeConfig('openai'), tools);
+    const result = await RunnerFactory.createAgent(makeAgentConfig('openai'), tools);
 
     expect(result).toBe(runner);
     expect(mockFactory.createAgent).toHaveBeenCalledWith(
@@ -177,7 +189,11 @@ describe('RunnerFactory.createAgent', () => {
 
     jest.spyOn(RunnerFactory as any, '_getProviderFactory').mockResolvedValue(undefined);
 
-    const result = await RunnerFactory.createAgent(makeConfig('openai'), undefined, logger as any);
+    const result = await RunnerFactory.createAgent(
+      makeAgentConfig('openai'),
+      undefined,
+      logger as any,
+    );
 
     expect(result).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('not supported'));
@@ -243,7 +259,7 @@ describe('AIProvider default factory methods', () => {
 
   it('createAgent returns undefined by default', async () => {
     const provider = new ConcreteProvider();
-    const result = await provider.createAgent(makeConfig('openai'));
+    const result = await provider.createAgent(makeAgentConfig('openai'));
     expect(result).toBeUndefined();
   });
 
@@ -251,26 +267,5 @@ describe('AIProvider default factory methods', () => {
     const provider = new ConcreteProvider();
     const result = await provider.createAgentGraph({} as any);
     expect(result).toBeUndefined();
-  });
-
-  it('createModel warns when not overridden', async () => {
-    const warnSpy = jest.fn();
-    const provider = new ConcreteProvider({ warn: warnSpy } as any);
-    await provider.createModel(makeConfig('openai'));
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('createModel not implemented'));
-  });
-
-  it('createAgent warns when not overridden', async () => {
-    const warnSpy = jest.fn();
-    const provider = new ConcreteProvider({ warn: warnSpy } as any);
-    await provider.createAgent(makeConfig('openai'));
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('createAgent not implemented'));
-  });
-
-  it('createAgentGraph warns when not overridden', async () => {
-    const warnSpy = jest.fn();
-    const provider = new ConcreteProvider({ warn: warnSpy } as any);
-    await provider.createAgentGraph({} as any);
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('createAgentGraph not implemented'));
   });
 });

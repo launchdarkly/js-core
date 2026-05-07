@@ -20,7 +20,7 @@
 
 ## Quick Setup
 
-This package provides Vercel AI SDK integration for the LaunchDarkly AI SDK. The simplest way to use it is with the LaunchDarkly AI SDK's `initChat` method:
+This package provides Vercel AI SDK integration for the LaunchDarkly AI SDK. The simplest way to use it is with the LaunchDarkly AI SDK's `createModel` method:
 
 1. Install the required packages:
 
@@ -30,7 +30,7 @@ npm install @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-vercel --sav
 yarn add @launchdarkly/server-sdk-ai @launchdarkly/server-sdk-ai-vercel
 ```
 
-2. Create a chat session and use it:
+2. Create a managed model and run it:
 
 ```typescript
 import { init } from '@launchdarkly/node-server-sdk';
@@ -40,17 +40,17 @@ import { initAi } from '@launchdarkly/server-sdk-ai';
 const ldClient = init(sdkKey);
 const aiClient = initAi(ldClient);
 
-// Create a chat session
-const defaultConfig = { 
-  enabled: true, 
+// Create a managed model
+const defaultConfig = {
+  enabled: true,
   model: { name: 'gpt-4' },
   provider: { name: 'openai' }
 };
-const chat = await aiClient.initChat('my-chat-config', context, defaultConfig);
+const model = await aiClient.createModel('my-chat-config', context, defaultConfig);
 
-if (chat) {
-  const response = await chat.invoke('What is the capital of France?');
-  console.log(response.message.content);
+if (model) {
+  const result = await model.run('What is the capital of France?');
+  console.log(result.content);
 }
 ```
 

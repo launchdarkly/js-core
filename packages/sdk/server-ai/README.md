@@ -79,37 +79,34 @@ if (aiConfig.enabled) {
 }
 ```
 
-## TrackedChat for Conversational AI
+## ManagedModel for Tracked Model Invocations
 
-`TrackedChat` provides a high-level interface for conversational AI with automatic conversation management and metrics tracking:
+`ManagedModel` provides a high-level interface for invoking AI models with automatic metrics tracking and judge evaluation:
 
 - Automatically configures models based on AI configuration
-- Maintains conversation history across multiple interactions
 - Automatically tracks token usage, latency, and success rates
+- Runs configured judges asynchronously and reports their results
 - Works with any supported AI provider (see [AI Providers](https://github.com/launchdarkly/js-core#ai-providers) for available packages)
 
-### Using TrackedChat
+### Using ManagedModel
 
 ```typescript
 // Use the same defaultConfig from the retrieval section above
-const chat = await aiClient.createChat(
+const model = await aiClient.createModel(
   'customer-support-chat',
   context,
   defaultConfig,
   { customerName: 'John' }
 );
 
-if (chat) {
-  // Simple conversation flow - metrics are automatically tracked by invoke()
-  const response1 = await chat.invoke('I need help with my order');
-  console.log(response1.message.content);
-  
-  const response2 = await chat.invoke("What's the status?");
-  console.log(response2.message.content);
-  
-  // Access conversation history
-  const messages = chat.getMessages();
-  console.log(`Conversation has ${messages.length} messages`);
+if (model) {
+  // Metrics are automatically tracked by run()
+  const result = await model.run('I need help with my order');
+  console.log(result.content);
+
+  // Judge evaluations run asynchronously; await if you need their results
+  const evals = await result.evaluations;
+  console.log('Judge results:', evals);
 }
 ```
 

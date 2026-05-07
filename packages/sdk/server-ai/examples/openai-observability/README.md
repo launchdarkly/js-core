@@ -1,6 +1,6 @@
 # Provider-Specific Observability Example (OpenAI)
 
-This example shows how to use the LaunchDarkly observability plugin when calling an AI provider directly — without the higher-level `createChat` abstraction. It uses OpenAI as the provider, but the same pattern applies to any provider (Bedrock, Anthropic, Vercel AI SDK, etc.).
+This example shows how to use the LaunchDarkly observability plugin when calling an AI provider directly — without the higher-level `createModel` abstraction. It uses OpenAI as the provider, but the same pattern applies to any provider (Bedrock, Anthropic, Vercel AI SDK, etc.).
 
 ## How it works
 
