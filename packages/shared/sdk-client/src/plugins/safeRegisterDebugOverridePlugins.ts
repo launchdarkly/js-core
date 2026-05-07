@@ -1,7 +1,7 @@
 import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDPluginBase } from '../api';
-import { LDDebugOverride } from '../flag-manager/FlagManager';
+import { LDDebugOverride } from '../api/LDDebugOverride';
 
 /**
  * Safe register debug override plugins.

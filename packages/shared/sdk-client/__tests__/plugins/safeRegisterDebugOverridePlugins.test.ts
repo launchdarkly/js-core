@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDPluginBase } from '../../src/api';
-import { LDDebugOverride } from '../../src/flag-manager/FlagManager';
+import { LDDebugOverride } from '../../src/api/LDDebugOverride';
 import { safeRegisterDebugOverridePlugins } from '../../src/plugins/safeRegisterDebugOverridePlugins';
 
 function createMockLogger(): LDLogger {
