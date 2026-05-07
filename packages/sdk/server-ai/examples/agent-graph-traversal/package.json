@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@launchdarkly/node-server-sdk": "9.10.14",
-    "@launchdarkly/server-sdk-ai": "0.19.1"
+    "@launchdarkly/server-sdk-ai": "0.20.0"
   },
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
