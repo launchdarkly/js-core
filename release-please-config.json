@@ -150,6 +150,11 @@
         "src/platform/NodeInfo.ts",
         {
           "type": "json",
+          "path": "/packages/sdk/react/examples/features/bootstrap/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
           "path": "/packages/sdk/react/examples/react-server-example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         },
@@ -308,6 +313,11 @@
     "packages/sdk/react": {
       "extra-files": [
         "src/client/LDReactClient.tsx",
+        {
+          "type": "json",
+          "path": "examples/features/bootstrap/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
         {
           "type": "json",
           "path": "examples/hello-react/package.json",

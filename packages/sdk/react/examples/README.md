@@ -5,5 +5,6 @@ This directory contains example applications demonstrating the LaunchDarkly Reac
 | Example | Description |
 |---------|-------------|
 | [hello-react](./hello-react/) | Minimal Vite + React app that evaluates a boolean feature flag and displays the result with real-time updates. This is the recommended starting point. |
+| [features/bootstrap](./features/bootstrap/) | Vite SPA + Express server demonstrating the standalone `bootstrap` option on `LDReactProviderOptions`. The Node Server SDK pre-evaluates flags so the client renders bootstrapped values on first paint without a flag-fetch round-trip. |
 | [react-server-example](./react-server-example/) | Next.js App Router example demonstrating server-side flag evaluation with React Server Components. |
 | [vercel-edge](./vercel-edge/) | Next.js App Router example using the Vercel Edge SDK to evaluate flags from Vercel Edge Config, with server-to-client bootstrap via `LDIsomorphicProvider`. |
