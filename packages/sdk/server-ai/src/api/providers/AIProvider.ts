@@ -25,6 +25,7 @@ export type ToolRegistry = Record<string, (...args: any[]) => unknown>;
  * actually support.
  */
 export abstract class AIProvider {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   protected _logger?: LDLogger;
 
   constructor(logger?: LDLogger) {
