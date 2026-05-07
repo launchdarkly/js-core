@@ -40,28 +40,38 @@ export interface LDAgentGraphFlagValue {
 }
 
 /**
- * Accumulated graph-level metrics collected by an LDGraphTracker.
+ * Summarized graph-level metrics for a completed graph invocation, as
+ * returned by {@link ManagedAgentGraph.run} via {@link ManagedGraphResult.metrics}.
+ *
+ * For the tracker-layer incremental view (where fields populate as tracking
+ * calls arrive), see {@link LDGraphTracker.getSummary}, which returns a
+ * `Partial<LDAIGraphMetricSummary>`.
  */
 export interface LDAIGraphMetricSummary {
   /**
-   * Whether the graph invocation succeeded. Absent if not yet tracked.
+   * Whether the graph invocation succeeded.
    */
-  success?: boolean;
+  success: boolean;
 
   /**
-   * Total graph execution duration in milliseconds. Absent if not yet tracked.
+   * Execution path through the graph as an ordered array of config keys.
+   */
+  path: string[];
+
+  /**
+   * Per-node metric summaries keyed by agent config key.
+   */
+  nodeMetrics: Record<string, LDAIMetricSummary>;
+
+  /**
+   * Total graph execution duration in milliseconds, if tracked.
    */
   durationMs?: number;
 
   /**
-   * Aggregate token usage across the entire graph invocation. Absent if not yet tracked.
+   * Aggregate token usage across the entire graph invocation, if available.
    */
   tokens?: LDTokenUsage;
-
-  /**
-   * Execution path through the graph as an array of config keys. Absent if not yet tracked.
-   */
-  path?: string[];
 
   /**
    * Resumption token for deferred feedback association.
@@ -126,42 +136,6 @@ export interface AgentGraphRunnerResult {
 // ============================================================================
 
 /**
- * Graph metric summary returned in ManagedGraphResult.
- * Includes per-node metrics and a resumption token.
- */
-export interface GraphMetricSummary {
-  /**
-   * Whether the graph invocation succeeded.
-   */
-  success: boolean;
-
-  /**
-   * Execution path through the graph as an ordered array of config keys.
-   */
-  path: string[];
-
-  /**
-   * Total graph execution duration in milliseconds, if tracked.
-   */
-  durationMs?: number;
-
-  /**
-   * Aggregate token usage across the entire graph invocation, if available.
-   */
-  tokens?: LDTokenUsage;
-
-  /**
-   * Per-node metric summaries keyed by agent config key.
-   */
-  nodeMetrics: Record<string, LDAIMetricSummary>;
-
-  /**
-   * Resumption token for deferred feedback association.
-   */
-  resumptionToken?: string;
-}
-
-/**
  * The result returned by a managed graph invocation (ManagedAgentGraph.run()).
  */
 export interface ManagedGraphResult {
@@ -173,7 +147,7 @@ export interface ManagedGraphResult {
   /**
    * Summarized metrics for this graph invocation.
    */
-  metrics: GraphMetricSummary;
+  metrics: LDAIGraphMetricSummary;
 
   /**
    * The raw response object from the provider, if available.
