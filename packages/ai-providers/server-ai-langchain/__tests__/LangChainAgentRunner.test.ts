@@ -27,7 +27,7 @@ it('returns content with no toolCalls when the agent returns a simple response',
   expect(result.content).toBe('done');
   expect(result.metrics.success).toBe(true);
   expect(result.metrics.toolCalls).toBeUndefined();
-  expect(result.metrics.usage).toEqual({ total: 6, input: 4, output: 2 });
+  expect(result.metrics.tokens).toEqual({ total: 6, input: 4, output: 2 });
 });
 
 it('extracts tool calls and aggregates usage from multi-step agent messages', async () => {
@@ -56,7 +56,7 @@ it('extracts tool calls and aggregates usage from multi-step agent messages', as
 
   expect(result.content).toBe('Answer is 42.');
   expect(result.metrics.toolCalls).toEqual(['lookup']);
-  expect(result.metrics.usage).toEqual({ total: 28, input: 16, output: 12 });
+  expect(result.metrics.tokens).toEqual({ total: 28, input: 16, output: 12 });
 });
 
 it('returns success=false when the agent throws', async () => {
@@ -83,5 +83,5 @@ it('handles empty messages array gracefully', async () => {
   expect(result.content).toBe('');
   expect(result.metrics.success).toBe(true);
   expect(result.metrics.toolCalls).toBeUndefined();
-  expect(result.metrics.usage).toBeUndefined();
+  expect(result.metrics.tokens).toBeUndefined();
 });

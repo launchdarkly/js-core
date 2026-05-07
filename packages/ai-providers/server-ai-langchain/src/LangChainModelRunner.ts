@@ -96,7 +96,7 @@ export class LangChainModelRunner implements Runner {
 
       const metrics = {
         success: true,
-        usage: { total: 0, input: 0, output: 0 },
+        tokens: { total: 0, input: 0, output: 0 },
       };
 
       return {
@@ -111,7 +111,7 @@ export class LangChainModelRunner implements Runner {
         content: '',
         metrics: {
           success: false,
-          usage: { total: 0, input: 0, output: 0 },
+          tokens: { total: 0, input: 0, output: 0 },
         },
       };
     }

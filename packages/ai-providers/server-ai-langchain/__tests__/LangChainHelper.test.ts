@@ -102,7 +102,7 @@ it('returns success=true with usage from the response', () => {
   message.usage_metadata = { total_tokens: 3, input_tokens: 1, output_tokens: 2 };
   expect(getAIMetricsFromResponse(message)).toEqual({
     success: true,
-    usage: { total: 3, input: 1, output: 2 },
+    tokens: { total: 3, input: 1, output: 2 },
   });
 });
 

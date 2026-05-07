@@ -62,7 +62,7 @@ describe('getAIMetricsFromResponse', () => {
       getAIMetricsFromResponse({
         usage: { totalTokens: 5, promptTokens: 2, completionTokens: 3 },
       }),
-    ).toEqual({ success: true, usage: { total: 5, input: 2, output: 3 } });
+    ).toEqual({ success: true, tokens: { total: 5, input: 2, output: 3 } });
   });
 
   it('marks success=false when finishReason is "error"', () => {
@@ -83,7 +83,7 @@ describe('getAIMetricsFromStream', () => {
     });
     expect(result).toEqual({
       success: true,
-      usage: { total: 100, input: 49, output: 51 },
+      tokens: { total: 100, input: 49, output: 51 },
     });
   });
 

@@ -192,7 +192,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: {
+          tokens: {
             total: 100,
             input: 50,
             output: 50,
@@ -254,7 +254,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -283,7 +283,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -356,7 +356,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -391,7 +391,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -426,7 +426,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -462,7 +462,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -512,7 +512,7 @@ describe('Judge', () => {
         parsed: undefined,
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -538,7 +538,7 @@ describe('Judge', () => {
         parsed: {},
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -568,7 +568,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 
@@ -642,7 +642,7 @@ describe('Judge', () => {
         },
         metrics: {
           success: true,
-          usage: { total: 100, input: 50, output: 50 },
+          tokens: { total: 100, input: 50, output: 50 },
         },
       };
 

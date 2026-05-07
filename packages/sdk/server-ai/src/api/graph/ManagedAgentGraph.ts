@@ -47,7 +47,7 @@ export class ManagedAgentGraph {
       success: runnerResult.metrics.success,
       path: runnerResult.metrics.path,
       durationMs: runnerResult.metrics.durationMs,
-      tokens: runnerResult.metrics.usage,
+      tokens: runnerResult.metrics.tokens,
       nodeMetrics: this._trackNodeMetrics(runnerResult.metrics.nodeMetrics),
       resumptionToken: graphTracker.resumptionToken,
     };
@@ -79,8 +79,8 @@ export class ManagedAgentGraph {
       }
 
       const tracker = node.getConfig().createTracker!();
-      if (metrics.usage) {
-        tracker.trackTokens(metrics.usage);
+      if (metrics.tokens) {
+        tracker.trackTokens(metrics.tokens);
       }
       if (metrics.durationMs !== undefined) {
         tracker.trackDuration(metrics.durationMs);

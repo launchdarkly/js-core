@@ -80,7 +80,7 @@ export function getAIUsageFromResponse(response: AIMessage): LDTokenUsage | unde
 export function getAIMetricsFromResponse(response: AIMessage): LDAIMetrics {
   return {
     success: true,
-    usage: getAIUsageFromResponse(response),
+    tokens: getAIUsageFromResponse(response),
   };
 }
 
