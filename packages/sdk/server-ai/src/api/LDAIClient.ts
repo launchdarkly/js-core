@@ -82,6 +82,16 @@ export interface LDAIClient {
   ): Promise<LDAICompletionConfig>;
 
   /**
+   * @deprecated Use `completionConfig` instead. This method will be removed in a future version.
+   */
+  config(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+  ): Promise<LDAICompletionConfig>;
+
+  /**
    * Retrieves and processes a single AI Config agent based on the provided key, LaunchDarkly context,
    * and variables. This includes the model configuration and the customized instructions.
    *
@@ -121,6 +131,16 @@ export interface LDAIClient {
     defaultValue?: LDAIAgentConfigDefault,
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
+  ): Promise<LDAIAgentConfig>;
+
+  /**
+   * @deprecated Use `agentConfig` instead. This method will be removed in a future version.
+   */
+  agent(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIAgentConfigDefault,
+    variables?: Record<string, unknown>,
   ): Promise<LDAIAgentConfig>;
 
   /**
@@ -209,6 +229,14 @@ export interface LDAIClient {
   ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
 
   /**
+   * @deprecated Use `agentConfigs` instead. This method will be removed in a future version.
+   */
+  agents<const T extends readonly LDAIAgentRequestConfig[]>(
+    agentConfigs: T,
+    context: LDContext,
+  ): Promise<Record<T[number]['key'], LDAIAgentConfig>>;
+
+  /**
    * Creates and returns a new ManagedModel instance for LLM model interactions.
    *
    * @param key The key identifying the AI completion configuration to use.
@@ -268,6 +296,28 @@ export interface LDAIClient {
     variables?: Record<string, unknown>,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<ManagedAgent | undefined>;
+
+  /**
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
+   */
+  createChat(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedModel | undefined>;
+
+  /**
+   * @deprecated Use `createModel` instead. This method will be removed in a future version.
+   */
+  initChat(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    variables?: Record<string, unknown>,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<ManagedModel | undefined>;
 
   /**
    * Creates and returns a new Judge instance for AI evaluation.
