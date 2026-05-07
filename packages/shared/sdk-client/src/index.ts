@@ -48,7 +48,8 @@ export type {
 } from './api';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
-export type { FlagManager, LDDebugOverride } from './flag-manager/FlagManager';
+export type { FlagManager } from './flag-manager/FlagManager';
+export type { LDDebugOverride } from './api/LDDebugOverride';
 export { safeRegisterDebugOverridePlugins } from './plugins/safeRegisterDebugOverridePlugins';
 export type { Configuration } from './configuration/Configuration';
 export { default as validateOptions } from './configuration/validateOptions';

@@ -1,6 +1,6 @@
 import { LDPluginBase as LDPluginBaseCommon } from '@launchdarkly/js-sdk-common';
 
-import { LDDebugOverride } from '../flag-manager/FlagManager';
+import { LDDebugOverride } from './LDDebugOverride';
 
 export interface LDPluginBase<TClient, THook> extends LDPluginBaseCommon<TClient, THook> {
   /**
