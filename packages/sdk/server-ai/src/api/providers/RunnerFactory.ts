@@ -1,6 +1,10 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIConfigKind } from '../config/types';
+import {
+  LDAIAgentConfig,
+  LDAICompletionConfig,
+  LDAIJudgeConfig,
+} from '../config/types';
 import { AgentGraphDefinition } from '../graph/AgentGraphDefinition';
 import { AIProvider, ToolRegistry } from './AIProvider';
 import { AgentGraphRunner, Runner } from './Runner';
@@ -29,21 +33,16 @@ export type SupportedAIProvider = (typeof SUPPORTED_AI_PROVIDERS)[number];
  * via {@link _getProviderFactory}, and delegates creation to the factory
  * instance methods on {@link AIProvider}.
  *
- * Provider packages implement {@link AIProvider} factory methods
- * (`createModel`, `createAgent`, `createAgentGraph`). The legacy
- * {@link AIProvider} abstract class is retained for backward compatibility,
- * and the {@link _LegacyProviderAdapter} shim wraps packages that have not
- * yet migrated to the new pattern.
+ * Provider packages subclass {@link AIProvider} and override its factory
+ * methods (`createModel`, `createAgent`, `createAgentGraph`).
  */
 export class RunnerFactory {
   /**
    * Load and return the AIProvider factory for the given provider type.
    *
    * This is the single place in the codebase that knows provider package names.
-   * If the provider package exports the new `*RunnerFactory` class, it is
-   * instantiated directly. Otherwise a {@link _LegacyProviderAdapter} wrapping
-   * the old `static create()` class is returned to keep CI green during the
-   * transition.
+   * Each supported provider package exports a `*RunnerFactory` class that
+   * extends {@link AIProvider}; this method instantiates it directly.
    *
    * @param providerType One of the {@link SUPPORTED_AI_PROVIDERS} values.
    * @param logger Optional logger forwarded to the provider factory.
@@ -163,7 +162,7 @@ export class RunnerFactory {
    *   `undefined` if no suitable provider could be loaded.
    */
   static async createModel(
-    config: LDAIConfigKind,
+    config: LDAICompletionConfig | LDAIJudgeConfig,
     logger?: LDLogger,
     defaultAiProvider?: SupportedAIProvider,
   ): Promise<Runner | undefined> {
@@ -200,7 +199,7 @@ export class RunnerFactory {
    *   provider could be loaded.
    */
   static async createAgent(
-    config: LDAIConfigKind,
+    config: LDAIAgentConfig,
     tools?: ToolRegistry,
     logger?: LDLogger,
     defaultAiProvider?: SupportedAIProvider,

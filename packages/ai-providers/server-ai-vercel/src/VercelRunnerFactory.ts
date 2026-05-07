@@ -25,7 +25,7 @@ export class VercelRunnerFactory extends AIProvider {
   async createModel(config: LDAICompletionConfig): Promise<VercelModelRunner> {
     const model = await VercelRunnerFactory.createVercelModel(config);
     const parameters = VercelRunnerFactory.mapParameters(config.model?.parameters);
-    return new VercelModelRunner(model, config, parameters, this.logger);
+    return new VercelModelRunner(model, config, parameters, this._logger);
   }
 
   /**
