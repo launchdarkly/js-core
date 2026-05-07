@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.7.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.6.3...server-sdk-ai-langchain-v0.7.0) (2026-05-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366))
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363))
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364))
+
+### Features
+
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363)) ([ad66314](https://github.com/launchdarkly/js-core/commit/ad66314e403b83976987c54da9c6c70308c25078))
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366)) ([ff932b7](https://github.com/launchdarkly/js-core/commit/ff932b74c10307519dc9f913a4330a5b7d79438d))
+* Replace LangChainProvider with Runner protocol implementation (AIC-2388) ([#1338](https://github.com/launchdarkly/js-core/issues/1338)) ([113a0d2](https://github.com/launchdarkly/js-core/commit/113a0d289ce764a3301140b2b14123ce5da9b42e))
+
+
+### Bug Fixes
+
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364)) ([c90034b](https://github.com/launchdarkly/js-core/commit/c90034b58a3b75d92269e7c485f38f1266208f08))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.19.1 to ^0.20.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.19.1 to ^0.20.0
+
 ## [0.6.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.6.2...server-sdk-ai-langchain-v0.6.3) (2026-05-06)
 
 

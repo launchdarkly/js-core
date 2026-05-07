@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.6.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.5.10...server-sdk-ai-vercel-v0.6.0) (2026-05-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366))
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363))
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364))
+
+### Features
+
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363)) ([ad66314](https://github.com/launchdarkly/js-core/commit/ad66314e403b83976987c54da9c6c70308c25078))
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366)) ([ff932b7](https://github.com/launchdarkly/js-core/commit/ff932b74c10307519dc9f913a4330a5b7d79438d))
+* replace VercelProvider with Runner protocol implementation (AIC-2388) ([#1339](https://github.com/launchdarkly/js-core/issues/1339)) ([d5a62de](https://github.com/launchdarkly/js-core/commit/d5a62def46b683d4c2e7de0c16ee7fc82e40b66a))
+
+
+### Bug Fixes
+
+* add zod devDependency to Vercel provider (peer dep of ai v5) ([aab6226](https://github.com/launchdarkly/js-core/commit/aab62262800dfc0b9d4c3c6f9ee71a3f63519959))
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364)) ([c90034b](https://github.com/launchdarkly/js-core/commit/c90034b58a3b75d92269e7c485f38f1266208f08))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.19.1 to ^0.20.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.19.1 to ^0.20.0
+
 ## [0.5.10](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.5.9...server-sdk-ai-vercel-v0.5.10) (2026-05-06)
 
 

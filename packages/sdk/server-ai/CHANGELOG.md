@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.20.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.19.1...server-sdk-ai-v0.20.0) (2026-05-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366))
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363))
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364))
+* Use LDAIGraphMetricSummary for graph metric summary ([#1362](https://github.com/launchdarkly/js-core/issues/1362))
+
+### Features
+
+* add Evaluator class for judge orchestration ([#1331](https://github.com/launchdarkly/js-core/issues/1331)) ([54faa69](https://github.com/launchdarkly/js-core/commit/54faa69aa28333f92d943de79307611fc05e2cbe))
+* add ManagedAgent with evaluations support ([#1334](https://github.com/launchdarkly/js-core/issues/1334)) ([7f09c46](https://github.com/launchdarkly/js-core/commit/7f09c46cdec808ce9ebeb6487e6a2fa4fc817cbc))
+* add ManagedGraphResult, GraphMetricSummary, and ManagedAgentGraph ([#1335](https://github.com/launchdarkly/js-core/issues/1335)) ([09fa1db](https://github.com/launchdarkly/js-core/commit/09fa1dbb134ea43ab8664b5e7903eb85883a0ac2))
+* introduce ManagedResult, RunnerResult, and LDAIMetricSummary ([#1332](https://github.com/launchdarkly/js-core/issues/1332)) ([5040122](https://github.com/launchdarkly/js-core/commit/5040122a5c6de88691820f02528550b983a14e58))
+* Remove AIProvider deprecated methods and create*/init* aliases (AIC-2388) ([#1363](https://github.com/launchdarkly/js-core/issues/1363)) ([ad66314](https://github.com/launchdarkly/js-core/commit/ad66314e403b83976987c54da9c6c70308c25078))
+* Rename LDAIMetrics.usage and LDAIGraphMetrics.usage to .tokens ([#1366](https://github.com/launchdarkly/js-core/issues/1366)) ([ff932b7](https://github.com/launchdarkly/js-core/commit/ff932b74c10307519dc9f913a4330a5b7d79438d))
+* Replace OpenAIProvider with Runner protocol implementation (AIC-2388) ([#1337](https://github.com/launchdarkly/js-core/issues/1337)) ([e32a955](https://github.com/launchdarkly/js-core/commit/e32a955c583db1bc382e2e0f3f459d459bc35984))
+
+
+### Bug Fixes
+
+* Build judge input as string and strip legacy judge config messages ([#1364](https://github.com/launchdarkly/js-core/issues/1364)) ([c90034b](https://github.com/launchdarkly/js-core/commit/c90034b58a3b75d92269e7c485f38f1266208f08))
+* Use LDAIGraphMetricSummary for graph metric summary ([#1362](https://github.com/launchdarkly/js-core/issues/1362)) ([76a4bf2](https://github.com/launchdarkly/js-core/commit/76a4bf278999c81b27ce1aa29a3c1cb42e113fbc))
+
 ## [0.19.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.19.0...server-sdk-ai-v0.19.1) (2026-05-06)
 
 

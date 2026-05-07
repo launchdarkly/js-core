@@ -10,8 +10,8 @@
   "dependencies": {
     "@launchdarkly/node-server-sdk": "9.10.14",
     "@launchdarkly/observability-node": "^1.0.0",
-    "@launchdarkly/server-sdk-ai": "0.19.1",
-    "@launchdarkly/server-sdk-ai-openai": "0.5.10",
+    "@launchdarkly/server-sdk-ai": "0.20.0",
+    "@launchdarkly/server-sdk-ai-openai": "0.6.0",
     "dotenv": "^16.0.0",
     "openai": "^5.12.2"
   },
