@@ -115,4 +115,69 @@ describe('LangChainModelRunner', () => {
   it('returns the underlying chat model', () => {
     expect(runner.getChatModel()).toBe(mockLLM);
   });
+
+  describe('conversation history', () => {
+    it('accumulates history across successful calls', async () => {
+      mockLLM.invoke
+        .mockResolvedValueOnce(new AIMessage('First response'))
+        .mockResolvedValueOnce(new AIMessage('Second response'));
+
+      await runner.run('First question');
+      await runner.run('Second question');
+
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      const roles = secondCallMessages.map((m: any) => m.constructor.name);
+      expect(roles).toEqual(['HumanMessage', 'AIMessage', 'HumanMessage']);
+      expect(secondCallMessages[0].content).toBe('First question');
+      expect(secondCallMessages[1].content).toBe('First response');
+      expect(secondCallMessages[2].content).toBe('Second question');
+    });
+
+    it('does not accumulate history when the call throws', async () => {
+      mockLLM.invoke.mockRejectedValueOnce(new Error('Model error'));
+      await runner.run('Hello');
+
+      mockLLM.invoke.mockResolvedValueOnce(new AIMessage('Recovery'));
+      await runner.run('Try again');
+
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      expect(secondCallMessages).toHaveLength(1);
+      expect(secondCallMessages[0].content).toBe('Try again');
+    });
+
+    it('does not accumulate history when content is empty (multimodal)', async () => {
+      mockLLM.invoke.mockResolvedValueOnce(new AIMessage([{ type: 'image' }] as any));
+      await runner.run('Hello');
+
+      mockLLM.invoke.mockResolvedValueOnce(new AIMessage('Recovery'));
+      await runner.run('Try again');
+
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      expect(secondCallMessages).toHaveLength(1);
+      expect(secondCallMessages[0].content).toBe('Try again');
+    });
+
+    it('keeps config messages prepended ahead of accumulated history on every call', async () => {
+      const configWithMessages: LDAICompletionConfig = {
+        ...baseConfig,
+        messages: [{ role: 'system', content: 'You are helpful.' }],
+      };
+      const r = new LangChainModelRunner(mockLLM, configWithMessages, mockLogger);
+
+      mockLLM.invoke
+        .mockResolvedValueOnce(new AIMessage('Answer 1'))
+        .mockResolvedValueOnce(new AIMessage('Answer 2'));
+
+      await r.run('Q1');
+      await r.run('Q2');
+
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      expect(secondCallMessages).toHaveLength(4);
+      expect(secondCallMessages[0].constructor.name).toBe('SystemMessage');
+      expect(secondCallMessages[0].content).toBe('You are helpful.');
+      expect(secondCallMessages[1].content).toBe('Q1');
+      expect(secondCallMessages[2].content).toBe('Answer 1');
+      expect(secondCallMessages[3].content).toBe('Q2');
+    });
+  });
 });
