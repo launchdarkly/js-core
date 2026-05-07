@@ -33,9 +33,13 @@ export interface LDGraphTracker {
   };
 
   /**
-   * Returns a snapshot of all graph-level metrics tracked so far.
+   * Returns a snapshot of all graph-level metrics tracked so far. Fields
+   * populate incrementally as `track*` methods are called, so the result is
+   * a `Partial<LDAIGraphMetricSummary>`. Once the graph invocation has
+   * completed via `ManagedAgentGraph.run()`, prefer `ManagedGraphResult.metrics`
+   * which is fully populated.
    */
-  getSummary(): LDAIGraphMetricSummary;
+  getSummary(): Partial<LDAIGraphMetricSummary>;
 
   /**
    * A URL-safe Base64-encoded (RFC 4648, no padding) token encoding the tracker's

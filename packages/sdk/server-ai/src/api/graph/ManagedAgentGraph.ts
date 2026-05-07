@@ -5,7 +5,7 @@ import { LDAIMetricSummary } from '../model/types';
 import { LDJudgeResult } from '../judge/types';
 import { AgentGraphDefinition } from './AgentGraphDefinition';
 import { LDGraphTracker } from './LDGraphTracker';
-import { AgentGraphRunnerResult, GraphMetricSummary, ManagedGraphResult } from './types';
+import { AgentGraphRunnerResult, LDAIGraphMetricSummary, ManagedGraphResult } from './types';
 
 /**
  * ManagedAgentGraph wraps an AgentGraphDefinition and provides a managed run()
@@ -13,7 +13,7 @@ import { AgentGraphRunnerResult, GraphMetricSummary, ManagedGraphResult } from '
  *
  * The runner function is responsible for executing the graph and returning
  * an AgentGraphRunnerResult. ManagedAgentGraph builds the managed result from
- * the runner result, including GraphMetricSummary with the graphTracker's
+ * the runner result, including LDAIGraphMetricSummary with the graphTracker's
  * resumptionToken.
  */
 export class ManagedAgentGraph {
@@ -31,7 +31,7 @@ export class ManagedAgentGraph {
    * run() returns before ManagedGraphResult.evaluations resolves.
    *
    * @param runner Async function that executes the graph and returns AgentGraphRunnerResult.
-   * @returns ManagedGraphResult with GraphMetricSummary and evaluations promise.
+   * @returns ManagedGraphResult with LDAIGraphMetricSummary and evaluations promise.
    */
   async run(
     runner: (
@@ -43,7 +43,7 @@ export class ManagedAgentGraph {
 
     const runnerResult = await runner(this._graphDefinition, graphTracker);
 
-    const metrics: GraphMetricSummary = {
+    const metrics: LDAIGraphMetricSummary = {
       success: runnerResult.metrics.success,
       path: runnerResult.metrics.path,
       durationMs: runnerResult.metrics.durationMs,
