@@ -41,7 +41,6 @@ export abstract class AIProvider {
    * @returns Promise resolving to a {@link Runner}, or `undefined` if this
    *   provider does not support model creation.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createModel(_config: LDAICompletionConfig | LDAIJudgeConfig): Promise<Runner | undefined> {
     return undefined;
   }
@@ -57,7 +56,6 @@ export abstract class AIProvider {
    * @returns Promise resolving to a {@link Runner}, or `undefined` if this
    *   provider does not support agent creation.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createAgent(_config: LDAIAgentConfig, _tools?: ToolRegistry): Promise<Runner | undefined> {
     return undefined;
   }
@@ -74,10 +72,8 @@ export abstract class AIProvider {
    *   this provider does not support graph execution.
    */
   async createAgentGraph(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    graphDef: AgentGraphDefinition,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    tools?: ToolRegistry,
+    _graphDef: AgentGraphDefinition,
+    _tools?: ToolRegistry,
   ): Promise<AgentGraphRunner | undefined> {
     return undefined;
   }
