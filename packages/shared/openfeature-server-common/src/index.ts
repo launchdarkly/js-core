@@ -8,3 +8,4 @@
 export { BaseOpenFeatureProvider } from './BaseOpenFeatureProvider';
 export type { BaseProviderConfig } from './BaseOpenFeatureProvider';
 export type { OpenFeatureLDClientContract } from './OpenFeatureLDClientContract';
+export { translateContext } from './translateContext';
