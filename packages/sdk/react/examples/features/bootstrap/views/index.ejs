@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaunchDarkly React SDK Bootstrap Example</title>
+    <link rel="stylesheet" href="/assets/index.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      window.__LD_BOOTSTRAP__ = <%- bootstrap %>;
+      window.__LD_CLIENT_SIDE_ID__ = <%- clientSideId %>;
+      window.__LD_CONTEXT__ = <%- context %>;
+    </script>
+    <script type="module" src="/assets/index.js"></script>
+  </body>
+</html>
