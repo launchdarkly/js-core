@@ -1,4 +1,3 @@
-/* eslint-disable import/prefer-default-export */
 /**
  * Enable / disable Auto environment attributes. When enabled, the SDK will automatically
  * provide data about the mobile environment where the application is running. This data makes it simpler to target

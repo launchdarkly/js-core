@@ -37,7 +37,6 @@ describe('sdk-client object', () => {
 
   function onDataSourceChangePromise(numToAwait: number) {
     let countdown = numToAwait;
-    // eslint-disable-next-line no-new
     return new Promise<void>((res) => {
       ldc.on('dataSourceStatus', () => {
         countdown -= 1;

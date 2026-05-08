@@ -1,5 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-// eslint-disable-next-line max-classes-per-file
 import type {
   LDContext,
   LDContextCommon,
@@ -296,7 +295,6 @@ export default class Context {
     }
 
     // The JSON interfaces uses dangling _.
-    // eslint-disable-next-line no-underscore-dangle
     const privateAttributeReferences = processPrivateAttributes(context._meta?.privateAttributes);
     const created = new Context(true, kind);
     created._isUser = kind === 'user';

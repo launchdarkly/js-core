@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { sveltekit } from '@sveltejs/kit/vite';
 import path from 'path';
 // eslint-disable-next-line import/no-extraneous-dependencies

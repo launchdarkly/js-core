@@ -78,7 +78,6 @@ class MockPersistentStore implements PersistentDataStore {
     this.closed = true;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   getDescription(): string {
     return 'mock';
   }

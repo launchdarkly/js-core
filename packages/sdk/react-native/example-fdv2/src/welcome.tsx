@@ -100,7 +100,6 @@ export default function Welcome() {
   const onIdentify = () => {
     ldc
       .identify({ kind: 'user', key: userKey }, { timeout: 5 })
-      // eslint-disable-next-line no-console
       .catch((e: any) => console.error(`error identifying ${userKey}: ${e}`));
   };
 

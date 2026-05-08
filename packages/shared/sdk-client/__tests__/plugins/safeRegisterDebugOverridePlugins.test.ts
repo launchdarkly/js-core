@@ -25,6 +25,7 @@ function createMockDebugOverride(): LDDebugOverride {
 it('calls registerDebug on every plugin that implements it', () => {
   const logger = createMockLogger();
   const debugOverride = createMockDebugOverride();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const mockClient = { id: 'test-client' };
 
   const plugin1: LDPluginBase<typeof mockClient, unknown> = {
@@ -49,6 +50,7 @@ it('calls registerDebug on every plugin that implements it', () => {
 it('skips plugins that do not implement registerDebug', () => {
   const logger = createMockLogger();
   const debugOverride = createMockDebugOverride();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const mockClient = { id: 'test-client' };
 
   const pluginWithDebug: LDPluginBase<typeof mockClient, unknown> = {
@@ -74,6 +76,7 @@ it('skips plugins that do not implement registerDebug', () => {
 it('continues processing and logs error when registerDebug throws', () => {
   const logger = createMockLogger();
   const debugOverride = createMockDebugOverride();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const mockClient = { id: 'test-client' };
 
   const throwingPlugin: LDPluginBase<typeof mockClient, unknown> = {

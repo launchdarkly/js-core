@@ -1,4 +1,4 @@
-/* eslint-disable no-console, @typescript-eslint/no-use-before-define, no-restricted-globals */
+/* eslint-disable no-console */
 /// <reference types="@fastly/js-compute" />
 import { env } from 'fastly:env';
 import { includeBytes } from 'fastly:experimental';
@@ -24,6 +24,7 @@ const dog = includeBytes('./src/dog.jpg');
 // path), send the request to a backend, make completely new requests, and/or
 // generate synthetic responses.
 
+// eslint-disable-next-line @typescript-eslint/no-use-before-define
 addEventListener('fetch', (event) => event.respondWith(handleRequest(event)));
 
 async function handleRequest(event: FetchEvent) {

@@ -104,7 +104,6 @@ describe('given an LDClient with test data', () => {
           jest.spyOn(internal, 'shouldSample').mockReturnValue(true);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage).checkRatio(10));
-          // eslint-disable-next-line no-await-in-loop
           await migration.read(flagKey, { key: 'test' }, stage);
           // Feature event.
           await events.take();
@@ -124,7 +123,6 @@ describe('given an LDClient with test data', () => {
           jest.spyOn(internal, 'shouldSample').mockReturnValue(false);
           const flagKey = 'migration';
           td.update(td.flag(flagKey).valueForAll(stage).checkRatio(12));
-          // eslint-disable-next-line no-await-in-loop
           await migration.read(flagKey, { key: 'test' }, stage);
           // Feature event.
           await events.take();

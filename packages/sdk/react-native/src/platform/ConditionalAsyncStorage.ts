@@ -1,4 +1,4 @@
-/* eslint-disable global-require */
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 /**
  * The LaunchDarkly React-Native SDK uses
