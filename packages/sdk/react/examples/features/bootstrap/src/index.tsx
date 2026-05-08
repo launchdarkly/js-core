@@ -10,49 +10,38 @@ import {
 import App from './App';
 import './index.css';
 
-const LAUNCHDARKLY_CLIENT_SIDE_ID = import.meta.env.LAUNCHDARKLY_CLIENT_SIDE_ID ?? '';
-
-const context: LDContext = {
-  // Set up the evaluation context. This context should appear on your LaunchDarkly contexts dashboard soon after you run the demo.
-  kind: 'user',
-  key: 'example-user-key',
-  name: 'Sandy',
-};
-
-async function fetchBootstrap(): Promise<Record<string, unknown>> {
-  const res = await fetch('/api/bootstrap');
-  if (!res.ok) {
-    throw new Error(`Bootstrap request failed: ${res.status} ${res.statusText}`);
+declare global {
+  interface Window {
+    __LD_BOOTSTRAP__?: Record<string, unknown>;
+    __LD_CLIENT_SIDE_ID__?: string;
+    __LD_CONTEXT__?: LDContext;
   }
-  return res.json();
 }
 
-async function main() {
-  const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+// eslint-disable-next-line no-underscore-dangle
+const bootstrapData = window.__LD_BOOTSTRAP__;
+// eslint-disable-next-line no-underscore-dangle
+const clientSideId = window.__LD_CLIENT_SIDE_ID__ ?? '';
+// eslint-disable-next-line no-underscore-dangle
+const context = window.__LD_CONTEXT__;
 
-  let bootstrapData: Record<string, unknown>;
-  try {
-    bootstrapData = await fetchBootstrap();
-  } catch (err) {
-    root.render(
-      <div className="error">
-        <p>
-          Failed to load bootstrap data from the server. Make sure
-          <code> LAUNCHDARKLY_SDK_KEY </code> and <code>LAUNCHDARKLY_CLIENT_SIDE_ID</code> are set,
-          then restart the server.
-        </p>
-        <pre>{err instanceof Error ? err.message : String(err)}</pre>
-      </div>,
-    );
-    return;
-  }
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 
+if (!bootstrapData || !context) {
+  root.render(
+    <div className="error">
+      <p>
+        Bootstrap data was not injected by the server. Make sure
+        <code> LAUNCHDARKLY_SDK_KEY </code> and <code>LAUNCHDARKLY_CLIENT_SIDE_ID</code> are set,
+        then restart the server.
+      </p>
+    </div>,
+  );
+} else {
   // Pass the server-evaluated payload as `bootstrap` so the client renders real flag values
   // on first paint instead of waiting for the SDK to fetch them.
-  const options: LDReactProviderOptions = {
-    bootstrap: bootstrapData,
-  };
-  const LDReactProvider = createLDReactProvider(LAUNCHDARKLY_CLIENT_SIDE_ID, context, options);
+  const options: LDReactProviderOptions = { bootstrap: bootstrapData };
+  const LDReactProvider = createLDReactProvider(clientSideId, context, options);
 
   root.render(
     <LDReactProvider>
@@ -60,5 +49,3 @@ async function main() {
     </LDReactProvider>,
   );
 }
-
-main();

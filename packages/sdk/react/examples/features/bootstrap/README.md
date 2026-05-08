@@ -12,26 +12,35 @@ This demo requires Node.js v20 or later.
 
 ## What this example adds on top of [`hello-react`](../../hello-react/)
 
-* A small Express server (`server/index.ts`) initializes `@launchdarkly/node-server-sdk`,
-  evaluates the client-side flags for the example context with
-  `allFlagsState(context, { clientSideOnly: true })`, and exposes the result at
-  `GET /api/bootstrap`.
-* `src/index.tsx` `await`s that endpoint before mounting the app and passes the response to
+* A small Express server (`server/index.ts`) initializes `@launchdarkly/node-server-sdk` and,
+  on every request to `/`, evaluates the client-side flags for the example context with
+  `allFlagsState(context, { clientSideOnly: true })`.
+* The server renders an EJS template (`views/index.ejs`) that injects the evaluated payload
+  into the page as a `<script>` blob:
+
+  ```html
+  <script>
+    window.__LD_BOOTSTRAP__ = <%- bootstrap %>;
+    window.__LD_CLIENT_SIDE_ID__ = <%- clientSideId %>;
+    window.__LD_CONTEXT__ = <%- context %>;
+  </script>
+  ```
+
+* `src/index.tsx` reads those values synchronously and hands the bootstrap payload to
   `LDReactProviderOptions.bootstrap`:
 
   ```ts
-  const bootstrap = await fetchBootstrap();
-  const LDReactProvider = createLDReactProvider(clientSideId, context, { bootstrap });
+  const options: LDReactProviderOptions = { bootstrap: window.__LD_BOOTSTRAP__ };
+  const LDReactProvider = createLDReactProvider(clientSideId, context, options);
   ```
 
-  With `bootstrap` set, the React SDK returns the seeded values from `useBoolVariation` (and the
-  other variation hooks) on the very first render -- no flag-fetch waterfall, no flicker between
-  the default and the evaluated value.
+  Because the bootstrap script runs inline before the React bundle, the SDK has the evaluated
+  values cached the moment the very first React render runs.
 
 ## Build instructions
 
 1. Set `LAUNCHDARKLY_SDK_KEY` to your server-side SDK key (used by the Express server) and
-   `LAUNCHDARKLY_CLIENT_SIDE_ID` to your client-side ID (read at build time by Vite):
+   `LAUNCHDARKLY_CLIENT_SIDE_ID` to your client-side ID:
 
    ```bash
    export LAUNCHDARKLY_SDK_KEY="my-server-side-sdk-key"
