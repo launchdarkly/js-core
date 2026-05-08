@@ -44,8 +44,8 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.24.3",
-    "@launchdarkly/openfeature-js-server-common": "0.1.0"
+    "@launchdarkly/js-sdk-common": "2.24.4",
+    "@launchdarkly/openfeature-js-server-common": "workspace:^"
   },
   "peerDependencies": {
     "@launchdarkly/node-server-sdk": "9.x",

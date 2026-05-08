@@ -53,13 +53,13 @@
     "@typescript-eslint/parser": "^6.20.0",
     "ai": "^5.0.0",
     "eslint": "^8.45.0",
-    "zod": "^3.25.76",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jest": "^27.6.3",
     "jest": "^29.6.1",
     "ts-jest": "^29.1.1",
     "tsup": "^8.5.1",
-    "typescript": "5.1.6"
+    "typescript": "5.1.6",
+    "zod": "^3.25.76"
   },
   "peerDependencies": {
     "@ai-sdk/anthropic": "^2.0.0 || ^3.0.0",
