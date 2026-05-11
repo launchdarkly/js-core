@@ -5,8 +5,6 @@ import { LDAIMetricSummary } from './api/model/types';
 import { LDJudgeResult } from './api/judge/types';
 import {
   createBedrockTokenUsage,
-  createOpenAiUsage,
-  createVercelAISDKTokenUsage,
   LDAIMetrics,
   LDFeedbackKind,
   LDTokenUsage,
@@ -277,28 +275,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     }
   }
 
-  async trackOpenAIMetrics<
-    TRes extends {
-      usage?: {
-        total_tokens?: number;
-        prompt_tokens?: number;
-        completion_tokens?: number;
-      };
-    },
-  >(func: () => Promise<TRes>): Promise<TRes> {
-    try {
-      const result = await this.trackDurationOf(func);
-      this.trackSuccess();
-      if (result.usage) {
-        this.trackTokens(createOpenAiUsage(result.usage));
-      }
-      return result;
-    } catch (err) {
-      this.trackError();
-      throw err;
-    }
-  }
-
   trackBedrockConverseMetrics<
     TRes extends {
       $metadata: { httpStatusCode?: number };
@@ -322,30 +298,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       this.trackTokens(createBedrockTokenUsage(res.usage));
     }
     return res;
-  }
-
-  async trackVercelAISDKGenerateTextMetrics<
-    TRes extends {
-      usage?: {
-        totalTokens?: number;
-        inputTokens?: number;
-        promptTokens?: number;
-        outputTokens?: number;
-        completionTokens?: number;
-      };
-    },
-  >(func: () => Promise<TRes>): Promise<TRes> {
-    try {
-      const result = await this.trackDurationOf(func);
-      this.trackSuccess();
-      if (result.usage) {
-        this.trackTokens(createVercelAISDKTokenUsage(result.usage));
-      }
-      return result;
-    } catch (err) {
-      this.trackError();
-      throw err;
-    }
   }
 
   trackTokens(tokens: LDTokenUsage): void {
