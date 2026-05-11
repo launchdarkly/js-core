@@ -629,8 +629,8 @@ describe('Judge', () => {
         { role: 'user', content: 'What is the capital of France?' },
         { role: 'assistant', content: 'Paris is the capital of France.' },
       ];
-      const response = {
-        message: { role: 'assistant' as const, content: 'Paris is the capital of France.' },
+      const response: RunnerResult = {
+        content: 'Paris is the capital of France.',
         metrics: { success: true },
       };
 
@@ -668,8 +668,8 @@ describe('Judge', () => {
 
     it('handles sampling rate correctly', async () => {
       const messages: LDMessage[] = [{ role: 'user', content: 'test' }];
-      const response = {
-        message: { role: 'assistant' as const, content: 'test response' },
+      const response: RunnerResult = {
+        content: 'test response',
         metrics: { success: true },
       };
 

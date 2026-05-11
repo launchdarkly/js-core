@@ -1,6 +1,5 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ChatResponse } from '../chat/types';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { RunnerResult } from '../model/types';
 import { Runner } from '../providers/Runner';
@@ -164,21 +163,21 @@ export class Judge {
   }
 
   /**
-   * Evaluates an AI response from chat messages and response.
+   * Evaluates an AI response from chat messages and a runner result.
    *
    * @param messages Array of messages representing the conversation history
-   * @param response The AI response to be evaluated
+   * @param response The runner result containing the AI-generated content to evaluate
    * @param samplingRatio Sampling ratio (0-1). When omitted, the Judge's
    *   constructor-default rate is used.
    * @returns Promise that resolves to evaluation results
    */
   async evaluateMessages(
     messages: LDMessage[],
-    response: ChatResponse,
+    response: RunnerResult,
     samplingRatio?: number,
   ): Promise<LDJudgeResult> {
     const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
-    const output = response.message.content;
+    const output = response.content;
 
     return this.evaluate(input, output, samplingRatio);
   }
