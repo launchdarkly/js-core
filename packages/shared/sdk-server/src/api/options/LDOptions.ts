@@ -74,10 +74,6 @@ export interface LDOptions {
   featureStore?: LDFeatureStore | ((clientContext: LDClientContext) => LDFeatureStore);
 
   /**
-   * @experimental
-   * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
-   * versioning.  It is not suitable for production usage.
-   *
    * Configuration options for the Data System that the SDK uses to get and maintain flags and other
    * data from LaunchDarkly and other sources.
    *

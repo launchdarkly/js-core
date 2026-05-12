@@ -3,10 +3,6 @@ import { LDClientContext } from '@launchdarkly/js-sdk-common';
 import { LDFeatureStore } from '../subsystems';
 
 /**
- * @experimental
- * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
- * versioning.  It is not suitable for production usage.
- *
  * Configuration options for the Data System that the SDK uses to get and maintain flags and other
  * data from LaunchDarkly and other sources.
  *
@@ -186,10 +182,7 @@ export type SynchronizerDataSource =
   | StreamingDataSourceConfiguration;
 
 /**
- * @experimental
  * This data source will allow developers to define their own composite data source.
- * This is a free-form option and is not subject to any backwards compatibility guarantees or semantic
- * versioning.
  *
  * The following example is roughly equivilent to using the {@link StandardDataSourceOptions} with the default values.
  * @example
