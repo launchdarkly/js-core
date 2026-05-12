@@ -36,7 +36,7 @@ function mapPromptToConversation(
   prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
 ): Message[] {
   return prompt
-    .filter((item) => item.role !== 'system')
+    .filter((item): item is { role: 'user' | 'assistant'; content: string } => item.role !== 'system')
     .map((item) => ({
       role: item.role,
       content: [{ text: item.content }],
