@@ -137,7 +137,20 @@ function constructFDv1(
     throw new Error('You must configure the client with an SDK key');
   }
   const { logger } = config;
-  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+  // Per SCMP-server-connection-minutes-polling (spec section 1.1), generate a single v4 GUID
+  // per SDK instance. We attach it to the default headers (rather than only on the poller) so
+  // that it is also present on streaming and event requests; baseHeaders is built once and
+  // shared across all subsystems for the lifetime of the client, which gives us the required
+  // "constant for the lifetime of the SDK instance" property for free.
+  const instanceId = platform.crypto.randomUUID();
+  const baseHeaders = defaultHeaders(
+    sdkKey,
+    platform.info,
+    config.tags,
+    true,
+    'user-agent',
+    instanceId,
+  );
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const featureStore = config.featureStoreFactory(clientContext);
@@ -268,7 +281,17 @@ function constructFDv2(
   }
 
   const { logger } = config;
-  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+  // Per SCMP-server-connection-minutes-polling (spec section 1.1), generate a single v4 GUID
+  // per SDK instance. See the matching comment in constructFDv1 above.
+  const instanceId = platform.crypto.randomUUID();
+  const baseHeaders = defaultHeaders(
+    sdkKey,
+    platform.info,
+    config.tags,
+    true,
+    'user-agent',
+    instanceId,
+  );
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const dataSystem = config.dataSystem!; // dataSystem must be defined to get into this construct function

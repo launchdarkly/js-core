@@ -64,6 +64,30 @@ describe('defaultHeaders', () => {
       'x-launchdarkly-tags': 'application-id/test-application application-version/test-version',
     });
   });
+
+  it('does not include the instance-id header by default', () => {
+    const h = defaultHeaders('my-sdk-key', makeInfo());
+    expect(h['x-launchdarkly-instance-id']).toBeUndefined();
+  });
+
+  it('sets the X-LaunchDarkly-Instance-Id header when an instance id is supplied', () => {
+    const h = defaultHeaders(
+      'my-sdk-key',
+      makeInfo(),
+      undefined,
+      true,
+      'user-agent',
+      'd3135edb-6531-4874-8a38-f0c9e556e836',
+    );
+    expect(h).toMatchObject({
+      'x-launchdarkly-instance-id': 'd3135edb-6531-4874-8a38-f0c9e556e836',
+    });
+  });
+
+  it('omits the X-LaunchDarkly-Instance-Id header when an empty instance id is supplied', () => {
+    const h = defaultHeaders('my-sdk-key', makeInfo(), undefined, true, 'user-agent', '');
+    expect(h['x-launchdarkly-instance-id']).toBeUndefined();
+  });
 });
 
 describe('httpErrorMessage', () => {

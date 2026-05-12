@@ -8,6 +8,7 @@ export type LDHeaders = {
   'x-launchdarkly-user-agent'?: string;
   'x-launchdarkly-wrapper'?: string;
   'x-launchdarkly-tags'?: string;
+  'x-launchdarkly-instance-id'?: string;
 };
 
 export function defaultHeaders(
@@ -16,6 +17,7 @@ export function defaultHeaders(
   tags?: ApplicationTags,
   includeAuthorizationHeader: boolean = true,
   userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' = 'user-agent',
+  instanceId?: string,
 ): LDHeaders {
   const { userAgentBase, version, wrapperName, wrapperVersion } = info.sdkData();
 
@@ -37,6 +39,15 @@ export function defaultHeaders(
 
   if (tags?.value) {
     headers['x-launchdarkly-tags'] = tags.value;
+  }
+
+  // Per SCMP-server-connection-minutes-polling (spec section 1.1), server SDKs include a
+  // per-instance v4 GUID on every polling request. The caller (a server SDK) is responsible
+  // for generating the GUID once per SDK instance and passing it here, so that it rides on
+  // every outbound request via this shared default-headers map. Client/edge SDKs do not pass
+  // this value, so the header is omitted for them.
+  if (instanceId) {
+    headers['x-launchdarkly-instance-id'] = instanceId;
   }
 
   return headers;
