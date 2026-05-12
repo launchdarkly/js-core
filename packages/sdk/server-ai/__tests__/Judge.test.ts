@@ -318,11 +318,10 @@ describe('Judge', () => {
       Math.random = originalRandom;
     });
 
-    it('returns error result when evaluationMetricKey and evaluationMetricKeys are both missing', async () => {
+    it('returns error result when evaluationMetricKey is missing', async () => {
       const configWithoutMetrics: LDAIJudgeConfig = {
         ...judgeConfig,
         evaluationMetricKey: undefined,
-        evaluationMetricKeys: [],
       };
       const judgeWithoutMetrics = new Judge(configWithoutMetrics, mockRunner, 1.0, mockLogger);
 
@@ -344,7 +343,6 @@ describe('Judge', () => {
       const configWithSingleKey: LDAIJudgeConfig = {
         ...judgeConfig,
         evaluationMetricKey: 'relevance',
-        evaluationMetricKeys: undefined,
       };
       const judgeWithSingleKey = new Judge(configWithSingleKey, mockRunner, 1.0, mockLogger);
 
@@ -369,112 +367,6 @@ describe('Judge', () => {
         score: 0.8,
         reasoning: 'The response is relevant',
         metricKey: 'relevance',
-        success: true,
-        sampled: true,
-        judgeConfigKey: 'test-judge',
-      });
-    });
-
-    it('falls back to first value in evaluationMetricKeys when evaluationMetricKey is not provided', async () => {
-      const configWithLegacyKeys: LDAIJudgeConfig = {
-        ...judgeConfig,
-        evaluationMetricKey: undefined,
-        evaluationMetricKeys: ['relevance', 'accuracy'],
-      };
-      const judgeWithLegacyKeys = new Judge(configWithLegacyKeys, mockRunner, 1.0, mockLogger);
-
-      const mockRunnerResult: RunnerResult = {
-        content: '',
-        parsed: {
-          score: 0.8,
-          reasoning: 'The response is relevant',
-        },
-        metrics: {
-          success: true,
-          tokens: { total: 100, input: 50, output: 50 },
-        },
-      };
-
-      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockRunner.run.mockResolvedValue(mockRunnerResult);
-
-      const result = await judgeWithLegacyKeys.evaluate('test input', 'test output');
-
-      expect(result).toEqual({
-        score: 0.8,
-        reasoning: 'The response is relevant',
-        metricKey: 'relevance',
-        success: true,
-        sampled: true,
-        judgeConfigKey: 'test-judge',
-      });
-    });
-
-    it('skips empty and whitespace-only strings in evaluationMetricKeys array', async () => {
-      const configWithInvalidKeys: LDAIJudgeConfig = {
-        ...judgeConfig,
-        evaluationMetricKey: undefined,
-        evaluationMetricKeys: ['', '   ', 'relevance', 'accuracy'],
-      };
-      const judgeWithInvalidKeys = new Judge(configWithInvalidKeys, mockRunner, 1.0, mockLogger);
-
-      const mockRunnerResult: RunnerResult = {
-        content: '',
-        parsed: {
-          score: 0.8,
-          reasoning: 'The response is relevant',
-        },
-        metrics: {
-          success: true,
-          tokens: { total: 100, input: 50, output: 50 },
-        },
-      };
-
-      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockRunner.run.mockResolvedValue(mockRunnerResult);
-
-      const result = await judgeWithInvalidKeys.evaluate('test input', 'test output');
-
-      // Should skip empty and whitespace strings, use first valid value
-      expect(result).toEqual({
-        score: 0.8,
-        reasoning: 'The response is relevant',
-        metricKey: 'relevance',
-        success: true,
-        sampled: true,
-        judgeConfigKey: 'test-judge',
-      });
-    });
-
-    it('prioritizes evaluationMetricKey over evaluationMetricKeys when both are provided', async () => {
-      const configWithBoth: LDAIJudgeConfig = {
-        ...judgeConfig,
-        evaluationMetricKey: 'helpfulness',
-        evaluationMetricKeys: ['relevance', 'accuracy'],
-      };
-      const judgeWithBoth = new Judge(configWithBoth, mockRunner, 1.0, mockLogger);
-
-      const mockRunnerResult: RunnerResult = {
-        content: '',
-        parsed: {
-          score: 0.7,
-          reasoning: 'The response is helpful',
-        },
-        metrics: {
-          success: true,
-          tokens: { total: 100, input: 50, output: 50 },
-        },
-      };
-
-      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
-      mockRunner.run.mockResolvedValue(mockRunnerResult);
-
-      const result = await judgeWithBoth.evaluate('test input', 'test output');
-
-      expect(result).toEqual({
-        score: 0.7,
-        reasoning: 'The response is helpful',
-        metricKey: 'helpfulness',
         success: true,
         sampled: true,
         judgeConfigKey: 'test-judge',
@@ -774,26 +666,5 @@ describe('Judge', () => {
       expect(result).toBeUndefined();
     });
 
-    it('handles empty evaluationMetricKeys array fallback', async () => {
-      const configWithEmptyKeys: LDAIJudgeConfig = {
-        ...judgeConfig,
-        evaluationMetricKey: undefined,
-        evaluationMetricKeys: [],
-      };
-      const judgeWithEmptyKeys = new Judge(configWithEmptyKeys, mockRunner, 1.0, mockLogger);
-
-      const result = await judgeWithEmptyKeys.evaluate('test input', 'test output');
-
-      expect(result).toEqual({
-        success: false,
-        sampled: true,
-        errorMessage: 'Judge configuration is missing required evaluation metric key',
-        judgeConfigKey: 'test-judge',
-      });
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Judge configuration is missing required evaluation metric key',
-        mockTrackData,
-      );
-    });
   });
 });

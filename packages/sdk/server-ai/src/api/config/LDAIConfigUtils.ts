@@ -72,9 +72,6 @@ export class LDAIConfigUtils {
     if ('evaluationMetricKey' in config && config.evaluationMetricKey !== undefined) {
       flagValue.evaluationMetricKey = config.evaluationMetricKey;
     }
-    if ('evaluationMetricKeys' in config && config.evaluationMetricKeys !== undefined) {
-      flagValue.evaluationMetricKeys = config.evaluationMetricKeys;
-    }
     if ('judgeConfiguration' in config && config.judgeConfiguration !== undefined) {
       flagValue.judgeConfiguration = config.judgeConfiguration;
     }

@@ -71,8 +71,7 @@ export class Judge {
   }
 
   /**
-   * Gets the evaluation metric key, prioritizing evaluationMetricKey over evaluationMetricKeys.
-   * Falls back to the first valid (non-empty, non-whitespace) value in evaluationMetricKeys if evaluationMetricKey is not provided.
+   * Gets the evaluation metric key from the judge AI config.
    * Treats empty strings and whitespace-only strings as invalid.
    * @returns The evaluation metric key, or undefined if not available
    */
@@ -82,12 +81,6 @@ export class Judge {
       this._aiConfig.evaluationMetricKey.trim().length > 0
     ) {
       return this._aiConfig.evaluationMetricKey.trim();
-    }
-    if (this._aiConfig.evaluationMetricKeys && this._aiConfig.evaluationMetricKeys.length > 0) {
-      const validKey = this._aiConfig.evaluationMetricKeys.find(
-        (key) => key && key.trim().length > 0,
-      );
-      return validKey ? validKey.trim() : undefined;
     }
     return undefined;
   }

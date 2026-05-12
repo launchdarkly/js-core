@@ -627,7 +627,7 @@ describe('judgeConfig method', () => {
       enabled: true,
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
-      evaluationMetricKeys: ['relevance'],
+      evaluationMetricKey: 'relevance',
       messages: [{ role: 'system' as const, content: 'You are a judge for {{metric}}.' }],
       createTracker: () => ({}) as any,
       toVercelAISDK: jest.fn(),
@@ -720,7 +720,7 @@ describe('createJudge method', () => {
       enabled: true,
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
-      evaluationMetricKeys: ['relevance', 'accuracy'],
+      evaluationMetricKey: 'relevance',
       messages: [{ role: 'system' as const, content: 'You are a judge.' }],
       createTracker: () => mockTrackerInstance,
       toVercelAISDK: jest.fn(),
@@ -754,7 +754,6 @@ describe('createJudge method', () => {
     const mockJudgeConfig = {
       key: 'test-judge',
       enabled: false,
-      evaluationMetricKeys: [],
     };
 
     const judgeConfigSpy = jest.spyOn(client as any, '_judgeConfig');
@@ -780,7 +779,7 @@ describe('createJudge method', () => {
       enabled: true,
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
-      evaluationMetricKeys: ['relevance'],
+      evaluationMetricKey: 'relevance',
       messages: [{ role: 'system' as const, content: 'You are a judge.' }],
       createTracker: () => ({}) as any,
       toVercelAISDK: jest.fn(),
