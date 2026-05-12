@@ -14,7 +14,6 @@ The tracker provides several methods depending on your provider. This example us
 |--------|----------|
 | `tracker.trackMetricsOf(OpenAIProvider.getAIMetricsFromResponse, fn)` | OpenAI (recommended) |
 | `tracker.trackBedrockConverseMetrics(response)` | AWS Bedrock |
-| `tracker.trackVercelAISDKGenerateTextMetrics(fn)` | Vercel AI SDK |
 | `tracker.trackMetricsOf(extractor, fn)` | Any provider (custom extractor) |
 
 ## Prerequisites

@@ -184,12 +184,6 @@ export interface LDAIJudgeConfigDefault extends LDAIConfigDefault {
    * The key of the metric that this judge can evaluate.
    */
   evaluationMetricKey?: string;
-  /**
-   * Evaluation metric keys for judge configurations (legacy).
-   * The keys of the metrics that this judge can evaluate.
-   * @deprecated Use evaluationMetricKey instead. This field is kept for legacy support.
-   */
-  evaluationMetricKeys?: string[];
 }
 
 /**
@@ -269,12 +263,6 @@ export interface LDAIJudgeConfig extends LDAIConfig {
    * The key of the metric that this judge can evaluate.
    */
   evaluationMetricKey?: string;
-  /**
-   * Evaluation metric keys for judge configurations (legacy).
-   * The keys of the metrics that this judge can evaluate.
-   * @deprecated Use evaluationMetricKey instead. This field is kept for legacy support.
-   */
-  evaluationMetricKeys?: string[];
 }
 
 // ============================================================================

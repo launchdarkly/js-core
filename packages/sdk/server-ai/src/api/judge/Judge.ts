@@ -1,6 +1,5 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ChatResponse } from '../chat/types';
 import { LDAIJudgeConfig, LDMessage } from '../config/types';
 import { RunnerResult } from '../model/types';
 import { Runner } from '../providers/Runner';
@@ -72,8 +71,7 @@ export class Judge {
   }
 
   /**
-   * Gets the evaluation metric key, prioritizing evaluationMetricKey over evaluationMetricKeys.
-   * Falls back to the first valid (non-empty, non-whitespace) value in evaluationMetricKeys if evaluationMetricKey is not provided.
+   * Gets the evaluation metric key from the judge AI config.
    * Treats empty strings and whitespace-only strings as invalid.
    * @returns The evaluation metric key, or undefined if not available
    */
@@ -83,12 +81,6 @@ export class Judge {
       this._aiConfig.evaluationMetricKey.trim().length > 0
     ) {
       return this._aiConfig.evaluationMetricKey.trim();
-    }
-    if (this._aiConfig.evaluationMetricKeys && this._aiConfig.evaluationMetricKeys.length > 0) {
-      const validKey = this._aiConfig.evaluationMetricKeys.find(
-        (key) => key && key.trim().length > 0,
-      );
-      return validKey ? validKey.trim() : undefined;
     }
     return undefined;
   }
@@ -164,21 +156,21 @@ export class Judge {
   }
 
   /**
-   * Evaluates an AI response from chat messages and response.
+   * Evaluates an AI response from chat messages and a runner result.
    *
    * @param messages Array of messages representing the conversation history
-   * @param response The AI response to be evaluated
+   * @param response The runner result containing the AI-generated content to evaluate
    * @param samplingRatio Sampling ratio (0-1). When omitted, the Judge's
    *   constructor-default rate is used.
    * @returns Promise that resolves to evaluation results
    */
   async evaluateMessages(
     messages: LDMessage[],
-    response: ChatResponse,
+    response: RunnerResult,
     samplingRatio?: number,
   ): Promise<LDJudgeResult> {
     const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
-    const output = response.message.content;
+    const output = response.content;
 
     return this.evaluate(input, output, samplingRatio);
   }

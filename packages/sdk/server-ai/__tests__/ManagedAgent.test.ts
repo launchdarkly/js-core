@@ -33,9 +33,7 @@ describe('ManagedAgent', () => {
       trackFeedback: jest.fn(),
       trackTimeToFirstToken: jest.fn(),
       trackDurationOf: jest.fn(),
-      trackOpenAIMetrics: jest.fn(),
       trackBedrockConverseMetrics: jest.fn(),
-      trackVercelAIMetrics: jest.fn(),
       getSummary: jest.fn().mockReturnValue({ success: true, resumptionToken: 'agent-resumption-token' }),
     } as any;
 

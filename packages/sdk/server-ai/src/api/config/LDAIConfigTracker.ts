@@ -168,30 +168,6 @@ export interface LDAIConfigTracker {
   ): TStream;
 
   /**
-   * Track an OpenAI operation.
-   *
-   * This function will track the duration of the operation, the token usage, and the success or error status.
-   *
-   * If the provided function throws, then this method will also throw.
-   * In the case the provided function throws, this function will record the duration and an error.
-   * A failed operation will not have any token usage data.
-   *
-   * @param func Function which executes the operation.
-   * @returns The result of the operation.
-   */
-  trackOpenAIMetrics<
-    TRes extends {
-      usage?: {
-        total_tokens?: number;
-        prompt_tokens?: number;
-        completion_tokens?: number;
-      };
-    },
-  >(
-    func: () => Promise<TRes>,
-  ): Promise<TRes>;
-
-  /**
    * Track an operation which uses Bedrock.
    *
    * This function will track the duration of the operation, the token usage, and the success or error status.
@@ -212,32 +188,6 @@ export interface LDAIConfigTracker {
   >(
     res: TRes,
   ): TRes;
-
-  /**
-   * Track a Vercel AI SDK generateText operation.
-   *
-   * This function will track the duration of the operation, the token usage, and the success or error status.
-   *
-   * If the provided function throws, then this method will also throw.
-   * In the case the provided function throws, this function will record the duration and an error.
-   * A failed operation will not have any token usage data.
-   *
-   * @param func Function which executes the operation.
-   * @returns The result of the operation.
-   */
-  trackVercelAISDKGenerateTextMetrics<
-    TRes extends {
-      usage?: {
-        totalTokens?: number;
-        inputTokens?: number;
-        promptTokens?: number;
-        outputTokens?: number;
-        completionTokens?: number;
-      };
-    },
-  >(
-    func: () => Promise<TRes>,
-  ): Promise<TRes>;
 
   /**
    * Get a summary of the tracked metrics.
