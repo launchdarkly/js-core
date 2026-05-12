@@ -1,46 +1,29 @@
-# LaunchDarkly AI SDK for AWS Bedrock Example
+# AWS Bedrock Converse Example
 
-This package demonstrates the integration of LaunchDarkly's AI SDK with AWS Bedrock, allowing you to leverage LaunchDarkly's AI Config capabilities in AI-powered applications using AWS Bedrock.
+This example demonstrates how to use LaunchDarkly's AI Config with the AWS Bedrock Converse API.
 
-## Installation and Build
+## Prerequisites
 
-When running as part of the js-core mono-repo the project will use local dependencies.
-As such those dependencies need built.
+- Node.js 20+
+- A LaunchDarkly account and SDK key
+- AWS credentials configured for Bedrock access (e.g. via `AWS_PROFILE` or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`)
 
-In the root of the repository run:
+## Setup
 
-```bash
-yarn
+1. [Create an AI Config](https://launchdarkly.com/docs/home/ai-configs/create) in LaunchDarkly with the key `sample-completion`. Select a Bedrock model (e.g. `anthropic.claude-3-haiku-20240307-v1:0`) and add a system message.
+2. Set the required environment variables:
+   ```
+   export LAUNCHDARKLY_SDK_KEY=...
+   export AWS_DEFAULT_REGION=us-east-1   # optional; defaults to us-east-1
+   ```
+3. From the repository root, install dependencies and build the SDK packages this example depends on:
+   ```
+   yarn install
+   yarn workspace bedrock-converse bootstrap
+   ```
+
+## Run
+
 ```
-
-And then
-
-```bash
-yarn build
-```
-
-## Configuration
-
-Before running the example, make sure to set the following environment variables:
-
-- `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key
-- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI Config key (defaults to 'sample-ai-config' if not set)
-
-Additionally, ensure you have proper AWS credentials configured to access Bedrock services.
-
-## Usage
-
-The main script (`index.js`) demonstrates how to:
-
-1. Initialize the LaunchDarkly SDK
-2. Set up a user context
-3. Initialize the LaunchDarkly AI client
-4. Retrieve an AI model configuration
-5. Send a prompt to AWS Bedrock
-6. Track token usage
-
-To run the example (in the bedrock directory):
-
-```bash
-yarn start
+yarn workspace bedrock-converse start
 ```

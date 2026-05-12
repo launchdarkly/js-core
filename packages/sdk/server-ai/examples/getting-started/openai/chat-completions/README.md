@@ -1,49 +1,29 @@
-# LaunchDarkly AI SDK for OpenAI Example
+# OpenAI Chat Completions Example
 
-This package demonstrates the integration of LaunchDarkly's AI SDK with OpenAI, allowing you to leverage LaunchDarkly's AI Config capabilities in AI-powered applications using OpenAI's services.
+This example demonstrates how to use LaunchDarkly's AI Config with the OpenAI Chat Completions API.
 
-## Installation and Build
+## Prerequisites
 
-When running as part of the js-core mono-repo the project will use local dependencies.
-As such those dependencies need built.
+- Node.js 20+
+- A LaunchDarkly account and SDK key
+- An [OpenAI API key](https://platform.openai.com/api-keys)
 
-In the root of the repository run:
+## Setup
 
-```bash
-yarn
+1. [Create an AI Config](https://launchdarkly.com/docs/home/ai-configs/create) in LaunchDarkly with the key `sample-completion`. Select OpenAI as the provider, a model such as `gpt-4`, and add a system message.
+2. Set the required environment variables:
+   ```
+   export LAUNCHDARKLY_SDK_KEY=...
+   export OPENAI_API_KEY=...
+   ```
+3. From the repository root, install dependencies and build the SDK packages this example depends on:
+   ```
+   yarn install
+   yarn workspace openai-chat-completions bootstrap
+   ```
+
+## Run
+
 ```
-
-And then
-
-```bash
-yarn build
+yarn workspace openai-chat-completions start
 ```
-
-## Configuration
-
-Before running the example, make sure to set the following environment variables:
-
-- `LAUNCHDARKLY_SDK_KEY`: Your LaunchDarkly SDK key
-- `LAUNCHDARKLY_AI_CONFIG_KEY`: Your LaunchDarkly AI Config key (defaults to 'sample-ai-config' if not set)
-- `OPENAI_API_KEY`: Your OpenAI API key
-
-## Usage
-
-The main script (`index.js`) demonstrates how to:
-
-1. Initialize the LaunchDarkly SDK
-2. Set up a user context
-3. Initialize the LaunchDarkly AI client
-4. Retrieve an AI model configuration
-5. Send a prompt to OpenAI
-6. Track token usage
-
-To run the example (in the openai directory):
-
-```bash
-yarn start
-```
-
-## Note
-
-This example uses OpenAI's chat completions API. Make sure your LaunchDarkly AI Config is set up correctly to work with OpenAI's models and API structure.

@@ -1,49 +1,33 @@
-# Tracked Chat Example
+# Create Model Example
 
-This example demonstrates how to use the LaunchDarkly AI SDK chat functionality with multiple providers for tracked chat interactions.
+This example demonstrates how to use LaunchDarkly's `createModel` method, which handles model creation, chat execution, automatic metrics tracking, and optional judge evaluation in a single managed call.
 
 ## Prerequisites
 
-1. A LaunchDarkly account and SDK key
-1. An OpenAI API key (for the AI provider)
-1. Node.js 16 or later
+- Node.js 20+
+- A LaunchDarkly account and SDK key
+- A provider API key for whichever model your AI Config selects (e.g. `OPENAI_API_KEY`)
 
 ## Setup
 
-1. Install dependencies:
-   ```bash
+1. [Create an AI Config](https://launchdarkly.com/docs/home/ai-configs/create) in LaunchDarkly with the key `sample-completion`. Configure a provider, model, and at least one message.
+2. Set the required environment variables:
+   ```
+   export LAUNCHDARKLY_SDK_KEY=...
+   export OPENAI_API_KEY=...   # if your AI Config uses OpenAI
+   ```
+3. From the repository root, install dependencies and build the SDK packages this example depends on:
+   ```
    yarn install
+   yarn workspace create-model bootstrap
    ```
 
-1. Set up environment variables:
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` and add your keys:
-   ```
-   LAUNCHDARKLY_SDK_KEY=your-sdk-key-here
-   OPENAI_API_KEY=your-openai-api-key-here
-   LAUNCHDARKLY_AI_CONFIG_KEY=sample-ai-chat-config
-   ```
+## Run
 
-1. Create an AI Config in LaunchDarkly:
-   - Navigate to the AI Configs section in your LaunchDarkly dashboard
-   - Create a new AI Config with the key `sample-ai-config`
-   - Add a variation with the following settings:
-     - **Model Selection**: Select "OpenAI" as the provider and "gpt-3.5-turbo" as the model
-     - **Messages**: Add a system message with the content: "You are a helpful assistant for {{companyName}}. You should be friendly and informative."
-     - Save the variation
-   - Update the default target rule to use the newly created variation
-
-## Running the Example
-
-```bash
-yarn start
+```
+yarn workspace create-model start
 ```
 
-This will:
-1. Initialize the LaunchDarkly client
-1. Create a chat configuration using the AI Config
-1. Send a message to the AI and display the response
-1. Automatically track interaction metrics (duration, tokens, success/error)
+## Adding judges
+
+Judge evaluations are dispatched automatically by `createModel` when the AI Config has judges configured. To see judge output, add one or more judges to the `sample-completion` AI Config in the LaunchDarkly UI -- the example already awaits `result.evaluations` and prints each judge's result.
