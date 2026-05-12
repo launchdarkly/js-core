@@ -47,10 +47,8 @@ const crypto: Crypto = {
     throw new Error(`Function not implemented.${algorithm}${key}`);
   },
   randomUUID(): string {
-    // Used by LDClientImpl to generate the per-instance X-LaunchDarkly-Instance-Id header
-    // (see SCMP-server-connection-minutes-polling). Big-segments tests don't assert on the
-    // value, so a stable stub is fine.
-    return '00000000-0000-4000-8000-000000000000';
+    // Not used for this test.
+    throw new Error(`Function not implemented.`);
   },
 };
 

@@ -116,6 +116,7 @@ function constructFDv1(
   initSuccess: () => void,
   dataSourceErrorHandler: (e: any) => void,
   hooks: Hook[],
+  instanceId: string | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -137,12 +138,6 @@ function constructFDv1(
     throw new Error('You must configure the client with an SDK key');
   }
   const { logger } = config;
-  // Per SCMP-server-connection-minutes-polling (spec section 1.1), generate a single v4 GUID
-  // per SDK instance. We attach it to the default headers (rather than only on the poller) so
-  // that it is also present on streaming and event requests; baseHeaders is built once and
-  // shared across all subsystems for the lifetime of the client, which gives us the required
-  // "constant for the lifetime of the SDK instance" property for free.
-  const instanceId = platform.crypto.randomUUID();
   const baseHeaders = defaultHeaders(
     sdkKey,
     platform.info,
@@ -258,6 +253,7 @@ function constructFDv2(
   callbacks: LDClientCallbacks,
   initSuccess: () => void,
   hooks: Hook[],
+  instanceId: string | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -281,9 +277,6 @@ function constructFDv2(
   }
 
   const { logger } = config;
-  // Per SCMP-server-connection-minutes-polling (spec section 1.1), generate a single v4 GUID
-  // per SDK instance. See the matching comment in constructFDv1 above.
-  const instanceId = platform.crypto.randomUUID();
   const baseHeaders = defaultHeaders(
     sdkKey,
     platform.info,
@@ -627,6 +620,7 @@ export default class LDClientImpl implements LDClient {
         () => this._initSuccess(),
         (e) => this._dataSourceErrorHandler(e),
         hooks,
+        internalOptions?.instanceId,
       ));
 
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
@@ -656,7 +650,15 @@ export default class LDClientImpl implements LDClient {
         onError: this._onError,
         onFailed: this._onFailed,
         onReady: this._onReady,
-      } = constructFDv2(_sdkKey, _platform, config, callbacks, () => this._initSuccess(), hooks));
+      } = constructFDv2(
+        _sdkKey,
+        _platform,
+        config,
+        callbacks,
+        () => this._initSuccess(),
+        hooks,
+        internalOptions?.instanceId,
+      ));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
         .statusProvider as BigSegmentStoreStatusProvider;
