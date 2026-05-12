@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
+import { Observability } from '@launchdarkly/observability-node';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
 // Set sdkKey to your LaunchDarkly SDK key.
@@ -13,7 +14,9 @@ if (!sdkKey) {
   process.exit(1);
 }
 
-const ldClient = init(sdkKey);
+const ldClient = init(sdkKey, {
+  plugins: [new Observability({ serviceName: 'js-server-ai-example-create-judge' })],
+});
 
 // Set up the evaluation context. This context should appear on your
 // LaunchDarkly contexts dashboard soon after you run the demo.

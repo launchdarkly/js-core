@@ -3,6 +3,7 @@ import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
 
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
+import { Observability } from '@launchdarkly/observability-node';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 import {
   convertMessagesToVercel,
@@ -21,7 +22,9 @@ if (!sdkKey) {
   process.exit(1);
 }
 
-const ldClient = init(sdkKey);
+const ldClient = init(sdkKey, {
+  plugins: [new Observability({ serviceName: 'js-server-ai-example-vercel-ai-generate-text' })],
+});
 
 // Set up the evaluation context. This context should appear on your
 // LaunchDarkly contexts dashboard soon after you run the demo.
@@ -80,6 +83,19 @@ async function main() {
     );
 
     console.log(`\nModel response:\n${result.text}`);
+
+    const summary = tracker.getSummary();
+    console.log('\nDone! The AI config was evaluated and the following metrics were tracked:');
+    console.log(`  Duration:      ${summary.durationMs}ms`);
+    console.log(`  Success:       ${summary.success}`);
+    if (summary.tokens) {
+      console.log(`  Input tokens:  ${summary.tokens.input}`);
+      console.log(`  Output tokens: ${summary.tokens.output}`);
+      console.log(`  Total tokens:  ${summary.tokens.total}`);
+    }
+    if (summary.toolCalls?.length) {
+      console.log(`  Tool calls:    ${summary.toolCalls.join(', ')}`);
+    }
   } catch (err) {
     console.error('Error:', err);
   } finally {
