@@ -1,35 +1,29 @@
 /* eslint-disable no-console */
 import { OpenAI } from 'openai';
 
-import { init, LDContext } from '@launchdarkly/node-server-sdk';
+import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 import { getAIMetricsFromResponse } from '@launchdarkly/server-sdk-ai-openai';
 
-// Environment variables
-const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
-const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
-
-// Initialize OpenAI client
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY, // This is the default and can be omitted
+const openaiClient = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Validate required environment variables
+// Set sdkKey to your LaunchDarkly SDK key.
+const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
+
+// Set completionKey to the AI Config key you want to evaluate.
+const completionKey = process.env.LAUNCHDARKLY_COMPLETION_KEY || 'sample-completion';
+
 if (!sdkKey) {
   console.error('*** Please set the LAUNCHDARKLY_SDK_KEY env first');
   process.exit(1);
 }
 
-if (!aiConfigKey) {
-  console.error('*** Please set the LAUNCHDARKLY_AI_CONFIG_KEY env first');
-  process.exit(1);
-}
-
-// Initialize LaunchDarkly client
 const ldClient = init(sdkKey);
 
-// Set up the context properties. This context should appear on your LaunchDarkly contexts dashboard
-// soon after you run the demo.
+// Set up the evaluation context. This context should appear on your
+// LaunchDarkly contexts dashboard soon after you run the demo.
 const context: LDContext = {
   kind: 'user',
   key: 'example-user-key',
@@ -41,44 +35,65 @@ async function main() {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
   } catch (error) {
-    console.log(`*** SDK failed to initialize: ${error}`);
+    console.log(
+      `*** SDK failed to initialize. Please check your internet connection and SDK credential for any typo: ${error}`,
+    );
     process.exit(1);
   }
 
   const aiClient = initAi(ldClient);
 
-  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
-  // Example:
-  //   const defaultValue = {
-  //     enabled: true,
-  //     model: { name: 'gpt-4' },
-  //     provider: { name: 'openai' },
-  //     messages: [...]
-  //   };
-  //   const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue, { myVariable: '...' });
-  const aiConfig = await aiClient.completionConfig(aiConfigKey, context, undefined, {
-    myVariable: 'My User Defined Variable',
-  });
+  try {
+    // Pass a defaultValue for improved resiliency when the AI config is unavailable
+    // or LaunchDarkly is unreachable; omit for a disabled default.
+    // Example:
+    //   const defaultValue = {
+    //     enabled: true,
+    //     model: { name: 'gpt-4' },
+    //     provider: { name: 'openai' },
+    //     messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
+    //   };
+    //   const aiConfig = await aiClient.completionConfig(completionKey, context, defaultValue, { myUserVariable: 'Testing Variable' });
+    const aiConfig = await aiClient.completionConfig(completionKey, context, undefined, {
+      myUserVariable: 'Testing Variable',
+    });
 
-  if (!aiConfig.enabled) {
-    console.log('*** AI configuration is not enabled');
-    process.exit(0);
-  }
+    if (!aiConfig.enabled) {
+      console.log(
+        `AI config '${completionKey}' is disabled. Verify the config key exists in your LaunchDarkly project and is not targeting a disabled variation.`,
+      );
+      return;
+    }
 
-  const tracker = aiConfig.createTracker!();
-  const completion = await tracker.trackMetricsOf(
-    getAIMetricsFromResponse,
-    async () =>
-      client.chat.completions.create({
-        messages: aiConfig.messages || [],
-        model: aiConfig.model?.name || 'gpt-4',
+    const tracker = aiConfig.createTracker!();
+
+    const sampleQuestion = 'What can you help me with?';
+    const messages = [
+      ...(aiConfig.messages ?? []),
+      { role: 'user' as const, content: sampleQuestion },
+    ];
+
+    console.log(`\nSending sample question to ${aiConfig.model?.name}: "${sampleQuestion}"`);
+    console.log('Waiting for response...');
+
+    const completion = await tracker.trackMetricsOf(getAIMetricsFromResponse, () =>
+      openaiClient.chat.completions.create({
+        messages,
+        model: aiConfig.model?.name ?? 'gpt-4',
         temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
         max_tokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
       }),
-  );
+    );
+    const aiResponse = completion.choices[0]?.message.content ?? '';
 
-  console.log('AI Response:', completion.choices[0]?.message.content);
-  console.log('Success.');
+    console.log(`\nModel response:\n${aiResponse}`);
+  } catch (err) {
+    console.error('Error:', err);
+  } finally {
+    // Flush pending events and close the client.
+    await ldClient.flush();
+    ldClient.close();
+  }
 }
 
 main();

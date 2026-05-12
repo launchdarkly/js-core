@@ -1,27 +1,29 @@
 /* eslint-disable no-console */
 import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
-import { init } from '@launchdarkly/node-server-sdk';
+import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
+const awsClient = new BedrockRuntimeClient({
+  region: process.env.AWS_DEFAULT_REGION ?? 'us-east-1',
+});
+
+// Set sdkKey to your LaunchDarkly SDK key.
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
-const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
-const awsClient = new BedrockRuntimeClient({ region: 'us-east-1' });
+
+// Set completionKey to the AI Config key you want to evaluate.
+const completionKey = process.env.LAUNCHDARKLY_COMPLETION_KEY || 'sample-completion';
 
 if (!sdkKey) {
   console.error('*** Please set the LAUNCHDARKLY_SDK_KEY env first');
   process.exit(1);
 }
 
-if (!aiConfigKey) {
-  console.error('*** Please set the LAUNCHDARKLY_AI_CONFIG_KEY env first');
-  process.exit(1);
-}
-
 const ldClient = init(sdkKey);
 
-// Set up the context properties
-const context = {
+// Set up the evaluation context. This context should appear on your
+// LaunchDarkly contexts dashboard soon after you run the demo.
+const context: LDContext = {
   kind: 'user',
   key: 'example-user-key',
   name: 'Sandy',
@@ -30,11 +32,12 @@ const context = {
 function mapPromptToConversation(
   prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
 ): Message[] {
-  return prompt.map((item) => ({
-    // Bedrock doesn't support systems in the converse command.
-    role: item.role !== 'system' ? item.role : 'user',
-    content: [{ text: item.content }],
-  }));
+  return prompt
+    .filter((item) => item.role !== 'system')
+    .map((item) => ({
+      role: item.role,
+      content: [{ text: item.content }],
+    }));
 }
 
 async function main() {
@@ -42,46 +45,72 @@ async function main() {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
   } catch (error) {
-    console.log(`*** SDK failed to initialize: ${error}`);
+    console.log(
+      `*** SDK failed to initialize. Please check your internet connection and SDK credential for any typo: ${error}`,
+    );
     process.exit(1);
   }
 
   const aiClient = initAi(ldClient);
 
-  const aiConfig = await aiClient.completionConfig(
-    aiConfigKey!,
-    context,
-    {
-      model: {
-        name: 'my-default-model',
-      },
-      enabled: true,
-    },
-    {
-      myVariable: 'My User Defined Variable',
-    },
-  );
+  try {
+    // Pass a defaultValue for improved resiliency when the AI config is unavailable
+    // or LaunchDarkly is unreachable; omit for a disabled default.
+    // Example:
+    //   const defaultValue = {
+    //     enabled: true,
+    //     model: { name: 'my-default-model' },
+    //     provider: { name: 'bedrock' },
+    //     messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
+    //   };
+    //   const aiConfig = await aiClient.completionConfig(completionKey, context, defaultValue, { myUserVariable: 'Testing Variable' });
+    const aiConfig = await aiClient.completionConfig(completionKey, context, undefined, {
+      myUserVariable: 'Testing Variable',
+    });
 
-  if (!aiConfig.enabled) {
-    console.log('*** AI configuration is not enabled');
-    process.exit(0);
+    if (!aiConfig.enabled) {
+      console.log(
+        `AI config '${completionKey}' is disabled. Verify the config key exists in your LaunchDarkly project and is not targeting a disabled variation.`,
+      );
+      return;
+    }
+
+    const tracker = aiConfig.createTracker!();
+
+    const chatMessages = mapPromptToConversation(aiConfig.messages ?? []);
+    const systemMessages =
+      aiConfig.messages?.filter((m) => m.role === 'system').map((m) => ({ text: m.content })) ??
+      [];
+
+    const sampleQuestion = 'What can you help me with?';
+    chatMessages.push({ role: 'user', content: [{ text: sampleQuestion }] });
+
+    console.log(`\nSending sample question to ${aiConfig.model?.name}: "${sampleQuestion}"`);
+    console.log('Waiting for response...');
+
+    const completion = tracker.trackBedrockConverseMetrics(
+      await awsClient.send(
+        new ConverseCommand({
+          modelId: aiConfig.model?.name ?? 'no-model',
+          messages: chatMessages,
+          system: systemMessages,
+          inferenceConfig: {
+            temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
+            maxTokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
+          },
+        }),
+      ),
+    );
+    const aiResponse = completion.output?.message?.content?.[0]?.text ?? '';
+
+    console.log(`\nModel response:\n${aiResponse}`);
+  } catch (err) {
+    console.error('Error:', err);
+  } finally {
+    // Flush pending events and close the client.
+    await ldClient.flush();
+    ldClient.close();
   }
-
-  const tracker = aiConfig.createTracker!();
-  const completion = tracker.trackBedrockConverseMetrics(
-    await awsClient.send(
-      new ConverseCommand({
-        modelId: aiConfig.model?.name ?? 'no-model',
-        messages: mapPromptToConversation(aiConfig.messages ?? []),
-        inferenceConfig: {
-          temperature: (aiConfig.model?.parameters?.temperature as number) ?? 0.5,
-          maxTokens: (aiConfig.model?.parameters?.maxTokens as number) ?? 4096,
-        },
-      }),
-    ),
-  );
-  console.log('AI Response:', completion.output?.message?.content?.[0]?.text ?? 'no-response');
-  console.log('Success.');
 }
 
 main();

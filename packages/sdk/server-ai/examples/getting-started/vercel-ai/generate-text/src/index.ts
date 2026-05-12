@@ -1,122 +1,92 @@
 /* eslint-disable no-console */
 import { openai } from '@ai-sdk/openai';
-import { generateText, streamText } from 'ai';
+import { generateText } from 'ai';
 
-import { init, type LDClient, type LDContext } from '@launchdarkly/node-server-sdk';
+import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 import {
   convertMessagesToVercel,
   getAIMetricsFromResponse,
-  getAIMetricsFromStream,
   VercelRunnerFactory,
 } from '@launchdarkly/server-sdk-ai-vercel';
 
-// Environment variables
-const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY ?? '';
-const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
+// Set sdkKey to your LaunchDarkly SDK key.
+const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 
-// Validate required environment variables
+// Set completionKey to the AI Config key you want to evaluate.
+const completionKey = process.env.LAUNCHDARKLY_COMPLETION_KEY || 'sample-completion';
+
 if (!sdkKey) {
   console.error('*** Please set the LAUNCHDARKLY_SDK_KEY env first');
   process.exit(1);
 }
 
-let client: LDClient | undefined;
+const ldClient = init(sdkKey);
+
+// Set up the evaluation context. This context should appear on your
+// LaunchDarkly contexts dashboard soon after you run the demo.
+const context: LDContext = {
+  kind: 'user',
+  key: 'example-user-key',
+  name: 'Sandy',
+};
 
 async function main() {
-  // Initialize LaunchDarkly client
-  client = init(sdkKey);
-
-  // Set up the context properties. This context should appear on your LaunchDarkly contexts dashboard
-  const context: LDContext = {
-    kind: 'user',
-    key: 'example-user-key',
-    name: 'Sandy',
-  };
-
   try {
-    await client.waitForInitialization({ timeout: 10 });
+    await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
   } catch (error) {
-    console.log(`*** SDK failed to initialize: ${error}`);
+    console.log(
+      `*** SDK failed to initialize. Please check your internet connection and SDK credential for any typo: ${error}`,
+    );
     process.exit(1);
   }
 
-  const aiClient = initAi(client);
-
-  // Get AI configuration from LaunchDarkly.
-  //
-  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
-  // Example:
-  //   const defaultValue = {
-  //     enabled: true,
-  //     model: { name: 'gpt-4' },
-  //     provider: { name: 'openai' },
-  //     messages: [...]
-  //   };
-  //   const aiConfig = await aiClient.completionConfig(aiConfigKey, context, defaultValue);
-  const aiConfig = await aiClient.completionConfig(aiConfigKey, context);
-
-  if (!aiConfig.enabled) {
-    console.log('*** AI configuration is not enabled');
-    process.exit(0);
-  }
-
-  console.log('Using model:', aiConfig.model?.name);
-
-  const model = openai(aiConfig.model?.name || 'gpt-4');
-  const parameters = VercelRunnerFactory.mapParameters(aiConfig.model?.parameters);
+  const aiClient = initAi(ldClient);
 
   try {
-    const userMessage = {
-      role: 'user' as const,
-      content: 'What can you help me with?',
-    };
+    // Pass a defaultValue for improved resiliency when the AI config is unavailable
+    // or LaunchDarkly is unreachable; omit for a disabled default.
+    // Example:
+    //   const defaultValue = {
+    //     enabled: true,
+    //     model: { name: 'gpt-4' },
+    //     provider: { name: 'openai' },
+    //     messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
+    //   };
+    //   const aiConfig = await aiClient.completionConfig(completionKey, context, defaultValue);
+    const aiConfig = await aiClient.completionConfig(completionKey, context);
 
-    console.log('\n*** Generating text:');
-
-    const messages = convertMessagesToVercel([...(aiConfig.messages || []), userMessage]);
+    if (!aiConfig.enabled) {
+      console.log(
+        `AI config '${completionKey}' is disabled. Verify the config key exists in your LaunchDarkly project and is not targeting a disabled variation.`,
+      );
+      return;
+    }
 
     const tracker = aiConfig.createTracker!();
+    const model = openai(aiConfig.model?.name ?? 'gpt-4');
+    const parameters = VercelRunnerFactory.mapParameters(aiConfig.model?.parameters);
+
+    const sampleQuestion = 'What can you help me with?';
+    const userMessage = { role: 'user' as const, content: sampleQuestion };
+    const messages = convertMessagesToVercel([...(aiConfig.messages ?? []), userMessage]);
+
+    console.log(`\nSending sample question to ${aiConfig.model?.name}: "${sampleQuestion}"`);
+    console.log('Waiting for response...');
+
     const result = await tracker.trackMetricsOf(getAIMetricsFromResponse, () =>
       generateText({ ...parameters, model, messages }),
     );
 
-    console.log('Response:', result.text);
+    console.log(`\nModel response:\n${result.text}`);
   } catch (err) {
     console.error('Error:', err);
-  }
-
-  // Example 2: Using streamText with trackStreamMetricsOf (streaming)
-  try {
-    const userMessage = {
-      role: 'user' as const,
-      content: 'Count from 1 to 5.',
-    };
-
-    console.log('\n*** Streaming text:');
-
-    const messages = convertMessagesToVercel([...(aiConfig.messages || []), userMessage]);
-
-    const streamTracker = aiConfig.createTracker!();
-    const streamResult = streamTracker.trackStreamMetricsOf(
-      () => streamText({ ...parameters, model, messages }),
-      getAIMetricsFromStream,
-    );
-
-    for await (const textPart of streamResult.textStream) {
-      process.stdout.write(textPart);
-    }
-
-    console.log('\nSuccess.');
-  } catch (err) {
-    console.error('Error:', err);
+  } finally {
+    // Flush pending events and close the client.
+    await ldClient.flush();
+    ldClient.close();
   }
 }
 
-main()
-  .catch((e) => console.error(e))
-  .finally(async () => {
-    await client?.flush();
-    client?.close();
-  });
+main();

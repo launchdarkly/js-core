@@ -1,24 +1,22 @@
 /* eslint-disable no-console */
-import 'dotenv/config';
-
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { initAi } from '@launchdarkly/server-sdk-ai';
 
-// Environment variables
+// Set sdkKey to your LaunchDarkly SDK key.
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
-const aiConfigKey = process.env.LAUNCHDARKLY_AI_CONFIG_KEY || 'sample-ai-config';
 
-// Validate required environment variables
+// Set completionKey to the AI Config key you want to evaluate.
+const completionKey = process.env.LAUNCHDARKLY_COMPLETION_KEY || 'sample-completion';
+
 if (!sdkKey) {
   console.error('*** Please set the LAUNCHDARKLY_SDK_KEY env first');
   process.exit(1);
 }
 
-// Initialize LaunchDarkly client
 const ldClient = init(sdkKey);
 
-// Set up the context properties. This context should appear on your LaunchDarkly contexts dashboard
-// soon after you run the demo.
+// Set up the evaluation context. This context should appear on your
+// LaunchDarkly contexts dashboard soon after you run the demo.
 const context: LDContext = {
   kind: 'user',
   key: 'example-user-key',
@@ -30,45 +28,76 @@ async function main() {
     await ldClient.waitForInitialization({ timeout: 10 });
     console.log('*** SDK successfully initialized');
   } catch (error) {
-    console.log(`*** SDK failed to initialize: ${error}`);
+    console.log(
+      `*** SDK failed to initialize. Please check your internet connection and SDK credential for any typo: ${error}`,
+    );
     process.exit(1);
   }
 
   const aiClient = initAi(ldClient);
 
-  // Get AI chat configuration from LaunchDarkly.
-  //
-  // Pass a defaultValue for improved resiliency when the flag is unavailable or LaunchDarkly is unreachable; omit for a disabled default.
-  // Example:
-  //   const defaultValue = {
-  //     enabled: true,
-  //     model: { name: 'gpt-4' },
-  //     provider: { name: 'openai' },
-  //     messages: [...]
-  //   };
-  //   const model = await aiClient.createModel(aiConfigKey, context, defaultValue, { companyName: 'LaunchDarkly' });
-  const model = await aiClient.createModel(aiConfigKey, context, undefined, {
-    companyName: 'LaunchDarkly',
-  });
-
-  if (!model) {
-    console.log('*** AI chat configuration is not enabled');
-    process.exit(0);
-  }
-
-  // Example of using the chat functionality
-  console.log('\n*** Starting chat conversation:');
   try {
-    const userInput = 'Hello! Can you help me understand how your company can help me?';
-    console.log('User Input:', userInput);
+    // Pass a defaultValue for improved resiliency when the AI config is unavailable
+    // or LaunchDarkly is unreachable; omit for a disabled default.
+    // Example:
+    //   const defaultValue = {
+    //     enabled: true,
+    //     model: { name: 'gpt-4' },
+    //     provider: { name: 'openai' },
+    //     messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
+    //   };
+    //   const model = await aiClient.createModel(completionKey, context, defaultValue, { companyName: 'LaunchDarkly' });
+    const model = await aiClient.createModel(completionKey, context, undefined, {
+      companyName: 'LaunchDarkly',
+    });
 
-    const result = await model.run(userInput);
+    if (!model) {
+      console.log(
+        `AI config '${completionKey}' is disabled. Verify the config key exists in your LaunchDarkly project and is not targeting a disabled variation.`,
+      );
+      return;
+    }
 
-    console.log('AI Response:', result.content);
+    const sampleQuestion = 'How can LaunchDarkly help me?';
+    console.log(`\nSending sample question: "${sampleQuestion}"`);
+    console.log('Waiting for response...');
 
-    console.log('Success.');
+    const result = await model.run(sampleQuestion);
+    console.log(`\nModel response:\n${result.content}`);
+
+    // Judge evaluations run asynchronously. Await them so they complete before
+    // the process or request ends - even if you don't need to log or use the
+    // results.
+    if (result.evaluations) {
+      const evalResults = await result.evaluations;
+      if (evalResults.length === 0) {
+        console.log(
+          '\nNo judge evaluations were performed. Try adding a judge to the AI config to see results.',
+        );
+      } else {
+        console.log('\nJudge results:');
+        for (const judgeResult of evalResults) {
+          console.log(`- judge_config_key: ${judgeResult.judgeConfigKey}`);
+          console.log(`  sampled: ${judgeResult.sampled}`);
+          if (!judgeResult.sampled) continue;
+          console.log(`  success: ${judgeResult.success}`);
+          console.log(`  error_message: ${judgeResult.errorMessage}`);
+          console.log(`  metric_key: ${judgeResult.metricKey}`);
+          console.log(`  score: ${judgeResult.score}`);
+          console.log(`  reasoning: ${judgeResult.reasoning}`);
+        }
+      }
+    } else {
+      console.log(
+        '\nNo judge evaluations were performed. Try adding a judge to the AI config to see results.',
+      );
+    }
   } catch (err) {
     console.error('Error:', err);
+  } finally {
+    // Flush pending events and close the client.
+    await ldClient.flush();
+    ldClient.close();
   }
 }
 
