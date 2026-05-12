@@ -1,9 +1,4 @@
 // TODO: refactor client-sdk to use this enum
-/**
- * @experimental
- * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
- * versioning.  It is not suitable for production usage.
- */
 export enum DataSourceState {
   // Positive confirmation of connection/data receipt
   Valid,
@@ -15,11 +10,6 @@ export enum DataSourceState {
   Closed,
 }
 
-/**
- * @experimental
- * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
- * versioning.  It is not suitable for production usage.
- */
 export interface DataSource {
   /**
    * May be called any number of times, if already started, has no effect
@@ -40,9 +30,4 @@ export interface DataSource {
   stop(): void;
 }
 
-/**
- * @experimental
- * This feature is not stable and not subject to any backwards compatibility guarantees or semantic
- * versioning.  It is not suitable for production usage.
- */
 export type LDDataSourceFactory = () => DataSource;
