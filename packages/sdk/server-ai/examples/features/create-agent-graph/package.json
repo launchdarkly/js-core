@@ -5,7 +5,7 @@
   "description": "Example demonstrating LaunchDarkly AI SDK agent graph traversal",
   "type": "module",
   "scripts": {
-    "bootstrap": "yarn workspaces foreach -R --from @launchdarkly/server-sdk-ai run build",
+    "bootstrap": "yarn workspaces foreach -A -pR --topological-dev --from '{create-agent-graph,@launchdarkly/node-server-sdk-otel}' run build",
     "start": "tsx src/index.ts"
   },
   "dependencies": {
