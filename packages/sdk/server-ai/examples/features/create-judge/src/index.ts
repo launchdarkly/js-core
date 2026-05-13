@@ -93,6 +93,9 @@ async function main() {
     }
 
     console.log('\nDone!');
+    // For convenience during example debugging, we log the raw error. In
+    // production, sanitize errors before logging - provider responses may
+    // include credentials or other sensitive data.
   } catch (err) {
     console.error('Error:', err);
   } finally {
