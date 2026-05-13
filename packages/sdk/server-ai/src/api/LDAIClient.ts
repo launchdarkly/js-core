@@ -317,7 +317,7 @@ export interface LDAIClient {
   /**
    * Reconstructs an AIConfigTracker from a resumption token string previously
    * obtained from a tracker's `resumptionToken` property. Use this to associate
-   * deferred events (such as user feedback) with the original run's runId.
+   * deferred events (such as user feedback) with the original tracker's runId.
    *
    * @param token A URL-safe Base64-encoded resumption token string.
    * @param context The evaluation context to use for subsequent track calls.
