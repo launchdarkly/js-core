@@ -973,7 +973,7 @@ describe('at-most-once semantics', () => {
 
     expect(mockTrack).toHaveBeenCalledTimes(1);
     expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining('Duration'));
+    expect(mockWarn).toHaveBeenCalledWith(expect.stringContaining('trackDuration'));
   });
 
   it('drops duplicate trackSuccess call with warning', () => {

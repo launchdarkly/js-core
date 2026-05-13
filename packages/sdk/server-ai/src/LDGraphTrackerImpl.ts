@@ -89,7 +89,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackInvocationSuccess(): void {
     if (this._summary.success !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
+        'Skipping trackInvocationSuccess: invocation result already recorded on this graph tracker. Call createTracker on the agent graph for a new run.',
       );
       return;
     }
@@ -100,7 +100,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackInvocationFailure(): void {
     if (this._summary.success !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: invocation success/failure already recorded for this run — dropping duplicate call.',
+        'Skipping trackInvocationFailure: invocation result already recorded on this graph tracker. Call createTracker on the agent graph for a new run.',
       );
       return;
     }
@@ -111,7 +111,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackDuration(durationMs: number): void {
     if (this._summary.durationMs !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackDuration already called for this run — dropping duplicate call.',
+        'Skipping trackDuration: duration already recorded on this graph tracker. Call createTracker on the agent graph for a new run.',
       );
       return;
     }
@@ -127,7 +127,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackTotalTokens(tokens: LDTokenUsage): void {
     if (this._summary.tokens !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackTotalTokens already called for this run — dropping duplicate call.',
+        'Skipping trackTotalTokens: tokens already recorded on this graph tracker. Call createTracker on the agent graph for a new run.',
       );
       return;
     }
@@ -143,7 +143,7 @@ export class LDGraphTrackerImpl implements LDGraphTracker {
   trackPath(path: string[]): void {
     if (this._summary.path !== undefined) {
       this._ldClient.logger?.warn(
-        'LDGraphTracker: trackPath already called for this run — dropping duplicate call.',
+        'Skipping trackPath: path already recorded on this graph tracker. Call createTracker on the agent graph for a new run.',
       );
       return;
     }

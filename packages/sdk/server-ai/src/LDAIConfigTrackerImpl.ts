@@ -82,7 +82,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackDuration(duration: number): void {
     if (this._trackedMetrics.durationMs !== undefined) {
       this._ldClient.logger?.warn(
-        'Duration has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackDuration: duration already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
@@ -106,7 +106,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackTimeToFirstToken(timeToFirstTokenMs: number) {
     if (this._trackedMetrics.timeToFirstTokenMs !== undefined) {
       this._ldClient.logger?.warn(
-        'Time to first token has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackTimeToFirstToken: time-to-first-token already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
@@ -148,7 +148,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackFeedback(feedback: { kind: LDFeedbackKind }): void {
     if (this._trackedMetrics.feedback !== undefined) {
       this._ldClient.logger?.warn(
-        'Feedback has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackFeedback: feedback already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
@@ -163,7 +163,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackSuccess(): void {
     if (this._trackedMetrics.success !== undefined) {
       this._ldClient.logger?.warn(
-        'Generation result has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackSuccess: success/error already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
@@ -174,7 +174,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackError(): void {
     if (this._trackedMetrics.success !== undefined) {
       this._ldClient.logger?.warn(
-        'Generation result has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackError: success/error already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
@@ -303,7 +303,7 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
   trackTokens(tokens: LDTokenUsage): void {
     if (this._trackedMetrics.tokens !== undefined) {
       this._ldClient.logger?.warn(
-        'Token usage has already been tracked for this execution. Use createTracker() for a new execution.',
+        'Skipping trackTokens: token usage already recorded on this tracker. Call createTracker on the AI Config for a new run.',
       );
       return;
     }
