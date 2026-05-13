@@ -113,10 +113,10 @@ export class AgentGraphDefinition {
   }
 
   /**
-   * Returns a new {@link LDGraphTracker} for this graph invocation.
+   * Returns a new {@link LDGraphTracker} for a fresh graph run.
    *
-   * Call this once per invocation. Each call produces a tracker with a fresh `runId`
-   * that groups all events for that invocation.
+   * Call this once per graph run. Each call produces a tracker with a fresh `runId`
+   * that groups all events for that run.
    */
   createTracker(): LDGraphTracker {
     return this._createTracker();

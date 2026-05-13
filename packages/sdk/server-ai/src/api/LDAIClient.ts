@@ -34,9 +34,11 @@ export interface LDAIClient {
    * the message content. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
    *
-   * @returns The AI `config`, customized `messages`, and a `tracker`. If the configuration cannot be accessed from
-   * LaunchDarkly, then the return value will include information from the `defaultValue`. The returned `tracker` can
-   * be used to track AI operation metrics (latency, token usage, etc.).
+   * @returns An {@link LDAICompletionConfig} with `enabled`, `model`, `provider`,
+   * `messages`, and a `createTracker()` factory. Call `createTracker()` on the
+   * returned config to obtain a tracker for each AI run. If the configuration
+   * cannot be accessed from LaunchDarkly, the return value will include
+   * information from the `defaultValue`.
    *
    * @example
    * ```
@@ -49,27 +51,11 @@ export interface LDAIClient {
    *  provider: { name: 'openai' },
    * };
    *
-   * const result = completionConfig(key, context, defaultValue, variables);
-   * // Output:
-   * {
-   *   enabled: true,
-   *   config: {
-   *     modelId: "gpt-4o",
-   *     temperature: 0.2,
-   *     maxTokens: 4096,
-   *     userDefinedKey: "myValue",
-   *   },
-   *   messages: [
-   *     {
-   *       role: "system",
-   *       content: "You are an amazing GPT."
-   *     },
-   *     {
-   *       role: "user",
-   *       content: "Explain how you're an amazing GPT."
-   *     }
-   *   ],
-   *   tracker: ...
+   * const completionConfig = await client.completionConfig(key, context, defaultValue, variables);
+   * if (completionConfig.enabled) {
+   *   const tracker = completionConfig.createTracker();
+   *   // Use completionConfig.messages and completionConfig.model with your LLM,
+   *   // then record metrics with tracker.trackSuccess(), tracker.trackTokens(), etc.
    * }
    * ```
    */
@@ -95,9 +81,11 @@ export interface LDAIClient {
    * the instructions. The keys correspond to placeholders within the template, and the values
    * are the corresponding replacements.
    *
-   * @returns An AI agent with customized `instructions` and a `tracker`. If the configuration
-   * cannot be accessed from LaunchDarkly, then the return value will include information from the
-   * `defaultValue`. The returned `tracker` can be used to track AI operation metrics (latency, token usage, etc.).
+   * @returns An {@link LDAIAgentConfig} with customized `instructions`, `model`,
+   * `provider`, and a `createTracker()` factory. Call `createTracker()` on the
+   * returned config to obtain a tracker for each AI run. If the configuration
+   * cannot be accessed from LaunchDarkly, the return value will include
+   * information from the `defaultValue`.
    *
    * @example
    * ```
@@ -111,8 +99,11 @@ export interface LDAIClient {
    *   instructions: 'You are a research assistant.',
    * }, variables);
    *
-   * const researchResult = agentConfig.instructions; // Interpolated instructions
-   * agentConfig.tracker.trackSuccess();
+   * if (agentConfig.enabled) {
+   *   const tracker = agentConfig.createTracker();
+   *   const researchResult = agentConfig.instructions; // Interpolated instructions
+   *   tracker.trackSuccess();
+   * }
    * ```
    */
   agentConfig(
@@ -134,7 +125,10 @@ export interface LDAIClient {
    * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
    * When omitted or null, a disabled default is used.
    * @param variables Optional variables for template interpolation in messages and instructions.
-   * @returns A promise that resolves to a tracked judge configuration.
+   * @returns A promise that resolves to an {@link LDAIJudgeConfig} with `enabled`,
+   * `model`, `provider`, `messages`, `evaluationMetricKey`, and a `createTracker()`
+   * factory. Call `createTracker()` on the returned config to obtain a tracker for
+   * each AI run.
    *
    * @example
    * ```typescript
@@ -146,8 +140,11 @@ export interface LDAIClient {
    *   messages: [{ role: 'system', content: 'You are a relevance judge.' }]
    * }, variables);
    *
-   * const config = judgeConf.config; // Interpolated configuration
-   * judgeConf.tracker.trackSuccess();
+   * if (judgeConf.enabled) {
+   *   const tracker = judgeConf.createTracker();
+   *   // Use judgeConf.messages and judgeConf.model with your LLM,
+   *   // then record metrics with tracker.trackSuccess(), tracker.trackJudgeResult(), etc.
+   * }
    * ```
    */
   judgeConfig(
@@ -167,10 +164,11 @@ export interface LDAIClient {
    * current environment, user, or session. This context may influence how the configuration is
    * processed or personalized.
    *
-   * @returns A map of agent keys to their respective AI agents with customized `instructions` and `tracker`.
-   * If a configuration cannot be accessed from LaunchDarkly, then the return value will include information
-   * from the respective `defaultValue`. The returned `tracker` can be used to track AI operation metrics
-   * (latency, token usage, etc.).
+   * @returns A map of agent keys to their respective {@link LDAIAgentConfig}s,
+   * each with customized `instructions` and a `createTracker()` factory. Call
+   * `createTracker()` on a returned config to obtain a tracker for each AI run.
+   * If a configuration cannot be accessed from LaunchDarkly, the return value
+   * will include information from the respective `defaultValue`.
    *
    * @example
    * ```
@@ -199,8 +197,11 @@ export interface LDAIClient {
    * const context = {...};
    *
    * const configs = await client.agentConfigs(agentConfigsList, context);
-   * const researchResult = configs["research_agent"].instructions; // Interpolated instructions
-   * configs["research_agent"].tracker.trackSuccess();
+   * if (configs["research_agent"].enabled) {
+   *   const tracker = configs["research_agent"].createTracker();
+   *   const researchResult = configs["research_agent"].instructions; // Interpolated instructions
+   *   tracker.trackSuccess();
+   * }
    * ```
    */
   agentConfigs<const T extends readonly LDAIAgentRequestConfig[]>(
@@ -316,7 +317,7 @@ export interface LDAIClient {
   /**
    * Reconstructs an AIConfigTracker from a resumption token string previously
    * obtained from a tracker's `resumptionToken` property. Use this to associate
-   * deferred events (such as user feedback) with the original invocation's runId.
+   * deferred events (such as user feedback) with the original run's runId.
    *
    * @param token A URL-safe Base64-encoded resumption token string.
    * @param context The evaluation context to use for subsequent track calls.

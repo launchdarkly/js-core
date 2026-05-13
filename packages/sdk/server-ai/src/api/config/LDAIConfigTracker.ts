@@ -3,7 +3,13 @@ import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from '../metrics';
 import { LDAIMetricSummary } from '../model/types';
 
 /**
- * The LDAIConfigTracker is used to track various details about AI operations.
+ * The LDAIConfigTracker records metrics for a single AI run.
+ *
+ * All events a tracker emits share a runId (a UUIDv4) so LaunchDarkly can
+ * correlate them in metrics views. See individual track methods for their
+ * specific semantics. Call `createTracker` on the AI Config to start a new
+ * run. A resumption token preserves the runId, so events emitted by a
+ * tracker reconstructed in another process correlate with the original run.
  */
 export interface LDAIConfigTracker {
   /**
@@ -23,66 +29,63 @@ export interface LDAIConfigTracker {
    * A URL-safe Base64-encoded token that encodes the tracker's runId, configKey,
    * variationKey, and version. Pass this to AIClient.createTracker() to reconstruct
    * the tracker across process boundaries (e.g. for associating deferred feedback
-   * with the original invocation).
+   * with the original AI run).
    */
   readonly resumptionToken: string;
 
   /**
    * Track the duration of generation.
    *
-   * At-most-once per execution: subsequent calls on the same tracker are dropped
-   * with a warning. Use createTracker() on the config result to obtain a fresh
-   * tracker for a new execution.
-   *
    * Ideally this would not include overhead time such as network communication.
    *
    * @param durationMs The duration in milliseconds.
+   *
+   * @remarks Records at most once per Tracker; further calls are ignored.
    */
   trackDuration(durationMs: number): void;
 
   /**
    * Track information about token usage.
    *
-   * At-most-once per execution: subsequent calls on the same tracker are dropped
-   * with a warning.
-   *
    * @param tokens Token usage information.
+   *
+   * @remarks Records at most once per Tracker; further calls are ignored.
    */
   trackTokens(tokens: LDTokenUsage): void;
 
   /**
    * Generation was successful.
    *
-   * At-most-once per execution: subsequent calls (including trackError) on the
-   * same tracker are dropped with a warning.
+   * @remarks Records at most once per Tracker. trackSuccess and trackError share
+   * state; only one of the two can record per Tracker, and subsequent calls are
+   * ignored.
    */
   trackSuccess(): void;
 
   /**
    * An error was encountered during generation.
    *
-   * At-most-once per execution: subsequent calls (including trackSuccess) on the
-   * same tracker are dropped with a warning.
+   * @remarks Records at most once per Tracker. trackSuccess and trackError share
+   * state; only one of the two can record per Tracker, and subsequent calls are
+   * ignored.
    */
   trackError(): void;
 
   /**
    * Track sentiment about the generation.
    *
-   * At-most-once per execution: subsequent calls on the same tracker are dropped
-   * with a warning.
-   *
    * @param feedback Feedback about the generation.
+   *
+   * @remarks Records at most once per Tracker; further calls are ignored.
    */
   trackFeedback(feedback: { kind: LDFeedbackKind }): void;
 
   /**
    * Track the time to first token for this generation.
    *
-   * At-most-once per execution: subsequent calls on the same tracker are dropped
-   * with a warning.
-   *
    * @param timeToFirstTokenMs The duration in milliseconds.
+   *
+   * @remarks Records at most once per Tracker; further calls are ignored.
    */
   trackTimeToFirstToken(timeToFirstTokenMs: number): void;
 
@@ -92,6 +95,9 @@ export interface LDAIConfigTracker {
    * No event is emitted when the result was not sampled (result.sampled is false).
    *
    * @param result Judge result containing score, reasoning, and metadata
+   *
+   * @remarks May be called multiple times per Tracker; each call records the
+   * scores from the given response.
    */
   trackJudgeResult(result: LDJudgeResult): void;
 
@@ -99,6 +105,9 @@ export interface LDAIConfigTracker {
    * Track a single tool invocation.
    *
    * @param toolKey The identifier of the tool that was invoked.
+   *
+   * @remarks May be called multiple times per Tracker; each call records the
+   * given tool call.
    */
   trackToolCall(toolKey: string): void;
 
@@ -106,11 +115,14 @@ export interface LDAIConfigTracker {
    * Track multiple tool invocations.
    *
    * @param toolKeys The identifiers of the tools that were invoked.
+   *
+   * @remarks May be called multiple times per Tracker; each call records the
+   * given tool calls.
    */
   trackToolCalls(toolKeys: string[]): void;
 
   /**
-   * Track the duration of execution of the provided function.
+   * Track the duration of the provided function.
    *
    * If the provided function throws, then this method will also throw.
    * In the case the provided function throws, this function will still record the duration.
@@ -119,22 +131,30 @@ export interface LDAIConfigTracker {
    *
    * @param func The function to track the duration of.
    * @returns The result of the function.
+   *
+   * @remarks Because each inner metric is at-most-once per Tracker, calling
+   * this twice on the same Tracker will run the inner function again but
+   * produce no additional metric events.
    */
   trackDurationOf(func: () => Promise<any>): Promise<any>;
 
   /**
    * Track metrics for a generic AI operation.
    *
-   * This function will track the duration of the operation, extract metrics using the provided
+   * This function will track the duration of the AI run, extract metrics using the provided
    * metrics extractor function, and track success or error status accordingly.
    *
    * If the provided function throws, then this method will also throw.
    * In the case the provided function throws, this function will record the duration and an error.
-   * A failed operation will not have any token usage data.
+   * A failed AI run will not have any token usage data.
    *
-   * @param metricsExtractor Function that extracts LDAIMetrics from the operation result
-   * @param func Function which executes the operation
-   * @returns The result of the operation
+   * @param metricsExtractor Function that extracts LDAIMetrics from the AI run result
+   * @param func Function which executes the AI run
+   * @returns The result of the AI run
+   *
+   * @remarks Because each inner metric is at-most-once per Tracker, calling
+   * this twice on the same Tracker will run the inner function again but
+   * produce no additional metric events.
    */
   trackMetricsOf<TRes>(
     metricsExtractor: (result: TRes) => LDAIMetrics,
@@ -144,10 +164,10 @@ export interface LDAIConfigTracker {
   /**
    * Track metrics for a streaming AI operation.
    *
-   * This function will track the duration of the operation, extract metrics using the provided
+   * This function will track the duration of the AI run, extract metrics using the provided
    * metrics extractor function, and track success or error status accordingly.
    *
-   * Unlike trackMetricsOf, this method is designed for streaming operations where:
+   * Unlike trackMetricsOf, this method is designed for streaming AI runs where:
    * - The stream is created and returned immediately (synchronously)
    * - Metrics are extracted asynchronously in the background once the stream completes
    * - Duration is tracked from stream creation to metrics extraction completion
@@ -161,6 +181,10 @@ export interface LDAIConfigTracker {
    * @param streamCreator Function that creates and returns the stream (synchronous)
    * @param metricsExtractor Function that asynchronously extracts metrics from the stream
    * @returns The stream result (returned immediately, not a Promise)
+   *
+   * @remarks Because each inner metric is at-most-once per Tracker, calling
+   * this twice on the same Tracker will run the inner function again but
+   * produce no additional metric events.
    */
   trackStreamMetricsOf<TStream>(
     streamCreator: () => TStream,
@@ -168,12 +192,15 @@ export interface LDAIConfigTracker {
   ): TStream;
 
   /**
-   * Track an operation which uses Bedrock.
+   * Track an AI run which uses Bedrock.
    *
-   * This function will track the duration of the operation, the token usage, and the success or error status.
+   * This function will track the duration of the AI run, the token usage, and the success or error status.
    *
    * @param res The result of the Bedrock operation.
    * @returns The input operation.
+   *
+   * @remarks Because each inner metric is at-most-once per Tracker, calling
+   * this twice on the same Tracker will produce no additional metric events.
    */
   trackBedrockConverseMetrics<
     TRes extends {
