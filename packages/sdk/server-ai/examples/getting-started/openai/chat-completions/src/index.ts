@@ -105,10 +105,8 @@ async function main() {
     if (summary.toolCalls?.length) {
       console.log(`  Tool calls:    ${summary.toolCalls.join(', ')}`);
     }
-    // For convenience during example debugging, we log the raw error. In
-    // production, sanitize errors before logging - provider responses may
-    // include credentials or other sensitive data.
   } catch (err) {
+    // In production, sanitize before logging — provider errors may include credentials.
     console.error('Error:', err);
   } finally {
     // Flush pending events and close the client.

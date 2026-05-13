@@ -118,10 +118,8 @@ async function main() {
     // Call trackInvocationSuccess() or trackInvocationFailure() when done.
     const tracker = graph.createTracker();
     tracker.trackInvocationSuccess();
-    // For convenience during example debugging, we log the raw error. In
-    // production, sanitize errors before logging - provider responses may
-    // include credentials or other sensitive data.
   } catch (err) {
+    // In production, sanitize before logging — provider errors may include credentials.
     console.error('Error:', err);
   } finally {
     // Flush pending events and close the client.
