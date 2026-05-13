@@ -49,7 +49,7 @@ class LDClientNode extends LDClientImpl implements LDClient {
     delete baseOptions.plugins;
 
     const platform = new NodePlatform({ ...options, logger });
-    // Per SCMP-server-connection-minutes-polling section 1.1, generate one v4 GUID per SDK
+    // Per SCMP-server-connection-minutes-polling, generate one v4 GUID per SDK
     // instance and pass it through `internalOptions` so LDClientImpl can attach it as the
     // `X-LaunchDarkly-Instance-Id` default header. Generation happens here (not in
     // LDClientImpl) so edge SDKs that share LDClientImpl do not advertise instance-id.
