@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import 'dotenv/config';
+
 import { OpenAI } from 'openai';
 
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';

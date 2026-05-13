@@ -11,11 +11,11 @@ This example demonstrates how to use LaunchDarkly's AI Config with the AWS Bedro
 ## Setup
 
 1. [Create an AI Config](https://launchdarkly.com/docs/home/ai-configs/create) in LaunchDarkly with the key `sample-completion`. Select a Bedrock model (e.g. `anthropic.claude-3-haiku-20240307-v1:0`) and add a system message.
-2. Set the required environment variables:
+2. Copy `.env.example` to `.env` and fill in your keys:
    ```
-   export LAUNCHDARKLY_SDK_KEY=...
-   export AWS_DEFAULT_REGION=us-east-1   # optional; defaults to us-east-1
+   cp .env.example .env
    ```
+   Then edit `.env` to add your `LAUNCHDARKLY_SDK_KEY` and any provider keys. AWS credentials should be configured via your usual mechanism (`AWS_PROFILE`, IAM role, etc.).
 3. From the repository root, install dependencies and build the SDK packages this example depends on:
    ```
    yarn install

@@ -13,6 +13,7 @@
     "@launchdarkly/observability-node": "^1.0.0",
     "@launchdarkly/server-sdk-ai": "workspace:^",
     "@launchdarkly/server-sdk-ai-openai": "workspace:^",
+    "dotenv": "^17.4.2",
     "openai": "^4.58.1"
   },
   "devDependencies": {

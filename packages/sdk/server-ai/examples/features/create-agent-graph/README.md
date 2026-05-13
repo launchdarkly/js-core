@@ -10,10 +10,11 @@ This example demonstrates how to use LaunchDarkly's `agentGraph` method to fetch
 ## Setup
 
 1. Create an Agent Graph in LaunchDarkly with the key `sample-agent-graph`. Define a root node and at least one downstream agent node.
-2. Set the required environment variables:
+2. Copy `.env.example` to `.env` and fill in your keys:
    ```
-   export LAUNCHDARKLY_SDK_KEY=...
+   cp .env.example .env
    ```
+   Then edit `.env` to add your `LAUNCHDARKLY_SDK_KEY`.
 3. From the repository root, install dependencies and build the SDK packages this example depends on:
    ```
    yarn install

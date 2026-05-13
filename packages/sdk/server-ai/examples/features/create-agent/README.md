@@ -11,11 +11,11 @@ This example demonstrates how to use LaunchDarkly's `createAgent` method, which 
 ## Setup
 
 1. [Create an AI Config](https://launchdarkly.com/docs/home/ai-configs/create) in LaunchDarkly with the key `sample-agent`, in Agent mode. Configure a provider, model, and instructions.
-2. Set the required environment variables:
+2. Copy `.env.example` to `.env` and fill in your keys:
    ```
-   export LAUNCHDARKLY_SDK_KEY=...
-   export OPENAI_API_KEY=...   # if your AI Config uses OpenAI
+   cp .env.example .env
    ```
+   Then edit `.env` to add your `LAUNCHDARKLY_SDK_KEY` and any provider keys.
 3. From the repository root, install dependencies and build the SDK packages this example depends on:
    ```
    yarn install

@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import 'dotenv/config';
+
 import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
 
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';

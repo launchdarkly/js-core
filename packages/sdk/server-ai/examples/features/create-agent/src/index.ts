@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import 'dotenv/config';
+
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { Observability } from '@launchdarkly/observability-node';
 import { initAi } from '@launchdarkly/server-sdk-ai';

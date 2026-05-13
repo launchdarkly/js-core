@@ -11,7 +11,8 @@
   "dependencies": {
     "@launchdarkly/node-server-sdk": "workspace:^",
     "@launchdarkly/observability-node": "^1.0.0",
-    "@launchdarkly/server-sdk-ai": "workspace:^"
+    "@launchdarkly/server-sdk-ai": "workspace:^",
+    "dotenv": "^17.4.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
