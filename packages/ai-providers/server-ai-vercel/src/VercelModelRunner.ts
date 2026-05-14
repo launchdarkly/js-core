@@ -1,9 +1,8 @@
-import { generateObject, generateText, jsonSchema, LanguageModel } from 'ai';
+import { generateObject, generateText, jsonSchema, LanguageModel, ModelMessage } from 'ai';
 
 import type {
   LDAICompletionConfig,
   LDLogger,
-  LDMessage,
   Runner,
   RunnerResult,
 } from '@launchdarkly/server-sdk-ai';
@@ -19,8 +18,8 @@ import { convertMessagesToVercel, getAIMetricsFromResponse } from './VercelHelpe
  */
 export class VercelModelRunner implements Runner {
   private _model: LanguageModel;
-  private _config: LDAICompletionConfig;
   private _parameters: VercelAIModelParameters;
+  private _history: ModelMessage[];
   private _logger?: LDLogger;
 
   constructor(
@@ -30,31 +29,42 @@ export class VercelModelRunner implements Runner {
     logger?: LDLogger,
   ) {
     this._model = model;
-    this._config = config;
     this._parameters = parameters;
+    this._history = convertMessagesToVercel(config.messages ?? []) as ModelMessage[];
     this._logger = logger;
   }
 
   /**
    * Run the Vercel AI model with the given user prompt.
    *
-   * Prepends any messages defined in the AI config (system prompt, etc.) before
-   * the user prompt.
+   * The runner maintains a conversation history (as Vercel AI SDK
+   * `ModelMessage`s) that is initialized from any messages on the AI config
+   * (system prompt, etc.) and grows with each successful call. On every
+   * invocation the user prompt is appended to the existing history before
+   * being sent to the model. When the call succeeds and produces non-empty
+   * content, the user prompt and the assistant's reply are persisted to the
+   * history; failed calls leave the history unchanged so the next call can
+   * retry cleanly.
    *
    * @param input The user prompt string.
    * @param outputType Optional JSON schema for structured output. When provided,
    *   the parsed object is exposed via {@link RunnerResult.parsed}.
    */
   async run(input: string, outputType?: Record<string, unknown>): Promise<RunnerResult> {
-    const messages: LDMessage[] = [
-      ...(this._config.messages ?? []),
-      { role: 'user', content: input },
-    ];
+    const userMessage: ModelMessage = { role: 'user', content: input };
+    const messages: ModelMessage[] = [...this._history, userMessage];
 
-    if (outputType !== undefined) {
-      return this._runStructured(messages, outputType);
+    const result =
+      outputType !== undefined
+        ? await this._runStructured(messages, outputType)
+        : await this._runCompletion(messages);
+
+    if (result.metrics.success && result.content) {
+      this._history.push(userMessage);
+      this._history.push({ role: 'assistant', content: result.content });
     }
-    return this._runCompletion(messages);
+
+    return result;
   }
 
   /**
@@ -64,12 +74,12 @@ export class VercelModelRunner implements Runner {
     return this._model;
   }
 
-  private async _runCompletion(messages: LDMessage[]): Promise<RunnerResult> {
+  private async _runCompletion(messages: ModelMessage[]): Promise<RunnerResult> {
     try {
       const result = await generateText({
         ...this._parameters,
         model: this._model,
-        messages: convertMessagesToVercel(messages),
+        messages,
         experimental_telemetry: { isEnabled: true },
       });
 
@@ -85,14 +95,14 @@ export class VercelModelRunner implements Runner {
   }
 
   private async _runStructured(
-    messages: LDMessage[],
+    messages: ModelMessage[],
     outputType: Record<string, unknown>,
   ): Promise<RunnerResult> {
     try {
       const result = await generateObject({
         ...this._parameters,
         model: this._model,
-        messages: convertMessagesToVercel(messages),
+        messages,
         schema: jsonSchema(outputType),
         experimental_telemetry: { isEnabled: true },
       });

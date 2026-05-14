@@ -146,4 +146,89 @@ describe('VercelModelRunner', () => {
       expect(runner.getModel()).toBe(fakeModel);
     });
   });
+
+  describe('conversation history', () => {
+    it('accumulates history across successful calls', async () => {
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({
+          text: 'First response',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        })
+        .mockResolvedValueOnce({
+          text: 'Second response',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        });
+
+      await runner.run('First question');
+      await runner.run('Second question');
+
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'user', content: 'First question' },
+        { role: 'assistant', content: 'First response' },
+        { role: 'user', content: 'Second question' },
+      ]);
+    });
+
+    it('does not accumulate history when the call throws', async () => {
+      (generateText as jest.Mock).mockRejectedValueOnce(new Error('boom'));
+      await runner.run('Hello');
+
+      (generateText as jest.Mock).mockResolvedValueOnce({
+        text: 'Recovery',
+        usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+      });
+      await runner.run('Try again');
+
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([{ role: 'user', content: 'Try again' }]);
+    });
+
+    it('does not accumulate history when content is empty', async () => {
+      (generateText as jest.Mock).mockResolvedValueOnce({
+        text: '',
+        finishReason: 'error',
+        usage: { totalTokens: 0, promptTokens: 0, completionTokens: 0 },
+      });
+      await runner.run('Hello');
+
+      (generateText as jest.Mock).mockResolvedValueOnce({
+        text: 'Recovery',
+        usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+      });
+      await runner.run('Try again');
+
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([{ role: 'user', content: 'Try again' }]);
+    });
+
+    it('keeps config messages prepended ahead of accumulated history on every call', async () => {
+      const configWithMessages: LDAICompletionConfig = {
+        ...baseConfig,
+        messages: [{ role: 'system', content: 'You are helpful.' }],
+      };
+      const r = new VercelModelRunner(fakeModel as any, configWithMessages, {}, mockLogger);
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({
+          text: 'Answer 1',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        })
+        .mockResolvedValueOnce({
+          text: 'Answer 2',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        });
+
+      await r.run('Q1');
+      await r.run('Q2');
+
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are helpful.' },
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'Answer 1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+    });
+  });
 });
