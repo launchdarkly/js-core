@@ -77,9 +77,10 @@ async function main() {
 
     const judgeResult = await judge.evaluate(inputText, outputText);
 
-    // Track the judge evaluation scores on the tracker for the aiConfig you
-    // are evaluating. Example:
-    //   aiConfig.createTracker().trackJudgeResult(judgeResult);
+    // If the output you're judging came from another AI Config, track the
+    // result on that config's tracker so the metric is attributed to the
+    // right config:
+    // aiConfig.createTracker().trackJudgeResult(judgeResult);
 
     console.log('\nJudge result:');
     console.log(`- judge_config_key: ${judgeKey}`);
