@@ -122,9 +122,10 @@ export interface LDAIConfig extends Omit<LDAIConfigDefault, 'enabled'> {
   enabled: boolean;
 
   /**
-   * Creates a new tracker for this AI Config invocation. Each call returns a
-   * new tracker with a fresh runId. Use createTracker() at the start of each
-   * execution to obtain a tracker, then use it to record metrics for that run.
+   * Creates a new tracker for a fresh AI run. Each call mints a new runId (a
+   * UUIDv4) that LaunchDarkly uses to correlate the run's events in metrics
+   * views. Call this once per AI run; metrics from different runIds cannot be
+   * combined.
    */
   createTracker: () => LDAIConfigTracker;
 }

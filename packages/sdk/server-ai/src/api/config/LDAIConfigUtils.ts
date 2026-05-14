@@ -87,7 +87,7 @@ export class LDAIConfigUtils {
    *
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param trackerFactory A factory function that creates a new tracker for each AI run
    * @param evaluator The evaluator to attach to completion and agent configs
    * @returns The appropriate AI configuration type
    */
@@ -117,7 +117,7 @@ export class LDAIConfigUtils {
    *
    * @param key The configuration key
    * @param mode The mode for the disabled config
-   * @param createTracker A factory function that creates a new tracker for each execution
+   * @param createTracker A factory function that creates a new tracker for each AI run
    * @param evaluator The evaluator to attach to completion and agent configs
    * @returns A disabled config of the appropriate type
    */
@@ -196,7 +196,7 @@ export class LDAIConfigUtils {
    *
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param trackerFactory A factory function that creates a new tracker for each AI run
    * @param evaluator The evaluator for this completion config
    * @returns A completion configuration
    */
@@ -221,7 +221,7 @@ export class LDAIConfigUtils {
    *
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param trackerFactory A factory function that creates a new tracker for each AI run
    * @param evaluator The evaluator for this agent config
    * @returns An agent configuration
    */
@@ -246,7 +246,7 @@ export class LDAIConfigUtils {
    *
    * @param key The configuration key
    * @param flagValue The flag value from LaunchDarkly
-   * @param trackerFactory A factory function that creates a new tracker for each execution
+   * @param trackerFactory A factory function that creates a new tracker for each AI run
    * @returns A judge configuration
    */
   static toJudgeConfig(
