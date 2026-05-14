@@ -158,6 +158,10 @@ export class Judge {
   /**
    * Evaluates an AI response from chat messages and a runner result.
    *
+   * Each message is rendered as `<role>: <content>` so the judge model can
+   * distinguish speakers in the message history. Messages are joined with a
+   * single newline.
+   *
    * @param messages Array of messages representing the conversation history
    * @param response The runner result containing the AI-generated content to evaluate
    * @param samplingRatio Sampling ratio (0-1). When omitted, the Judge's
@@ -169,7 +173,10 @@ export class Judge {
     response: RunnerResult,
     samplingRatio?: number,
   ): Promise<LDJudgeResult> {
-    const input = messages.length === 0 ? '' : messages.map((msg) => msg.content).join('\r\n');
+    const input =
+      messages.length === 0
+        ? ''
+        : messages.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
     const output = response.content;
 
     return this.evaluate(input, output, samplingRatio);

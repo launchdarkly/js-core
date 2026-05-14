@@ -28,9 +28,17 @@ export class OpenAIRunnerFactory extends AIProvider {
 
   /**
    * Create a model runner from a completion AI configuration.
+   *
+   * @param config The completion (or judge) AI configuration.
+   * @param multiTurn Whether the runner should accumulate conversation history
+   *   across successive `run()` calls. Defaults to `true` (chat semantics).
+   *   Pass `false` for stateless runners such as judges.
    */
-  async createModel(config: LDAICompletionConfig): Promise<OpenAIModelRunner> {
-    return new OpenAIModelRunner(this._client, config, this._logger);
+  async createModel(
+    config: LDAICompletionConfig,
+    multiTurn: boolean = true,
+  ): Promise<OpenAIModelRunner> {
+    return new OpenAIModelRunner(this._client, config, this._logger, multiTurn);
   }
 
   /**

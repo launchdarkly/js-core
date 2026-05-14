@@ -381,7 +381,12 @@ export class LDAIClientImpl implements LDAIClient {
         return undefined;
       }
 
-      const runner = await RunnerFactory.createModel(judgeConfig, this._logger, defaultAiProvider);
+      const runner = await RunnerFactory.createModel(
+        judgeConfig,
+        this._logger,
+        defaultAiProvider,
+        false,
+      );
       if (!runner) {
         return undefined;
       }

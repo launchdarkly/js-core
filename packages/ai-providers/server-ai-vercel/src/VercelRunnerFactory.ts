@@ -21,11 +21,19 @@ export class VercelRunnerFactory extends AIProvider {
 
   /**
    * Create a model runner from a completion AI configuration.
+   *
+   * @param config The completion (or judge) AI configuration.
+   * @param multiTurn Whether the runner should accumulate conversation history
+   *   across successive `run()` calls. Defaults to `true` (chat semantics).
+   *   Pass `false` for stateless runners such as judges.
    */
-  async createModel(config: LDAICompletionConfig): Promise<VercelModelRunner> {
+  async createModel(
+    config: LDAICompletionConfig,
+    multiTurn: boolean = true,
+  ): Promise<VercelModelRunner> {
     const model = await VercelRunnerFactory.createVercelModel(config);
     const parameters = VercelRunnerFactory.mapParameters(config.model?.parameters);
-    return new VercelModelRunner(model, config, parameters, this._logger);
+    return new VercelModelRunner(model, config, parameters, this._logger, multiTurn);
   }
 
   /**

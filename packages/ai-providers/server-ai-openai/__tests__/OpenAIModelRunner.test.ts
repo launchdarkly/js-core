@@ -231,4 +231,89 @@ describe('OpenAIModelRunner', () => {
       ]);
     });
   });
+
+  describe('multiTurn=false (stateless)', () => {
+    const configWithMessages: LDAICompletionConfig = {
+      ...baseConfig,
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    it('does not accumulate history across successful calls', async () => {
+      const statelessRunner = new OpenAIModelRunner(
+        mockOpenAI,
+        configWithMessages,
+        undefined,
+        false,
+      );
+
+      (mockOpenAI.chat.completions.create as jest.Mock)
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: 'First response' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        } as any)
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: 'Second response' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        } as any);
+
+      await statelessRunner.run('First question');
+      await statelessRunner.run('Second question');
+
+      const firstCallArgs = (mockOpenAI.chat.completions.create as jest.Mock).mock.calls[0][0];
+      const secondCallArgs = (mockOpenAI.chat.completions.create as jest.Mock).mock.calls[1][0];
+      expect(firstCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'First question' },
+      ]);
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'Second question' },
+      ]);
+    });
+
+    it('keeps the internal history length pinned to the seeded config messages', async () => {
+      const statelessRunner = new OpenAIModelRunner(
+        mockOpenAI,
+        configWithMessages,
+        undefined,
+        false,
+      );
+
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue({
+        choices: [{ message: { content: 'response' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      } as any);
+
+      await statelessRunner.run('Q1');
+      await statelessRunner.run('Q2');
+
+      // eslint-disable-next-line no-underscore-dangle
+      expect((statelessRunner as any)._history).toHaveLength(1);
+    });
+
+    it('defaults to multiTurn=true when the parameter is omitted', async () => {
+      const defaultRunner = new OpenAIModelRunner(mockOpenAI, configWithMessages);
+
+      (mockOpenAI.chat.completions.create as jest.Mock)
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: 'Answer 1' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        } as any)
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: 'Answer 2' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        } as any);
+
+      await defaultRunner.run('Q1');
+      await defaultRunner.run('Q2');
+
+      const secondCallArgs = (mockOpenAI.chat.completions.create as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'Answer 1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+    });
+  });
 });

@@ -20,6 +20,7 @@ export class VercelModelRunner implements Runner {
   private _model: LanguageModel;
   private _parameters: VercelAIModelParameters;
   private _history: ModelMessage[];
+  private _multiTurn: boolean;
   private _logger?: LDLogger;
 
   constructor(
@@ -27,10 +28,12 @@ export class VercelModelRunner implements Runner {
     config: LDAICompletionConfig,
     parameters: VercelAIModelParameters,
     logger?: LDLogger,
+    multiTurn: boolean = true,
   ) {
     this._model = model;
     this._parameters = parameters;
     this._history = convertMessagesToVercel(config.messages ?? []) as ModelMessage[];
+    this._multiTurn = multiTurn;
     this._logger = logger;
   }
 
@@ -39,12 +42,15 @@ export class VercelModelRunner implements Runner {
    *
    * The runner maintains a conversation history (as Vercel AI SDK
    * `ModelMessage`s) that is initialized from any messages on the AI config
-   * (system prompt, etc.) and grows with each successful call. On every
-   * invocation the user prompt is appended to the existing history before
-   * being sent to the model. When the call succeeds and produces non-empty
-   * content, the user prompt and the assistant's reply are persisted to the
-   * history; failed calls leave the history unchanged so the next call can
-   * retry cleanly.
+   * (system prompt, etc.). On every invocation the user prompt is appended to
+   * the existing history before being sent to the model. When `multiTurn` is
+   * `true` (the default) and the call succeeds with non-empty content, the
+   * user prompt and the assistant's reply are persisted to the history so
+   * subsequent calls continue the conversation. When `multiTurn` is `false`,
+   * history is treated as read-only — useful for stateless runners (e.g.
+   * judges) where every call should see only the initial config messages
+   * plus the current input. Failed calls leave the history unchanged so the
+   * next call can retry cleanly.
    *
    * @param input The user prompt string.
    * @param outputType Optional JSON schema for structured output. When provided,
@@ -59,7 +65,7 @@ export class VercelModelRunner implements Runner {
         ? await this._runStructured(messages, outputType)
         : await this._runCompletion(messages);
 
-    if (result.metrics.success && result.content) {
+    if (result.metrics.success && result.content && this._multiTurn) {
       this._history.push(userMessage);
       this._history.push({ role: 'assistant', content: result.content });
     }

@@ -180,4 +180,68 @@ describe('LangChainModelRunner', () => {
       expect(secondCallMessages[3].content).toBe('Q2');
     });
   });
+
+  describe('multiTurn=false (stateless)', () => {
+    const configWithMessages: LDAICompletionConfig = {
+      ...baseConfig,
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    it('does not accumulate history across successful calls', async () => {
+      const statelessRunner = new LangChainModelRunner(
+        mockLLM,
+        configWithMessages,
+        mockLogger,
+        false,
+      );
+
+      mockLLM.invoke
+        .mockResolvedValueOnce(new AIMessage('First response'))
+        .mockResolvedValueOnce(new AIMessage('Second response'));
+
+      await statelessRunner.run('First question');
+      await statelessRunner.run('Second question');
+
+      const firstCallMessages = mockLLM.invoke.mock.calls[0][0];
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      expect(firstCallMessages).toHaveLength(2);
+      expect(firstCallMessages[0].content).toBe('You are a judge.');
+      expect(firstCallMessages[1].content).toBe('First question');
+      expect(secondCallMessages).toHaveLength(2);
+      expect(secondCallMessages[0].content).toBe('You are a judge.');
+      expect(secondCallMessages[1].content).toBe('Second question');
+    });
+
+    it('keeps the internal chat history length pinned to the seeded config messages', async () => {
+      const statelessRunner = new LangChainModelRunner(
+        mockLLM,
+        configWithMessages,
+        mockLogger,
+        false,
+      );
+
+      mockLLM.invoke.mockResolvedValue(new AIMessage('response'));
+
+      await statelessRunner.run('Q1');
+      await statelessRunner.run('Q2');
+
+      // eslint-disable-next-line no-underscore-dangle
+      const messages = await (statelessRunner as any)._chatHistory.getMessages();
+      expect(messages).toHaveLength(1);
+    });
+
+    it('defaults to multiTurn=true when the parameter is omitted', async () => {
+      const defaultRunner = new LangChainModelRunner(mockLLM, configWithMessages, mockLogger);
+
+      mockLLM.invoke
+        .mockResolvedValueOnce(new AIMessage('Answer 1'))
+        .mockResolvedValueOnce(new AIMessage('Answer 2'));
+
+      await defaultRunner.run('Q1');
+      await defaultRunner.run('Q2');
+
+      const secondCallMessages = mockLLM.invoke.mock.calls[1][0];
+      expect(secondCallMessages).toHaveLength(4);
+    });
+  });
 });
