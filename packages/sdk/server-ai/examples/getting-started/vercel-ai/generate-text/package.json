@@ -1,0 +1,26 @@
+{
+  "name": "vercel-ai-generate-text",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK with Vercel AI generateText",
+  "type": "module",
+  "scripts": {
+    "bootstrap": "yarn workspaces foreach -A -pR --topological-dev --from '{vercel-ai-generate-text,@launchdarkly/node-server-sdk-otel}' run build",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.30",
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/observability-node": "^1.0.0",
+    "@launchdarkly/server-sdk-ai": "workspace:^",
+    "@launchdarkly/server-sdk-ai-vercel": "workspace:^",
+    "ai": "5.0.52",
+    "dotenv": "^17.4.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.5.3"
+  }
+}

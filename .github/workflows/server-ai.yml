@@ -25,18 +25,14 @@ jobs:
         with:
           workspace_name: '@launchdarkly/server-sdk-ai'
           workspace_path: packages/sdk/server-ai
-      - name: Build bedrock example
+      - name: Type-check all server-ai examples
         run: |
-          yarn workspaces focus @launchdarkly/hello-ai-bedrock
-          yarn workspace @launchdarkly/hello-ai-bedrock lint
-          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-ai-bedrock' run build
-      - name: Build OpenAI example
-        run: |
-          yarn workspaces focus @launchdarkly/hello-openai
-          yarn workspace @launchdarkly/hello-openai lint
-          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openai' run build
-      - name: Build Vercel AI example
-        run: |
-          yarn workspaces focus @launchdarkly/hello-vercel-ai
-          yarn workspace @launchdarkly/hello-vercel-ai lint
-          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-vercel-ai' run build
+          set -e
+          for dir in packages/sdk/server-ai/examples/getting-started/*/*/ packages/sdk/server-ai/examples/features/*/; do
+            name=$(node -p "require('./$dir/package.json').name")
+            echo "::group::Type-checking $name ($dir)"
+            yarn workspaces focus "$name"
+            yarn workspaces foreach -A -pR --topological-dev --from "{$name,@launchdarkly/node-server-sdk-otel}" run build
+            (cd "$dir" && npx tsc --noEmit)
+            echo "::endgroup::"
+          done

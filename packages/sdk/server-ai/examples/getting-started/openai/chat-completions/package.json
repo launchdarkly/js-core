@@ -1,0 +1,24 @@
+{
+  "name": "openai-chat-completions",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK with OpenAI chat completions",
+  "type": "module",
+  "scripts": {
+    "bootstrap": "yarn workspaces foreach -A -pR --topological-dev --from '{openai-chat-completions,@launchdarkly/node-server-sdk-otel}' run build",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/observability-node": "^1.0.0",
+    "@launchdarkly/server-sdk-ai": "workspace:^",
+    "@launchdarkly/server-sdk-ai-openai": "workspace:^",
+    "dotenv": "^17.4.2",
+    "openai": "^4.58.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.5.3"
+  }
+}

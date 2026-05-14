@@ -1,0 +1,22 @@
+{
+  "name": "create-agent-graph",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Example demonstrating LaunchDarkly AI SDK agent graph traversal",
+  "type": "module",
+  "scripts": {
+    "bootstrap": "yarn workspaces foreach -A -pR --topological-dev --from '{create-agent-graph,@launchdarkly/node-server-sdk-otel}' run build",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/observability-node": "^1.0.0",
+    "@launchdarkly/server-sdk-ai": "workspace:^",
+    "dotenv": "^17.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.5.3"
+  }
+}
