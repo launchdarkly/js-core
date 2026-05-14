@@ -70,7 +70,7 @@ async function main() {
       return;
     }
 
-    const tracker = aiConfig.createTracker!();
+    const tracker = aiConfig.createTracker();
 
     const sampleQuestion = 'What can you help me with?';
     const messages = [

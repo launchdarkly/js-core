@@ -69,7 +69,7 @@ async function main() {
       return;
     }
 
-    const tracker = aiConfig.createTracker!();
+    const tracker = aiConfig.createTracker();
     const model = openai(aiConfig.model?.name ?? 'gpt-4');
     const parameters = VercelRunnerFactory.mapParameters(aiConfig.model?.parameters);
 
