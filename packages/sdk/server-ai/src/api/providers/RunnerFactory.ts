@@ -158,6 +158,10 @@ export class RunnerFactory {
    *   ('openai', 'langchain', 'vercel', …). When set, only that provider is
    *   tried. When omitted, providers are tried in priority order based on the
    *   provider name in the config.
+   * @param multiTurn Whether the runner should accumulate conversation history
+   *   across successive `run()` calls. Defaults to `true` (chat semantics).
+   *   Judges pass `false` so each evaluation starts from the initial config
+   *   messages.
    * @returns A configured {@link Runner} ready to invoke the model, or
    *   `undefined` if no suitable provider could be loaded.
    */
@@ -165,6 +169,7 @@ export class RunnerFactory {
     config: LDAICompletionConfig | LDAIJudgeConfig,
     logger?: LDLogger,
     defaultAiProvider?: SupportedAIProvider,
+    multiTurn: boolean = true,
   ): Promise<Runner | undefined> {
     const providerName = config.provider?.name?.toLowerCase();
     // eslint-disable-next-line no-underscore-dangle
@@ -173,7 +178,7 @@ export class RunnerFactory {
     // eslint-disable-next-line no-underscore-dangle
     const runner = await RunnerFactory._withFallback(
       providers,
-      (factory) => factory.createModel(config),
+      (factory) => factory.createModel(config, multiTurn),
       logger,
     );
 

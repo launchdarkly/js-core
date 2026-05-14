@@ -26,10 +26,18 @@ export class LangChainRunnerFactory extends AIProvider {
 
   /**
    * Create a model runner from a completion AI configuration.
+   *
+   * @param config The completion (or judge) AI configuration.
+   * @param multiTurn Whether the runner should accumulate conversation history
+   *   across successive `run()` calls. Defaults to `true` (chat semantics).
+   *   Pass `false` for stateless runners such as judges.
    */
-  async createModel(config: LDAICompletionConfig): Promise<LangChainModelRunner> {
+  async createModel(
+    config: LDAICompletionConfig,
+    multiTurn: boolean = true,
+  ): Promise<LangChainModelRunner> {
     const llm = await createLangChainModel(config);
-    return new LangChainModelRunner(llm, config, this._logger);
+    return new LangChainModelRunner(llm, config, this._logger, multiTurn);
   }
 
   /**

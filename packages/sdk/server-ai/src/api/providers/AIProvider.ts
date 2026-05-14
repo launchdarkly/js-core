@@ -38,10 +38,17 @@ export abstract class AIProvider {
    * Default implementation returns `undefined`.
    *
    * @param config The completion or judge AI configuration.
+   * @param multiTurn Whether the runner should accumulate conversation history
+   *   across successive `run()` calls. Defaults to `true` (chat semantics).
+   *   Pass `false` for stateless runners such as judges where each call must
+   *   start from the initial config messages.
    * @returns Promise resolving to a {@link Runner}, or `undefined` if this
    *   provider does not support model creation.
    */
-  async createModel(_config: LDAICompletionConfig | LDAIJudgeConfig): Promise<Runner | undefined> {
+  async createModel(
+    _config: LDAICompletionConfig | LDAIJudgeConfig,
+    _multiTurn: boolean = true,
+  ): Promise<Runner | undefined> {
     return undefined;
   }
 

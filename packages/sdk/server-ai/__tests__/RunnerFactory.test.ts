@@ -67,7 +67,10 @@ describe('RunnerFactory.createModel', () => {
     const result = await RunnerFactory.createModel(makeConfig('openai'));
 
     expect(result).toBe(runner);
-    expect(mockFactory.createModel).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }));
+    expect(mockFactory.createModel).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+      true,
+    );
   });
 
   it('uses only the defaultAiProvider when one is specified', async () => {
@@ -85,6 +88,38 @@ describe('RunnerFactory.createModel', () => {
     // _getProviderFactory should only have been called once, with 'openai'
     expect(getProviderSpy).toHaveBeenCalledTimes(1);
     expect(getProviderSpy).toHaveBeenCalledWith('openai', undefined);
+  });
+
+  it('defaults multiTurn to true when forwarding to the provider factory', async () => {
+    const runner = makeRunner();
+    const mockFactory: AIProvider = {
+      createModel: jest.fn().mockResolvedValue(runner),
+    } as unknown as AIProvider;
+
+    jest.spyOn(RunnerFactory as any, '_getProviderFactory').mockResolvedValue(mockFactory);
+
+    await RunnerFactory.createModel(makeConfig('openai'));
+
+    expect(mockFactory.createModel).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+      true,
+    );
+  });
+
+  it('forwards multiTurn=false to the provider factory when specified', async () => {
+    const runner = makeRunner();
+    const mockFactory: AIProvider = {
+      createModel: jest.fn().mockResolvedValue(runner),
+    } as unknown as AIProvider;
+
+    jest.spyOn(RunnerFactory as any, '_getProviderFactory').mockResolvedValue(mockFactory);
+
+    await RunnerFactory.createModel(makeConfig('openai'), undefined, undefined, false);
+
+    expect(mockFactory.createModel).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+      false,
+    );
   });
 
   it('falls through to multi-provider packages when specific provider returns undefined', async () => {

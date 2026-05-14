@@ -231,4 +231,96 @@ describe('VercelModelRunner', () => {
       ]);
     });
   });
+
+  describe('multiTurn=false (stateless)', () => {
+    const configWithMessages: LDAICompletionConfig = {
+      ...baseConfig,
+      messages: [{ role: 'system', content: 'You are a judge.' }],
+    };
+
+    it('does not accumulate history across successful calls', async () => {
+      const statelessRunner = new VercelModelRunner(
+        fakeModel as any,
+        configWithMessages,
+        {},
+        mockLogger,
+        false,
+      );
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({
+          text: 'First response',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        })
+        .mockResolvedValueOnce({
+          text: 'Second response',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        });
+
+      await statelessRunner.run('First question');
+      await statelessRunner.run('Second question');
+
+      const firstCallArgs = (generateText as jest.Mock).mock.calls[0][0];
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(firstCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'First question' },
+      ]);
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'Second question' },
+      ]);
+    });
+
+    it('keeps the internal history length pinned to the seeded config messages', async () => {
+      const statelessRunner = new VercelModelRunner(
+        fakeModel as any,
+        configWithMessages,
+        {},
+        mockLogger,
+        false,
+      );
+
+      (generateText as jest.Mock).mockResolvedValue({
+        text: 'response',
+        usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+      });
+
+      await statelessRunner.run('Q1');
+      await statelessRunner.run('Q2');
+
+      // eslint-disable-next-line no-underscore-dangle
+      expect((statelessRunner as any)._history).toHaveLength(1);
+    });
+
+    it('defaults to multiTurn=true when the parameter is omitted', async () => {
+      const defaultRunner = new VercelModelRunner(
+        fakeModel as any,
+        configWithMessages,
+        {},
+        mockLogger,
+      );
+
+      (generateText as jest.Mock)
+        .mockResolvedValueOnce({
+          text: 'Answer 1',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        })
+        .mockResolvedValueOnce({
+          text: 'Answer 2',
+          usage: { totalTokens: 2, promptTokens: 1, completionTokens: 1 },
+        });
+
+      await defaultRunner.run('Q1');
+      await defaultRunner.run('Q2');
+
+      const secondCallArgs = (generateText as jest.Mock).mock.calls[1][0];
+      expect(secondCallArgs.messages).toEqual([
+        { role: 'system', content: 'You are a judge.' },
+        { role: 'user', content: 'Q1' },
+        { role: 'assistant', content: 'Answer 1' },
+        { role: 'user', content: 'Q2' },
+      ]);
+    });
+  });
 });

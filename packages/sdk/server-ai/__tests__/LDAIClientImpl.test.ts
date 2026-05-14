@@ -738,7 +738,12 @@ describe('createJudge method', () => {
       1,
     );
     expect(judgeConfigSpy).toHaveBeenCalledWith(key, testContext, defaultValue, undefined);
-    expect(RunnerFactory.createModel).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(RunnerFactory.createModel).toHaveBeenCalledWith(
+      mockJudgeConfig,
+      undefined,
+      undefined,
+      false,
+    );
     expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, undefined);
     expect(result).toBe(mockJudge);
     judgeConfigSpy.mockRestore();
@@ -793,7 +798,12 @@ describe('createJudge method', () => {
     const result = await client.createJudge(key, testContext, defaultValue);
 
     expect(result).toBeUndefined();
-    expect(RunnerFactory.createModel).toHaveBeenCalledWith(mockJudgeConfig, undefined, undefined);
+    expect(RunnerFactory.createModel).toHaveBeenCalledWith(
+      mockJudgeConfig,
+      undefined,
+      undefined,
+      false,
+    );
     expect(Judge).not.toHaveBeenCalled();
     judgeConfigSpy.mockRestore();
   });

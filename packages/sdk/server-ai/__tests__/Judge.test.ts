@@ -553,9 +553,79 @@ describe('Judge', () => {
       });
 
       expect(mockRunner.run).toHaveBeenCalledWith(
-        'MESSAGE HISTORY:\nWhat is the capital of France?\r\nParis is the capital of France.\n\nRESPONSE TO EVALUATE:\nParis is the capital of France.',
+        'MESSAGE HISTORY:\nuser: What is the capital of France?\nassistant: Paris is the capital of France.\n\nRESPONSE TO EVALUATE:\nParis is the capital of France.',
         expect.any(Object), // evaluation schema
       );
+    });
+
+    it('renders each message as "<role>: <content>" joined by newlines', async () => {
+      const messages: LDMessage[] = [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hello' },
+      ];
+      const response: RunnerResult = {
+        content: 'hello',
+        metrics: { success: true },
+      };
+
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: { score: 0.5, reasoning: 'ok' },
+        metrics: { success: true },
+      };
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
+      await judge.evaluateMessages(messages, response);
+
+      const inputArg = mockRunner.run.mock.calls[0][0] as string;
+      expect(inputArg).toContain('MESSAGE HISTORY:\nuser: hi\nassistant: hello');
+    });
+
+    it('produces an empty MESSAGE HISTORY section when messages is empty', async () => {
+      const response: RunnerResult = {
+        content: 'output',
+        metrics: { success: true },
+      };
+
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: { score: 0.5, reasoning: 'ok' },
+        metrics: { success: true },
+      };
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
+      await judge.evaluateMessages([], response);
+
+      const inputArg = mockRunner.run.mock.calls[0][0] as string;
+      expect(inputArg).toBe('MESSAGE HISTORY:\n\n\nRESPONSE TO EVALUATE:\noutput');
+    });
+
+    it('does not contaminate the runner input across successive evaluations', async () => {
+      const mockRunnerResult: RunnerResult = {
+        content: '',
+        parsed: { score: 0.5, reasoning: 'ok' },
+        metrics: { success: true },
+      };
+      mockTracker.trackMetricsOf.mockImplementation(async (extractor, func) => func());
+      mockRunner.run.mockResolvedValue(mockRunnerResult);
+
+      await judge.evaluate('Q1', 'A1');
+      await judge.evaluate('Q2', 'A2');
+
+      const firstInput = mockRunner.run.mock.calls[0][0] as string;
+      const secondInput = mockRunner.run.mock.calls[1][0] as string;
+
+      expect(firstInput).toBe(
+        'MESSAGE HISTORY:\nQ1\n\nRESPONSE TO EVALUATE:\nA1',
+      );
+      expect(secondInput).toBe(
+        'MESSAGE HISTORY:\nQ2\n\nRESPONSE TO EVALUATE:\nA2',
+      );
+      // The second call's input must not reference the first call.
+      expect(secondInput).not.toContain('Q1');
+      expect(secondInput).not.toContain('A1');
     });
 
     it('handles sampling rate correctly', async () => {

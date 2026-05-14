@@ -21,13 +21,20 @@ export class OpenAIModelRunner implements Runner {
   private _modelName: string;
   private _parameters: Record<string, unknown>;
   private _history: LDMessage[];
+  private _multiTurn: boolean;
   private _logger?: LDLogger;
 
-  constructor(client: OpenAI, config: LDAICompletionConfig, logger?: LDLogger) {
+  constructor(
+    client: OpenAI,
+    config: LDAICompletionConfig,
+    logger?: LDLogger,
+    multiTurn: boolean = true,
+  ) {
     this._client = client;
     this._modelName = config.model?.name ?? '';
     this._parameters = { ...(config.model?.parameters ?? {}) };
     this._history = [...(config.messages ?? [])];
+    this._multiTurn = multiTurn;
     this._logger = logger;
   }
 
@@ -35,12 +42,16 @@ export class OpenAIModelRunner implements Runner {
    * Run the OpenAI model with the given user prompt.
    *
    * The runner maintains a conversation history that is initialized from any
-   * messages on the AI config (system prompt, instructions, etc.) and grows
-   * with each successful call. On every invocation the user prompt is appended
-   * to the existing history before being sent to the model. When the call
-   * succeeds and produces non-empty content, the user prompt and the
-   * assistant's reply are persisted to the history; failed calls leave the
-   * history unchanged so the next call can retry cleanly.
+   * messages on the AI config (system prompt, instructions, etc.). On every
+   * invocation the user prompt is appended to the existing history before
+   * being sent to the model. When `multiTurn` is `true` (the default) and the
+   * call succeeds with non-empty content, the user prompt and the assistant's
+   * reply are persisted to the history so subsequent calls continue the
+   * conversation. When `multiTurn` is `false`, history is treated as
+   * read-only — useful for stateless runners (e.g. judges) where every call
+   * should see only the initial config messages plus the current input.
+   * Failed calls leave the history unchanged so the next call can retry
+   * cleanly.
    *
    * @param input The user prompt string.
    * @param outputType Optional JSON schema for structured output. When provided,
@@ -55,7 +66,7 @@ export class OpenAIModelRunner implements Runner {
         ? await this._runStructured(messages, outputType)
         : await this._runCompletion(messages);
 
-    if (result.metrics.success && result.content) {
+    if (result.metrics.success && result.content && this._multiTurn) {
       this._history.push(userMessage);
       this._history.push({ role: 'assistant', content: result.content });
     }
