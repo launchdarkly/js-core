@@ -80,7 +80,7 @@ async function main() {
       return;
     }
 
-    const tracker = aiConfig.createTracker!();
+    const tracker = aiConfig.createTracker();
 
     const chatMessages = mapPromptToConversation(aiConfig.messages ?? []);
     const systemMessages =
