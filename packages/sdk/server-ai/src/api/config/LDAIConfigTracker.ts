@@ -152,9 +152,9 @@ export interface LDAIConfigTracker {
    * @param func Function which executes the AI run
    * @returns The result of the AI run
    *
-   * @remarks Because each inner metric is at-most-once per Tracker, calling
-   * this twice on the same Tracker will run the inner function again but
-   * produce no additional metric events.
+   * @remarks Subsequent calls re-run the inner function but emit only metrics
+   * not already recorded on this Tracker. Call createTracker on the AI Config
+   * to start a new run.
    */
   trackMetricsOf<TRes>(
     metricsExtractor: (result: TRes) => LDAIMetrics,
@@ -182,9 +182,9 @@ export interface LDAIConfigTracker {
    * @param metricsExtractor Function that asynchronously extracts metrics from the stream
    * @returns The stream result (returned immediately, not a Promise)
    *
-   * @remarks Because each inner metric is at-most-once per Tracker, calling
-   * this twice on the same Tracker will run the inner function again but
-   * produce no additional metric events.
+   * @remarks Subsequent calls re-run the inner function but emit only metrics
+   * not already recorded on this Tracker. Call createTracker on the AI Config
+   * to start a new run.
    */
   trackStreamMetricsOf<TStream>(
     streamCreator: () => TStream,
@@ -199,8 +199,8 @@ export interface LDAIConfigTracker {
    * @param res The result of the Bedrock operation.
    * @returns The input operation.
    *
-   * @remarks Because each inner metric is at-most-once per Tracker, calling
-   * this twice on the same Tracker will produce no additional metric events.
+   * @remarks Subsequent calls emit only metrics not already recorded on this
+   * Tracker. Call createTracker on the AI Config to start a new run.
    */
   trackBedrockConverseMetrics<
     TRes extends {
