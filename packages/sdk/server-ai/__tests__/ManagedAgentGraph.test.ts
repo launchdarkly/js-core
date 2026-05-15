@@ -1,7 +1,7 @@
 import { AgentGraphDefinition } from '../src/api/graph/AgentGraphDefinition';
 import { AgentGraphNode } from '../src/api/graph/AgentGraphNode';
 import { LDGraphTracker } from '../src/api/graph/LDGraphTracker';
-import { ManagedAgentGraph } from '../src/api/graph/ManagedAgentGraph';
+import { ManagedAgentGraph } from '../src/api/ManagedAgentGraph';
 import { AgentGraphRunnerResult } from '../src/api/graph/types';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 
