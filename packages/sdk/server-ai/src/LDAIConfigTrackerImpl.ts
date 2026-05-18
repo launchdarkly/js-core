@@ -3,12 +3,7 @@ import { LDContext } from '@launchdarkly/js-server-sdk-common';
 import { LDAIConfigTracker } from './api/config';
 import { LDAIMetricSummary } from './api/model/types';
 import { LDJudgeResult } from './api/judge/types';
-import {
-  createBedrockTokenUsage,
-  LDAIMetrics,
-  LDFeedbackKind,
-  LDTokenUsage,
-} from './api/metrics';
+import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from './api/metrics';
 import { LDClientMin } from './LDClientMin';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
@@ -273,31 +268,6 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       // Track duration regardless of success/error
       this.trackDuration(Date.now() - startTime);
     }
-  }
-
-  trackBedrockConverseMetrics<
-    TRes extends {
-      $metadata: { httpStatusCode?: number };
-      metrics?: { latencyMs?: number };
-      usage?: {
-        inputTokens?: number;
-        outputTokens?: number;
-        totalTokens?: number;
-      };
-    },
-  >(res: TRes): TRes {
-    if (res.$metadata?.httpStatusCode === 200) {
-      this.trackSuccess();
-    } else if (res.$metadata?.httpStatusCode && res.$metadata.httpStatusCode >= 400) {
-      this.trackError();
-    }
-    if (res.metrics && res.metrics.latencyMs) {
-      this.trackDuration(res.metrics.latencyMs);
-    }
-    if (res.usage) {
-      this.trackTokens(createBedrockTokenUsage(res.usage));
-    }
-    return res;
   }
 
   trackTokens(tokens: LDTokenUsage): void {
