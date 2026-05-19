@@ -2,6 +2,7 @@ export * from './config';
 export * from './graph';
 export * from './judge';
 export * from './ManagedAgent';
+export * from './ManagedAgentGraph';
 export * from './ManagedModel';
 export * from './metrics';
 export * from './model';

@@ -1,11 +1,15 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { LDAIMetrics } from '../metrics';
-import { LDAIMetricSummary } from '../model/types';
-import { LDJudgeResult } from '../judge/types';
-import { AgentGraphDefinition } from './AgentGraphDefinition';
-import { LDGraphTracker } from './LDGraphTracker';
-import { AgentGraphRunnerResult, LDAIGraphMetricSummary, ManagedGraphResult } from './types';
+import { AgentGraphDefinition } from './graph/AgentGraphDefinition';
+import { LDGraphTracker } from './graph/LDGraphTracker';
+import {
+  AgentGraphRunnerResult,
+  LDAIGraphMetricSummary,
+  ManagedGraphResult,
+} from './graph/types';
+import { LDJudgeResult } from './judge/types';
+import { LDAIMetrics } from './metrics';
+import { LDAIMetricSummary } from './model/types';
 
 /**
  * ManagedAgentGraph wraps an AgentGraphDefinition and provides a managed run()
