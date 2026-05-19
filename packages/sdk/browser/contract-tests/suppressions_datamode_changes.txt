@@ -43,4 +43,3 @@ tags/poll requests/{"applicationId":"___________________________________________
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
 tags/disallowed characters
-hooks/track/executes afterTrack hooks in registration order

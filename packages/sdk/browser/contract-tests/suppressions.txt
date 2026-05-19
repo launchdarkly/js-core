@@ -17,3 +17,4 @@ tags/stream requests/{"applicationId":"_________________________________________
 tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
 hooks/evaluation/executes beforeEvaluation hooks in registration order
+hooks/track/executes afterTrack hooks in registration order
