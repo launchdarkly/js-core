@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.0.2](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.1...react-sdk-v4.0.2) (2026-05-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.6.5 to ^4.7.0
+
 ## [4.0.1](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.0...react-sdk-v4.0.1) (2026-05-06)
 
 

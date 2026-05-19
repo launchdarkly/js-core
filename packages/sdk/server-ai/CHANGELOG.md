@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.20.0...server-sdk-ai-v1.0.0) (2026-05-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Remove bedrock-specific tracker method ([#1385](https://github.com/launchdarkly/js-core/issues/1385))
+* Remove `LDAIClient.agent` — use `LDAIClient.agentConfig` instead
+* Remove `LDAIClient.agents` — use `LDAIClient.agentConfigs` instead
+* Remove `LDAIClient.createChat` — use `LDAIClient.createModel` instead
+* Remove `LDAIClient.initChat` — use `LDAIClient.createModel` instead
+* Remove `ChatResponse` type and the `api/chat` module — use `RunnerResult` from `api/model` instead
+* Change `Judge.evaluateMessages` parameter type from `ChatResponse` to `RunnerResult` (method retained per AI SDK spec Requirement 1.1.3)
+* Remove `evaluationMetricKeys` (plural) field from `LDAIJudgeConfig` and `LDAIJudgeConfigDefault` — use `evaluationMetricKey` (singular) instead
+* Remove `LDAIConfigTracker.trackOpenAIMetrics` — use `tracker.trackMetricsOf(getAIMetricsFromResponse, fn)` from `@launchdarkly/server-sdk-ai-openai` instead
+* Remove `LDAIConfigTracker.trackVercelAISDKGenerateTextMetrics` — use `tracker.trackMetricsOf(getAIMetricsFromResponse, fn)` from `@launchdarkly/server-sdk-ai-vercel` instead
+* Remove `createOpenAiUsage` helper — use `getAIMetricsFromResponse` from `@launchdarkly/server-sdk-ai-openai` instead
+* Remove `createVercelAISDKTokenUsage` helper — use `getAIMetricsFromResponse`  from `@launchdarkly/server-sdk-ai-vercel` instead
+* Remove `LDAIClient.config` — use `LDAIClient.completionConfig` instead
+
+### Features
+
+* Change `Judge.evaluateMessages` parameter type from `ChatResponse` to `RunnerResult` (method retained per AI SDK spec Requirement 1.1.3) ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `ChatResponse` type and the `api/chat` module — use `RunnerResult` from `api/model` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `createOpenAiUsage` helper — use `getAIMetricsFromResponse` from `@launchdarkly/server-sdk-ai-openai` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `createVercelAISDKTokenUsage` helper — use `getAIMetricsFromResponse`  from `@launchdarkly/server-sdk-ai-vercel` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `evaluationMetricKeys` (plural) field from `LDAIJudgeConfig` and `LDAIJudgeConfigDefault` — use `evaluationMetricKey` (singular) instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIClient.agent` — use `LDAIClient.agentConfig` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIClient.agents` — use `LDAIClient.agentConfigs` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIClient.config` — use `LDAIClient.completionConfig` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIClient.createChat` — use `LDAIClient.createModel` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIClient.initChat` — use `LDAIClient.createModel` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIConfigTracker.trackOpenAIMetrics` — use `tracker.trackMetricsOf(getAIMetricsFromResponse, fn)` from `@launchdarkly/server-sdk-ai-openai` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove `LDAIConfigTracker.trackVercelAISDKGenerateTextMetrics` — use `tracker.trackMetricsOf(getAIMetricsFromResponse, fn)` from `@launchdarkly/server-sdk-ai-vercel` instead ([86951b0](https://github.com/launchdarkly/js-core/commit/86951b0f66eed3f374d06c40e858dca04a837fda))
+* Remove bedrock-specific tracker method ([#1385](https://github.com/launchdarkly/js-core/issues/1385)) ([f7dbee8](https://github.com/launchdarkly/js-core/commit/f7dbee806a15e8b9d5a6b7b49a461e16e5e757fe))
+
+
+### Bug Fixes
+
+* Make judge runners non-multi-turn ([#1383](https://github.com/launchdarkly/js-core/issues/1383)) ([3d8f488](https://github.com/launchdarkly/js-core/commit/3d8f488354a5ed590859c7fe96429a2ab9f79c01))
+* Move ManagedAgentGraph alongside other managed types ([#1384](https://github.com/launchdarkly/js-core/issues/1384)) ([22dd76d](https://github.com/launchdarkly/js-core/commit/22dd76d61a830d7ad37ae0136b59d1971973b424))
+
 ## [0.20.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.19.1...server-sdk-ai-v0.20.0) (2026-05-07)
 
 

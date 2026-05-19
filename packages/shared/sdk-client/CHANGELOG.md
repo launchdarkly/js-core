@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.3...js-client-sdk-common-v1.27.0) (2026-05-19)
+
+
+### Features
+
+* wire registerDebugOverrides through client common ([#1368](https://github.com/launchdarkly/js-core/issues/1368)) ([9011c2a](https://github.com/launchdarkly/js-core/commit/9011c2a76f7460770efe3c07b3e16338b647d9df))
+
 ## [1.26.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.2...js-client-sdk-common-v1.26.3) (2026-05-06)
 
 
