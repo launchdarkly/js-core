@@ -11,3 +11,5 @@ streaming/fdv2/reconnection state management/replaces previously known state
 streaming/fdv2/reconnection state management/updates previously known state
 streaming/fdv2/ignores model version
 streaming/fdv2/can discard partial events on errors
+hooks/evaluation/executes beforeEvaluation hooks in registration order
+hooks/track/executes afterTrack hooks in registration order
