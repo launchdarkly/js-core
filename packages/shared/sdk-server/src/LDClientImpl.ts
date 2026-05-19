@@ -116,6 +116,7 @@ function constructFDv1(
   initSuccess: () => void,
   dataSourceErrorHandler: (e: any) => void,
   hooks: Hook[],
+  instanceId: string | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -137,7 +138,14 @@ function constructFDv1(
     throw new Error('You must configure the client with an SDK key');
   }
   const { logger } = config;
-  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+  const baseHeaders = defaultHeaders(
+    sdkKey,
+    platform.info,
+    config.tags,
+    true,
+    'user-agent',
+    instanceId,
+  );
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const featureStore = config.featureStoreFactory(clientContext);
@@ -245,6 +253,7 @@ function constructFDv2(
   callbacks: LDClientCallbacks,
   initSuccess: () => void,
   hooks: Hook[],
+  instanceId: string | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -268,7 +277,14 @@ function constructFDv2(
   }
 
   const { logger } = config;
-  const baseHeaders = defaultHeaders(sdkKey, platform.info, config.tags);
+  const baseHeaders = defaultHeaders(
+    sdkKey,
+    platform.info,
+    config.tags,
+    true,
+    'user-agent',
+    instanceId,
+  );
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const dataSystem = config.dataSystem!; // dataSystem must be defined to get into this construct function
@@ -604,6 +620,7 @@ export default class LDClientImpl implements LDClient {
         () => this._initSuccess(),
         (e) => this._dataSourceErrorHandler(e),
         hooks,
+        internalOptions?.instanceId,
       ));
 
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
@@ -633,7 +650,15 @@ export default class LDClientImpl implements LDClient {
         onError: this._onError,
         onFailed: this._onFailed,
         onReady: this._onReady,
-      } = constructFDv2(_sdkKey, _platform, config, callbacks, () => this._initSuccess(), hooks));
+      } = constructFDv2(
+        _sdkKey,
+        _platform,
+        config,
+        callbacks,
+        () => this._initSuccess(),
+        hooks,
+        internalOptions?.instanceId,
+      ));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
         .statusProvider as BigSegmentStoreStatusProvider;

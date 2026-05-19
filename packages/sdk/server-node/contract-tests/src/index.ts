@@ -45,6 +45,7 @@ app.get('/', (req: Request, res: Response) => {
       'optional-event-gzip',
       'flag-change-listeners',
       'fdv1-fallback',
+      'instance-id',
     ],
   });
 });
