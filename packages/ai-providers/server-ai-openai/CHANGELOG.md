@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.6.0...server-sdk-ai-openai-v0.7.0) (2026-05-19)
+
+
+### Features
+
+* Support conversation history directly in AI Provider model runners ([#1371](https://github.com/launchdarkly/js-core/issues/1371)) ([b246631](https://github.com/launchdarkly/js-core/commit/b246631bfcaf7155dec52a1580cf4ffb329ebfaa))
+
+
+### Bug Fixes
+
+* Make judge runners non-multi-turn ([#1383](https://github.com/launchdarkly/js-core/issues/1383)) ([3d8f488](https://github.com/launchdarkly/js-core/commit/3d8f488354a5ed590859c7fe96429a2ab9f79c01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.20.0 to ^1.0.0
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^0.20.0 to ^1.0.0
+
 ## [0.6.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-openai-v0.5.10...server-sdk-ai-openai-v0.6.0) (2026-05-07)
 
 
