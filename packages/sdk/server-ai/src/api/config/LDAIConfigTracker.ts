@@ -192,31 +192,6 @@ export interface LDAIConfigTracker {
   ): TStream;
 
   /**
-   * Track an AI run which uses Bedrock.
-   *
-   * This function will track the duration of the AI run, the token usage, and the success or error status.
-   *
-   * @param res The result of the Bedrock operation.
-   * @returns The input operation.
-   *
-   * @remarks Subsequent calls emit only metrics not already recorded on this
-   * Tracker. Call createTracker on the AI Config to start a new run.
-   */
-  trackBedrockConverseMetrics<
-    TRes extends {
-      $metadata: { httpStatusCode?: number };
-      metrics?: { latencyMs?: number };
-      usage?: {
-        inputTokens?: number;
-        outputTokens?: number;
-        totalTokens?: number;
-      };
-    },
-  >(
-    res: TRes,
-  ): TRes;
-
-  /**
    * Get a summary of the tracked metrics.
    */
   getSummary(): LDAIMetricSummary;

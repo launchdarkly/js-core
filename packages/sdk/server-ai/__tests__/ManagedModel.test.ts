@@ -24,7 +24,6 @@ describe('ManagedModel', () => {
       trackFeedback: jest.fn(),
       trackTimeToFirstToken: jest.fn(),
       trackDurationOf: jest.fn(),
-      trackBedrockConverseMetrics: jest.fn(),
       getSummary: jest.fn().mockReturnValue({}),
       trackJudgeResult: jest.fn(),
       resumptionToken: 'resumption-token-123',

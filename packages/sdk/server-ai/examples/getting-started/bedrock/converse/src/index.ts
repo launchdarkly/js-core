@@ -1,11 +1,16 @@
 /* eslint-disable no-console */
 import 'dotenv/config';
 
-import { BedrockRuntimeClient, ConverseCommand, Message } from '@aws-sdk/client-bedrock-runtime';
+import {
+  BedrockRuntimeClient,
+  ConverseCommand,
+  type ConverseCommandOutput,
+  Message,
+} from '@aws-sdk/client-bedrock-runtime';
 
 import { init, type LDContext } from '@launchdarkly/node-server-sdk';
 import { Observability } from '@launchdarkly/observability-node';
-import { initAi } from '@launchdarkly/server-sdk-ai';
+import { initAi, type LDAIMetrics } from '@launchdarkly/server-sdk-ai';
 
 const awsClient = new BedrockRuntimeClient({
   region: process.env.AWS_DEFAULT_REGION ?? 'us-east-1',
@@ -33,6 +38,23 @@ const context: LDContext = {
   key: 'example-user-key',
   name: 'Sandy',
 };
+
+// Extract LD AI metrics from a Bedrock Converse response. Passed to
+// tracker.trackMetricsOf, which wraps the AI call to track duration and
+// success automatically. The dedicated @launchdarkly/server-sdk-ai-bedrock
+// provider package will supply an equivalent extractor out of the box.
+function extractBedrockConverseMetrics(res: ConverseCommandOutput): LDAIMetrics {
+  return {
+    success: (res.$metadata?.httpStatusCode ?? 0) === 200,
+    tokens: res.usage
+      ? {
+          total: res.usage.totalTokens ?? 0,
+          input: res.usage.inputTokens ?? 0,
+          output: res.usage.outputTokens ?? 0,
+        }
+      : undefined,
+  };
+}
 
 function mapPromptToConversation(
   prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
@@ -93,8 +115,8 @@ async function main() {
     console.log(`\nSending sample question to ${aiConfig.model?.name}: "${sampleQuestion}"`);
     console.log('Waiting for response...');
 
-    const completion = tracker.trackBedrockConverseMetrics(
-      await awsClient.send(
+    const completion = await tracker.trackMetricsOf(extractBedrockConverseMetrics, () =>
+      awsClient.send(
         new ConverseCommand({
           modelId: aiConfig.model?.name ?? 'no-model',
           messages: chatMessages,

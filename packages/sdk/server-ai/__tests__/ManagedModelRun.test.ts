@@ -33,7 +33,6 @@ describe('ManagedModel.run() evaluations', () => {
       trackFeedback: jest.fn(),
       trackTimeToFirstToken: jest.fn(),
       trackDurationOf: jest.fn(),
-      trackBedrockConverseMetrics: jest.fn(),
       getSummary: jest
         .fn()
         .mockReturnValue({ success: true, resumptionToken: 'test-resumption-token' }),
