@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.11.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.14...node-server-sdk-v9.11.0) (2026-05-20)
+
+
+### Features
+
+* add X-LaunchDarkly-Instance-Id header to server-node SDK (SDK-2358) ([#1377](https://github.com/launchdarkly/js-core/issues/1377)) ([814dc0b](https://github.com/launchdarkly/js-core/commit/814dc0bfd6b152385f3a758f9eeca37a0f9f08e8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.7 to 2.19.0
+
 ## [9.10.14](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.10.13...node-server-sdk-v9.10.14) (2026-05-06)
 
 

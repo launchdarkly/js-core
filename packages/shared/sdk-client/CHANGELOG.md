@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.27.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.27.0...js-client-sdk-common-v1.27.1) (2026-05-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.4 to 2.25.0
+
 ## [1.27.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.26.3...js-client-sdk-common-v1.27.0) (2026-05-19)
 
 

@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.0.0...server-sdk-ai-v1.0.1) (2026-05-20)
+
+
+### Bug Fixes
+
+* Remove pre-release caution note from server-ai README ([#1387](https://github.com/launchdarkly/js-core/issues/1387)) ([0bafcbf](https://github.com/launchdarkly/js-core/commit/0bafcbfc22d5c39c3664d38bdb47183824a068e5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.7 to 2.19.0
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.18.7 to 2.19.0
+
 ## [1.0.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v0.20.0...server-sdk-ai-v1.0.0) (2026-05-19)
 
 
