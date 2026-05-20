@@ -1,5 +1,4 @@
+/** @type {import('next').NextConfig} */
 module.exports = {
-  images: {
-    domains: ['store.storeimages.cdn-apple.com'],
-  },
+  reactStrictMode: false,
 };
