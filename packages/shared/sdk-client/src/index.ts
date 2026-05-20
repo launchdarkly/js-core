@@ -35,7 +35,6 @@ export type {
   LDIdentifyError,
   LDIdentifyTimeout,
   LDIdentifyShed,
-  LDClientIdentifyResult,
   LDPluginBase,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,

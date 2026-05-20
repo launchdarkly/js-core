@@ -154,7 +154,7 @@ describe('given an initialized ElectronClient', () => {
     const context: LDContext = { kind: 'user', key: 'test-user-id' };
     const options: LDIdentifyOptions = { waitForNetworkResults: true };
 
-    const spy = jest.spyOn(client, 'identifyResult');
+    const spy = jest.spyOn(client, 'identify');
     spy.mockResolvedValueOnce({ status: 'completed' });
 
     const result = await mockIpcMain.getHandler(getEventName('identify'))?.({}, context, options);
