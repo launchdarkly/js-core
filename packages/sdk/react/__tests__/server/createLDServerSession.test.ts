@@ -150,6 +150,58 @@ it('allFlagsState() forwards options to base client', async () => {
   expect(client.allFlagsState).toHaveBeenCalledWith(context, options);
 });
 
+describe('given a client with forContext', () => {
+  function makeMockScopedBaseClient() {
+    const base = makeMockBaseClient();
+    const forContext = jest.fn((ctx: LDContext) => ({
+      currentContext: () => ctx,
+      boolVariation: (key: string, def: boolean) => base.boolVariation(key, ctx, def),
+      numberVariation: (key: string, def: number) => base.numberVariation(key, ctx, def),
+      stringVariation: (key: string, def: string) => base.stringVariation(key, ctx, def),
+      jsonVariation: (key: string, def: unknown) => base.jsonVariation(key, ctx, def),
+      boolVariationDetail: (key: string, def: boolean) => base.boolVariationDetail(key, ctx, def),
+      numberVariationDetail: (key: string, def: number) =>
+        base.numberVariationDetail(key, ctx, def),
+      stringVariationDetail: (key: string, def: string) =>
+        base.stringVariationDetail(key, ctx, def),
+      jsonVariationDetail: (key: string, def: unknown) => base.jsonVariationDetail(key, ctx, def),
+      allFlagsState: (options?: LDFlagsStateOptions) => base.allFlagsState(ctx, options),
+    }));
+    return { ...base, forContext } as any;
+  }
+
+  it('uses forContext when available', () => {
+    const client = makeMockScopedBaseClient();
+    createLDServerSession(client, context);
+    expect(client.forContext).toHaveBeenCalledWith(context, {
+      wrapperName: 'react-client-sdk',
+      wrapperVersion: '0.0.0',
+    });
+  });
+
+  it('delegates boolVariation through scoped client', async () => {
+    const client = makeMockScopedBaseClient();
+    client.boolVariation.mockResolvedValue(true);
+    const session = createLDServerSession(client, context);
+    const result = await session.boolVariation('my-flag', false);
+    expect(result).toBe(true);
+    expect(client.boolVariation).toHaveBeenCalledWith('my-flag', context, false);
+  });
+
+  it('getContext() returns the scoped client currentContext', () => {
+    const client = makeMockScopedBaseClient();
+    const session = createLDServerSession(client, context);
+    expect(session.getContext()).toEqual(context);
+  });
+
+  it('initialized() delegates to the base client', () => {
+    const client = makeMockScopedBaseClient();
+    client.initialized.mockReturnValue(false);
+    const session = createLDServerSession(client, context);
+    expect(session.initialized()).toBe(false);
+  });
+});
+
 describe('given a browser environment (window defined)', () => {
   let originalWindow: typeof globalThis.window;
 

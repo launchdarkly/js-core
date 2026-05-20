@@ -3,6 +3,8 @@ import {
   LDEvaluationDetailTyped,
   LDFlagsState,
   LDFlagsStateOptions,
+  LDScopedClient,
+  LDScopedClientOptions,
 } from '@launchdarkly/js-server-sdk-common';
 
 /**
@@ -88,4 +90,14 @@ export interface LDServerBaseClient {
    * Builds an object encapsulating the state of all feature flags for a given context.
    */
   allFlagsState(context: LDContext, options?: LDFlagsStateOptions): Promise<LDFlagsState>;
+
+  /**
+   * Creates a scoped client bound to the given evaluation context.
+   *
+   * @remarks
+   * When present, {@link createLDServerSession} will delegate to the scoped client
+   * instead of manually wrapping each method. Clients that do not implement this
+   * method (e.g., edge SDKs) fall back to the manual wrapping behavior.
+   */
+  forContext?(context: LDContext, options?: LDScopedClientOptions): LDScopedClient;
 }
