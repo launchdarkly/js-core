@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "LaunchDarkly AI SDK for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-ai",
   "repository": {
@@ -44,7 +44,7 @@
     "mustache": "^4.2.0"
   },
   "devDependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.18.7",
+    "@launchdarkly/js-server-sdk-common": "2.19.0",
     "@types/jest": "^29.5.3",
     "@types/mustache": "^4.2.5",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
@@ -58,6 +58,6 @@
     "typescript": "5.1.6"
   },
   "peerDependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.18.7"
+    "@launchdarkly/js-server-sdk-common": "2.19.0"
   }
 }
