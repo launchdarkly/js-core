@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.3](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.2...react-sdk-v4.0.3) (2026-05-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency next to v16.2.6 [security] ([#1374](https://github.com/launchdarkly/js-core/issues/1374)) ([24487f4](https://github.com/launchdarkly/js-core/commit/24487f49d2f0b87d50af18d807b98a3dc5b11b8f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.7.0 to ^4.7.1
+    * @launchdarkly/js-server-sdk-common bumped from ^2.18.7 to ^2.19.0
+
 ## [4.0.2](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.1...react-sdk-v4.0.2) (2026-05-19)
 
 
