@@ -14,11 +14,9 @@
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@launchdarkly/akamai-edgeworker-sdk-common</a></li>
 <li><a href="LDDataSystemOptions.html">LDDataSystemOptions</a></li></ul>
-<h1>Interface LDDataSystemOptions<code class="tsd-tag ts-flagExperimental">Experimental</code> </h1></div>
+<h1>Interface LDDataSystemOptions</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>This feature is not stable and not subject to any backwards compatibility guarantees or semantic
-versioning.  It is not suitable for production usage.</p>
-<p>Configuration options for the Data System that the SDK uses to get and maintain flags and other
+<div class="tsd-comment tsd-typography"><p>Configuration options for the Data System that the SDK uses to get and maintain flags and other
 data from LaunchDarkly and other sources.</p>
 <p>Example (Recommended):</p>
 <pre><code class="language-typescript"><span class="hl-2">let</span><span class="hl-0"> </span><span class="hl-5">dataSystemOptions</span><span class="hl-0"> = {</span><br/><span class="hl-0">    </span><span class="hl-5">dataSource:</span><span class="hl-0"> {</span><br/><span class="hl-0">        </span><span class="hl-5">dataSourceOptionsType:</span><span class="hl-0"> </span><span class="hl-6">&#39;standard&#39;</span><span class="hl-0">;</span><br/><span class="hl-0">    },</span><br/><span class="hl-0">}</span><br/><br/><span class="hl-4">Example</span><span class="hl-0"> (</span><span class="hl-5">Polling</span><span class="hl-0"> </span><span class="hl-5">with</span><span class="hl-0"> </span><span class="hl-5">DynamoDB</span><span class="hl-0"> </span><span class="hl-5">Persistent</span><span class="hl-0"> </span><span class="hl-5">Store</span><span class="hl-0">):</span><br/><span class="hl-6">```typescript</span><br/><span class="hl-6">import { DynamoDBFeatureStore } from &#39;@launchdarkly/node-server-sdk-dynamodb&#39;;</span><br/><br/><span class="hl-6">let dataSystemOptions = {</span><br/><span class="hl-6">    dataSource: {</span><br/><span class="hl-6">        dataSourceOptionsType: &#39;pollingOnly&#39;;</span><br/><span class="hl-6">        pollInterval: 300;</span><br/><span class="hl-6">    },</span><br/><span class="hl-6">    persistentStore: DynamoDBFeatureStore(&#39;your-table&#39;, { cacheTTL: 30 });</span><br/><span class="hl-6">}</span><br/><span class="hl-6">const client = init(&#39;my-sdk-key&#39;, { hooks: [new TracingHook()] });</span>
@@ -30,7 +28,7 @@ data from LaunchDarkly and other sources.</p>
 <ul class="tsd-hierarchy">
 <li><span class="target">LDDataSystemOptions</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:33</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:29</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -58,7 +56,7 @@ performs a combination of streaming and polling.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:45</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:41</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="fdv1Fallback" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>fdv1<wbr/>Fallback</span><a href="#fdv1Fallback" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">fdv1<wbr/>Fallback</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><a href="FDv1FallbackConfiguration.html" class="tsd-signature-type tsd-kind-interface">FDv1FallbackConfiguration</a></div>
@@ -72,7 +70,7 @@ will transition to a terminal Closed state when the directive is received.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:78</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:74</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="persistentStore" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>persistent<wbr/>Store</span><a href="#persistentStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">persistent<wbr/>Store</span><span class="tsd-signature-symbol">?:</span> <a href="subsystems.LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">clientContext</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><a href="subsystems.LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a><span class="tsd-signature-symbol">)</span></div>
@@ -101,7 +99,7 @@ configuration; this property accepts either.</p>
 <h4>Param</h4><p>whose properties may be used to influence creation of the persistent store.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:58</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:54</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="useLdd" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>use<wbr/>Ldd</span><a href="#useLdd" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">use<wbr/>Ldd</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -112,7 +110,7 @@ store integration) that is populated by the relay. By default, this is false.</p
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:66</li></ul></aside></section></section></div>
+<li>Defined in packages/shared/sdk-server/dist/api/options/LDDataSystemOptions.d.ts:62</li></ul></aside></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
