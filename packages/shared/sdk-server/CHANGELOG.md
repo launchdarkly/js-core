@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.19.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.7...js-server-sdk-common-v2.19.0) (2026-05-21)
+
+
+### Features
+
+* add X-LaunchDarkly-Instance-Id header to server-node SDK (SDK-2358) ([#1377](https://github.com/launchdarkly/js-core/issues/1377)) ([814dc0b](https://github.com/launchdarkly/js-core/commit/814dc0bfd6b152385f3a758f9eeca37a0f9f08e8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.24.4 to 2.25.0
+
 ## [2.18.7](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.18.6...js-server-sdk-common-v2.18.7) (2026-05-06)
 
 

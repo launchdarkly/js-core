@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.25.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.4...js-sdk-common-v2.25.0) (2026-05-21)
+
+
+### Features
+
+* add X-LaunchDarkly-Instance-Id header to server-node SDK (SDK-2358) ([#1377](https://github.com/launchdarkly/js-core/issues/1377)) ([814dc0b](https://github.com/launchdarkly/js-core/commit/814dc0bfd6b152385f3a758f9eeca37a0f9f08e8))
+
 ## [2.24.4](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.3...js-sdk-common-v2.24.4) (2026-05-06)
 
 
