@@ -10,6 +10,11 @@ const spanExporter = new InMemorySpanExporter();
 const sdk = new NodeSDK({
   serviceName: 'ryan-test',
   spanProcessors: [new SimpleSpanProcessor(spanExporter)],
+  // Skip async resource detection (host/process/env detectors). The new
+  // SimpleSpanProcessor awaits Resource.waitForAsyncAttributes() before
+  // calling the exporter, which makes the first span land after the test
+  // reads getFinishedSpans() synchronously.
+  autoDetectResources: false,
 });
 sdk.start();
 
