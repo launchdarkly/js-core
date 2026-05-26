@@ -7,7 +7,6 @@
     "url": "https://github.com/launchdarkly/js-core.git"
   },
   "license": "Apache-2.0",
-  "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
     "akamai",

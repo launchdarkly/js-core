@@ -63,12 +63,12 @@
   ],
   "private": true,
   "scripts": {
-    "clean": "yarn workspaces foreach -vpt run clean",
-    "build": "yarn workspaces foreach -vp --topological-dev run build",
+    "clean": "yarn workspaces foreach -A -vpt run clean",
+    "build": "yarn workspaces foreach -A -vp --topological-dev run build",
     "//": "When using build:doc you need to specify the workspace. 'yarn run build:doc -- packages/shared/common' for example.",
     "build:doc": "npx typedoc --options $1/typedoc.json",
     "lint": "npx eslint . --ext .ts",
-    "lint:fix": "yarn run lint -- --fix",
+    "lint:fix": "yarn lint --fix",
     "test": "echo Please run tests for individual packages.",
     "coverage": "npm run test -- --coverage",
     "contract-test-harness": "curl -s https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/master/downloader/run.sh \\ | VERSION=v2 PARAMS=\"-url http://localhost:8000 -debug -stop-service-at-end $TEST_HARNESS_PARAMS\" sh",
@@ -83,7 +83,7 @@
     "typedoc": "0.25.0",
     "typescript": "5.1.6"
   },
-  "packageManager": "yarn@3.4.1",
+  "packageManager": "yarn@4.15.0",
   "//": "Pin jsonc-parser because v3.3.0 breaks rollup-plugin-esbuild",
   "resolutions": {
     "jsonc-parser": "3.2.0",

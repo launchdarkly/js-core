@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "module": "./dist/index.mjs",
-  "packageManager": "yarn@3.4.1",
   "dependencies": {
     "@launchdarkly/cloudflare-server-sdk": "2.7.24"
   },

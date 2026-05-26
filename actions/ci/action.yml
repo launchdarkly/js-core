@@ -17,10 +17,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Setup Yarn
-      shell: bash
-      run: yarn set version 3.4.1
-
     - name: Install Dependencies
       shell: bash
       # Install only the dependencies requires for the specific workspace.
