@@ -1,8 +1,15 @@
 import { integrations, LDEvaluationDetail } from '@launchdarkly/js-server-sdk-common';
 
 import { BaseTestHook } from '../shared/BaseTestHook.js';
+import { HookPostQueue } from '../shared/HookPostQueue.js';
+import { SDKConfigHookInstance } from '../types/ConfigParams.js';
 
 export default class TestHook extends BaseTestHook implements integrations.Hook {
+  static forClient(configs: ReadonlyArray<SDKConfigHookInstance>): TestHook[] {
+    const queue = new HookPostQueue();
+    return configs.map((c) => new TestHook(c.name, c.callbackUri, c.data, c.errors, queue));
+  }
+
   protected async safePost(body: unknown): Promise<void> {
     try {
       await fetch(this.endpoint, {
