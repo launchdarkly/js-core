@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.17.7](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.6...react-native-client-sdk-v10.17.7) (2026-05-26)
+
+
+### Bug Fixes
+
+* **sdk-client:** `executeAfterTrack` ordering ([58e063b](https://github.com/launchdarkly/js-core/commit/58e063bad4651e25beea644425bea23a20f4870f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.27.1 to 1.27.2
+
 ## [10.17.6](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.5...react-native-client-sdk-v10.17.6) (2026-05-21)
 
 
