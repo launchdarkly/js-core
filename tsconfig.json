@@ -99,6 +99,9 @@
     },
     {
       "path": "./packages/sdk/openfeature-node-server/tsconfig.ref.json"
+    },
+    {
+      "path": "./packages/sdk/node-client/tsconfig.ref.json"
     }
   ]
 }
