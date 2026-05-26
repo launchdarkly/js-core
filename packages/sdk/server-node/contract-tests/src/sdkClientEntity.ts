@@ -88,9 +88,7 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
   }
 
   if (options.hooks) {
-    cf.hooks = options.hooks.hooks.map(
-      (hook) => new TestHook(hook.name, hook.callbackUri, hook.data, hook.errors),
-    );
+    cf.hooks = TestHook.forClient(options.hooks.hooks);
   }
 
   if (options.wrapper) {
