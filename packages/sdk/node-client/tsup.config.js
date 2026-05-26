@@ -10,7 +10,6 @@ export default defineConfig([
     splitting: false,
     sourcemap: true,
     clean: true,
-    noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
     dts: true,
     metafile: true,
   },
