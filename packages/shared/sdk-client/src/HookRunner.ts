@@ -117,9 +117,7 @@ function executeAfterIdentify(
 }
 
 function executeAfterTrack(logger: LDLogger, hooks: Hook[], hookContext: TrackSeriesContext) {
-  // This iterates in reverse, versus reversing a shallow copy of the hooks,
-  // for efficiency.
-  for (let hookIndex = hooks.length - 1; hookIndex >= 0; hookIndex -= 1) {
+  for (let hookIndex = 0; hookIndex < hooks.length; hookIndex += 1) {
     const hook = hooks[hookIndex];
     tryExecuteStage(
       logger,

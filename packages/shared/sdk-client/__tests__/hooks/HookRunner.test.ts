@@ -421,6 +421,6 @@ describe('given a hook runner and test hook', () => {
     expect(afterIdentifyOrder).toEqual(['c', 'b', 'a']);
 
     // Verify track hooks order
-    expect(afterTrackOrder).toEqual(['c', 'b', 'a']);
+    expect(afterTrackOrder).toEqual(['a', 'b', 'c']);
   });
 });
