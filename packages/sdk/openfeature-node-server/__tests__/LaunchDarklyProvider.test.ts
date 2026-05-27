@@ -32,7 +32,7 @@ it('can fail to initialize client', async () => {
     updateProcessor: (
       clientContext: LDClientContext,
       dataSourceUpdates: any,
-      initSuccessHandler: VoidFunction,
+      initSuccessHandler: () => void,
       errorHandler?: (e: Error) => void,
     ) => ({
       start: () => {
