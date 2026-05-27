@@ -1,9 +1,11 @@
 /**
- * This is the API reference for the LaunchDarkly OpenFeature provider for the
- * Node.js server SDK.
+ * This is the API reference for the LaunchDarkly OpenFeature provider for the Server-Side SDK for
+ * Node.js
  *
  * @module @launchdarkly/openfeature-node-server
  */
 
-// Provider implementation lands in a follow-up slice.
-export {};
+/* eslint-disable import/prefer-default-export */
+import LaunchDarklyProvider from './LaunchDarklyProvider';
+
+export { LaunchDarklyProvider };
