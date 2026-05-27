@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.27.1...js-client-sdk-common-v1.27.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* **sdk-client:** `executeAfterTrack` ordering ([58e063b](https://github.com/launchdarkly/js-core/commit/58e063bad4651e25beea644425bea23a20f4870f))
+
 ## [1.27.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.27.0...js-client-sdk-common-v1.27.1) (2026-05-21)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.0.4](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.3...react-sdk-v4.0.4) (2026-05-26)
+
+
+### Bug Fixes
+
+* **sdk-client:** `executeAfterTrack` ordering ([58e063b](https://github.com/launchdarkly/js-core/commit/58e063bad4651e25beea644425bea23a20f4870f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.7.1 to ^4.7.2
+
 ## [4.0.3](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.2...react-sdk-v4.0.3) (2026-05-21)
 
 
