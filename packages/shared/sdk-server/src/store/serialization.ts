@@ -99,34 +99,26 @@ export function replacer(this: any, key: string, value: any): any {
     return value;
   }
   if (value.generated_includedSet) {
-     
     value.included = [...value.generated_includedSet];
-     
     delete value.generated_includedSet;
   }
   if (value.generated_excludedSet) {
-     
     value.excluded = [...value.generated_excludedSet];
-     
     delete value.generated_excludedSet;
   }
   if (value.includedContexts) {
     value.includedContexts.forEach((target: any) => {
       if (target.generated_valuesSet) {
-         
         target.values = [...target.generated_valuesSet];
       }
-       
       delete target.generated_valuesSet;
     });
   }
   if (value.excludedContexts) {
     value.excludedContexts.forEach((target: any) => {
       if (target.generated_valuesSet) {
-         
         target.values = [...target.generated_valuesSet];
       }
-       
       delete target.generated_valuesSet;
     });
   }
@@ -149,7 +141,6 @@ export interface PatchData {
 
 function processRollout(rollout?: Rollout) {
   if (rollout && rollout.bucketBy) {
-     
     rollout.bucketByAttributeReference = new AttributeReference(
       rollout.bucketBy,
       !rollout.contextKind,
@@ -174,10 +165,8 @@ export function processFlag(flag: Flag) {
       if (clause && clause.attribute) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
-         
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-         
         clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
@@ -190,25 +179,19 @@ export function processFlag(flag: Flag) {
 export function processSegment(segment: Segment) {
   nullReplacer(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
-     
     segment.generated_includedSet = new Set(segment.included);
-     
     delete segment.included;
   }
   if (segment?.excluded?.length && segment.excluded.length > TARGET_LIST_ARRAY_CUTOFF) {
-     
     segment.generated_excludedSet = new Set(segment.excluded);
-     
     delete segment.excluded;
   }
 
   if (segment?.includedContexts?.length) {
     segment.includedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
-         
         target.generated_valuesSet = new Set(target.values);
         // Currently typing is non-optional, so we don't delete it.
-         
         target.values = [];
       }
     });
@@ -217,10 +200,8 @@ export function processSegment(segment: Segment) {
   if (segment?.excludedContexts?.length) {
     segment.excludedContexts.forEach((target) => {
       if (target?.values?.length && target.values.length > TARGET_LIST_ARRAY_CUTOFF) {
-         
         target.generated_valuesSet = new Set(target.values);
         // Currently typing is non-optional, so we don't delete it.
-         
         target.values = [];
       }
     });
@@ -230,7 +211,6 @@ export function processSegment(segment: Segment) {
     if (rule.bucketBy) {
       // Rules before U2C would have had literals for attributes.
       // So use the rolloutContextKind to indicate if this is new or old data.
-       
       rule.bucketByAttributeReference = new AttributeReference(
         rule.bucketBy,
         !rule.rolloutContextKind,
@@ -240,10 +220,8 @@ export function processSegment(segment: Segment) {
       if (clause && clause.attribute) {
         // Clauses before U2C would have had literals for attributes.
         // So use the contextKind to indicate if this is new or old data.
-         
         clause.attributeReference = new AttributeReference(clause.attribute, !clause.contextKind);
       } else if (clause) {
-         
         clause.attributeReference = AttributeReference.InvalidReference;
       }
     });
