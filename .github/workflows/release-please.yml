@@ -583,9 +583,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    # if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-openfeature-node-server-released == 'true'}}
-    # TODO: Uncomment this when the package is ready to be released.
-    if: false
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-openfeature-node-server-released == 'true'}}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - id: release-openfeature-node-server
