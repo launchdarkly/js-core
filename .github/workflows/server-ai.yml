@@ -32,7 +32,7 @@ jobs:
             name=$(node -p "require('./$dir/package.json').name")
             echo "::group::Type-checking $name ($dir)"
             yarn workspaces focus "$name"
-            yarn workspaces foreach -A -pR --topological-dev --from "{$name,@launchdarkly/node-server-sdk-otel}" run build
+            yarn workspaces foreach -pR --topological-dev --from "{$name,@launchdarkly/node-server-sdk-otel}" run build
             (cd "$dir" && npx tsc --noEmit)
             echo "::endgroup::"
           done
