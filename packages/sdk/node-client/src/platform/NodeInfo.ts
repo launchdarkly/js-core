@@ -2,7 +2,7 @@ import * as os from 'os';
 
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
-const sdkName = '@launchdarkly/node-client-sdk';
+const sdkName = 'node-client-sdk';
 const sdkVersion = '0.0.1'; // x-release-please-version
 
 function processPlatformName(name: string): string {
