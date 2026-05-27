@@ -25,7 +25,7 @@ afterEach(() => {
 it('returns sdk data with the package name, version, and user-agent base', () => {
   const info = new NodeInfo();
   expect(info.sdkData()).toEqual({
-    name: '@launchdarkly/node-client-sdk',
+    name: 'node-client-sdk',
     version: '0.0.1',
     userAgentBase: 'NodeClient',
   });
