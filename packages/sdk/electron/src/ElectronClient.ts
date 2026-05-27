@@ -204,24 +204,20 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'allFlags'), (event) => {
-       
       event.returnValue = this.allFlags();
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'boolVariation'), (event, key, defaultValue) => {
-       
       event.returnValue = this.boolVariation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'boolVariationDetail'), (event, key, defaultValue) => {
-       
       event.returnValue = this.boolVariationDetail(key, defaultValue);
     });
 
     ipcMain.handle(getIPCChannelName(namespace, 'flush'), (_event) => this.flush());
 
     ipcMain.on(getIPCChannelName(namespace, 'getContext'), (event) => {
-       
       event.returnValue = this.getContext();
     });
 
@@ -236,53 +232,44 @@ export class ElectronClient extends LDClientImpl {
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'jsonVariation'), (event, key, defaultValue) => {
-       
       event.returnValue = this.jsonVariation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'jsonVariationDetail'), (event, key, defaultValue) => {
-       
       event.returnValue = this.jsonVariationDetail(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'numberVariation'), (event, key, defaultValue) => {
-       
       event.returnValue = this.numberVariation(key, defaultValue);
     });
 
     ipcMain.on(
       getIPCChannelName(namespace, 'numberVariationDetail'),
       (event, key, defaultValue) => {
-         
         event.returnValue = this.numberVariationDetail(key, defaultValue);
       },
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'stringVariation'), (event, key, defaultValue) => {
-       
       event.returnValue = this.stringVariation(key, defaultValue);
     });
 
     ipcMain.on(
       getIPCChannelName(namespace, 'stringVariationDetail'),
       (event, key, defaultValue) => {
-         
         event.returnValue = this.stringVariationDetail(key, defaultValue);
       },
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'track'), (event, key, data, metricValue) => {
-       
       event.returnValue = this.track(key, data, metricValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'variation'), (event, key, defaultValue) => {
-       
       event.returnValue = this.variation(key, defaultValue);
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'variationDetail'), (event, key, defaultValue) => {
-       
       event.returnValue = this.variationDetail(key, defaultValue);
     });
 
@@ -291,12 +278,10 @@ export class ElectronClient extends LDClientImpl {
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'getConnectionMode'), (event) => {
-       
       event.returnValue = this.getConnectionMode();
     });
 
     ipcMain.on(getIPCChannelName(namespace, 'isOffline'), (event) => {
-       
       event.returnValue = this.isOffline();
     });
   }
@@ -346,14 +331,12 @@ export class ElectronClient extends LDClientImpl {
   private _applyRemove(event: IpcMainEvent, callbackId: string): void {
     const eventName = this._ipcCallbackIdToEventName!.get(callbackId);
     if (!eventName) {
-       
       event.returnValue = false;
       return;
     }
     const entry = this._ipcEventSubscriptions!.get(eventName);
     const port = entry?.ports.get(callbackId);
     if (!entry || !port) {
-       
       event.returnValue = false;
       return;
     }
@@ -364,7 +347,6 @@ export class ElectronClient extends LDClientImpl {
       this.off(eventName, entry.broadcastCallback);
       this._ipcEventSubscriptions!.delete(eventName);
     }
-     
     event.returnValue = true;
   }
 

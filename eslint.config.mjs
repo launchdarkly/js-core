@@ -140,6 +140,9 @@ export default tseslint.config(
       'no-await-in-loop': 'error',
       'no-new': 'error',
       'no-console': 'error',
+      // Catches whitespace-only lines left behind when auto-fix removes
+      // eslint-disable directives. Auto-fixable, so a second --fix pass cleans up.
+      'no-trailing-spaces': 'error',
       'prefer-const': ['error', { ignoreReadBeforeAssign: true }],
 
       // NOTE: this will allow object fields to be reassigned.

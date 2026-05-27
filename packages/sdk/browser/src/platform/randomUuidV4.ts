@@ -72,11 +72,9 @@ export function formatDataAsUuidV4(bytes: number[]): string {
 
   // Set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and
   // one, respectively.
-   
   bytes[clockSeqHiAndReserved.start] = (bytes[clockSeqHiAndReserved.start] | 0x80) & 0xbf;
   // Set the four most significant bits (bits 12 through 15) of the time_hi_and_version field to
   // the 4-bit version number from Section 4.1.3.
-   
   bytes[timeHiAndVersion.start] = (bytes[timeHiAndVersion.start] & 0x0f) | 0x40;
 
   return (

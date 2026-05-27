@@ -263,10 +263,8 @@ export default class Evaluator {
             state,
             updatedVisitedFlags,
             (res) => {
-               
               state.events ??= [];
               if (topLevel) {
-                 
                 state.prerequisites ??= [];
 
                 state.prerequisites.push(prereqFlag.key);
@@ -620,7 +618,6 @@ export default class Evaluator {
       // that probably means the data store was populated by an older SDK that doesn't know
       // about the generation property and therefore dropped it from the JSON data. We'll treat
       // that as a "not configured" condition.
-       
       state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
         state.bigSegmentsStatus,
         'NOT_CONFIGURED',
@@ -645,19 +642,15 @@ export default class Evaluator {
     }
 
     this._queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
-       
       state.bigSegmentsMembership = state.bigSegmentsMembership || {};
       if (result) {
         const [membership, status] = result;
-         
         state.bigSegmentsMembership[keyForBigSegment] = membership;
-         
         state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
           state.bigSegmentsStatus,
           status as BigSegmentStoreStatusString,
         );
       } else {
-         
         state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
           state.bigSegmentsStatus,
           'NOT_CONFIGURED',
