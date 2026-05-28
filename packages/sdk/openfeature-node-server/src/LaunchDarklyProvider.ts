@@ -26,7 +26,7 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
         wrapperName: 'open-feature-node-server',
         // The wrapper version should be kept on its own line to allow easy updates using
         // release-please.
-        wrapperVersion: '1.2.0', // x-release-please-version
+        wrapperVersion: '1.2.2', // x-release-please-version
       });
 
       this.setClient(client);
