@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.7.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.7.2...js-client-sdk-v4.7.3) (2026-05-28)
+
+
+### Bug Fixes
+
+* Ensure FDv2 waits for network results instead of cached results. ([#1397](https://github.com/launchdarkly/js-core/issues/1397)) ([142da36](https://github.com/launchdarkly/js-core/commit/142da363702264debef25796f92760b8ec6ab342))
+
 ## [4.7.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.7.1...js-client-sdk-v4.7.2) (2026-05-26)
 
 
