@@ -7,7 +7,6 @@
     "url": "https://github.com/launchdarkly/js-core.git"
   },
   "description": "LaunchDarkly Server SDK for JavaScript - common Edge SDK code",
-  "packageManager": "yarn@3.4.1",
   "keywords": [
     "launchdarkly",
     "edge",

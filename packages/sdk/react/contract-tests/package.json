@@ -2,7 +2,6 @@
   "name": "@launchdarkly/react-sdk-contract-tests",
   "version": "0.0.0",
   "private": true,
-  "packageManager": "yarn@3.4.1",
   "scripts": {
     "install-playwright-browsers": "playwright install --with-deps chromium",
     "start:adapter": "sdk-testharness-server adapter",
