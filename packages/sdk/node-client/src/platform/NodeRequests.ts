@@ -150,6 +150,10 @@ export default class NodeRequests implements platform.Requests {
         req.write(bodyData);
       }
 
+      req.on('timeout', () => {
+        req.destroy(new Error('Request timed out'));
+      });
+
       req.on('error', (err) => {
         reject(err);
       });

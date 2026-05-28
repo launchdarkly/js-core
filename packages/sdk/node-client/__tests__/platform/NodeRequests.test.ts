@@ -106,6 +106,17 @@ describe('given a running HTTP server', () => {
     await expect(requests.fetch(server.url)).rejects.toThrow();
   });
 
+  it('rejects the fetch promise when the server does not respond before the timeout', async () => {
+    server.byDefault(() => {
+      // Hang -- never write or end the response.
+    });
+
+    const requests = new NodeRequests();
+    await expect(requests.fetch(server.url, { timeout: 50 })).rejects.toThrow(
+      /Request timed out/,
+    );
+  });
+
   it('requests gzip on GET requests by default', async () => {
     server.byDefault(TestHttpHandlers.respond(200));
 
