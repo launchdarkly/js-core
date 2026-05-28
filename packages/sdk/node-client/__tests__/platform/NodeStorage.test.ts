@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
+import { createMockLogger } from '../testHelpers';
 import NodeStorage, { getNodeStorage, resetNodeStorage } from '../../src/platform/NodeStorage';
 
 let tmpRoot: string;
@@ -69,14 +70,26 @@ it('recovers when the storage file contains invalid JSON', async () => {
   await expect(storage.get('alpha')).resolves.toBe('one');
 });
 
-it('throws on operations when initialization fails', async () => {
+it('logs and returns sentinel values when initialization fails', async () => {
   const filePath = path.join(tmpRoot, 'not-a-dir');
   await fs.writeFile(filePath, 'sentinel', 'utf8');
 
-  const storage = new NodeStorage(filePath);
-  await expect(storage.get('alpha')).rejects.toThrow(/Storage is not initialized/);
-  await expect(storage.set('alpha', 'one')).rejects.toThrow(/Storage is not initialized/);
-  await expect(storage.clear('alpha')).rejects.toThrow(/Storage is not initialized/);
+  const logger = createMockLogger();
+  const storage = new NodeStorage(filePath, logger);
+
+  await expect(storage.get('alpha')).resolves.toBeNull();
+  await expect(storage.set('alpha', 'one')).resolves.toBeUndefined();
+  await expect(storage.clear('alpha')).resolves.toBeUndefined();
+
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error getting key from storage'),
+  );
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error setting key in storage'),
+  );
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error clearing key from storage'),
+  );
 });
 
 it('returns the same singleton across getNodeStorage calls', () => {

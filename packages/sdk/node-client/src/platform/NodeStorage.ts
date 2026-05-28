@@ -1,25 +1,35 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-import type { Storage } from '@launchdarkly/js-client-sdk-common';
+import type { LDLogger, Storage } from '@launchdarkly/js-client-sdk-common';
 
 const DEFAULT_DIR_NAME = 'ldclient-user-cache';
 const STORAGE_FILE_NAME = 'ldcache.json';
+
+const ERROR_PREFIX = {
+  get: 'Error getting key from storage',
+  set: 'Error setting key in storage',
+  clear: 'Error clearing key from storage',
+} as const;
+
+type StorageOp = keyof typeof ERROR_PREFIX;
 
 export default class NodeStorage implements Storage {
   private readonly _storageDir: string;
   private readonly _storageFile: string;
   private readonly _tempFile: string;
   private readonly _initialized: Promise<boolean>;
+  private readonly _logger?: LDLogger;
   private _initError?: Error;
   private _cache: Map<string, string> = new Map();
   private _flushPending: boolean = false;
   private _flushQueue: Promise<void> = Promise.resolve();
 
-  constructor(storagePath?: string) {
+  constructor(storagePath?: string, logger?: LDLogger) {
     this._storageDir = storagePath ?? path.join(process.cwd(), DEFAULT_DIR_NAME);
     this._storageFile = path.join(this._storageDir, STORAGE_FILE_NAME);
     this._tempFile = `${this._storageFile}.tmp`;
+    this._logger = logger;
     this._initialized = this._initialize();
   }
 
@@ -65,30 +75,50 @@ export default class NodeStorage implements Storage {
     }
   }
 
-  private async _throwIfNotInitialized(): Promise<void> {
-    const initialized = await this._initialized;
-    if (!initialized) {
-      const reason = this._initError ? `: ${this._initError.message}` : '';
-      throw new Error(`Storage is not initialized${reason}`);
-    }
+  private _logError(op: StorageOp, key: string, reason: unknown): void {
+    this._logger?.error(`${ERROR_PREFIX[op]}: ${key}, reason: ${reason}`);
+  }
+
+  private _initFailureReason(): string {
+    return `not initialized${this._initError ? `: ${this._initError.message}` : ''}`;
   }
 
   async get(key: string): Promise<string | null> {
-    await this._throwIfNotInitialized();
+    const initialized = await this._initialized;
+    if (!initialized) {
+      this._logError('get', key, this._initFailureReason());
+      return null;
+    }
     return this._cache.get(key) ?? null;
   }
 
   async set(key: string, value: string): Promise<void> {
-    await this._throwIfNotInitialized();
+    const initialized = await this._initialized;
+    if (!initialized) {
+      this._logError('set', key, this._initFailureReason());
+      return;
+    }
     this._cache.set(key, value);
-    await this._scheduleFlush();
+    try {
+      await this._scheduleFlush();
+    } catch (error) {
+      this._logError('set', key, error);
+    }
   }
 
   async clear(key: string): Promise<void> {
-    await this._throwIfNotInitialized();
+    const initialized = await this._initialized;
+    if (!initialized) {
+      this._logError('clear', key, this._initFailureReason());
+      return;
+    }
     if (this._cache.has(key)) {
       this._cache.delete(key);
-      await this._scheduleFlush();
+      try {
+        await this._scheduleFlush();
+      } catch (error) {
+        this._logError('clear', key, error);
+      }
     }
   }
 
@@ -109,13 +139,13 @@ export default class NodeStorage implements Storage {
 }
 
 // Storage is a process-level singleton so multiple SDK instances in the same Node
-// process share the same cache file (matching the electron SDK pattern). The first
-// call's storagePath wins; later calls ignore the argument.
+// process share the same cache file. The first call's storagePath / logger wins;
+// later calls ignore the arguments.
 let instance: NodeStorage | undefined;
 
-export function getNodeStorage(storagePath?: string): NodeStorage {
+export function getNodeStorage(storagePath?: string, logger?: LDLogger): NodeStorage {
   if (!instance) {
-    instance = new NodeStorage(storagePath);
+    instance = new NodeStorage(storagePath, logger);
   }
   return instance;
 }

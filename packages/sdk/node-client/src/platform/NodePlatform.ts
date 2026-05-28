@@ -14,36 +14,12 @@ export default class NodePlatform implements platform.Platform {
 
   encoding?: platform.Encoding = new NodeEncoding();
 
-  storage?: platform.Storage;
+  storage: platform.Storage;
 
   requests: platform.Requests;
 
   constructor(logger: LDLogger, options: NodeOptions) {
-    const fileStorage = getNodeStorage(options.localStoragePath);
-    this.storage = {
-      async get(key: string): Promise<string | null> {
-        try {
-          return await fileStorage.get(key);
-        } catch (error) {
-          logger.error(`Error getting key from storage: ${key}, reason: ${error}`);
-          return null;
-        }
-      },
-      async set(key: string, value: string): Promise<void> {
-        try {
-          await fileStorage.set(key, value);
-        } catch (error) {
-          logger.error(`Error setting key in storage: ${key}, reason: ${error}`);
-        }
-      },
-      async clear(key: string): Promise<void> {
-        try {
-          await fileStorage.clear(key);
-        } catch (error) {
-          logger.error(`Error clearing key from storage: ${key}, reason: ${error}`);
-        }
-      },
-    };
+    this.storage = getNodeStorage(options.localStoragePath, logger);
     this.requests = new NodeRequests(
       options.tlsParams,
       options.proxyOptions,

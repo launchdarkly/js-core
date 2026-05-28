@@ -29,41 +29,21 @@ it('exposes info, crypto, encoding, storage, and requests', () => {
   expect(platform.requests).toBeDefined();
 });
 
-it('round-trips storage values through the wrapped file storage', async () => {
+it('round-trips storage values through the file-backed NodeStorage', async () => {
   const platform = new NodePlatform(logger, { localStoragePath: tmpRoot });
-  await platform.storage!.set('alpha', 'one');
-  await expect(platform.storage!.get('alpha')).resolves.toBe('one');
-  await platform.storage!.clear('alpha');
-  await expect(platform.storage!.get('alpha')).resolves.toBeNull();
+  await platform.storage.set('alpha', 'one');
+  await expect(platform.storage.get('alpha')).resolves.toBe('one');
+  await platform.storage.clear('alpha');
+  await expect(platform.storage.get('alpha')).resolves.toBeNull();
 });
 
-it('logs and returns null when the wrapped storage get throws', async () => {
+it('forwards the logger to NodeStorage so storage failures surface', async () => {
   const platform = new NodePlatform(logger, {
     localStoragePath: path.join(tmpRoot, 'never-created', '\0bad'),
   });
-  await expect(platform.storage!.get('alpha')).resolves.toBeNull();
+  await expect(platform.storage.get('alpha')).resolves.toBeNull();
   expect(logger.error).toHaveBeenCalledWith(
     expect.stringContaining('Error getting key from storage'),
-  );
-});
-
-it('logs and swallows errors when the wrapped storage set throws', async () => {
-  const platform = new NodePlatform(logger, {
-    localStoragePath: path.join(tmpRoot, 'never-created', '\0bad'),
-  });
-  await expect(platform.storage!.set('alpha', 'one')).resolves.toBeUndefined();
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error setting key in storage'),
-  );
-});
-
-it('logs and swallows errors when the wrapped storage clear throws', async () => {
-  const platform = new NodePlatform(logger, {
-    localStoragePath: path.join(tmpRoot, 'never-created', '\0bad'),
-  });
-  await expect(platform.storage!.clear('alpha')).resolves.toBeUndefined();
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error clearing key from storage'),
   );
 });
 
