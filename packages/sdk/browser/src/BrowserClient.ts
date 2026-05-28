@@ -238,7 +238,7 @@ class BrowserClientImpl extends LDClientImpl {
     const options: LDBaseIdentifyOptions =
       identifyOptions?.sheddable === undefined
         ? { ...identifyOptions, sheddable: true }
-        : identifyOptions;
+        : { ...identifyOptions };
     // The browser only supports waiting for network results.
     options.waitForNetworkResults = true;
 
