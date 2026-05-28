@@ -246,7 +246,7 @@ describe('LDClientImpl.start()', () => {
         initialContext: context,
       });
 
-      const result = await ldc.identifyResult({ kind: 'user', key: 'other-user' });
+      const result = await ldc.identify({ kind: 'user', key: 'other-user' });
 
       expect(result.status).toBe('error');
       if (result.status === 'error') {
@@ -263,7 +263,7 @@ describe('LDClientImpl.start()', () => {
 
       await ldc.start();
 
-      const result = await ldc.identifyResult({ kind: 'user', key: 'other-user' });
+      const result = await ldc.identify({ kind: 'user', key: 'other-user' });
       expect(result.status).toBe('completed');
     });
 
@@ -271,7 +271,7 @@ describe('LDClientImpl.start()', () => {
       const mockPlatform = setupStreamingPlatform();
       const { ldc } = setupClient(mockPlatform, { requiresStart: false });
 
-      const result = await ldc.identifyResult(context);
+      const result = await ldc.identify(context);
       expect(result.status).toBe('completed');
     });
 
@@ -280,9 +280,9 @@ describe('LDClientImpl.start()', () => {
       const { ldc } = setupClient(mockPlatform, { requiresStart: true, initialContext: context });
 
       const startPromise = ldc.start();
-      const promise1 = ldc.identifyResult({ kind: 'user', key: 'user-1' });
-      const promise2 = ldc.identifyResult({ kind: 'user', key: 'user-2' });
-      const promise3 = ldc.identifyResult({ kind: 'user', key: 'user-3' });
+      const promise1 = ldc.identify({ kind: 'user', key: 'user-1' });
+      const promise2 = ldc.identify({ kind: 'user', key: 'user-2' });
+      const promise3 = ldc.identify({ kind: 'user', key: 'user-3' });
 
       const [startResult, result1, result2, result3] = await Promise.all([
         startPromise,

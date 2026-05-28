@@ -77,7 +77,7 @@ describe('sdk-client object', () => {
     const p = ldc.identify(context);
     const flagValue = ldc.variation('does-not-exist', 'not-found');
 
-    await expect(p).resolves.toBeUndefined();
+    await expect(p).resolves.toEqual({ status: 'completed' });
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown feature'));
     expect(flagValue).toBe('not-found');

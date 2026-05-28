@@ -10,6 +10,10 @@ import RNOptions, { RNDataSystemOptions, RNStorage } from './RNOptions';
 
 export * from '@launchdarkly/js-client-sdk-common';
 
+// Override the common LDClient type with a React Native-specific one that
+// preserves backward-compatible identify() returning Promise<void>.
+export type { LDClient } from './LDClient';
+
 export * from './hooks';
 export * from './provider';
 export * from './LDPlugin';
