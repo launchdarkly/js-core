@@ -235,10 +235,13 @@ class BrowserClientImpl extends LDClientImpl {
     context: LDContext,
     identifyOptions?: LDIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    const options =
+    const options: LDBaseIdentifyOptions =
       identifyOptions?.sheddable === undefined
         ? { ...identifyOptions, sheddable: true }
-        : identifyOptions;
+        : { ...identifyOptions };
+    // The browser only supports waiting for network results.
+    options.waitForNetworkResults = true;
+
     const res = await super.identifyResult(context, options);
     // Ensure that we do not start the goal manager if start() is not called.
     if (this.startPromise) {
