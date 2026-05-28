@@ -41,8 +41,9 @@ export default class NodeResponse implements platform.Response {
           if (this.listened) {
             reject(err);
           }
+        } else {
+          resolve(Buffer.concat(this.chunks).toString());
         }
-        return resolve(Buffer.concat(this.chunks).toString());
       };
       switch (res.headers['content-encoding']) {
         case 'gzip':
