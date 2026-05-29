@@ -52,6 +52,7 @@ it('createClient returns the documented LDClient surface', () => {
   expect(typeof client.setConnectionMode).toBe('function');
   expect(typeof client.getConnectionMode).toBe('function');
   expect(typeof client.isOffline).toBe('function');
+  expect(typeof client.getContext).toBe('function');
   expect(client.logger).toBeDefined();
 });
 

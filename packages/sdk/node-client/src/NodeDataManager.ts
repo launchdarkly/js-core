@@ -79,11 +79,6 @@ export default class NodeDataManager extends BaseDataManager {
       identifyResolve();
       identifyResolved = true;
     }
-    if (loadedFromCache && waitForNetworkResults) {
-      this._debugLog(
-        'Identify - Flags loaded from cache, but identify was requested with "waitForNetworkResults"',
-      );
-    }
 
     if (offline) {
       if (loadedFromCache) {
@@ -99,9 +94,6 @@ export default class NodeDataManager extends BaseDataManager {
       return;
     }
 
-    // Online path. Pass identify callbacks only if not already resolved -- otherwise
-    // the streaming/polling processor would receive stale handles and bootstrap/cache
-    // resolution would race with network resolution.
     if (identifyResolved) {
       this._setupConnection(context);
     } else {
