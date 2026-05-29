@@ -1,0 +1,177 @@
+import { TestHttpHandlers, TestHttpServer, TestHttpServers } from 'launchdarkly-js-test-helpers';
+
+import NodeRequests from '../../src/platform/NodeRequests';
+
+it('reports event source capabilities (read timeout, custom headers, custom method)', () => {
+  const requests = new NodeRequests();
+  expect(requests.getEventSourceCapabilities()).toEqual({
+    readTimeout: true,
+    headers: true,
+    customMethod: true,
+  });
+});
+
+describe('given a running HTTP server', () => {
+  let server: TestHttpServer;
+
+  beforeEach(async () => {
+    server = await TestHttpServers.start();
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  it('forwards method, path, and headers for a GET request', async () => {
+    server.forMethodAndPath('get', '/path', TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests();
+    await requests.fetch(`${server.url}/path`, {
+      method: 'GET',
+      headers: { a: '1', b: '2' },
+    });
+
+    expect(server.requestCount()).toEqual(1);
+    const req = await server.nextRequest();
+    expect(req.method.toUpperCase()).toEqual('GET');
+    expect(req.path).toEqual('/path');
+    expect(req.headers.a).toEqual('1');
+    expect(req.headers.b).toEqual('2');
+  });
+
+  it('forwards a POST request body to the server', async () => {
+    server.forMethodAndPath('post', '/path', TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests();
+    await requests.fetch(`${server.url}/path`, {
+      method: 'POST',
+      headers: { a: '1' },
+      body: '{}',
+    });
+
+    const req = await server.nextRequest();
+    expect(req.method.toUpperCase()).toEqual('POST');
+    expect(req.headers.a).toEqual('1');
+    expect(req.body).toEqual('{}');
+  });
+
+  it('returns response status, headers, and body', async () => {
+    server.byDefault(TestHttpHandlers.respond(200, { 'content-type': 'text/plain' }, 'hello'));
+
+    const requests = new NodeRequests();
+    const response = await requests.fetch(server.url);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('text/plain');
+    await expect(response.text()).resolves.toBe('hello');
+  });
+
+  it('rejects the fetch promise on a network error', async () => {
+    server.byDefault(TestHttpHandlers.networkError());
+
+    const requests = new NodeRequests();
+    await expect(requests.fetch(server.url)).rejects.toThrow();
+  });
+
+  it('rejects the fetch promise when the server does not respond before the timeout', async () => {
+    server.byDefault(() => {
+      // Hang -- never write or end the response.
+    });
+
+    const requests = new NodeRequests();
+    await expect(requests.fetch(server.url, { timeout: 50 })).rejects.toThrow(
+      /Request timed out/,
+    );
+  });
+
+  it('requests gzip on GET requests by default', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests();
+    await requests.fetch(server.url, { method: 'GET' });
+
+    const req = await server.nextRequest();
+    expect(req.headers['accept-encoding']).toEqual('gzip');
+  });
+
+  it('sets content-encoding gzip on POST bodies when compression is enabled and requested', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests(undefined, true);
+    const body = JSON.stringify({ payload: 'x'.repeat(64) });
+    await requests.fetch(server.url, {
+      method: 'POST',
+      body,
+      compressBodyIfPossible: true,
+    });
+
+    const req = await server.nextRequest();
+    expect(req.headers['content-encoding']).toEqual('gzip');
+    expect(req.body).not.toEqual(body);
+  });
+
+  it('does not compress POST bodies when compressBodyIfPossible is not requested', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests(undefined, true);
+    await requests.fetch(server.url, { method: 'POST', body: 'plain' });
+
+    const req = await server.nextRequest();
+    expect(req.headers['content-encoding']).toBeUndefined();
+    expect(req.body).toEqual('plain');
+  });
+
+  it('does not compress POST bodies when enableEventCompression is false', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests();
+    await requests.fetch(server.url, {
+      method: 'POST',
+      body: 'plain',
+      compressBodyIfPossible: true,
+    });
+
+    const req = await server.nextRequest();
+    expect(req.headers['content-encoding']).toBeUndefined();
+    expect(req.body).toEqual('plain');
+  });
+
+  it('creates an event source against the given url', async () => {
+    const requests = new NodeRequests();
+    const es = requests.createEventSource(`${server.url}/stream`, {
+      headers: {},
+      initialRetryDelayMillis: 100,
+      readTimeoutMillis: 1000,
+      retryResetIntervalMillis: 30_000,
+      errorFilter: () => true,
+    });
+    expect(es).toBeDefined();
+    (es as { close: () => void }).close();
+  });
+});
+
+describe('given a running HTTPS server with a self-signed certificate', () => {
+  let server: TestHttpServer;
+
+  beforeEach(async () => {
+    server = await TestHttpServers.startSecure();
+    server.byDefault(TestHttpHandlers.respond(200));
+  });
+
+  afterEach(async () => {
+    await server.close();
+  });
+
+  it('connects when the CA is provided in tlsParams', async () => {
+    const requests = new NodeRequests({ ca: server.certificate });
+    const response = await requests.fetch(server.url);
+    expect(response.status).toBe(200);
+  });
+
+  it('rejects the connection when no CA is provided', async () => {
+    const requests = new NodeRequests();
+    await expect(requests.fetch(server.url)).rejects.toMatchObject({
+      code: expect.stringMatching(/SELF[_-]SIGNED|DEPTH_ZERO_SELF_SIGNED_CERT/i),
+    });
+  });
+});
