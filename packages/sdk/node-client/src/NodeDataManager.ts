@@ -64,18 +64,20 @@ export default class NodeDataManager extends BaseDataManager {
     }
     this.context = context;
 
+    let identifyResolved = false;
     if (identifyOptions?.bootstrap) {
       this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
+      identifyResolved = true;
     }
-    const resolvedFromBootstrap = !!identifyOptions?.bootstrap;
 
     const offline = this.connectionMode === 'offline';
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
 
     const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !waitForNetworkResults && !resolvedFromBootstrap) {
+    if (loadedFromCache && !waitForNetworkResults && !identifyResolved) {
       this._debugLog('Identify completing with cached flags');
       identifyResolve();
+      identifyResolved = true;
     }
     if (loadedFromCache && waitForNetworkResults) {
       this._debugLog(
@@ -83,17 +85,25 @@ export default class NodeDataManager extends BaseDataManager {
       );
     }
 
-    if (this.connectionMode === 'offline') {
+    if (offline) {
       if (loadedFromCache) {
         this._debugLog('Offline identify - using cached flags.');
       } else {
         this._debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
-        if (!resolvedFromBootstrap) {
+        if (!identifyResolved) {
           identifyResolve();
         }
       }
+      return;
+    }
+
+    // Online path. Pass identify callbacks only if not already resolved -- otherwise
+    // the streaming/polling processor would receive stale handles and bootstrap/cache
+    // resolution would race with network resolution.
+    if (identifyResolved) {
+      this._setupConnection(context);
     } else {
       this._setupConnection(context, identifyResolve, identifyReject);
     }
@@ -156,7 +166,10 @@ export default class NodeDataManager extends BaseDataManager {
         );
         break;
       default:
-        break;
+        this.logger.warn(
+          `${logTag} _setupConnection called with unsupported connectionMode '${this.connectionMode}'.`,
+        );
+        return;
     }
     this.updateProcessor!.start();
   }

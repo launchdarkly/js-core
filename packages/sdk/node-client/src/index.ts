@@ -29,8 +29,6 @@ export type {
 
 export { basicLogger };
 
-export const version = '0.0.1'; // x-release-please-version
-
 /**
  * Creates a LaunchDarkly client. The client is not ready until {@link LDClient.start}
  * is called -- after which the first identify with `initialContext` runs and the returned

@@ -31,9 +31,22 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
    */
   start(options?: LDStartOptions): Promise<LDWaitForInitializationResult>;
 
+  /**
+   * Sets the data source connection mode.
+   *
+   * Pass `'offline'` to stop the streaming or polling connection and disable analytics event
+   * delivery. Pass `'streaming'` or `'polling'` to (re)establish the connection using the
+   * current context. The returned promise resolves once the mode change has been applied.
+   */
   setConnectionMode(mode: ConnectionMode): Promise<void>;
 
+  /**
+   * Returns the current data source connection mode.
+   */
   getConnectionMode(): ConnectionMode;
 
+  /**
+   * Returns true if the client is in offline mode.
+   */
   isOffline(): boolean;
 }
