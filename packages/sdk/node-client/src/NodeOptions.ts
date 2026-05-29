@@ -1,33 +1,3 @@
-import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
-
-/**
- * Options for configuring the HTTP proxy.
- */
-export interface LDProxyOptions {
-  /**
-   * Allows you to specify a host for an optional HTTP proxy.
-   */
-  host?: string;
-
-  /**
-   * Allows you to specify a port for an optional HTTP proxy.
-   *
-   * Both the host and port must be specified to enable proxy support.
-   */
-  port?: number;
-
-  /**
-   * When using an HTTP proxy, specifies whether it is accessed via `http` or `https`.
-   */
-  scheme?: string;
-
-  /**
-   * Allows you to specify basic authentication parameters for an optional HTTP proxy.
-   * Usually of the form `username:password`.
-   */
-  auth?: string;
-}
-
 /**
  * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
  * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
@@ -52,11 +22,6 @@ export interface LDTLSOptions {
  */
 export interface NodeOptions {
   /**
-   * Allows you to specify configuration for an optional HTTP proxy.
-   */
-  proxyOptions?: LDProxyOptions;
-
-  /**
    * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
    * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
    *
@@ -77,10 +42,4 @@ export interface NodeOptions {
    * Defaults to `<cwd>/ldclient-user-cache`.
    */
   localStoragePath?: string;
-
-  /**
-   * Optional custom logger. When omitted, the SDK uses its default logger; non-critical
-   * messages (e.g. proxy or TLS warnings) are only surfaced when this is set.
-   */
-  logger?: LDLogger;
 }

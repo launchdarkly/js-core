@@ -1,6 +1,5 @@
 import { TestHttpHandlers, TestHttpServer, TestHttpServers } from 'launchdarkly-js-test-helpers';
 
-import { createMockLogger } from '../testHelpers';
 import NodeRequests from '../../src/platform/NodeRequests';
 
 it('reports event source capabilities (read timeout, custom headers, custom method)', () => {
@@ -10,38 +9,6 @@ it('reports event source capabilities (read timeout, custom headers, custom meth
     headers: true,
     customMethod: true,
   });
-});
-
-it('reports proxy status flags based on constructor input', () => {
-  expect(new NodeRequests().usingProxy()).toBe(false);
-  expect(new NodeRequests().usingProxyAuth()).toBe(false);
-
-  const withProxy = new NodeRequests(undefined, { host: 'localhost', port: 8080 });
-  expect(withProxy.usingProxy()).toBe(true);
-  expect(withProxy.usingProxyAuth()).toBe(false);
-
-  const withAuth = new NodeRequests(undefined, {
-    host: 'localhost',
-    port: 8080,
-    auth: 'user:pass',
-  });
-  expect(withAuth.usingProxy()).toBe(true);
-  expect(withAuth.usingProxyAuth()).toBe(true);
-});
-
-it('warns when proxy is configured with TLS but using an http scheme', () => {
-  const logger = createMockLogger();
-
-  // eslint-disable-next-line no-new
-  new NodeRequests(
-    { ca: 'fake-ca' },
-    { host: 'localhost', port: 8080, scheme: 'http' },
-    logger,
-  );
-
-  expect(logger.warn).toHaveBeenCalledWith(
-    expect.stringContaining('Proxy configured with TLS options'),
-  );
 });
 
 describe('given a running HTTP server', () => {
@@ -130,7 +97,7 @@ describe('given a running HTTP server', () => {
   it('sets content-encoding gzip on POST bodies when compression is enabled and requested', async () => {
     server.byDefault(TestHttpHandlers.respond(200));
 
-    const requests = new NodeRequests(undefined, undefined, undefined, true);
+    const requests = new NodeRequests(undefined, true);
     const body = JSON.stringify({ payload: 'x'.repeat(64) });
     await requests.fetch(server.url, {
       method: 'POST',
@@ -146,7 +113,7 @@ describe('given a running HTTP server', () => {
   it('does not compress POST bodies when compressBodyIfPossible is not requested', async () => {
     server.byDefault(TestHttpHandlers.respond(200));
 
-    const requests = new NodeRequests(undefined, undefined, undefined, true);
+    const requests = new NodeRequests(undefined, true);
     await requests.fetch(server.url, { method: 'POST', body: 'plain' });
 
     const req = await server.nextRequest();

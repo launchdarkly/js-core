@@ -1,16 +1,14 @@
 import * as http from 'http';
 import * as https from 'https';
-import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
 // No types for the event source.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
-import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { EventSourceCapabilities, LDLogger, platform } from '@launchdarkly/js-client-sdk-common';
+import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
-import type { LDProxyOptions, LDTLSOptions } from '../NodeOptions';
+import type { LDTLSOptions } from '../NodeOptions';
 import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
@@ -42,76 +40,16 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   return options;
 }
 
-function processProxyOptions(
-  proxyOptions: LDProxyOptions,
-  additional: https.AgentOptions = {},
-): https.Agent | http.Agent {
-  const proxyUrl = formatUrl({
-    protocol: proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http:',
-    slashes: true,
-    hostname: proxyOptions.host,
-    port: proxyOptions.port,
-  });
-  const parsedOptions: HttpsProxyAgentOptions<string> = {
-    ...additional,
-  };
-  if (proxyOptions.auth) {
-    parsedOptions.headers = {
-      'Proxy-Authorization': `Basic ${Buffer.from(proxyOptions.auth).toString('base64')}`,
-    };
-  }
-
-  Object.keys(parsedOptions).forEach((key) => {
-    if (parsedOptions[key as keyof HttpsProxyAgentOptions<string>] === undefined) {
-      delete parsedOptions[key as keyof HttpsProxyAgentOptions<string>];
-    }
-  });
-
-  return new HttpsProxyAgent(proxyUrl, parsedOptions);
-}
-
-function createAgent(
-  tlsOptions?: LDTLSOptions,
-  proxyOptions?: LDProxyOptions,
-  logger?: LDLogger,
-): https.Agent | http.Agent | undefined {
-  if (proxyOptions && tlsOptions && !proxyOptions.scheme?.startsWith('https')) {
-    logger?.warn('Proxy configured with TLS options, but proxy is not using https scheme.');
-  }
-  if (tlsOptions) {
-    const agentOptions = processTlsOptions(tlsOptions);
-    if (proxyOptions) {
-      return processProxyOptions(proxyOptions, agentOptions);
-    }
-    return new https.Agent(agentOptions);
-  }
-  if (proxyOptions) {
-    return processProxyOptions(proxyOptions);
-  }
-  return undefined;
-}
-
 export default class NodeRequests implements platform.Requests {
-  private _agent: https.Agent | http.Agent | undefined;
+  private _agent: https.Agent | undefined;
 
   private _tlsOptions: LDTLSOptions | undefined;
 
-  private _hasProxy: boolean = false;
-
-  private _hasProxyAuth: boolean = false;
-
   private _enableBodyCompression: boolean = false;
 
-  constructor(
-    tlsOptions?: LDTLSOptions,
-    proxyOptions?: LDProxyOptions,
-    logger?: LDLogger,
-    enableEventCompression?: boolean,
-  ) {
-    this._agent = createAgent(tlsOptions, proxyOptions, logger);
+  constructor(tlsOptions?: LDTLSOptions, enableEventCompression?: boolean) {
+    this._agent = tlsOptions ? new https.Agent(processTlsOptions(tlsOptions)) : undefined;
     this._tlsOptions = tlsOptions;
-    this._hasProxy = !!proxyOptions;
-    this._hasProxyAuth = !!proxyOptions?.auth;
     this._enableBodyCompression = !!enableEventCompression;
   }
 
@@ -182,13 +120,5 @@ export default class NodeRequests implements platform.Requests {
       headers: true,
       customMethod: true,
     };
-  }
-
-  usingProxy(): boolean {
-    return this._hasProxy;
-  }
-
-  usingProxyAuth(): boolean {
-    return this._hasProxyAuth;
   }
 }

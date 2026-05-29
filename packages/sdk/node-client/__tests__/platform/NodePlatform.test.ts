@@ -47,12 +47,3 @@ it('forwards the logger to NodeStorage so storage failures surface', async () =>
   );
 });
 
-it('passes proxyOptions and tlsParams through to NodeRequests', () => {
-  const platform = new NodePlatform(logger, {
-    localStoragePath: tmpRoot,
-    proxyOptions: { host: 'localhost', port: 8080, auth: 'user:pass' },
-    tlsParams: { ca: 'fake-ca' },
-  });
-  expect(platform.requests.usingProxy!()).toBe(true);
-  expect(platform.requests.usingProxyAuth!()).toBe(true);
-});
