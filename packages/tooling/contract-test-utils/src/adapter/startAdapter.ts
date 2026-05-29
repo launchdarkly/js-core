@@ -38,11 +38,16 @@ export function startAdapter(options?: AdapterOptions) {
     options?.requestTimeoutMs ?? Number(process.env.ADAPTER_REQUEST_TIMEOUT_MS ?? 30000);
 
   const wss = new WebSocketServer({ port: wsPort });
-  const waiters: Record<string, Waiter> = {};
 
   console.log('Running contract test harness adapter.');
   wss.on('connection', async (ws) => {
     ws.on('error', console.error);
+
+    // Outstanding commands awaiting a response over THIS socket. Scoped per
+    // connection (not shared across the adapter) so that closing one socket
+    // only fails its own in-flight commands and never rejects waiters that
+    // belong to another, e.g. reconnecting, connection.
+    const waiters: Record<string, Waiter> = {};
 
     ws.on('message', (stringData: string) => {
       const data = JSON.parse(stringData);
@@ -56,8 +61,8 @@ export function startAdapter(options?: AdapterOptions) {
       }
     });
 
-    // When the entity's socket drops, fail every outstanding command instead
-    // of leaving REST requests (and the harness) hanging forever.
+    // When this socket drops, fail its outstanding commands instead of leaving
+    // those REST requests (and the harness) hanging forever.
     ws.on('close', () => {
       Object.keys(waiters).forEach((reqId) => {
         const waiter = waiters[reqId];
