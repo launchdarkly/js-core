@@ -75,7 +75,10 @@ export default class NodeStorage implements Storage {
       try {
         await fs.unlink(this._tempFile);
       } catch {
-        // Ignore if temp file does not exist.
+        // Either the temp file didn't exist, which we don't care about or there was
+        // a problem deleting the file, for example a problem with permissions, in
+        // which case the subsequent write will likely also fail and be handled by its
+        // exception handler.
       }
       handle = await fs.open(this._tempFile, 'wx', 0o600);
       await handle.writeFile(content, 'utf8');
