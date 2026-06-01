@@ -6,25 +6,14 @@ import { platform } from '@launchdarkly/js-client-sdk-common';
 
 import HeaderWrapper from './HeaderWrapper';
 
-// Upper bound on a buffered response body. Flag and event responses are far smaller than this;
-// the cap prevents a misbehaving or hostile endpoint from exhausting memory with a huge body.
-export const MAX_RESPONSE_BYTES = 100 * 1024 * 1024;
-
 export default class NodeResponse implements platform.Response {
   incomingMessage: http.IncomingMessage;
 
   chunks: any[] = [];
 
-  private _totalBytes: number = 0;
-
   memoryStream: Writable = new Writable({
     decodeStrings: true,
     write: (chunk, _enc, next) => {
-      this._totalBytes += chunk.length;
-      if (this._totalBytes > MAX_RESPONSE_BYTES) {
-        next(new Error(`Response body exceeded maximum size of ${MAX_RESPONSE_BYTES} bytes`));
-        return;
-      }
       this.chunks.push(chunk);
       next();
     },
