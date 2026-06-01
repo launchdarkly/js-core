@@ -2,7 +2,7 @@ import * as http from 'http';
 import { Readable } from 'stream';
 import * as zlib from 'zlib';
 
-import NodeResponse from '../../src/platform/NodeResponse';
+import NodeResponse, { MAX_RESPONSE_BYTES } from '../../src/platform/NodeResponse';
 
 function makeIncomingMessage(
   body: Buffer | string,
@@ -49,6 +49,13 @@ it('decodes a gzip-encoded body', async () => {
     makeIncomingMessage(gzipped, { headers: { 'content-encoding': 'gzip' } }),
   );
   await expect(res.text()).resolves.toBe('compressed payload');
+});
+
+it('rejects when the response body exceeds the maximum size', async () => {
+  // One chunk just over the cap trips the limit on the first write, so nothing is buffered.
+  const oversized = Buffer.allocUnsafe(MAX_RESPONSE_BYTES + 1);
+  const res = new NodeResponse(makeIncomingMessage(oversized));
+  await expect(res.text()).rejects.toThrow(/exceeded maximum size/);
 });
 
 it('rejects text() when the pipeline encounters an error', async () => {

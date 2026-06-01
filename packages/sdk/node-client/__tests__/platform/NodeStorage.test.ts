@@ -70,6 +70,48 @@ it('recovers when the storage file contains invalid JSON', async () => {
   await expect(storage.get('alpha')).resolves.toBe('one');
 });
 
+it('warns when the cache file is not valid JSON', async () => {
+  await fs.writeFile(path.join(tmpRoot, 'ldcache.json'), 'not json', 'utf8');
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(tmpRoot, logger);
+  await expect(storage.get('anything')).resolves.toBeNull();
+
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Discarding malformed flag cache'),
+  );
+});
+
+it('ignores non-string values when loading the cache', async () => {
+  await fs.writeFile(
+    path.join(tmpRoot, 'ldcache.json'),
+    JSON.stringify({ good: 'keep', obj: { nested: true }, arr: [1, 2], num: 5 }),
+    'utf8',
+  );
+
+  const storage = new NodeStorage(tmpRoot);
+  await expect(storage.get('good')).resolves.toBe('keep');
+  await expect(storage.get('obj')).resolves.toBeNull();
+  await expect(storage.get('arr')).resolves.toBeNull();
+  await expect(storage.get('num')).resolves.toBeNull();
+});
+
+it('does not follow a symlink planted at the temp file path', async () => {
+  const storage = new NodeStorage(tmpRoot);
+  // Ensure initialization (which clears any temp file) has completed before planting.
+  await storage.get('warmup');
+
+  const victim = path.join(tmpRoot, 'victim.txt');
+  await fs.writeFile(victim, 'protected', 'utf8');
+  await fs.symlink(victim, path.join(tmpRoot, 'ldcache.json.tmp'));
+
+  await storage.set('alpha', 'one');
+
+  // The exclusive open removes the symlink and writes a fresh file, so the victim is untouched.
+  await expect(fs.readFile(victim, 'utf8')).resolves.toBe('protected');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+});
+
 it('logs and returns sentinel values when initialization fails', async () => {
   const filePath = path.join(tmpRoot, 'not-a-dir');
   await fs.writeFile(filePath, 'sentinel', 'utf8');
@@ -103,4 +145,15 @@ it('rebuilds the singleton after resetNodeStorage', () => {
   resetNodeStorage();
   const second = getNodeStorage(tmpRoot);
   expect(second).not.toBe(first);
+});
+
+it('warns when getNodeStorage is called with a different localStoragePath', () => {
+  getNodeStorage(tmpRoot);
+
+  const logger = createMockLogger();
+  getNodeStorage(path.join(tmpRoot, 'different'), logger);
+
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('different localStoragePath'),
+  );
 });
