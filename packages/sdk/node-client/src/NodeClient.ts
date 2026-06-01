@@ -105,12 +105,12 @@ export class NodeClient extends LDClientImpl {
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     const task = this._connectionModeQueue.then(async () => {
       const dataManager = this.dataManager as NodeDataManager;
-      if (mode === 'offline') {
-        // Disable analytics, then drain any queued events before tearing down the data source.
-        this.setEventSendingEnabled(false, false);
-        await this.flush();
-      }
       try {
+        if (mode === 'offline') {
+          // Disable analytics, then drain any queued events before tearing down the data source.
+          this.setEventSendingEnabled(false, false);
+          await this.flush();
+        }
         await dataManager.setConnectionMode(mode);
       } finally {
         // Read the mode back so event-sending always matches the mode that actually took

@@ -181,6 +181,11 @@ export default class NodeDataManager extends BaseDataManager {
           `${logTag} _setupConnection called with unsupported connectionMode '${this.connectionMode}'.`,
         );
         this.updateProcessor = undefined;
+        // The mode may have changed to 'offline' while identify was awaiting the cache; reject
+        // rather than leave the identify promise to hang until its timeout.
+        identifyReject?.(
+          new Error(`Connection mode changed to '${this.connectionMode}' during identify.`),
+        );
         return;
     }
     this.updateProcessor!.start();

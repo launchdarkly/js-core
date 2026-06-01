@@ -406,3 +406,64 @@ it('does not read cached flags when bootstrap is provided', async () => {
 
   await client.close();
 });
+
+it('rejects identify rather than hanging when the mode flips to offline mid-identify', async () => {
+  // Gate the cached-flag read so we can flip the connection mode while identify is parked on
+  // the await -- reproducing the race where _setupConnection later sees connectionMode==='offline'.
+  let releaseGet: () => void = () => {};
+  const getGate = new Promise<void>((resolve) => {
+    releaseGet = resolve;
+  });
+
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: jest.fn(() => ({
+        addEventListener: jest.fn(),
+        close: jest.fn(),
+        onclose: jest.fn(),
+        onerror: jest.fn(),
+        onopen: jest.fn(),
+        onretrying: jest.fn(),
+      })),
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  (fakePlatform as any).storage = {
+    get: jest.fn(async () => {
+      await getGate;
+      return null;
+    }),
+    set: jest.fn(async () => {}),
+    clear: jest.fn(async () => {}),
+  };
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  // Bootstrap on start so the first identify skips the (gated) cache read.
+  await client.start({ bootstrap: bootstrapData });
+
+  // A second identify without bootstrap routes through the cache path and parks on the gated get.
+  const identifyPromise = client.identify({ kind: 'user', key: 'alice' }, { timeout: 2 });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Flip to offline while identify is parked, then release the cache read.
+  await client.setConnectionMode('offline');
+  releaseGet();
+
+  const result = await identifyPromise;
+  // With the fix the identify settles immediately as an error; the bug would hang to timeout.
+  expect(result.status).toBe('error');
+
+  await client.close();
+});
