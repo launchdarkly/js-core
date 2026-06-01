@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.28.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.27.2...js-client-sdk-common-v1.28.0) (2026-06-01)
+
+
+### Features
+
+* **js-client-sdk:** add ability to customize storage impl ([#1404](https://github.com/launchdarkly/js-core/issues/1404)) ([77864cb](https://github.com/launchdarkly/js-core/commit/77864cb04f737c8aab4476422a2a2422c7be978c))
+
 ## [1.27.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.27.1...js-client-sdk-common-v1.27.2) (2026-05-26)
 
 

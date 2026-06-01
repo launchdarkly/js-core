@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.8.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.7.3...js-client-sdk-v4.8.0) (2026-06-01)
+
+
+### Features
+
+* **js-client-sdk:** add ability to customize storage impl ([#1404](https://github.com/launchdarkly/js-core/issues/1404)) ([77864cb](https://github.com/launchdarkly/js-core/commit/77864cb04f737c8aab4476422a2a2422c7be978c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.27.2 to 1.28.0
+
 ## [4.7.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.7.2...js-client-sdk-v4.7.3) (2026-05-28)
 
 

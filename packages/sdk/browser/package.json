@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk",
-  "version": "4.7.3",
+  "version": "4.8.0",
   "description": "LaunchDarkly SDK for JavaScript in Browsers",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser",
   "repository": {
@@ -43,7 +43,7 @@
     "check": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.27.2"
+    "@launchdarkly/js-client-sdk-common": "1.28.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
