@@ -8,7 +8,7 @@ import HeaderWrapper from './HeaderWrapper';
 
 // Upper bound on a buffered response body. Flag and event responses are far smaller than this;
 // the cap prevents a misbehaving or hostile endpoint from exhausting memory with a huge body.
-const MAX_RESPONSE_BYTES = 100 * 1024 * 1024;
+export const MAX_RESPONSE_BYTES = 100 * 1024 * 1024;
 
 export default class NodeResponse implements platform.Response {
   incomingMessage: http.IncomingMessage;
