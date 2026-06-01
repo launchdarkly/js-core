@@ -1,6 +1,7 @@
 import ConnectionMode from './ConnectionMode';
 
 export * from './LDOptions';
+export * from './LDStorage';
 export * from './LDClient';
 export * from './LDEvaluationDetail';
 export * from './integrations';

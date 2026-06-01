@@ -23,10 +23,8 @@ export default class BrowserPlatform implements Platform {
   requests: Requests = new BrowserRequests();
   storage?: Storage;
 
-  constructor(logger: LDLogger, options: BrowserOptions) {
-    if (isLocalStorageSupported()) {
-      this.storage = new LocalStorage(logger);
-    }
+  constructor(logger: LDLogger, options: BrowserOptions, storage?: Storage) {
+    this.storage = storage ?? (isLocalStorageSupported() ? new LocalStorage(logger) : undefined);
     this.info = new BrowserInfo(options);
   }
 }

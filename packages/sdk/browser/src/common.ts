@@ -31,6 +31,7 @@ export type {
   LDInspection,
   LDLogger,
   LDLogLevel,
+  LDStorage,
   LDMultiKindContext,
   LDSingleKindContext,
   TrackSeriesContext,
