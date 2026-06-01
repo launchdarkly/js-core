@@ -166,3 +166,63 @@ it('includes authorization and user-agent headers on the events request', async 
 
   await client.close();
 });
+
+it('delivers events tracked across an offline transition once back online', async () => {
+  const fetchMock = mockFetch('', 202);
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: fetchMock,
+      createEventSource: jest.fn(() => ({
+        addEventListener: jest.fn(),
+        close: jest.fn(),
+        onclose: jest.fn(),
+        onerror: jest.fn(),
+        onopen: jest.fn(),
+        onretrying: jest.fn(),
+      })),
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: true,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  client.track('eventA');
+  await client.setConnectionMode('offline');
+  client.track('eventB');
+  await client.setConnectionMode('streaming');
+  client.track('eventC');
+  await client.flush();
+
+  const customKeys = new Set<string>();
+  fetchMock.mock.calls
+    .filter(([url]: [string]) => url.includes('/events/bulk/'))
+    .forEach((call: any) => {
+      try {
+        JSON.parse(call[1].body).forEach((e: any) => {
+          if (e.kind === 'custom') {
+            customKeys.add(e.key);
+          }
+        });
+      } catch {
+        // not JSON, skip
+      }
+    });
+
+  expect(customKeys.has('eventA')).toBe(true);
+  expect(customKeys.has('eventB')).toBe(true);
+  expect(customKeys.has('eventC')).toBe(true);
+
+  await client.close();
+});

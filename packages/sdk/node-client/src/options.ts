@@ -72,5 +72,12 @@ export default function validateOptions(opts: NodeOptions, logger: LDLogger): Va
     }
   });
 
+  if (output.tlsParams?.rejectUnauthorized === false) {
+    logger.warn(
+      'TLS certificate verification is disabled via tlsParams.rejectUnauthorized=false. ' +
+        'This is insecure and should not be used in production.',
+    );
+  }
+
   return output;
 }

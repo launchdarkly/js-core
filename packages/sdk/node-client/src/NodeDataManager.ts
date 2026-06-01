@@ -4,6 +4,7 @@ import {
   ConnectionMode,
   Context,
   DataSourcePaths,
+  DataSourceState,
   FlagManager,
   internal,
   LDEmitter,
@@ -19,7 +20,6 @@ import type { ValidatedOptions } from './options';
 const logTag = '[NodeDataManager]';
 
 export default class NodeDataManager extends BaseDataManager {
-  protected networkAvailable: boolean = true;
   protected connectionMode: ConnectionMode = 'streaming';
 
   constructor(
@@ -60,21 +60,36 @@ export default class NodeDataManager extends BaseDataManager {
   ): Promise<void> {
     if (this.closed) {
       this._debugLog('Identify called after data manager was closed.');
+      identifyReject(new Error('Client has been closed.'));
       return;
     }
     this.context = context;
 
-    let identifyResolved = false;
+    const offline = this.connectionMode === 'offline';
+
+    // Bootstrap and cache are mutually exclusive: when bootstrap data is provided it
+    // resolves identify immediately, so we must not also load (and potentially overwrite
+    // with) stale cached flags.
     if (identifyOptions?.bootstrap) {
+      if (identifyOptions.waitForNetworkResults) {
+        this.logger.warn(
+          `${logTag} 'waitForNetworkResults' is ignored when 'bootstrap' is provided.`,
+        );
+      }
       this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
-      identifyResolved = true;
+      if (!offline) {
+        // Open a connection for ongoing updates, but identify is already resolved so no
+        // callbacks are forwarded.
+        this._setupConnection(context);
+      }
+      return;
     }
 
-    const offline = this.connectionMode === 'offline';
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
 
     const loadedFromCache = await this.flagManager.loadCached(context);
-    if (loadedFromCache && !waitForNetworkResults && !identifyResolved) {
+    let identifyResolved = false;
+    if (loadedFromCache && !waitForNetworkResults) {
       this._debugLog('Identify completing with cached flags');
       identifyResolve();
       identifyResolved = true;
@@ -87,9 +102,7 @@ export default class NodeDataManager extends BaseDataManager {
         this._debugLog(
           'Offline identify - no cached flags, using defaults or already loaded flags.',
         );
-        if (!identifyResolved) {
-          identifyResolve();
-        }
+        identifyResolve();
       }
       return;
     }
@@ -111,6 +124,7 @@ export default class NodeDataManager extends BaseDataManager {
       bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
+    this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Valid);
     this._debugLog('Identify - Initialization completed from bootstrap');
 
     identifyResolve();
@@ -121,7 +135,12 @@ export default class NodeDataManager extends BaseDataManager {
     identifyResolve?: () => void,
     identifyReject?: (err: Error) => void,
   ) {
-    const rawContext = Context.toLDContext(context)!;
+    const rawContext = Context.toLDContext(context);
+    if (!rawContext) {
+      this.logger.error(`${logTag} Unable to convert context; cannot establish connection.`);
+      identifyReject?.(new Error('Invalid context.'));
+      return;
+    }
 
     const plainContextString = JSON.stringify(rawContext);
     const requestor = makeRequestor(
@@ -161,13 +180,10 @@ export default class NodeDataManager extends BaseDataManager {
         this.logger.warn(
           `${logTag} _setupConnection called with unsupported connectionMode '${this.connectionMode}'.`,
         );
+        this.updateProcessor = undefined;
         return;
     }
     this.updateProcessor!.start();
-  }
-
-  setNetworkAvailability(available: boolean): void {
-    this.networkAvailable = available;
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
@@ -187,6 +203,7 @@ export default class NodeDataManager extends BaseDataManager {
     switch (mode) {
       case 'offline':
         this.updateProcessor?.close();
+        this.updateProcessor = undefined;
         break;
       case 'polling':
       case 'streaming':

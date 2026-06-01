@@ -109,6 +109,25 @@ it('re-identifying with new bootstrap data replaces previous flags', async () =>
   expect(client.boolVariation('my-boolean-flag', false)).toBe(true);
 });
 
+it('warns that waitForNetworkResults is ignored when combined with bootstrap', async () => {
+  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
+    initialConnectionMode: 'offline',
+    sendEvents: false,
+    diagnosticOptOut: true,
+    localStoragePath: tmpRoot,
+    logger,
+  });
+
+  await client.start({ bootstrap: goodBootstrapData });
+  const result = await client.identify(
+    { kind: 'user', key: 'alice' },
+    { bootstrap: goodBootstrapData, waitForNetworkResults: true },
+  );
+
+  expect(result.status).toBe('completed');
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('waitForNetworkResults'));
+});
+
 it('returns defaults when no bootstrap data is provided', async () => {
   const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
     initialConnectionMode: 'offline',

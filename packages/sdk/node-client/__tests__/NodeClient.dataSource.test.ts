@@ -2,6 +2,7 @@ import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import { createClient } from '../src';
 import NodeDataManager from '../src/NodeDataManager';
+import { NodeClient } from '../src/NodeClient';
 import { makeMockPlatform, mockFetch } from './NodeClient.mocks';
 
 // Replace NodePlatform's constructor with one that returns the mock platform. Lets us
@@ -304,6 +305,104 @@ it('setConnectionMode streaming -> offline tears down the EventSource', async ()
   await client.setConnectionMode('offline');
   expect(client.isOffline()).toBe(true);
   expect(eventSourceClose).toHaveBeenCalled();
+
+  await client.close();
+});
+
+it('keeps event-sending state consistent with the mode under concurrent setConnectionMode', async () => {
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: mockFetch('', 202),
+      createEventSource: jest.fn(() => ({
+        addEventListener: jest.fn(),
+        close: jest.fn(),
+        onclose: jest.fn(),
+        onerror: jest.fn(),
+        onopen: jest.fn(),
+        onretrying: jest.fn(),
+      })),
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  // Use the implementation directly so we can assert on the internal event-sending flag,
+  // which governs background (timer-driven) analytics delivery.
+  const client = new NodeClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: true,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  // Fire two transitions without awaiting between them. Without serialization the offline
+  // transition could settle while event-sending is left enabled.
+  const p1 = client.setConnectionMode('streaming');
+  const p2 = client.setConnectionMode('offline');
+  await Promise.all([p1, p2]);
+
+  expect(client.getConnectionMode()).toBe('offline');
+  expect(client.isOffline()).toBe(true);
+  // When offline, background analytics delivery must be disabled.
+  // eslint-disable-next-line no-underscore-dangle
+  expect((client as any)._eventSendingEnabled).toBe(false);
+
+  await client.close();
+});
+
+it('rejects identify called after close without waiting for the identify timeout', async () => {
+  const fakePlatform = makeMockPlatform();
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+  await client.close();
+
+  const start = Date.now();
+  const result = await client.identify({ kind: 'user', key: 'alice' });
+  const elapsed = Date.now() - start;
+
+  expect(result.status).toBe('error');
+  // Should fail fast, not sit until the 5s identify timeout.
+  expect(elapsed).toBeLessThan(1000);
+});
+
+it('does not read cached flags when bootstrap is provided', async () => {
+  const fakePlatform = makeMockPlatform();
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  // Bootstrap and cache are mutually exclusive: cached flags must not be consulted (and so
+  // cannot overwrite) the freshly applied bootstrap data.
+  expect(fakePlatform.storage!.get).not.toHaveBeenCalled();
 
   await client.close();
 });
