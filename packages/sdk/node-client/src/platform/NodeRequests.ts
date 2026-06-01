@@ -13,6 +13,8 @@ import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   const options: https.AgentOptions & { [index: string]: any } = {
     ca: tlsOptions.ca,
@@ -76,7 +78,7 @@ export default class NodeRequests implements platform.Requests {
       const req = impl.request(
         url,
         {
-          timeout: options.timeout,
+          timeout: options.timeout ?? DEFAULT_REQUEST_TIMEOUT_MS,
           headers,
           method: options.method,
           agent: this._agent,

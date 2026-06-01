@@ -46,10 +46,16 @@ export default class NodeStorage implements Storage {
       try {
         const data = await fs.readFile(this._storageFile, 'utf8');
         const parsed = JSON.parse(data);
-        if (parsed && typeof parsed === 'object') {
-          this._cache = new Map(Object.entries(parsed as Record<string, string>));
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          const entries = Object.entries(parsed).filter(
+            ([, value]) => typeof value === 'string',
+          ) as [string, string][];
+          this._cache = new Map(entries);
         }
-      } catch {
+      } catch (error) {
+        this._logger?.warn(
+          `Discarding malformed flag cache at ${this._storageFile}: ${error instanceof Error ? error.message : error}`,
+        );
         await this._atomicWriteToFile(this._cache);
       }
 
@@ -62,10 +68,26 @@ export default class NodeStorage implements Storage {
 
   private async _atomicWriteToFile(data: Map<string, string>): Promise<void> {
     const content = JSON.stringify(Object.fromEntries(data));
+    let handle: fs.FileHandle | undefined;
     try {
-      await fs.writeFile(this._tempFile, content, { encoding: 'utf8', mode: 0o600 });
+      try {
+        await fs.unlink(this._tempFile);
+      } catch {
+        // Ignore if temp file does not exist.
+      }
+      handle = await fs.open(this._tempFile, 'wx', 0o600);
+      await handle.writeFile(content, 'utf8');
+      await handle.close();
+      handle = undefined;
       await fs.rename(this._tempFile, this._storageFile);
     } catch (error) {
+      if (handle) {
+        try {
+          await handle.close();
+        } catch {
+          // Ignore close errors during cleanup.
+        }
+      }
       try {
         await fs.unlink(this._tempFile);
       } catch {
@@ -133,7 +155,13 @@ export default class NodeStorage implements Storage {
       await this._atomicWriteToFile(new Map(this._cache));
     });
 
-    this._flushQueue = flush.catch(() => {});
+    // Batched callers chain off _flushQueue; log here so a failed write is never silently
+    // masked for callers that did not directly await this flush.
+    this._flushQueue = flush.catch((error) => {
+      this._logger?.error(
+        `Storage flush failed: ${error instanceof Error ? error.message : error}`,
+      );
+    });
     return flush;
   }
 }
@@ -142,10 +170,16 @@ export default class NodeStorage implements Storage {
 // process share the same cache file. The first call's storagePath / logger wins;
 // later calls ignore the arguments.
 let instance: NodeStorage | undefined;
+let instancePath: string | undefined;
 
 export function getNodeStorage(storagePath?: string, logger?: LDLogger): NodeStorage {
   if (!instance) {
     instance = new NodeStorage(storagePath, logger);
+    instancePath = storagePath;
+  } else if (storagePath !== undefined && storagePath !== instancePath) {
+    logger?.warn(
+      `NodeStorage was already initialized with a different localStoragePath; ignoring '${storagePath}'.`,
+    );
   }
   return instance;
 }
@@ -153,4 +187,5 @@ export function getNodeStorage(storagePath?: string, logger?: LDLogger): NodeSto
 /** @internal Visible for testing only. */
 export function resetNodeStorage(): void {
   instance = undefined;
+  instancePath = undefined;
 }
