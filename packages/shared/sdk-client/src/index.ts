@@ -45,7 +45,10 @@ export type {
   LDStartOptions,
   LDContext,
   LDContextStrict,
+  LDStorage,
 } from './api';
+
+export { default as createSafeStorage } from './storage/createSafeStorage';
 
 export type { DataManager, DataManagerFactory, ConnectionParams } from './DataManager';
 export type { FlagManager } from './flag-manager/FlagManager';

@@ -7,6 +7,7 @@ import {
   Configuration,
   createDefaultSourceFactoryProvider,
   createFDv2DataManagerBase,
+  createSafeStorage,
   FDv2ConnectionMode,
   FlagManager,
   Hook,
@@ -71,9 +72,12 @@ class BrowserClientImpl extends LDClientImpl {
     // TODO: Use the already-configured baseUri from the SDK config. SDK-560
     const baseUrl = options.baseUri ?? 'https://clientsdk.launchdarkly.com';
 
-    const platform = overridePlatform ?? new BrowserPlatform(logger, options);
     // Only the browser-specific options are in validatedBrowserOptions.
     const validatedBrowserOptions = validateBrowserOptions(options, logger);
+    const safeStorage = validatedBrowserOptions.storage
+      ? createSafeStorage(validatedBrowserOptions.storage, logger)
+      : undefined;
+    const platform = overridePlatform ?? new BrowserPlatform(logger, options, safeStorage);
     // The base options are in baseOptionsWithDefaults.
     const baseOptionsWithDefaults = filterToBaseOptionsWithDefaults({ ...options, logger });
     const { eventUrlTransformer } = validatedBrowserOptions;

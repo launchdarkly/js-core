@@ -2,6 +2,7 @@ import {
   LDClientDataSystemOptions,
   LDLogger,
   LDOptions as LDOptionsBase,
+  LDStorage,
   ManualModeSwitching,
   OptionMessages,
   TypeValidator,
@@ -96,6 +97,23 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * A list of plugins to be used with the SDK.
    */
   plugins?: LDPlugin[];
+
+  /**
+   * Custom storage implementation.
+   *
+   * Storage is used for caching flag values for a context as well as persisting
+   * generated identifiers.
+   *
+   * By default the browser SDK uses `window.localStorage`.
+   *
+   * @remarks
+   * If there is an issue with the storage implementation, then generated keys
+   * and context caches may not be persisted. This will cause the SDK to generate
+   * new keys and context caches on every startup. Implementations should not
+   * throw; if one does, the SDK logs the error and degrades gracefully rather
+   * than crashing the application.
+   */
+  storage?: LDStorage;
 }
 
 export interface ValidatedOptions {
@@ -104,6 +122,7 @@ export interface ValidatedOptions {
   streaming?: boolean;
   automaticBackgroundHandling?: boolean;
   plugins: LDPlugin[];
+  storage?: LDStorage;
 }
 
 const optDefaults = {
@@ -111,6 +130,7 @@ const optDefaults = {
   eventUrlTransformer: (url: string) => url,
   streaming: undefined,
   plugins: [],
+  storage: undefined,
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
@@ -118,6 +138,7 @@ const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefine
   eventUrlTransformer: TypeValidators.Function,
   streaming: TypeValidators.Boolean,
   plugins: TypeValidators.createTypeArray('LDPlugin', {}),
+  storage: TypeValidators.Object,
 };
 
 function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {
