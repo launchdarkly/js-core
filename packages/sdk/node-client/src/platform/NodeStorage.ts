@@ -53,10 +53,12 @@ export default class NodeStorage implements Storage {
           this._cache = new Map(entries);
         }
       } catch (error) {
-        this._logger?.warn(
-          `Discarding malformed flag cache at ${this._storageFile}: ${error instanceof Error ? error.message : error}`,
-        );
-        await this._atomicWriteToFile(this._cache);
+        if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+          this._logger?.warn(
+            `Discarding malformed flag cache at ${this._storageFile}: ${error instanceof Error ? error.message : error}`,
+          );
+          await this._atomicWriteToFile(this._cache);
+        }
       }
 
       return true;

@@ -70,6 +70,23 @@ it('recovers when the storage file contains invalid JSON', async () => {
   await expect(storage.get('alpha')).resolves.toBe('one');
 });
 
+it('does not warn on first run when the cache file does not exist', async () => {
+  const logger = createMockLogger();
+  const storage = new NodeStorage(tmpRoot, logger);
+  await expect(storage.get('anything')).resolves.toBeNull();
+
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('does not preemptively write the cache file on first run', async () => {
+  const storage = new NodeStorage(tmpRoot);
+  await expect(storage.get('anything')).resolves.toBeNull();
+
+  await expect(fs.access(path.join(tmpRoot, 'ldcache.json'))).rejects.toMatchObject({
+    code: 'ENOENT',
+  });
+});
+
 it('warns when the cache file is not valid JSON', async () => {
   await fs.writeFile(path.join(tmpRoot, 'ldcache.json'), 'not json', 'utf8');
 
