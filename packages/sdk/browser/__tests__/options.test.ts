@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
 
-import { LDLogger } from '@launchdarkly/js-client-sdk-common';
+import { LDLogger, LDStorage } from '@launchdarkly/js-client-sdk-common';
 
 import validateBrowserOptions, { filterToBaseOptionsWithDefaults } from '../src/options';
 
@@ -16,10 +16,23 @@ beforeEach(() => {
 });
 
 it('logs no warnings when all configuration is valid', () => {
+  const storage: LDStorage = {
+    get(_key: string): Promise<string | null> {
+      throw new Error('Function not implemented.');
+    },
+    set(_key: string, _value: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+    clear(_key: string): Promise<void> {
+      throw new Error('Function not implemented.');
+    },
+  };
+
   validateBrowserOptions(
     {
       fetchGoals: true,
       eventUrlTransformer: (url: string) => url,
+      storage,
     },
     logger,
   );
