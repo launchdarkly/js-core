@@ -119,7 +119,7 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-common
         name: Full release of packages/shared/common
         uses: ./actions/full-release
@@ -135,7 +135,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-sdk-client
         name: Full release of packages/shared/sdk-client
         uses: ./actions/full-release
@@ -151,7 +151,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
         uses: ./actions/full-release
@@ -167,7 +167,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
         uses: ./actions/full-release
@@ -183,7 +183,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
         uses: ./actions/full-release
@@ -199,7 +199,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
         uses: ./actions/full-release
@@ -215,7 +215,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-fastly-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-fastly
         name: Full release of packages/sdk/fastly
         uses: ./actions/full-release
@@ -231,7 +231,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-react-native
         name: Full release of packages/sdk/react-native
         uses: ./actions/full-release
@@ -247,7 +247,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-browser
         name: Full release of packages/sdk/browser
         uses: ./actions/full-release
@@ -263,7 +263,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-server-node
         name: Full release of packages/sdk/server-node
         uses: ./actions/full-release
@@ -279,7 +279,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-vercel
         name: Full release of packages/sdk/vercel
         uses: ./actions/full-release
@@ -295,7 +295,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
         uses: ./actions/full-release
@@ -311,7 +311,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
         uses: ./actions/full-release
@@ -327,7 +327,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
@@ -347,7 +347,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-node-server-sdk-dynamodb
@@ -365,7 +365,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-node-server-sdk-otel
         name: Full release of packages/telemetry/node-server-sdk-otel
         uses: ./actions/full-release
@@ -381,7 +381,7 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-tooling-jest
         name: Full release of packages/tooling/jest
         uses: ./actions/full-release
@@ -397,7 +397,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-react-native
         name: Full release of packages/sdk/server-ai
         uses: ./actions/full-release
@@ -413,7 +413,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-combined-browser-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-combined-browser
         name: Full release of packages/sdk/combined-browser
         uses: ./actions/full-release
@@ -429,7 +429,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-langchain-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-server-ai-langchain
         name: Full release of packages/ai-providers/server-ai-langchain
         uses: ./actions/full-release
@@ -445,7 +445,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-openai-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-server-ai-openai
         name: Full release of packages/ai-providers/server-ai-openai
         uses: ./actions/full-release
@@ -461,7 +461,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-server-ai-vercel
         name: Full release of packages/ai-providers/server-ai-vercel
         uses: ./actions/full-release
@@ -477,7 +477,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-shopify-oxygen-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-shopify-oxygen
         name: Full release of packages/sdk/shopify-oxygen
         uses: ./actions/full-release
@@ -495,7 +495,7 @@ jobs:
     # TODO: Uncomment this when the package is ready to be released.
     if: false
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-electron
         name: Full release of packages/sdk/electron
         uses: ./actions/full-release
@@ -511,7 +511,7 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-react-released == 'true'}}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - id: release-react
         name: Full release of packages/sdk/react
         uses: ./actions/full-release
@@ -526,7 +526,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./actions/setup-release-node
 
       - name: 'Setup Redis'
