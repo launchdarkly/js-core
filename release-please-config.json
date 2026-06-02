@@ -346,7 +346,8 @@
       "prerelease": true
     },
     "packages/sdk/openfeature-node-server": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "extra-files": ["src/LaunchDarklyProvider.ts"]
     }
   },
   "plugins": [
