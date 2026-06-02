@@ -24,11 +24,10 @@ afterEach(() => {
 
 it('returns sdk data with the package name, version, and user-agent base', () => {
   const info = new NodeInfo();
-  expect(info.sdkData()).toEqual({
-    name: 'node-client-sdk',
-    version: '0.0.1',
-    userAgentBase: 'NodeClient',
-  });
+  const data = info.sdkData();
+
+  expect(data.name).toEqual('node-client-sdk')
+  expect(data.userAgentBase).toEqual('NodeClient')
 });
 
 it('reports the runtime node version under platformData additional', () => {

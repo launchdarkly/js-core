@@ -89,8 +89,10 @@ export default class NodeStorage implements Storage {
       if (handle) {
         try {
           await handle.close();
-        } catch {
-          // Ignore close errors during cleanup.
+        } catch (closeError) {
+          this._logger?.warn(
+            `Failed to close storage temp file during cleanup: ${closeError}`,
+          );
         }
       }
       try {
