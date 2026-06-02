@@ -39,14 +39,15 @@ client.stringVariation('greeting', '(default)'); // 'Hello!'
 td.setBool('new-ui', false).setString('greeting', 'Welcome');
 ```
 
-### Why these options matter
+### Required LD client options
+In order to successfully set up a LD client to use the testing plugin, you **MUST** set the following options:
 
-- **`plugins: [td]`** -- registers the testing plugin so it can inject overrides.
-- **`sendEvents: false`** -- keeps analytics events off in tests.
-- **`streaming: false`** -- prevents the SDK from auto-starting a streaming connection when a `change` listener is registered. Without this, the React SDK provider (and any other code that registers `change` listeners) will trigger a real network call to `clientstream.launchdarkly.com`.
+- **`plugins: [td]`** - registers the testing plugin so it can inject overrides.
+- **`sendEvents: false`** - keeps analytics events off in tests.
+- **`streaming: false`** - (required for `js-client-sdk` and its derivativs, eg `react-sdk`), having streaming on will cause the `js-client-sdk` to automatically open a streaming connection.
 - **`bootstrap: {}` (passed to `start()`)** -- gives the SDK an empty initial flag set so it does not block on a network identify call. The plugin's overrides are applied immediately afterward.
 
-If you forget any of these, the SDK may attempt to fetch flags from LaunchDarkly during initialization and produce real network traffic, console errors, or stray evaluation events.
+> Refer to the usage example above.
 
 ## API
 
@@ -67,6 +68,6 @@ class TestData implements LDPlugin {
 ```
 
 - **`new TestData(initialFlags?)`** -- seed the instance with a base map of flag keys to values. The values are applied to the SDK client when it initializes.
-- **`setBool` / `setString` / `setNumber` / `setJson`** -- set or update a single flag. If the SDK is already running, the change propagates immediately and listeners receive a `change:<key>` event. Updates dedup by reference equality (`===`); pass a fresh object/array reference if you want a change event after mutating a previous value.
+- **`setBool` / `setString` / `setNumber` / `setJson`** -- set or update a single flag. If the SDK is already running, the change propagates immediately and listeners receive a `change:<key>` event. Every write applies the override, even when the value is unchanged -- mirroring a real connection that can re-deliver a flag and fire a `change` event without the value differing.
 - **`remove(key)`** -- drop the override for a single key. If the SDK is connected, also calls `removeOverride`.
 - **`clear()`** -- drop all overrides. Useful in `beforeEach` for shared `TestData` instances.

@@ -5,7 +5,7 @@
     "declarationMap": true,
     "lib": ["es6", "dom"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "noImplicitOverride": true,
     "outDir": "dist",
     "resolveJsonModule": true,

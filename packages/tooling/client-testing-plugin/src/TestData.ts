@@ -8,9 +8,6 @@ import type {
 
 const PLUGIN_NAME = 'test-data';
 
-const hasOwn = (obj: object, key: string): boolean =>
-  Object.prototype.hasOwnProperty.call(obj, key);
-
 /**
  * A mechanism for providing dynamically updatable feature flag values to an
  * SDK client in test scenarios.
@@ -99,10 +96,6 @@ export default class TestData implements LDPluginBase<unknown, unknown> {
   /**
    * Sets a JSON flag value (object or array).
    *
-   * Updates dedup by reference equality. Pass a fresh object/array reference
-   * if you want a `change` event to fire after mutating the previously-set
-   * value.
-   *
    * @returns this TestData for chaining
    */
   setJson(key: string, value: object | unknown[]): this {
@@ -170,20 +163,14 @@ export default class TestData implements LDPluginBase<unknown, unknown> {
   /**
    * @internal
    *
-   * Shared write path for the typed setters. Stores the value, then fires
-   * `setOverride` unless this is a no-op primitive write (same key, same
-   * primitive value as before). Object/array writes always fire.
+   * Shared write path for the typed setters. Stores the value and, if the SDK
+   * client is connected, applies the override. Every write fires
+   * `setOverride`, mirroring a real connection that can re-deliver a flag and
+   * fire a `change` event even when the value is unchanged.
    */
   private _set(key: string, value: LDFlagValue): this {
-    const hadPrevious = hasOwn(this._values, key);
-    const previous = hadPrevious ? this._values[key] : undefined;
-
     this._values[key] = value;
-
-    const isNoop = hadPrevious && Object.is(previous, value);
-    if (this._debugOverride && !isNoop) {
-      this._debugOverride.setOverride(key, value);
-    }
+    this._debugOverride?.setOverride(key, value);
     return this;
   }
 }

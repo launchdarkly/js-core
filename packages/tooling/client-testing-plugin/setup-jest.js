@@ -13,11 +13,8 @@ if (typeof global.EventSource === 'undefined') {
     constructor() {
       // no-op
     }
-
     addEventListener() {}
-
     removeEventListener() {}
-
     close() {}
   };
 }
