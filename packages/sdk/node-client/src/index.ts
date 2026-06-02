@@ -3,4 +3,4 @@
 // the source-port slice (SDK-2312); this file exists so the package builds
 // and the version stamp is in place.
 
-export const version = '0.0.1'; // x-release-please-version
+export const version = '0.0.2'; // x-release-please-version

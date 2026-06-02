@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.1.0](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.5...react-sdk-v4.1.0) (2026-06-01)
+
+
+### Features
+
+* **js-client-sdk:** add ability to customize storage impl ([#1404](https://github.com/launchdarkly/js-core/issues/1404)) ([77864cb](https://github.com/launchdarkly/js-core/commit/77864cb04f737c8aab4476422a2a2422c7be978c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.7.3 to ^4.8.0
+
 ## [4.0.5](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.0.4...react-sdk-v4.0.5) (2026-05-28)
 
 
