@@ -32,3 +32,17 @@ jobs:
           workspace_name: '@launchdarkly/openfeature-node-server'
           workspace_path: packages/sdk/openfeature-node-server
       # TODO: Add contract tests
+
+  run-getting-started-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 20
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@launchdarkly/hello-openfeature-node-server'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
