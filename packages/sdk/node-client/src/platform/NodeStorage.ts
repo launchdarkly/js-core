@@ -46,11 +46,19 @@ export default class NodeStorage implements Storage {
       try {
         const data = await fs.readFile(this._storageFile, 'utf8');
         const parsed = JSON.parse(data);
-        if (parsed && typeof parsed === 'object') {
-          this._cache = new Map(Object.entries(parsed as Record<string, string>));
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          const entries = Object.entries(parsed).filter(
+            ([, value]) => typeof value === 'string',
+          ) as [string, string][];
+          this._cache = new Map(entries);
         }
-      } catch {
-        await this._atomicWriteToFile(this._cache);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+          this._logger?.warn(
+            `Discarding malformed flag cache at ${this._storageFile}: ${error instanceof Error ? error.message : error}`,
+          );
+          await this._atomicWriteToFile(this._cache);
+        }
       }
 
       return true;
@@ -62,10 +70,31 @@ export default class NodeStorage implements Storage {
 
   private async _atomicWriteToFile(data: Map<string, string>): Promise<void> {
     const content = JSON.stringify(Object.fromEntries(data));
+    let handle: fs.FileHandle | undefined;
     try {
-      await fs.writeFile(this._tempFile, content, { encoding: 'utf8', mode: 0o600 });
+      try {
+        await fs.unlink(this._tempFile);
+      } catch {
+        // Either the temp file didn't exist, which we don't care about or there was
+        // a problem deleting the file, for example a problem with permissions, in
+        // which case the subsequent write will likely also fail and be handled by its
+        // exception handler.
+      }
+      handle = await fs.open(this._tempFile, 'wx', 0o600);
+      await handle.writeFile(content, 'utf8');
+      await handle.close();
+      handle = undefined;
       await fs.rename(this._tempFile, this._storageFile);
     } catch (error) {
+      if (handle) {
+        try {
+          await handle.close();
+        } catch (closeError) {
+          this._logger?.warn(
+            `Failed to close storage temp file during cleanup: ${closeError}`,
+          );
+        }
+      }
       try {
         await fs.unlink(this._tempFile);
       } catch {
@@ -142,10 +171,16 @@ export default class NodeStorage implements Storage {
 // process share the same cache file. The first call's storagePath / logger wins;
 // later calls ignore the arguments.
 let instance: NodeStorage | undefined;
+let instancePath: string | undefined;
 
 export function getNodeStorage(storagePath?: string, logger?: LDLogger): NodeStorage {
   if (!instance) {
     instance = new NodeStorage(storagePath, logger);
+    instancePath = storagePath;
+  } else if (storagePath !== undefined && storagePath !== instancePath) {
+    logger?.warn(
+      `NodeStorage was already initialized with a different localStoragePath; ignoring '${storagePath}'.`,
+    );
   }
   return instance;
 }
@@ -153,4 +188,5 @@ export function getNodeStorage(storagePath?: string, logger?: LDLogger): NodeSto
 /** @internal Visible for testing only. */
 export function resetNodeStorage(): void {
   instance = undefined;
+  instancePath = undefined;
 }
