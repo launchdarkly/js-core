@@ -1,0 +1,6 @@
+{
+  "holistic_branch": "skz/sdk-2276/eslint-9-flat-config",
+  "jira_subtasks": false,
+  "worktrees": false,
+  "budget": { "target": 500, "ceiling": 1000 }
+}
