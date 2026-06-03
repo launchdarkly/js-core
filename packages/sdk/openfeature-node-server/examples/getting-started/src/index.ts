@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { OpenFeature, ProviderEvents } from '@openfeature/server-sdk';
 
 import { LaunchDarklyProvider } from '@launchdarkly/openfeature-node-server';
