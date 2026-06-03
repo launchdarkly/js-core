@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-/* eslint-disable no-console */
 import { startAdapter } from '../adapter/startAdapter.js';
 
 function parsePort(value: string | undefined): number | undefined {

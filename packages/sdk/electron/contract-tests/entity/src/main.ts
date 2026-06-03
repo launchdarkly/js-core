@@ -97,7 +97,7 @@ app.on('ready', () => {
   });
 
   server.listen(8000, () => {
-    // eslint-disable-next-line no-console
+
     console.log('Server is running on port 8000');
   });
 });

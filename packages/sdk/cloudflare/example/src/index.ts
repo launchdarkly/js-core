@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { init as initLD } from '@launchdarkly/cloudflare-server-sdk';
 
 export default {

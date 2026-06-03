@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /// <reference types="@fastly/js-compute" />
 import { env } from 'fastly:env';
 import { includeBytes } from 'fastly:experimental';

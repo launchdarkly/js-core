@@ -7,7 +7,6 @@ export interface Logger {
 
 export function Log(tag: string): Logger {
   function doLog(level: string, message: string): void {
-    // eslint-disable-next-line no-console
     console.log(`${new Date().toISOString()} [${tag}] ${level}: ${message}`);
   }
   return {
@@ -20,7 +19,6 @@ export function sdkLogger(tag: string): ld.LDLogger {
   return ld.basicLogger({
     level: 'debug',
     destination: (line: string) => {
-      // eslint-disable-next-line no-console
       console.log(`${new Date().toISOString()} [${tag}.sdk] ${line}`);
     },
   });

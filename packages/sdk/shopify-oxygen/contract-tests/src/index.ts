@@ -3,8 +3,6 @@ import { Server } from 'http';
 
 import { ClientPool } from './utils';
 
-/* eslint-disable no-console */
-
 // export DEBUG=true to enable debugging
 // unset DEBUG to disable debugging
 const debugging = process.env.DEBUG === 'true';

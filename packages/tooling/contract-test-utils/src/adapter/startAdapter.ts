@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import { randomUUID } from 'crypto';
