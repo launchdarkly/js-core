@@ -1,5 +1,4 @@
 import bodyParser from 'body-parser';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { app } from 'electron';
 import express from 'express';
 
@@ -98,7 +97,7 @@ app.on('ready', () => {
   });
 
   server.listen(8000, () => {
-    // eslint-disable-next-line no-console
+
     console.log('Server is running on port 8000');
   });
 });

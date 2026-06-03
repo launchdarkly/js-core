@@ -1,6 +1,5 @@
 // These classes are of trivial complexity. If they become
 // more complex, then they could be independent files.
-/* eslint-disable max-classes-per-file */
 
 export class LDUnexpectedResponseError extends Error {
   constructor(message: string) {

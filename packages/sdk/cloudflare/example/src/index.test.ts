@@ -7,7 +7,6 @@ describe('test', () => {
 
   beforeEach(async () => {
     // solves jest complaining about console.log in flush after exiting
-    // eslint-disable-next-line no-console
     console.log = jest.fn();
 
     mockExecutionContext = {

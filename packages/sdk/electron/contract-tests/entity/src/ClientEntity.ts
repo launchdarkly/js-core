@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';

@@ -4,6 +4,7 @@ import { Platform } from '../platform';
 /**
  * Specifies the base service URIs used by SDK components.
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface LDServiceEndpoints {
   // Properties are for internal SDK components.
 }

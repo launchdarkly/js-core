@@ -45,6 +45,7 @@ export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseCh
 
   return initChatModel(modelName, {
     ...parameters,
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     modelProvider: mapProviderName(provider),
   });
 }

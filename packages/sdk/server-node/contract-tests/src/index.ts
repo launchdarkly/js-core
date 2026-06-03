@@ -103,7 +103,6 @@ app.post('/clients/:id', async (req: Request, res: Response) => {
       const message = e instanceof Error ? e.message : JSON.stringify(e);
       res.write(message);
       if (!isBadRequest && e instanceof Error && e.stack) {
-        // eslint-disable-next-line no-console
         console.log(e.stack);
       }
     }
@@ -125,6 +124,5 @@ app.delete('/clients/:id', async (req: Request, res: Response) => {
 });
 
 server = app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log('Listening on port %d', port);
 });

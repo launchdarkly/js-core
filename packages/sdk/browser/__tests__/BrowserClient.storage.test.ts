@@ -8,7 +8,6 @@ jest.mock('../src/platform/BrowserPlatform', () => ({
   __esModule: true,
   default: jest.fn().mockImplementation((logger, options, storage) => {
     mockPlatformConstructor(logger, options, storage);
-    // eslint-disable-next-line global-require
     const { makeBasicPlatform } = require('./BrowserClient.mocks');
     const platform = makeBasicPlatform(options);
     // Surface the storage the client wired in so we can assert on it, while

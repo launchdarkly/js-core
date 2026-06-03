@@ -23,7 +23,7 @@
     "clean": "npx tsc --build --clean",
     "test": "npx jest --ci --runInBand",
     "build": "npx tsc",
-    "lint": "npx eslint . --ext .ts",
+    "lint": "npx eslint .",
     "lint:fix": "yarn run lint --fix"
   },
   "peerDependencies": {
@@ -32,16 +32,19 @@
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "3.348.0",
+    "@eslint/js": "^9.0.0",
     "@launchdarkly/node-server-sdk": "9.11.1",
     "@types/jest": "^29.4.0",
-    "@typescript-eslint/eslint-plugin": "^6.20.0",
-    "@typescript-eslint/parser": "^6.20.0",
-    "eslint": "^8.45.0",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint": "^9.0.0",
+    "eslint-import-resolver-typescript": "^4.0.0",
+    "eslint-plugin-import-x": "^4.0.0",
+    "eslint-plugin-jest": "^28.0.0",
+    "globals": "^16.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
     "ts-jest": "^29.0.5",
     "typedoc": "0.25.0",
-    "typescript": "5.1.6"
+    "typescript": "5.1.6",
+    "typescript-eslint": "^8.0.0"
   }
 }

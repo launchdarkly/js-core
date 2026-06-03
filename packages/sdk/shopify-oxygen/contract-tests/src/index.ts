@@ -3,8 +3,6 @@ import { Server } from 'http';
 
 import { ClientPool } from './utils';
 
-/* eslint-disable no-console */
-
 // export DEBUG=true to enable debugging
 // unset DEBUG to disable debugging
 const debugging = process.env.DEBUG === 'true';
@@ -63,6 +61,5 @@ app.delete('/clients/:id', async (req: Request, res: Response) => {
 });
 
 server = app.listen(port, () => {
-  // eslint-disable-next-line no-console
   console.log('Listening on port %d', port);
 });

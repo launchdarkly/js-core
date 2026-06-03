@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import {
   LDClientImpl,
   LDClient as LDClientType,

@@ -352,8 +352,6 @@ it('canonicalUnfilteredJson should cache results', () => {
 
   // Setup spy before first call to track if it's called
   // Using require for mocking. Tests are ran in CJS.
-  /* eslint-disable @typescript-eslint/no-require-imports */
-  /* eslint-disable global-require */
   const canonicalizeModule = require('../src/internal/json/canonicalize');
   const originalCanon = canonicalizeModule.canonicalize;
   const mockCanon = jest.fn().mockImplementation(originalCanon);

@@ -33,14 +33,14 @@ async function setSegments(
 
   // Generators and await in a loop, both of which eslint doesn't like. This is a test, and this
   // is simpler.
-  /* eslint-disable */
   for (const ref of included) {
+    // eslint-disable-next-line no-await-in-loop
     await client.sadd(`${prefix}:${KEY_USER_INCLUDE}:${userHashKey}`, ref);
   }
   for (const ref of excluded) {
+    // eslint-disable-next-line no-await-in-loop
     await client.sadd(`${prefix}:${KEY_USER_EXCLUDE}:${userHashKey}`, ref);
   }
-  /* eslint-enable */
   await client.quit();
 }
 

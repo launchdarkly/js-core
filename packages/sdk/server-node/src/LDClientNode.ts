@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import { EventEmitter } from 'events';
 import { format } from 'util';
 
@@ -141,12 +140,12 @@ class LDClientNode extends LDClientImpl implements LDClient {
     return this.emitter.getMaxListeners();
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   listeners(eventName: string | symbol): Function[] {
     return this.emitter.listeners(eventName);
   }
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   rawListeners(eventName: string | symbol): Function[] {
     return this.emitter.rawListeners(eventName);
   }

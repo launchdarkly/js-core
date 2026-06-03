@@ -1,6 +1,5 @@
 import { createMiniOxygen } from '@shopify/mini-oxygen';
 
-/* eslint-disable no-console */
 
 /**
  * This is script is a simple runner for our example app. This script will run

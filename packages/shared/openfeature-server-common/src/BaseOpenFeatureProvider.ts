@@ -177,7 +177,6 @@ export abstract class BaseOpenFeatureProvider<
     return wrongTypeResult<U>(defaultValue);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   get hooks(): Hook[] {
     return [];
   }

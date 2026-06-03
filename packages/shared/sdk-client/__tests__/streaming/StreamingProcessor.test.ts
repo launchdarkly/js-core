@@ -58,7 +58,6 @@ function getStreamingDataSourceConfig(
 ): StreamingDataSourceConfig {
   return {
     credential: sdkKey,
-    // eslint-disable-next-line object-shorthand
     serviceEndpoints: serviceEndpoints,
     paths: {
       pathGet(_encoding: Encoding, _plainContextString: string): string {

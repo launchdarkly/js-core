@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 // Disabling max classes per file as these are tag classes without
 // logic implementation.
 

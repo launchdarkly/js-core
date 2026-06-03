@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import { EventListener, EventName, LDLogger } from '../../api';
 import { DataSourceErrorKind } from '../../datasource';
 import { PayloadProcessor } from './payloadProcessor';

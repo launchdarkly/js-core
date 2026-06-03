@@ -8,6 +8,7 @@ export default function Welcome() {
   const flagValue = ldClient.boolVariation('my-boolean-flag', false);
 
   return (
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     <View style={styles.container}>
       <Text>Welcome to LaunchDarkly</Text>
       <Text>Flag value is {`${flagValue}`}</Text>
