@@ -5,7 +5,6 @@
  * @module @launchdarkly/openfeature-node-server
  */
 
-/* eslint-disable import/prefer-default-export */
 import LaunchDarklyProvider from './LaunchDarklyProvider';
 
 export { LaunchDarklyProvider };
