@@ -154,6 +154,7 @@ export default tseslint.config(
       // extension rules (https://typescript-eslint.io/rules#extension-rules)
       "no-use-before-define": "off",
       "@typescript-eslint/no-use-before-define": "error",
+      'eqeqeq': ['error', 'always', { 'null': 'ignore' }],
 
       // Keeping this as a reference, but I don't think we really need to enforce this rule.
       // "class-methods-use-this": "off",
