@@ -37,6 +37,10 @@
     "packages/sdk/vercel",
     "packages/sdk/svelte",
     "packages/sdk/svelte/example",
+    "packages/sdk/vue",
+    "packages/sdk/vue/contract-tests",
+    "packages/sdk/vue/examples/getting-started",
+    "packages/sdk/vue/examples/features/data-saving-mode",
     "packages/sdk/akamai-base",
     "packages/sdk/akamai-base/example",
     "packages/sdk/akamai-edgekv",
@@ -66,7 +70,10 @@
     "packages/sdk/browser/example-fdv2",
     "packages/sdk/openfeature-node-server",
     "packages/sdk/openfeature-node-server/examples/getting-started",
-    "packages/sdk/vue"
+    "packages/sdk/vue",
+    "packages/sdk/vue/contract-tests",
+    "packages/sdk/vue/examples/getting-started",
+    "packages/sdk/vue/examples/features/data-saving-mode"
   ],
   "private": true,
   "scripts": {
