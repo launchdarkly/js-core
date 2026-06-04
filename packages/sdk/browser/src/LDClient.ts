@@ -35,12 +35,6 @@ export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | '
    * from the interface.
    */
   /**
-   * @internal
-   *
-   * This feature is experimental and should NOT be considered ready for
-   * production use. It may change or be removed without notice and is not
-   * subject to backwards compatibility guarantees.
-   *
    * Sets the connection mode for the SDK's data system.
    *
    * When set, this mode is used exclusively, overriding all automatic mode
@@ -53,6 +47,11 @@ export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | '
    *
    * This method requires the FDv2 data system (`dataSystem` option). If
    * FDv2 is not enabled, the call logs a warning and has no effect.
+   *
+   * This method is not stable, and not subject to any backwards compatibility
+   * guarantees or semantic versioning. It is in early access. If you want access
+   * to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
    *
    * @param mode The connection mode to use, or `undefined` to clear the override.
    */

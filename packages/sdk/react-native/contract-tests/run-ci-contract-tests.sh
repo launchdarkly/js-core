@@ -56,14 +56,28 @@ while [ "$i" -lt 30 ]; do
   sleep 2
 done
 
-# Run the contract test harness
-SUPPRESSIONS_FILE="$SCRIPT_DIR/suppressions.txt"
-EXTRA_ARGS=""
-if [ -s "$SUPPRESSIONS_FILE" ]; then
-  EXTRA_ARGS="--skip-from=$SUPPRESSIONS_FILE"
+# Run the FDv1 contract test harness
+FDV1_SUPPRESSIONS="$SCRIPT_DIR/suppressions.txt"
+FDV1_ARGS=""
+if [ -s "$FDV1_SUPPRESSIONS" ]; then
+  FDV1_ARGS="--skip-from=$FDV1_SUPPRESSIONS"
 fi
 
-"$REPO_ROOT/sdk-test-harness" \
+echo "=== Running FDv1 contract tests ==="
+"$REPO_ROOT/sdk-test-harness-v2" \
   -url http://localhost:8000 \
   -debug \
-  $EXTRA_ARGS
+  $FDV1_ARGS
+
+# Run the FDv2 contract test harness
+FDV2_SUPPRESSIONS="$SCRIPT_DIR/suppressions-fdv2.txt"
+FDV2_ARGS=""
+if [ -s "$FDV2_SUPPRESSIONS" ]; then
+  FDV2_ARGS="--skip-from=$FDV2_SUPPRESSIONS"
+fi
+
+echo "=== Running FDv2 contract tests ==="
+"$REPO_ROOT/sdk-test-harness-v3" \
+  -url http://localhost:8000 \
+  -debug \
+  $FDV2_ARGS

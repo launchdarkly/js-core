@@ -137,18 +137,17 @@ export interface RNSpecificOptions {
   plugins?: LDPlugin[];
 
   /**
-   * @internal
-   *
-   * This feature is experimental and should NOT be considered ready for
-   * production use. It may change or be removed without notice and is not
-   * subject to backwards compatibility guarantees.
-   *
    * Configuration for the FDv2 data system. When present, the SDK uses
    * the FDv2 protocol for flag delivery instead of the default FDv1
    * protocol.
    *
    * Note: Network-based automatic mode switching is not yet supported.
    * Lifecycle-based switching (foreground/background) is fully functional.
+   *
+   * This option is not stable, and not subject to any backwards compatibility
+   * guarantees or semantic versioning. It is in early access. If you want access
+   * to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
    */
   dataSystem?: RNDataSystemOptions;
 }

@@ -14,7 +14,6 @@ const featureClient = new ReactNativeLDClient(LAUNCHDARKLY_MOBILE_KEY, AutoEnvAt
     id: 'ld-rn-fdv2-test-app',
     version: '0.0.1',
   },
-  // @ts-ignore dataSystem is @internal
   dataSystem: {},
 });
 
