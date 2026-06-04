@@ -26,5 +26,6 @@
   "packages/tooling/client-testing-plugin": "0.1.1",
   "packages/sdk/shopify-oxygen": "0.1.13",
   "packages/sdk/react": "4.1.2",
-  "packages/sdk/openfeature-node-server": "1.2.3"
+  "packages/sdk/openfeature-node-server": "1.2.3",
+  "packages/sdk/vue": "0.1.0"
 }

@@ -1,0 +1,9 @@
+{
+  "transform": { "^.+\\.tsx?$": ["ts-jest", { "tsconfig": { "esModuleInterop": true } }] },
+  "testMatch": ["**/*.test.ts?(x)"],
+  "testPathIgnorePatterns": ["node_modules", "example", "contract-tests", "dist"],
+  "modulePathIgnorePatterns": ["dist"],
+  "testEnvironment": "node",
+  "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+  "collectCoverageFrom": ["src/**/*.ts?(x)"]
+}

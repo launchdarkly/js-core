@@ -1,0 +1,28 @@
+name: sdk/vue
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-vue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ./actions/setup-yarn
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/vue-client-sdk'
+          workspace_path: packages/sdk/vue
+          should_build_docs: false
+
+  # TODO(scaffold): run-example job arrives when examples/getting-started lands
+  # TODO(scaffold): contract-tests job arrives when contract-tests land
