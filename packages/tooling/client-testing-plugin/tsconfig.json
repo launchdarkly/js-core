@@ -5,6 +5,7 @@
     "declarationMap": true,
     "lib": ["es6", "dom"],
     "module": "ESNext",
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,
     "outDir": "dist",

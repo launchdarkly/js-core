@@ -4,6 +4,7 @@
     "outDir": "dist",
     "lib": ["es6", "DOM"],
     "module": "CommonJS",
+    "types": ["jest", "node"],
     "strict": true,
     "noImplicitOverride": true,
     "sourceMap": true,
