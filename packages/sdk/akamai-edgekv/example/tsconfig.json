@@ -6,7 +6,7 @@
     "outDir": "dist/ew",
     "rootDir": ".",
     "sourceMap": false,
-    "moduleResolution": "node"
+    "moduleResolution": "node16"
   },
   "exclude": ["node_modules"]
 }
