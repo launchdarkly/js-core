@@ -3,12 +3,12 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["es6"],
-    "module": "ES6",
-    "moduleResolution": "node",
+    "lib": ["es2020", "dom"],
+    "module": "ESNext",
+    "ignoreDeprecations": "6.0",
+    "moduleResolution": "bundler",
     "noImplicitOverride": true,
     "outDir": "dist",
-    "resolveJsonModule": true,
     "rootDir": ".",
     "skipLibCheck": true,
     "sourceMap": true,
@@ -19,3 +19,4 @@
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
 }
+
