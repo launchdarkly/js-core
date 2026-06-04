@@ -21,6 +21,7 @@ const logTag = '[NodeDataManager]';
 
 export default class NodeDataManager extends BaseDataManager {
   protected connectionMode: ConnectionMode = 'streaming';
+  private _pendingIdentifyReject?: (err: Error) => void;
 
   constructor(
     platform: Platform,
@@ -65,7 +66,9 @@ export default class NodeDataManager extends BaseDataManager {
     }
     this.context = context;
 
-    const offline = this.connectionMode === 'offline';
+    // Snapshot the mode before any await so the bootstrap path and the stale-snapshot
+    // detection below both see a consistent starting point.
+    const startedOffline = this.connectionMode === 'offline';
 
     // Bootstrap and cache are mutually exclusive: when bootstrap data is provided it
     // resolves identify immediately, so we must not also load (and potentially overwrite
@@ -77,7 +80,7 @@ export default class NodeDataManager extends BaseDataManager {
         );
       }
       this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
-      if (!offline) {
+      if (!startedOffline) {
         // Open a connection for ongoing updates, but identify is already resolved so no
         // callbacks are forwarded.
         this._setupConnection(context);
@@ -85,9 +88,11 @@ export default class NodeDataManager extends BaseDataManager {
       return;
     }
 
-    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
-
     const loadedFromCache = await this.flagManager.loadCached(context);
+    // Re-read connectionMode after the await: a concurrent setConnectionMode call may have
+    // changed it while loadCached was in flight.
+    const offline = this.connectionMode === 'offline';
+    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
     let identifyResolved = false;
     if (loadedFromCache && !waitForNetworkResults) {
       this._debugLog('Identify completing with cached flags');
@@ -96,6 +101,15 @@ export default class NodeDataManager extends BaseDataManager {
     }
 
     if (offline) {
+      if (!startedOffline) {
+        // The connection mode changed to offline while we were awaiting the cache. Reject
+        // rather than silently resolve so the caller knows the identify did not complete
+        // in the originally-requested mode.
+        if (!identifyResolved) {
+          identifyReject(new Error("Connection mode changed to 'offline' during identify."));
+        }
+        return;
+      }
       if (loadedFromCache) {
         this._debugLog('Offline identify - using cached flags.');
       } else {
@@ -142,6 +156,22 @@ export default class NodeDataManager extends BaseDataManager {
       return;
     }
 
+    // Wrap callbacks so _pendingIdentifyReject is cleared as soon as the identify settles,
+    // preventing a stale reject from firing if setConnectionMode runs after resolution.
+    const wrappedResolve = identifyResolve
+      ? () => {
+          this._pendingIdentifyReject = undefined;
+          identifyResolve();
+        }
+      : undefined;
+    const wrappedReject = identifyReject
+      ? (err: Error) => {
+          this._pendingIdentifyReject = undefined;
+          identifyReject(err);
+        }
+      : undefined;
+    this._pendingIdentifyReject = wrappedReject;
+
     const plainContextString = JSON.stringify(rawContext);
     const requestor = makeRequestor(
       plainContextString,
@@ -163,8 +193,8 @@ export default class NodeDataManager extends BaseDataManager {
           rawContext,
           context,
           requestor,
-          identifyResolve,
-          identifyReject,
+          wrappedResolve,
+          wrappedReject,
         );
         break;
       case 'polling':
@@ -172,8 +202,8 @@ export default class NodeDataManager extends BaseDataManager {
           rawContext,
           context,
           requestor,
-          identifyResolve,
-          identifyReject,
+          wrappedResolve,
+          wrappedReject,
         );
         break;
       default:
@@ -181,9 +211,9 @@ export default class NodeDataManager extends BaseDataManager {
           `${logTag} _setupConnection called with unsupported connectionMode '${this.connectionMode}'.`,
         );
         this.updateProcessor = undefined;
-        // The mode may have changed to 'offline' while identify was awaiting the cache; reject
-        // rather than leave the identify promise to hang until its timeout.
-        identifyReject?.(
+        // connectionMode is an unsupported value; reject the in-flight identify so the
+        // promise does not hang until its timeout.
+        wrappedReject?.(
           new Error(`Connection mode changed to '${this.connectionMode}' during identify.`),
         );
         return;
@@ -207,12 +237,26 @@ export default class NodeDataManager extends BaseDataManager {
 
     switch (mode) {
       case 'offline':
+        // Reject any in-flight identify before closing the processor -- the processor's
+        // close() does not invoke pending callbacks, so without this the identify promise
+        // would hang until its timeout.
+        if (this._pendingIdentifyReject) {
+          const reject = this._pendingIdentifyReject;
+          this._pendingIdentifyReject = undefined;
+          reject(new Error("Connection mode changed to 'offline' during identify."));
+        }
         this.updateProcessor?.close();
         this.updateProcessor = undefined;
         break;
       case 'polling':
       case 'streaming':
         if (this.context) {
+          // Reject any in-flight identify from the previous processor before replacing it.
+          if (this._pendingIdentifyReject) {
+            const reject = this._pendingIdentifyReject;
+            this._pendingIdentifyReject = undefined;
+            reject(new Error(`Connection mode changed to '${mode}' during identify.`));
+          }
           this._setupConnection(this.context);
         }
         break;
@@ -226,5 +270,14 @@ export default class NodeDataManager extends BaseDataManager {
 
   getConnectionMode(): ConnectionMode {
     return this.connectionMode;
+  }
+
+  override close(): void {
+    if (this._pendingIdentifyReject) {
+      const reject = this._pendingIdentifyReject;
+      this._pendingIdentifyReject = undefined;
+      reject(new Error('Client has been closed.'));
+    }
+    super.close();
   }
 }

@@ -407,6 +407,142 @@ it('does not read cached flags when bootstrap is provided', async () => {
   await client.close();
 });
 
+it('rejects an in-flight identify immediately when close() is called while the processor awaits its first event', async () => {
+  // The streaming processor never fires a 'put' event, simulating a slow or stalled stream.
+  // close() must reject _pendingIdentifyReject promptly so the caller is not left waiting for
+  // the 5-second identify timeout.
+  const createEventSource = jest.fn(() => ({
+    addEventListener: jest.fn(),
+    close: jest.fn(),
+    onclose: jest.fn(),
+    onerror: jest.fn(),
+    onopen: jest.fn(),
+    onretrying: jest.fn(),
+  }));
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: createEventSource as any,
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  // Identify without bootstrap: cache miss -> _setupConnection -> processor running, no 'put' yet.
+  const identifyPromise = client.identify({ kind: 'user', key: 'alice' }, { timeout: 5 });
+  // Allow the identify to reach the streaming processor before closing.
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  await client.close();
+
+  const result = await identifyPromise;
+  expect(result.status).toBe('error');
+});
+
+it('rejects an in-flight identify when setConnectionMode offline runs after the processor started', async () => {
+  // The processor phase: identify has passed loadCached and _setupConnection has registered
+  // _pendingIdentifyReject. The stream never delivers a 'put', so the only way out is the
+  // reject path.
+  const createEventSource = jest.fn(() => ({
+    addEventListener: jest.fn(),
+    close: jest.fn(),
+    onclose: jest.fn(),
+    onerror: jest.fn(),
+    onopen: jest.fn(),
+    onretrying: jest.fn(),
+  }));
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: createEventSource as any,
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  const identifyPromise = client.identify({ kind: 'user', key: 'alice' }, { timeout: 5 });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Go offline while the streaming processor is running and waiting for its first event.
+  await client.setConnectionMode('offline');
+
+  const result = await identifyPromise;
+  expect(result.status).toBe('error');
+
+  await client.close();
+});
+
+it('rejects an in-flight identify when setConnectionMode switches modes while the processor is running', async () => {
+  // Switching from streaming to polling replaces the active processor. The pending identify
+  // on the old processor must be rejected rather than silently abandoned.
+  const createEventSource = jest.fn(() => ({
+    addEventListener: jest.fn(),
+    close: jest.fn(),
+    onclose: jest.fn(),
+    onerror: jest.fn(),
+    onopen: jest.fn(),
+    onretrying: jest.fn(),
+  }));
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: createEventSource as any,
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  await client.start({ bootstrap: bootstrapData });
+
+  const identifyPromise = client.identify({ kind: 'user', key: 'alice' }, { timeout: 5 });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Switch to polling -- the old streaming processor is replaced; the pending identify rejects.
+  await client.setConnectionMode('polling');
+
+  const result = await identifyPromise;
+  expect(result.status).toBe('error');
+
+  await client.close();
+});
+
 it('rejects identify rather than hanging when the mode flips to offline mid-identify', async () => {
   // Gate the cached-flag read so we can flip the connection mode while identify is parked on
   // the await -- reproducing the race where _setupConnection later sees connectionMode==='offline'.
