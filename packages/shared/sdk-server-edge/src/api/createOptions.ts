@@ -8,6 +8,6 @@ export const defaultOptions: LDOptions = {
   logger: BasicLogger.get(),
 };
 
-const createOptions = (options: LDOptions) => ({ ...defaultOptions, ...options });
+const createOptions = (options: LDOptions): LDOptions => ({ ...defaultOptions, ...options });
 
 export default createOptions;

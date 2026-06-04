@@ -26,7 +26,7 @@ export const defaultOptions: LDOptions & OxygenLDOptions = {
   },
 };
 
-export const createOptions = (options: LDOptions & OxygenLDOptions = {}) => {
+export const createOptions = (options: LDOptions & OxygenLDOptions = {}): LDOptions & OxygenLDOptions => {
   const finalOptions = {
     ...defaultOptions,
     ...options,

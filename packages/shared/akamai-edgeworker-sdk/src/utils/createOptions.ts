@@ -8,7 +8,7 @@ export const defaultOptions: LDOptions = {
   logger: BasicLogger.get(),
 };
 
-export const createOptions = (options: LDOptions) => {
+export const createOptions = (options: LDOptions): LDOptions => {
   const finalOptions = { ...defaultOptions, ...options };
   finalOptions.logger?.debug(`Using LD options: ${JSON.stringify(finalOptions)}`);
   return finalOptions;
