@@ -5,6 +5,8 @@
     "target": "ES2017",
     "lib": ["es2020", "dom"],
     "module": "commonjs",
+    "types": ["jest", "node"],
+    "skipLibCheck": true,
     "strict": true,
     "noImplicitOverride": true,
     // Needed for CommonJS modules.

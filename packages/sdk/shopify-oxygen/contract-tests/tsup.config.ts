@@ -13,7 +13,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: false,
   clean: true,
-  dts: true,
+  dts: false,
   metafile: true,
   esbuildOptions(opts) {
     // This would normally be `^_(?!meta|_)`, but go doesn't support negative look-ahead assertions,
