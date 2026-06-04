@@ -25,12 +25,16 @@ import {
 export default function basicLogger(options: BasicLoggerOptions = {}): LDLogger {
   return new BasicLogger({
     ...options,
-    destination:
-      options.destination ??
-      ((line: string) => {
-        // eslint-disable-next-line no-console
-        console.log(line);
-      }),
+    destination: options.destination ?? {
+      // eslint-disable-next-line no-console
+      debug: console.debug,
+      // eslint-disable-next-line no-console
+      info: console.info,
+      // eslint-disable-next-line no-console
+      warn: console.warn,
+      // eslint-disable-next-line no-console
+      error: console.error,
+    },
     formatter: options.formatter ?? format,
   });
 }
