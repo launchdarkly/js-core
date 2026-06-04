@@ -4,7 +4,7 @@
     "jsx": "react-jsx",
     "lib": ["es6", "dom"],
     "module": "ES6",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "resolveJsonModule": true,
     "rootDir": ".",
     "strict": true,

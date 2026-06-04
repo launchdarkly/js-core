@@ -12,6 +12,7 @@ const sharedOptions = {
     '@launchdarkly/js-server-sdk',
   ],
   dts: true,
+  tsconfig: 'tsconfig.build.json',
   metafile: true,
 };
 

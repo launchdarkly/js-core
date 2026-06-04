@@ -15,6 +15,7 @@
     "declarationMap": true,
     "resolveJsonModule": true,
     "stripInternal": true,
+    "ignoreDeprecations": "6.0",
     "types": ["jest", "node"],
     "skipLibCheck": true
   },
