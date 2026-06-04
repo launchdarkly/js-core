@@ -21,6 +21,7 @@ export default class PlatformRequests implements Requests {
       body: eventSourceInitDict.body,
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this._logger,
+      urlBuilder: eventSourceInitDict.urlBuilder,
     });
   }
 
