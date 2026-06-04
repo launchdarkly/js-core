@@ -107,9 +107,9 @@ export class NodeClient extends LDClientImpl {
       const dataManager = this.dataManager as NodeDataManager;
       try {
         if (mode === 'offline') {
-          // Disable analytics, then drain any queued events before tearing down the data source.
-          this.setEventSendingEnabled(false, false);
+          // Drain any queued events before closing the event processor and tearing down the data source.
           await this.flush();
+          this.setEventSendingEnabled(false, false);
         }
         await dataManager.setConnectionMode(mode);
       } finally {
