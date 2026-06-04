@@ -37,7 +37,7 @@ echo "Port forwarding configured."
 echo ""
 echo "=== Starting adapter ==="
 cd "$REPO_ROOT"
-yarn workspace react-native-contract-test-entity run start:adapter > /tmp/rn-adapter.log 2>&1 &
+yarn workspace @launchdarkly/react-native-contract-test-entity run start:adapter > /tmp/rn-adapter.log 2>&1 &
 ADAPTER_PID=$!
 echo "Adapter started (PID: $ADAPTER_PID)"
 
