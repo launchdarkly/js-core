@@ -22,8 +22,8 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.10.14",
-    "@launchdarkly/openfeature-node-server": "1.2.0",
+    "@launchdarkly/node-server-sdk": "9.11.1",
+    "@launchdarkly/openfeature-node-server": "1.2.2",
     "@openfeature/core": "^1.10.0",
     "@openfeature/server-sdk": "^1.16.0"
   },
