@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.15](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.14...fastly-server-sdk-v0.2.15) (2026-06-05)
+
+
+### Bug Fixes
+
+* explicit return types and TS6 source compatibility fixes ([#1418](https://github.com/launchdarkly/js-core/issues/1418)) ([9c131a2](https://github.com/launchdarkly/js-core/commit/9c131a2e731c97a7fd4cf7ec1fe11efbbf49d6fb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.0 to 2.19.1
+
 ## [0.2.14](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.13...fastly-server-sdk-v0.2.14) (2026-05-21)
 
 

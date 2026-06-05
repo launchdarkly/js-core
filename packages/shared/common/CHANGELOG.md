@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.25.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.0...js-sdk-common-v2.25.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* explicit return types and TS6 source compatibility fixes ([#1418](https://github.com/launchdarkly/js-core/issues/1418)) ([9c131a2](https://github.com/launchdarkly/js-core/commit/9c131a2e731c97a7fd4cf7ec1fe11efbbf49d6fb))
+
 ## [2.25.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.24.4...js-sdk-common-v2.25.0) (2026-05-21)
 
 
