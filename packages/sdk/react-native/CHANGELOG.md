@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.18.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.8...react-native-client-sdk-v10.18.0) (2026-06-04)
+
+
+### Features
+
+* **react-native:** adding debug override plugin support ([#1410](https://github.com/launchdarkly/js-core/issues/1410)) ([99a96d2](https://github.com/launchdarkly/js-core/commit/99a96d2d73a98264e551074f66fb5d10155042c6))
+
 ## [10.17.8](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.7...react-native-client-sdk-v10.17.8) (2026-06-01)
 
 
