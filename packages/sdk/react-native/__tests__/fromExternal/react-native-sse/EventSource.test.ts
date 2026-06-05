@@ -114,4 +114,25 @@ describe('EventSource', () => {
     expect(mockXhr.open).toHaveBeenCalledTimes(2);
     expect(eventSource.onclose).toHaveBeenCalledTimes(1);
   });
+
+  test('recomputes the connection URL via urlBuilder on each connection', () => {
+    let basis: string | undefined;
+    const urlBuilder = jest.fn(() => (basis ? `${uri}?basis=${basis}` : uri));
+    const es = new EventSource<EventName>(uri, { logger, urlBuilder });
+    es.onretrying = jest.fn();
+
+    // Initial connection asks the builder for the URL (no selector known yet).
+    jest.runAllTimers();
+    expect(urlBuilder).toHaveBeenCalled();
+    expect(mockXhr.open).toHaveBeenLastCalledWith('GET', uri, true);
+
+    // Once a selector is known, a reconnect must replay it (e.g. FDv2 basis)
+    // rather than reuse the original URL.
+    basis = 'initial';
+    // @ts-ignore - force a reconnect
+    es._tryConnect();
+    jest.runAllTimers();
+
+    expect(mockXhr.open).toHaveBeenLastCalledWith('GET', `${uri}?basis=initial`, true);
+  });
 });

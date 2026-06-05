@@ -54,6 +54,13 @@ export interface EventSourceOptions {
   retryAndHandleError?: (err: any) => boolean;
   initialRetryDelayMillis?: number;
   logger?: any;
+  /**
+   * Called before each (re)connection to compute the URL to connect to. When
+   * provided, this takes precedence over the static URL so that reconnections
+   * pick up state that changes over the connection's lifetime (for example the
+   * FDv2 `basis` selector, which must be replayed on reconnect).
+   */
+  urlBuilder?: () => string;
 }
 
 type BuiltInEventMap = {
