@@ -100,7 +100,15 @@
       ]
     },
     "packages/shared/common": {},
-    "packages/shared/sdk-client": {},
+    "packages/shared/sdk-client": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/tooling/client-testing-plugin/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk-common']"
+        }
+      ]
+    },
     "packages/shared/sdk-server": {},
     "packages/shared/sdk-server-edge": {},
     "packages/shared/akamai-edgeworker-sdk": {},
@@ -257,6 +265,11 @@
           "type": "json",
           "path": "example-fdv2/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/tooling/client-testing-plugin/package.json",
+          "jsonpath": "$.devDependencies['@launchdarkly/js-client-sdk']"
         }
       ]
     },
@@ -313,6 +326,10 @@
     "packages/tooling/jest": {
       "release-as": "1.0.0"
     },
+    "packages/tooling/client-testing-plugin": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
     },
@@ -338,6 +355,11 @@
           "type": "json",
           "path": "examples/vercel-edge/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/tooling/client-testing-plugin/package.json",
+          "jsonpath": "$.devDependencies['@launchdarkly/react-sdk']"
         }
       ]
     },

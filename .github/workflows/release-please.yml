@@ -53,6 +53,7 @@ on:
           - packages/store/node-server-sdk-dynamodb
           - packages/telemetry/node-server-sdk-otel
           - packages/tooling/jest
+          - packages/tooling/client-testing-plugin
           - packages/sdk/browser
           - packages/sdk/server-ai
           - packages/ai-providers/server-ai-openai
@@ -107,6 +108,7 @@ jobs:
       package-sdk-electron-released: ${{ steps.release.outputs['packages/sdk/electron--release_created'] }}
       package-sdk-react-released: ${{ steps.release.outputs['packages/sdk/react--release_created'] }}
       package-sdk-openfeature-node-server-released: ${{ steps.release.outputs['packages/sdk/openfeature-node-server--release_created'] }}
+      package-tooling-client-testing-plugin-released: ${{ steps.release.outputs['packages/tooling/client-testing-plugin--release_created'] }}
     steps:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0
         id: release
@@ -389,6 +391,22 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/tooling/jest
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-tooling-client-testing-plugin:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-sdk-client']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-tooling-client-testing-plugin-released == 'true'}}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - id: release-tooling-client-testing-plugin
+        name: Full release of packages/tooling/client-testing-plugin
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/tooling/client-testing-plugin
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-server-ai:
