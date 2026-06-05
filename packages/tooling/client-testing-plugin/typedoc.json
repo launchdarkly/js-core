@@ -1,0 +1,5 @@
+{
+  "extends": ["../../../typedoc.base.json"],
+  "entryPoints": ["src/index.ts", "src/clients/js-client-sdk.ts", "src/clients/react-sdk.ts"],
+  "out": "docs"
+}

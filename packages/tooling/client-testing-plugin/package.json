@@ -48,11 +48,11 @@
     "lint:fix": "yarn run lint --fix"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "workspace:^"
+    "@launchdarkly/js-client-sdk-common": "1.28.0"
   },
   "peerDependencies": {
-    "@launchdarkly/js-client-sdk": "workspace:^",
-    "@launchdarkly/react-sdk": "workspace:^"
+    "@launchdarkly/js-client-sdk": ">=4.8.0",
+    "@launchdarkly/react-sdk": ">=4.1.0"
   },
   "peerDependenciesMeta": {
     "@launchdarkly/js-client-sdk": {
@@ -64,8 +64,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@launchdarkly/js-client-sdk": "workspace:^",
-    "@launchdarkly/react-sdk": "workspace:^",
+    "@launchdarkly/js-client-sdk": "4.8.0",
+    "@launchdarkly/react-sdk": "4.1.0",
     "@types/jest": "^29.5.0",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
