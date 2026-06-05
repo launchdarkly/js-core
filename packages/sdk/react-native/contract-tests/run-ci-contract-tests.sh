@@ -56,28 +56,32 @@ while [ "$i" -lt 30 ]; do
   sleep 2
 done
 
-# Run the FDv1 contract test harness
+# Fetch the official contract-test-harness runner once. This is the same
+# downloader the launchdarkly/gh-actions contract-tests action uses; VERSION
+# selects the harness release (v2 -> latest v2.x for FDv1, v3 -> latest v3.x
+# for FDv2), and GITHUB_TOKEN (from the workflow env) avoids API rate limits.
+# This mirrors the android-client-sdk contract-test setup.
+HARNESS_RUNNER=/tmp/run-test-harness.sh
+curl -sf \
+  https://raw.githubusercontent.com/launchdarkly/sdk-test-harness/v2/downloader/run.sh \
+  -o "$HARNESS_RUNNER"
+
+# FDv1 (v2 harness).
 FDV1_SUPPRESSIONS="$SCRIPT_DIR/suppressions.txt"
-FDV1_ARGS=""
+FDV1_SKIP=""
 if [ -s "$FDV1_SUPPRESSIONS" ]; then
-  FDV1_ARGS="--skip-from=$FDV1_SUPPRESSIONS"
+  FDV1_SKIP="--skip-from=$FDV1_SUPPRESSIONS"
 fi
 
 echo "=== Running FDv1 contract tests ==="
-"$REPO_ROOT/sdk-test-harness-v2" \
-  -url http://localhost:8000 \
-  -debug \
-  $FDV1_ARGS
+VERSION=v2 PARAMS="-url http://localhost:8000 -debug $FDV1_SKIP" sh "$HARNESS_RUNNER"
 
-# Run the FDv2 contract test harness
+# FDv2 (v3 harness). Only the final run stops the test service.
 FDV2_SUPPRESSIONS="$SCRIPT_DIR/suppressions-fdv2.txt"
-FDV2_ARGS=""
+FDV2_SKIP=""
 if [ -s "$FDV2_SUPPRESSIONS" ]; then
-  FDV2_ARGS="--skip-from=$FDV2_SUPPRESSIONS"
+  FDV2_SKIP="--skip-from=$FDV2_SUPPRESSIONS"
 fi
 
 echo "=== Running FDv2 contract tests ==="
-"$REPO_ROOT/sdk-test-harness-v3" \
-  -url http://localhost:8000 \
-  -debug \
-  $FDV2_ARGS
+VERSION=v3 PARAMS="-url http://localhost:8000 -debug $FDV2_SKIP -stop-service-at-end" sh "$HARNESS_RUNNER"
