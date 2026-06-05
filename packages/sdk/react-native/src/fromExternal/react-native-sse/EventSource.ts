@@ -68,6 +68,7 @@ export default class EventSource<E extends string = never> {
   private _initialRetryDelayMillis: number = 1000;
   private _retryCount: number = 0;
   private _logger?: any;
+  private _urlBuilder?: () => string;
 
   constructor(url: string, options?: EventSourceOptions) {
     const opts = {
@@ -84,6 +85,7 @@ export default class EventSource<E extends string = never> {
     this._retryAndHandleError = opts.retryAndHandleError;
     this._initialRetryDelayMillis = opts.initialRetryDelayMillis!;
     this._logger = opts.logger;
+    this._urlBuilder = opts.urlBuilder;
 
     this._tryConnect(true);
   }
@@ -116,6 +118,12 @@ export default class EventSource<E extends string = never> {
     try {
       this._lastIndexProcessed = 0;
       this._status = this.CONNECTING;
+      // Recompute the URL on each (re)connection so that reconnects pick up
+      // state that changes over the connection's lifetime (for example the
+      // FDv2 `basis` selector, which must be replayed on reconnect).
+      if (this._urlBuilder) {
+        this._url = this._urlBuilder();
+      }
       this._xhr.open(this._method, this._url, true);
 
       if (this._withCredentials) {
