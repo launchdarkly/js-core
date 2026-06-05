@@ -43,6 +43,6 @@ export const init = ({
     featureStoreProvider: edgekvProvider,
     platformName: 'Akamai EdgeWorker',
     sdkName: '@launchdarkly/akamai-server-edgekv-sdk',
-    sdkVersion: '1.4.25', // x-release-please-version
+    sdkVersion: '1.4.26', // x-release-please-version
   });
 };

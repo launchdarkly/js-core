@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.0.1...server-sdk-ai-v1.1.0) (2026-06-05)
+
+
+### Features
+
+* add region to model type ([#1423](https://github.com/launchdarkly/js-core/issues/1423)) ([7db5df5](https://github.com/launchdarkly/js-core/commit/7db5df587812e8d9b0140d2b389f16d341d55cd7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.0 to 2.19.1
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.0 to 2.19.1
+
 ## [1.0.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.0.0...server-sdk-ai-v1.0.1) (2026-05-21)
 
 

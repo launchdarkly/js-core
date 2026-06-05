@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.18.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.18.0...react-native-client-sdk-v10.18.1) (2026-06-05)
+
+
+### Bug Fixes
+
+* Honor urlBuilder on React Native EventSource reconnect ([#1420](https://github.com/launchdarkly/js-core/issues/1420)) ([93bd3f8](https://github.com/launchdarkly/js-core/commit/93bd3f84d1c824fe1bea94f7760c586349c3dc3e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.28.0 to 1.28.1
+
 ## [10.18.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.17.8...react-native-client-sdk-v10.18.0) (2026-06-04)
 
 

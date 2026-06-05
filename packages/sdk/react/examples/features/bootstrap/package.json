@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.11.1",
-    "@launchdarkly/react-sdk": "4.1.0",
+    "@launchdarkly/node-server-sdk": "9.11.2",
+    "@launchdarkly/react-sdk": "4.1.1",
     "ejs": "^5.0.2",
     "express": "^4.21.0",
     "react": "^19",
