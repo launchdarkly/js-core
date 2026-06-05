@@ -37,6 +37,11 @@ export interface LDModelConfig {
    * Additional user-specified parameters.
    */
   custom?: { [index: string]: unknown };
+
+  /**
+   * The region for the model.
+   */
+  region?: string;
 }
 
 export interface LDProviderConfig {
