@@ -50,6 +50,7 @@ const mockSendEventData = jest.fn();
 jest.useFakeTimers();
 
 jest.mock('../../../src/internal/events/EventSender', () => ({
+  __esModule: true,
   default: jest.fn(() => ({
     sendEventData: mockSendEventData,
   })),

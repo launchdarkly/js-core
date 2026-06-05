@@ -8,7 +8,7 @@ export const defaultOptions: LDOptions = {
   logger: BasicLogger.get(),
 };
 
-const createOptions = (options: LDOptions) => {
+const createOptions = (options: LDOptions): LDOptions => {
   const finalOptions = { ...defaultOptions, ...options };
 
   // The Fastly SDK does not poll LaunchDarkly for updates, so a custom baseUri does not make sense. However, we need
