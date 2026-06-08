@@ -293,8 +293,11 @@ export default class NodeDataManager extends BaseDataManager {
         }
       } finally {
         // Re-sync event-sending against the mode that actually took effect, even on early
-        // returns and failures.
-        setEventSendingEnabled?.(this.connectionMode !== 'offline');
+        // returns and failures. Skip when closed -- a closed client must not restart event
+        // sending or any side effects gated on the enabled flag.
+        if (!this.closed) {
+          setEventSendingEnabled?.(this.connectionMode !== 'offline');
+        }
       }
     });
     // Keep the queue alive even if a transition fails; the failure still propagates to this caller.
