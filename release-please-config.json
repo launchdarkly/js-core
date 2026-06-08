@@ -387,6 +387,9 @@
           "jsonpath": "$.dependencies['@launchdarkly/openfeature-node-server']"
         }
       ]
+    },
+    "packages/sdk/vue": {
+      "bump-minor-pre-major": true
     }
   },
   "plugins": [

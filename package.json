@@ -62,7 +62,8 @@
     "packages/sdk/browser/example",
     "packages/sdk/browser/example-fdv2",
     "packages/sdk/openfeature-node-server",
-    "packages/sdk/openfeature-node-server/examples/getting-started"
+    "packages/sdk/openfeature-node-server/examples/getting-started",
+    "packages/sdk/vue"
   ],
   "private": true,
   "scripts": {
