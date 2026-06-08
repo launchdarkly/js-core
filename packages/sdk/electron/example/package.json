@@ -28,7 +28,7 @@
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.58.2",
     "@types/electron-squirrel-startup": "^1.0.2",
-    "electron": "^40.4.1",
+    "electron": "^42.3.3",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
     "eslint-plugin-import-x": "^4.0.0",
@@ -37,10 +37,10 @@
     "playwright": "^1.49.1",
     "typescript": "~4.5.4",
     "typescript-eslint": "^8.0.0",
-    "vite": "^5.4.21"
+    "vite": "^8.0.16"
   },
   "peerDependencies": {
-    "electron": "^40.4.1"
+    "electron": "^42.3.3"
   },
   "dependencies": {
     "@launchdarkly/electron-client-sdk": "0.0.1",
