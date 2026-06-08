@@ -1,0 +1,59 @@
+.App {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.App h1 {
+  font-size: 22px;
+}
+
+.App h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5a5f6b;
+  margin-bottom: 6px;
+}
+
+.status {
+  font-style: italic;
+  color: #5a5f6b;
+}
+
+section {
+  border-top: 1px solid #e1e3e8;
+  padding: 12px 0;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.buttons button {
+  background-color: #405bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.buttons button:hover {
+  background-color: #2f47cc;
+}
+
+.log {
+  background-color: #1a1a1a;
+  color: #ffa500;
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 10px;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
