@@ -7,6 +7,10 @@ inputs:
   aws_assume_role:
     description: 'The ARN of an AWS IAM role to assume. Used to auth with AWS to upload results to S3.'
     required: true
+  prerelease:
+    description: 'Is this a prerelease. If so, then the latest tag will not be updated in npm. Defaults to `false`.'
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -32,8 +36,9 @@ runs:
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
-        prerelease: false
+        prerelease: ${{ inputs.prerelease }}
         dry_run: false
-    - uses: ./actions/publish-docs
+    - if: ${{ inputs.prerelease != 'true' }}
+      uses: ./actions/publish-docs
       with:
         workspace_path: ${{ inputs.workspace_path }}
