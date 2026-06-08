@@ -1,14 +1,7 @@
 # LaunchDarkly OpenFeature Provider for the Node.js Server-Side SDK
 
-<!--
 [![NPM][openfeature-node-server-npm-badge]][openfeature-node-server-npm-link]
 [![Actions Status][openfeature-node-server-ci-badge]][openfeature-node-server-ci]
--->
-
-> [!CAUTION]
-> This SDK is experimental and should NOT be considered ready for production use.
-> It may change or be removed without notice and is not subject to backwards
-> compatibility guarantees.
 
 This package provides an [OpenFeature](https://openfeature.dev/) provider that wraps the [LaunchDarkly Server-Side SDK for Node.js](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node).
 
@@ -56,9 +49,7 @@ LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-<!--
 [openfeature-node-server-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/openfeature-node-server.svg?style=flat-square
 [openfeature-node-server-npm-link]: https://www.npmjs.com/package/@launchdarkly/openfeature-node-server
 [openfeature-node-server-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-node-server.yml/badge.svg
 [openfeature-node-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-node-server.yml
--->
