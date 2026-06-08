@@ -242,18 +242,17 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   async setConnectionMode(mode: ConnectionMode): Promise<void>;
   /**
-   * @internal
-   *
-   * This overload is experimental and should NOT be considered ready for
-   * production use. It may change or be removed without notice and is not
-   * subject to backwards compatibility guarantees.
-   *
    * Sets the connection mode for the FDv2 data system.
    *
    * When the FDv2 data system is enabled (`dataSystem` option), this method
    * additionally accepts `'one-shot'` and `'background'` modes. Pass
    * `undefined` to clear an explicit override and return to automatic mode
    * selection.
+   *
+   * This overload is not stable, and not subject to any backwards compatibility
+   * guarantees or semantic versioning. It is in early access. If you want access
+   * to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
    *
    * @param mode The connection mode to use, or `undefined` to clear the
    *   override (FDv2 only).
@@ -290,7 +289,15 @@ export default class ReactNativeLDClient extends LDClientImpl {
    */
   getConnectionMode(): ConnectionMode;
   /**
-   * @internal
+   * Gets the SDK connection mode.
+   *
+   * When the FDv2 data system is enabled (`dataSystem` option), the connection
+   * mode may also be `'one-shot'` or `'background'`.
+   *
+   * This overload is not stable, and not subject to any backwards compatibility
+   * guarantees or semantic versioning. It is in early access. If you want access
+   * to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
    */
   getConnectionMode(): FDv2ConnectionMode;
   getConnectionMode(): ConnectionMode | FDv2ConnectionMode {

@@ -104,7 +104,6 @@ export default function Welcome() {
   };
 
   const onSetConnectionMode = (mode?: FDv2ConnectionMode) => {
-    // @ts-ignore setConnectionMode is @internal - experimental FDv2 opt-in
     ldc.setConnectionMode(mode);
     setCurrentMode(mode ?? 'automatic');
   };
