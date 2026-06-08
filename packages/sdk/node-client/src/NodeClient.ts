@@ -28,10 +28,6 @@ import NodePlatform from './platform/NodePlatform';
 export class NodeClient extends LDClientImpl {
   private readonly _plugins: LDPlugin[];
 
-  // Serializes connection-mode transitions so concurrent calls cannot leave event-sending
-  // state out of sync with the active connection mode.
-  private _connectionModeQueue: Promise<void> = Promise.resolve();
-
   constructor(envKey: string, initialContext: LDContext, options: NodeOptions = {}) {
     const { logger: customLogger, debug } = options;
     const logger = customLogger ?? basicLogger({ level: debug ? 'debug' : 'info' });
@@ -103,24 +99,12 @@ export class NodeClient extends LDClientImpl {
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    const task = this._connectionModeQueue.then(async () => {
-      const dataManager = this.dataManager as NodeDataManager;
-      try {
-        if (mode === 'offline') {
-          // Drain any queued events before closing the event processor and tearing down the data source.
-          await this.flush();
-          this.setEventSendingEnabled(false, false);
-        }
-        await dataManager.setConnectionMode(mode);
-      } finally {
-        // Read the mode back so event-sending always matches the mode that actually took
-        // effect, even if the transition failed partway.
-        this.setEventSendingEnabled(dataManager.getConnectionMode() !== 'offline', false);
-      }
-    });
-    // Keep the queue alive even if a transition fails; the failure still propagates to this caller.
-    this._connectionModeQueue = task.catch(() => {});
-    return task;
+    const dataManager = this.dataManager as NodeDataManager;
+    return dataManager.setConnectionMode(
+      mode,
+      () => this.flush(),
+      (enabled) => this.setEventSendingEnabled(enabled, false),
+    );
   }
 
   getConnectionMode(): ConnectionMode {

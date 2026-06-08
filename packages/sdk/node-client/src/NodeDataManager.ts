@@ -22,6 +22,9 @@ const logTag = '[NodeDataManager]';
 export default class NodeDataManager extends BaseDataManager {
   protected connectionMode: ConnectionMode = 'streaming';
   private _pendingIdentifyReject?: (err: Error) => void;
+  // Serializes connection-mode transitions so concurrent calls cannot leave state
+  // (event-sending, processor, mode) out of sync.
+  private _connectionModeQueue: Promise<void> = Promise.resolve();
 
   constructor(
     platform: Platform,
@@ -51,6 +54,16 @@ export default class NodeDataManager extends BaseDataManager {
 
   private _debugLog(message: any, ...args: any[]) {
     this.logger.debug(`${logTag} ${message}`, ...args);
+  }
+
+  // Capture-then-clear-then-invoke the pending identify reject so a re-entrant call from
+  // the reject handler cannot observe a stale callback.
+  private _rejectPendingIdentify(error: Error): void {
+    if (this._pendingIdentifyReject) {
+      const reject = this._pendingIdentifyReject;
+      this._pendingIdentifyReject = undefined;
+      reject(error);
+    }
   }
 
   override async identify(
@@ -89,6 +102,11 @@ export default class NodeDataManager extends BaseDataManager {
     }
 
     const loadedFromCache = await this.flagManager.loadCached(context);
+    if (this.closed) {
+      this._debugLog('Identify called after data manager was closed (during cache load).');
+      identifyReject(new Error('Client has been closed.'));
+      return;
+    }
     // Re-read connectionMode after the await: a concurrent setConnectionMode call may have
     // changed it while loadCached was in flight.
     const offline = this.connectionMode === 'offline';
@@ -221,51 +239,67 @@ export default class NodeDataManager extends BaseDataManager {
     this.updateProcessor!.start();
   }
 
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    if (this.closed) {
-      this._debugLog('setting connection mode after data manager was closed');
-      return;
-    }
-
-    if (this.connectionMode === mode) {
-      this._debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
-      return;
-    }
-
-    this.connectionMode = mode;
-    this._debugLog(`setConnectionMode ${mode}.`);
-
-    switch (mode) {
-      case 'offline':
-        // Reject any in-flight identify before closing the processor -- the processor's
-        // close() does not invoke pending callbacks, so without this the identify promise
-        // would hang until its timeout.
-        if (this._pendingIdentifyReject) {
-          const reject = this._pendingIdentifyReject;
-          this._pendingIdentifyReject = undefined;
-          reject(new Error("Connection mode changed to 'offline' during identify."));
+  async setConnectionMode(
+    mode: ConnectionMode,
+    flush?: () => Promise<unknown>,
+    setEventSendingEnabled?: (enabled: boolean) => void,
+  ): Promise<void> {
+    const task = this._connectionModeQueue.then(async () => {
+      try {
+        if (this.closed) {
+          this._debugLog('setting connection mode after data manager was closed');
+          return;
         }
-        this.updateProcessor?.close();
-        this.updateProcessor = undefined;
-        break;
-      case 'polling':
-      case 'streaming':
-        if (this.context) {
-          // Reject any in-flight identify from the previous processor before replacing it.
-          if (this._pendingIdentifyReject) {
-            const reject = this._pendingIdentifyReject;
-            this._pendingIdentifyReject = undefined;
-            reject(new Error(`Connection mode changed to '${mode}' during identify.`));
-          }
-          this._setupConnection(this.context);
+        if (this.connectionMode === mode) {
+          this._debugLog(`setConnectionMode ignored. Mode is already '${mode}'.`);
+          return;
         }
-        break;
-      default:
-        this.logger.warn(
-          `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
-        );
-        break;
-    }
+
+        if (mode === 'offline') {
+          // Drain queued analytics before tearing down the data source, then stop
+          // accepting new events.
+          await flush?.();
+          setEventSendingEnabled?.(false);
+        }
+
+        this.connectionMode = mode;
+        this._debugLog(`setConnectionMode ${mode}.`);
+
+        switch (mode) {
+          case 'offline':
+            // The processor's close() does not invoke pending callbacks, so reject the
+            // in-flight identify here to keep its promise from hanging until timeout.
+            this._rejectPendingIdentify(
+              new Error("Connection mode changed to 'offline' during identify."),
+            );
+            this.updateProcessor?.close();
+            this.updateProcessor = undefined;
+            break;
+          case 'polling':
+          case 'streaming':
+            if (this.context) {
+              // Reject any in-flight identify from the previous processor before replacing it.
+              this._rejectPendingIdentify(
+                new Error(`Connection mode changed to '${mode}' during identify.`),
+              );
+              this._setupConnection(this.context);
+            }
+            break;
+          default:
+            this.logger.warn(
+              `Unknown ConnectionMode: ${mode}. Only 'offline', 'streaming', and 'polling' are supported.`,
+            );
+            break;
+        }
+      } finally {
+        // Re-sync event-sending against the mode that actually took effect, even on early
+        // returns and failures.
+        setEventSendingEnabled?.(this.connectionMode !== 'offline');
+      }
+    });
+    // Keep the queue alive even if a transition fails; the failure still propagates to this caller.
+    this._connectionModeQueue = task.catch(() => {});
+    return task;
   }
 
   getConnectionMode(): ConnectionMode {
@@ -273,11 +307,7 @@ export default class NodeDataManager extends BaseDataManager {
   }
 
   override close(): void {
-    if (this._pendingIdentifyReject) {
-      const reject = this._pendingIdentifyReject;
-      this._pendingIdentifyReject = undefined;
-      reject(new Error('Client has been closed.'));
-    }
+    this._rejectPendingIdentify(new Error('Client has been closed.'));
     super.close();
   }
 }

@@ -543,6 +543,69 @@ it('rejects an in-flight identify when setConnectionMode switches modes while th
   await client.close();
 });
 
+it('rejects identify fast when close() runs while loadCached is in flight', async () => {
+  // Gate the cached-flag read so we can close the client while identify is parked on
+  // the await - reproducing the race where the post-await path would otherwise resolve
+  // or start a processor on a closed client.
+  let releaseGet: () => void = () => {};
+  const getGate = new Promise<void>((resolve) => {
+    releaseGet = resolve;
+  });
+
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: jest.fn(() => ({
+        addEventListener: jest.fn(),
+        close: jest.fn(),
+        onclose: jest.fn(),
+        onerror: jest.fn(),
+        onopen: jest.fn(),
+        onretrying: jest.fn(),
+      })),
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  (fakePlatform as any).storage = {
+    get: jest.fn(async () => {
+      await getGate;
+      return null;
+    }),
+    set: jest.fn(async () => {}),
+    clear: jest.fn(async () => {}),
+  };
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  // Bootstrap on start so the first identify skips the (gated) cache read.
+  await client.start({ bootstrap: bootstrapData });
+
+  const start = Date.now();
+  // A second identify without bootstrap parks on the gated storage.get.
+  const identifyPromise = client.identify({ kind: 'user', key: 'alice' }, { timeout: 5 });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Close the client while identify is parked, then release the cache read.
+  await client.close();
+  releaseGet();
+
+  const result = await identifyPromise;
+  const elapsed = Date.now() - start;
+  expect(result.status).toBe('error');
+  // Should fail fast -- the post-await closed-check rejects rather than waiting on the timeout.
+  expect(elapsed).toBeLessThan(1000);
+});
+
 it('rejects identify rather than hanging when the mode flips to offline mid-identify', async () => {
   // Gate the cached-flag read so we can flip the connection mode while identify is parked on
   // the await -- reproducing the race where _setupConnection later sees connectionMode==='offline'.
