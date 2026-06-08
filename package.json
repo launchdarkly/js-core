@@ -61,7 +61,8 @@
     "packages/sdk/shopify-oxygen/example",
     "packages/sdk/browser/example",
     "packages/sdk/browser/example-fdv2",
-    "packages/sdk/openfeature-node-server"
+    "packages/sdk/openfeature-node-server",
+    "packages/sdk/openfeature-node-server/examples/getting-started"
   ],
   "private": true,
   "scripts": {
