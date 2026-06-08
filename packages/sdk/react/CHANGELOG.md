@@ -1,5 +1,49 @@
 # Changelog
 
+## [4.1.2](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.1...react-sdk-v4.1.2) (2026-06-08)
+
+
+### Data saving mode (FDv2) Early Access
+
+This release adds support for our second generation flag delivery protocol, also known as data saving mode, through the React SDK's dependency on the JavaScript SDK. The SDK uses the first generation protocol unless you set the `dataSystem` option through the provider's `ldOptions`, which opts into the new protocol. Applications that do not set `dataSystem` are unaffected.
+
+**This is an Early Access feature.** The `dataSystem` configuration surface is subject to change without notice and is not covered by the SDK's semantic-versioning guarantees until it graduates to GA.
+
+#### Default
+
+An empty `dataSystem` opts in with default behavior: a streaming connection for real-time flag updates, with polling as a fallback.
+
+```js
+import { createLDReactProvider } from '@launchdarkly/react-sdk';
+
+export const LDReactProvider = createLDReactProvider('my-client-side-id', context, {
+  ldOptions: { dataSystem: {} },
+});
+```
+
+#### Single connection mode
+
+To keep the SDK in a single connection mode, use manual mode switching and set the initial connection mode (`streaming`, `polling`, or `offline`):
+
+```js
+export const LDReactProvider = createLDReactProvider('my-client-side-id', context, {
+  ldOptions: {
+    dataSystem: {
+      automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' },
+    },
+  },
+});
+```
+
+The React Web SDK does not switch connection modes automatically.
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.8.1 to ^4.9.0
+
 ## [4.1.1](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.0...react-sdk-v4.1.1) (2026-06-05)
 
 

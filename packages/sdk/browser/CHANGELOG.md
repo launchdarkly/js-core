@@ -1,5 +1,52 @@
 # Changelog
 
+## [4.9.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.8.1...js-client-sdk-v4.9.0) (2026-06-08)
+
+
+### Data saving mode (FDv2) Early Access
+
+This release adds support for our second generation flag delivery protocol, also known as data saving mode. The SDK uses the first generation protocol unless you set the `dataSystem` option, which opts into the new protocol. Applications that do not set `dataSystem` are unaffected.
+
+**This is an Early Access feature.** The `dataSystem` configuration surface is subject to change without notice and is not covered by the SDK's semantic-versioning guarantees until it graduates to GA.
+
+#### Default
+
+An empty `dataSystem` opts in with default behavior: a streaming connection for real-time flag updates, with polling as a fallback.
+
+```js
+import { createClient } from '@launchdarkly/js-client-sdk';
+
+const client = createClient('my-client-side-id', context, {
+  dataSystem: {},
+});
+```
+
+#### Single connection mode
+
+To keep the SDK in a single connection mode, use manual mode switching and set the initial connection mode (`streaming`, `polling`, or `offline`):
+
+```js
+const client = createClient('my-client-side-id', context, {
+  dataSystem: {
+    automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' },
+  },
+});
+```
+
+The browser SDK does not switch connection modes automatically; `automaticModeSwitching` accepts only `false` or a manual mode. You can also change the mode at runtime with `client.setConnectionMode(mode)`.
+
+
+### Features
+
+* Prepare FDv2 EAP for browser and React Native SDKs ([#1419](https://github.com/launchdarkly/js-core/issues/1419)) ([6ee9c51](https://github.com/launchdarkly/js-core/commit/6ee9c515fe9aaf999fd7f0eb722d6df9a2d208d8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.28.1 to 1.29.0
+
 ## [4.8.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.8.0...js-client-sdk-v4.8.1) (2026-06-05)
 
 
