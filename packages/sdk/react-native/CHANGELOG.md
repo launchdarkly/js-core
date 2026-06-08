@@ -3,6 +3,37 @@
 ## [10.19.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.18.1...react-native-client-sdk-v10.19.0) (2026-06-08)
 
 
+### Data saving mode (FDv2) Early Access
+
+This release adds support for our second generation flag delivery protocol, also known as data saving mode. The SDK uses the first generation protocol unless you set the `dataSystem` option, which opts into the new protocol. Applications that do not set `dataSystem` are unaffected.
+
+**This is an Early Access feature.** The `dataSystem` configuration surface is subject to change without notice and is not covered by the SDK's semantic-versioning guarantees until it graduates to GA.
+
+#### Default
+
+An empty `dataSystem` uses streaming in the foreground for real-time flag updates and polling in the background, switching automatically as the application moves between the foreground and background.
+
+```js
+import { AutoEnvAttributes, ReactNativeLDClient } from '@launchdarkly/react-native-client-sdk';
+
+const client = new ReactNativeLDClient('my-mobile-key', AutoEnvAttributes.Enabled, {
+  dataSystem: {},
+});
+```
+
+#### Disable automatic mode switching
+
+To keep the SDK in a single connection mode regardless of lifecycle changes:
+
+```js
+const client = new ReactNativeLDClient('my-mobile-key', AutoEnvAttributes.Enabled, {
+  dataSystem: { automaticModeSwitching: false },
+});
+```
+
+By default, the SDK switches connection modes automatically based on application lifecycle, as the app moves between the foreground and background. You can also change the mode at runtime with `client.setConnectionMode(mode)`.
+
+
 ### Features
 
 * Prepare FDv2 EAP for browser and React Native SDKs ([#1419](https://github.com/launchdarkly/js-core/issues/1419)) ([6ee9c51](https://github.com/launchdarkly/js-core/commit/6ee9c515fe9aaf999fd7f0eb722d6df9a2d208d8))
