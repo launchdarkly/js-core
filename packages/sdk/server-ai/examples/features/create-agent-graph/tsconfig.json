@@ -2,10 +2,12 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "node16",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "rootDir": "src",
+    "outDir": "dist",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
