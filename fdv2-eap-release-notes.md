@@ -118,17 +118,15 @@ const client = new ReactNativeLDClient('my-mobile-key', AutoEnvAttributes.Enable
 
 ### Automatic mode switching
 
-By default the SDK switches modes based on application lifecycle (foreground and background). You can turn lifecycle-driven switching off with a granular configuration:
+By default the SDK switches modes automatically based on application lifecycle, as the application moves between the foreground and background. You can turn lifecycle-driven switching off with a granular configuration:
 
 ```js
 const client = new ReactNativeLDClient('my-mobile-key', AutoEnvAttributes.Enabled, {
   dataSystem: {
-    automaticModeSwitching: { type: 'automatic', lifecycle: false, network: false },
+    automaticModeSwitching: { type: 'automatic', lifecycle: false },
   },
 });
 ```
-
-> Network-driven mode switching is not yet supported in the React Native SDK. The SDK switches connection modes based on application lifecycle only.
 
 ### Runtime control
 
