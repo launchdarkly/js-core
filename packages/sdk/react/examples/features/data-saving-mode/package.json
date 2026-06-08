@@ -1,5 +1,5 @@
 {
-  "name": "@launchdarkly/react-sdk-example-fdv2",
+  "name": "@launchdarkly/react-sdk-example-data-saving-mode",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

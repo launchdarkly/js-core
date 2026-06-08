@@ -33,7 +33,7 @@ Then start the example with your client-side ID (and optionally a flag key):
 ```bash
 LAUNCHDARKLY_CLIENT_SIDE_ID=your-client-side-id \
 LAUNCHDARKLY_FLAG_KEY=your-flag-key \
-yarn workspace @launchdarkly/react-sdk-example-fdv2 start
+yarn workspace @launchdarkly/react-sdk-example-data-saving-mode start
 ```
 
 Open the URL Vite prints (default <http://localhost:5173>).

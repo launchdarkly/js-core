@@ -321,7 +321,7 @@
         "src/client/LDReactClient.tsx",
         {
           "type": "json",
-          "path": "examples/example-fdv2/package.json",
+          "path": "examples/features/data-saving-mode/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         },
         {
