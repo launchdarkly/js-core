@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.9.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.8.1...js-client-sdk-v4.9.0) (2026-06-08)
+
+
+### Features
+
+* Prepare FDv2 EAP for browser and React Native SDKs ([#1419](https://github.com/launchdarkly/js-core/issues/1419)) ([6ee9c51](https://github.com/launchdarkly/js-core/commit/6ee9c515fe9aaf999fd7f0eb722d6df9a2d208d8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.28.1 to 1.29.0
+
 ## [4.8.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.8.0...js-client-sdk-v4.8.1) (2026-06-05)
 
 
