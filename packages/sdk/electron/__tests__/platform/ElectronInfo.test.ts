@@ -2,6 +2,23 @@ import * as os from 'os';
 
 import ElectronInfo from '../../src/platform/ElectronInfo';
 
+jest.mock('os', () => ({
+  ...jest.requireActual('os'),
+  platform: jest.fn(),
+  release: jest.fn(),
+  arch: jest.fn(),
+}));
+
+const actualOs = jest.requireActual<typeof os>('os');
+
+// Restore real os implementations before each test so non-mock tests still work.
+// Mock tests override these per-test with mockReturnValue.
+beforeEach(() => {
+  (os.platform as jest.Mock).mockImplementation(actualOs.platform);
+  (os.release as jest.Mock).mockImplementation(actualOs.release);
+  (os.arch as jest.Mock).mockImplementation(actualOs.arch);
+});
+
 describe('given an information instance', () => {
   const info = new ElectronInfo();
 
@@ -34,15 +51,14 @@ describe('given an information instance', () => {
 describe('given an information instance with mock data', () => {
   const info = new ElectronInfo();
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('can get platform information', () => {
-    const platformSpy = jest.spyOn(os, 'platform');
-    platformSpy.mockReturnValue('darwin');
-
-    const releaseSpy = jest.spyOn(os, 'release');
-    releaseSpy.mockReturnValue('0.0.0');
-
-    const archSpy = jest.spyOn(os, 'arch');
-    archSpy.mockReturnValue('x64');
+    (os.platform as jest.Mock).mockReturnValue('darwin');
+    (os.release as jest.Mock).mockReturnValue('0.0.0');
+    (os.arch as jest.Mock).mockReturnValue('x64');
 
     global.process = {
       ...process,
@@ -65,9 +81,7 @@ describe('given an information instance with mock data', () => {
     ['linux', 'Linux'],
     ['some_os', 'some_os'],
   ])('handles known platforms', (platform, processed) => {
-    const platformSpy = jest.spyOn(os, 'platform');
-    // @ts-ignore
-    platformSpy.mockReturnValue(platform);
+    (os.platform as jest.Mock).mockReturnValue(platform);
 
     const data = info.platformData();
     expect(data.os).toBeDefined();
