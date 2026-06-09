@@ -19,11 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # NOTE: we need to pin this particular version for electron because
-        # 24.16 introduce some breaking changes affecting electron installation.
-        # We should monitor if NodeJS patches anything on that minor version before
-        # putting this back to latest LTS.
-        version: [24.15]
+        # NOTE: previously pinned to 24.15 due to a Node 24.16 regression affecting
+        # older electron installs; electron 42 does not have this issue.
+        version: [24]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./actions/setup-yarn
@@ -42,7 +40,7 @@ jobs:
         env:
           ELECTRON_DISABLE_SANDBOX: '1'
         run: |
-          yarn workspaces focus @launchdarkly/electron-contract-tests-entity
+          yarn workspaces focus @launchdarkly/js-core @launchdarkly/electron-contract-tests-entity
           yarn workspace @launchdarkly/js-contract-test-utils build:client
           yarn workspace @launchdarkly/electron-contract-tests-entity build
           sudo apt-get install -y xvfb
@@ -83,10 +81,11 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - uses: ./actions/setup-yarn
         with:
-          node-version: 24.15
+          node-version: 24
       - uses: ./actions/run-example
         with:
           workspace_name: '@launchdarkly/electron-example'
+          additional_workspace: '@launchdarkly/js-core'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           env_vars: |
             DISPLAY=:99

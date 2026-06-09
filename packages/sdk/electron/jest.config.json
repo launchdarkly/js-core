@@ -4,5 +4,8 @@
   "testEnvironment": "node",
   "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
   "collectCoverageFrom": ["src/**/*.ts"],
-  "testPathIgnorePatterns": ["node_modules", "example", "dist"]
+  "testPathIgnorePatterns": ["node_modules", "example", "dist"],
+  "moduleNameMapper": {
+    "^electron$": "<rootDir>/__mocks__/electron.js"
+  }
 }

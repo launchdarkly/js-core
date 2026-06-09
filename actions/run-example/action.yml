@@ -5,6 +5,10 @@ inputs:
   workspace_name:
     description: 'Yarn workspace name of the example app'
     required: true
+  additional_workspace:
+    description: 'Optional extra workspace to include in the focus install step alongside workspace_name'
+    required: false
+    default: ''
   aws_assume_role:
     description: 'AWS OIDC role ARN used to fetch secrets from SSM'
     required: true
@@ -19,7 +23,7 @@ runs:
   steps:
     - name: Install dependencies
       shell: bash
-      run: yarn workspaces focus ${{ inputs.workspace_name }}
+      run: yarn workspaces focus ${{ inputs.additional_workspace }} ${{ inputs.workspace_name }}
 
     - name: Set environment variables
       shell: bash
