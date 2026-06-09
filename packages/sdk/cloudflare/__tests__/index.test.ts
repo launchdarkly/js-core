@@ -4,7 +4,7 @@ import { Miniflare } from 'miniflare';
 import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common-edge';
 
 import { init } from '../src/index';
-import * as allFlagsSegments from './testData.json';
+import allFlagsSegments from './testData.json';
 
 const mf = new Miniflare({
   modules: true,

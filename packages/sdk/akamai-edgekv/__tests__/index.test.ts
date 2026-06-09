@@ -1,6 +1,6 @@
 import EdgeKVProvider from '../src/edgekv/edgeKVProvider';
 import { init as initWithEdgeKV, LDClient, LDContext, LDLogger } from '../src/index';
-import * as testData from './testData.json';
+import testData from './testData.json';
 
 jest.mock('../src/edgekv/edgekv', () => ({
   EdgeKV: jest.fn(),

@@ -3,7 +3,7 @@ import * as edgeExports from '@launchdarkly/js-server-sdk-common-edge';
 
 import { EdgeFeatureStore } from '../../src/api/EdgeFeatureStore';
 import mockEdgeProvider from '../utils/mockEdgeProvider';
-import * as testData from './testData.json';
+import testData from './testData.json';
 
 describe('EdgeFeatureStore', () => {
   const sdkKey = 'sdkKey';

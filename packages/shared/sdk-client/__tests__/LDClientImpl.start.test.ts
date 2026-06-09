@@ -5,7 +5,7 @@ import * as bootstrapModule from '../src/flag-manager/bootstrap';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import { createBasicPlatform } from './createBasicPlatform';
-import * as mockResponseJson from './evaluation/mockResponse.json';
+import mockResponseJson from './evaluation/mockResponse.json';
 import { goodBootstrapData, goodBootstrapDataWithReasons } from './flag-manager/testBootstrapData';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';

@@ -3,7 +3,7 @@ import { KVStore } from 'fastly:kv-store';
 
 import { LDClient } from '../src/api';
 import { init } from '../src/index';
-import * as testData from './utils/testData.json';
+import testData from './utils/testData.json';
 
 // Tell Jest to use the manual mock
 jest.mock('fastly:kv-store');

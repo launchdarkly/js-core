@@ -5,7 +5,7 @@ import { DataSourceState } from '../src/datasource/DataSourceStatus';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags } from '../src/types';
 import { createBasicPlatform } from './createBasicPlatform';
-import * as mockResponseJson from './evaluation/mockResponse.json';
+import mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';
 
