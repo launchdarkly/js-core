@@ -4,6 +4,7 @@ import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
 // No types for the event source.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
@@ -48,10 +49,36 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   return options;
 }
 
+const socksSchemes = ['socks', 'socks4', 'socks4a', 'socks5', 'socks5h'];
+
+function isSocksScheme(scheme?: string): boolean {
+  return scheme !== undefined && socksSchemes.includes(scheme);
+}
+
+function processSocksProxyOptions(
+  proxyOptions: LDProxyOptions,
+  additional: https.AgentOptions = {},
+): https.Agent | http.Agent {
+  // A single SOCKS agent works for both http and https targets. Build the proxy address as a URL
+  // so its username/password setters percent-encode the credentials; socks-proxy-agent decodes
+  // them again, which means an `auth` password may safely contain characters such as ':'.
+  const proxyUrl = new URL(`${proxyOptions.scheme}://${proxyOptions.host}:${proxyOptions.port}`);
+  if (proxyOptions.auth) {
+    const [userId, ...passwordParts] = proxyOptions.auth.split(':');
+    proxyUrl.username = userId;
+    proxyUrl.password = passwordParts.join(':');
+  }
+  return new SocksProxyAgent(proxyUrl, additional);
+}
+
 function processProxyOptions(
   proxyOptions: LDProxyOptions,
   additional: https.AgentOptions = {},
 ): https.Agent | http.Agent {
+  if (isSocksScheme(proxyOptions.scheme)) {
+    return processSocksProxyOptions(proxyOptions, additional);
+  }
+
   const proxyUrl = formatUrl({
     protocol: proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http:',
     slashes: true,
