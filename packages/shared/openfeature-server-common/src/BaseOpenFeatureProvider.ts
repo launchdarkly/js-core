@@ -58,22 +58,10 @@ export interface BaseProviderConfig {
 export abstract class BaseOpenFeatureProvider<
   TClient extends OpenFeatureLDClientContract = OpenFeatureLDClientContract,
 > implements Provider {
-  /**
-   * Metadata reported to OpenFeature. The provider name is supplied by each
-   * concrete subclass via the {@link BaseProviderConfig.providerName} field.
-   */
   readonly metadata: ProviderMetadata;
 
-  /**
-   * The OpenFeature paradigm this provider runs on. LaunchDarkly server-side
-   * SDKs always run on the server.
-   */
   readonly runsOn: Paradigm = 'server';
 
-  /**
-   * Event emitter used to surface OpenFeature provider events such as
-   * {@link ProviderEvents.ConfigurationChanged}.
-   */
   readonly events = new OpenFeatureEventEmitter();
 
   private _client?: TClient;
@@ -116,11 +104,6 @@ export abstract class BaseOpenFeatureProvider<
     });
   }
 
-  /**
-   * Called by OpenFeature once the provider is registered. Waits for the
-   * underlying LDClient to finish initialization, or rethrows the error that
-   * was captured if client construction failed.
-   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async initialize(context?: EvaluationContext): Promise<void> {
     if (!this._client) {
@@ -266,10 +249,6 @@ export abstract class BaseOpenFeatureProvider<
     return this._client!;
   }
 
-  /**
-   * Called by OpenFeature when it needs to close the provider. This will flush
-   * events from the LDClient and then close it.
-   */
   async onClose(): Promise<void> {
     try {
       await this._client?.flush();
@@ -278,13 +257,6 @@ export abstract class BaseOpenFeatureProvider<
     }
   }
 
-  /**
-   * Track a user action or application state, usually representing a business objective or outcome.
-   * @param trackingEventName The name of the event, which may correspond to a metric
-   *   in Experimentation.
-   * @param context The context to track.
-   * @param trackingEventDetails Optional additional information to associate with the event.
-   */
   track(
     trackingEventName: string,
     context: EvaluationContext,
