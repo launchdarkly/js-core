@@ -110,7 +110,7 @@ export default class NodeDataManager extends BaseDataManager {
     // Re-read connectionMode after the await: a concurrent setConnectionMode call may have
     // changed it while loadCached was in flight.
     const offline = this.connectionMode === 'offline';
-    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
+    const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !startedOffline;
     let identifyResolved = false;
     if (loadedFromCache && !waitForNetworkResults) {
       this._debugLog('Identify completing with cached flags');

@@ -606,6 +606,72 @@ it('rejects identify fast when close() runs while loadCached is in flight', asyn
   expect(elapsed).toBeLessThan(1000);
 });
 
+it('rejects identify when waitForNetworkResults was requested and mode flips to offline mid-identify with a cache hit', async () => {
+  let releaseGet: () => void = () => {};
+  const getGate = new Promise<void>((resolve) => {
+    releaseGet = resolve;
+  });
+
+  const fakePlatform = makeMockPlatform({
+    requests: {
+      fetch: jest.fn(),
+      createEventSource: jest.fn(() => ({
+        addEventListener: jest.fn(),
+        close: jest.fn(),
+        onclose: jest.fn(),
+        onerror: jest.fn(),
+        onopen: jest.fn(),
+        onretrying: jest.fn(),
+      })),
+      getEventSourceCapabilities: () => ({ readTimeout: true, headers: true, customMethod: true }),
+    },
+  });
+  // Storage returns a non-null value so loadCached produces a cache hit.
+  (fakePlatform as any).storage = {
+    get: jest.fn(async () => {
+      await getGate;
+      // Return a minimal serialised flags object so the cache hit path is taken.
+      return JSON.stringify({ flagA: { flag: { variation: 0, version: 1 } } });
+    }),
+    set: jest.fn(async () => {}),
+    clear: jest.fn(async () => {}),
+  };
+  NodePlatformMock.mockImplementationOnce(() => fakePlatform);
+
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'streaming',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger,
+    },
+  );
+
+  // Bootstrap on start so the first identify skips the (gated) cache read.
+  await client.start({ bootstrap: bootstrapData });
+
+  // Identify with waitForNetworkResults so the caller explicitly does NOT want to settle
+  // early from cache. The identify parks on the gated storage.get.
+  const identifyPromise = client.identify(
+    { kind: 'user', key: 'alice' },
+    { waitForNetworkResults: true, timeout: 2 },
+  );
+  await new Promise((resolve) => setTimeout(resolve, 10));
+
+  // Flip to offline while identify is parked, then release the cache read.
+  await client.setConnectionMode('offline');
+  releaseGet();
+
+  const result = await identifyPromise;
+  // The identify must reject -- the mode-change-to-offline makes it impossible to honour
+  // waitForNetworkResults, and silently settling from cache would mask that.
+  expect(result.status).toBe('error');
+
+  await client.close();
+});
+
 it('rejects identify rather than hanging when the mode flips to offline mid-identify', async () => {
   // Gate the cached-flag read so we can flip the connection mode while identify is parked on
   // the await -- reproducing the race where _setupConnection later sees connectionMode==='offline'.
