@@ -65,6 +65,8 @@ export interface NodeOptions extends LDOptionsBase {
   /**
    * The Secure Mode hash for the configured context.
    *
+   * This value can be overridden on a per-identify basis via {@link NodeIdentifyOptions.hash}.
+   *
    * @see https://docs.launchdarkly.com/sdk/features/secure-mode
    */
   hash?: string;

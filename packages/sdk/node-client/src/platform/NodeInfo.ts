@@ -36,12 +36,17 @@ export default class NodeInfo implements Info {
   }
 
   sdkData(): SdkData {
-    return {
+    const data: SdkData = {
       name: sdkName,
       version: sdkVersion,
       userAgentBase: 'NodeClient',
-      wrapperName: this._config.wrapperName,
-      wrapperVersion: this._config.wrapperVersion,
     };
+    if (this._config.wrapperName) {
+      data.wrapperName = this._config.wrapperName;
+    }
+    if (this._config.wrapperVersion) {
+      data.wrapperVersion = this._config.wrapperVersion;
+    }
+    return data;
   }
 }

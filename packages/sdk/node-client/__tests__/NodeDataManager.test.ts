@@ -293,4 +293,69 @@ describe('given a NodeDataManager with mocked dependencies', () => {
     const [pollUri] = (platform.requests.fetch as jest.Mock).mock.calls[0];
     expect(pollUri).not.toContain('h=');
   });
+
+  it('falls back to config hash on second identify when per-identify hash is omitted', async () => {
+    const dataManager = makeDataManager(makeNodeConfig({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const context2 = Context.fromLDContext({ kind: 'user', key: 'test-user-2' });
+
+    await dataManager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as NodeIdentifyOptions);
+    (platform.requests.createEventSource as jest.Mock).mockClear();
+
+    await dataManager.identify(jest.fn(), jest.fn(), context2, {});
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('h=config-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('omits h param on second identify when per-identify hash is omitted and no config hash is set', async () => {
+    const dataManager = makeDataManager(makeNodeConfig());
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const context2 = Context.fromLDContext({ kind: 'user', key: 'test-user-2' });
+
+    await dataManager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as NodeIdentifyOptions);
+    (platform.requests.createEventSource as jest.Mock).mockClear();
+
+    await dataManager.identify(jest.fn(), jest.fn(), context2, {});
+
+    const [streamUri] = (platform.requests.createEventSource as jest.Mock).mock.calls[0];
+    expect(streamUri).not.toContain('h=');
+  });
+
+  it('per-identify hash persists when connection mode switches to polling', async () => {
+    const dataManager = makeDataManager(makeNodeConfig({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await dataManager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as NodeIdentifyOptions);
+
+    await dataManager.setConnectionMode('polling');
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=per-identify-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('includes the per-identify hash in the connection opened after bootstrap', async () => {
+    const dataManager = makeDataManager(makeNodeConfig());
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await dataManager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+      bootstrap: {},
+    } as NodeIdentifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('h=per-identify-hash'),
+      expect.anything(),
+    );
+  });
 });

@@ -83,7 +83,7 @@ export default class NodeDataManager extends BaseDataManager {
     this.context = context;
 
     const nodeOptions = identifyOptions as NodeIdentifyOptions | undefined;
-    this._currentHash = nodeOptions?.hash ?? this._nodeConfig.hash;
+    this._currentHash = nodeOptions?.hash || this._nodeConfig.hash;
     if (this._currentHash) {
       this.setConnectionParams({ queryParameters: [{ key: 'h', value: this._currentHash }] });
     } else {

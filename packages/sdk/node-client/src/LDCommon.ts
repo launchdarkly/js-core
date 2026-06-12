@@ -5,7 +5,6 @@ export type {
 } from '@launchdarkly/js-client-sdk-common';
 
 export type {
-  LDIdentifyOptions,
   AutoEnvAttributes,
   BasicLogger,
   BasicLoggerOptions,
