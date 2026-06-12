@@ -156,8 +156,7 @@
     "packages/sdk/node-client": {
       "bump-minor-pre-major": true,
       "extra-files": [
-        "src/platform/NodeInfo.ts",
-        "src/index.ts"
+        "src/platform/NodeInfo.ts"
       ]
     },
     "packages/sdk/server-node": {
