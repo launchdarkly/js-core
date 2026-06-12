@@ -15,12 +15,14 @@ import {
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
+import type { NodeIdentifyOptions } from './NodeIdentifyOptions';
 import type { ValidatedOptions } from './options';
 
 const logTag = '[NodeDataManager]';
 
 export default class NodeDataManager extends BaseDataManager {
   protected connectionMode: ConnectionMode = 'streaming';
+  private _currentHash?: string;
   private _pendingIdentifyReject?: (err: Error) => void;
   // Serializes connection-mode transitions so concurrent calls cannot leave state
   // (event-sending, processor, mode) out of sync.
@@ -50,6 +52,7 @@ export default class NodeDataManager extends BaseDataManager {
       diagnosticsManager,
     );
     this.connectionMode = _nodeConfig.initialConnectionMode;
+    this._currentHash = _nodeConfig.hash;
   }
 
   private _debugLog(message: any, ...args: any[]) {
@@ -78,6 +81,14 @@ export default class NodeDataManager extends BaseDataManager {
       return;
     }
     this.context = context;
+
+    const nodeOptions = identifyOptions as NodeIdentifyOptions | undefined;
+    this._currentHash = nodeOptions?.hash ?? this._nodeConfig.hash;
+    if (this._currentHash) {
+      this.setConnectionParams({ queryParameters: [{ key: 'h', value: this._currentHash }] });
+    } else {
+      this.setConnectionParams();
+    }
 
     // Snapshot the mode before any await so the bootstrap path and the stale-snapshot
     // detection below both see a consistent starting point.
@@ -201,7 +212,7 @@ export default class NodeDataManager extends BaseDataManager {
       [],
       this.config.withReasons,
       this.config.useReport,
-      this._nodeConfig.hash,
+      this._currentHash,
     );
 
     this.updateProcessor?.close();

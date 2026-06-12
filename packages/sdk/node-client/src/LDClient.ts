@@ -2,11 +2,12 @@ import type {
   ConnectionMode,
   LDClient as LDClientBase,
   LDContext,
-  LDIdentifyOptions,
   LDIdentifyResult,
   LDStartOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
+
+import type { NodeIdentifyOptions } from './NodeIdentifyOptions';
 
 export type { LDStartOptions };
 
@@ -29,7 +30,7 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
    * @param identifyOptions Optional configuration. @see {@link LDIdentifyOptions}.
    * @returns A promise which resolves to an object containing the result of the identify operation.
    */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult>;
+  identify(context: LDContext, identifyOptions?: NodeIdentifyOptions): Promise<LDIdentifyResult>;
 
   /**
    * Starts the client and returns a promise that resolves to the initialization result.

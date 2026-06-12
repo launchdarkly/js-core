@@ -3,7 +3,7 @@ import * as os from 'os';
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
 const sdkName = 'node-client-sdk';
-const sdkVersion = '0.0.4'; // x-release-please-version
+const sdkVersion = '0.0.1'; // x-release-please-version
 
 function processPlatformName(name: string): string {
   switch (name) {
@@ -19,6 +19,8 @@ function processPlatformName(name: string): string {
 }
 
 export default class NodeInfo implements Info {
+  constructor(private readonly _config: { wrapperName?: string; wrapperVersion?: string } = {}) {}
+
   platformData(): PlatformData {
     return {
       os: {
@@ -38,6 +40,8 @@ export default class NodeInfo implements Info {
       name: sdkName,
       version: sdkVersion,
       userAgentBase: 'NodeClient',
+      wrapperName: this._config.wrapperName,
+      wrapperVersion: this._config.wrapperVersion,
     };
   }
 }

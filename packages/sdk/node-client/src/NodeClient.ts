@@ -12,7 +12,6 @@ import {
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
-  LDIdentifyOptions,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
 } from '@launchdarkly/js-client-sdk-common';
@@ -21,6 +20,7 @@ import basicLogger from './basicLogger';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
 import NodeDataManager from './NodeDataManager';
+import type { NodeIdentifyOptions } from './NodeIdentifyOptions';
 import type { NodeOptions } from './NodeOptions';
 import validateOptions, { filterToBaseOptions } from './options';
 import NodePlatform from './platform/NodePlatform';
@@ -89,9 +89,9 @@ export class NodeClient extends LDClientImpl {
 
   override async identifyResult(
     context: LDContext,
-    identifyOptions?: LDIdentifyOptions,
+    identifyOptions?: NodeIdentifyOptions,
   ): Promise<LDIdentifyResult> {
-    const options =
+    const options: NodeIdentifyOptions =
       identifyOptions?.sheddable === undefined
         ? { ...identifyOptions, sheddable: true }
         : identifyOptions;
@@ -100,7 +100,7 @@ export class NodeClient extends LDClientImpl {
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     const dataManager = this.dataManager as NodeDataManager;
-    return dataManager.setConnectionMode(
+    await dataManager.setConnectionMode(
       mode,
       () => this.flush(),
       (enabled) => this.setEventSendingEnabled(enabled, false),
@@ -152,7 +152,7 @@ export function makeClient(
     off: (key: string, callback: (...args: unknown[]) => void) =>
       impl.off(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
     flush: () => impl.flush(),
-    identify: (ctx: LDContext, identifyOptions?: LDIdentifyOptions) =>
+    identify: (ctx: LDContext, identifyOptions?: NodeIdentifyOptions) =>
       impl.identifyResult(ctx, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),

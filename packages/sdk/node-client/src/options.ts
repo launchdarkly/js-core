@@ -26,6 +26,8 @@ export interface ValidatedOptions {
   plugins: LDPlugin[];
   localStoragePath?: string;
   hash?: string;
+  wrapperName?: string;
+  wrapperVersion?: string;
 }
 
 const optDefaults: ValidatedOptions = {
@@ -35,18 +37,19 @@ const optDefaults: ValidatedOptions = {
   plugins: [],
   localStoragePath: undefined,
   hash: undefined,
+  wrapperName: undefined,
+  wrapperVersion: undefined,
 };
 
-// Keyed off ValidatedOptions so adding a Node-specific option fails to compile until a
-// validator is registered here (and a default in optDefaults), forcing validation/logging
-// coverage for the new field.
-const validators: Record<keyof ValidatedOptions, TypeValidator> = {
+const validators: { [Property in keyof NodeOptions]: TypeValidator | undefined } = {
   tlsParams: TypeValidators.Object,
   enableEventCompression: TypeValidators.Boolean,
   initialConnectionMode: new ConnectionModeValidator(),
   plugins: TypeValidators.createTypeArray('LDPlugin[]', {}),
   localStoragePath: TypeValidators.String,
   hash: TypeValidators.String,
+  wrapperName: TypeValidators.String,
+  wrapperVersion: TypeValidators.String,
 };
 
 export function filterToBaseOptions(opts: NodeOptions): LDOptionsBase {
@@ -63,7 +66,10 @@ export default function validateOptions(opts: NodeOptions, logger: LDLogger): Va
   const output: ValidatedOptions = { ...optDefaults };
 
   Object.entries(validators).forEach((entry) => {
-    const [key, validator] = entry as [keyof ValidatedOptions, TypeValidator];
+    const [key, validator] = entry as [keyof NodeOptions, TypeValidator | undefined];
+    if (!validator) {
+      return;
+    }
     const value = opts[key];
     if (value !== undefined) {
       if (validator.is(value)) {

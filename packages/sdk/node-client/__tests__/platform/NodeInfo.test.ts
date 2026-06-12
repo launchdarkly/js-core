@@ -58,3 +58,17 @@ it('passes through an unknown os platform name', () => {
   const info = new NodeInfo();
   expect(info.platformData().os).toEqual({ name: 'freebsd', version: '14.0', arch: 'arm64' });
 });
+
+it('includes wrapperName and wrapperVersion in sdkData when configured', () => {
+  const info = new NodeInfo({ wrapperName: 'my-wrapper', wrapperVersion: '1.0.0' });
+  const data = info.sdkData();
+  expect(data.wrapperName).toEqual('my-wrapper');
+  expect(data.wrapperVersion).toEqual('1.0.0');
+});
+
+it('omits wrapperName and wrapperVersion from sdkData when not configured', () => {
+  const info = new NodeInfo();
+  const data = info.sdkData();
+  expect(data.wrapperName).toBeUndefined();
+  expect(data.wrapperVersion).toBeUndefined();
+});

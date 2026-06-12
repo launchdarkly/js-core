@@ -14,6 +14,7 @@ import basicLogger from './basicLogger';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDPlugin } from './LDPlugin';
 import { makeClient } from './NodeClient';
+import type { NodeIdentifyOptions } from './NodeIdentifyOptions';
 import type { LDTLSOptions, NodeOptions } from './NodeOptions';
 
 export * from './LDCommon';
@@ -23,6 +24,7 @@ export { resetNodeStorage } from './platform/NodeStorage';
 
 export type {
   NodeOptions as LDOptions,
+  NodeIdentifyOptions as LDIdentifyOptions,
   LDClient,
   LDPlugin,
   LDStartOptions,
