@@ -50,7 +50,7 @@
     "launchdarkly-eventsource": "2.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "^10.0.1",
     "@types/jest": "^29.4.0",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
