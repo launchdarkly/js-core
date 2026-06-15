@@ -35,7 +35,7 @@
     "@config-plugins/detox": "^8.0.0",
     "@types/detox": "^18.1.0",
     "@types/jest": "^29.5.11",
-    "@types/node": "^20.10.5",
+    "@types/node": "^25.9.2",
     "@types/react": "~18.2.55",
     "@types/react-native-dotenv": "^0.2.1",
     "detox": "^20.17.1",
