@@ -11,7 +11,7 @@
     "@launchdarkly/shopify-oxygen-sdk": "*",
     "@shopify/mini-oxygen": "^4.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "tsup": "^8.5.1"
