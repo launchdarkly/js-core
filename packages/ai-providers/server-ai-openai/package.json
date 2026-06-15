@@ -45,7 +45,7 @@
     "@eslint/js": "^9.0.0",
     "@launchdarkly/js-server-sdk-common": "2.19.1",
     "@launchdarkly/server-sdk-ai": "^1.1.0",
-    "@openai/agents": "^0.9.0",
+    "@openai/agents": "^0.11.6",
     "@opentelemetry/api": "^1.9.0",
     "@traceloop/instrumentation-openai": "^0.22.0",
     "@types/jest": "^29.5.3",
@@ -63,7 +63,7 @@
   },
   "peerDependencies": {
     "@launchdarkly/server-sdk-ai": "^1.1.0",
-    "@openai/agents": "^0.9.0",
+    "@openai/agents": "^0.11.6",
     "@opentelemetry/api": "^1.0.0",
     "@traceloop/instrumentation-openai": "^0.22.0",
     "openai": ">= 4 < 7"
