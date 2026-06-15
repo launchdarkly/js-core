@@ -14,7 +14,7 @@
     "@launchdarkly/observability-node": "^1.0.0",
     "@launchdarkly/server-sdk-ai": "workspace:^",
     "@launchdarkly/server-sdk-ai-vercel": "workspace:^",
-    "ai": "5.0.52",
+    "ai": "6.0.197",
     "dotenv": "^17.4.2",
     "zod": "^3.23.8"
   },
