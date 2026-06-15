@@ -21,7 +21,7 @@
     "@rollup/plugin-alias": "^5.0.0",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-typescript": "^11.1.1",
+    "@rollup/plugin-typescript": "^12.3.0",
     "@types/akamai-edgeworkers": "^1.1.8",
     "rimraf": "^5.0.1",
     "rollup": "^3.22.0",
