@@ -51,7 +51,7 @@
     "@openfeature/server-sdk": "^1.16.0",
     "@types/jest": "^29.5.3",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
-    "@typescript-eslint/parser": "^6.20.0",
+    "@typescript-eslint/parser": "^8.60.1",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
