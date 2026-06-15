@@ -103,7 +103,7 @@ jobs:
           sleep 5  # Give the browser time to initialize and connect via WebSocket
 
       - name: Run contract tests (FDv1)
-        uses: launchdarkly/gh-actions/actions/contract-tests@d271978e893b5b9facb9f000414e9fcd62e1f78b
+        uses: launchdarkly/gh-actions/actions/contract-tests@a848aec9c87c29470093b22154107b83a7696374
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -111,7 +111,7 @@ jobs:
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/browser/contract-tests/suppressions.txt'
 
       - name: Run contract tests (FDv2)
-        uses: launchdarkly/gh-actions/actions/contract-tests@d271978e893b5b9facb9f000414e9fcd62e1f78b
+        uses: launchdarkly/gh-actions/actions/contract-tests@a848aec9c87c29470093b22154107b83a7696374
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
