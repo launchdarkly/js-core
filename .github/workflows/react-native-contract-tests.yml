@@ -89,7 +89,7 @@ jobs:
 
       - name: Run contract tests on Android emulator
         # https://github.com/ReactiveCircus/android-emulator-runner/releases/tag/v2.34.0
-        uses: reactivecircus/android-emulator-runner@f0d1ed2dcad93c7479e8b2f2226c83af54494915 # v2
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2
         env:
           # The contract-test runner script downloads the harness via the
           # official downloader; the token avoids GitHub API rate limits.
