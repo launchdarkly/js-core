@@ -41,7 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@types/crypto-js": "^4.1.1",
-    "@types/jest": "^29.5.0",
+    "@types/jest": "^30.0.0",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
     "eslint-plugin-import-x": "^4.0.0",
