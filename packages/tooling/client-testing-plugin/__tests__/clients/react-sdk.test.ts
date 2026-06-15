@@ -47,6 +47,7 @@ it('createTestClientProvider returns a pre-wired Provider, client, and testData'
   expect(Provider).toBeInstanceOf(Function);
   expect(client).toBeDefined();
   expect(testData).toBeInstanceOf(TestData);
+  await client.close();
 });
 
 it('updates flag values dynamically via testData after the client is started', async () => {

@@ -279,6 +279,11 @@
           "type": "json",
           "path": "/packages/tooling/client-testing-plugin/package.json",
           "jsonpath": "$.devDependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/react/examples/testing/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         }
       ]
     },
