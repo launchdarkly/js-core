@@ -22,7 +22,7 @@
     "@babel/core": "^7.20.0",
     "@types/react": "~18.2.55",
     "@types/react-native-dotenv": "^0.2.1",
-    "typescript": "^5.2.2"
+    "typescript": "^6.0.3"
   },
   "installConfig": {
     "hoistingLimits": "workspaces"
