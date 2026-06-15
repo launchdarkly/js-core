@@ -61,7 +61,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "miniflare": "^2.13.0",
     "rimraf": "^5.0.1",
-    "rollup": "^3.29.2",
+    "rollup": "^4.61.1",
     "rollup-plugin-filesize": "^10.0.0",
     "rollup-plugin-generate-package-json": "^3.2.0",
     "ts-jest": "^29.1.0",

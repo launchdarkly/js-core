@@ -24,7 +24,7 @@
     "@rollup/plugin-typescript": "^11.1.1",
     "@types/akamai-edgeworkers": "^1.1.8",
     "rimraf": "^5.0.1",
-    "rollup": "^3.22.0",
+    "rollup": "^4.61.1",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-copy-assets": "^2.0.3",
     "rollup-plugin-node-polyfills": "^0.2.1",
