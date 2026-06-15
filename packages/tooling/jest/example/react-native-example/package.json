@@ -23,7 +23,7 @@
     "@babel/preset-react": "^7.24.7",
     "@babel/runtime": "^7.25.4",
     "@launchdarkly/jest": "workspace:^",
-    "@react-native/babel-preset": "^0.75.2",
+    "@react-native/babel-preset": "^0.85.3",
     "@testing-library/react-native": "^12.6.1",
     "@types/jest": "^29.5.12",
     "@types/react": "~18.2.45",
