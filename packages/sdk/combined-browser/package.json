@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk": "4.9.0",
-    "@launchdarkly/observability": "0.2.0",
+    "@launchdarkly/observability": "1.1.10",
     "@launchdarkly/session-replay": "0.2.0"
   },
   "devDependencies": {
