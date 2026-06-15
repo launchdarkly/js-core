@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "workspace:^",
-    "https-proxy-agent": "^7.0.6",
+    "https-proxy-agent": "^9.0.0",
     "launchdarkly-eventsource": "2.2.0"
   },
   "devDependencies": {
