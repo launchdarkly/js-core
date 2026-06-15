@@ -28,7 +28,7 @@
     "@openfeature/server-sdk": "^1.16.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "^10.0.1",
     "@tsconfig/node20": "20.1.4",
     "@types/node": "^25.9.1",
     "eslint": "^9.0.0",
