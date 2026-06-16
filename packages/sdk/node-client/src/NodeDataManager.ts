@@ -83,6 +83,9 @@ export default class NodeDataManager extends BaseDataManager {
     this.context = context;
 
     const nodeOptions = identifyOptions as NodeIdentifyOptions | undefined;
+
+    // We will treat empty string as `null`/`undefined`. This should be more
+    // ergonomic for users who have multiple settings for this value.
     this._currentHash = nodeOptions?.hash || this._nodeConfig.hash;
     if (this._currentHash) {
       this.setConnectionParams({ queryParameters: [{ key: 'h', value: this._currentHash }] });
