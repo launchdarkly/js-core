@@ -71,13 +71,13 @@ export function createClient(
         return baseClient.start(startOptions);
       }
       startCalled = true;
-      if (startOptions?.bootstrap) {
+      if (startOptions?.bootstrap || startOptions?.identifyOptions?.bootstrap) {
         hasBootstrap = true;
       }
       return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
         initializationState = result.status;
         lastInitResult = result;
-        if (!startNotified) {
+        if (!startNotified && result.status === 'complete') {
           startNotified = true;
           notifyContextSubscribers();
         }
