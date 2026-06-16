@@ -20,6 +20,7 @@ SUPPRESSIONS="${SUPPRESSIONS:-$SCRIPT_DIR/testharness-suppressions.txt}"
 VERSION="${VERSION:-v2}"
 
 yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/node-client-sdk' run build
+yarn workspace @launchdarkly/js-contract-test-utils build:client
 yarn workspace @launchdarkly/node-client-sdk-contract-tests build
 
 yarn workspace @launchdarkly/node-client-sdk-contract-tests start &
