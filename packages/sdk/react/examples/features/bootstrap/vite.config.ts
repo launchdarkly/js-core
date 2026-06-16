@@ -8,6 +8,9 @@ export default defineConfig({
   // Only expose client-safe LaunchDarkly env vars. Do NOT add `LAUNCHDARKLY_` as a broad prefix --
   // that would bake `LAUNCHDARKLY_SDK_KEY` (a server-side secret) into the client bundle.
   envPrefix: ['VITE_', 'LAUNCHDARKLY_CLIENT_SIDE_ID', 'LAUNCHDARKLY_FLAG_KEY'],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   build: {
     rollupOptions: {
       output: {

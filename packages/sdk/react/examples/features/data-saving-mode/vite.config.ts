@@ -6,4 +6,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   plugins: [react()],
   envPrefix: ['VITE_', 'LAUNCHDARKLY_'],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
 });
