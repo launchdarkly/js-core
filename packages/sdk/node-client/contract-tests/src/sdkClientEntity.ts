@@ -337,9 +337,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
           client.off('change', existing);
         }
         const handler: FlagChangeListener = (...args) => {
-          // The common-base emitter dispatches 'change' with (flagKeys: string[]).
+          // The common-base emitter dispatches 'change' with (context, flagKeys: string[]).
           // Fan out one POST per flag so the harness sees individual notifications.
-          const flagKeys = Array.isArray(args[0]) ? (args[0] as string[]) : [];
+          const flagKeys = Array.isArray(args[1]) ? (args[1] as string[]) : [];
           flagKeys.forEach((flagKey) => {
             fetch(pr.callbackUri, {
               method: 'POST',
