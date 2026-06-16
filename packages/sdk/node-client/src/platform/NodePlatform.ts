@@ -8,7 +8,7 @@ import NodeRequests from './NodeRequests';
 import { getNodeStorage } from './NodeStorage';
 
 export default class NodePlatform implements platform.Platform {
-  info: platform.Info = new NodeInfo();
+  info: platform.Info;
 
   crypto: platform.Crypto = new NodeCrypto();
 
@@ -20,8 +20,9 @@ export default class NodePlatform implements platform.Platform {
 
   constructor(
     logger: LDLogger,
-    options: Pick<ValidatedOptions, 'localStoragePath' | 'tlsParams' | 'enableEventCompression'>,
+    options: Pick<ValidatedOptions, 'localStoragePath' | 'tlsParams' | 'enableEventCompression' | 'wrapperName' | 'wrapperVersion'>,
   ) {
+    this.info = new NodeInfo({ wrapperName: options.wrapperName, wrapperVersion: options.wrapperVersion });
     this.storage = getNodeStorage(options.localStoragePath, logger);
     this.requests = new NodeRequests(options.tlsParams, options.enableEventCompression);
   }

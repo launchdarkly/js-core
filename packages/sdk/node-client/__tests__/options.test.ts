@@ -15,6 +15,8 @@ const wrongTypedOptions: Record<keyof ValidatedOptions, unknown> = {
   plugins: BOGUS_VALUE,
   localStoragePath: BOGUS_VALUE,
   hash: BOGUS_VALUE,
+  wrapperName: BOGUS_VALUE,
+  wrapperVersion: BOGUS_VALUE,
 };
 
 const nodeOptionKeys = Object.keys(wrongTypedOptions) as (keyof ValidatedOptions)[];
@@ -34,6 +36,8 @@ it('applies defaults when no node-specific options are provided', () => {
   expect(out.enableEventCompression).toBeUndefined();
   expect(out.localStoragePath).toBeUndefined();
   expect(out.hash).toBeUndefined();
+  expect(out.wrapperName).toBeUndefined();
+  expect(out.wrapperVersion).toBeUndefined();
   expect(logger.warn).not.toHaveBeenCalled();
 });
 
@@ -52,6 +56,13 @@ it('passes through valid node-specific options', () => {
   expect(out.enableEventCompression).toBe(true);
   expect(out.localStoragePath).toBe('/tmp/ld-cache');
   expect(out.hash).toBe('abc123');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('passes through wrapperName and wrapperVersion', () => {
+  const out = validateOptions({ wrapperName: 'my-wrapper', wrapperVersion: '1.0.0' }, logger);
+  expect(out.wrapperName).toBe('my-wrapper');
+  expect(out.wrapperVersion).toBe('1.0.0');
   expect(logger.warn).not.toHaveBeenCalled();
 });
 

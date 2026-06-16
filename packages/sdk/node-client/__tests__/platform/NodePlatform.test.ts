@@ -47,3 +47,21 @@ it('forwards the logger to NodeStorage so storage failures surface', async () =>
   );
 });
 
+
+it('passes wrapperName and wrapperVersion to NodeInfo', () => {
+  const platform = new NodePlatform(logger, {
+    localStoragePath: tmpRoot,
+    wrapperName: 'test-wrapper',
+    wrapperVersion: '2.0.0',
+  });
+  const sdkData = platform.info.sdkData();
+  expect(sdkData.wrapperName).toBe('test-wrapper');
+  expect(sdkData.wrapperVersion).toBe('2.0.0');
+});
+
+it('omits wrapperName and wrapperVersion from NodeInfo when not configured', () => {
+  const platform = new NodePlatform(logger, { localStoragePath: tmpRoot });
+  const sdkData = platform.info.sdkData();
+  expect(sdkData.wrapperName).toBeUndefined();
+  expect(sdkData.wrapperVersion).toBeUndefined();
+});

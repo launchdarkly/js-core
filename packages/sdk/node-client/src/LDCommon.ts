@@ -1,5 +1,10 @@
 export type {
-  LDIdentifyOptions,
+  InitializerEntry,
+  ModeDefinition,
+  SynchronizerEntry,
+} from '@launchdarkly/js-client-sdk-common';
+
+export type {
   AutoEnvAttributes,
   BasicLogger,
   BasicLoggerOptions,
