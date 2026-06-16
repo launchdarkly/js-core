@@ -5,7 +5,7 @@ compatibility_flags = [ "nodejs_compat" ]
 kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
 
 [build]
-command = "node build.js"
+command = "npx tsup"
 
 [miniflare]
 kv_persist = true
