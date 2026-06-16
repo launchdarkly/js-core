@@ -1,0 +1,7 @@
+# Tests in this file will be skipped by the LaunchDarkly SDK test harness running
+# the FDv2-feature branch against the Node.js client-side SDK. Add a path per line.
+# Lines beginning with '#' are comments.
+streaming/fdv2/reconnection state management/saves previously known state
+streaming/fdv2/reconnection state management/replaces previously known state
+streaming/fdv2/reconnection state management/updates previously known state
+streaming/fdv2/can discard partial events on errors

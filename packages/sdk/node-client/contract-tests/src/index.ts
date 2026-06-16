@@ -1,0 +1,122 @@
+import bodyParser from 'body-parser';
+import express, { Request, Response } from 'express';
+import { Server } from 'http';
+
+import { ClientPool } from '@launchdarkly/js-contract-test-utils';
+
+import { Log } from './log.js';
+import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClientEntity.js';
+
+const app = express();
+let server: Server | null = null;
+
+const port = 8000;
+
+const clients = new ClientPool<SdkClientEntity>();
+
+const mainLog = Log('service');
+
+app.use(bodyParser.json());
+
+app.get('/', (req: Request, res: Response) => {
+  res.header('Content-Type', 'application/json');
+  res.json({
+    capabilities: [
+      'client-side',
+      'service-endpoints',
+      'tags',
+      'user-type',
+      'inline-context',
+      'inline-context-all',
+      'client-prereq-events',
+      'client-per-context-summaries',
+      'evaluation-hooks',
+      'track-hooks',
+      'anonymous-redaction',
+      'strongly-typed',
+      'event-gzip',
+      'flag-change-listeners',
+      'tls:skip-verify-peer',
+      'tls:custom-ca',
+      'wrapper',
+    ],
+  });
+});
+
+app.delete('/', (req: Request, res: Response) => {
+  mainLog.info('Test service has told us to exit');
+  res.status(204);
+  res.send();
+
+  // Defer the following actions till after the response has been sent
+  setTimeout(() => {
+    if (server) {
+      server.close(() => process.exit());
+    }
+    // We force-quit with process.exit because, even after closing the server, there could be some
+    // scheduled tasks lingering if an SDK instance didn't get cleaned up properly.
+  }, 1);
+});
+
+app.post('/', async (req: Request, res: Response) => {
+  const options = req.body;
+
+  try {
+    const client = await newSdkClientEntity(options);
+    const clientId = clients.add(client);
+
+    res.status(201);
+    res.set('Location', `/clients/${clientId}`);
+  } catch (e) {
+    res.status(500);
+    const message = e instanceof Error ? e.message : JSON.stringify(e);
+    mainLog.error(`Error creating client: ${message}`);
+    res.write(message);
+  }
+  res.send();
+});
+
+app.post('/clients/:id', async (req: Request, res: Response) => {
+  const client = clients.get(req.params.id);
+  if (!client) {
+    res.status(404);
+  } else {
+    try {
+      const respValue = await client.doCommand(req.body);
+      if (respValue) {
+        res.status(200);
+        res.write(JSON.stringify(respValue));
+      } else {
+        res.status(204);
+      }
+    } catch (e) {
+      const isBadRequest = e === badCommandError;
+      res.status(isBadRequest ? 400 : 500);
+      const message = e instanceof Error ? e.message : JSON.stringify(e);
+      res.write(message);
+      if (!isBadRequest && e instanceof Error && e.stack) {
+        // eslint-disable-next-line no-console
+        console.log(e.stack);
+      }
+    }
+  }
+  res.send();
+});
+
+app.delete('/clients/:id', async (req: Request, res: Response) => {
+  const client = clients.get(req.params.id);
+  if (!client) {
+    res.status(404);
+    res.send();
+  } else {
+    await client.close();
+    clients.remove(req.params.id);
+    res.status(204);
+    res.send();
+  }
+});
+
+server = app.listen(port, () => {
+  // eslint-disable-next-line no-console
+  console.log('Listening on port %d', port);
+});
