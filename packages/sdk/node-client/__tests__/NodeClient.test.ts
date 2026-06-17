@@ -80,7 +80,6 @@ it('setConnectionMode round-trips to offline', async () => {
   expect(client.getConnectionMode()).toBe('offline');
   expect(client.isOffline()).toBe(true);
 
-  // Setting the same mode is a no-op but should not throw.
   await client.setConnectionMode('offline');
   expect(client.getConnectionMode()).toBe('offline');
 });

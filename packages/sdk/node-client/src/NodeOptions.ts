@@ -1,4 +1,8 @@
-import { ConnectionMode, LDOptions as LDOptionsBase } from '@launchdarkly/js-client-sdk-common';
+import {
+  ConnectionMode,
+  LDOptions as LDOptionsBase,
+  Storage,
+} from '@launchdarkly/js-client-sdk-common';
 
 import type { LDPlugin } from './LDPlugin';
 
@@ -21,9 +25,6 @@ export interface LDTLSOptions {
   servername?: string;
 }
 
-/**
- * Configuration options for the Node client-side SDK.
- */
 export interface NodeOptions extends LDOptionsBase {
   /**
    * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
@@ -41,13 +42,6 @@ export interface NodeOptions extends LDOptionsBase {
   enableEventCompression?: boolean;
 
   /**
-   * The directory to use for the persistent flag and anonymous-key cache.
-   *
-   * Defaults to `<cwd>/ldclient-user-cache`.
-   */
-  localStoragePath?: string;
-
-  /**
    * Sets the mode to use for connections when the SDK is initialized.
    *
    * @remarks
@@ -59,8 +53,30 @@ export interface NodeOptions extends LDOptionsBase {
 
   /**
    * A list of plugins to be used with the SDK.
+   *
+   * Plugin support is currently experimental and subject to change.
    */
   plugins?: LDPlugin[];
+
+  /**
+   * Directory for the built-in file-backed persistent flag and anonymous-key cache.
+   *
+   * Defaults to `<process.cwd()>/ldclient-user-cache`. Ignored when {@link storage}
+   * is also set - a warning will be logged in that case.
+   */
+  localStoragePath?: string;
+
+  /**
+   * Custom storage implementation for the persistent flag and anonymous-key cache.
+   *
+   * When provided, the SDK uses this implementation instead of the built-in
+   * file-backed storage. Use {@link localStoragePath} if you only need to change
+   * the directory used by the default file-backed storage.
+   *
+   * Setting both `storage` and `localStoragePath` is not supported. When both are
+   * present, `storage` takes precedence and `localStoragePath` is ignored.
+   */
+  storage?: Storage;
 
   /**
    * The Secure Mode hash for the configured context.
@@ -70,4 +86,20 @@ export interface NodeOptions extends LDOptionsBase {
    * @see https://docs.launchdarkly.com/sdk/features/secure-mode
    */
   hash?: string;
+
+  /**
+   * If `true`, the credential passed to {@link createClient} is treated as a
+   * **mobile key** rather than a client-side ID. The SDK then uses the mobile
+   * event paths (`/mobile`, `/mobile/events/diagnostic`), the mobile FDv1
+   * data source endpoints (`/msdk/evalx/...`, `/meval/...`), and the
+   * `'mobileKey'` credential type. The credential is sent as an
+   * `Authorization` header rather than embedded in URLs.
+   *
+   * Defaults to `false` (client-side ID mode).
+   *
+   * Note: secure mode ({@link NodeOptions.hash}) is not supported in mobile
+   * key mode. Setting both `useMobileKey: true` and `hash` will cause
+   * {@link createClient} to throw.
+   */
+  useMobileKey?: boolean;
 }

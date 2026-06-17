@@ -168,8 +168,8 @@ export default class NodeStorage implements Storage {
 }
 
 // Storage is a process-level singleton so multiple SDK instances in the same Node
-// process share the same cache file. The first call's storagePath / logger wins;
-// later calls ignore the arguments.
+// process share the same cache file. The first call's storagePath wins;
+// subsequent calls with a different path log a warning and return the existing instance.
 let instance: NodeStorage | undefined;
 let instancePath: string | undefined;
 

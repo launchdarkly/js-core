@@ -47,6 +47,16 @@ it('forwards the logger to NodeStorage so storage failures surface', async () =>
   );
 });
 
+it('uses a custom storage implementation when provided', async () => {
+  const customStorage = {
+    get: jest.fn().mockResolvedValue('custom-value'),
+    set: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
+  };
+  const platform = new NodePlatform(logger, { storage: customStorage });
+  await expect(platform.storage.get('alpha')).resolves.toBe('custom-value');
+  expect(customStorage.get).toHaveBeenCalledWith('alpha');
+});
 
 it('passes wrapperName and wrapperVersion to NodeInfo', () => {
   const platform = new NodePlatform(logger, {

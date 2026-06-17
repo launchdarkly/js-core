@@ -174,3 +174,4 @@ it('warns when getNodeStorage is called with a different localStoragePath', () =
     expect.stringContaining('different localStoragePath'),
   );
 });
+

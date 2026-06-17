@@ -53,6 +53,7 @@ function makeNodeConfig(overrides: Partial<ValidatedOptions> = {}): ValidatedOpt
   return {
     initialConnectionMode: 'streaming',
     plugins: [],
+    useMobileKey: false,
     ...overrides,
   };
 }
