@@ -1,7 +1,7 @@
 import {
   ConnectionMode,
   LDOptions as LDOptionsBase,
-  Storage,
+  LDStorage,
 } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDPlugin } from './LDPlugin';
@@ -76,7 +76,7 @@ export interface NodeOptions extends LDOptionsBase {
    * Setting both `storage` and `localStoragePath` is not supported. When both are
    * present, `storage` takes precedence and `localStoragePath` is ignored.
    */
-  storage?: Storage;
+  storage?: LDStorage;
 
   /**
    * The Secure Mode hash for the configured context.

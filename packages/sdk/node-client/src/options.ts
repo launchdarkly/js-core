@@ -2,8 +2,8 @@ import {
   ConnectionMode,
   LDLogger,
   LDOptions as LDOptionsBase,
+  LDStorage,
   OptionMessages,
-  Storage,
   TypeValidator,
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
@@ -21,7 +21,7 @@ class ConnectionModeValidator implements TypeValidator {
 }
 
 class StorageOptionsValidator implements TypeValidator {
-  is(u: unknown): u is Storage {
+  is(u: unknown): u is LDStorage {
     if (typeof u !== 'object' || u === null) {
       return false;
     }
@@ -39,7 +39,7 @@ export interface ValidatedOptions {
   initialConnectionMode: ConnectionMode;
   plugins: LDPlugin[];
   localStoragePath?: string;
-  storage?: Storage;
+  storage?: LDStorage;
   hash?: string;
   useMobileKey: boolean;
   wrapperName?: string;

@@ -1,4 +1,4 @@
-import { LDLogger, platform } from '@launchdarkly/js-client-sdk-common';
+import { createSafeStorage, LDLogger, platform } from '@launchdarkly/js-client-sdk-common';
 
 import type { NodeOptions } from '../NodeOptions';
 import NodeCrypto from './NodeCrypto';
@@ -23,7 +23,9 @@ export default class NodePlatform implements platform.Platform {
     options: Pick<NodeOptions, 'storage' | 'localStoragePath' | 'tlsParams' | 'enableEventCompression' | 'wrapperName' | 'wrapperVersion'>,
   ) {
     this.info = new NodeInfo({ wrapperName: options.wrapperName, wrapperVersion: options.wrapperVersion });
-    this.storage = options.storage ?? getNodeStorage(options.localStoragePath, logger);
+    this.storage = options.storage
+      ? createSafeStorage(options.storage, logger)
+      : getNodeStorage(options.localStoragePath, logger);
     this.requests = new NodeRequests(options.tlsParams, options.enableEventCompression);
   }
 }
