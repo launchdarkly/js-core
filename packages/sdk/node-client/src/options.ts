@@ -25,9 +25,7 @@ class StorageOptionsValidator implements TypeValidator {
     if (typeof u !== 'object' || u === null) {
       return false;
     }
-    const has = (k: string) =>
-      Object.prototype.hasOwnProperty.call(u, k) &&
-      typeof (u as Record<string, unknown>)[k] === 'function';
+    const has = (k: string) => typeof (u as Record<string, unknown>)[k] === 'function';
     return has('get') && has('set') && has('clear');
   }
   getType(): string {

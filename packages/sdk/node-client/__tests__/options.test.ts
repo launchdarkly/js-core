@@ -75,6 +75,17 @@ it('accepts a valid Storage implementation', () => {
   expect(logger.warn).not.toHaveBeenCalled();
 });
 
+it('accepts a class-based Storage implementation with prototype methods', () => {
+  class MyStorage {
+    async get(_key: string): Promise<string | null> { return null; }
+    async set(_key: string, _value: string): Promise<void> {}
+    async clear(_key: string): Promise<void> {}
+  }
+  const validated = validateOptions({ storage: new MyStorage() }, logger);
+  expect(validated.storage).toBeInstanceOf(MyStorage);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
 it('rejects a non-object storage value and warns', () => {
   const validated = validateOptions({ storage: 'file' as any }, logger);
   expect(validated.storage).toBeUndefined();
