@@ -45,20 +45,23 @@ export function createTestClient(
 
 /**
  * Creates a `@launchdarkly/react-sdk` client and a pre-wired Provider component,
- * ready to wrap components under test.
+ * ready to wrap components under test. The client is started automatically with
+ * an empty bootstrap so initialization does not block on a network call.
  *
  * @param context the LDContext to identify the test client as
  * @param initialFlags optional seed map of flag keys to values
  * @param options optional react-sdk options
  *
- * @returns an object containing the Provider component, client, and testData
+ * @returns a Promise resolving to an object containing the Provider component,
+ *   client, and testData
  */
-export function createTestClientProvider(
+export async function createTestClientProvider(
   context: LDContext,
   initialFlags?: { [key: string]: LDFlagValue },
   options?: Partial<LDReactClientOptions>,
-): CreateTestClientProviderResult {
+): Promise<CreateTestClientProviderResult> {
   const { client, testData } = createTestClient(context, initialFlags, options);
+  await client.start({ bootstrap: {} });
   const Provider = createLDReactProviderWithClient(client);
   return { Provider, client, testData };
 }

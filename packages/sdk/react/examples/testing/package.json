@@ -1,0 +1,33 @@
+{
+  "name": "@launchdarkly/react-sdk-example-testing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example: unit-testing React components with @launchdarkly/client-testing-plugin and the React SDK",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react/examples/testing",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "npx jest --ci"
+  },
+  "dependencies": {
+    "@launchdarkly/client-testing-plugin": "0.1.1",
+    "@launchdarkly/js-client-sdk": "4.9.0",
+    "@launchdarkly/react-sdk": "4.1.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^29.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.0.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "5.1.6"
+  }
+}

@@ -71,7 +71,7 @@ render(<LDProvider><MyComponent /></LDProvider>);
 testData.setString('greeting', 'Updated');
 ```
 
-A runnable example lives under [`example/sdks/react-sdk/`](./example/sdks/react-sdk/).
+A runnable example lives under [`packages/sdk/react/examples/testing/`](../../sdk/react/examples/testing/).
 
 ## Manual setup (advanced)
 

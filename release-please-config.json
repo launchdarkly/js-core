@@ -279,6 +279,11 @@
           "type": "json",
           "path": "/packages/tooling/client-testing-plugin/package.json",
           "jsonpath": "$.devDependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/react/examples/testing/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         }
       ]
     },
@@ -337,7 +342,14 @@
     },
     "packages/tooling/client-testing-plugin": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/react/examples/testing/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/client-testing-plugin']"
+        }
+      ]
     },
     "packages/sdk/combined-browser": {
       "bump-minor-pre-major": true
@@ -368,6 +380,11 @@
         {
           "type": "json",
           "path": "examples/vercel-edge/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "examples/testing/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/react-sdk']"
         },
         {

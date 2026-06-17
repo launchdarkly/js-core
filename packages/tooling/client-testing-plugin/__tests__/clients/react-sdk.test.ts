@@ -39,14 +39,15 @@ it('appends TestData to user-supplied plugins rather than replacing them', async
   await client.close();
 });
 
-it('createTestClientProvider returns a pre-wired Provider, client, and testData', () => {
-  const { Provider, client, testData } = createTestClientProvider(
+it('createTestClientProvider returns a pre-wired Provider, client, and testData', async () => {
+  const { Provider, client, testData } = await createTestClientProvider(
     { kind: 'user', key: 'tester' },
     { 'show-banner': true },
   );
   expect(Provider).toBeInstanceOf(Function);
   expect(client).toBeDefined();
   expect(testData).toBeInstanceOf(TestData);
+  await client.close();
 });
 
 it('updates flag values dynamically via testData after the client is started', async () => {

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "lib": ["es6", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noImplicitOverride": true,
+    "paths": {
+      "@launchdarkly/client-testing-plugin": ["../../../../tooling/client-testing-plugin/src/index.ts"],
+      "@launchdarkly/client-testing-plugin/react-sdk": ["../../../../tooling/client-testing-plugin/src/clients/react-sdk.ts"],
+      "@launchdarkly/react-sdk": ["../../src/client/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2017",
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*"]
+}

@@ -51,8 +51,8 @@
     "@launchdarkly/js-client-sdk-common": "1.29.0"
   },
   "peerDependencies": {
-    "@launchdarkly/js-client-sdk": ">=4.9.0",
-    "@launchdarkly/react-sdk": ">=4.1.2"
+    "@launchdarkly/js-client-sdk": "^4",
+    "@launchdarkly/react-sdk": "^4"
   },
   "peerDependenciesMeta": {
     "@launchdarkly/js-client-sdk": {
