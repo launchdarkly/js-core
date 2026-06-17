@@ -104,6 +104,7 @@ function translateContextCommon(
 
 /**
  * Convert an OpenFeature evaluation context into an LDContext.
+ * @param logger Logger to use when warnings or errors are encountered during translation.
  * @param evalContext The OpenFeature evaluation context to translate.
  * @returns An LDContext based on the evaluation context.
  */

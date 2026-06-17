@@ -25,6 +25,8 @@ import { translateTrackingEventDetails } from './translateTrackingEventDetails';
 /**
  * Create a ResolutionDetails for an evaluation that produced a type different
  * than the expected type.
+ * @param value The default value to populate the ResolutionDetails with.
+ * @returns A ResolutionDetails with the default value.
  */
 function wrongTypeResult<T>(value: T): ResolutionDetails<T> {
   return {
@@ -113,6 +115,19 @@ export abstract class BaseOpenFeatureProvider<
     await this._client.waitForInitialization({ timeout: this._initTimeoutSeconds });
   }
 
+  /**
+   * Determines the boolean variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * If the flag does not evaluate to a boolean value, then the defaultValue will be returned.
+   *
+   * @param flagKey The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @returns A promise which will resolve to a ResolutionDetails.
+   */
   async resolveBooleanEvaluation(
     flagKey: string,
     defaultValue: boolean,
@@ -129,6 +144,19 @@ export abstract class BaseOpenFeatureProvider<
     return wrongTypeResult(defaultValue);
   }
 
+  /**
+   * Determines the string variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * If the flag does not evaluate to a string value, then the defaultValue will be returned.
+   *
+   * @param flagKey The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @returns A promise which will resolve to a ResolutionDetails.
+   */
   async resolveStringEvaluation(
     flagKey: string,
     defaultValue: string,
@@ -145,6 +173,19 @@ export abstract class BaseOpenFeatureProvider<
     return wrongTypeResult(defaultValue);
   }
 
+  /**
+   * Determines the numeric variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * If the flag does not evaluate to a numeric value, then the defaultValue will be returned.
+   *
+   * @param flagKey The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @returns A promise which will resolve to a ResolutionDetails.
+   */
   async resolveNumberEvaluation(
     flagKey: string,
     defaultValue: number,
@@ -161,6 +202,19 @@ export abstract class BaseOpenFeatureProvider<
     return wrongTypeResult(defaultValue);
   }
 
+  /**
+   * Determines the object variation of a feature flag for a context, along with information about
+   * how it was calculated.
+   *
+   * If the flag does not evaluate to a JSON object value, then the defaultValue will be returned.
+   *
+   * @param flagKey The unique key of the feature flag.
+   * @param defaultValue The default value of the flag, to be used if the value is not available
+   *   from LaunchDarkly.
+   * @param context The context requesting the flag. The client will generate an analytics event to
+   *   register this context with LaunchDarkly if the context does not already exist.
+   * @returns A promise which will resolve to a ResolutionDetails.
+   */
   async resolveObjectEvaluation<U extends JsonValue>(
     flagKey: string,
     defaultValue: U,
@@ -177,10 +231,20 @@ export abstract class BaseOpenFeatureProvider<
     return wrongTypeResult<U>(defaultValue);
   }
 
+  /**
+   * Returns the OpenFeature hooks registered for this provider. The
+   * LaunchDarkly provider does not currently register any provider-level
+   * hooks, so this always returns an empty array.
+   */
   get hooks(): Hook[] {
     return [];
   }
 
+  /**
+   * Get the LDClient instance used by this provider.
+   *
+   * @returns The client for this provider.
+   */
   getClient(): TClient {
     return this._client!;
   }
