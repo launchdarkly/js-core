@@ -1,15 +1,10 @@
 # LaunchDarkly OpenFeature Common Server Provider
 
-<!--
 [![NPM][openfeature-server-common-npm-badge]][openfeature-server-common-npm-link]
 [![Actions Status][openfeature-server-common-ci-badge]][openfeature-server-common-ci]
--->
-
-> [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
+[![Documentation][openfeature-server-common-ghp-badge]][openfeature-server-common-ghp-link]
+[![NPM][openfeature-server-common-dm-badge]][openfeature-server-common-npm-link]
+[![NPM][openfeature-server-common-dt-badge]][openfeature-server-common-npm-link]
 
 This package contains the shared OpenFeature provider implementation for LaunchDarkly server-side JavaScript SDKs. It provides a base provider class and translation utilities that convert between OpenFeature and LaunchDarkly concepts.
 
@@ -38,9 +33,11 @@ LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-<!--
+[openfeature-server-common-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-server-common.yaml/badge.svg
+[openfeature-server-common-ci]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-server-common.yaml
 [openfeature-server-common-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/openfeature-js-server-common.svg?style=flat-square
 [openfeature-server-common-npm-link]: https://www.npmjs.com/package/@launchdarkly/openfeature-js-server-common
-[openfeature-server-common-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-node-server.yml/badge.svg
-[openfeature-server-common-ci]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-node-server.yml
--->
+[openfeature-server-common-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[openfeature-server-common-ghp-link]: https://launchdarkly.github.io/js-core/packages/shared/openfeature-server-common/docs/
+[openfeature-server-common-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/openfeature-js-server-common.svg?style=flat-square
+[openfeature-server-common-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/openfeature-js-server-common.svg?style=flat-square

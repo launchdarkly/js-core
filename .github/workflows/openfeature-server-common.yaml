@@ -1,0 +1,33 @@
+name: shared/openfeature-server-common
+
+on:
+  push:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md' #Do not need to run CI for markdown changes.
+  pull_request:
+    branches: [main, 'feat/**']
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build-test-openfeature-server-common:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        # Node versions to run on.
+        version: [20, 22]
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: ${{ matrix.version }}
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/openfeature-js-server-common'
+          workspace_path: packages/shared/openfeature-server-common
