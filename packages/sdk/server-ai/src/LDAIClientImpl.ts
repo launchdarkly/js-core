@@ -104,10 +104,20 @@ export class LDAIClientImpl implements LDAIClient {
         graphKey,
       );
 
+    let evaluator = Evaluator.noop();
+
+    // A disabled variation is served without a mode, so short-circuit to a
+    // disabled config of the requested mode before comparing modes. Otherwise
+    // the absent mode defaults to 'completion' and triggers a spurious
+    // mismatch warning for agent and judge requests.
+    // eslint-disable-next-line no-underscore-dangle
+    if (value._ldMeta?.enabled === false) {
+      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
+    }
+
     // Validate mode match
     // eslint-disable-next-line no-underscore-dangle
     const flagMode = value._ldMeta?.mode ?? 'completion';
-    let evaluator = Evaluator.noop();
 
     if (flagMode !== mode) {
       this._logger?.warn(

@@ -23,9 +23,17 @@ jest.mock('../src/api/judge/Judge', () => {
 });
 jest.mock('../src/api/providers/RunnerFactory');
 
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
 const mockLdClient: jest.Mocked<LDClientMin> = {
   variation: jest.fn(),
   track: jest.fn(),
+  logger: mockLogger,
 };
 
 // Reset mocks before each test
@@ -365,6 +373,64 @@ describe('config evaluation', () => {
 
     expect(result.enabled).toBe(false);
     expect(result.createTracker).toBeInstanceOf(Function);
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('mode mismatch'));
+  });
+
+  it('does not warn about a mode mismatch when an agent config is disabled', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'sample-agent';
+
+    // A disabled variation is served with only `enabled: false` and no mode.
+    const mockVariation = {
+      _ldMeta: { enabled: false },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfig(key, testContext);
+
+    expect(result.enabled).toBe(false);
+    expect(result.key).toBe(key);
+    expect(result.createTracker).toBeInstanceOf(Function);
+    // An agent config exposes an evaluator; a judge config does not.
+    expect('evaluator' in result).toBe(true);
+    expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('mode mismatch'));
+  });
+
+  it('does not warn about a mode mismatch when a judge config is disabled', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'sample-judge';
+
+    const mockVariation = {
+      _ldMeta: { enabled: false },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.judgeConfig(key, testContext);
+
+    expect(result.enabled).toBe(false);
+    expect(result.key).toBe(key);
+    expect(result.createTracker).toBeInstanceOf(Function);
+    expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('mode mismatch'));
+  });
+
+  it('does not warn about a mode mismatch when a completion config is disabled', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'sample-completion';
+
+    const mockVariation = {
+      _ldMeta: { enabled: false },
+    };
+
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfig(key, testContext);
+
+    expect(result.enabled).toBe(false);
+    expect(result.key).toBe(key);
+    expect(result.createTracker).toBeInstanceOf(Function);
+    expect(mockLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('mode mismatch'));
   });
 
   it('handles missing metadata mode by defaulting to completion mode', async () => {
@@ -740,11 +806,11 @@ describe('createJudge method', () => {
     expect(judgeConfigSpy).toHaveBeenCalledWith(key, testContext, defaultValue, undefined);
     expect(RunnerFactory.createModel).toHaveBeenCalledWith(
       mockJudgeConfig,
-      undefined,
+      mockLogger,
       undefined,
       false,
     );
-    expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, undefined);
+    expect(Judge).toHaveBeenCalledWith(mockJudgeConfig, mockProvider, 1.0, mockLogger);
     expect(result).toBe(mockJudge);
     judgeConfigSpy.mockRestore();
   });
@@ -800,7 +866,7 @@ describe('createJudge method', () => {
     expect(result).toBeUndefined();
     expect(RunnerFactory.createModel).toHaveBeenCalledWith(
       mockJudgeConfig,
-      undefined,
+      mockLogger,
       undefined,
       false,
     );
