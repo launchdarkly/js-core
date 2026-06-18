@@ -119,23 +119,26 @@ export class LDAIClientImpl implements LDAIClient {
     // eslint-disable-next-line no-underscore-dangle
     const flagMode = value._ldMeta?.mode ?? 'completion';
 
+    // An enabled variation whose mode differs from the requested mode cannot be
+    // returned as the requested type. Fall back to the caller's supplied default
+    // (converted to the requested mode) rather than the served variation.
+    const sourceValue = flagMode === mode ? value : ldFlagValue;
     if (flagMode !== mode) {
       this._logger?.warn(
-        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning disabled config.`,
+        `AI Config mode mismatch for ${key}: expected ${mode}, got ${flagMode}. Returning caller's default.`,
       );
-      return LDAIConfigUtils.createDisabledConfig(key, mode, trackerFactory, evaluator);
     }
 
-    if (flagMode !== 'judge') {
+    if (mode !== 'judge') {
       evaluator = await this._buildEvaluator(
-        value.judgeConfiguration?.judges ?? [],
+        sourceValue.judgeConfiguration?.judges ?? [],
         context,
         variables,
         defaultAiProvider,
       );
     }
 
-    const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
+    const config = LDAIConfigUtils.fromFlagValue(key, sourceValue, trackerFactory, evaluator);
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);

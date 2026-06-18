@@ -354,13 +354,17 @@ describe('config evaluation', () => {
     evaluateSpy.mockRestore();
   });
 
-  it('handles mode mismatch by returning disabled config', async () => {
+  it("returns the caller's default on a genuine mode mismatch", async () => {
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-flag';
     const defaultValue: LDAICompletionConfigDefault = {
-      enabled: false,
+      enabled: true,
+      model: { name: 'default-model', parameters: { name: 'default' } },
+      provider: { name: 'default-provider' },
+      messages: [{ role: 'system', content: 'Default message' }],
     };
 
+    // Served variation is enabled but a different mode than requested.
     const mockVariation = {
       model: { name: 'example-provider', parameters: { name: 'imagination' } },
       messages: [{ role: 'system', content: 'Hello' }],
@@ -371,7 +375,12 @@ describe('config evaluation', () => {
 
     const result = await client.completionConfig(key, testContext, defaultValue);
 
-    expect(result.enabled).toBe(false);
+    // The returned config reflects the caller's default, not a disabled config
+    // and not the served variation.
+    expect(result.enabled).toBe(true);
+    expect(result.model).toEqual({ name: 'default-model', parameters: { name: 'default' } });
+    expect(result.provider).toEqual({ name: 'default-provider' });
+    expect(result.messages).toEqual([{ role: 'system', content: 'Default message' }]);
     expect(result.createTracker).toBeInstanceOf(Function);
     expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('mode mismatch'));
   });
