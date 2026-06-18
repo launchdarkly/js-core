@@ -205,6 +205,12 @@ updates:
     cooldown:
       default-days: 7
   - package-ecosystem: "npm"
+    directory: "/packages/sdk/react/examples/testing"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "npm"
     directory: "/packages/sdk/react/examples/vercel-edge"
     schedule:
       interval: "weekly"
