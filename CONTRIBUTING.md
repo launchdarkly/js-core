@@ -184,6 +184,7 @@ flowchart LR
     common --> sdk-server
     common --> sdk-server-edge
     common --> akamai-edgeworker
+    common --> openfeature-server-common
     sdk-server --> sdk-server-edge
     
     %% Dependencies for SDK packages
