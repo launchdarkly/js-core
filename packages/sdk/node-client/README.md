@@ -1,21 +1,16 @@
 # LaunchDarkly Node.js Client-Side SDK
 
-<!--
-[![NPM][npm-badge]][npm-link]
-[![Actions Status][ci-badge]][ci-link]
-[![Documentation][ghp-badge]][ghp-link]
-[![NPM][npm-dm-badge]][npm-link]
-[![NPM][npm-dt-badge]][npm-link]
--->
+[![NPM][node-client-npm-badge]][node-client-npm-link]
+[![Actions Status][node-client-ci-badge]][node-client-ci]
+[![Documentation][node-client-ghp-badge]][node-client-ghp-link]
+[![NPM][node-client-dm-badge]][node-client-npm-link]
+[![NPM][node-client-dt-badge]][node-client-npm-link]
 
 > [!CAUTION]
-> This SDK is experimental and should NOT be considered ready for production use.
-> It may change or be removed without notice and is not subject to backwards
-> compatibility guarantees.
-
-<!--
-> Pin to a specific minor version and review the [changelog](link-to-changelog) before upgrading.
--->
+> This SDK is in pre-release and not subject to backwards compatibility
+> guarantees. The API may change based on feedback.
+>
+> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
 
 ## Getting started
 
@@ -37,13 +32,11 @@ Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/n
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
 
-<!--
-[npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-client-sdk.svg?style=flat-square
-[npm-link]: https://www.npmjs.com/package/@launchdarkly/node-client-sdk
-[npm-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/node-client-sdk.svg?style=flat-square
-[npm-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/node-client-sdk.svg?style=flat-square
-[ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml/badge.svg
-[ci-link]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml
-[ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/node-client/docs/
--->
+[node-client-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml/badge.svg
+[node-client-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml
+[node-client-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-client-sdk.svg?style=flat-square
+[node-client-npm-link]: https://www.npmjs.com/package/@launchdarkly/node-client-sdk
+[node-client-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
+[node-client-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/node-client/docs/
+[node-client-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/node-client-sdk.svg?style=flat-square
+[node-client-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/node-client-sdk.svg?style=flat-square
