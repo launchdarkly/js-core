@@ -20,6 +20,7 @@ import Configuration from '../options/Configuration';
 export default class Requestor implements LDFeatureRequestor {
   private readonly _headers: Record<string, string>;
   private readonly _serviceEndpoints: ServiceEndpoints;
+  private readonly _timeoutMs: number;
   private readonly _eTagCache: Record<
     string,
     {
@@ -38,6 +39,7 @@ export default class Requestor implements LDFeatureRequestor {
   ) {
     this._headers = { ...baseHeaders };
     this._serviceEndpoints = serviceEndpointsOverride ?? config.serviceEndpoints;
+    this._timeoutMs = config.timeout * 1000;
   }
 
   /**
@@ -81,6 +83,7 @@ export default class Requestor implements LDFeatureRequestor {
     const options: Options = {
       method: 'GET',
       headers: this._headers,
+      timeout: this._timeoutMs,
     };
 
     const uri = getPollingUri(this._serviceEndpoints, this._path, queryParams);

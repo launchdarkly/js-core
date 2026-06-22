@@ -181,6 +181,38 @@ describe('given a default instance of NodeRequests', () => {
   });
 });
 
+describe('given a request to a server that never responds', () => {
+  let hangingServer: http.Server;
+  let hangingPort: number;
+
+  beforeAll(
+    async () =>
+      new Promise<void>((resolveListening) => {
+        hangingServer = http.createServer((_req, _res) => {
+          // Intentionally never respond — simulates a hung upstream.
+        });
+        hangingServer.listen(0, () => {
+          hangingPort = (hangingServer.address() as { port: number }).port;
+          resolveListening();
+        });
+      }),
+  );
+
+  afterAll(
+    async () =>
+      new Promise<void>((resolveClose) => {
+        hangingServer.close(() => resolveClose());
+      }),
+  );
+
+  it('rejects with "Request timed out" when the timeout elapses', async () => {
+    const requests = new NodeRequests();
+    await expect(
+      requests.fetch(`http://localhost:${hangingPort}`, { timeout: 50 }),
+    ).rejects.toThrow('Request timed out');
+  });
+});
+
 describe('given an instance of NodeRequests with enableEventCompression turned on', () => {
   const requests = new NodeRequests(undefined, undefined, undefined, true);
   it('can make a basic post with compressBodyIfPossible enabled', async () => {

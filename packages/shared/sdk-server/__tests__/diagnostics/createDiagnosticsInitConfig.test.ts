@@ -18,7 +18,7 @@ describe.each([
     {},
     {
       allAttributesPrivate: false,
-      connectTimeoutMillis: 5000,
+      connectTimeoutMillis: 10000,
       customBaseURI: false,
       customEventsURI: false,
       customStreamURI: false,
@@ -29,7 +29,7 @@ describe.each([
       offline: false,
       pollingIntervalMillis: 30000,
       reconnectTimeMillis: 1000,
-      socketTimeoutMillis: 5000,
+      socketTimeoutMillis: 10000,
       streamingDisabled: false,
       contextKeysCapacity: 1000,
       contextKeysFlushIntervalMillis: 300000,
