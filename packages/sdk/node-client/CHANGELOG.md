@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.2.0...node-client-sdk-v0.3.0) (2026-06-22)
+
+
+### Features
+
+* **node-client-sdk:** adding ability to override storage implementation ([#1753](https://github.com/launchdarkly/js-core/issues/1753)) ([a04ec92](https://github.com/launchdarkly/js-core/commit/a04ec9215e069b7195c6e7aba21c09b39c607837))
+
 ## [0.2.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.1.0...node-client-sdk-v0.2.0) (2026-06-22)
 
 
