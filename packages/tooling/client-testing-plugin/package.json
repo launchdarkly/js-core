@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/client-testing-plugin",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "description": "Testing plugin for LaunchDarkly client-side JavaScript SDKs. Uses the experimental plugin debug-override mechanism to inject flag values for unit tests and local development.",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/tooling/client-testing-plugin",
   "repository": {
