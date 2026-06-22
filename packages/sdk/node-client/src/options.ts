@@ -2,6 +2,7 @@ import {
   ConnectionMode,
   LDLogger,
   LDOptions as LDOptionsBase,
+  LDStorage,
   OptionMessages,
   TypeValidator,
   TypeValidators,
@@ -19,13 +20,28 @@ class ConnectionModeValidator implements TypeValidator {
   }
 }
 
+class StorageOptionsValidator implements TypeValidator {
+  is(u: unknown): u is LDStorage {
+    if (typeof u !== 'object' || u === null) {
+      return false;
+    }
+    const has = (k: string) => typeof (u as Record<string, unknown>)[k] === 'function';
+    return has('get') && has('set') && has('clear');
+  }
+  getType(): string {
+    return 'Storage ({ get, set, clear })';
+  }
+}
+
 export interface ValidatedOptions {
   tlsParams?: LDTLSOptions;
   enableEventCompression?: boolean;
   initialConnectionMode: ConnectionMode;
   plugins: LDPlugin[];
   localStoragePath?: string;
+  storage?: LDStorage;
   hash?: string;
+  useMobileKey: boolean;
   wrapperName?: string;
   wrapperVersion?: string;
 }
@@ -36,7 +52,9 @@ const optDefaults: ValidatedOptions = {
   initialConnectionMode: 'streaming',
   plugins: [],
   localStoragePath: undefined,
+  storage: undefined,
   hash: undefined,
+  useMobileKey: false,
   wrapperName: undefined,
   wrapperVersion: undefined,
 };
@@ -47,7 +65,9 @@ const validators: { [Property in keyof NodeOptions]: TypeValidator | undefined }
   initialConnectionMode: new ConnectionModeValidator(),
   plugins: TypeValidators.createTypeArray('LDPlugin[]', {}),
   localStoragePath: TypeValidators.String,
+  storage: new StorageOptionsValidator(),
   hash: TypeValidators.String,
+  useMobileKey: TypeValidators.Boolean,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
 };
@@ -80,6 +100,20 @@ export default function validateOptions(opts: NodeOptions, logger: LDLogger): Va
       }
     }
   });
+
+  if (output.useMobileKey && output.hash !== undefined) {
+    throw new Error(
+      'Invalid configuration: secure mode "hash" is not supported when "useMobileKey" is true. ' +
+        'Remove one of these options.',
+    );
+  }
+
+  if (output.localStoragePath !== undefined && output.storage !== undefined) {
+    logger.warn(
+      'Both "localStoragePath" and "storage" are set. ' +
+        '"localStoragePath" will be ignored in favor of the custom "storage" implementation.',
+    );
+  }
 
   if (output.tlsParams?.rejectUnauthorized === false) {
     logger.warn(

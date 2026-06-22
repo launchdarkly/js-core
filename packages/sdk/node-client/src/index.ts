@@ -19,9 +19,6 @@ import type { LDTLSOptions, NodeOptions } from './NodeOptions';
 
 export * from './LDCommon';
 
-/** @internal */
-export { resetNodeStorage } from './platform/NodeStorage';
-
 export type {
   NodeOptions as LDOptions,
   NodeIdentifyOptions as LDIdentifyOptions,

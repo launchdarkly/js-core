@@ -47,6 +47,60 @@ it('forwards the logger to NodeStorage so storage failures surface', async () =>
   );
 });
 
+it('uses a custom storage implementation when provided', async () => {
+  const customStorage = {
+    get: jest.fn().mockResolvedValue('custom-value'),
+    set: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
+  };
+  const platform = new NodePlatform(logger, { storage: customStorage });
+  await expect(platform.storage.get('alpha')).resolves.toBe('custom-value');
+  expect(customStorage.get).toHaveBeenCalledWith('alpha');
+});
+
+it('does not throw when a custom storage get rejects', async () => {
+  const faultyStorage = {
+    get: jest.fn().mockRejectedValue(new Error('disk full')),
+    set: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
+  };
+  const platform = new NodePlatform(logger, { storage: faultyStorage });
+  await expect(platform.storage.get('alpha')).resolves.toBeNull();
+  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error getting key from storage'));
+});
+
+it('does not throw when a custom storage set rejects', async () => {
+  const faultyStorage = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockRejectedValue(new Error('disk full')),
+    clear: jest.fn().mockResolvedValue(undefined),
+  };
+  const platform = new NodePlatform(logger, { storage: faultyStorage });
+  await expect(platform.storage.set('alpha', 'one')).resolves.toBeUndefined();
+  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error setting key in storage'));
+});
+
+it('does not throw when a custom storage clear rejects', async () => {
+  const faultyStorage = {
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockRejectedValue(new Error('disk full')),
+  };
+  const platform = new NodePlatform(logger, { storage: faultyStorage });
+  await expect(platform.storage.clear('alpha')).resolves.toBeUndefined();
+  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error clearing key from storage'));
+});
+
+it('does not throw when a custom storage get throws synchronously', async () => {
+  const faultyStorage = {
+    get: jest.fn().mockImplementation(() => { throw new Error('sync boom'); }),
+    set: jest.fn().mockResolvedValue(undefined),
+    clear: jest.fn().mockResolvedValue(undefined),
+  };
+  const platform = new NodePlatform(logger, { storage: faultyStorage });
+  await expect(platform.storage.get('alpha')).resolves.toBeNull();
+  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error getting key from storage'));
+});
 
 it('passes wrapperName and wrapperVersion to NodeInfo', () => {
   const platform = new NodePlatform(logger, {
