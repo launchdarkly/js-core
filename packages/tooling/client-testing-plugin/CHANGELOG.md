@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/client-testing-plugin-v0.1.1...client-testing-plugin-v1.0.0) (2026-06-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* release `@launchdarkly/client-testing-plugin` ([#1755](https://github.com/launchdarkly/js-core/issues/1755))
+
+### Features
+
+* release `@launchdarkly/client-testing-plugin` ([#1755](https://github.com/launchdarkly/js-core/issues/1755)) ([9d44e25](https://github.com/launchdarkly/js-core/commit/9d44e25380d58b1510b510d5f2a5b6d4d05e58e9))
+
 ## [0.1.1](https://github.com/launchdarkly/js-core/compare/client-testing-plugin-v0.1.0...client-testing-plugin-v0.1.1) (2026-06-08)
 
 

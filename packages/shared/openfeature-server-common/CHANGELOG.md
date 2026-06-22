@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v0.1.3...openfeature-js-server-common-v1.0.0) (2026-06-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* release `@launchdarkly/openfeature-js-server-common` ([#1754](https://github.com/launchdarkly/js-core/issues/1754))
+
+### Features
+
+* release `@launchdarkly/openfeature-js-server-common` ([#1754](https://github.com/launchdarkly/js-core/issues/1754)) ([f83f6db](https://github.com/launchdarkly/js-core/commit/f83f6db16b6c77f1cbc5cfeb4dfd47b7c17b71bf))
+
 ## [0.1.3](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v0.1.2...openfeature-js-server-common-v0.1.3) (2026-06-05)
 
 
