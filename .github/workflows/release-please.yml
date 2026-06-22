@@ -63,6 +63,7 @@ on:
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
           - packages/sdk/react
+          - packages/shared/openfeature-server-common
           - packages/sdk/openfeature-node-server
           - packages/sdk/vue
       prerelease:
@@ -108,6 +109,7 @@ jobs:
       package-sdk-shopify-oxygen-released: ${{ steps.release.outputs['packages/sdk/shopify-oxygen--release_created'] }}
       package-sdk-electron-released: ${{ steps.release.outputs['packages/sdk/electron--release_created'] }}
       package-sdk-react-released: ${{ steps.release.outputs['packages/sdk/react--release_created'] }}
+      package-shared-openfeature-server-common-released: ${{ steps.release.outputs['packages/shared/openfeature-server-common--release_created'] }}
       package-sdk-openfeature-node-server-released: ${{ steps.release.outputs['packages/sdk/openfeature-node-server--release_created'] }}
       package-tooling-client-testing-plugin-released: ${{ steps.release.outputs['packages/tooling/client-testing-plugin--release_created'] }}
       package-sdk-vue-released: ${{ steps.release.outputs['packages/sdk/vue--release_created'] }}
@@ -541,9 +543,25 @@ jobs:
           workspace_path: packages/sdk/react
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
+  release-openfeature-server-common:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-common']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-shared-openfeature-server-common-released == 'true'}}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - id: release-openfeature-server-common
+        name: Full release of packages/shared/openfeature-server-common
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/shared/openfeature-server-common
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
   release-openfeature-node-server:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-server-node']
+    needs: ['release-please', 'release-server-node', 'release-openfeature-server-common']
     permissions:
       id-token: write
       contents: write

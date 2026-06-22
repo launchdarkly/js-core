@@ -154,6 +154,7 @@ flowchart LR
     sdk-server[shared/sdk-server]
     sdk-server-edge[shared/sdk-server-edge]
     akamai-edgeworker[shared/akamai-edgeworker-sdk]
+    openfeature-server-common[shared/openfeature-server-common]
 
     %% SDK packages
     server-node[sdk/server-node]
@@ -183,6 +184,7 @@ flowchart LR
     common --> sdk-server
     common --> sdk-server-edge
     common --> akamai-edgeworker
+    common --> openfeature-server-common
     sdk-server --> sdk-server-edge
     
     %% Dependencies for SDK packages
@@ -212,7 +214,7 @@ flowchart LR
     %% Dependencies for tooling packages
     react-native -.-> jest
     
-    class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker shared
+    class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker,openfeature-server-common shared
     class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen sdk
     class redis,dynamodb store
     class node-otel telemetry
@@ -227,6 +229,7 @@ There are a number of categories of packages in the monorepo:
    - `shared/sdk-server`: Common code for server-side SDKs
    - `shared/sdk-server-edge`: Common code for edge SDKs
    - `shared/akamai-edgeworker-sdk`: Common code for Akamai edge worker SDKs
+   - `shared/openfeature-server-common`: Common code for server-side OpenFeature providers
 
 2. **SDK packages** (blue): Actual SDK implementations for different platforms
    - Browser, React Native, Server Node, Cloudflare, Fastly, Vercel, Akamai, etc.

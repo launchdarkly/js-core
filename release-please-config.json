@@ -395,8 +395,7 @@
       ]
     },
     "packages/shared/openfeature-server-common": {
-      "bump-minor-pre-major": true,
-      "prerelease": true
+      "release-as": "1.0.0"
     },
     "packages/sdk/openfeature-node-server": {
       "bump-minor-pre-major": true,
