@@ -6,13 +6,7 @@
 [![NPM][client-testing-plugin-dm-badge]][client-testing-plugin-npm-link]
 [![NPM][client-testing-plugin-dt-badge]][client-testing-plugin-npm-link]
 
-> [!CAUTION]
-> This plugin is in pre-release and not subject to backwards compatibility
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
-
-A testing plugin for LaunchDarkly client-side JavaScript SDKs. Use it to inject deterministic flag values into a real SDK client during unit tests, integration tests, and local development.
+>A testing plugin for LaunchDarkly client-side JavaScript SDKs. Use it to inject deterministic flag values into a real SDK client during unit tests, integration tests, and local development.
 
 ## Install
 
