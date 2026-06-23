@@ -1,4 +1,4 @@
-import type { Storage } from '@launchdarkly/js-client-sdk-common';
+import type { LDStorage } from '@launchdarkly/js-client-sdk-common';
 
 import validateOptions, { ValidatedOptions } from '../src/options';
 import { createMockLogger } from './testHelpers';
@@ -65,7 +65,7 @@ it('warns when TLS certificate verification is disabled', () => {
 });
 
 it('accepts a valid Storage implementation', () => {
-  const storage: Storage = {
+  const storage: LDStorage = {
     get: async () => null,
     set: async () => {},
     clear: async () => {},
@@ -120,7 +120,7 @@ it('warns and ignores localStoragePath when it is not a string', () => {
 });
 
 it('warns when both localStoragePath and storage are set', () => {
-  const storage: Storage = {
+  const storage: LDStorage = {
     get: async () => null,
     set: async () => {},
     clear: async () => {},

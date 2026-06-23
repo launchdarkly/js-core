@@ -345,6 +345,43 @@ describe('given a NodeDataManager with mocked dependencies', () => {
     );
   });
 
+  it('ignores per-identify hash and logs a warning when useMobileKey is true', async () => {
+    const dataManager = makeDataManager(
+      makeNodeConfig({ useMobileKey: true, initialConnectionMode: 'polling' }),
+    );
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      const identifyResolve = jest.fn().mockImplementation(resolve);
+      dataManager.identify(identifyResolve, jest.fn(), context, {
+        hash: 'some-hash',
+      } as NodeIdentifyOptions);
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('hash'));
+    const [pollUri] = (platform.requests.fetch as jest.Mock).mock.calls[0];
+    expect(pollUri).not.toContain('h=some-hash');
+  });
+
+  // Defense-in-depth: createClient rejects hash+useMobileKey at construction, so this
+  // state is unreachable via the public API. The guard in NodeDataManager is still exercised
+  // here directly in case it is ever instantiated outside of NodeClient.
+  it('ignores config-level hash and logs a warning when useMobileKey is true', async () => {
+    const dataManager = makeDataManager(
+      makeNodeConfig({ useMobileKey: true, initialConnectionMode: 'polling', hash: 'config-hash' }),
+    );
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      const identifyResolve = jest.fn().mockImplementation(resolve);
+      dataManager.identify(identifyResolve, jest.fn(), context, {});
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('hash'));
+    const [pollUri] = (platform.requests.fetch as jest.Mock).mock.calls[0];
+    expect(pollUri).not.toContain('h=config-hash');
+  });
+
   it('includes the per-identify hash in the connection opened after bootstrap', async () => {
     const dataManager = makeDataManager(makeNodeConfig());
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
