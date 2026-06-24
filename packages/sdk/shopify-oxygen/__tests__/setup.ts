@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { jest } from '@jest/globals';
 
-import * as allFlagsSegments from './testData.json';
+import allFlagsSegments from './testData.json';
 
 // @ts-ignore
 global.setInterval = () => ({}) as any;

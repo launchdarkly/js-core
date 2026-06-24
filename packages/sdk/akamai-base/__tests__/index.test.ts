@@ -1,5 +1,5 @@
 import { EdgeProvider, init } from '../src/index';
-import * as testData from './testData.json';
+import testData from './testData.json';
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';

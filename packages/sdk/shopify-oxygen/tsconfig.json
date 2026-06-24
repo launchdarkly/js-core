@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
     "lib": ["es6"],

@@ -6,7 +6,7 @@ import { LDInspection } from '../src/api/LDInspection';
 import LDClientImpl from '../src/LDClientImpl';
 import { Flags, PatchFlag } from '../src/types';
 import { createBasicPlatform } from './createBasicPlatform';
-import * as mockResponseJson from './evaluation/mockResponse.json';
+import mockResponseJson from './evaluation/mockResponse.json';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
 import { makeTestDataManagerFactory } from './TestDataManager';
 

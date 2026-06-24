@@ -1,5 +1,5 @@
 import { EdgeProvider, init, LDLogger, LDMultiKindContext, LDSingleKindContext } from '../dist';
-import * as testData from './testData.json';
+import testData from './testData.json';
 
 const createClient = (sdkKey: string, mockLogger: LDLogger, mockEdgeProvider: EdgeProvider) =>
   init({
