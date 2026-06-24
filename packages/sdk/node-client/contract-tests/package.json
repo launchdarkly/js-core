@@ -1,0 +1,26 @@
+{
+  "name": "@launchdarkly/node-client-sdk-contract-tests",
+  "version": "0.0.0",
+  "main": "dist/src/index.js",
+  "scripts": {
+    "start": "node --inspect dist/src/index.js",
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "type": "module",
+  "author": "",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "@launchdarkly/js-contract-test-utils": "workspace:^",
+    "@launchdarkly/node-client-sdk": "workspace:^",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.11.9",
+    "typescript": "^5.5.3"
+  }
+}

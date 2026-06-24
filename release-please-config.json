@@ -162,7 +162,12 @@
       "bump-minor-pre-major": true,
       "prerelease": true,
       "extra-files": [
-        "src/platform/NodeInfo.ts"
+        "src/platform/NodeInfo.ts",
+        {
+          "type": "json",
+          "path": "examples/hello-node-client/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-client-sdk']"
+        }
       ]
     },
     "packages/sdk/server-node": {
