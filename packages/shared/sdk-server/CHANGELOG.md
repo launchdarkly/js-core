@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.19.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.1...js-server-sdk-common-v2.19.2) (2026-06-24)
+
+
+### Bug Fixes
+
+* Wire timeout option through to flag polling and event delivery requests ([#1760](https://github.com/launchdarkly/js-core/issues/1760)) ([e18998e](https://github.com/launchdarkly/js-core/commit/e18998eb339a7edc1e059c2f6832afe2739b0bd6))
+
 ## [2.19.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.0...js-server-sdk-common-v2.19.1) (2026-06-05)
 
 

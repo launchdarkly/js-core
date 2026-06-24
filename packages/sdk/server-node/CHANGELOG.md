@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.11.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.11.2...node-server-sdk-v9.11.3) (2026-06-24)
+
+
+### Bug Fixes
+
+* Wire timeout option through to flag polling and event delivery requests ([#1760](https://github.com/launchdarkly/js-core/issues/1760)) ([e18998e](https://github.com/launchdarkly/js-core/commit/e18998eb339a7edc1e059c2f6832afe2739b0bd6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.1 to 2.19.2
+
 ## [9.11.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.11.1...node-server-sdk-v9.11.2) (2026-06-05)
 
 
