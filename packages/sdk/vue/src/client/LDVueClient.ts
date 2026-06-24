@@ -16,12 +16,15 @@ import type { LDVueClientOptions } from './LDOptions';
  * Creates a new instance of the LaunchDarkly client for Vue.
  *
  * @remarks
- * This factory is provided to allow the caller to own the client lifecycle. When using this
- * function, the caller is responsible for calling `client.start()` before or after mounting
- * and for subscribing to client lifecycle events.
+ * **NOTE:** We recommend using {@link createLDProvider} or the {@link LDVuePlugin} instead of this
+ * function if you can.
  *
- * TODO(scaffold): add recommendation to prefer createLDProvider / LDVuePlugin once those
- * arrive in the next PR, and restore the createLDProviderWithClient cross-reference.
+ * This factory is provided to allow the caller to own the client lifecycle. When using this
+ * function, the caller is responsible for:
+ *  - calling `client.start()` before or after mounting.
+ *  - subscribing to client lifecycle events.
+ *
+ * Refer to {@link createLDProviderWithClient} for the default behavior.
  *
  * @example
  * ```ts
@@ -57,9 +60,20 @@ export function createClient(
   let lastInitResult: LDWaitForInitializationResult | undefined;
 
   function notifyContextSubscribers() {
-    const newContext = baseClient.getContext();
+    let newContext: LDContextStrict | undefined;
+    try {
+      newContext = baseClient.getContext();
+    } catch (_) {
+      return;
+    }
     if (newContext) {
-      subscribers.forEach((cb) => cb(newContext));
+      subscribers.forEach((cb) => {
+        try {
+          cb(newContext!);
+        } catch (_) {
+          // Individual subscriber errors must not prevent other subscribers from firing.
+        }
+      });
     }
   }
 
@@ -74,16 +88,38 @@ export function createClient(
       if (startOptions?.bootstrap || startOptions?.identifyOptions?.bootstrap) {
         hasBootstrap = true;
       }
-      return baseClient.start(startOptions).then((result: LDWaitForInitializationResult) => {
-        initializationState = result.status;
-        lastInitResult = result;
-        if (!startNotified && result.status === 'complete') {
-          startNotified = true;
-          notifyContextSubscribers();
-        }
-        initStatusSubscribers.forEach((cb) => cb(result));
-        return result;
-      });
+      return baseClient.start(startOptions).then(
+        (result: LDWaitForInitializationResult) => {
+          initializationState = result.status;
+          lastInitResult = result;
+          if (!startNotified) {
+            startNotified = true;
+            notifyContextSubscribers();
+          }
+          initStatusSubscribers.forEach((cb) => {
+            try {
+              cb(result);
+            } catch (_) {
+              // Individual subscriber errors must not prevent other subscribers from firing.
+            }
+          });
+          return result;
+        },
+        (err: unknown) => {
+          const error = err instanceof Error ? err : new Error(String(err));
+          const failedResult: LDWaitForInitializationResult = { status: 'failed', error };
+          initializationState = 'failed';
+          lastInitResult = failedResult;
+          initStatusSubscribers.forEach((cb) => {
+            try {
+              cb(failedResult);
+            } catch (_) {
+              // Individual subscriber errors must not prevent other subscribers from firing.
+            }
+          });
+          return failedResult;
+        },
+      );
     },
     identify: (ldContext: LDContext, identifyOptions?: LDIdentifyOptions) =>
       baseClient.identify(ldContext, identifyOptions).then((result: LDIdentifyResult) => {
@@ -103,7 +139,11 @@ export function createClient(
     },
     onInitializationStatusChange: (callback: (result: LDWaitForInitializationResult) => void) => {
       if (lastInitResult) {
-        callback(lastInitResult);
+        try {
+          callback(lastInitResult);
+        } catch (_) {
+          // Individual subscriber errors must not prevent registration.
+        }
       }
       initStatusSubscribers.add(callback);
       return () => {

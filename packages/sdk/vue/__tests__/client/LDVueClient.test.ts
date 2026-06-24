@@ -105,3 +105,83 @@ it('does not notify context subscribers when identify does not complete', async 
 
   expect(onContext).not.toHaveBeenCalled();
 });
+
+it('transitions to failed state and resolves (not rejects) when the base start() rejects', async () => {
+  const error = new Error('network failure');
+  createBaseClientMock.mockReturnValue(
+    makeBaseClient({ start: jest.fn(() => Promise.reject(error)) }),
+  );
+  const client = createClient('env-id', { kind: 'user', key: 'k' });
+
+  const subscriber = jest.fn();
+  client.onInitializationStatusChange(subscriber);
+
+  const result = await client.start();
+
+  expect(result).toEqual({ status: 'failed', error });
+  expect(client.getInitializationState()).toBe('failed');
+  expect(client.getInitializationError()).toBe(error);
+  expect(subscriber).toHaveBeenCalledWith({ status: 'failed', error });
+
+  // Late subscriber should also receive the cached failed result.
+  const lateSubscriber = jest.fn();
+  client.onInitializationStatusChange(lateSubscriber);
+  expect(lateSubscriber).toHaveBeenCalledWith({ status: 'failed', error });
+});
+
+it('start() notifies init-status subscribers once even if called multiple times', async () => {
+  const startMock = jest.fn(() => Promise.resolve<Result>({ status: 'complete' }));
+  createBaseClientMock.mockReturnValue(makeBaseClient({ start: startMock }));
+  const client = createClient('env-id', { kind: 'user', key: 'k' });
+
+  const earlySubscriber = jest.fn();
+  client.onInitializationStatusChange(earlySubscriber);
+
+  await client.start();
+  await client.start();
+
+  expect(startMock).toHaveBeenCalledTimes(2);
+  // The second start() bypasses the wrapper's then handler, so early subscribers are only notified once.
+  expect(earlySubscriber).toHaveBeenCalledTimes(1);
+  expect(earlySubscriber).toHaveBeenCalledWith({ status: 'complete' });
+
+  // A subscriber registered after both starts should still receive the cached result.
+  const lateSubscriber = jest.fn();
+  client.onInitializationStatusChange(lateSubscriber);
+  expect(lateSubscriber).toHaveBeenCalledWith({ status: 'complete' });
+});
+
+it('notifies context subscribers when start resolves with timeout', async () => {
+  createBaseClientMock.mockReturnValue(
+    makeBaseClient({ start: jest.fn(() => Promise.resolve<Result>({ status: 'timeout' })) }),
+  );
+  const client = createClient('env-id', { kind: 'user', key: 'k' });
+
+  const onContext = jest.fn();
+  client.onContextChange(onContext);
+
+  await client.start();
+
+  expect(client.isReady()).toBe(true);
+  expect(client.getInitializationState()).toBe('timeout');
+  expect(onContext).toHaveBeenCalledWith({ kind: 'user', key: 'context-key' });
+});
+
+it('does not let a getContext() throw affect the initialization result', async () => {
+  const boom = new Error('getContext boom');
+  createBaseClientMock.mockReturnValue(
+    makeBaseClient({
+      start: jest.fn(() => Promise.resolve<Result>({ status: 'complete' })),
+      getContext: jest.fn(() => { throw boom; }),
+    }),
+  );
+  const client = createClient('env-id', { kind: 'user', key: 'k' });
+  const subscriber = jest.fn();
+  client.onInitializationStatusChange(subscriber);
+
+  const result = await client.start();
+
+  expect(result.status).toBe('complete');
+  expect(client.getInitializationState()).toBe('complete');
+  expect(subscriber).toHaveBeenCalledWith({ status: 'complete' });
+});

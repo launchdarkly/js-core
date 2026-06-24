@@ -6,4 +6,6 @@ export type {
 } from './LDClient';
 export type { LDVueClientOptions, LDVueProviderOptions } from './LDOptions';
 export { createClient } from './LDVueClient';
-// TODO(scaffold): provider and composables arrive in the next PR
+export { createLDProvider, createLDProviderWithClient } from './provider/LDProvider';
+export { createLDVueInstanceKey, LDVueInstanceKey } from './provider/LDVueContext';
+export * from './composables';
