@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-openai",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "LaunchDarkly AI SDK OpenAI Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-openai",
   "repository": {
@@ -43,8 +43,8 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@launchdarkly/js-server-sdk-common": "2.19.1",
-    "@launchdarkly/server-sdk-ai": "^1.1.0",
+    "@launchdarkly/js-server-sdk-common": "2.19.2",
+    "@launchdarkly/server-sdk-ai": "^1.1.1",
     "@openai/agents": "^0.9.0",
     "@opentelemetry/api": "^1.9.0",
     "@traceloop/instrumentation-openai": "^0.22.0",
@@ -62,7 +62,7 @@
     "typescript-eslint": "^8.0.0"
   },
   "peerDependencies": {
-    "@launchdarkly/server-sdk-ai": "^1.1.0",
+    "@launchdarkly/server-sdk-ai": "^1.1.1",
     "@openai/agents": "^0.9.0",
     "@opentelemetry/api": "^1.0.0",
     "@traceloop/instrumentation-openai": "^0.22.0",

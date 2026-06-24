@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/openfeature-node-server",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "LaunchDarkly OpenFeature provider for the Node.js server SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/openfeature-node-server",
   "repository": {
@@ -47,12 +47,12 @@
     "@launchdarkly/openfeature-js-server-common": "1.0.0"
   },
   "peerDependencies": {
-    "@launchdarkly/node-server-sdk": "9.11.2",
+    "@launchdarkly/node-server-sdk": "9.11.3",
     "@openfeature/server-sdk": "^1.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@launchdarkly/node-server-sdk": "9.11.2",
+    "@launchdarkly/node-server-sdk": "9.11.3",
     "@openfeature/core": "^1.10.0",
     "@openfeature/server-sdk": "^1.16.0",
     "@types/jest": "^29.5.3",
