@@ -290,6 +290,11 @@
           "type": "json",
           "path": "/packages/sdk/react/examples/testing/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/svelte/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         }
       ]
     },
