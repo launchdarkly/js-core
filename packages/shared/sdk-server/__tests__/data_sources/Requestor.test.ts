@@ -16,11 +16,14 @@ describe('given a requestor', () => {
   let requestor: Requestor;
 
   let requestsMade: Array<{ url: string; options: Options }>;
+  let requests: Requests;
 
   let testHeaders: Record<string, string>;
   let testStatus = 200;
   let testResponse: string | undefined;
   let throwThis: string | undefined;
+
+  const baseHeaders = { authorization: 'sdkKey' };
 
   function resetRequestState() {
     requestsMade = [];
@@ -33,7 +36,7 @@ describe('given a requestor', () => {
   beforeEach(() => {
     resetRequestState();
 
-    const requests: Requests = {
+    requests = {
       async fetch(url: string, options?: Options): Promise<Response> {
         return new Promise<Response>((a, r) => {
           if (throwThis) {
@@ -80,9 +83,7 @@ describe('given a requestor', () => {
       },
     };
 
-    requestor = new Requestor(new Configuration({}), requests, {
-      authorization: 'sdkKey',
-    });
+    requestor = new Requestor(new Configuration({}), requests, baseHeaders);
   });
 
   it('gets data', (done) => {
@@ -212,5 +213,17 @@ describe('given a requestor', () => {
 
     expect(res.err).toBeInstanceOf(LDFlagDeliveryFallbackError);
     expect(res.fallbackToFDv1).toBe(true);
+  });
+
+  it('passes the configured timeout (converted to milliseconds) in the request options', async () => {
+    testResponse = 'a response';
+    const localRequestor = new Requestor(new Configuration({ timeout: 10 }), requests, baseHeaders);
+    const res = await promisify<{ err: any; body: any }>((cb) => {
+      localRequestor.requestAllData((err, body) => cb({ err, body }));
+    });
+    expect(res.err).toBeUndefined();
+    expect(requestsMade.length).toBe(1);
+    // timeout: 10 (seconds) must be converted to milliseconds before being passed to fetch.
+    expect(requestsMade[0].options.timeout).toBe(10000);
   });
 });

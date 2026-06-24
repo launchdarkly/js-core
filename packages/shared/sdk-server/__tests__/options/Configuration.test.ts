@@ -36,7 +36,7 @@ describe.each([undefined, null, 'potat0', 17, [], {}])('constructed without opti
     expect(config.stream).toBe(true);
     expect(config.streamInitialReconnectDelay).toEqual(1);
     expect(config.tags.value).toBeUndefined();
-    expect(config.timeout).toEqual(5);
+    expect(config.timeout).toEqual(10);
     expect(config.tlsParams).toBeUndefined();
     expect(config.useLdd).toBe(false);
     expect(config.wrapperName).toBeUndefined();
@@ -138,9 +138,9 @@ describe('when setting different options', () => {
   });
 
   it.each([
-    [0, 0, []],
+    [0, 1, [{ level: LogLevel.Warn, matches: /Config option "timeout" had invalid value/ }]],
     [6, 6, []],
-    ['potato', 5, [{ level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ }]],
+    ['potato', 10, [{ level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ }]],
   ])('allow setting timeout and validates timeout', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ timeout: value }));
