@@ -31,7 +31,13 @@ export function createReactiveInstance(client: LDVueClient): {
   value: LDVueInstance;
   dispose: () => void;
 } {
-  const context = ref<LDContextStrict | undefined>(client.getContext() ?? undefined);
+  let initialContext: LDContextStrict | undefined;
+  try {
+    initialContext = client.getContext() ?? undefined;
+  } catch (_) {
+    initialContext = undefined;
+  }
+  const context = ref<LDContextStrict | undefined>(initialContext);
   const initializedState = ref<InitializedState>(client.getInitializationState());
   const error = ref<Error | undefined>(client.getInitializationError());
 

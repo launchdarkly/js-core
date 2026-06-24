@@ -52,6 +52,15 @@ it('renders the #failed slot with the error when initialization fails', async ()
   expect(wrapper.text()).toBe('failed:bad-key');
 });
 
+it('mounts without crashing when getContext() throws during setup', () => {
+  const { client } = makeMockClient();
+  // @ts-ignore -- simulates a context with a circular reference that clone() would throw on
+  client.getContext = jest.fn(() => { throw new Error('circular reference'); });
+
+  const Provider = createLDProviderWithClient(client);
+  expect(() => mount(Provider, { slots: { default: () => h('div', 'app') } })).not.toThrow();
+});
+
 it('unsubscribes from the client on unmount', () => {
   const { client, controls } = makeMockClient();
   const Provider = createLDProviderWithClient(client);
