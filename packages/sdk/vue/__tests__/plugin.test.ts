@@ -3,16 +3,16 @@
  */
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
-import { useInitializationStatus, useLDClient } from '../../src/client/composables';
-import { createLDVueInstanceKey } from '../../src/client/provider/LDVueContext';
-import { LDVuePlugin, type LDVuePluginOptions } from '../../src/plugin';
-import { makeMockClient } from './mockClient';
+import { useInitializationStatus, useLDClient } from '../src/client/composables';
+import { createLDVueInstanceKey } from '../src/client/provider/LDVueContext';
+import { LDVuePlugin, type LDVuePluginOptions } from '../src/plugin';
+import { makeMockClient } from './client/mockClient';
 
-jest.mock('../../src/client/LDVueClient', () => ({
+jest.mock('../src/client/LDVueClient', () => ({
   createClient: jest.fn(),
 }));
 
-import { createClient } from '../../src/client/LDVueClient';
+import { createClient } from '../src/client/LDVueClient';
 
 const createClientMock = createClient as jest.Mock;
 

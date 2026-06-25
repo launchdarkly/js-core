@@ -4,15 +4,15 @@
 import { mount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
 
-import { useLDClient } from '../../src/client/composables';
-import { createLDProvider } from '../../src/client/provider/LDProvider';
-import { makeMockClient } from './mockClient';
+import { useLDClient } from '../../../src/client/composables';
+import { createLDProvider } from '../../../src/client/provider/LDProvider';
+import { makeMockClient } from '../mockClient';
 
-jest.mock('../../src/client/LDVueClient', () => ({
+jest.mock('../../../src/client/LDVueClient', () => ({
   createClient: jest.fn(),
 }));
 
-import { createClient } from '../../src/client/LDVueClient';
+import { createClient } from '../../../src/client/LDVueClient';
 
 const createClientMock = createClient as jest.Mock;
 

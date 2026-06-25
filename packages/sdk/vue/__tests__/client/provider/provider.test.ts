@@ -4,8 +4,8 @@
 import { mount } from '@vue/test-utils';
 import { h, nextTick } from 'vue';
 
-import { createLDProviderWithClient } from '../../src/client/provider/LDProvider';
-import { makeMockClient } from './mockClient';
+import { createLDProviderWithClient } from '../../../src/client/provider/LDProvider';
+import { makeMockClient } from '../mockClient';
 
 it('renders the default slot when no gating slots are provided', () => {
   const { client } = makeMockClient({ ready: false, initializedState: 'initializing' });
