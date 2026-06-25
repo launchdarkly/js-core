@@ -68,6 +68,65 @@ export interface LDAIClient {
   ): Promise<LDAICompletionConfig>;
 
   /**
+   * Retrieves a completion AI Config with Mustache placeholders left intact (no interpolation).
+   * Useful for displaying prompt previews or storing templates for later rendering.
+   *
+   * @param key The key of the AI Config.
+   * @param context The LaunchDarkly context object.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
+   *
+   * @returns An {@link LDAICompletionConfig} identical to {@link completionConfig} except that
+   * `messages[].content` strings are stored verbatim from the flag variation — Mustache
+   * placeholders such as `{{variable}}` are preserved.
+   */
+  completionConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<LDAICompletionConfig>;
+
+  /**
+   * Retrieves an agent AI Config with Mustache placeholders left intact (no interpolation).
+   * Useful for auditing instruction templates or building UI previews.
+   *
+   * @param key The key of the AI Config agent.
+   * @param context The LaunchDarkly context object.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
+   *
+   * @returns An {@link LDAIAgentConfig} identical to {@link agentConfig} except that
+   * the `instructions` string is stored verbatim from the flag variation — Mustache
+   * placeholders such as `{{topic}}` are preserved.
+   */
+  agentConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIAgentConfigDefault,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<LDAIAgentConfig>;
+
+  /**
+   * Retrieves a judge AI Config with Mustache placeholders left intact (no interpolation).
+   * Useful for auditing judge prompt templates.
+   *
+   * @param key The key of the Judge AI Config.
+   * @param context The LaunchDarkly context object.
+   * @param defaultValue Optional fallback when the configuration is not available from LaunchDarkly.
+   * When omitted or null, a disabled default is used.
+   *
+   * @returns An {@link LDAIJudgeConfig} identical to {@link judgeConfig} except that
+   * `messages[].content` strings are stored verbatim from the flag variation — Mustache
+   * placeholders are preserved.
+   */
+  judgeConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIJudgeConfigDefault,
+  ): Promise<LDAIJudgeConfig>;
+
+  /**
    * Retrieves and processes a single AI Config agent based on the provided key, LaunchDarkly context,
    * and variables. This includes the model configuration and the customized instructions.
    *

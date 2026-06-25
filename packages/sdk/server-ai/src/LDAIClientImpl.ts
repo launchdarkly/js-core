@@ -37,11 +37,14 @@ import { aiSdkLanguage, aiSdkName, aiSdkVersion } from './sdkInfo';
  */
 const TRACK_SDK_INFO = '$ld:ai:sdk:info';
 const TRACK_USAGE_COMPLETION_CONFIG = '$ld:ai:usage:completion-config';
+const TRACK_USAGE_COMPLETION_CONFIG_TEMPLATE = '$ld:ai:usage:completion-config-template';
 const TRACK_USAGE_CREATE_CHAT = '$ld:ai:usage:create-chat';
 const TRACK_USAGE_CREATE_AGENT = '$ld:ai:usage:create-agent';
 const TRACK_USAGE_JUDGE_CONFIG = '$ld:ai:usage:judge-config';
+const TRACK_USAGE_JUDGE_CONFIG_TEMPLATE = '$ld:ai:usage:judge-config-template';
 const TRACK_USAGE_CREATE_JUDGE = '$ld:ai:usage:create-judge';
 const TRACK_USAGE_AGENT_CONFIG = '$ld:ai:usage:agent-config';
+const TRACK_USAGE_AGENT_CONFIG_TEMPLATE = '$ld:ai:usage:agent-config-template';
 const TRACK_USAGE_AGENT_CONFIGS = '$ld:ai:usage:agent-configs';
 const TRACK_USAGE_AGENT_GRAPH = '$ld:ai:usage:agent-graph';
 
@@ -84,6 +87,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     graphKey?: string,
     defaultAiProvider?: SupportedAIProvider,
+    skipInterpolation: boolean = false,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
@@ -126,6 +130,10 @@ export class LDAIClientImpl implements LDAIClient {
     }
 
     const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
+
+    if (skipInterpolation) {
+      return config;
+    }
 
     // Apply variable interpolation (always needed for ldctx)
     return this._applyInterpolation(config, context, variables);
@@ -311,6 +319,62 @@ export class LDAIClientImpl implements LDAIClient {
       undefined,
       defaultAiProvider,
     );
+  }
+
+  async completionConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAICompletionConfigDefault,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<LDAICompletionConfig> {
+    this._ldClient.track(TRACK_USAGE_COMPLETION_CONFIG_TEMPLATE, context, key, 1);
+    return (await this._evaluate(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      'completion',
+      undefined,
+      undefined,
+      defaultAiProvider,
+      true,
+    )) as LDAICompletionConfig;
+  }
+
+  async agentConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIAgentConfigDefault,
+    defaultAiProvider?: SupportedAIProvider,
+  ): Promise<LDAIAgentConfig> {
+    this._ldClient.track(TRACK_USAGE_AGENT_CONFIG_TEMPLATE, context, key, 1);
+    return (await this._evaluate(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      'agent',
+      undefined,
+      undefined,
+      defaultAiProvider,
+      true,
+    )) as LDAIAgentConfig;
+  }
+
+  async judgeConfigTemplate(
+    key: string,
+    context: LDContext,
+    defaultValue?: LDAIJudgeConfigDefault,
+  ): Promise<LDAIJudgeConfig> {
+    this._ldClient.track(TRACK_USAGE_JUDGE_CONFIG_TEMPLATE, context, key, 1);
+    return (await this._evaluate(
+      key,
+      context,
+      defaultValue ?? disabledAIConfig,
+      'judge',
+      undefined,
+      undefined,
+      undefined,
+      true,
+    )) as LDAIJudgeConfig;
   }
 
   async agentConfigs<const T extends readonly LDAIAgentRequestConfig[]>(
