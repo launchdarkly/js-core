@@ -190,10 +190,22 @@ export class NodeClient extends LDClientImpl {
         return;
       }
       if (mode === this._connectionMode) {
+        // The requested mode matches the optimistically-set _connectionMode, so
+        // no new transition is queued. But _connectionMode is set synchronously
+        // before the queued task runs, so an earlier call's transition to this
+        // same mode may still be in flight. Await the queue tail (without
+        // appending to it) so the caller's promise resolves only after that
+        // transition has actually completed. If nothing is in flight,
+        // _fdv2ConnectionModeQueue is already resolved, so this is a no-op.
+        await this._fdv2ConnectionModeQueue;
         return;
       }
       // FDv2 data manager: serialize transitions so concurrent calls cannot
       // reorder flush/setEventSendingEnabled around the offline await.
+      // Capture the prior mode so a failed transition can be rolled back -
+      // otherwise isOffline()/getConnectionMode() would report a state the
+      // data manager never actually entered.
+      const previousMode = this._connectionMode;
       this._connectionMode = mode;
       const task = this._fdv2ConnectionModeQueue.then(async () => {
         // Re-check after any preceding tasks have run — close() may have fired
@@ -201,13 +213,24 @@ export class NodeClient extends LDClientImpl {
         if (this._closed) {
           return;
         }
-        if (mode === 'offline') {
-          await this.flush();
-          this.setEventSendingEnabled(false, false);
-        }
-        (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
-        if (mode !== 'offline') {
-          this.setEventSendingEnabled(true, false);
+        try {
+          if (mode === 'offline') {
+            await this.flush();
+            this.setEventSendingEnabled(false, false);
+          }
+          (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
+          if (mode !== 'offline') {
+            this.setEventSendingEnabled(true, false);
+          }
+        } catch (e) {
+          // The transition did not complete; restore the requested-mode marker
+          // so isOffline()/getConnectionMode() stay consistent with the data
+          // manager. Only roll back if no later queued task has already moved
+          // us on from this transition's target mode.
+          if (this._connectionMode === mode) {
+            this._connectionMode = previousMode;
+          }
+          throw e;
         }
       });
       this._fdv2ConnectionModeQueue = task.catch(() => {});
