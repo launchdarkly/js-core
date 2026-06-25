@@ -133,6 +133,18 @@ updates:
     cooldown:
       default-days: 7
   - package-ecosystem: "npm"
+    directory: "/packages/sdk/node-client/contract-tests"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "npm"
+    directory: "/packages/sdk/node-client/examples/hello-node-client"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: "npm"
     directory: "/packages/sdk/openfeature-node-server"
     schedule:
       interval: "weekly"
