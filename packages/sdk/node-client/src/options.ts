@@ -29,7 +29,7 @@ class StorageOptionsValidator implements TypeValidator {
     return has('get') && has('set') && has('clear');
   }
   getType(): string {
-    return 'Storage ({ get, set, clear })';
+    return 'LDStorage ({ get, set, clear })';
   }
 }
 

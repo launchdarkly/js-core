@@ -14,6 +14,7 @@ import {
   LDHeaders,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
+  mobileFdv1Endpoints,
 } from '@launchdarkly/js-client-sdk-common';
 
 import basicLogger from './basicLogger';
@@ -34,19 +35,23 @@ export class NodeClient extends LDClientImpl {
 
     const validatedNodeOptions = validateOptions(options, logger);
 
+    const { useMobileKey } = validatedNodeOptions;
+
     const internalOptions: LDClientInternalOptions = {
-      analyticsEventPath: `/events/bulk/${envKey}`,
-      diagnosticEventPath: `/events/diagnostic/${envKey}`,
+      analyticsEventPath: useMobileKey ? `/mobile` : `/events/bulk/${envKey}`,
+      diagnosticEventPath: useMobileKey
+        ? `/mobile/events/diagnostic`
+        : `/events/diagnostic/${envKey}`,
       highTimeoutThreshold: 15,
       getImplementationHooks: (_environmentMetadata: LDPluginEnvironmentMetadata) =>
         internal.safeGetHooks(logger, _environmentMetadata, validatedNodeOptions.plugins),
-      credentialType: 'clientSideId',
+      credentialType: useMobileKey ? 'mobileKey' : 'clientSideId',
       requiresStart: true,
       initialContext,
     };
 
     const platform = new NodePlatform(logger, validatedNodeOptions);
-    const endpoints = browserFdv1Endpoints(envKey);
+    const endpoints = useMobileKey ? mobileFdv1Endpoints() : browserFdv1Endpoints(envKey);
 
     super(
       envKey,

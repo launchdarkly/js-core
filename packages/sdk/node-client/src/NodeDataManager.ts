@@ -87,6 +87,14 @@ export default class NodeDataManager extends BaseDataManager {
     // We will treat empty string as `null`/`undefined`. This should be more
     // ergonomic for users who have multiple settings for this value.
     this._currentHash = nodeOptions?.hash || this._nodeConfig.hash;
+    if (this._currentHash && this._nodeConfig.useMobileKey) {
+      // This deviates from the `createClient` behavior (where the sdk will throw if
+      // constructed with both `hash` and `useMobileKey`) because `identify()` is called
+      // during sdk client runtime and throwing at this stage would likely cause more severe
+      // disruptions to the service.
+      this.logger.warn(`${logTag} 'hash' is ignored in mobile key mode.`);
+      this._currentHash = undefined;
+    }
     if (this._currentHash) {
       this.setConnectionParams({ queryParameters: [{ key: 'h', value: this._currentHash }] });
     } else {
