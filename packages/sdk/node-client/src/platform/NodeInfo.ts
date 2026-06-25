@@ -3,7 +3,7 @@ import * as os from 'os';
 import { Info, PlatformData, SdkData } from '@launchdarkly/js-client-sdk-common';
 
 const sdkName = 'node-client-sdk';
-const sdkVersion = '0.3.0'; // x-release-please-version
+const sdkVersion = '0.4.0'; // x-release-please-version
 
 function processPlatformName(name: string): string {
   switch (name) {
