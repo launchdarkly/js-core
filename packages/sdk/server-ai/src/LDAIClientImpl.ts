@@ -87,7 +87,7 @@ export class LDAIClientImpl implements LDAIClient {
     variables?: Record<string, unknown>,
     graphKey?: string,
     defaultAiProvider?: SupportedAIProvider,
-    skipInterpolation: boolean = false,
+    interpolate: boolean = true,
   ): Promise<LDAIConfigKind> {
     const ldFlagValue = LDAIConfigUtils.toFlagValue(defaultValue, mode);
 
@@ -131,7 +131,7 @@ export class LDAIClientImpl implements LDAIClient {
 
     const config = LDAIConfigUtils.fromFlagValue(key, value, trackerFactory, evaluator);
 
-    if (skipInterpolation) {
+    if (!interpolate) {
       return config;
     }
 
@@ -336,7 +336,7 @@ export class LDAIClientImpl implements LDAIClient {
       undefined,
       undefined,
       defaultAiProvider,
-      true,
+      false,
     )) as LDAICompletionConfig;
   }
 
@@ -355,7 +355,7 @@ export class LDAIClientImpl implements LDAIClient {
       undefined,
       undefined,
       defaultAiProvider,
-      true,
+      false,
     )) as LDAIAgentConfig;
   }
 
@@ -373,7 +373,7 @@ export class LDAIClientImpl implements LDAIClient {
       undefined,
       undefined,
       undefined,
-      true,
+      false,
     )) as LDAIJudgeConfig;
   }
 
