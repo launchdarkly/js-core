@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.3.0...node-client-sdk-v0.4.0) (2026-06-25)
+
+
+### Features
+
+* **node-client-sdk:** adding support for mobile usage ([#1768](https://github.com/launchdarkly/js-core/issues/1768)) ([71d47a7](https://github.com/launchdarkly/js-core/commit/71d47a70d303df349592a1573eb927d983673782))
+
 ## [0.3.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.2.0...node-client-sdk-v0.3.0) (2026-06-22)
 
 
