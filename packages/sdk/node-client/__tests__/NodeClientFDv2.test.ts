@@ -296,13 +296,13 @@ it('duplicate-mode setConnectionMode awaits an in-flight transition to the same 
     localStoragePath: tmpRoot,
   });
 
-  // Keeps the queue draining when p3 is issued, making the race deterministic.
+  // flush() must not reject during the offline leg so p1 does not poison the queue.
   const flushSpy = jest
     .spyOn(LDClientImpl.prototype, 'flush')
     .mockImplementation(() => Promise.resolve({ result: true }));
 
-  // p3 hits the idempotency guard because p2 sets _connectionMode synchronously,
-  // before p2's queued task runs. Without the await, p3 resolves too early.
+  // p3 queues behind p2; by the time p3's task runs, p2 has already committed
+  // _connectionMode to 'streaming', so the idempotency check fires and p3 no-ops.
   const p1 = client.setConnectionMode('offline');
   const p2 = client.setConnectionMode('streaming');
   const p3 = client.setConnectionMode('streaming');
@@ -348,9 +348,9 @@ it('setConnectionMode with an invalid mode logs a warning and does not delegate 
   expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('invalid-mode'));
 });
 
-// ------ Mode rollback on failed transition ------
+// ------ Failed offline transition ------
 
-it('restores connection mode when an FDv2 offline transition task throws', async () => {
+it('setConnectionMode rejects and does not change connection mode when flush fails in FDv2', async () => {
   const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
     dataSystem: {},
     diagnosticOptOut: true,
@@ -358,25 +358,21 @@ it('restores connection mode when an FDv2 offline transition task throws', async
     logger,
     localStoragePath: tmpRoot,
   });
-  // flush() is the first async step, so a reject here means setConnectionMode
-  // on the data manager is never reached.
+  // flush() throws before _connectionMode is written or the data manager is notified.
   const flushSpy = jest
     .spyOn(LDClientImpl.prototype, 'flush')
     .mockRejectedValueOnce(new Error('flush failed'));
 
   await expect(client.setConnectionMode('offline')).rejects.toThrow('flush failed');
 
-  // The synchronously-set 'offline' is rolled back: the data manager is still
-  // streaming, so isOffline() reflects actual state.
   expect(client.getConnectionMode()).toBe('streaming');
   expect(client.isOffline()).toBe(false);
-  // The data manager was never told to go offline.
   expect(mockSetConnectionMode).not.toHaveBeenCalled();
 
   flushSpy.mockRestore();
 });
 
-it('keeps the FDv2 transition queue alive for subsequent calls after a failed transition', async () => {
+it('setConnectionMode queue stays alive after a failed offline transition in FDv2', async () => {
   const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
     dataSystem: {},
     diagnosticOptOut: true,
@@ -391,7 +387,7 @@ it('keeps the FDv2 transition queue alive for subsequent calls after a failed tr
   await expect(client.setConnectionMode('offline')).rejects.toThrow('flush failed');
   flushSpy.mockRestore();
 
-  // A subsequent transition must still work; the queue was not poisoned.
+  // task.catch() keeps _fdv2ConnectionModeQueue alive; the next call must succeed.
   await client.setConnectionMode('polling');
   expect(client.getConnectionMode()).toBe('polling');
   expect(mockSetConnectionMode).toHaveBeenCalledWith('polling');

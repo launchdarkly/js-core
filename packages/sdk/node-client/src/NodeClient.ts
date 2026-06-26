@@ -36,15 +36,13 @@ import NodePlatform from './platform/NodePlatform';
 
 export class NodeClient extends LDClientImpl {
   private readonly _plugins: LDPlugin[];
-  // Tracks the current connection mode for both FDv1 (NodeDataManager) and
-  // FDv2 paths. Updated synchronously so getConnectionMode()/isOffline()
-  // reflect the caller's intent without waiting for async data manager work.
+  // Connection mode for both paths. FDv2 updates this inside the
+  // serialized queue task; FDv1 reads it back from the data manager after each
+  // transition.
   private _connectionMode: ConnectionMode;
-  // Serializes FDv2 connection-mode transitions so concurrent calls cannot
-  // reorder flush/event-sending around the await in the offline branch.
+  // Serializes FDv2 mode transitions so concurrent callers cannot interleave
+  // flush() and setEventSendingEnabled() across the offline branch's await.
   private _fdv2ConnectionModeQueue: Promise<void> = Promise.resolve();
-  // Set to true when close() is called so post-close setConnectionMode calls
-  // are no-ops in the FDv2 path.
   private _closed: boolean = false;
 
   constructor(envKey: string, initialContext: LDContext, options: NodeOptions = {}) {
@@ -180,8 +178,7 @@ export class NodeClient extends LDClientImpl {
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
     if (this.isFDv2) {
-      // Validate mode before forwarding to prevent a runtime crash inside the
-      // debounce timer when an invalid value is passed from JavaScript.
+      // JS callers can pass arbitrary strings; validate before the debounce timer fires.
       if (mode !== 'offline' && mode !== 'streaming' && mode !== 'polling') {
         this.logger.warn(`[NodeClient] Unknown connection mode "${mode}", ignoring.`);
         return;
@@ -189,41 +186,22 @@ export class NodeClient extends LDClientImpl {
       if (this._closed) {
         return;
       }
-      if (mode === this._connectionMode) {
-        // Await without appending: an earlier call may still be transitioning to
-        // this same mode, and we must not resolve until it has finished.
-        await this._fdv2ConnectionModeQueue;
-        return;
-      }
-      // Without serialization, concurrent calls can interleave flush() and
-      // setEventSendingEnabled() across an offline await, corrupting order.
-      // Capture the prior mode so a failed transition can be rolled back:
-      // otherwise isOffline()/getConnectionMode() would report a state the
-      // data manager never actually entered.
-      const previousMode = this._connectionMode;
-      this._connectionMode = mode;
       const task = this._fdv2ConnectionModeQueue.then(async () => {
         // Re-check: close() may have been called while this task was queued.
         if (this._closed) {
           return;
         }
-        try {
-          if (mode === 'offline') {
-            await this.flush();
-            this.setEventSendingEnabled(false, false);
-          }
-          (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
-          if (mode !== 'offline') {
-            this.setEventSendingEnabled(true, false);
-          }
-        } catch (e) {
-          // Only roll back if no later queued task has already moved past this
-          // mode; otherwise isOffline()/getConnectionMode() would drift from
-          // the state the data manager actually reached.
-          if (this._connectionMode === mode) {
-            this._connectionMode = previousMode;
-          }
-          throw e;
+        if (mode === this._connectionMode) {
+          return;
+        }
+        if (mode === 'offline') {
+          await this.flush();
+          this.setEventSendingEnabled(false, false);
+        }
+        (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
+        this._connectionMode = mode;
+        if (mode !== 'offline') {
+          this.setEventSendingEnabled(true, false);
         }
       });
       this._fdv2ConnectionModeQueue = task.catch(() => {});
