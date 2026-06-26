@@ -296,24 +296,17 @@ it('duplicate-mode setConnectionMode awaits an in-flight transition to the same 
     localStoragePath: tmpRoot,
   });
 
-  // Make the offline transition's flush() defer to a later microtask so the
-  // offline -> streaming queue is still draining when the duplicate streaming
-  // call is issued. This exposes the early-return race deterministically.
+  // Keeps the queue draining when p3 is issued, making the race deterministic.
   const flushSpy = jest
     .spyOn(LDClientImpl.prototype, 'flush')
     .mockImplementation(() => Promise.resolve({ result: true }));
 
-  // Sequence: initial mode is 'streaming'. Go offline, then streaming, then
-  // streaming again (the duplicate). The third call's _connectionMode is already
-  // 'streaming' (set synchronously by the second call), so the idempotency guard
-  // fires. Without the await fix, p3 resolves before the second call's queued
-  // task has delegated 'streaming' to the data manager.
+  // p3 hits the idempotency guard because p2 sets _connectionMode synchronously,
+  // before p2's queued task runs. Without the await, p3 resolves too early.
   const p1 = client.setConnectionMode('offline');
   const p2 = client.setConnectionMode('streaming');
   const p3 = client.setConnectionMode('streaming');
 
-  // Awaiting only the duplicate call must guarantee the queued streaming
-  // transition has completed (mockSetConnectionMode called with 'streaming').
   await p3;
   expect(mockSetConnectionMode).toHaveBeenCalledWith('streaming');
 
@@ -365,15 +358,16 @@ it('restores connection mode when an FDv2 offline transition task throws', async
     logger,
     localStoragePath: tmpRoot,
   });
-  // Force the queued offline transition task to throw by making flush() reject.
+  // flush() is the first async step, so a reject here means setConnectionMode
+  // on the data manager is never reached.
   const flushSpy = jest
     .spyOn(LDClientImpl.prototype, 'flush')
     .mockRejectedValueOnce(new Error('flush failed'));
 
   await expect(client.setConnectionMode('offline')).rejects.toThrow('flush failed');
 
-  // The synchronously-set 'offline' must be rolled back to the prior mode so
-  // isOffline() does not lie while the data manager is still streaming.
+  // The synchronously-set 'offline' is rolled back: the data manager is still
+  // streaming, so isOffline() reflects actual state.
   expect(client.getConnectionMode()).toBe('streaming');
   expect(client.isOffline()).toBe(false);
   // The data manager was never told to go offline.
