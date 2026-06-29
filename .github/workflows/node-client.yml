@@ -53,5 +53,6 @@ jobs:
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
-          version: v3.1.1-alpha.6
+          version: v3
+          branch: v3
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/node-client/contract-tests/testharness-suppressions-fdv2.txt'
