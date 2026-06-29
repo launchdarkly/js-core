@@ -39,6 +39,8 @@ app.get('/', (req: Request, res: Response) => {
       'tls:skip-verify-peer',
       'tls:custom-ca',
       'wrapper',
+      'fdv1-fallback',
+      'client-event-source-http-errors',
     ],
   });
 });

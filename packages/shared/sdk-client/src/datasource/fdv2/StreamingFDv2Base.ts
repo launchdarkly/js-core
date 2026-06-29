@@ -25,6 +25,7 @@ import {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
+import { readFallbackDirective, readGoodbyeFallbackDirective } from './fallbackDirective';
 
 /**
  * Handler invoked when a legacy `"ping"` event is received on the stream.
@@ -37,7 +38,7 @@ export interface PingHandler {
 }
 
 /**
- * The public surface of the streaming base — used by
+ * The public surface of the streaming base, used by
  * {@link createStreamingInitializer} and {@link createStreamingSynchronizer}
  * to control the EventSource connection and consume results.
  *
@@ -109,6 +110,11 @@ export function createStreamingBase(config: {
   let eventSource: EventSource | undefined;
   let connectionAttemptStartTime: number | undefined;
   let fdv1Fallback = false;
+  let fdv1FallbackTtlMs: number | undefined;
+  // Directive deferred from a stream `onopen` carrying x-ld-fd-fallback; applied
+  // to the NEXT changeSet so the payload is delivered before the SDK falls back.
+  let pendingFallbackTtlMs: number | undefined;
+  let pendingFallback = false;
   let started = false;
   let stopped = false;
 
@@ -127,26 +133,51 @@ export function createStreamingBase(config: {
     connectionAttemptStartTime = undefined;
   }
 
-  function handleAction(action: internal.ProtocolAction): void {
+  function handleAction(action: internal.ProtocolAction, rawData?: unknown): void {
     switch (action.type) {
       case 'payload':
         logConnectionResult(true);
-        resultQueue.put(changeSet(action.payload, fdv1Fallback));
+        if (pendingFallback) {
+          // A fallback directive was deferred from onopen; apply it now that
+          // the payload has been delivered. Mirrors Flutter _pendingDirective.
+          fdv1Fallback = true;
+          fdv1FallbackTtlMs = pendingFallbackTtlMs;
+          resultQueue.put(changeSet(action.payload, true, undefined, undefined, pendingFallbackTtlMs));
+          pendingFallback = false;
+          pendingFallbackTtlMs = undefined;
+        } else {
+          resultQueue.put(changeSet(action.payload, fdv1Fallback, undefined, undefined, fdv1FallbackTtlMs));
+        }
         break;
 
-      case 'goodbye':
-        resultQueue.put(goodbye(action.reason, fdv1Fallback));
+      case 'goodbye': {
+        // In-band fallback signal read from the raw goodbye data (used by SDKs
+        // that cannot read streaming response headers), or a directive deferred
+        // from onopen (pendingFallback). Surface as a terminal fallback result.
+        const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
+        if (goodbyeDirective.fdv1Fallback || pendingFallback) {
+          const ttlMs = goodbyeDirective.fdv1Fallback
+            ? goodbyeDirective.fdv1FallbackTtlMs
+            : pendingFallbackTtlMs;
+          fdv1Fallback = true;
+          resultQueue.put(terminalError(errorInfoFromUnknown(action.reason), true, ttlMs));
+          pendingFallback = false;
+          pendingFallbackTtlMs = undefined;
+        } else {
+          resultQueue.put(goodbye(action.reason, fdv1Fallback));
+        }
         break;
+      }
 
       case 'serverError':
-        resultQueue.put(interrupted(errorInfoFromUnknown(action.reason), fdv1Fallback));
+        resultQueue.put(interrupted(errorInfoFromUnknown(action.reason), fdv1Fallback, fdv1FallbackTtlMs));
         break;
 
       case 'error':
         // Only actionable errors are queued; informational ones (UNKNOWN_EVENT)
         // are logged by the protocol handler.
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
-          resultQueue.put(interrupted(errorInfoFromInvalidData(action.message), fdv1Fallback));
+          resultQueue.put(interrupted(errorInfoFromInvalidData(action.message), fdv1Fallback, fdv1FallbackTtlMs));
         }
         break;
 
@@ -157,25 +188,32 @@ export function createStreamingBase(config: {
   }
 
   function handleError(err: HttpErrorResponse): boolean {
-    // Check for FDv1 fallback header.
-    if (err.headers?.['x-ld-fd-fallback'] === 'true') {
+    // Check for FDv1 fallback header (with optional TTL).
+    const errHeaders = err.headers ?? {};
+    const directive = readFallbackDirective({
+      get: (name: string) => errHeaders[name.toLowerCase()] ?? null,
+    });
+    if (directive.fdv1Fallback) {
       fdv1Fallback = true;
+      fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
       logConnectionResult(false);
-      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), true));
+      resultQueue.put(
+        terminalError(errorInfoFromHttpError(err.status ?? 0), true, directive.fdv1FallbackTtlMs),
+      );
       return false;
     }
 
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback));
+      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback, fdv1FallbackTtlMs));
       return false;
     }
 
     config.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     logConnectionResult(false);
     logConnectionAttempt();
-    resultQueue.put(interrupted(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback));
+    resultQueue.put(interrupted(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback, fdv1FallbackTtlMs));
     return true;
   }
 
@@ -206,13 +244,13 @@ export function createStreamingBase(config: {
           );
           config.logger?.debug(`Data follows: ${event.data}`);
           resultQueue.put(
-            interrupted(errorInfoFromInvalidData('Malformed JSON in EventStream'), fdv1Fallback),
+            interrupted(errorInfoFromInvalidData('Malformed JSON in EventStream'), fdv1Fallback, fdv1FallbackTtlMs),
           );
           return;
         }
 
         const action = protocolHandler.processEvent({ event: eventName, data: parsed });
-        handleAction(action);
+        handleAction(action, parsed);
       });
     });
   }
@@ -249,6 +287,7 @@ export function createStreamingBase(config: {
           interrupted(
             errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'),
             fdv1Fallback,
+            fdv1FallbackTtlMs,
           ),
         );
       }
@@ -291,13 +330,33 @@ export function createStreamingBase(config: {
           return;
         }
         resultQueue.put(
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fdv1Fallback),
+          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fdv1Fallback, fdv1FallbackTtlMs),
         );
       };
 
-      es.onopen = () => {
+      es.onopen = (e?: { headers?: { [key: string]: string } }) => {
+        if (stopped) {
+          return;
+        }
         config.logger?.info('Opened LaunchDarkly stream connection');
         protocolHandler.reset();
+
+        // Reset pending directive on every connection open so a reconnect that
+        // does not carry the fallback header clears any state from a prior attempt.
+        pendingFallback = false;
+        pendingFallbackTtlMs = undefined;
+
+        // SDKs whose EventSource exposes response headers can
+        // detect FDv1 fallback at connection open. Defer the directive and apply
+        // it to the next changeSet so the payload is delivered first.
+        const openHeaders = e?.headers;
+        if (openHeaders) {
+          const directive = readFallbackDirective({
+            get: (name: string) => openHeaders[name.toLowerCase()] ?? null,
+          });
+          pendingFallback = directive.fdv1Fallback;
+          pendingFallbackTtlMs = directive.fdv1FallbackTtlMs;
+        }
       };
 
       es.onretrying = (e) => {
@@ -310,6 +369,8 @@ export function createStreamingBase(config: {
         return;
       }
       stopped = true;
+      pendingFallback = false;
+      pendingFallbackTtlMs = undefined;
       eventSource?.close();
       eventSource = undefined;
       resultQueue.put(shutdown());

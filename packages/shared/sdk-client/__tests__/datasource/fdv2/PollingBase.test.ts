@@ -468,3 +468,115 @@ describe('given a delete-object event', () => {
     }
   });
 });
+
+describe('given x-ld-fd-fallback-ttl header (regression: SDK-2617)', () => {
+  it('reads TTL in seconds and converts to ms on a changeSet', async () => {
+    const body = makeFullPayloadBody({ flagA: { value: true } });
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' }),
+      body,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+  });
+
+  it('treats TTL "0" as indefinite (0 ms)', async () => {
+    const body = makeFullPayloadBody({ flagA: { value: true } });
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '0' }),
+      body,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBe(0);
+  });
+
+  it('leaves TTL undefined when the ttl header is absent but fallback is true', async () => {
+    const body = makeFullPayloadBody({ flagA: { value: true } });
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true' }),
+      body,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBeUndefined();
+  });
+
+  it('stamps TTL on a non-success error response', async () => {
+    const requestor = makeRequestor({
+      status: 503,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '30' }),
+      body: null,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBe(30000);
+  });
+});
+
+describe('given a goodbye event with protocolFallbackTTL (regression: SDK-2617)', () => {
+  it('emits terminal_error with fdv1Fallback and TTL rather than goodbye', async () => {
+    const body = makeFDv2Body([
+      { event: 'goodbye', data: { reason: 'falling back', protocolFallbackTTL: 60 } },
+    ]);
+    const requestor = makeRequestor({ status: 200, headers: makeHeaders(), body });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.type).toBe('status');
+    if (result.type !== 'status') return;
+    expect(result.state).toBe('terminal_error');
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+  });
+
+  it('emits terminal_error when the response header signals fallback even without protocolFallbackTTL', async () => {
+    const body = makeFDv2Body([{ event: 'goodbye', data: { reason: 'bye' } }]);
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '45' }),
+      body,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.type).toBe('status');
+    if (result.type !== 'status') return;
+    expect(result.state).toBe('terminal_error');
+    expect(result.fdv1Fallback).toBe(true);
+    expect((result as any).fdv1FallbackTtlMs).toBe(45000);
+  });
+
+  it('in-band protocolFallbackTTL takes priority over the response header TTL', async () => {
+    // When both the goodbye event has protocolFallbackTTL and the response header has
+    // x-ld-fd-fallback-ttl, the in-band value wins (45s in-band vs 90s header).
+    const body = makeFDv2Body([
+      { event: 'goodbye', data: { reason: 'falling back', protocolFallbackTTL: 45 } },
+    ]);
+    const requestor = makeRequestor({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '90' }),
+      body,
+    });
+
+    const result = await poll(requestor, undefined, logger);
+
+    expect(result.type).toBe('status');
+    if (result.type !== 'status') return;
+    expect(result.state).toBe('terminal_error');
+    expect(result.fdv1Fallback).toBe(true);
+    expect(result.fdv1FallbackTtlMs).toBe(45000);
+  });
+});
