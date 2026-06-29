@@ -63,7 +63,7 @@ it('produces a changeSet with full payload from a successful poll', async () => 
 
     const flagAUpdate = result.payload.updates.find((u) => u.key === 'flagA');
     expect(flagAUpdate).toEqual({
-      kind: 'flag',
+      kind: 'flag-eval',
       key: 'flagA',
       version: 5,
       object: { version: 5, value: 'yes' },
@@ -71,7 +71,7 @@ it('produces a changeSet with full payload from a successful poll', async () => 
 
     const flagBUpdate = result.payload.updates.find((u) => u.key === 'flagB');
     expect(flagBUpdate).toEqual({
-      kind: 'flag',
+      kind: 'flag-eval',
       key: 'flagB',
       version: 3,
       object: { version: 3, value: 42 },
