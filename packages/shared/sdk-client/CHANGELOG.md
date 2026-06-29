@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.29.0...js-client-sdk-common-v1.29.1) (2026-06-29)
+
+
+### Bug Fixes
+
+* client side fdv2 payload type ([#1778](https://github.com/launchdarkly/js-core/issues/1778)) ([0b9fde5](https://github.com/launchdarkly/js-core/commit/0b9fde5d88dc0816937f5fb0baa6ca205388e53f))
+
 ## [1.29.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.28.1...js-client-sdk-common-v1.29.0) (2026-06-08)
 
 
