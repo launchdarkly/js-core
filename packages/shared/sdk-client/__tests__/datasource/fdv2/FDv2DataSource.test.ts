@@ -1106,3 +1106,182 @@ it('fdv1 fallback triggered on interrupted result with fdv1Fallback flag', async
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
   ds.close();
 });
+
+// -- FDv2 recovery after TTL (regression: SDK-2617) --
+
+it('re-engages FDv2 after the fdv1 fallback TTL expires', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+  const fdv2RecoveryPayload = makePayload({ state: 'fdv2-recovered' });
+
+  let fdv2Created = 0;
+  const fdv2Factory = jest.fn(() => {
+    fdv2Created += 1;
+    return fdv2Created === 1
+      // @ts-ignore
+      ? makeMockSynchronizer([changeSet(fdv2Payload, true, undefined, undefined, 50)])
+      : makeMockSynchronizer([changeSet(fdv2RecoveryPayload, false)]);
+  });
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+
+  await statusManager.waitForState('VALID', 2);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+
+  await statusManager.waitForState('VALID', 3);
+  expect(dataCallback).toHaveBeenCalledWith(fdv2RecoveryPayload);
+  expect(fdv2Factory).toHaveBeenCalledTimes(2);
+
+  ds.close();
+});
+
+it('does not re-engage FDv2 when the fdv1 fallback TTL is 0 (indefinite)', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  let fdv2Created = 0;
+  const fdv2Factory = jest.fn(() => {
+    fdv2Created += 1;
+    // @ts-ignore
+    return makeMockSynchronizer([changeSet(fdv2Payload, true, undefined, undefined, 0)]);
+  });
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 100);
+  });
+  expect(fdv2Created).toBe(1);
+
+  ds.close();
+});
+
+it('does not re-trigger fallback when the fdv1 synchronizer itself yields a fallback-flagged result', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1PayloadA = makePayload({ state: 'fdv1-a' });
+  const fdv1PayloadB = makePayload({ state: 'fdv1-b' });
+
+  let fdv2Created = 0;
+  const fdv2Factory = jest.fn(() => {
+    fdv2Created += 1;
+    // @ts-ignore
+    return makeMockSynchronizer([changeSet(fdv2Payload, true, undefined, undefined, 0)]);
+  });
+  const fdv1Sync = makeMockSynchronizer([
+    changeSet(fdv1PayloadA, true),
+    changeSet(fdv1PayloadB, false),
+  ]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+
+  await statusManager.waitForState('VALID', 3);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1PayloadA);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1PayloadB);
+  expect(fdv2Created).toBe(1);
+
+  ds.close();
+});
+
+it('uses a default recovery interval (not zero) when fdv1FallbackTtlMs is absent (regression: SDK-2617 §8.3.2)', async () => {
+  // §8.3.2: when x-ld-fd-fallback-ttl header is absent, the SDK MUST use a default
+  // retry interval of 1 hour. Absence must NOT suppress recovery (unlike TTL=0).
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+  const fdv2RecoveryPayload = makePayload({ state: 'fdv2-recovered' });
+
+  let fdv2Created = 0;
+  const fdv2Factory = jest.fn(() => {
+    fdv2Created += 1;
+    // changeSet with fdv1Fallback=true and no TTL (undefined) — should use 1-hour default
+    return fdv2Created === 1
+      ? makeMockSynchronizer([changeSet(fdv2Payload, true)])
+      : makeMockSynchronizer([changeSet(fdv2RecoveryPayload, false)]);
+  });
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot(
+      { create: () => makeMockSynchronizer([changeSet(fdv1Payload, false)]) },
+      { isFDv1Fallback: true },
+    ),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    fdv2RecoveryTimeoutMs: 50,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  // Recovery must be scheduled (not skipped as with TTL=0).
+  await statusManager.waitForState('VALID', 3);
+  expect(dataCallback).toHaveBeenCalledWith(fdv2RecoveryPayload);
+  expect(fdv2Created).toBe(2);
+
+  ds.close();
+});

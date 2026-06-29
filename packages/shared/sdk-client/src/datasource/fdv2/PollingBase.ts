@@ -13,11 +13,7 @@ import {
   interrupted,
   terminalError,
 } from './FDv2SourceResult';
-
-function getFallback(headers: { get(name: string): string | null }): boolean {
-  const value = headers.get('x-ld-fd-fallback');
-  return value !== null && value.toLowerCase() === 'true';
-}
+import { readFallbackDirective } from './fallbackDirective';
 
 function getEnvironmentId(headers: { get(name: string): string | null }): string | undefined {
   return headers.get('x-ld-envid') ?? undefined;
@@ -27,7 +23,7 @@ function getEnvironmentId(headers: { get(name: string): string | null }): string
  * Process FDv2 events using the protocol handler directly.
  *
  * We use `createProtocolHandler` rather than `PayloadProcessor` because
- * the PayloadProcessor does not surface goodbye/serverError actions —
+ * the PayloadProcessor does not surface goodbye/serverError actions:
  * it only forwards payloads and actionable errors. For polling results,
  * we need full control over all protocol action types.
  */
@@ -35,6 +31,7 @@ function processEvents(
   events: internal.FDv2Event[],
   fdv1Fallback: boolean,
   environmentId: string | undefined,
+  fdv1FallbackTtlMs: number | undefined,
   logger?: LDLogger,
 ): FDv2SourceResult {
   const handler = internal.createProtocolHandler(
@@ -55,31 +52,35 @@ function processEvents(
 
     switch (action.type) {
       case 'payload':
-        earlyResult = changeSet(action.payload, fdv1Fallback, environmentId);
+        earlyResult = changeSet(action.payload, fdv1Fallback, environmentId, undefined, fdv1FallbackTtlMs);
         break;
       case 'goodbye':
-        earlyResult = goodbye(action.reason, fdv1Fallback);
+        // Polling uses HTTP fetch, so the fallback directive always arrives via
+        // response headers (x-ld-fd-fallback / x-ld-fd-fallback-ttl). Surface
+        // goodbye-with-fallback as a terminal error so the orchestrator engages FDv1.
+        if (fdv1Fallback) {
+          earlyResult = terminalError(errorInfoFromUnknown(action.reason), true, fdv1FallbackTtlMs);
+        } else {
+          earlyResult = goodbye(action.reason, fdv1Fallback);
+        }
         break;
       case 'serverError': {
         const errorInfo = errorInfoFromUnknown(action.reason);
         logger?.error(`Server error during polling: ${action.reason}`);
-        earlyResult = interrupted(errorInfo, fdv1Fallback);
+        earlyResult = interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
         break;
       }
       case 'error': {
-        // Actionable protocol errors (MISSING_PAYLOAD, PROTOCOL_ERROR)
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
           const errorInfo = errorInfoFromInvalidData(action.message);
           logger?.warn(`Protocol error during polling: ${action.message}`);
-          earlyResult = interrupted(errorInfo, fdv1Fallback);
+          earlyResult = interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
         } else {
-          // Non-actionable errors (UNKNOWN_EVENT) are logged but don't stop processing
           logger?.warn(action.message);
         }
         break;
       }
       default:
-        // 'none' — continue processing next event
         break;
     }
   });
@@ -88,10 +89,9 @@ function processEvents(
     return earlyResult;
   }
 
-  // Events didn't produce a result
   const errorInfo = errorInfoFromUnknown('Unexpected end of polling response');
   logger?.error('Unexpected end of polling response');
-  return interrupted(errorInfo, fdv1Fallback);
+  return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
 }
 
 /**
@@ -109,22 +109,26 @@ export async function poll(
   logger?: LDLogger,
 ): Promise<FDv2SourceResult> {
   let fdv1Fallback = false;
+  let fdv1FallbackTtlMs: number | undefined;
   let environmentId: string | undefined;
 
   try {
     const response = await requestor.poll(basis);
-    fdv1Fallback = getFallback(response.headers);
+    const directive = readFallbackDirective(response.headers);
+    fdv1Fallback = directive.fdv1Fallback;
+    fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
     environmentId = getEnvironmentId(response.headers);
 
-    // 304 Not Modified: treat as server-intent with intentCode 'none'
-    // (Spec Requirement 10.1.2)
+    // 304 Not Modified: no payload has changed since the last poll.
+    // Synthesize a 'none' payload so the orchestrator's changeSet path runs
+    // normally without touching stored flags.
     if (response.status === 304) {
       const nonePayload: internal.Payload = {
         version: 0,
         type: 'none',
         updates: [],
       };
-      return changeSet(nonePayload, fdv1Fallback, environmentId);
+      return changeSet(nonePayload, fdv1Fallback, environmentId, undefined, fdv1FallbackTtlMs);
     }
 
     // Non-success HTTP status
@@ -134,15 +138,15 @@ export async function poll(
 
       const recoverable = response.status <= 0 || isHttpRecoverable(response.status);
       return recoverable
-        ? interrupted(errorInfo, fdv1Fallback)
-        : terminalError(errorInfo, fdv1Fallback);
+        ? interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs)
+        : terminalError(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
     }
 
-    // Successful response — process FDv2 events
+    // Successful response: process FDv2 events
     if (!response.body) {
       const errorInfo = errorInfoFromInvalidData('Empty response body');
       logger?.error('Polling request received empty response body');
-      return interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
     }
 
     let parsed: internal.FDv2EventsCollection;
@@ -151,7 +155,7 @@ export async function poll(
     } catch {
       const errorInfo = errorInfoFromInvalidData('Malformed JSON data in polling response');
       logger?.error('Polling request received malformed data');
-      return interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
     }
 
     if (!Array.isArray(parsed.events)) {
@@ -159,15 +163,14 @@ export async function poll(
         'Invalid polling response: missing or invalid events array',
       );
       logger?.error('Polling response does not contain a valid events array');
-      return interrupted(errorInfo, fdv1Fallback);
+      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
     }
 
-    return processEvents(parsed.events, fdv1Fallback, environmentId, logger);
+    return processEvents(parsed.events, fdv1Fallback, environmentId, fdv1FallbackTtlMs, logger);
   } catch (err: any) {
-    // Network or other I/O error from the fetch itself
     const message = err?.message ?? String(err);
     logger?.error(`Polling request failed with network error: ${message}`);
     const errorInfo = errorInfoFromNetworkError(message);
-    return interrupted(errorInfo, fdv1Fallback);
+    return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
   }
 }

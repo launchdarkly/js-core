@@ -452,3 +452,59 @@ it('close prevents further gets', () => {
   expect(manager.getNextInitializerAndSetActive()).toBeUndefined();
   expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
 });
+
+// -- fdv2Recovery and isCurrentSynchronizerFDv1Fallback --
+
+it('fdv2Recovery blocks FDv1 slots and unblocks non-FDv1 slots', () => {
+  const fdv2Factory = { create: jest.fn(() => ({ next: jest.fn(), close: jest.fn() })) };
+  const fdv1Factory = { create: jest.fn(() => ({ next: jest.fn(), close: jest.fn() })) };
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot(fdv2Factory),
+    createSynchronizerSlot(fdv1Factory, { isFDv1Fallback: true }),
+  ];
+
+  const sm = createSourceManager([], slots, () => undefined);
+
+  // Engage FDv1 fallback first
+  sm.fdv1Fallback();
+  expect(slots[0].state).toBe('blocked');
+  expect(slots[1].state).toBe('available');
+
+  // Recover: FDv2 unblocked, FDv1 blocked
+  sm.fdv2Recovery();
+  expect(slots[0].state).toBe('available');
+  expect(slots[1].state).toBe('blocked');
+});
+
+it('fdv2Recovery resets the synchronizer index so the next selection starts from FDv2', () => {
+  const fdv2Factory = { create: jest.fn(() => ({ next: jest.fn(), close: jest.fn() })) };
+  const fdv1Factory = { create: jest.fn(() => ({ next: jest.fn(), close: jest.fn() })) };
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot(fdv2Factory),
+    createSynchronizerSlot(fdv1Factory, { isFDv1Fallback: true }),
+  ];
+
+  const sm = createSourceManager([], slots, () => undefined);
+  sm.fdv1Fallback();
+
+  // Advance into the FDv1 slot
+  sm.getNextAvailableSynchronizerAndSetActive();
+  expect(sm.isCurrentSynchronizerFDv1Fallback).toBe(true);
+
+  // After recovery the FDv2 slot is first
+  sm.fdv2Recovery();
+  const next = sm.getNextAvailableSynchronizerAndSetActive();
+  expect(next).toBeDefined();
+  expect(sm.isCurrentSynchronizerFDv1Fallback).toBe(false);
+});
+
+it('isCurrentSynchronizerFDv1Fallback returns false when synchronizer index is -1 (before first selection)', () => {
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: jest.fn() }, { isFDv1Fallback: true }),
+  ];
+  const sm = createSourceManager([], slots, () => undefined);
+  // No selection made yet (index = -1)
+  expect(sm.isCurrentSynchronizerFDv1Fallback).toBe(false);
+});

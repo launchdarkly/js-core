@@ -10,6 +10,7 @@ export interface MessageEvent {
 
 export interface OpenEvent {
   type: 'open';
+  headers?: Record<string, string>;
 }
 
 export interface CloseEvent {

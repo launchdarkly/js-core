@@ -38,7 +38,12 @@ describe('EventSource', () => {
       abort: jest.fn(),
     };
 
-    jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => mockXhr as XMLHttpRequest);
+    const xhrSpy = jest.spyOn(window, 'XMLHttpRequest').mockImplementation(() => mockXhr as XMLHttpRequest);
+    // Preserve static constants that EventSource reads from the constructor reference.
+    // @ts-ignore
+    xhrSpy.LOADING = 3;
+    // @ts-ignore
+    xhrSpy.DONE = 4;
 
     eventSource = new EventSource<EventName>(uri, { logger });
     eventSource.onclose = jest.fn();
@@ -134,5 +139,32 @@ describe('EventSource', () => {
     jest.runAllTimers();
 
     expect(mockXhr.open).toHaveBeenLastCalledWith('GET', `${uri}?basis=initial`, true);
+  });
+
+  test('calls onopen with parsed response headers', () => {
+    const onopen = jest.fn();
+    eventSource.onopen = onopen;
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = '';
+
+    jest.runAllTimers();
+
+    mockXhr.readyState = 4;
+    mockXhr.status = 200;
+    mockXhr.onreadystatechange();
+
+    expect(onopen).toHaveBeenCalledTimes(1);
+    expect(onopen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'open',
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
   });
 });
