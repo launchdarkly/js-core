@@ -62,13 +62,30 @@ function processSocksProxyOptions(
   // A single SOCKS agent works for both http and https targets. Build the proxy address as a URL
   // so its username/password setters percent-encode the credentials; socks-proxy-agent decodes
   // them again, which means an `auth` password may safely contain characters such as ':'.
-  const proxyUrl = new URL(`${proxyOptions.scheme}://${proxyOptions.host}:${proxyOptions.port}`);
+  // Assemble the address with formatUrl (the same handling the http proxy path uses) so IPv6
+  // literal hosts are bracketed and a missing port is omitted rather than appended as the
+  // literal string 'undefined'.
+  const proxyUrl = new URL(
+    formatUrl({
+      protocol: `${proxyOptions.scheme}:`,
+      slashes: true,
+      hostname: proxyOptions.host,
+      port: proxyOptions.port,
+    }),
+  );
   if (proxyOptions.auth) {
     const [userId, ...passwordParts] = proxyOptions.auth.split(':');
     proxyUrl.username = userId;
     proxyUrl.password = passwordParts.join(':');
   }
-  return new SocksProxyAgent(proxyUrl, additional);
+  const agent = new SocksProxyAgent(proxyUrl, additional);
+  // socks-proxy-agent derives the proxy host from URL.hostname, which keeps the surrounding
+  // brackets on an IPv6 literal (e.g. '[::1]'). The underlying socks client passes that host
+  // straight to net.connect, which cannot resolve a bracketed literal, so strip the brackets.
+  if (agent.proxy.host?.startsWith('[') && agent.proxy.host.endsWith(']')) {
+    agent.proxy.host = agent.proxy.host.slice(1, -1);
+  }
+  return agent;
 }
 
 function processProxyOptions(

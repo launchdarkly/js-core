@@ -83,6 +83,33 @@ describe('When using a SOCKS proxy', () => {
     expect(proxy.requestCount()).toBeGreaterThanOrEqual(1);
   });
 
+  it('can use a SOCKS proxy reached via an IPv6 literal host', async () => {
+    // An IPv6 literal proxy host must be bracketed when building the proxy URL; without that the
+    // URL is invalid and the agent cannot connect.
+    const proxy: SocksProxyServer = await startSocksProxyServer({ bindAddress: '::1' });
+    const server = await TestHttpServer.start();
+    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
+
+    const client = new LDClientNode(sdkKey, {
+      baseUri: server.url,
+      proxyOptions: {
+        host: proxy.hostname,
+        port: proxy.port,
+        scheme: 'socks5',
+      },
+      stream: false,
+      sendEvents: false,
+      logger,
+    });
+
+    closeable.push(proxy, server, client);
+
+    await client.waitForInitialization({ timeout: 10 });
+    expect(client.initialized()).toBe(true);
+
+    expect(proxy.requestCount()).toBeGreaterThanOrEqual(1);
+  });
+
   it('can use a SOCKS proxy with username/password authentication', async () => {
     // The password contains a colon to verify that everything after the first colon in `auth` is
     // treated as the password.
