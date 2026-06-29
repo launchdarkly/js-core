@@ -1,5 +1,6 @@
-import { LDOptions, platform } from '@launchdarkly/js-server-sdk-common';
+import { platform } from '@launchdarkly/js-server-sdk-common';
 
+import { LDOptions } from '../api/LDOptions';
 import NodeCrypto from './NodeCrypto';
 import NodeFilesystem from './NodeFilesystem';
 import NodeInfo from './NodeInfo';
@@ -19,6 +20,7 @@ export default class NodePlatform implements platform.Platform {
     this.requests = new NodeRequests(
       options.tlsParams,
       options.proxyOptions,
+      options.proxyAgent,
       options.logger,
       options.enableEventCompression,
     );

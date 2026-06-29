@@ -4,7 +4,6 @@ import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
 // No types for the event source.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
-import { SocksProxyAgent } from 'socks-proxy-agent';
 import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
@@ -49,53 +48,10 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   return options;
 }
 
-const socksSchemes = ['socks', 'socks4', 'socks4a', 'socks5', 'socks5h'];
-
-function isSocksScheme(scheme?: string): boolean {
-  return scheme !== undefined && socksSchemes.includes(scheme);
-}
-
-function processSocksProxyOptions(
-  proxyOptions: LDProxyOptions,
-  additional: https.AgentOptions = {},
-): https.Agent | http.Agent {
-  // A single SOCKS agent works for both http and https targets. Build the proxy address as a URL
-  // so its username/password setters percent-encode the credentials; socks-proxy-agent decodes
-  // them again, which means an `auth` password may safely contain characters such as ':'.
-  // Assemble the address with formatUrl (the same handling the http proxy path uses) so IPv6
-  // literal hosts are bracketed and a missing port is omitted rather than appended as the
-  // literal string 'undefined'.
-  const proxyUrl = new URL(
-    formatUrl({
-      protocol: `${proxyOptions.scheme}:`,
-      slashes: true,
-      hostname: proxyOptions.host,
-      port: proxyOptions.port,
-    }),
-  );
-  if (proxyOptions.auth) {
-    const [userId, ...passwordParts] = proxyOptions.auth.split(':');
-    proxyUrl.username = userId;
-    proxyUrl.password = passwordParts.join(':');
-  }
-  const agent = new SocksProxyAgent(proxyUrl, additional);
-  // socks-proxy-agent derives the proxy host from URL.hostname, which keeps the surrounding
-  // brackets on an IPv6 literal (e.g. '[::1]'). The underlying socks client passes that host
-  // straight to net.connect, which cannot resolve a bracketed literal, so strip the brackets.
-  if (agent.proxy.host?.startsWith('[') && agent.proxy.host.endsWith(']')) {
-    agent.proxy.host = agent.proxy.host.slice(1, -1);
-  }
-  return agent;
-}
-
 function processProxyOptions(
   proxyOptions: LDProxyOptions,
   additional: https.AgentOptions = {},
 ): https.Agent | http.Agent {
-  if (isSocksScheme(proxyOptions.scheme)) {
-    return processSocksProxyOptions(proxyOptions, additional);
-  }
-
   const proxyUrl = formatUrl({
     protocol: proxyOptions.scheme?.startsWith('https') ? 'https:' : 'http:',
     slashes: true,
@@ -124,8 +80,21 @@ function processProxyOptions(
 function createAgent(
   tlsOptions?: LDTLSOptions,
   proxyOptions?: LDProxyOptions,
+  proxyAgent?: https.Agent | http.Agent,
   logger?: LDLogger,
 ): https.Agent | http.Agent | undefined {
+  // A caller-supplied agent takes precedence and is used verbatim. This is the extension point for
+  // proxy schemes the SDK does not build itself (for example a SOCKS proxy via socks-proxy-agent):
+  // the application constructs the agent and the SDK simply uses it. When it is set, proxyOptions
+  // and tlsParams are ignored because the agent owns connection setup.
+  if (proxyAgent) {
+    if (proxyOptions || tlsOptions) {
+      logger?.warn(
+        'Both proxyAgent and proxyOptions/tlsParams were provided; using proxyAgent and ignoring proxyOptions/tlsParams.',
+      );
+    }
+    return proxyAgent;
+  }
   if (!proxyOptions?.auth?.startsWith('https') && tlsOptions) {
     logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
   }
@@ -156,11 +125,12 @@ export default class NodeRequests implements platform.Requests {
   constructor(
     tlsOptions?: LDTLSOptions,
     proxyOptions?: LDProxyOptions,
+    proxyAgent?: https.Agent | http.Agent,
     logger?: LDLogger,
     enableEventCompression?: boolean,
   ) {
-    this._agent = createAgent(tlsOptions, proxyOptions, logger);
-    this._hasProxy = !!proxyOptions;
+    this._agent = createAgent(tlsOptions, proxyOptions, proxyAgent, logger);
+    this._hasProxy = !!proxyOptions || !!proxyAgent;
     this._hasProxyAuth = !!proxyOptions?.auth;
     this._enableBodyCompression = !!enableEventCompression;
   }

@@ -1,4 +1,5 @@
 import { AsyncQueue, SSEItem, TestHttpHandlers, TestHttpServer } from 'launchdarkly-js-test-helpers';
+import { SocksProxyAgent } from 'socks-proxy-agent';
 
 import { basicLogger, LDLogger } from '../src';
 import LDClientNode from '../src/LDClientNode';
@@ -16,7 +17,10 @@ const flag = {
 };
 const allData = { flags: { flagKey: flag }, segments: {} };
 
-describe('When using a SOCKS proxy', () => {
+// The proxyAgent option lets an application route SDK traffic through any agent it constructs. A
+// SOCKS proxy is the motivating example: the SDK does not build SOCKS agents itself, so the
+// application supplies a SocksProxyAgent and the SDK uses it for all connections.
+describe('When using a custom proxyAgent', () => {
   let logger: LDLogger;
   let closeable: { close: () => void }[];
 
@@ -31,18 +35,14 @@ describe('When using a SOCKS proxy', () => {
     closeable.forEach((item) => item.close());
   });
 
-  it('can use a SOCKS proxy in polling mode', async () => {
+  it('routes polling traffic through a user-supplied SOCKS proxy agent', async () => {
     const proxy: SocksProxyServer = await startSocksProxyServer();
     const server = await TestHttpServer.start();
     server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
 
     const client = new LDClientNode(sdkKey, {
       baseUri: server.url,
-      proxyOptions: {
-        host: proxy.hostname,
-        port: proxy.port,
-        scheme: 'socks5',
-      },
+      proxyAgent: new SocksProxyAgent(`socks5://${proxy.hostname}:${proxy.port}`),
       stream: false,
       sendEvents: false,
       logger,
@@ -53,11 +53,11 @@ describe('When using a SOCKS proxy', () => {
     await client.waitForInitialization({ timeout: 10 });
     expect(client.initialized()).toBe(true);
 
-    // If the SOCKS proxy did not see a connection then the SDK did not actually use it.
+    // If the SOCKS proxy did not see a connection then the SDK did not actually use the agent.
     expect(proxy.requestCount()).toBeGreaterThanOrEqual(1);
   });
 
-  it('can use a SOCKS proxy in streaming mode', async () => {
+  it('routes streaming traffic through a user-supplied SOCKS proxy agent', async () => {
     const proxy: SocksProxyServer = await startSocksProxyServer();
     const server = await TestHttpServer.start();
     const events = new AsyncQueue<SSEItem>();
@@ -66,11 +66,7 @@ describe('When using a SOCKS proxy', () => {
 
     const client = new LDClientNode(sdkKey, {
       streamUri: server.url,
-      proxyOptions: {
-        host: proxy.hostname,
-        port: proxy.port,
-        scheme: 'socks5',
-      },
+      proxyAgent: new SocksProxyAgent(`socks5://${proxy.hostname}:${proxy.port}`),
       sendEvents: false,
       logger,
     });
@@ -83,51 +79,17 @@ describe('When using a SOCKS proxy', () => {
     expect(proxy.requestCount()).toBeGreaterThanOrEqual(1);
   });
 
-  it('can use a SOCKS proxy reached via an IPv6 literal host', async () => {
-    // An IPv6 literal proxy host must be bracketed when building the proxy URL; without that the
-    // URL is invalid and the agent cannot connect.
-    const proxy: SocksProxyServer = await startSocksProxyServer({ bindAddress: '::1' });
-    const server = await TestHttpServer.start();
-    server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
-
-    const client = new LDClientNode(sdkKey, {
-      baseUri: server.url,
-      proxyOptions: {
-        host: proxy.hostname,
-        port: proxy.port,
-        scheme: 'socks5',
-      },
-      stream: false,
-      sendEvents: false,
-      logger,
-    });
-
-    closeable.push(proxy, server, client);
-
-    await client.waitForInitialization({ timeout: 10 });
-    expect(client.initialized()).toBe(true);
-
-    expect(proxy.requestCount()).toBeGreaterThanOrEqual(1);
-  });
-
-  it('can use a SOCKS proxy with username/password authentication', async () => {
-    // The password contains a colon to verify that everything after the first colon in `auth` is
-    // treated as the password.
+  it('routes traffic through a SOCKS proxy agent with username/password authentication', async () => {
     const proxy: SocksProxyServer = await startSocksProxyServer({
       username: 'user',
-      password: 'p@ss:word',
+      password: 'password',
     });
     const server = await TestHttpServer.start();
     server.forMethodAndPath('get', '/sdk/latest-all', TestHttpHandlers.respondJson(allData));
 
     const client = new LDClientNode(sdkKey, {
       baseUri: server.url,
-      proxyOptions: {
-        host: proxy.hostname,
-        port: proxy.port,
-        scheme: 'socks5',
-        auth: 'user:p@ss:word',
-      },
+      proxyAgent: new SocksProxyAgent(`socks5://user:password@${proxy.hostname}:${proxy.port}`),
       stream: false,
       sendEvents: false,
       logger,

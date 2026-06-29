@@ -1,8 +1,8 @@
 # Using this build of `@launchdarkly/node-server-sdk` in your app
 
 This guide explains how to consume this local fork/build of the Node server SDK in a
-separate test application — for example, to try out the SOCKS proxy support on the
-`socks-proxy-support` branch before it is published to npm.
+separate test application — for example, to try out the custom `proxyAgent` support on
+the `socks-proxy-support` branch before it is published to npm.
 
 The package is `@launchdarkly/node-server-sdk` (currently version `9.11.2`). It lives in
 a monorepo, so you must build it (and its workspace dependencies) before consuming it.
@@ -83,39 +83,43 @@ const value = await client.variation('your-flag-key', { key: 'user-123' }, false
 console.log(value);
 ```
 
-## 4. Testing the SOCKS proxy support
+## 4. Testing the custom `proxyAgent` support
 
-This branch adds SOCKS proxy support via the existing `proxyOptions` config. Set
-`scheme` to a SOCKS scheme; `host` and `port` identify the SOCKS proxy, and `auth`
-(if needed) carries the `username:password` credentials.
+This branch adds a `proxyAgent` option: an HTTP(S) agent that the SDK uses for all
+outgoing connections. It is the extension point for proxy configurations the SDK does
+not build itself — a SOCKS proxy being the motivating example. For a basic HTTP/HTTPS
+proxy, keep using `proxyOptions`; when `proxyAgent` is set, `proxyOptions` and
+`tlsParams` are ignored because the agent owns connection and TLS setup.
 
-Supported schemes: `socks`, `socks4`, `socks4a`, `socks5`, `socks5h`
-(plus the existing `http` / `https` HTTP-proxy schemes).
+To route traffic through a SOCKS proxy, construct a `SocksProxyAgent` (from the
+[`socks-proxy-agent`](https://www.npmjs.com/package/socks-proxy-agent) package) in your
+app and pass it as `proxyAgent`:
+
+```bash
+npm install socks-proxy-agent
+```
 
 ```js
 const { init } = require('@launchdarkly/node-server-sdk');
+const { SocksProxyAgent } = require('socks-proxy-agent');
 
 const client = init('your-sdk-key', {
-  proxyOptions: {
-    scheme: 'socks5',
-    host: '127.0.0.1',
-    port: 1080,
-    // Optional. The password may contain ':' — only the first ':' splits user/password.
-    auth: 'proxyuser:proxypassword',
-  },
+  // Supported schemes: socks, socks4, socks4a, socks5, socks5h.
+  // Credentials, if needed: socks5://user:password@host:port
+  proxyAgent: new SocksProxyAgent('socks5://127.0.0.1:1080'),
 });
 
 await client.waitForInitialization({ timeout: 10 });
 console.log(await client.variation('your-flag-key', { key: 'user-123' }, false));
 ```
 
-A single SOCKS agent handles both the streaming (HTTPS) and event-delivery connections,
-so no separate configuration is required for each.
+A single agent handles both the streaming (HTTPS) and event-delivery connections, so no
+separate configuration is required for each.
 
 If you just want to confirm the proxy path works without a real SDK key, the repo's own
 test harness spins up an in-process SOCKS server — see
 [`__tests__/socksProxyServer.ts`](__tests__/socksProxyServer.ts) and
-[`__tests__/LDClientNode.socksProxy.test.ts`](__tests__/LDClientNode.socksProxy.test.ts).
+[`__tests__/LDClientNode.proxyAgent.test.ts`](__tests__/LDClientNode.proxyAgent.test.ts).
 Run them with:
 
 ```bash

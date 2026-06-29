@@ -11,9 +11,6 @@ export interface SocksProxyServer {
 export interface SocksProxyServerOptions {
   username?: string;
   password?: string;
-  // Address for the proxy itself to listen on. Defaults to 127.0.0.1; pass '::1' to exercise the
-  // SDK's handling of an IPv6 literal proxy host.
-  bindAddress?: string;
 }
 
 // A minimal SOCKS5 proxy server for tests. It implements just enough of RFC 1928 (and the
@@ -26,7 +23,6 @@ export function startSocksProxyServer(
   const expectedUser = options.username;
   const expectedPassword = options.password;
   const requireAuth = !!expectedUser;
-  const bindAddress = options.bindAddress ?? '127.0.0.1';
 
   let connectionCount = 0;
   const authFailures: { uname: string; passwd: string }[] = [];
@@ -109,10 +105,10 @@ export function startSocksProxyServer(
   });
 
   return new Promise((resolve) => {
-    server.listen(0, bindAddress, () => {
+    server.listen(0, '127.0.0.1', () => {
       const address = server.address() as net.AddressInfo;
       resolve({
-        hostname: bindAddress,
+        hostname: '127.0.0.1',
         port: address.port,
         requestCount: () => connectionCount,
         authFailures: () => authFailures,
