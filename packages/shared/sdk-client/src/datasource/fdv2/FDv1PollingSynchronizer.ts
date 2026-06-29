@@ -22,7 +22,7 @@ import { Synchronizer } from './Synchronizer';
 
 function flagsToPayload(flags: Flags): internal.Payload {
   const updates: internal.Update[] = Object.entries(flags).map(([key, flag]) => ({
-    kind: 'flag',
+    kind: 'flag-eval',
     key,
     version: flag.version ?? 1,
     object: flag,
