@@ -353,11 +353,8 @@
         }
       ]
     },
-    "packages/tooling/jest": {
-      "release-as": "1.0.0"
-    },
+    "packages/tooling/jest": {},
     "packages/tooling/client-testing-plugin": {
-      "release-as": "1.0.0",
       "extra-files": [
         {
           "type": "json",
@@ -409,11 +406,8 @@
         }
       ]
     },
-    "packages/shared/openfeature-server-common": {
-      "release-as": "1.0.0"
-    },
+    "packages/shared/openfeature-server-common": {},
     "packages/sdk/openfeature-node-server": {
-      "release-as": "1.3.0",
       "extra-files": [
         "src/LaunchDarklyProvider.ts",
         {
