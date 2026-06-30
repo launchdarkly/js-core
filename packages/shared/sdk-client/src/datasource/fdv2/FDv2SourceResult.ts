@@ -101,11 +101,21 @@ export function terminalError(
 }
 
 /**
- * Signals a server-initiated disconnect. Unlike terminal_error, this is
- * expected and the synchronizer handles reconnection internally.
+ * Signals a server-initiated disconnect. Unlike `terminal_error`, the
+ * synchronizer will reconnect; the orchestrator does not block this source.
+ *
+ * @param reason Human-readable description of why the server closed the stream.
+ * @param fdv1Fallback Whether the server directed the client to fall back to FDv1.
+ * @param fdv1FallbackTtlMs How long (ms) to remain on FDv1 before attempting FDv2
+ *   recovery. Omit to use the caller's default; pass `0` for indefinite fallback.
+ *   Same semantics as {@link StatusResult.fdv1FallbackTtlMs}.
  */
-export function goodbye(reason: string, fdv1Fallback: boolean): FDv2SourceResult {
-  return { type: 'status', state: 'goodbye', reason, fdv1Fallback };
+export function goodbye(
+  reason: string,
+  fdv1Fallback: boolean,
+  fdv1FallbackTtlMs?: number,
+): FDv2SourceResult {
+  return { type: 'status', state: 'goodbye', reason, fdv1Fallback, fdv1FallbackTtlMs };
 }
 
 /** Builds {@link DataSourceStatusErrorInfo} for an unexpected HTTP status. */
