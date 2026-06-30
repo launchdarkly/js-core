@@ -13,7 +13,7 @@ import DataSourceStatusErrorInfo from '../DataSourceStatusErrorInfo';
 export type SourceState = 'interrupted' | 'shutdown' | 'terminal_error' | 'goodbye';
 
 /**
- * A change set result containing a processed FDv2 payload.
+ * A successfully processed FDv2 payload ready for delivery to the flag store.
  */
 export interface ChangeSetResult {
   type: 'changeSet';
@@ -22,10 +22,16 @@ export interface ChangeSetResult {
   environmentId?: string;
   /** Freshness timestamp from cache, if this result originated from cached data. */
   freshness?: number;
+  /**
+   * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
+   * attempting FDv2 recovery. `undefined` means no TTL was provided (caller
+   * uses a default); `0` means indefinite (no recovery).
+   */
+  fdv1FallbackTtlMs?: number;
 }
 
 /**
- * A status result indicating a state transition (error, shutdown, goodbye).
+ * A state-transition result (error, shutdown, or goodbye) with no payload.
  */
 export interface StatusResult {
   type: 'status';
@@ -33,73 +39,76 @@ export interface StatusResult {
   errorInfo?: DataSourceStatusErrorInfo;
   reason?: string;
   fdv1Fallback: boolean;
+  /**
+   * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
+   * attempting FDv2 recovery. `undefined` means no TTL was provided (caller
+   * uses a default); `0` means indefinite (no recovery).
+   */
+  fdv1FallbackTtlMs?: number;
 }
 
 /**
  * The result type for FDv2 initializers and synchronizers.
  *
- * An initializer produces a single result, while a synchronizer produces a
- * stream of results. Each result is either a change set (containing a payload
- * of flag data) or a status (indicating a state transition like an error or
- * shutdown).
+ * Initializers produce a single result; synchronizers produce a stream.
+ * The orchestrator in {@link FDv2DataSource} drives the control flow based
+ * on which variant is returned.
  */
 export type FDv2SourceResult = ChangeSetResult | StatusResult;
 
 /**
- * Creates a change set result containing processed flag data.
+ * Wraps a processed FDv2 payload in a {@link ChangeSetResult}.
  */
 export function changeSet(
   payload: internal.Payload,
   fdv1Fallback: boolean,
   environmentId?: string,
   freshness?: number,
+  fdv1FallbackTtlMs?: number,
 ): FDv2SourceResult {
-  return { type: 'changeSet', payload, fdv1Fallback, environmentId, freshness };
+  return { type: 'changeSet', payload, fdv1Fallback, environmentId, freshness, fdv1FallbackTtlMs };
 }
 
 /**
- * Creates an interrupted status result. Indicates a transient error; the
- * synchronizer will attempt to recover automatically.
- *
- * When used with an initializer, this is still a terminal state.
+ * Signals a transient error. Synchronizers retry automatically; for an
+ * initializer this is terminal since there is no retry loop.
  */
 export function interrupted(
   errorInfo: DataSourceStatusErrorInfo,
   fdv1Fallback: boolean,
+  fdv1FallbackTtlMs?: number,
 ): FDv2SourceResult {
-  return { type: 'status', state: 'interrupted', errorInfo, fdv1Fallback };
+  return { type: 'status', state: 'interrupted', errorInfo, fdv1Fallback, fdv1FallbackTtlMs };
 }
 
 /**
- * Creates a shutdown status result. Indicates the data source was closed
- * gracefully and will not produce any further results.
+ * Signals a graceful close initiated by the local caller (not the server).
  */
 export function shutdown(): FDv2SourceResult {
   return { type: 'status', state: 'shutdown', fdv1Fallback: false };
 }
 
 /**
- * Creates a terminal error status result. Indicates an unrecoverable error;
- * the data source will not produce any further results.
+ * Signals an unrecoverable error. The orchestrator will block this source
+ * and move on; it will not retry.
  */
 export function terminalError(
   errorInfo: DataSourceStatusErrorInfo,
   fdv1Fallback: boolean,
+  fdv1FallbackTtlMs?: number,
 ): FDv2SourceResult {
-  return { type: 'status', state: 'terminal_error', errorInfo, fdv1Fallback };
+  return { type: 'status', state: 'terminal_error', errorInfo, fdv1Fallback, fdv1FallbackTtlMs };
 }
 
 /**
- * Creates a goodbye status result. Indicates the server has instructed the
- * client to disconnect.
+ * Signals a server-initiated disconnect. Unlike terminal_error, this is
+ * expected and the synchronizer handles reconnection internally.
  */
 export function goodbye(reason: string, fdv1Fallback: boolean): FDv2SourceResult {
   return { type: 'status', state: 'goodbye', reason, fdv1Fallback };
 }
 
-/**
- * Helper to create a {@link DataSourceStatusErrorInfo} from an HTTP status code.
- */
+/** Builds {@link DataSourceStatusErrorInfo} for an unexpected HTTP status. */
 export function errorInfoFromHttpError(statusCode: number): DataSourceStatusErrorInfo {
   return {
     kind: DataSourceErrorKind.ErrorResponse,
@@ -109,9 +118,7 @@ export function errorInfoFromHttpError(statusCode: number): DataSourceStatusErro
   };
 }
 
-/**
- * Helper to create a {@link DataSourceStatusErrorInfo} from a network error.
- */
+/** Builds {@link DataSourceStatusErrorInfo} for a network-level failure. */
 export function errorInfoFromNetworkError(message: string): DataSourceStatusErrorInfo {
   return {
     kind: DataSourceErrorKind.NetworkError,
@@ -120,9 +127,7 @@ export function errorInfoFromNetworkError(message: string): DataSourceStatusErro
   };
 }
 
-/**
- * Helper to create a {@link DataSourceStatusErrorInfo} from invalid data.
- */
+/** Builds {@link DataSourceStatusErrorInfo} for a malformed or unexpected payload. */
 export function errorInfoFromInvalidData(message: string): DataSourceStatusErrorInfo {
   return {
     kind: DataSourceErrorKind.InvalidData,
@@ -131,9 +136,7 @@ export function errorInfoFromInvalidData(message: string): DataSourceStatusError
   };
 }
 
-/**
- * Helper to create a {@link DataSourceStatusErrorInfo} for unknown errors.
- */
+/** Builds {@link DataSourceStatusErrorInfo} when the error kind is not otherwise classifiable. */
 export function errorInfoFromUnknown(message: string): DataSourceStatusErrorInfo {
   return {
     kind: DataSourceErrorKind.Unknown,
