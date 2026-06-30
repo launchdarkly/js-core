@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/openfeature-node-server",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "LaunchDarkly OpenFeature provider for the Node.js server SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/openfeature-node-server",
   "repository": {
