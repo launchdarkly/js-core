@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.2.5...openfeature-node-server-v1.3.0) (2026-06-30)
+
+
+### Features
+
+* openfeature-node-server migration ([#1767](https://github.com/launchdarkly/js-core/issues/1767)) ([22fb0b2](https://github.com/launchdarkly/js-core/commit/22fb0b230412e97e930cb6c7414e98beb37f587a))
+
 ## [1.2.5](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.2.4...openfeature-node-server-v1.2.5) (2026-06-24)
 
 
