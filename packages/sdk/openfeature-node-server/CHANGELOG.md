@@ -2,6 +2,11 @@
 
 ## [1.3.0](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.2.5...openfeature-node-server-v1.3.0) (2026-06-30)
 
+Migrates the implemenation of `@launchdarkly/openfeature-node-server` to
+the `js-core` monorepo.
+
+For older changelogs please see https://github.com/launchdarkly/openfeature-node-server/blob/main/CHANGELOG.md
+
 
 ### Features
 
