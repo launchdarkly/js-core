@@ -8,6 +8,12 @@
 
 This package provides an [OpenFeature](https://openfeature.dev/) provider that wraps the [LaunchDarkly Server-Side SDK for Node.js](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node).
 
+This provider is designed primarily for use in multi-user systems such as web servers and applications. It is not intended for use in desktop and embedded systems applications.
+
+## Supported Node versions
+
+This version of the LaunchDarkly OpenFeature provider is compatible with Node.js versions 20 and above.
+
 ## Installation
 
 ```bash
@@ -17,16 +23,118 @@ npm install @openfeature/server-sdk @launchdarkly/node-server-sdk @launchdarkly/
 ## Usage
 
 ```typescript
-import { OpenFeature } from '@openfeature/server-sdk';
+import { OpenFeature, ProviderEvents } from '@openfeature/server-sdk';
 import { LaunchDarklyProvider } from '@launchdarkly/openfeature-node-server';
 
-const provider = new LaunchDarklyProvider('your-sdk-key');
+// The optional third parameter controls how long to wait for initialization (default: 10 seconds).
+const provider = new LaunchDarklyProvider('your-sdk-key', {/* LDOptions here */});
+
+// setProviderAndWait throws if initialization fails; catch as needed.
 await OpenFeature.setProviderAndWait(provider);
+
+// Access the underlying LDClient directly if needed.
+const ldClient = provider.getClient();
 
 const client = OpenFeature.getClient();
 const flagValue = await client.getBooleanValue('flag-key', false, {
   targetingKey: 'user-key',
 });
+
+// The provider emits ConfigurationChanged for each flag key that may have changed.
+// Each event contains a single key in the flagsChanged array.
+OpenFeature.addHandler(ProviderEvents.ConfigurationChanged, (eventDetails) => {
+  console.log(`Changed: ${eventDetails.flagsChanged}`);
+});
+
+// Calling close() flushes SDK events - useful for short-lived processes.
+await OpenFeature.close();
+```
+
+## OpenFeature Specific Considerations
+
+LaunchDarkly evaluates contexts, and it can either evaluate a single-context or a multi-context. When using OpenFeature, both single and multi-contexts must be encoded into a single `EvaluationContext`. This is accomplished by looking for an attribute named `kind` in the `EvaluationContext`.
+
+There are 4 different scenarios related to the `kind`:
+1. There is no `kind` attribute. The provider will treat the context as a single context of kind `"user"`.
+2. There is a `kind` attribute with the value `"multi"`. The provider will treat the context as a multi-context.
+3. There is a `kind` attribute with a string value other than `"multi"`. The provider will treat it as a single context of the specified kind.
+4. There is a `kind` attribute, but its value is not a string. The value will be discarded, the context will be treated as kind `"user"`, and a warning will be logged.
+
+The `kind` attribute should be a string containing only ASCII letters, numbers, `.`, `_`, or `-`.
+
+The OpenFeature specification allows for an optional targeting key, but LaunchDarkly requires a key for evaluation. A targeting key must be specified for each context being evaluated. It may be specified using either `targetingKey`, as defined in the OpenFeature specification, or `key`, which is the typical LaunchDarkly identifier. If both are specified, `targetingKey` takes precedence.
+
+There are several attributes with special handling within a single or multi-context:
+- `privateAttributes` - Must be an array of strings. Equivalent to `_meta.privateAttributes` in the SDK.
+- `anonymous` - Must be a boolean. Equivalent to `anonymous` in the SDK.
+- `name` - Must be a string. Equivalent to `name` in the SDK.
+
+### Examples
+
+#### A single user context
+
+```typescript
+const evaluationContext = {
+  targetingKey: 'my-user-key',
+};
+```
+
+#### A single context of kind "organization"
+
+```typescript
+const evaluationContext = {
+  kind: 'organization',
+  targetingKey: 'my-org-key',
+};
+```
+
+#### A multi-context containing a "user" and an "organization"
+
+```typescript
+const evaluationContext = {
+  kind: 'multi',
+  organization: {
+    targetingKey: 'my-org-key',
+    myCustomAttribute: 'myAttributeValue',
+  },
+  user: {
+    targetingKey: 'my-user-key',
+  },
+};
+```
+
+#### Setting private attributes in a single context
+
+```typescript
+const evaluationContext = {
+  kind: 'organization',
+  name: 'the-org-name',
+  targetingKey: 'my-org-key',
+  myCustomAttribute: 'myCustomValue',
+  privateAttributes: ['myCustomAttribute'],
+};
+```
+
+#### Setting private attributes in a multi-context
+
+```typescript
+const evaluationContext = {
+  kind: 'multi',
+  organization: {
+    targetingKey: 'my-org-key',
+    name: 'the-org-name',
+    // privateAttributes only applies to the "organization" context.
+    privateAttributes: ['myCustomAttribute'],
+    // This attribute will be private.
+    myCustomAttribute: 'myAttributeValue',
+  },
+  user: {
+    targetingKey: 'my-user-key',
+    anonymous: true,
+    // This attribute will not be private.
+    myCustomAttribute: 'myAttributeValue',
+  },
+};
 ```
 
 ## Contributing
