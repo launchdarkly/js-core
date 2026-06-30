@@ -184,6 +184,30 @@ it('useBoolVariation re-evaluates when context changes after identify', async ()
   expect((client.boolVariation as jest.Mock).mock.calls.length).toBe(callsBefore + 1);
 });
 
+it('useBoolVariation evaluates only once per identify (no duplicate analytics impression)', async () => {
+  const { client, controls } = makeMockClient();
+  (client.boolVariation as jest.Mock).mockReturnValue(true);
+
+  const Child = defineComponent({
+    setup() {
+      const flag = useBoolVariation('my-flag', false);
+      return () => h('div', String(flag.value));
+    },
+  });
+
+  mountUnderProvider(client, Child);
+  (client.boolVariation as jest.Mock).mockClear();
+
+  // A single identify() in the base SDK emits change:<key> synchronously AND notifies
+  // context subscribers, so model both for one identify.
+  controls.emitChange('my-flag');
+  controls.emitContextChange({ kind: 'user', key: 'new-user' });
+  await nextTick();
+
+  // One identify must produce exactly one evaluation -> one analytics impression.
+  expect(client.boolVariation as jest.Mock).toHaveBeenCalledTimes(1);
+});
+
 it('useBoolVariation re-evaluates and re-subscribes when key changes', async () => {
   const { client, controls } = makeMockClient();
   (client.boolVariation as jest.Mock).mockImplementation((k: string, def: boolean) => {
