@@ -33,10 +33,9 @@ export interface LDOptions extends LDOptionsCommon {
    *
    * @remarks
    * The SDK cannot inspect a caller-supplied agent, so diagnostic reporting treats any agent
-   * supplied here as a best-effort signal that a proxy is in use. This may be inaccurate if the
-   * agent is used for something other than proxying, such as custom certificates. Credentials
-   * carried by the agent itself (for example a SOCKS URL's embedded username/password) are not
-   * reflected in proxy-authentication diagnostics, since the SDK has no way to inspect them.
+   * supplied here as a best-effort signal that a proxy - and proxy authentication - is in use.
+   * This may be inaccurate if the agent is used for something other than an authenticated proxy,
+   * such as custom certificates.
    */
   proxyAgent?: https.Agent | http.Agent;
 }

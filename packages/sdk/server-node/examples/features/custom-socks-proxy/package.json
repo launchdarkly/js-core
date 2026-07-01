@@ -1,0 +1,41 @@
+{
+  "name": "@launchdarkly/node-server-sdk-example-custom-socks-proxy",
+  "version": "0.1.0",
+  "description": "Example: route the Node.js server-side SDK's traffic through a SOCKS proxy via the proxyAgent option",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "yarn build && node ./dist/index.js",
+    "test": "node ./e2e/verify.mjs",
+    "lint": "npx eslint .",
+    "lint:fix": "yarn run lint --fix",
+    "check": "yarn lint && yarn build"
+  },
+  "keywords": [
+    "launchdarkly",
+    "socks",
+    "proxy",
+    "feature-flags"
+  ],
+  "author": "LaunchDarkly",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@launchdarkly/node-server-sdk": "9.11.3",
+    "socks-proxy-agent": "^10.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@tsconfig/node20": "20.1.4",
+    "@types/node": "^25.9.1",
+    "eslint": "^9.0.0",
+    "eslint-import-resolver-typescript": "^4.0.0",
+    "eslint-plugin-import-x": "^4.0.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "5.1.6",
+    "typescript-eslint": "^8.0.0"
+  }
+}
