@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.1.1...server-sdk-ai-v1.2.0) (2026-07-01)
+
+
+### Features
+
+* implements _template methods for fetching non-interpolated config ([#1774](https://github.com/launchdarkly/js-core/issues/1774)) ([d808ca8](https://github.com/launchdarkly/js-core/commit/d808ca8c0bc1abb1061de1e2ee989c929ac1cc53))
+
 ## [1.1.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.1.0...server-sdk-ai-v1.1.1) (2026-06-24)
 
 
