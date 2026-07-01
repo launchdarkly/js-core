@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.12.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.11.3...node-server-sdk-v9.12.0) (2026-07-01)
+
+
+### Features
+
+* add a custom proxyAgent option to the Node server SDK ([#1438](https://github.com/launchdarkly/js-core/issues/1438)) ([c74dae7](https://github.com/launchdarkly/js-core/commit/c74dae74e01fa2f36ec91086f53658d4644d9c9f))
+
 ## [9.11.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.11.2...node-server-sdk-v9.11.3) (2026-06-24)
 
 
