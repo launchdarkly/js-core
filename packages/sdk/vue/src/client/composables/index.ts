@@ -1,3 +1,14 @@
 export { useLDClient } from './useLDClient';
 export { useInitializationStatus } from './useInitializationStatus';
-// TODO(scaffold): variation composables (useBoolVariation, useStringVariation, etc.) arrive in the next PR
+export {
+  useBoolVariation,
+  useStringVariation,
+  useNumberVariation,
+  useJsonVariation,
+} from './useVariation';
+export {
+  useBoolVariationDetail,
+  useStringVariationDetail,
+  useNumberVariationDetail,
+  useJsonVariationDetail,
+} from './useVariationDetail';

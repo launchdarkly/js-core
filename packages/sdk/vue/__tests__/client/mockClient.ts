@@ -25,15 +25,15 @@ export function makeMockClient(initial?: {
   let boolValue = initial?.boolValue ?? true;
   let initError: Error | undefined;
 
-  const handlers = new Map<string, Set<(...args: unknown[]) => void>>();
+  const handlers = new Map<string, Array<(...args: unknown[]) => void>>();
   const initStatusSubs = new Set<(r: { status: string; error?: Error }) => void>();
   const contextSubs = new Set<(c: unknown) => void>();
 
   const addHandler = (event: string, h: (...args: unknown[]) => void) => {
     if (!handlers.has(event)) {
-      handlers.set(event, new Set());
+      handlers.set(event, []);
     }
-    handlers.get(event)!.add(h);
+    handlers.get(event)!.push(h);
   };
 
   const notReadyDetail = <T>(def: T): LDEvaluationDetailTyped<T> => ({
@@ -71,7 +71,13 @@ export function makeMockClient(initial?: {
     start: jest.fn(),
     close: jest.fn(),
     on: jest.fn((event: string, h: (...args: unknown[]) => void) => addHandler(event, h)),
-    off: jest.fn((event: string, h: (...args: unknown[]) => void) => handlers.get(event)?.delete(h)),
+    off: jest.fn((event: string, h: (...args: unknown[]) => void) => {
+      const arr = handlers.get(event);
+      if (arr) {
+        const idx = arr.indexOf(h);
+        if (idx !== -1) arr.splice(idx, 1);
+      }
+    }),
   };
 
   const controls: MockControls = {
@@ -80,9 +86,9 @@ export function makeMockClient(initial?: {
     },
     emitChange: (key: string) =>
       handlers.get(`change:${key}`)?.forEach((h) => h({ kind: 'user', key: 'context-key' })),
-    handlerCount: (event: string) => handlers.get(event)?.size ?? 0,
+    handlerCount: (event: string) => handlers.get(event)?.length ?? 0,
     emitInitStatus: (r: { status: string; error?: Error }) => {
-      ready = true;
+      ready = r.status !== 'initializing';
       initializedState = r.status;
       initError = r.error;
       initStatusSubs.forEach((cb) => cb(r));
