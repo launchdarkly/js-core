@@ -1,4 +1,5 @@
 import BigSegmentStoreStatusProviderImpl from './BigSegmentStatusProviderImpl';
+import createScopedClient from './createScopedClient';
 import LDClientImpl from './LDClientImpl';
 import { createMigration, LDMigrationError, LDMigrationSuccess } from './Migration';
 
@@ -13,6 +14,7 @@ export * as internalServer from './internal';
 
 export {
   LDClientImpl,
+  createScopedClient,
   BigSegmentStoreStatusProviderImpl,
   LDMigrationError,
   LDMigrationSuccess,
