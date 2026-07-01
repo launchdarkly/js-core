@@ -5,7 +5,9 @@ import { spawnSync } from 'node:child_process';
 // relayed. A successful run must contain both, proving the SDK actually used the proxy rather
 // than connecting directly.
 const EXPECTED_EVALUATION = 'feature flag evaluates to true';
-const EXPECTED_PROXY_USE = 'relayed';
+
+// We should relay the identify and the evaluation
+const EXPECTED_PROXY_USE = 'relayed 2 connection';
 
 const result = spawnSync('node', ['./dist/index.js'], {
   encoding: 'utf8',

@@ -55,3 +55,17 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v3.0.0-alpha.6
           extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions-fdv2.txt'
+
+  run-custom-socks-proxy-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 20
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk-example-custom-socks-proxy'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
