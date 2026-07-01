@@ -98,6 +98,27 @@ function createAgent(
   return undefined;
 }
 
+// A caller-supplied agent is a completely different way of constructing the agent than the
+// tlsOptions/proxyOptions path above: it takes precedence and is used verbatim, covering proxy
+// schemes the SDK does not build itself (for example a SOCKS proxy via socks-proxy-agent). When
+// it is set, proxyOptions and tlsParams are ignored because the agent owns connection setup.
+function resolveAgent(
+  tlsOptions?: LDTLSOptions,
+  proxyOptions?: LDProxyOptions,
+  proxyAgent?: https.Agent | http.Agent,
+  logger?: LDLogger,
+): https.Agent | http.Agent | undefined {
+  if (proxyAgent) {
+    if (proxyOptions || tlsOptions) {
+      logger?.warn(
+        'Both proxyAgent and proxyOptions/tlsParams were provided; using proxyAgent and ignoring proxyOptions/tlsParams.',
+      );
+    }
+    return proxyAgent;
+  }
+  return createAgent(tlsOptions, proxyOptions, logger);
+}
+
 export default class NodeRequests implements platform.Requests {
   private _agent: https.Agent | http.Agent | undefined;
 
@@ -112,11 +133,17 @@ export default class NodeRequests implements platform.Requests {
   constructor(
     tlsOptions?: LDTLSOptions,
     proxyOptions?: LDProxyOptions,
+    proxyAgent?: https.Agent | http.Agent,
     logger?: LDLogger,
     enableEventCompression?: boolean,
   ) {
-    this._agent = createAgent(tlsOptions, proxyOptions, logger);
-    this._hasProxy = !!proxyOptions;
+    this._agent = resolveAgent(tlsOptions, proxyOptions, proxyAgent, logger);
+    // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
+    // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
+    // certificate-only agent for mTLS). Reporting true is the better default here because
+    // proxying is this option's primary motivation, while other connection concerns (such as
+    // custom TLS) are handled by tlsParams.
+    this._hasProxy = !!proxyOptions || !!proxyAgent;
     this._hasProxyAuth = !!proxyOptions?.auth;
     this._enableBodyCompression = !!enableEventCompression;
   }
