@@ -207,3 +207,42 @@ describe('given an instance of NodeRequests with enableEventCompression turned o
     expect(serverResult.body).toEqual('BODY TEXT');
   });
 });
+
+describe('given an instance of NodeRequests with a proxyAgent and proxyOptions both supplied', () => {
+  it('logs a warning and uses the supplied proxyAgent instead of building one from proxyOptions', async () => {
+    const agent = new http.Agent({ keepAlive: false });
+    // addRequest exists at runtime but is not part of the public http.Agent type.
+    // @ts-ignore
+    const addRequestSpy = jest.spyOn(agent, 'addRequest');
+    const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() };
+
+    const requests = new NodeRequests(
+      undefined,
+      { host: 'proxy.invalid', port: 8080 },
+      agent,
+      logger,
+    );
+    await requests.fetch(`http://localhost:${PORT}`);
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('proxyAgent'));
+    expect(addRequestSpy).toHaveBeenCalled();
+  });
+});
+
+describe('given an instance of NodeRequests with only a proxyAgent supplied', () => {
+  it('uses the supplied agent for requests and reports usingProxy as a best-effort true', async () => {
+    const agent = new http.Agent({ keepAlive: false });
+    // addRequest exists at runtime but is not part of the public http.Agent type.
+    // @ts-ignore
+    const addRequestSpy = jest.spyOn(agent, 'addRequest');
+
+    const requests = new NodeRequests(undefined, undefined, agent);
+    await requests.fetch(`http://localhost:${PORT}`);
+
+    expect(addRequestSpy).toHaveBeenCalled();
+    // The SDK can't verify a caller-supplied agent is actually proxying (it could just as easily
+    // be for mTLS), but reporting true is the better default for this option's motivating case
+    // (a SOCKS proxy), so usingProxy() treats any supplied proxyAgent as a best-effort signal.
+    expect(requests.usingProxy()).toBe(true);
+  });
+});
