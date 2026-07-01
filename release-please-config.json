@@ -232,6 +232,11 @@
           "type": "json",
           "path": "/packages/sdk/openfeature-node-server/examples/getting-started/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-node/examples/features/custom-socks-proxy/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/node-server-sdk']"
         }
       ]
     },
