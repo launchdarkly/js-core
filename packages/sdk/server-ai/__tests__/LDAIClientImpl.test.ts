@@ -1100,3 +1100,211 @@ describe('tools map support', () => {
     expect(result.tools).toBeUndefined();
   });
 });
+
+describe('template methods', () => {
+  it('completionConfigTemplate preserves Mustache placeholders in messages', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+    const defaultValue: LDAICompletionConfigDefault = { enabled: false };
+
+    const mockVariation = {
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      messages: [
+        { role: 'system', content: 'Hello {{name}}' },
+        { role: 'user', content: 'Score: {{score}}' },
+      ],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfigTemplate(key, testContext, defaultValue);
+
+    expect(result.messages).toEqual([
+      { role: 'system', content: 'Hello {{name}}' },
+      { role: 'user', content: 'Score: {{score}}' },
+    ]);
+    expect(result.enabled).toBe(true);
+    expect(result.createTracker).toBeDefined();
+  });
+
+  it('completionConfigTemplate emits the correct usage tracking event', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    const mockVariation = {
+      messages: [{ role: 'system', content: 'Hello {{name}}' }],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    await client.completionConfigTemplate(key, testContext);
+
+    expect(mockLdClient.track).toHaveBeenCalledWith(
+      '$ld:ai:usage:completion-config-template',
+      testContext,
+      key,
+      1,
+    );
+  });
+
+  it('completionConfigTemplate uses disabled default when no defaultValue is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    const mockVariation = {
+      _ldMeta: { variationKey: 'v1', enabled: false, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfigTemplate(key, testContext);
+
+    expect(result.enabled).toBe(false);
+  });
+
+  it('agentConfigTemplate preserves Mustache placeholders in instructions', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+    const defaultValue: LDAIAgentConfigDefault = { enabled: false };
+
+    const mockVariation = {
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      instructions: 'You are a research assistant specializing in {{topic}}.',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfigTemplate(key, testContext, defaultValue);
+
+    expect(result.instructions).toBe('You are a research assistant specializing in {{topic}}.');
+    expect(result.enabled).toBe(true);
+    expect(result.createTracker).toBeDefined();
+  });
+
+  it('agentConfigTemplate emits the correct usage tracking event', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+
+    const mockVariation = {
+      instructions: 'You are a {{role}}.',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    await client.agentConfigTemplate(key, testContext);
+
+    expect(mockLdClient.track).toHaveBeenCalledWith(
+      '$ld:ai:usage:agent-config-template',
+      testContext,
+      key,
+      1,
+    );
+  });
+
+  it('agentConfigTemplate uses disabled default when no defaultValue is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+
+    const mockVariation = {
+      _ldMeta: { variationKey: 'v1', enabled: false, mode: 'agent' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfigTemplate(key, testContext);
+
+    expect(result.enabled).toBe(false);
+  });
+
+  it('judgeConfigTemplate preserves Mustache placeholders in messages', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+    const defaultValue: LDAIJudgeConfigDefault = { enabled: false };
+
+    const mockVariation = {
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      evaluationMetricKey: 'relevance',
+      messages: [
+        { role: 'system', content: 'You are a judge evaluating {{criteria}}.' },
+        { role: 'user', content: 'Score: {{score}}' },
+      ],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'judge' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.judgeConfigTemplate(key, testContext, defaultValue);
+
+    expect(result.messages).toEqual([
+      { role: 'system', content: 'You are a judge evaluating {{criteria}}.' },
+      { role: 'user', content: 'Score: {{score}}' },
+    ]);
+    expect(result.enabled).toBe(true);
+    expect(result.createTracker).toBeDefined();
+  });
+
+  it('judgeConfigTemplate emits the correct usage tracking event', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+
+    const mockVariation = {
+      evaluationMetricKey: 'relevance',
+      messages: [{ role: 'system', content: 'You are a {{role}}.' }],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'judge' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    await client.judgeConfigTemplate(key, testContext);
+
+    expect(mockLdClient.track).toHaveBeenCalledWith(
+      '$ld:ai:usage:judge-config-template',
+      testContext,
+      key,
+      1,
+    );
+  });
+
+  it('judgeConfigTemplate uses disabled default when no defaultValue is provided', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-judge';
+
+    const mockVariation = {
+      _ldMeta: { variationKey: 'v1', enabled: false, mode: 'judge' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.judgeConfigTemplate(key, testContext);
+
+    expect(result.enabled).toBe(false);
+  });
+
+  it('completionConfigTemplate does not apply ldctx interpolation', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    const mockVariation = {
+      messages: [{ role: 'system', content: 'User: {{ldctx.key}}' }],
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'completion' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.completionConfigTemplate(key, testContext);
+
+    expect(result.messages?.[0].content).toBe('User: {{ldctx.key}}');
+  });
+
+  it('agentConfigTemplate does not apply ldctx interpolation', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-agent';
+
+    const mockVariation = {
+      instructions: 'Context key: {{ldctx.key}}',
+      _ldMeta: { variationKey: 'v1', enabled: true, mode: 'agent' },
+    };
+    mockLdClient.variation.mockResolvedValue(mockVariation);
+
+    const result = await client.agentConfigTemplate(key, testContext);
+
+    expect(result.instructions).toBe('Context key: {{ldctx.key}}');
+  });
+});
