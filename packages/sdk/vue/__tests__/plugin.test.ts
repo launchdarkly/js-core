@@ -3,7 +3,7 @@
  */
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
-import { useInitializationStatus, useLDClient } from '../src/client/composables';
+import { useBoolVariation, useInitializationStatus, useLDClient } from '../src/client/composables';
 import { createLDVueInstanceKey } from '../src/client/provider/LDVueContext';
 import { LDVuePlugin, type LDVuePluginOptions } from '../src/plugin';
 import { makeMockClient } from './client/mockClient';
@@ -139,5 +139,25 @@ it('provides via a custom injection key when specified', () => {
   expect(injected).toBe(client);
 });
 
-// TODO(scaffold): variation composable integration test (useBoolVariation under the plugin)
-// arrives in the next PR with the full composable layer.
+it('evaluates flags via useBoolVariation under the plugin', () => {
+  const { client } = makeMockClient({ boolValue: true });
+  createClientMock.mockReturnValue(client);
+
+  let flagValue: boolean | undefined;
+  const Child = defineComponent({
+    setup() {
+      const flag = useBoolVariation('my-flag', false);
+      return () => {
+        flagValue = flag.value;
+        return h('div');
+      };
+    },
+  });
+
+  const app = createApp(Child);
+  app.use(LDVuePlugin, { clientSideID: 'env-id', context: { kind: 'user', key: 'k' } });
+  app.mount(document.createElement('div'));
+
+  expect(flagValue).toBe(true);
+  expect(client.boolVariation).toHaveBeenCalledWith('my-flag', false);
+});
