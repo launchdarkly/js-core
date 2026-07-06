@@ -47,6 +47,7 @@ describe('When using a custom proxyAgent', () => {
     // addRequest exists at runtime but is not part of the public http.Agent type.
     // @ts-ignore
     const addRequestSpy = jest.spyOn(agent, 'addRequest');
+    const warnSpy = jest.spyOn(logger, 'warn');
 
     const client = new LDClientNode(sdkKey, {
       baseUri: server.url,
@@ -61,6 +62,9 @@ describe('When using a custom proxyAgent', () => {
     await client.waitForInitialization({ timeout: 10 });
     expect(client.initialized()).toBe(true);
     expect(addRequestSpy).toHaveBeenCalled();
+    // proxyAgent is a real, known LDOptions member; the shared Configuration validator should
+    // not flag it as unrecognized just because it isn't part of the common LDOptions.
+    expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining('unknown config option'));
   });
 
   it('uses the supplied proxyAgent for streaming requests', async () => {

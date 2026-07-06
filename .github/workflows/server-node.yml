@@ -55,3 +55,28 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v3.0.0-alpha.6
           extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions-fdv2.txt'
+
+  run-custom-socks-proxy-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 20
+      # Installs and starts Dante directly on the runner rather than in a container - see
+      # proxy/setup.sh.
+      - name: Install and start Dante (SOCKS proxy)
+        run: sudo packages/sdk/server-node/examples/features/custom-socks-proxy/proxy/setup.sh
+      - name: Verify Dante actually started
+        run: test -f /var/run/danted.pid
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk-example-custom-socks-proxy'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          env_vars: |
+            SOCKS_PROXY_URL=socks5h://127.0.0.1:1080
+      - name: Verify traffic flowed through the SOCKS proxy
+        run: |
+          sudo cat /var/log/danted.log | grep -c "tcp/connect \[" | awk '{ if ($1 < 2) { print "FAIL: expected at least 2 SOCKS connections, got " $1; exit 1 } else { print "OK: proxy logged " $1 " connection(s)" } }'

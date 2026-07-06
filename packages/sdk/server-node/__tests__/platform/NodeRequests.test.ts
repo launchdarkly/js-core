@@ -258,6 +258,9 @@ describe('given an instance of NodeRequests with a proxyAgent and proxyOptions b
 
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('proxyAgent'));
     expect(addRequestSpy).toHaveBeenCalled();
+    // Same best-effort reasoning as usingProxy(): the SDK can't verify whether the supplied agent
+    // carries its own auth, but reporting true is the better default here.
+    expect(requests.usingProxyAuth()).toBe(true);
   });
 });
 
@@ -276,5 +279,8 @@ describe('given an instance of NodeRequests with only a proxyAgent supplied', ()
     // be for mTLS), but reporting true is the better default for this option's motivating case
     // (a SOCKS proxy), so usingProxy() treats any supplied proxyAgent as a best-effort signal.
     expect(requests.usingProxy()).toBe(true);
+    // Same reasoning applies to auth: the agent could carry its own credentials (e.g. a SOCKS
+    // URL's embedded username/password) that the SDK has no way to inspect.
+    expect(requests.usingProxyAuth()).toBe(true);
   });
 });

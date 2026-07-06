@@ -144,7 +144,11 @@ export default class NodeRequests implements platform.Requests {
     // proxying is this option's primary motivation, while other connection concerns (such as
     // custom TLS) are handled by tlsParams.
     this._hasProxy = !!proxyOptions || !!proxyAgent;
-    this._hasProxyAuth = !!proxyOptions?.auth;
+    // Same best-effort reasoning as _hasProxy above: the SDK can't inspect a caller-supplied
+    // proxyAgent to know whether it carries its own auth (e.g. credentials embedded in a SOCKS
+    // URL), so treat any proxyAgent as a best-effort signal for auth too, rather than reporting
+    // false just because it doesn't come from proxyOptions.auth.
+    this._hasProxyAuth = !!proxyOptions?.auth || !!proxyAgent;
     this._enableBodyCompression = !!enableEventCompression;
   }
 

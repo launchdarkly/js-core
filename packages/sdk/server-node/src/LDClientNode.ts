@@ -46,6 +46,7 @@ class LDClientNode extends LDClientImpl implements LDClient {
 
     const baseOptions = { ...options, logger };
     delete baseOptions.plugins;
+    delete baseOptions.proxyAgent;
 
     const platform = new NodePlatform({ ...options, logger });
     // Per SCMP-server-connection-minutes-polling, generate one v4 GUID per SDK
