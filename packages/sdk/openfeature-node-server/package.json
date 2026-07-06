@@ -47,7 +47,7 @@
     "@launchdarkly/openfeature-js-server-common": "1.0.0"
   },
   "peerDependencies": {
-    "@launchdarkly/node-server-sdk": "9.11.3",
+    "@launchdarkly/node-server-sdk": "^9.0.0",
     "@openfeature/server-sdk": "^1.16.0"
   },
   "devDependencies": {
