@@ -3,7 +3,7 @@
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        "tsconfig": {}
+        "tsconfig": { "esModuleInterop": true }
       }
     ]
   },
