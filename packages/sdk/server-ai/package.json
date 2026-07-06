@@ -60,6 +60,6 @@
     "typescript-eslint": "^8.0.0"
   },
   "peerDependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.19.2"
+    "@launchdarkly/js-server-sdk-common": "^2.0.0"
   }
 }
