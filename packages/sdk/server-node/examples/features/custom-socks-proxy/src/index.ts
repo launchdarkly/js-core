@@ -2,21 +2,26 @@ import { SocksProxyAgent } from 'socks-proxy-agent';
 
 import { basicLogger, init, type LDLogger } from '@launchdarkly/node-server-sdk';
 
-import { startLocalSocksProxyServer } from './localSocksProxyServer.js';
-
-// The server-side SDK key is read from the LAUNCHDARKLY_SDK_KEY environment variable.
 const sdkKey = process.env.LAUNCHDARKLY_SDK_KEY;
 
-// Set flagKey to the feature flag key you want to evaluate.
+// Override with LAUNCHDARKLY_FLAG_KEY to test against a flag other than the sample one.
 const flagKey = process.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';
 
-// Point this at a real SOCKS proxy (for example one started with `ssh -D 1080 -N user@host`)
-// to exercise it instead of the bundled demo proxy below.
+// Point this at a SOCKS proxy (for example one started with `ssh -D 1080 -N user@host`, or the
+// container described in README.md). This is required: the example routes all SDK traffic
+// through it.
 const socksProxyUrl = process.env.SOCKS_PROXY_URL;
 
 if (!sdkKey) {
   console.error(
     '*** LaunchDarkly SDK key is required: set the LAUNCHDARKLY_SDK_KEY environment variable and try again.',
+  );
+  process.exit(1);
+}
+
+if (!socksProxyUrl) {
+  console.error(
+    '*** A SOCKS proxy is required: set the SOCKS_PROXY_URL environment variable (for example socks5h://user:password@127.0.0.1:1080) and try again.',
   );
   process.exit(1);
 }
@@ -28,21 +33,8 @@ const context = {
 };
 
 async function main(): Promise<void> {
-  let proxyAgent: SocksProxyAgent;
-  let localProxy: Awaited<ReturnType<typeof startLocalSocksProxyServer>> | undefined;
-
-  if (socksProxyUrl) {
-    console.log(`*** Routing SDK traffic through the SOCKS proxy at ${socksProxyUrl}\n`);
-    proxyAgent = new SocksProxyAgent(socksProxyUrl);
-  } else {
-    localProxy = await startLocalSocksProxyServer();
-    const localProxyUrl = `socks5h://127.0.0.1:${localProxy.port}`;
-    console.log(
-      `*** No SOCKS_PROXY_URL set, so this example started a local demo SOCKS5 proxy at ` +
-        `${localProxyUrl}.`
-    );
-    proxyAgent = new SocksProxyAgent(localProxyUrl);
-  }
+  console.log(`*** Routing SDK traffic through the SOCKS proxy at ${socksProxyUrl}\n`);
+  const proxyAgent = new SocksProxyAgent(socksProxyUrl!);
 
   const logger: LDLogger = basicLogger({ level: 'warn' });
 
@@ -67,14 +59,6 @@ async function main(): Promise<void> {
 
   const flagValue = await client.variation(flagKey, context, false);
   console.log(`*** The '${flagKey}' feature flag evaluates to ${flagValue}.\n`);
-
-  if (localProxy) {
-    console.log(
-      `*** The local demo SOCKS proxy relayed ${localProxy.connectionCount()} connection(s) ` +
-        'for this run, confirming SDK traffic flowed through proxyAgent rather than directly.',
-    );
-    localProxy.close();
-  }
 
   client.close();
 }
