@@ -39,6 +39,19 @@ describe('init', () => {
     ldClient.close();
   });
 
+  it('does not throw when initialized with a custom eventsUri', () => {
+    let client: LDClient | undefined;
+    expect(() => {
+      client = init(sdkKey, mockKVStore, {
+        eventsUri: 'https://custom-events.example.com',
+        eventsBackendName: 'custom-backend',
+      });
+    }).not.toThrow();
+    // Close the client so its event processor's flush timer does not keep the
+    // runtime (and the jest process) alive.
+    client?.close();
+  });
+
   describe('flag tests', () => {
     it('evaluates a boolean flag with a variation call', async () => {
       const value = await ldClient.variation(flagKey1, context, false);
