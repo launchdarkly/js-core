@@ -39,6 +39,15 @@ describe('init', () => {
     ldClient.close();
   });
 
+  it('does not throw when initialized with a custom eventsUri', () => {
+    expect(() =>
+      init(sdkKey, mockKVStore, {
+        eventsUri: 'https://custom-events.example.com',
+        eventsBackendName: 'custom-backend',
+      }),
+    ).not.toThrow();
+  });
+
   describe('flag tests', () => {
     it('evaluates a boolean flag with a variation call', async () => {
       const value = await ldClient.variation(flagKey1, context, false);

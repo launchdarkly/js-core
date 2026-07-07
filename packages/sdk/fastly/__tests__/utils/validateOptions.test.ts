@@ -32,6 +32,18 @@ describe('validateOptions', () => {
     ).toBeTruthy();
   });
 
+  test('success with eventsUri and eventsBackendName', () => {
+    expect(
+      validateOptions('test-sdk-key', {
+        featureStore: mockFeatureStore,
+        logger: BasicLogger.get(),
+        sendEvents: true,
+        eventsUri: 'https://custom-events.example.com',
+        eventsBackendName: 'custom-backend',
+      }),
+    ).toBeTruthy();
+  });
+
   test('throws with invalid options', () => {
     expect(() => {
       validateOptions('test-sdk-key', {

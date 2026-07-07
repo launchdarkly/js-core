@@ -24,7 +24,7 @@ const validators = {
 };
 
 const validateOptions = (clientSideId: string, options: LDOptionsInternal) => {
-  const { eventsBackendName, featureStore, logger, sendEvents, ...rest } = options;
+  const { eventsBackendName, eventsUri, featureStore, logger, sendEvents, ...rest } = options;
   if (!clientSideId || !validators.clientSideId.is(clientSideId)) {
     throw new Error('You must configure the client with a client-side id');
   }
@@ -37,8 +37,9 @@ const validateOptions = (clientSideId: string, options: LDOptionsInternal) => {
     throw new Error('You must configure the client with a logger');
   }
 
-  if (JSON.stringify(rest) !== '{}') {
-    throw new Error(`Invalid configuration: ${Object.keys(rest).toString()} not supported`);
+  const unsupported = Object.keys(rest);
+  if (unsupported.length !== 0) {
+    throw new Error(`Invalid configuration: ${unsupported.toString()} not supported`);
   }
 
   return true;
