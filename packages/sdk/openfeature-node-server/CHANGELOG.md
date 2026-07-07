@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.2](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.1...openfeature-node-server-v1.3.2) (2026-07-07)
+
+
+### Bug Fixes
+
+* **openfeature-node-server:** identify floor for node server sdk peer dep ([#1787](https://github.com/launchdarkly/js-core/issues/1787)) ([d42203a](https://github.com/launchdarkly/js-core/commit/d42203a9d32c1f0d8365a09471bf33712580719c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.11.3 to 9.12.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from ^9.0.0 to ^9.12.0
+
 ## [1.3.1](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.0...openfeature-node-server-v1.3.1) (2026-06-30)
 
 
