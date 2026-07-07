@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.1.1...server-sdk-ai-v1.2.0) (2026-07-07)
+
+
+### Features
+
+* implements _template methods for fetching non-interpolated config ([#1774](https://github.com/launchdarkly/js-core/issues/1774)) ([d808ca8](https://github.com/launchdarkly/js-core/commit/d808ca8c0bc1abb1061de1e2ee989c929ac1cc53))
+
+
+### Bug Fixes
+
+* **server-ai:** unpin peer depedency reference ([#1788](https://github.com/launchdarkly/js-core/issues/1788)) ([dbc2bd5](https://github.com/launchdarkly/js-core/commit/dbc2bd5d8af9bcd7e4ffdc3e439cb6e4c7985a38))
+
 ## [1.1.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.1.0...server-sdk-ai-v1.1.1) (2026-06-24)
 
 
