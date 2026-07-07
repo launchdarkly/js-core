@@ -40,12 +40,16 @@ describe('init', () => {
   });
 
   it('does not throw when initialized with a custom eventsUri', () => {
-    expect(() =>
-      init(sdkKey, mockKVStore, {
+    let client: LDClient | undefined;
+    expect(() => {
+      client = init(sdkKey, mockKVStore, {
         eventsUri: 'https://custom-events.example.com',
         eventsBackendName: 'custom-backend',
-      }),
-    ).not.toThrow();
+      });
+    }).not.toThrow();
+    // Close the client so its event processor's flush timer does not keep the
+    // runtime (and the jest process) alive.
+    client?.close();
   });
 
   describe('flag tests', () => {
