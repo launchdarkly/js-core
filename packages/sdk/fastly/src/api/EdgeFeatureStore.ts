@@ -32,7 +32,7 @@ export class EdgeFeatureStore implements LDFeatureStore {
    */
   private async _getKVData(): Promise<LDFeatureStoreDataStorage | null> {
     if (!this._deserializedPromise) {
-      this._deserializedPromise = (async (): Promise<LDFeatureStoreDataStorage | null> => {
+      const promise = (async (): Promise<LDFeatureStoreDataStorage | null> => {
         this._logger.debug('No cached data found, loading from KV store');
         const kvData = await this._edgeProvider.get(this._rootKey);
         if (!kvData) {
@@ -56,6 +56,20 @@ export class EdgeFeatureStore implements LDFeatureStore {
 
         return deserializedData;
       })();
+
+      // Do not cache a rejected load. If the KV read throws (for example a
+      // transient backend error), clear the cached promise so the next call
+      // retries instead of reusing the rejected promise for the rest of the
+      // request, which would make every flag evaluation fall back to defaults.
+      // A successful load that resolves to null (missing or undeserializable
+      // data) is still cached, since that is a stable state within a request.
+      promise.catch(() => {
+        if (this._deserializedPromise === promise) {
+          this._deserializedPromise = null;
+        }
+      });
+
+      this._deserializedPromise = promise;
     } else {
       this._logger.debug('Using cached deserialized data');
     }

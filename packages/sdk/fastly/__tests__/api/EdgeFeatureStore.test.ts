@@ -113,6 +113,30 @@ describe('EdgeFeatureStore', () => {
     });
   });
 
+  describe('load caching', () => {
+    it('does not cache a rejected load and retries on the next call', async () => {
+      mockGet.mockRejectedValueOnce(new Error('transient KV error'));
+
+      // The first read hits the transient error and falls back to null.
+      const first = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
+      expect(first).toBeNull();
+
+      // A later read must retry the provider (the beforeEach success impl) rather
+      // than reuse the cached rejected promise, and should succeed.
+      const second = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
+      expect(second).toMatchObject(testData.flags.testFlag1);
+      expect(mockGet).toHaveBeenCalledTimes(2);
+    });
+
+    it('caches a successful load and reuses it across calls', async () => {
+      await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
+      await asyncFeatureStore.get({ namespace: 'segments' }, 'testSegment1');
+      await asyncFeatureStore.all({ namespace: 'features' });
+
+      expect(mockGet).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('init & getDescription', () => {
     it('can initialize', (done) => {
       const cb = jest.fn(() => {
