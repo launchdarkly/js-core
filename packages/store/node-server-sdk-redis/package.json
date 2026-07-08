@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-server-sdk-redis",
-  "version": "4.2.31",
+  "version": "4.2.32",
   "description": "Redis-backed feature store for the LaunchDarkly Server-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/store/node-server-sdk-redis",
   "repository": {
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
-    "@launchdarkly/node-server-sdk": "9.12.0",
+    "@launchdarkly/node-server-sdk": "9.12.1",
     "@types/jest": "^29.4.0",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
