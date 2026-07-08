@@ -37,13 +37,13 @@ it('round-trips storage values through the file-backed NodeStorage', async () =>
   await expect(platform.storage.get('alpha')).resolves.toBeNull();
 });
 
-it('forwards the logger to NodeStorage so storage failures surface', async () => {
+it('forwards the logger to NodeStorage so storage init failures surface', async () => {
   const platform = new NodePlatform(logger, {
     localStoragePath: path.join(tmpRoot, 'never-created', '\0bad'),
   });
   await expect(platform.storage.get('alpha')).resolves.toBeNull();
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error getting key from storage'),
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Using in-memory storage as a fallback'),
   );
 });
 
