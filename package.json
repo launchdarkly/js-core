@@ -65,6 +65,7 @@
     "packages/sdk/shopify-oxygen/example",
     "packages/sdk/browser/example",
     "packages/sdk/browser/example-fdv2",
+    "packages/sdk/browser/examples/frameworks/browser-extension",
     "packages/sdk/openfeature-node-server",
     "packages/sdk/openfeature-node-server/examples/getting-started",
     "packages/sdk/vue"

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "LaunchDarkly Browser Extension POC",
+  "version": "0.0.1",
+  "description": "POC: running the LaunchDarkly browser SDK inside an MV3 service worker.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://*.launchdarkly.com/*"],
+  "background": {
+    "service_worker": "dist/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dist/content-script.js"]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "verbose": true,
+  "testEnvironment": "node",
+  "testPathIgnorePatterns": ["./dist"],
+  "testMatch": ["**/tests/**/*.test.ts"],
+  "transform": {
+    "^.+\\.ts$": [
+      "ts-jest",
+      {
+        "tsconfig": "tsconfig.test.json"
+      }
+    ]
+  }
+}

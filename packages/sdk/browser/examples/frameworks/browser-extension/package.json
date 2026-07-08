@@ -1,0 +1,30 @@
+{
+  "name": "@launchdarkly/browser-extension-example",
+  "version": "0.0.0",
+  "private": true,
+  "description": "LaunchDarkly POC: browser SDK in an MV3 extension service worker",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/examples/frameworks/browser-extension",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsdown",
+    "test": "npx jest --runInBand"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "4.9.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/chrome": "^0.2.2",
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "tsdown": "^0.17.0-beta.4",
+    "typescript": "^5.9.3"
+  }
+}
