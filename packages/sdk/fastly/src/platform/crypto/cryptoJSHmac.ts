@@ -1,8 +1,3 @@
-// Import only the crypto-js submodules we use. Importing the crypto-js entry point
-// pulls in the entire cipher suite (AES, DES, Rabbit, MD5, SHA3, PBKDF2, ...), which
-// bloats the Wasm bundle and cold-start parse time. The type namespace comes from
-// 'crypto-js/core'; the algorithm and encoder submodules register themselves on it at
-// runtime (enc.Hex is part of core).
 import CryptoJS from 'crypto-js/core';
 import 'crypto-js/sha1';
 import 'crypto-js/sha256';
