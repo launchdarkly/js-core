@@ -1,4 +1,7 @@
-import CryptoJS from 'crypto-js';
+import CryptoJS from 'crypto-js/core';
+import 'crypto-js/sha1';
+import 'crypto-js/sha256';
+import 'crypto-js/enc-base64';
 
 import { Hasher as LDHasher } from '@launchdarkly/js-server-sdk-common';
 
