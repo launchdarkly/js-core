@@ -846,6 +846,91 @@ describe('createTracker method', () => {
       configKey: 'my-config',
       variationKey: 'v1',
       version: 3,
+      modelVersion: 1,
+    });
+    expect('modelKey' in tracker.getTrackData()).toBe(false);
+  });
+});
+
+describe('modelKey and modelVersion tracking', () => {
+  it('stamps modelKey and modelVersion on tracker from flag payload', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    mockLdClient.variation.mockResolvedValue({
+      model: {
+        name: 'gpt-4',
+        modelKey: 'my-model',
+        modelVersion: 2,
+      },
+      provider: { name: 'openai' },
+      messages: [],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'completion',
+        version: 7,
+      },
+    });
+
+    const result = await client.completionConfig(key, testContext);
+    const tracker = result.createTracker();
+
+    expect(tracker.getTrackData()).toMatchObject({
+      modelKey: 'my-model',
+      modelVersion: 2,
+    });
+  });
+
+  it('defaults modelVersion to 1 and omits modelKey when absent from flag payload', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    mockLdClient.variation.mockResolvedValue({
+      model: { name: 'gpt-4' },
+      provider: { name: 'openai' },
+      messages: [],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'completion',
+        version: 7,
+      },
+    });
+
+    const result = await client.completionConfig(key, testContext);
+    const tracker = result.createTracker();
+
+    const trackData = tracker.getTrackData();
+    expect('modelKey' in trackData).toBe(false);
+    expect(trackData.modelVersion).toBe(1);
+  });
+
+  it('exposes modelKey and modelVersion on config.model from flag payload', async () => {
+    const client = new LDAIClientImpl(mockLdClient);
+    const key = 'test-flag';
+
+    mockLdClient.variation.mockResolvedValue({
+      model: {
+        name: 'gpt-4',
+        modelKey: 'my-model',
+        modelVersion: 2,
+      },
+      provider: { name: 'openai' },
+      messages: [],
+      _ldMeta: {
+        variationKey: 'v1',
+        enabled: true,
+        mode: 'completion',
+      },
+    });
+
+    const result = await client.completionConfig(key, testContext);
+
+    expect(result.model).toEqual({
+      name: 'gpt-4',
+      modelKey: 'my-model',
+      modelVersion: 2,
     });
   });
 });

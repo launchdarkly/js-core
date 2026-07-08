@@ -106,6 +106,8 @@ export class LDAIClientImpl implements LDAIClient {
         value.provider?.name ?? '',
         context,
         graphKey,
+        value.model?.modelKey,
+        value.model?.modelVersion ?? 1,
       );
 
     // Validate mode match

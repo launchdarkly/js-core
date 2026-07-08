@@ -22,6 +22,8 @@ export interface LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    modelVersion: number;
+    modelKey?: string;
     graphKey?: string;
   };
 

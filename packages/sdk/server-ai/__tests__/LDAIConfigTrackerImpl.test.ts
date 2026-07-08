@@ -31,6 +31,7 @@ const getExpectedTrackData = () => ({
   version,
   modelName,
   providerName,
+  modelVersion: 1,
   runId: testRunId,
 });
 
@@ -1192,4 +1193,109 @@ describe('fromResumptionToken', () => {
 
     expect('graphKey' in reconstructed.getTrackData()).toBe(false);
   });
+});
+
+it('includes modelKey and modelVersion in getTrackData when set on constructor', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+    undefined,
+    'my-model',
+    2,
+  );
+
+  expect(tracker.getTrackData()).toEqual({
+    ...getExpectedTrackData(),
+    modelKey: 'my-model',
+    modelVersion: 2,
+  });
+});
+
+it('omits modelKey from getTrackData when unset', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+  );
+
+  const trackData = tracker.getTrackData();
+  expect('modelKey' in trackData).toBe(false);
+  expect(trackData.modelVersion).toBe(1);
+});
+
+it('omits modelKey from getTrackData when empty string', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+    undefined,
+    '',
+    3,
+  );
+
+  const trackData = tracker.getTrackData();
+  expect('modelKey' in trackData).toBe(false);
+  expect(trackData.modelVersion).toBe(3);
+});
+
+it('excludes modelKey and modelVersion from resumption token', () => {
+  const tracker = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+    undefined,
+    'my-model',
+    2,
+  );
+
+  const decoded = JSON.parse(Buffer.from(tracker.resumptionToken, 'base64url').toString('utf8'));
+  expect('modelKey' in decoded).toBe(false);
+  expect('modelVersion' in decoded).toBe(false);
+});
+
+it('fromResumptionToken defaults modelVersion to 1 and omits modelKey', () => {
+  const original = new LDAIConfigTrackerImpl(
+    mockLdClient,
+    testRunId,
+    configKey,
+    variationKey,
+    version,
+    modelName,
+    providerName,
+    testContext,
+    undefined,
+    'my-model',
+    2,
+  );
+
+  const reconstructed = LDAIConfigTrackerImpl.fromResumptionToken(
+    original.resumptionToken,
+    mockLdClient,
+    testContext,
+  );
+
+  const trackData = reconstructed.getTrackData();
+  expect('modelKey' in trackData).toBe(false);
+  expect(trackData.modelVersion).toBe(1);
 });

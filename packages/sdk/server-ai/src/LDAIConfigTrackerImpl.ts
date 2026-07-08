@@ -19,6 +19,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     private _providerName: string,
     private _context: LDContext,
     private _graphKey?: string,
+    private _modelKey?: string,
+    private _modelVersion: number = 1,
   ) {
     this._trackedMetrics.resumptionToken = this.resumptionToken;
   }
@@ -30,6 +32,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
     version: number;
     modelName: string;
     providerName: string;
+    modelVersion: number;
+    modelKey?: string;
     graphKey?: string;
   } {
     return {
@@ -39,6 +43,8 @@ export class LDAIConfigTrackerImpl implements LDAIConfigTracker {
       version: this._version,
       modelName: this._modelName,
       providerName: this._providerName,
+      modelVersion: this._modelVersion,
+      ...(this._modelKey ? { modelKey: this._modelKey } : {}),
       ...(this._graphKey !== undefined ? { graphKey: this._graphKey } : {}),
     };
   }
