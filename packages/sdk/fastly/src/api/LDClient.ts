@@ -1,4 +1,4 @@
-import { Info, internal, LDClientImpl } from '@launchdarkly/js-server-sdk-common';
+import { Info, LDClientImpl, ServerInternalOptions } from '@launchdarkly/js-server-sdk-common';
 
 import EdgePlatform from '../platform';
 import { FastlySDKOptions } from '../utils/validateOptions';
@@ -18,7 +18,7 @@ export default class LDClient extends LDClientImpl {
       platformInfo,
       eventsBackendName || DEFAULT_EVENTS_BACKEND_NAME,
     );
-    const internalOptions: internal.LDInternalOptions = {
+    const internalOptions: ServerInternalOptions = {
       analyticsEventPath: `/events/bulk/${clientSideID}`,
       diagnosticEventPath: `/events/diagnostic/${clientSideID}`,
       includeAuthorizationHeader: false,
