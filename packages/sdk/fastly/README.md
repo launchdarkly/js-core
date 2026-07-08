@@ -22,7 +22,18 @@ yarn add @launchdarkly/fastly-server-sdk
 
 - The SDK must be initialized and used when processing requests, not during build-time initialization.
 - The SDK caches all KV data during initialization to reduce the number of backend requests needed to fetch KV data. This means changes to feature flags or segments will not be picked up during the lifecycle of a single request instance.
-- Events should flushed using the [`waitUntil()` method](https://js-compute-reference-docs.edgecompute.app/docs/globals/FetchEvent/prototype/waitUntil).
+
+### Events and the client lifecycle
+
+The SDK is designed to be created per request: call `init()` inside your request handler, and flush events at the end of each request using the [`waitUntil()` method](https://js-compute-reference-docs.edgecompute.app/docs/globals/FetchEvent/prototype/waitUntil):
+
+```js
+event.waitUntil(ldClient.flush());
+```
+
+The SDK does not run a periodic background flush. On [Fastly Compute](https://www.fastly.com/documentation/guides/compute/developer-guides/sandbox-lifecycle/), outbound requests must be made while a request is being handled, and by default each request runs in a fresh sandbox that is torn down afterward, so a background timer cannot reliably deliver events. Flushing explicitly with `waitUntil()` on every request that evaluates flags is the supported pattern -- it keeps the sandbox alive just long enough to send the events after the response is returned.
+
+If you enable Fastly's opt-in [reusable sandboxes](https://www.fastly.com/documentation/guides/compute/developer-guides/sandbox-lifecycle/), a single sandbox may serve multiple requests, so avoid holding a single client at module scope and relying on it to flush on its own: buffered events would accumulate and, once the event queue capacity is reached, be dropped. Creating a client per request and flushing via `waitUntil()` avoids this regardless of sandbox mode.
 
 ## Quickstart
 

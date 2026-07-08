@@ -116,6 +116,7 @@ function constructFDv1(
   dataSourceErrorHandler: (e: any) => void,
   hooks: Hook[],
   instanceId: string | undefined,
+  startEventProcessor: boolean,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -170,6 +171,7 @@ function constructFDv1(
       baseHeaders,
       new ContextDeduplicator(config),
       diagnosticsManager,
+      startEventProcessor,
     );
   }
 
@@ -253,6 +255,7 @@ function constructFDv2(
   initSuccess: () => void,
   hooks: Hook[],
   instanceId: string | undefined,
+  startEventProcessor: boolean,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -314,6 +317,7 @@ function constructFDv2(
       baseHeaders,
       new ContextDeduplicator(config),
       diagnosticsManager,
+      startEventProcessor,
     );
   }
 
@@ -587,6 +591,10 @@ export default class LDClientImpl implements LDClient {
   ) {
     const config = new Configuration(options, internalOptions);
 
+    // Edge SDKs run per request and flush events explicitly, so they opt out of the
+    // event processor's background flush timers to avoid leaving interval timers running.
+    const startEventProcessor = !internalOptions?.disableBackgroundEventFlush;
+
     this.environmentMetadata = createPluginEnvironmentMetadata(_platform, _sdkKey, config);
 
     const hooks: Hook[] = [];
@@ -620,6 +628,7 @@ export default class LDClientImpl implements LDClient {
         (e) => this._dataSourceErrorHandler(e),
         hooks,
         internalOptions?.instanceId,
+        startEventProcessor,
       ));
 
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
@@ -657,6 +666,7 @@ export default class LDClientImpl implements LDClient {
         () => this._initSuccess(),
         hooks,
         internalOptions?.instanceId,
+        startEventProcessor,
       ));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager

@@ -44,6 +44,19 @@ describe('Edge LDClient', () => {
       },
     });
   });
+  it('constructs the event processor without background flush timers', async () => {
+    const client = new LDClient('client-side-id', createBasicPlatform().info, {
+      sendEvents: true,
+      eventsBackendName: 'launchdarkly',
+    });
+    await client.waitForInitialization({ timeout: 10 });
+
+    // The 6th positional argument to EventProcessor is `start`. Edge clients run per
+    // request and flush explicitly, so they must not start the background flush timers.
+    expect(mockEventProcessor).toHaveBeenCalled();
+    expect(mockEventProcessor.mock.calls[0][5]).toBe(false);
+  });
+
   it('uses custom eventsUri when specified', async () => {
     const client = new LDClient('client-side-id', createBasicPlatform().info, {
       sendEvents: true,

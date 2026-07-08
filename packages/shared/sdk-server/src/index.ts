@@ -11,6 +11,8 @@ export * from './events';
 export * from '@launchdarkly/js-sdk-common';
 export * as internalServer from './internal';
 
+export type { ServerInternalOptions } from './options/ServerInternalOptions';
+
 export {
   LDClientImpl,
   BigSegmentStoreStatusProviderImpl,

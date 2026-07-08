@@ -1,4 +1,4 @@
-import { Info, internal, LDClientImpl } from '@launchdarkly/js-server-sdk-common';
+import { Info, LDClientImpl, ServerInternalOptions } from '@launchdarkly/js-server-sdk-common';
 
 import EdgePlatform from '../platform';
 import { FastlySDKOptions } from '../utils/validateOptions';
@@ -18,10 +18,16 @@ export default class LDClient extends LDClientImpl {
       platformInfo,
       eventsBackendName || DEFAULT_EVENTS_BACKEND_NAME,
     );
-    const internalOptions: internal.LDInternalOptions = {
+    const internalOptions: ServerInternalOptions = {
       analyticsEventPath: `/events/bulk/${clientSideID}`,
       diagnosticEventPath: `/events/diagnostic/${clientSideID}`,
       includeAuthorizationHeader: false,
+      // Fastly Compute runs a fresh instance per request and flushes events explicitly
+      // via the request handler (event.waitUntil(client.flush())). Disable the event
+      // processor's background flush timers so a per-request client does not leave
+      // interval timers running that would keep the runtime alive and pin the client
+      // graph in memory.
+      disableBackgroundEventFlush: true,
     };
 
     const finalOptions = createOptions(ldOptions);
