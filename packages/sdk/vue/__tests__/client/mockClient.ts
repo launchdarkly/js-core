@@ -9,6 +9,7 @@ export interface MockControls {
   emitInitStatus: (r: { status: string; error?: Error }) => void;
   emitContextChange: (c: unknown) => void;
   subscriberCount: () => number;
+  contextSubscriberCount: () => number;
 }
 
 /**
@@ -84,6 +85,7 @@ export function makeMockClient(initial?: {
     setBool: (v: boolean) => {
       boolValue = v;
     },
+    // mirrors the real client: change:<key> events carry the context, not the new flag value
     emitChange: (key: string) =>
       handlers.get(`change:${key}`)?.forEach((h) => h({ kind: 'user', key: 'context-key' })),
     handlerCount: (event: string) => handlers.get(event)?.length ?? 0,
@@ -95,6 +97,9 @@ export function makeMockClient(initial?: {
     },
     emitContextChange: (c: unknown) => contextSubs.forEach((cb) => cb(c)),
     subscriberCount: () => initStatusSubs.size + contextSubs.size,
+    // separate from subscriberCount so composable tests can assert on context subs alone,
+    // without init-status subs (which the composable doesn't use) muddying the count
+    contextSubscriberCount: () => contextSubs.size,
   };
 
   return { client: client as unknown as LDVueClient, controls };
