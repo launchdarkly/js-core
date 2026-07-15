@@ -26,6 +26,8 @@ export interface LDAIConfigFlagValue {
     enabled: boolean;
     version?: number;
     mode?: LDAIConfigMode;
+    modelKey?: string;
+    modelVersion?: number;
   };
   model?: LDModelConfig;
   messages?: LDMessage[];
@@ -182,11 +184,23 @@ export class LDAIConfigUtils {
    * @returns Base configuration object
    */
   private static _toBaseConfig(key: string, flagValue: LDAIConfigFlagValue) {
+    let model = flagValue.model;
+    if (model) {
+      // eslint-disable-next-line no-underscore-dangle
+      const { modelKey, modelVersion } = flagValue._ldMeta ?? {};
+      model = { ...model };
+      if (modelKey !== undefined) {
+        model.modelKey = modelKey;
+      }
+      if (modelVersion !== undefined) {
+        model.modelVersion = modelVersion;
+      }
+    }
     return {
       key,
       // eslint-disable-next-line no-underscore-dangle
       enabled: flagValue._ldMeta?.enabled ?? false,
-      model: flagValue.model,
+      model,
       provider: flagValue.provider,
     };
   }

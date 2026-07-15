@@ -106,8 +106,10 @@ export class LDAIClientImpl implements LDAIClient {
         value.provider?.name ?? '',
         context,
         graphKey,
-        value.model?.modelKey,
-        value.model?.modelVersion ?? 1,
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.modelKey,
+        // eslint-disable-next-line no-underscore-dangle
+        value._ldMeta?.modelVersion ?? 1,
       );
 
     // Validate mode match

@@ -860,8 +860,6 @@ describe('modelKey and modelVersion tracking', () => {
     mockLdClient.variation.mockResolvedValue({
       model: {
         name: 'gpt-4',
-        modelKey: 'my-model',
-        modelVersion: 2,
       },
       provider: { name: 'openai' },
       messages: [],
@@ -870,6 +868,8 @@ describe('modelKey and modelVersion tracking', () => {
         enabled: true,
         mode: 'completion',
         version: 7,
+        modelKey: 'my-model',
+        modelVersion: 2,
       },
     });
 
@@ -913,8 +913,6 @@ describe('modelKey and modelVersion tracking', () => {
     mockLdClient.variation.mockResolvedValue({
       model: {
         name: 'gpt-4',
-        modelKey: 'my-model',
-        modelVersion: 2,
       },
       provider: { name: 'openai' },
       messages: [],
@@ -922,6 +920,8 @@ describe('modelKey and modelVersion tracking', () => {
         variationKey: 'v1',
         enabled: true,
         mode: 'completion',
+        modelKey: 'my-model',
+        modelVersion: 2,
       },
     });
 
