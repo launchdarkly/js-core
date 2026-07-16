@@ -7,10 +7,17 @@
  * 4. replaced all for of loops with foreach
  *
  * Additional changes:
- * 1. separated event handling to use onprogress for data changes
- *    and onreadystatechange for status changes. This is to address
- *    an issue with Vega OS where they do not fire a readyStatechange
- *    event when the response is received.
+ * 1. separated event handling to use onprogress for data changes and
+ *    onreadystatechange for status changes, since some platforms (e.g. Vega OS)
+ *    never fire a readystatechange event while the response is still streaming in.
+ * 2. onprogress now also performs the CONNECTING -> OPEN transition and dispatches
+ *    open, guarded by the same this._status === CONNECTING check onreadystatechange
+ *    already used. Previously open only fired from onreadystatechange at
+ *    readyState DONE, which for a long-lived stream only happens at connection
+ *    close, so the parsed response headers carried on open were never seen while
+ *    the stream was actually running. onprogress fires as soon as the response
+ *    starts loading, so headers are available as soon as the connection opens
+ *    instead of only at teardown.
  */
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
@@ -158,6 +165,16 @@ export default class EventSource<E extends string = never> {
         );
 
         if (this._xhr.status >= 200 && this._xhr.status < 400) {
+          if (this._status === this.CONNECTING) {
+            this._retryCount = 0;
+            this._status = this.OPEN;
+            this.dispatch('open', {
+              type: 'open',
+              headers: this._parseResponseHeaders(this._xhr.getAllResponseHeaders()),
+            });
+            this._logger?.debug('[EventSource][onprogress][OPEN] Connection opened.');
+          }
+
           this._handleEvent(this._xhr.responseText || '');
         } else {
           this._status = this.ERROR;
