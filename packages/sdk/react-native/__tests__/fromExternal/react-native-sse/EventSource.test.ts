@@ -167,4 +167,60 @@ describe('EventSource', () => {
       }),
     );
   });
+
+  test('calls onopen with parsed response headers during streaming (onprogress, pre-DONE)', () => {
+    const onopen = jest.fn();
+    eventSource.onopen = onopen;
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = '';
+
+    jest.runAllTimers();
+
+    // Simulate a chunk arriving while the connection is still LOADING (readyState 3).
+    // This is the real runtime path for a live stream: DONE (readyState 4) only
+    // fires once the connection closes, so gating 'open' on DONE would mean the
+    // event, and the fallback headers it carries, never fires during normal streaming.
+    mockXhr.readyState = 3;
+    mockXhr.status = 200;
+    mockXhr.onprogress();
+
+    expect(onopen).toHaveBeenCalledTimes(1);
+    expect(onopen).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'open',
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
+  });
+
+  test('dispatches open exactly once when onprogress precedes an onreadystatechange DONE', () => {
+    const onopen = jest.fn();
+    eventSource.onopen = onopen;
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = '';
+
+    jest.runAllTimers();
+
+    // onprogress observes the connection first (LOADING) and transitions to OPEN.
+    mockXhr.readyState = 3;
+    mockXhr.status = 200;
+    mockXhr.onprogress();
+
+    // A later onreadystatechange at DONE must not re-dispatch open: the status is
+    // already OPEN (no longer CONNECTING), so its open-dispatch guard is a no-op.
+    mockXhr.readyState = 4;
+    mockXhr.status = 200;
+    mockXhr.onreadystatechange();
+
+    expect(onopen).toHaveBeenCalledTimes(1);
+  });
 });
