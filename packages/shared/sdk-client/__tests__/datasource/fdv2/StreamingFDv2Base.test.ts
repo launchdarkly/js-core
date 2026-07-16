@@ -514,3 +514,146 @@ it('calling start twice does not create a second EventSource', () => {
 
   base.close();
 });
+
+it('reads x-ld-fd-fallback-ttl on the error path', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  const willRetry = simulateErrorFilter(mockRequests, {
+    status: 200,
+    message: 'fallback',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' },
+  });
+  expect(willRetry).toBe(false);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('terminal_error');
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+
+  base.close();
+});
+
+it('defers the open fallback directive to the next changeSet', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '90' },
+  });
+
+  sendFullTransfer(mockEventSource, [{ key: 'flag-a', version: 1, value: 'green' }]);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('changeSet');
+  if (result.type !== 'changeSet') return;
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(90000);
+
+  base.close();
+});
+
+it('emits terminal_error for a goodbye with protocolFallbackTTL', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  simulateEvent(mockEventSource, 'goodbye', {
+    reason: 'falling back',
+    protocolFallbackTTL: 60,
+  });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('terminal_error');
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+
+  base.close();
+});
+
+it('emits terminal_error for a goodbye when a deferred open directive is pending', async () => {
+  // When onopen sets pendingFallback but the goodbye event has no protocolFallbackTTL,
+  // the pending directive triggers the fallback path with the deferred TTL.
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Open with fallback headers (defers the directive)
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '45' },
+  });
+
+  // Goodbye fires before any payload — the pending directive triggers the fallback
+  simulateEvent(mockEventSource, 'goodbye', { reason: 'bye' });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('terminal_error');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(45000);
+
+  base.close();
+});
+
+it('clears a pending fallback directive when onopen fires without the fallback header', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // First open carries fallback headers — arms the deferred directive
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' },
+  });
+
+  // Reconnect without fallback header — must clear the stale directive
+  mockEventSource.onopen({ type: 'open', headers: {} });
+
+  // A payload arriving after the clean reconnect must NOT carry fdv1Fallback=true
+  sendFullTransfer(mockEventSource, [{ key: 'flag-a', version: 1, value: 'blue' }]);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('changeSet');
+  if (result.type !== 'changeSet') return;
+  expect(result.fdv1Fallback).toBe(false);
+  expect(result.fdv1FallbackTtlMs).toBeUndefined();
+
+  base.close();
+});
+
+it('close resets the pending fallback directive', async () => {
+  // Calling close() must clear pendingFallback/pendingFallbackTtlMs so a
+  // subsequently re-created source does not inherit stale state.
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Arm the deferred directive
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '30' },
+  });
+
+  // Close before any payload arrives — the shutdown result must NOT carry TTL
+  base.close();
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('shutdown');
+  expect(result.fdv1FallbackTtlMs).toBeUndefined();
+});

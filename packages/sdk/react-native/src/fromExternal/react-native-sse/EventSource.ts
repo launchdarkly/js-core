@@ -194,7 +194,10 @@ export default class EventSource<E extends string = never> {
           if (this._status === this.CONNECTING) {
             this._retryCount = 0;
             this._status = this.OPEN;
-            this.dispatch('open', { type: 'open' });
+            this.dispatch('open', {
+              type: 'open',
+              headers: this._parseResponseHeaders(this._xhr.getAllResponseHeaders()),
+            });
             this._logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
 
@@ -353,12 +356,28 @@ export default class EventSource<E extends string = never> {
     }
   }
 
+  private _parseResponseHeaders(raw: string | null): Record<string, string> {
+    const result: Record<string, string> = {};
+    if (!raw) {
+      return result;
+    }
+    raw.split('\r\n').forEach((line) => {
+      const separatorIndex = line.indexOf(': ');
+      if (separatorIndex > 0) {
+        const key = line.slice(0, separatorIndex).toLowerCase();
+        const value = line.slice(separatorIndex + 2);
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
   dispatch<T extends EventType<E>>(type: T, data: EventSourceEvent<T>) {
     this._eventHandlers[type]?.forEach((handler: EventSourceListener<E, T>) => handler(data));
 
     switch (type) {
       case 'open':
-        this.onopen();
+        this.onopen(data);
         break;
       case 'close':
         this.onclose();
@@ -389,7 +408,7 @@ export default class EventSource<E extends string = never> {
     return this._status;
   }
 
-  onopen() {}
+  onopen(_e: any) {}
   onclose() {}
   onerror(_err: any) {}
   onretrying(_e: any) {}
