@@ -133,6 +133,28 @@ export function createStreamingBase(config: {
     connectionAttemptStartTime = undefined;
   }
 
+  /**
+   * Promotes a directive deferred from `onopen` (`pendingFallback`) into the
+   * committed `fdv1Fallback`/`fdv1FallbackTtlMs` state, clears the pending
+   * pair, and returns the current committed fallback state.
+   *
+   * Every path that can produce a result, a stream error, a network failure,
+   * or a ping-triggered poll (including one that succeeds without its own
+   * fallback signal), calls this instead of reading the closure variables
+   * directly, so a directive deferred at onopen surfaces no matter which
+   * path fires next. Safe to call when nothing is pending; it just returns
+   * the current state unchanged.
+   */
+  function resolveFallback(): { fdv1Fallback: boolean; fdv1FallbackTtlMs: number | undefined } {
+    if (pendingFallback) {
+      fdv1Fallback = true;
+      fdv1FallbackTtlMs = pendingFallbackTtlMs;
+      pendingFallback = false;
+      pendingFallbackTtlMs = undefined;
+    }
+    return { fdv1Fallback, fdv1FallbackTtlMs };
+  }
+
   function handleAction(action: internal.ProtocolAction, rawData?: unknown): void {
     switch (action.type) {
       case 'payload':
@@ -169,15 +191,22 @@ export function createStreamingBase(config: {
         break;
       }
 
-      case 'serverError':
-        resultQueue.put(interrupted(errorInfoFromUnknown(action.reason), fdv1Fallback, fdv1FallbackTtlMs));
+      case 'serverError': {
+        const fallback = resolveFallback();
+        resultQueue.put(
+          interrupted(errorInfoFromUnknown(action.reason), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
+        );
         break;
+      }
 
       case 'error':
         // Only actionable errors are queued; informational ones (UNKNOWN_EVENT)
         // are logged by the protocol handler.
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
-          resultQueue.put(interrupted(errorInfoFromInvalidData(action.message), fdv1Fallback, fdv1FallbackTtlMs));
+          const fallback = resolveFallback();
+          resultQueue.put(
+            interrupted(errorInfoFromInvalidData(action.message), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
+          );
         }
         break;
 
@@ -203,17 +232,23 @@ export function createStreamingBase(config: {
       return false;
     }
 
+    const fallback = resolveFallback();
+
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback, fdv1FallbackTtlMs));
+      resultQueue.put(
+        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
+      );
       return false;
     }
 
     config.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     logConnectionResult(false);
     logConnectionAttempt();
-    resultQueue.put(interrupted(errorInfoFromHttpError(err.status ?? 0), fdv1Fallback, fdv1FallbackTtlMs));
+    resultQueue.put(
+      interrupted(errorInfoFromHttpError(err.status ?? 0), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
+    );
     return true;
   }
 
@@ -243,8 +278,13 @@ export function createStreamingBase(config: {
             `Stream received data that was unable to be parsed in "${eventName}" message`,
           );
           config.logger?.debug(`Data follows: ${event.data}`);
+          const fallback = resolveFallback();
           resultQueue.put(
-            interrupted(errorInfoFromInvalidData('Malformed JSON in EventStream'), fdv1Fallback, fdv1FallbackTtlMs),
+            interrupted(
+              errorInfoFromInvalidData('Malformed JSON in EventStream'),
+              fallback.fdv1Fallback,
+              fallback.fdv1FallbackTtlMs,
+            ),
           );
           return;
         }
@@ -276,6 +316,16 @@ export function createStreamingBase(config: {
           return;
         }
 
+        // Trust the poll's own fallback signal (e.g. from its own HTTP
+        // response headers) over a directive deferred at onopen. Only
+        // backfill from the deferred directive when the poll result doesn't
+        // already indicate fallback, so an onopen directive still surfaces
+        // even while ping-triggered polls keep succeeding.
+        const fallback = resolveFallback();
+        if (!result.fdv1Fallback && fallback.fdv1Fallback) {
+          result.fdv1Fallback = true;
+          result.fdv1FallbackTtlMs = fallback.fdv1FallbackTtlMs;
+        }
         resultQueue.put(result);
       } catch (err: any) {
         if (stopped) {
@@ -283,11 +333,12 @@ export function createStreamingBase(config: {
         }
 
         config.logger?.error(`Error handling ping: ${err?.message ?? err}`);
+        const fallback = resolveFallback();
         resultQueue.put(
           interrupted(
             errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'),
-            fdv1Fallback,
-            fdv1FallbackTtlMs,
+            fallback.fdv1Fallback,
+            fallback.fdv1FallbackTtlMs,
           ),
         );
       }
@@ -329,8 +380,13 @@ export function createStreamingBase(config: {
           // This condition will be handled by the error filter.
           return;
         }
+        const fallback = resolveFallback();
         resultQueue.put(
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fdv1Fallback, fdv1FallbackTtlMs),
+          interrupted(
+            errorInfoFromNetworkError(err?.message ?? 'IO Error'),
+            fallback.fdv1Fallback,
+            fallback.fdv1FallbackTtlMs,
+          ),
         );
       };
 

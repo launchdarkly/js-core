@@ -595,7 +595,7 @@ it('emits terminal_error for a goodbye when a deferred open directive is pending
     headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '45' },
   });
 
-  // Goodbye fires before any payload — the pending directive triggers the fallback
+  // Goodbye fires before any payload; the pending directive triggers the fallback
   simulateEvent(mockEventSource, 'goodbye', { reason: 'bye' });
 
   const result = await base.takeResult();
@@ -614,13 +614,13 @@ it('clears a pending fallback directive when onopen fires without the fallback h
   const base = createBase(mockRequests, logger);
   base.start();
 
-  // First open carries fallback headers — arms the deferred directive
+  // First open carries fallback headers, arming the deferred directive
   mockEventSource.onopen({
     type: 'open',
     headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' },
   });
 
-  // Reconnect without fallback header — must clear the stale directive
+  // Reconnect without fallback header; must clear the stale directive
   mockEventSource.onopen({ type: 'open', headers: {} });
 
   // A payload arriving after the clean reconnect must NOT carry fdv1Fallback=true
@@ -649,11 +649,230 @@ it('close resets the pending fallback directive', async () => {
     headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '30' },
   });
 
-  // Close before any payload arrives — the shutdown result must NOT carry TTL
+  // Close before any payload arrives; the shutdown result must NOT carry TTL
   base.close();
   const result = await base.takeResult();
   expect(result.type).toBe('status');
   if (result.type !== 'status') return;
   expect(result.state).toBe('shutdown');
   expect(result.fdv1FallbackTtlMs).toBeUndefined();
+});
+
+it('surfaces a deferred fallback directive on the serverError path', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Arm the deferred directive at open.
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // A server-side FDv2 'error' event arrives before any payload/goodbye.
+  simulateEvent(mockEventSource, 'error', { reason: 'server error', payload_id: 'p1' });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive on the protocol error path', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // A server-intent with no payloads yields a MISSING_PAYLOAD protocol error
+  // before any payload/goodbye.
+  simulateEvent(mockEventSource, 'server-intent', { payloads: [] });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive on the malformed-JSON path', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // Invoke a registered listener directly with unparseable data.
+  const { calls } = mockEventSource.addEventListener.mock;
+  const listener = calls.find((c: any[]) => c[0] === 'server-intent')?.[1];
+  listener({ data: 'not-valid-json{{{' });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.errorInfo?.message).toContain('Malformed JSON');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive on the network-error path', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // Network error with no numeric status routes through es.onerror
+  // (a numeric status would be handled by the error filter instead).
+  mockEventSource.onerror({ message: 'IO Error' });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('merges a deferred fallback directive into a successful ping-triggered poll result', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const pingHandler: PingHandler = {
+    handlePing: jest.fn().mockResolvedValue({
+      type: 'changeSet',
+      payload: { events: [], selector: undefined },
+      fdv1Fallback: false,
+    }),
+  };
+  const base = createBase(mockRequests, logger, { pingHandler });
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  const { calls } = mockEventSource.addEventListener.mock;
+  const pingListener = calls.find((c: any[]) => c[0] === 'ping')?.[1];
+  await pingListener();
+
+  const result = await base.takeResult();
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive when a ping-triggered poll throws', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const pingHandler: PingHandler = {
+    handlePing: jest.fn().mockRejectedValue(new Error('poll failed')),
+  };
+  const base = createBase(mockRequests, logger, { pingHandler });
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  const { calls } = mockEventSource.addEventListener.mock;
+  const pingListener = calls.find((c: any[]) => c[0] === 'ping')?.[1];
+  await pingListener();
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive on a non-retryable errorFilter error', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Arm a directive at onopen (a prior successful connection observed the header).
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // A later reconnect attempt fails with a non-retryable status that does NOT
+  // carry its own fallback header.
+  const willRetry = simulateErrorFilter(mockRequests, {
+    status: 401,
+    message: 'Error 401',
+  });
+  expect(willRetry).toBe(false);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('terminal_error');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('surfaces a deferred fallback directive on a retryable errorFilter error', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Arm a directive at onopen (a prior successful connection observed the header).
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  // A later reconnect attempt fails with a retryable status that does NOT
+  // carry its own fallback header.
+  const willRetry = simulateErrorFilter(mockRequests, {
+    status: 500,
+    message: 'Error 500',
+  });
+  expect(willRetry).toBe(true);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
 });
