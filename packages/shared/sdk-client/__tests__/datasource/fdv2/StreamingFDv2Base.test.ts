@@ -635,6 +635,42 @@ it('clears a pending fallback directive when onopen fires without the fallback h
   base.close();
 });
 
+it('clears a committed fallback after a clean reconnect on the same source', async () => {
+  // Once a changeSet has been stamped with fdv1Fallback=true, that state is
+  // committed (not just pending). A later onopen on the SAME source with no
+  // fallback header must clear the committed flag too, not only the pending
+  // one, so a stray reconnect racing ahead of the orchestrator's shutdown
+  // doesn't keep stamping fresh results as fallback.
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // First open carries the fallback header; applied to the next changeSet.
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' },
+  });
+  sendFullTransfer(mockEventSource, [{ key: 'flag-a', version: 1, value: 'blue' }]);
+
+  const fallbackResult = await base.takeResult();
+  expect(fallbackResult.type).toBe('changeSet');
+  if (fallbackResult.type !== 'changeSet') return;
+  expect(fallbackResult.fdv1Fallback).toBe(true);
+
+  // Reconnect cleanly on the same source, with no fallback header this time.
+  mockEventSource.onopen({ type: 'open', headers: {} });
+  sendFullTransfer(mockEventSource, [{ key: 'flag-b', version: 1, value: 'green' }]);
+
+  const cleanResult = await base.takeResult();
+  expect(cleanResult.type).toBe('changeSet');
+  if (cleanResult.type !== 'changeSet') return;
+  expect(cleanResult.fdv1Fallback).toBe(false);
+  expect(cleanResult.fdv1FallbackTtlMs).toBeUndefined();
+
+  base.close();
+});
+
 it('close resets the pending fallback directive', async () => {
   // Calling close() must clear pendingFallback/pendingFallbackTtlMs so a
   // subsequently re-created source does not inherit stale state.
