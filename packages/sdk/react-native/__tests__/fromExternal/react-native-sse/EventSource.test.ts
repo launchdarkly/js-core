@@ -223,4 +223,149 @@ describe('EventSource', () => {
 
     expect(onopen).toHaveBeenCalledTimes(1);
   });
+
+  test('calls retryAndHandleError with parsed response headers on an error response', () => {
+    const retryAndHandleError = jest.fn(() => false);
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = 'error body';
+
+    const es = new EventSource<EventName>(uri, { logger, retryAndHandleError });
+    es.onerror = jest.fn();
+
+    jest.runAllTimers();
+
+    mockXhr.readyState = 4;
+    mockXhr.status = 500;
+    mockXhr.onreadystatechange();
+
+    expect(retryAndHandleError).toHaveBeenCalledTimes(1);
+    expect(retryAndHandleError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 500,
+        message: 'error body',
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
+  });
+
+  test('dispatches error with status and headers from onprogress mid-stream', () => {
+    const onerror = jest.fn();
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = 'error body';
+
+    eventSource.onerror = onerror;
+
+    jest.runAllTimers();
+
+    // readyState 3 (LOADING), not DONE, so this exercises onprogress's
+    // error branch rather than onreadystatechange's.
+    mockXhr.readyState = 3;
+    mockXhr.status = 500;
+    mockXhr.onprogress();
+
+    expect(onerror).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 500,
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
+  });
+
+  test('dispatches error with status and headers from onreadystatechange before retrying', () => {
+    const onerror = jest.fn();
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = 'error body';
+
+    eventSource.onerror = onerror;
+
+    jest.runAllTimers();
+
+    mockXhr.readyState = 4;
+    mockXhr.status = 500;
+    mockXhr.onreadystatechange();
+
+    expect(onerror).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 500,
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
+  });
+
+  test('invokes retryAndHandleError from onprogress when the connection never reaches DONE', () => {
+    const retryAndHandleError = jest.fn(() => false);
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = 'error body';
+
+    const es = new EventSource<EventName>(uri, { logger, retryAndHandleError });
+    es.onerror = jest.fn();
+
+    jest.runAllTimers();
+
+    // readyState never advances to DONE for this attempt, so
+    // onreadystatechange never fires; onprogress must drive the retry
+    // on its own.
+    mockXhr.readyState = 3;
+    mockXhr.status = 500;
+    mockXhr.onprogress();
+
+    expect(retryAndHandleError).toHaveBeenCalledTimes(1);
+    expect(retryAndHandleError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 500,
+        message: 'error body',
+        headers: expect.objectContaining({
+          'x-ld-fd-fallback': 'true',
+          'x-ld-fd-fallback-ttl': '60',
+        }),
+      }),
+    );
+  });
+
+  test('does not invoke retryAndHandleError twice when onprogress and onreadystatechange observe the same failed attempt', () => {
+    const retryAndHandleError = jest.fn(() => false);
+
+    mockXhr.getAllResponseHeaders = jest.fn(
+      () => 'X-Ld-Fd-Fallback: true\r\nX-Ld-Fd-Fallback-Ttl: 60\r\nContent-Type: text/event-stream',
+    );
+    mockXhr.responseText = 'error body';
+
+    const es = new EventSource<EventName>(uri, { logger, retryAndHandleError });
+    es.onerror = jest.fn();
+
+    jest.runAllTimers();
+
+    // onprogress observes the error first (LOADING), then the same response
+    // reaches DONE via onreadystatechange. retryAndHandleError must fire
+    // exactly once for this attempt despite both handlers seeing the error.
+    mockXhr.readyState = 3;
+    mockXhr.status = 500;
+    mockXhr.onprogress();
+
+    mockXhr.readyState = 4;
+    mockXhr.onreadystatechange();
+
+    expect(retryAndHandleError).toHaveBeenCalledTimes(1);
+  });
 });

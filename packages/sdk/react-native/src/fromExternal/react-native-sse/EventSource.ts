@@ -18,6 +18,12 @@
  *    the stream was actually running. onprogress fires as soon as the response
  *    starts loading, so headers are available as soon as the connection opens
  *    instead of only at teardown.
+ * 3. onprogress now also drives retryAndHandleError/reconnect on an error status,
+ *    guarded exactly-once against onreadystatechange (see isFirstErrorForThisAttempt
+ *    below). Previously only onreadystatechange reaching DONE could trigger a retry,
+ *    so an error response that never reached DONE - the same never-fires-
+ *    readystatechange-while-streaming platforms note 1 above describes - would never
+ *    recover or have its response headers (e.g. an FDv1 fallback directive) read.
  */
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
@@ -177,14 +183,40 @@ export default class EventSource<E extends string = never> {
 
           this._handleEvent(this._xhr.responseText || '');
         } else {
+          const isFirstErrorForThisAttempt = this._status !== this.ERROR;
           this._status = this.ERROR;
+          const headers = this._parseResponseHeaders(this._xhr.getAllResponseHeaders());
 
           this.dispatch('error', {
             type: 'error',
             message: this._xhr.responseText,
             xhrStatus: this._xhr.status,
             xhrState: this._xhr.readyState,
+            status: this._xhr.status,
+            headers,
           });
+
+          // A bad status observed here may never be followed by a DONE
+          // readystatechange: a streaming error response, or a platform
+          // that does not fire readystatechange reliably, leaves
+          // onreadystatechange silent. Retry from onprogress too, guarded
+          // so a later DONE for the same attempt does not trigger a second
+          // retry.
+          if (isFirstErrorForThisAttempt) {
+            if (!this._retryAndHandleError) {
+              this._tryConnect();
+            } else {
+              const shouldRetry = this._retryAndHandleError({
+                status: this._xhr.status,
+                message: this._xhr.responseText,
+                headers,
+              });
+
+              if (shouldRetry) {
+                this._tryConnect();
+              }
+            }
+          }
         }
       };
 
@@ -226,30 +258,46 @@ export default class EventSource<E extends string = never> {
             this._tryConnect();
           }
         } else {
+          // Mirrors onprogress's error-retry guard: if onprogress already
+          // retried for this attempt's error, this DONE for the same attempt
+          // must not trigger a second retry. This also relies on
+          // readystatechange(DONE) firing before the native onerror handler
+          // for the same failed request - onerror sets _status = ERROR
+          // without retrying, so if it ran first this guard would
+          // incorrectly suppress the retry below. XHR fires
+          // readystatechange(DONE) before error, and RN follows that
+          // ordering, so this holds today.
+          const isFirstErrorForThisAttempt = this._status !== this.ERROR;
           this._status = this.ERROR;
+          const headers = this._parseResponseHeaders(this._xhr.getAllResponseHeaders());
 
           this.dispatch('error', {
             type: 'error',
             message: this._xhr.responseText,
             xhrStatus: this._xhr.status,
             xhrState: this._xhr.readyState,
+            status: this._xhr.status,
+            headers,
           });
 
           if (this._xhr.readyState === XMLHttpRequest.DONE) {
             this._logger?.debug('[EventSource][onreadystatechange][ERROR] Response status error.');
 
-            if (!this._retryAndHandleError) {
-              // by default just try and reconnect if there's an error.
-              this._tryConnect();
-            } else {
-              // custom retry logic taking into account status codes.
-              const shouldRetry = this._retryAndHandleError({
-                status: this._xhr.status,
-                message: this._xhr.responseText,
-              });
-
-              if (shouldRetry) {
+            if (isFirstErrorForThisAttempt) {
+              if (!this._retryAndHandleError) {
+                // by default just try and reconnect if there's an error.
                 this._tryConnect();
+              } else {
+                // custom retry logic taking into account status codes.
+                const shouldRetry = this._retryAndHandleError({
+                  status: this._xhr.status,
+                  message: this._xhr.responseText,
+                  headers,
+                });
+
+                if (shouldRetry) {
+                  this._tryConnect();
+                }
               }
             }
           }

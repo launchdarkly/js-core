@@ -397,8 +397,16 @@ export function createStreamingBase(config: {
         config.logger?.info('Opened LaunchDarkly stream connection');
         protocolHandler.reset();
 
-        // Reset pending directive on every connection open so a reconnect that
-        // does not carry the fallback header clears any state from a prior attempt.
+        // Reset both the committed and pending directive on every connection
+        // open so a reconnect that does not carry the fallback header clears
+        // any state from a prior attempt. Resetting the committed flag here
+        // does not undo an already-emitted fallback: the result queue is
+        // FIFO, so a `fdv1Fallback: true` result queued before this reconnect
+        // is always drained before anything this connection queues after it,
+        // and the orchestrator closes this instance as soon as it sees that
+        // result - any later result from this reconnect is abandoned unread.
+        fdv1Fallback = false;
+        fdv1FallbackTtlMs = undefined;
         pendingFallback = false;
         pendingFallbackTtlMs = undefined;
 
