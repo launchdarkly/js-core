@@ -42,17 +42,6 @@ export interface LDModelConfig {
    * The region for the model.
    */
   region?: string;
-
-  /**
-   * The stable, unique key of the model (used for direct lookup; distinct from
-   * `name`, which is not guaranteed unique).
-   */
-  modelKey?: string;
-
-  /**
-   * The pinned version of the model that this config variation references.
-   */
-  modelVersion?: number;
 }
 
 export interface LDProviderConfig {

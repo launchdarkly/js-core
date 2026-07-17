@@ -906,7 +906,10 @@ describe('modelKey and modelVersion tracking', () => {
     expect(trackData.modelVersion).toBe(1);
   });
 
-  it('exposes modelKey and modelVersion on config.model from flag payload', async () => {
+  it('does not expose modelKey or modelVersion on config.model', async () => {
+    // modelKey/modelVersion are intentionally not exposed on LDModelConfig (they'd read as
+    // properties of the LLM itself, e.g. a version like "5.4"); the only place they surface is
+    // the tracker's stamped event data, mirroring variationKey/version.
     const client = new LDAIClientImpl(mockLdClient);
     const key = 'test-flag';
 
@@ -929,8 +932,6 @@ describe('modelKey and modelVersion tracking', () => {
 
     expect(result.model).toEqual({
       name: 'gpt-4',
-      modelKey: 'my-model',
-      modelVersion: 2,
     });
   });
 });
