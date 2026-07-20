@@ -7,23 +7,10 @@
  * 4. replaced all for of loops with foreach
  *
  * Additional changes:
- * 1. separated event handling to use onprogress for data changes and
- *    onreadystatechange for status changes, since some platforms (e.g. Vega OS)
- *    never fire a readystatechange event while the response is still streaming in.
- * 2. onprogress now also performs the CONNECTING -> OPEN transition and dispatches
- *    open, guarded by the same this._status === CONNECTING check onreadystatechange
- *    already used. Previously open only fired from onreadystatechange at
- *    readyState DONE, which for a long-lived stream only happens at connection
- *    close, so the parsed response headers carried on open were never seen while
- *    the stream was actually running. onprogress fires as soon as the response
- *    starts loading, so headers are available as soon as the connection opens
- *    instead of only at teardown.
- * 3. onprogress now also drives retryAndHandleError/reconnect on an error status,
- *    guarded exactly-once against onreadystatechange (see isFirstErrorForThisAttempt
- *    below). Previously only onreadystatechange reaching DONE could trigger a retry,
- *    so an error response that never reached DONE - the same never-fires-
- *    readystatechange-while-streaming platforms note 1 above describes - would never
- *    recover or have its response headers (e.g. an FDv1 fallback directive) read.
+ * 1. separated event handling to use onprogress for data changes
+ *    and onreadystatechange for status changes. This is to address
+ *    an issue with Vega OS where they do not fire a readyStatechange
+ *    event when the response is received.
  */
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
@@ -171,52 +158,16 @@ export default class EventSource<E extends string = never> {
         );
 
         if (this._xhr.status >= 200 && this._xhr.status < 400) {
-          if (this._status === this.CONNECTING) {
-            this._retryCount = 0;
-            this._status = this.OPEN;
-            this.dispatch('open', {
-              type: 'open',
-              headers: this._parseResponseHeaders(this._xhr.getAllResponseHeaders()),
-            });
-            this._logger?.debug('[EventSource][onprogress][OPEN] Connection opened.');
-          }
-
           this._handleEvent(this._xhr.responseText || '');
         } else {
-          const isFirstErrorForThisAttempt = this._status !== this.ERROR;
           this._status = this.ERROR;
-          const headers = this._parseResponseHeaders(this._xhr.getAllResponseHeaders());
 
           this.dispatch('error', {
             type: 'error',
             message: this._xhr.responseText,
             xhrStatus: this._xhr.status,
             xhrState: this._xhr.readyState,
-            status: this._xhr.status,
-            headers,
           });
-
-          // A bad status observed here may never be followed by a DONE
-          // readystatechange: a streaming error response, or a platform
-          // that does not fire readystatechange reliably, leaves
-          // onreadystatechange silent. Retry from onprogress too, guarded
-          // so a later DONE for the same attempt does not trigger a second
-          // retry.
-          if (isFirstErrorForThisAttempt) {
-            if (!this._retryAndHandleError) {
-              this._tryConnect();
-            } else {
-              const shouldRetry = this._retryAndHandleError({
-                status: this._xhr.status,
-                message: this._xhr.responseText,
-                headers,
-              });
-
-              if (shouldRetry) {
-                this._tryConnect();
-              }
-            }
-          }
         }
       };
 
@@ -243,10 +194,7 @@ export default class EventSource<E extends string = never> {
           if (this._status === this.CONNECTING) {
             this._retryCount = 0;
             this._status = this.OPEN;
-            this.dispatch('open', {
-              type: 'open',
-              headers: this._parseResponseHeaders(this._xhr.getAllResponseHeaders()),
-            });
+            this.dispatch('open', { type: 'open' });
             this._logger?.debug('[EventSource][onreadystatechange][OPEN] Connection opened.');
           }
 
@@ -258,46 +206,30 @@ export default class EventSource<E extends string = never> {
             this._tryConnect();
           }
         } else {
-          // Mirrors onprogress's error-retry guard: if onprogress already
-          // retried for this attempt's error, this DONE for the same attempt
-          // must not trigger a second retry. This also relies on
-          // readystatechange(DONE) firing before the native onerror handler
-          // for the same failed request - onerror sets _status = ERROR
-          // without retrying, so if it ran first this guard would
-          // incorrectly suppress the retry below. XHR fires
-          // readystatechange(DONE) before error, and RN follows that
-          // ordering, so this holds today.
-          const isFirstErrorForThisAttempt = this._status !== this.ERROR;
           this._status = this.ERROR;
-          const headers = this._parseResponseHeaders(this._xhr.getAllResponseHeaders());
 
           this.dispatch('error', {
             type: 'error',
             message: this._xhr.responseText,
             xhrStatus: this._xhr.status,
             xhrState: this._xhr.readyState,
-            status: this._xhr.status,
-            headers,
           });
 
           if (this._xhr.readyState === XMLHttpRequest.DONE) {
             this._logger?.debug('[EventSource][onreadystatechange][ERROR] Response status error.');
 
-            if (isFirstErrorForThisAttempt) {
-              if (!this._retryAndHandleError) {
-                // by default just try and reconnect if there's an error.
-                this._tryConnect();
-              } else {
-                // custom retry logic taking into account status codes.
-                const shouldRetry = this._retryAndHandleError({
-                  status: this._xhr.status,
-                  message: this._xhr.responseText,
-                  headers,
-                });
+            if (!this._retryAndHandleError) {
+              // by default just try and reconnect if there's an error.
+              this._tryConnect();
+            } else {
+              // custom retry logic taking into account status codes.
+              const shouldRetry = this._retryAndHandleError({
+                status: this._xhr.status,
+                message: this._xhr.responseText,
+              });
 
-                if (shouldRetry) {
-                  this._tryConnect();
-                }
+              if (shouldRetry) {
+                this._tryConnect();
               }
             }
           }
@@ -421,28 +353,12 @@ export default class EventSource<E extends string = never> {
     }
   }
 
-  private _parseResponseHeaders(raw: string | null): Record<string, string> {
-    const result: Record<string, string> = {};
-    if (!raw) {
-      return result;
-    }
-    raw.split('\r\n').forEach((line) => {
-      const separatorIndex = line.indexOf(': ');
-      if (separatorIndex > 0) {
-        const key = line.slice(0, separatorIndex).toLowerCase();
-        const value = line.slice(separatorIndex + 2);
-        result[key] = value;
-      }
-    });
-    return result;
-  }
-
   dispatch<T extends EventType<E>>(type: T, data: EventSourceEvent<T>) {
     this._eventHandlers[type]?.forEach((handler: EventSourceListener<E, T>) => handler(data));
 
     switch (type) {
       case 'open':
-        this.onopen(data);
+        this.onopen();
         break;
       case 'close':
         this.onclose();
@@ -473,7 +389,7 @@ export default class EventSource<E extends string = never> {
     return this._status;
   }
 
-  onopen(_e: any) {}
+  onopen() {}
   onclose() {}
   onerror(_err: any) {}
   onretrying(_e: any) {}
