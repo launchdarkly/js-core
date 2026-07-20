@@ -737,6 +737,15 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
+    // The custom event inlines the context, so an anonymous context's attributes are redacted.
+    // The index event is not subject to anonymous redaction and keeps the full context.
+    const redactedAnonUser = {
+      key: 'anon-user',
+      kind: 'user',
+      anonymous: true,
+      _meta: { redactedAttributes: ['name'] },
+    };
+
     expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
       {
         kind: 'index',
@@ -748,7 +757,7 @@ describe('given an event processor', () => {
         key: 'eventkey',
         data: { thing: 'stuff' },
         creationDate: 1000,
-        context: { ...anonUser, kind: 'user' },
+        context: redactedAnonUser,
       },
     ]);
   });

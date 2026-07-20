@@ -363,7 +363,9 @@ export default class EventProcessor implements LDEventProcessor {
           kind: 'custom',
           creationDate: event.creationDate,
           key: event.key,
-          context: this._contextFilter.filter(event.context),
+          // Custom events inline the full context and are never debug events, so anonymous
+          // context attributes must be redacted here just as they are for feature events.
+          context: this._contextFilter.filter(event.context, true),
         };
 
         if (event.samplingRatio !== 1) {
