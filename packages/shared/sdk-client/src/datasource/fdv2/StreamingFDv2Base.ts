@@ -317,13 +317,16 @@ export function createStreamingBase(config: {
         }
 
         // Trust the poll's own fallback signal (e.g. from its own HTTP
-        // response headers) over a directive deferred at onopen. Only
-        // backfill from the deferred directive when the poll result doesn't
-        // already indicate fallback, so an onopen directive still surfaces
-        // even while ping-triggered polls keep succeeding.
+        // response headers) over a directive deferred at onopen, so an
+        // onopen directive still surfaces even while ping-triggered polls
+        // keep succeeding. Still backfill the TTL alone when the poll's own
+        // fallback signal did not carry one, so a deferred TTL is not lost
+        // just because the poll also happened to indicate fallback.
         const fallback = resolveFallback();
         if (!result.fdv1Fallback && fallback.fdv1Fallback) {
           result.fdv1Fallback = true;
+          result.fdv1FallbackTtlMs = fallback.fdv1FallbackTtlMs;
+        } else if (result.fdv1Fallback && result.fdv1FallbackTtlMs === undefined) {
           result.fdv1FallbackTtlMs = fallback.fdv1FallbackTtlMs;
         }
         resultQueue.put(result);
