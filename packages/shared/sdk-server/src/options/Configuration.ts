@@ -34,6 +34,7 @@ import {
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
 import { ServerInternalOptions } from './ServerInternalOptions';
 import { ValidatedOptions } from './ValidatedOptions';
+import TransactionalFeatureStore from '../store/TransactionalFeatureStore';
 
 // Once things are internal to the implementation of the SDK we can depend on
 // types. Calls to the SDK could contain anything without any regard to typing.
@@ -464,16 +465,19 @@ export default class Configuration {
         dataSource: validatedDSOptions.dataSource,
         useLdd: validatedDSOptions.useLdd,
         fdv1Fallback: validatedDSOptions.fdv1Fallback,
-        // @ts-ignore
         featureStoreFactory: (clientContext) => {
           if (validatedDSOptions.persistentStore === undefined) {
             // the persistent store provided was either undefined or invalid, default to memory store
             return new InMemoryFeatureStore();
           }
-          if (TypeValidators.Function.is(validatedDSOptions.persistentStore)) {
-            return validatedDSOptions.persistentStore(clientContext);
+          let nonTransactionalStore: LDFeatureStore;
+          if (typeof validatedDSOptions.persistentStore === 'function') {
+            nonTransactionalStore = validatedDSOptions.persistentStore(clientContext);
+          } else {
+            nonTransactionalStore = validatedDSOptions.persistentStore;  
           }
-          return validatedDSOptions.persistentStore;
+
+          return new TransactionalFeatureStore(nonTransactionalStore);
         },
       };
       dsErrors.forEach((error) => {
