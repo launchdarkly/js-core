@@ -263,7 +263,9 @@ export default class EventProcessor implements LDEventProcessor {
       if (shouldSample(inputEvent.samplingRatio)) {
         const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
-          context: inputEvent.context ? this._contextFilter.filter(inputEvent.context) : undefined,
+          context: inputEvent.context
+            ? this._contextFilter.filter(inputEvent.context, true)
+            : undefined,
         };
         if (migrationEvent.samplingRatio === 1) {
           delete migrationEvent.samplingRatio;
@@ -359,7 +361,7 @@ export default class EventProcessor implements LDEventProcessor {
           kind: 'custom',
           creationDate: event.creationDate,
           key: event.key,
-          context: this._contextFilter.filter(event.context),
+          context: this._contextFilter.filter(event.context, true),
         };
 
         if (event.samplingRatio !== 1) {
