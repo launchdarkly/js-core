@@ -468,6 +468,54 @@ describe('given an event processor', () => {
     ]);
   });
 
+  it('redacts all attributes from anonymous context for migration op events', async () => {
+    const userObj = { key: 'user-key', kind: 'user', name: 'Example user', anonymous: true };
+    const context = Context.fromLDContext(userObj);
+
+    Date.now = jest.fn(() => 1000);
+    eventProcessor.sendEvent({
+      kind: 'migration_op',
+      operation: 'read',
+      creationDate: 1000,
+      context,
+      evaluation: {
+        key: 'flagkey',
+        value: 'live',
+        default: 'off',
+        reason: { kind: 'FALLTHROUGH' },
+      },
+      measurements: [],
+      samplingRatio: 1,
+    });
+
+    await eventProcessor.flush();
+
+    const redactedContext = {
+      kind: 'user',
+      key: 'user-key',
+      anonymous: true,
+      _meta: {
+        redactedAttributes: ['name'],
+      },
+    };
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      {
+        kind: 'migration_op',
+        operation: 'read',
+        creationDate: 1000,
+        context: redactedContext,
+        evaluation: {
+          key: 'flagkey',
+          value: 'live',
+          default: 'off',
+          reason: { kind: 'FALLTHROUGH' },
+        },
+        measurements: [],
+      },
+    ]);
+  });
+
   it('expires debug mode based on client time if client time is later than server time', async () => {
     Date.now = jest.fn(() => 2000);
 
