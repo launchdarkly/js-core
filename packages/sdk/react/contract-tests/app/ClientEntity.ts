@@ -157,6 +157,9 @@ export async function doCommand(client: LDReactClient, params: CommandParams): P
       if (!customEventParams) {
         throw malformedCommand;
       }
+      if (customEventParams.user || customEventParams.context) {
+        await client.identify(customEventParams.user || customEventParams.context);
+      }
       client.track(
         customEventParams.eventKey,
         customEventParams.data,

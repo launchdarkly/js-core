@@ -319,6 +319,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
         if (!pce) {
           throw malformedCommand;
         }
+        if (pce.user || pce.context) {
+          await client.identify((pce.user as LDContext) || (pce.context as LDContext));
+        }
         client.track(pce.eventKey, pce.data, pce.metricValue);
         return undefined;
       }

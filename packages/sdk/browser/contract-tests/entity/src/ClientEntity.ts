@@ -296,6 +296,9 @@ export class ClientEntity {
         if (!customEventParams) {
           throw malformedCommand;
         }
+        if (customEventParams.user || customEventParams.context) {
+          await this._client.identify(customEventParams.user || customEventParams.context);
+        }
         this._client.track(
           customEventParams.eventKey,
           customEventParams.data,
