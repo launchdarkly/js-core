@@ -10,7 +10,6 @@ export interface MessageEvent {
 
 export interface OpenEvent {
   type: 'open';
-  headers?: Record<string, string>;
 }
 
 export interface CloseEvent {
@@ -31,15 +30,6 @@ export interface ErrorEvent {
   message: string;
   xhrState: number;
   xhrStatus: number;
-  /**
-   * Present when the error corresponds to an HTTP response with a numeric
-   * status, as opposed to a network-level failure with no response at all.
-   * Consumers' `errorFilter`/`onerror` handlers rely on this to tell an
-   * HTTP-status error apart from a network error.
-   */
-  status?: number;
-  /** Parsed response headers, present under the same condition as `status`. */
-  headers?: Record<string, string>;
 }
 
 export interface CustomEvent<E extends string> {
