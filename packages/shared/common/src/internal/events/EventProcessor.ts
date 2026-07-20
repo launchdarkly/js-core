@@ -263,8 +263,6 @@ export default class EventProcessor implements LDEventProcessor {
       if (shouldSample(inputEvent.samplingRatio)) {
         const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
-          // Migration events inline the full context and are never debug events, so anonymous
-          // context attributes must be redacted here just as they are for feature events.
           context: inputEvent.context
             ? this._contextFilter.filter(inputEvent.context, true)
             : undefined,
@@ -363,8 +361,6 @@ export default class EventProcessor implements LDEventProcessor {
           kind: 'custom',
           creationDate: event.creationDate,
           key: event.key,
-          // Custom events inline the full context and are never debug events, so anonymous
-          // context attributes must be redacted here just as they are for feature events.
           context: this._contextFilter.filter(event.context, true),
         };
 
