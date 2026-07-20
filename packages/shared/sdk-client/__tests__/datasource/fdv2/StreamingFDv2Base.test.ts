@@ -825,6 +825,35 @@ it('merges a deferred fallback directive into a successful ping-triggered poll r
   base.close();
 });
 
+it('backfills the deferred TTL into a ping-triggered poll result that already signals fallback without one', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const pingHandler: PingHandler = {
+    handlePing: jest.fn().mockResolvedValue({
+      type: 'changeSet',
+      payload: { events: [], selector: undefined },
+      fdv1Fallback: true,
+    }),
+  };
+  const base = createBase(mockRequests, logger, { pingHandler });
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  const { calls } = mockEventSource.addEventListener.mock;
+  const pingListener = calls.find((c: any[]) => c[0] === 'ping')?.[1];
+  await pingListener();
+
+  const result = await base.takeResult();
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
 it('surfaces a deferred fallback directive when a ping-triggered poll throws', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
