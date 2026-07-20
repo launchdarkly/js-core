@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.17](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.16...fastly-server-sdk-v0.2.17) (2026-07-08)
+
+
+### Bug Fixes
+
+* Accept eventsUri option in Fastly SDK init() ([#1791](https://github.com/launchdarkly/js-core/issues/1791)) ([18deecd](https://github.com/launchdarkly/js-core/commit/18deecddc53714850a31a8d796720fb101535af2))
+* Disable event processor background flush timers for edge clients ([#1797](https://github.com/launchdarkly/js-core/issues/1797)) ([bac7f81](https://github.com/launchdarkly/js-core/commit/bac7f81e07bcd0bbbf2abcfd15cb6ca7f3e512cb))
+* Do not cache rejected KV loads in Fastly EdgeFeatureStore ([#1796](https://github.com/launchdarkly/js-core/issues/1796)) ([8f51339](https://github.com/launchdarkly/js-core/commit/8f51339c6d09d2ac6f86636f2b61ae4adeb7d16e))
+
+
+### Performance Improvements
+
+* Import only used crypto-js submodules in Fastly SDK ([#1795](https://github.com/launchdarkly/js-core/issues/1795)) ([5c12f19](https://github.com/launchdarkly/js-core/commit/5c12f19f5c0b6a73ad12b8ca1e1450a38a45f9a0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.2 to 2.19.3
+
 ## [0.2.16](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.15...fastly-server-sdk-v0.2.16) (2026-06-24)
 
 
