@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.19.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.2...js-server-sdk-common-v2.19.3) (2026-07-08)
+
+
+### Bug Fixes
+
+* Disable event processor background flush timers for edge clients ([#1797](https://github.com/launchdarkly/js-core/issues/1797)) ([bac7f81](https://github.com/launchdarkly/js-core/commit/bac7f81e07bcd0bbbf2abcfd15cb6ca7f3e512cb))
+
 ## [2.19.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.1...js-server-sdk-common-v2.19.2) (2026-06-24)
 
 

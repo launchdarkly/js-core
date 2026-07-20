@@ -9,8 +9,8 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@launchdarkly/react-sdk": "4.1.4",
-    "@launchdarkly/vercel-server-sdk": "1.3.49",
+    "@launchdarkly/react-sdk": "4.1.5",
+    "@launchdarkly/vercel-server-sdk": "1.3.50",
     "@vercel/edge-config": "^1.1.0",
     "next": "^16",
     "react": "^19",

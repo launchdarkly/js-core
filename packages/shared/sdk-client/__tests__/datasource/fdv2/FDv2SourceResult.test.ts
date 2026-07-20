@@ -95,6 +95,30 @@ it('creates a goodbye status result', () => {
   });
 });
 
+it('creates a goodbye status result with fdv1Fallback and a TTL', () => {
+  const result = goodbye('server-shutdown', true, 5000);
+
+  expect(result).toEqual({
+    type: 'status',
+    state: 'goodbye',
+    reason: 'server-shutdown',
+    fdv1Fallback: true,
+    fdv1FallbackTtlMs: 5000,
+  });
+});
+
+it('creates a goodbye status result with TTL 0 (indefinite fallback)', () => {
+  const result = goodbye('server-shutdown', true, 0);
+
+  expect(result).toEqual({
+    type: 'status',
+    state: 'goodbye',
+    reason: 'server-shutdown',
+    fdv1Fallback: true,
+    fdv1FallbackTtlMs: 0,
+  });
+});
+
 it('creates error info from an HTTP status code', () => {
   const info = errorInfoFromHttpError(503);
 
