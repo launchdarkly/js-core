@@ -1,4 +1,10 @@
-import { DataSourceOptions, isStandardOptions, LDFeatureStore, LDOptions } from '../../src';
+import {
+  DataSourceOptions,
+  isStandardOptions,
+  LDFeatureStore,
+  LDOptions,
+  LDTransactionalFeatureStore,
+} from '../../src';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import TestLogger, { LogLevel } from '../Logger';
@@ -451,6 +457,107 @@ describe('when setting different options', () => {
         matches: /Config option "persistentStore" should be of type LDFeatureStore/,
       },
     ]);
+  });
+
+  // A minimal object implementing only the FDv1 LDFeatureStore interface - no
+  // applyChanges. Structurally identical to the shape of the Redis/DynamoDB
+  // persistent store integrations.
+  function makeFDv1OnlyStore(): LDFeatureStore {
+    return {
+      get: (_kind, _key, callback) => callback(null),
+      all: (_kind, callback) => callback({}),
+      init: (_allData, callback) => callback(),
+      delete: (_kind, _key, _version, callback) => callback(),
+      upsert: (_kind, _data, callback) => callback(),
+      initialized: (callback) => callback(false),
+      close: () => {},
+    };
+  }
+
+  it('wraps an FDv1-only persistent store so applyChanges does not crash', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: makeFDv1OnlyStore(),
+        },
+      }),
+    );
+
+    // @ts-ignore - the test only needs an object here; the object-form persistent
+    // store path does not read clientContext.
+    const store = config.dataSystem!.featureStoreFactory({});
+
+    // Before the fix, the raw FDv1 store is returned and this throws
+    // "TypeError: store.applyChanges is not a function".
+    expect(() =>
+      (store as LDTransactionalFeatureStore).applyChanges(true, {}, () => {}),
+    ).not.toThrow();
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('passes a native transactional persistent store through without wrapping', () => {
+    const applyChanges = jest.fn(
+      (
+        _basis: boolean,
+        _data: Record<string, unknown>,
+        callback: () => void,
+      ) => {
+        callback();
+      },
+    );
+
+    // A store that already implements LDTransactionalFeatureStore (has a native
+    // applyChanges). It must be returned as the same object reference - not
+    // decorated - so its native transactional path is preserved.
+    const nativeStore: LDTransactionalFeatureStore = {
+      get: (_kind, _key, callback) => callback(null),
+      all: (_kind, callback) => callback({}),
+      init: (_allData, callback) => callback(),
+      delete: (_kind, _key, _version, callback) => callback(),
+      upsert: (_kind, _data, callback) => callback(),
+      initialized: (callback) => callback(false),
+      close: () => {},
+      applyChanges,
+    };
+
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: nativeStore,
+        },
+      }),
+    );
+
+    // @ts-ignore - object-form persistent store path does not read clientContext.
+    const store = config.dataSystem!.featureStoreFactory({});
+
+    // Same object reference: the store was not wrapped in a decorator.
+    expect(store).toBe(nativeStore);
+
+    // Its native applyChanges runs directly, not decomposed into init/upsert
+    // calls by a decorator.
+    (store as LDTransactionalFeatureStore).applyChanges(true, {}, () => {});
+    expect(applyChanges).toHaveBeenCalledTimes(1);
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('wraps an FDv1-only persistent store supplied as a factory', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: {
+          persistentStore: () => makeFDv1OnlyStore(),
+        },
+      }),
+    );
+
+    // @ts-ignore - factory receives clientContext; an empty object is sufficient
+    // because makeFDv1OnlyStore ignores it.
+    const store = config.dataSystem!.featureStoreFactory({});
+
+    expect(() =>
+      (store as LDTransactionalFeatureStore).applyChanges(true, {}, () => {}),
+    ).not.toThrow();
+    expect(logger(config).getCount()).toEqual(0);
   });
 
   it('provides reasonable defaults when datasystem is provided, but some options are missing', () => {
