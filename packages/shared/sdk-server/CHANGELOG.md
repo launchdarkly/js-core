@@ -8,6 +8,21 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.19.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.3...js-server-sdk-common-v2.19.4) (2026-07-21)
+
+
+### Bug Fixes
+
+* custom featureStores in FDv2 does not get wrapped as TransactionalFeatureStore. ([#1812](https://github.com/launchdarkly/js-core/issues/1812)) ([c687a97](https://github.com/launchdarkly/js-core/commit/c687a9702db83d0b1093c8c794bee6bca89c856a))
+* Only redact anonymous contexts in custom events for server SDKs ([#1814](https://github.com/launchdarkly/js-core/issues/1814)) ([5a3b3fb](https://github.com/launchdarkly/js-core/commit/5a3b3fbc59e9a0b2d65221d65e54078ffa1bf433))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.25.1 to 2.25.2
+
 ## [2.19.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.2...js-server-sdk-common-v2.19.3) (2026-07-08)
 
 
