@@ -43,13 +43,13 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
 
   if (!storage) {
     logger?.debug('No storage available for cache initializer');
-    return changeSet({ version: 0, type: 'none', updates: [] }, false);
+    return changeSet({ version: 0, type: 'none', updates: [] }, { fdv1Fallback: false });
   }
 
   const cached = await loadCachedFlags(storage, crypto, environmentNamespace, context, logger);
   if (!cached) {
     logger?.debug('Cache miss for context');
-    return changeSet({ version: 0, type: 'none', updates: [] }, false);
+    return changeSet({ version: 0, type: 'none', updates: [] }, { fdv1Fallback: false });
   }
 
   const updates: internal.Update[] = Object.entries(cached.flags).map(
@@ -72,7 +72,7 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
   const freshness = await readFreshness(storage, crypto, environmentNamespace, context, logger);
 
   logger?.debug('Loaded cached flag evaluations via cache initializer');
-  return changeSet(payload, false, undefined, freshness);
+  return changeSet(payload, { fdv1Fallback: false }, undefined, freshness);
 }
 
 /**
@@ -91,7 +91,7 @@ async function loadFromCache(config: CacheInitializerConfig): Promise<FDv2Source
 export function createCacheInitializerFactory(config: CacheInitializerConfig): InitializerFactory {
   return {
     isCache: true,
-    // The selectorGetter is ignored -- cache data has no selector.
+    // The selectorGetter is ignored: cache data has no selector.
     create(_selectorGetter: () => string | undefined): Initializer {
       let shutdownResolve: ((result: FDv2SourceResult) => void) | undefined;
       const shutdownPromise = new Promise<FDv2SourceResult>((resolve) => {

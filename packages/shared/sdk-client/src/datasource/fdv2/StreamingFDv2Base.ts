@@ -25,7 +25,11 @@ import {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
-import { readFallbackDirective, readGoodbyeFallbackDirective } from './fallbackDirective';
+import {
+  FallbackDirective,
+  readFallbackDirective,
+  readGoodbyeFallbackDirective,
+} from './fallbackDirective';
 
 /**
  * Handler invoked when a legacy `"ping"` event is received on the stream.
@@ -111,8 +115,10 @@ export function createStreamingBase(config: {
   let connectionAttemptStartTime: number | undefined;
   let fdv1Fallback = false;
   let fdv1FallbackTtlMs: number | undefined;
-  // Directive deferred from a stream `onopen` carrying x-ld-fd-fallback; applied
-  // to the NEXT changeSet so the payload is delivered before the SDK falls back.
+  // Directive deferred from a stream `onopen` carrying x-ld-fd-fallback. Promoted
+  // into the committed state by resolveFallback() the next time a result is
+  // queued, rather than applied immediately, so a payload already in flight on
+  // this connection still gets delivered.
   let pendingFallbackTtlMs: number | undefined;
   let pendingFallback = false;
   let started = false;
@@ -138,14 +144,16 @@ export function createStreamingBase(config: {
    * committed `fdv1Fallback`/`fdv1FallbackTtlMs` state, clears the pending
    * pair, and returns the current committed fallback state.
    *
-   * Every path that can produce a result, a stream error, a network failure,
-   * or a ping-triggered poll (including one that succeeds without its own
-   * fallback signal), calls this instead of reading the closure variables
-   * directly, so a directive deferred at onopen surfaces no matter which
-   * path fires next. Safe to call when nothing is pending; it just returns
-   * the current state unchanged.
+   * Called via putWithFallback() by every path that can queue a payload
+   * result, a stream error, a network failure, or a ping-triggered poll
+   * result (including one that succeeds without its own fallback signal),
+   * so a directive deferred at onopen surfaces no matter which path fires
+   * next. The one exception is the plain goodbye path, which only runs
+   * when nothing is pending and reads the committed flag directly instead.
+   * Safe to call when nothing is pending; it just returns the current state
+   * unchanged.
    */
-  function resolveFallback(): { fdv1Fallback: boolean; fdv1FallbackTtlMs: number | undefined } {
+  function resolveFallback(): FallbackDirective {
     if (pendingFallback) {
       fdv1Fallback = true;
       fdv1FallbackTtlMs = pendingFallbackTtlMs;
@@ -155,58 +163,54 @@ export function createStreamingBase(config: {
     return { fdv1Fallback, fdv1FallbackTtlMs };
   }
 
+  /**
+   * The single place a result derived from the committed/pending stream state
+   * is enqueued. It resolves the current fallback directive once (promoting any
+   * directive deferred at onopen) and hands it to `build`, which stamps it onto
+   * the result. Call sites that carry their own directive source - an in-band
+   * goodbye directive, an error-response header, or a plain no-fallback goodbye
+   * or shutdown - enqueue directly instead.
+   */
+  function putWithFallback(build: (fallback: FallbackDirective) => FDv2SourceResult): void {
+    resultQueue.put(build(resolveFallback()));
+  }
+
   function handleAction(action: internal.ProtocolAction, rawData?: unknown): void {
     switch (action.type) {
       case 'payload':
         logConnectionResult(true);
-        if (pendingFallback) {
-          // A fallback directive was deferred from onopen; apply it now that
-          // the payload has been delivered.
-          fdv1Fallback = true;
-          fdv1FallbackTtlMs = pendingFallbackTtlMs;
-          resultQueue.put(changeSet(action.payload, true, undefined, undefined, pendingFallbackTtlMs));
-          pendingFallback = false;
-          pendingFallbackTtlMs = undefined;
-        } else {
-          resultQueue.put(changeSet(action.payload, fdv1Fallback, undefined, undefined, fdv1FallbackTtlMs));
-        }
+        putWithFallback((fallback) => changeSet(action.payload, fallback));
         break;
 
       case 'goodbye': {
-        // In-band fallback signal read from the raw goodbye data (used by SDKs
-        // that cannot read streaming response headers), or a directive deferred
-        // from onopen (pendingFallback). Surface as a terminal fallback result.
         const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
-        if (goodbyeDirective.fdv1Fallback || pendingFallback) {
-          const ttlMs = goodbyeDirective.fdv1Fallback
-            ? goodbyeDirective.fdv1FallbackTtlMs
-            : pendingFallbackTtlMs;
+        if (goodbyeDirective.fdv1Fallback) {
+          // An in-band fallback signal in the goodbye data overrides any pending
+          // or committed state and carries its own TTL, so it does not go through
+          // putWithFallback(). Clear the pending pair since it is superseded.
           fdv1Fallback = true;
-          resultQueue.put(terminalError(errorInfoFromUnknown(action.reason), true, ttlMs));
           pendingFallback = false;
           pendingFallbackTtlMs = undefined;
+          resultQueue.put(terminalError(errorInfoFromUnknown(action.reason), goodbyeDirective));
+        } else if (pendingFallback) {
+          // No in-band signal, but a directive was deferred at onopen: let
+          // putWithFallback() consume the pending fallback and clear the values.
+          putWithFallback((fallback) => terminalError(errorInfoFromUnknown(action.reason), fallback));
         } else {
-          resultQueue.put(goodbye(action.reason, fdv1Fallback));
+          resultQueue.put(goodbye(action.reason, { fdv1Fallback }));
         }
         break;
       }
 
-      case 'serverError': {
-        const fallback = resolveFallback();
-        resultQueue.put(
-          interrupted(errorInfoFromUnknown(action.reason), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
-        );
+      case 'serverError':
+        putWithFallback((fallback) => interrupted(errorInfoFromUnknown(action.reason), fallback));
         break;
-      }
 
       case 'error':
         // Only actionable errors are queued; informational ones (UNKNOWN_EVENT)
         // are logged by the protocol handler.
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
-          const fallback = resolveFallback();
-          resultQueue.put(
-            interrupted(errorInfoFromInvalidData(action.message), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
-          );
+          putWithFallback((fallback) => interrupted(errorInfoFromInvalidData(action.message), fallback));
         }
         break;
 
@@ -223,32 +227,27 @@ export function createStreamingBase(config: {
       get: (name: string) => errHeaders[name.toLowerCase()] ?? null,
     });
     if (directive.fdv1Fallback) {
+      // A fallback directive overrides normal retry handling, even for an
+      // otherwise-recoverable HTTP status: the server is telling us to stop
+      // trying FDv2 now rather than keep retrying this connection.
       fdv1Fallback = true;
       fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
       logConnectionResult(false);
-      resultQueue.put(
-        terminalError(errorInfoFromHttpError(err.status ?? 0), true, directive.fdv1FallbackTtlMs),
-      );
+      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), directive));
       return false;
     }
-
-    const fallback = resolveFallback();
 
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      resultQueue.put(
-        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
-      );
+      putWithFallback((fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback));
       return false;
     }
 
     config.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     logConnectionResult(false);
     logConnectionAttempt();
-    resultQueue.put(
-      interrupted(errorInfoFromHttpError(err.status ?? 0), fallback.fdv1Fallback, fallback.fdv1FallbackTtlMs),
-    );
+    putWithFallback((fallback) => interrupted(errorInfoFromHttpError(err.status ?? 0), fallback));
     return true;
   }
 
@@ -278,13 +277,8 @@ export function createStreamingBase(config: {
             `Stream received data that was unable to be parsed in "${eventName}" message`,
           );
           config.logger?.debug(`Data follows: ${event.data}`);
-          const fallback = resolveFallback();
-          resultQueue.put(
-            interrupted(
-              errorInfoFromInvalidData('Malformed JSON in EventStream'),
-              fallback.fdv1Fallback,
-              fallback.fdv1FallbackTtlMs,
-            ),
+          putWithFallback((fallback) =>
+            interrupted(errorInfoFromInvalidData('Malformed JSON in EventStream'), fallback),
           );
           return;
         }
@@ -316,33 +310,29 @@ export function createStreamingBase(config: {
           return;
         }
 
-        // Trust the poll's own fallback signal (e.g. from its own HTTP
-        // response headers) over a directive deferred at onopen, so an
-        // onopen directive still surfaces even while ping-triggered polls
-        // keep succeeding. Still backfill the TTL alone when the poll's own
-        // fallback signal did not carry one, so a deferred TTL is not lost
-        // just because the poll also happened to indicate fallback.
-        const fallback = resolveFallback();
-        if (!result.fdv1Fallback && fallback.fdv1Fallback) {
-          result.fdv1Fallback = true;
-          result.fdv1FallbackTtlMs = fallback.fdv1FallbackTtlMs;
-        } else if (result.fdv1Fallback && result.fdv1FallbackTtlMs === undefined) {
-          result.fdv1FallbackTtlMs = fallback.fdv1FallbackTtlMs;
-        }
-        resultQueue.put(result);
+        // A poll can succeed with no fallback signal of its own even though
+        // a directive was deferred at onopen; override the result in that
+        // case so the deferred directive still surfaces. When the poll's own
+        // result already signals fallback, keep its flag but backfill the
+        // TTL from the deferred directive if the poll didn't carry one.
+        // Build a new object rather than mutating the poll's result in place.
+        putWithFallback((fallback) => {
+          if (!result.fdv1Fallback && fallback.fdv1Fallback) {
+            return { ...result, fdv1Fallback: true, fdv1FallbackTtlMs: fallback.fdv1FallbackTtlMs };
+          }
+          if (result.fdv1Fallback && result.fdv1FallbackTtlMs === undefined) {
+            return { ...result, fdv1FallbackTtlMs: fallback.fdv1FallbackTtlMs };
+          }
+          return result;
+        });
       } catch (err: any) {
         if (stopped) {
           return;
         }
 
         config.logger?.error(`Error handling ping: ${err?.message ?? err}`);
-        const fallback = resolveFallback();
-        resultQueue.put(
-          interrupted(
-            errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'),
-            fallback.fdv1Fallback,
-            fallback.fdv1FallbackTtlMs,
-          ),
+        putWithFallback((fallback) =>
+          interrupted(errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'), fallback),
         );
       }
     });
@@ -383,13 +373,8 @@ export function createStreamingBase(config: {
           // This condition will be handled by the error filter.
           return;
         }
-        const fallback = resolveFallback();
-        resultQueue.put(
-          interrupted(
-            errorInfoFromNetworkError(err?.message ?? 'IO Error'),
-            fallback.fdv1Fallback,
-            fallback.fdv1FallbackTtlMs,
-          ),
+        putWithFallback((fallback) =>
+          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fallback),
         );
       };
 
@@ -413,9 +398,10 @@ export function createStreamingBase(config: {
         pendingFallback = false;
         pendingFallbackTtlMs = undefined;
 
-        // SDKs whose EventSource exposes response headers can
-        // detect FDv1 fallback at connection open. Defer the directive and apply
-        // it to the next changeSet so the payload is delivered first.
+        // EventSource implementations that expose response headers can detect
+        // FDv1 fallback at connection open. Defer the directive; resolveFallback()
+        // applies it to whatever result is queued next, so a payload already
+        // in flight is delivered first.
         const openHeaders = e?.headers;
         if (openHeaders) {
           const directive = readFallbackDirective({

@@ -13,7 +13,7 @@ import {
   interrupted,
   terminalError,
 } from './FDv2SourceResult';
-import { readFallbackDirective } from './fallbackDirective';
+import { FallbackDirective, readFallbackDirective } from './fallbackDirective';
 
 function getEnvironmentId(headers: { get(name: string): string | null }): string | undefined {
   return headers.get('x-ld-envid') ?? undefined;
@@ -29,9 +29,8 @@ function getEnvironmentId(headers: { get(name: string): string | null }): string
  */
 function processEvents(
   events: internal.FDv2Event[],
-  fdv1Fallback: boolean,
+  fallback: FallbackDirective,
   environmentId: string | undefined,
-  fdv1FallbackTtlMs: number | undefined,
   logger?: LDLogger,
 ): FDv2SourceResult {
   const handler = internal.createProtocolHandler(
@@ -52,26 +51,30 @@ function processEvents(
 
     switch (action.type) {
       case 'payload':
-        earlyResult = changeSet(action.payload, fdv1Fallback, environmentId, undefined, fdv1FallbackTtlMs);
+        earlyResult = changeSet(action.payload, fallback, environmentId);
         break;
       case 'goodbye':
-        if (fdv1Fallback) {
-          earlyResult = terminalError(errorInfoFromUnknown(action.reason), true, fdv1FallbackTtlMs);
+        // A plain goodbye is a status the orchestrator doesn't treat as an
+        // error. When it's paired with a fallback directive, report it as a
+        // terminal error instead so the orchestrator actually records the
+        // error and moves off this source rather than quietly continuing.
+        if (fallback.fdv1Fallback) {
+          earlyResult = terminalError(errorInfoFromUnknown(action.reason), fallback);
         } else {
-          earlyResult = goodbye(action.reason, fdv1Fallback);
+          earlyResult = goodbye(action.reason, fallback);
         }
         break;
       case 'serverError': {
         const errorInfo = errorInfoFromUnknown(action.reason);
         logger?.error(`Server error during polling: ${action.reason}`);
-        earlyResult = interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+        earlyResult = interrupted(errorInfo, fallback);
         break;
       }
       case 'error': {
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
           const errorInfo = errorInfoFromInvalidData(action.message);
           logger?.warn(`Protocol error during polling: ${action.message}`);
-          earlyResult = interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+          earlyResult = interrupted(errorInfo, fallback);
         } else {
           logger?.warn(action.message);
         }
@@ -88,7 +91,7 @@ function processEvents(
 
   const errorInfo = errorInfoFromUnknown('Unexpected end of polling response');
   logger?.error('Unexpected end of polling response');
-  return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+  return interrupted(errorInfo, fallback);
 }
 
 /**
@@ -105,15 +108,12 @@ export async function poll(
   basis: string | undefined,
   logger?: LDLogger,
 ): Promise<FDv2SourceResult> {
-  let fdv1Fallback = false;
-  let fdv1FallbackTtlMs: number | undefined;
+  let directive: FallbackDirective = { fdv1Fallback: false };
   let environmentId: string | undefined;
 
   try {
     const response = await requestor.poll(basis);
-    const directive = readFallbackDirective(response.headers);
-    fdv1Fallback = directive.fdv1Fallback;
-    fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
+    directive = readFallbackDirective(response.headers);
     environmentId = getEnvironmentId(response.headers);
 
     // 304 Not Modified: no payload has changed since the last poll.
@@ -125,7 +125,7 @@ export async function poll(
         type: 'none',
         updates: [],
       };
-      return changeSet(nonePayload, fdv1Fallback, environmentId, undefined, fdv1FallbackTtlMs);
+      return changeSet(nonePayload, directive, environmentId);
     }
 
     // Non-success HTTP status
@@ -133,17 +133,18 @@ export async function poll(
       const errorInfo = errorInfoFromHttpError(response.status);
       logger?.error(`Polling request failed with HTTP error: ${response.status}`);
 
+      // status <= 0 means the request never got an HTTP response (e.g. a
+      // network failure surfaced without a status code); treat that as
+      // recoverable the same as a retryable HTTP status.
       const recoverable = response.status <= 0 || isHttpRecoverable(response.status);
-      return recoverable
-        ? interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs)
-        : terminalError(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+      return recoverable ? interrupted(errorInfo, directive) : terminalError(errorInfo, directive);
     }
 
     // Successful response - process FDv2 events
     if (!response.body) {
       const errorInfo = errorInfoFromInvalidData('Empty response body');
       logger?.error('Polling request received empty response body');
-      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+      return interrupted(errorInfo, directive);
     }
 
     let parsed: internal.FDv2EventsCollection;
@@ -152,7 +153,7 @@ export async function poll(
     } catch {
       const errorInfo = errorInfoFromInvalidData('Malformed JSON data in polling response');
       logger?.error('Polling request received malformed data');
-      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+      return interrupted(errorInfo, directive);
     }
 
     if (!Array.isArray(parsed.events)) {
@@ -160,14 +161,14 @@ export async function poll(
         'Invalid polling response: missing or invalid events array',
       );
       logger?.error('Polling response does not contain a valid events array');
-      return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+      return interrupted(errorInfo, directive);
     }
 
-    return processEvents(parsed.events, fdv1Fallback, environmentId, fdv1FallbackTtlMs, logger);
+    return processEvents(parsed.events, directive, environmentId, logger);
   } catch (err: any) {
     const message = err?.message ?? String(err);
     logger?.error(`Polling request failed with network error: ${message}`);
     const errorInfo = errorInfoFromNetworkError(message);
-    return interrupted(errorInfo, fdv1Fallback, fdv1FallbackTtlMs);
+    return interrupted(errorInfo, directive);
   }
 }

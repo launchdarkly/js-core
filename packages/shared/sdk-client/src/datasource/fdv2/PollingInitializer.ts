@@ -55,7 +55,7 @@ export function createPollingInitializer(
           return result;
         }
 
-        // Recoverable error — save and potentially retry
+        // Recoverable error: save it and retry if attempts remain
         lastResult = result;
 
         if (attempt < maxRetries) {
@@ -72,7 +72,7 @@ export function createPollingInitializer(
 
       // Convert final interrupted -> terminal_error
       const status = lastResult as StatusResult;
-      return terminalError(status.errorInfo!, status.fdv1Fallback);
+      return terminalError(status.errorInfo!, { fdv1Fallback: status.fdv1Fallback });
     },
 
     close(): void {
