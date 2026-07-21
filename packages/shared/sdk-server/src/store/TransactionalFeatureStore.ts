@@ -128,4 +128,15 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   getDescription(): string {
     return 'transactional persistent store';
   }
+
+  // applyChanges always writes here first, so the memory store has the latest
+  // metadata/selector even while _activeStore still points at the persistence
+  // store; the plain LDFeatureStore contract has no equivalent to read them from
+  getInitMetaData(): internal.InitMetadata | undefined {
+    return this._memoryStore.getInitMetaData?.();
+  }
+
+  getSelector(): string | undefined {
+    return this._memoryStore.getSelector?.();
+  }
 }

@@ -32,6 +32,7 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from '../store/InMemoryFeatureStore';
+import TransactionalFeatureStore from '../store/TransactionalFeatureStore';
 import { ServerInternalOptions } from './ServerInternalOptions';
 import { ValidatedOptions } from './ValidatedOptions';
 
@@ -464,16 +465,27 @@ export default class Configuration {
         dataSource: validatedDSOptions.dataSource,
         useLdd: validatedDSOptions.useLdd,
         fdv1Fallback: validatedDSOptions.fdv1Fallback,
-        // @ts-ignore
-        featureStoreFactory: (clientContext) => {
-          if (validatedDSOptions.persistentStore === undefined) {
+        featureStoreFactory: (clientContext): LDTransactionalFeatureStore => {
+          const { persistentStore } = validatedDSOptions;
+          let store: LDFeatureStore;
+          if (persistentStore === undefined) {
             // the persistent store provided was either undefined or invalid, default to memory store
-            return new InMemoryFeatureStore();
+            store = new InMemoryFeatureStore();
+          } else if (TypeValidators.Function.is(persistentStore)) {
+            store = (persistentStore as (clientContext: LDClientContext) => LDFeatureStore)(
+              clientContext,
+            );
+          } else {
+            store = persistentStore as LDFeatureStore;
           }
-          if (TypeValidators.Function.is(validatedDSOptions.persistentStore)) {
-            return validatedDSOptions.persistentStore(clientContext);
+
+          // FDv2 always calls applyChanges, so the returned store must support it. A
+          // store that already implements LDTransactionalFeatureStore is used as-is to
+          // preserve its native transactional path.
+          if (TypeValidators.Function.is((store as LDTransactionalFeatureStore).applyChanges)) {
+            return store as LDTransactionalFeatureStore;
           }
-          return validatedDSOptions.persistentStore;
+          return new TransactionalFeatureStore(store);
         },
       };
       dsErrors.forEach((error) => {

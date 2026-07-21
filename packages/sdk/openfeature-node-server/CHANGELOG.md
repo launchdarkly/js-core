@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.4](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.3...openfeature-node-server-v1.3.4) (2026-07-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 1.0.0 to 1.0.1
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.12.1 to 9.12.2
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from ^9.0.0 to ^9.12.2
+
 ## [1.3.3](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.2...openfeature-node-server-v1.3.3) (2026-07-08)
 
 

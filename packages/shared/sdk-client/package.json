@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-client-sdk-common",
-  "version": "1.29.1",
+  "version": "1.30.0",
   "type": "module",
   "main": "./dist/esm/index.mjs",
   "types": "./dist/esm/index.d.ts",
@@ -42,7 +42,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/js-sdk-common": "2.25.1"
+    "@launchdarkly/js-sdk-common": "2.25.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
