@@ -24,7 +24,6 @@ const capabilities = [
   'client-per-context-summaries',
   'track-hooks',
   'tls:skip-verify-peer',
-  'secure-mode-hash',
   'event-gzip',
 
   /// ////////////////////////////
