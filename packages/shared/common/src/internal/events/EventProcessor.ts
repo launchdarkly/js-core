@@ -109,6 +109,11 @@ export interface EventProcessorOptions {
   eventsCapacity: number;
   flushInterval: number;
   diagnosticRecordingInterval: number;
+  // Whether anonymous context attributes are redacted across all inlined events (custom and
+  // migration op events), in addition to feature events which always redact them. Defaults to
+  // false (redact only feature events, the client-side behavior); server-side SDKs set this to
+  // true so anonymous contexts are redacted on every event kind.
+  redactAnonymousAllEvents?: boolean;
 }
 
 function isMultiEventSummarizer(summarizer: unknown): summarizer is LDMultiEventSummarizer {
@@ -264,7 +269,10 @@ export default class EventProcessor implements LDEventProcessor {
         const migrationEvent: MigrationOutputEvent = {
           ...inputEvent,
           context: inputEvent.context
-            ? this._contextFilter.filter(inputEvent.context, true)
+            ? this._contextFilter.filter(
+                inputEvent.context,
+                this._config.redactAnonymousAllEvents ?? false,
+              )
             : undefined,
         };
         if (migrationEvent.samplingRatio === 1) {
@@ -361,7 +369,10 @@ export default class EventProcessor implements LDEventProcessor {
           kind: 'custom',
           creationDate: event.creationDate,
           key: event.key,
-          context: this._contextFilter.filter(event.context, true),
+          context: this._contextFilter.filter(
+            event.context,
+            this._config.redactAnonymousAllEvents ?? false,
+          ),
         };
 
         if (event.samplingRatio !== 1) {

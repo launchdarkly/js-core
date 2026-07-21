@@ -166,7 +166,9 @@ function constructFDv1(
     eventProcessor = new NullEventProcessor();
   } else {
     eventProcessor = new internal.EventProcessor(
-      config,
+      // Server-side SDKs redact anonymous context attributes on all inlined events (feature,
+      // custom, migration op), not just feature events.
+      { ...config, redactAnonymousAllEvents: true },
       clientContext,
       baseHeaders,
       new ContextDeduplicator(config),
@@ -312,7 +314,9 @@ function constructFDv2(
     eventProcessor = new NullEventProcessor();
   } else {
     eventProcessor = new internal.EventProcessor(
-      config,
+      // Server-side SDKs redact anonymous context attributes on all inlined events (feature,
+      // custom, migration op), not just feature events.
+      { ...config, redactAnonymousAllEvents: true },
       clientContext,
       baseHeaders,
       new ContextDeduplicator(config),
