@@ -13,8 +13,22 @@ import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 import FileLoader from './FileLoader';
+import { makeFlagWithValue } from './FileDataSource';
 
 /**
+ * Loads flag/segment data from one or more files. Each file may contain `flags`
+ * (full flag JSON) and/or `segments` keys, and also supports the `flagValues`
+ * shorthand map (`{ [key]: value }`) for quickly defining single-variation flags,
+ * the same shorthand supported by FDv1's `FileDataSource`.
+ *
+ * @remarks
+ * This initializer runs once at startup and never reloads or diffs against
+ * previously loaded data, so every flag generated from `flagValues` gets
+ * `version: 1` - there is no version-bump-on-change behavior like FDv1 has.
+ * Duplicate keys resolve last-value-wins (across files, and between a `flags`
+ * and `flagValues` entry for the same key within one file) rather than being
+ * rejected the way FDv1 does.
+ *
  * @internal
  */
 export default class FileDataInitializerFDv2 implements subsystemCommon.DataSource {
@@ -125,6 +139,15 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
         } else {
           parsed = JSON.parse(curr.data);
         }
+
+        // flagValues has no previous-state to diff against, so each entry always
+        // gets version 1. Convert to full Flag objects here so they merge with
+        // flags below on equal footing
+        const flagsFromValues: { [key: string]: Flag } = {};
+        Object.entries(parsed.flagValues ?? {}).forEach(([key, value]) => {
+          flagsFromValues[key] = makeFlagWithValue(key, value, 1);
+        });
+
         return {
           segments: {
             ...acc.segments,
@@ -133,6 +156,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
           flags: {
             ...acc.flags,
             ...(parsed.flags ?? {}),
+            ...flagsFromValues,
           },
         };
       },

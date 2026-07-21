@@ -16,7 +16,7 @@ import FileLoader from './FileLoader';
 
 export type FileDataSourceErrorHandler = (err: LDFileDataSourceError) => void;
 
-function makeFlagWithValue(key: string, value: any, version: number): Flag {
+export function makeFlagWithValue(key: string, value: any, version: number): Flag {
   return {
     key,
     on: true,
