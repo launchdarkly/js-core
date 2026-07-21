@@ -685,8 +685,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       // such as events for prereqs.
       //
       // `visited` tracks the chain of prerequisite dependencies from the top-level evaluation to
-      // (but not including) the current flag. It is allocated lazily: variation calls on
-      // prereq-less flags (the common case) allocate zero collections.
+      // (but not including) the current flag.
       const ancestors = visited ?? new Set<string>();
       ancestors.add(flagKey);
       try {
