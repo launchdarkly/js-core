@@ -72,7 +72,10 @@ export function createPollingInitializer(
 
       // Convert final interrupted -> terminal_error
       const status = lastResult as StatusResult;
-      return terminalError(status.errorInfo!, { fdv1Fallback: status.fdv1Fallback });
+      return terminalError(status.errorInfo!, {
+        fdv1Fallback: status.fdv1Fallback,
+        fdv1FallbackTtlMs: status.fdv1FallbackTtlMs,
+      });
     },
 
     close(): void {
