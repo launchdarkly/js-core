@@ -158,4 +158,60 @@ describe('given a non transactional store', () => {
       },
     });
   });
+
+  it('exposes the selector tracked by the memory store before a basis is provided', async () => {
+    // non-basis changes still flow through the memory store, so its tracked selector should
+    // update even though the active store (used for reads) is still the persistence store
+    await transactionalFacade.applyChanges(
+      false,
+      {
+        features: {
+          key1: {
+            version: 1,
+          },
+        },
+      },
+      undefined,
+      'selector-before-basis',
+    );
+
+    expect(transactionalStore.getSelector()).toEqual('selector-before-basis');
+  });
+
+  it('does not expose init metadata set directly on the persistence store before a basis is provided', async () => {
+    // metadata set directly on the persistence store (the active store pre-basis) should not
+    // be visible through the transactional wrapper, which always reads from the memory store
+    await nonTransactionalFacade.init(
+      {
+        features: {
+          key1: {
+            version: 1,
+          },
+        },
+      },
+      { environmentId: 'env-on-persistence-store' },
+    );
+
+    expect(transactionalStore.getInitMetaData()).toBeUndefined();
+  });
+
+  it('exposes selector and init metadata from the memory store after a basis is provided', async () => {
+    const initMetadata = { environmentId: 'env-after-basis' };
+
+    await transactionalFacade.applyChanges(
+      true,
+      {
+        features: {
+          key1: {
+            version: 1,
+          },
+        },
+      },
+      initMetadata,
+      'selector-after-basis',
+    );
+
+    expect(transactionalStore.getSelector()).toEqual('selector-after-basis');
+    expect(transactionalStore.getInitMetaData()).toEqual(initMetadata);
+  });
 });
