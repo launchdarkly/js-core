@@ -1,7 +1,7 @@
 import type { Info, PlatformData, SdkData } from '@launchdarkly/js-server-sdk-common';
 
 const name = '@launchdarkly/shopify-oxygen-sdk';
-const version = '0.1.16'; // x-release-please-version
+const version = '0.1.17'; // x-release-please-version
 
 class OxygenPlatformInfo implements Info {
   constructor(
