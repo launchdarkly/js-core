@@ -148,6 +148,27 @@ it('exhausts retries on recoverable error then returns terminal error', async ()
   expect(sleep).toHaveBeenCalledTimes(3);
 });
 
+it('preserves the fallback directive and TTL when retries exhaust', async () => {
+  const requestor: FDv2Requestor = {
+    poll: jest.fn().mockResolvedValue({
+      status: 500,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '300' }),
+      body: null,
+    }),
+  };
+
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
+  const result = await initializer.run();
+
+  expect(result.type).toBe('status');
+  if (result.type === 'status') {
+    expect(result.state).toBe('terminal_error');
+    expect(result.fdv1Fallback).toBe(true);
+    expect(result.fdv1FallbackTtlMs).toBe(300000);
+  }
+  expect(requestor.poll).toHaveBeenCalledTimes(4);
+});
+
 it('exhausts retries on network error then returns terminal error', async () => {
   const requestor: FDv2Requestor = {
     poll: jest.fn().mockRejectedValue(new Error('network failure')),

@@ -140,20 +140,24 @@ export function createStreamingBase(config: {
   }
 
   /**
-   * Promotes a directive deferred from `onopen` (`pendingFallback`) into the
-   * committed `fdv1Fallback`/`fdv1FallbackTtlMs` state, clears the pending
-   * pair, and returns the current committed fallback state.
-   *
-   * Called via putWithFallback() by every path that can queue a payload
-   * result, a stream error, a network failure, or a ping-triggered poll
-   * result (including one that succeeds without its own fallback signal),
-   * so a directive deferred at onopen surfaces no matter which path fires
-   * next. The one exception is the plain goodbye path, which only runs
-   * when nothing is pending and reads the committed flag directly instead.
-   * Safe to call when nothing is pending; it just returns the current state
-   * unchanged.
+   * Resolves the current fallback directive, optionally overridden by an
+   * `incoming` directive from a different source (an in-band goodbye payload
+   * or an error-response header). When `incoming` signals fallback, it wins
+   * outright - it carries its own TTL, which takes precedence over anything
+   * deferred at `onopen`, and the pending pair is cleared since it is now
+   * superseded. Otherwise, a directive deferred at `onopen` (`pendingFallback`)
+   * is promoted into the committed `fdv1Fallback`/`fdv1FallbackTtlMs` state and
+   * the pending pair is cleared. Safe to call with neither; it just returns the
+   * current committed state unchanged.
    */
-  function resolveFallback(): FallbackDirective {
+  function resolveFallback(incoming?: FallbackDirective): FallbackDirective {
+    if (incoming?.fdv1Fallback) {
+      fdv1Fallback = true;
+      fdv1FallbackTtlMs = incoming.fdv1FallbackTtlMs;
+      pendingFallback = false;
+      pendingFallbackTtlMs = undefined;
+      return { fdv1Fallback, fdv1FallbackTtlMs };
+    }
     if (pendingFallback) {
       fdv1Fallback = true;
       fdv1FallbackTtlMs = pendingFallbackTtlMs;
@@ -164,15 +168,18 @@ export function createStreamingBase(config: {
   }
 
   /**
-   * The single place a result derived from the committed/pending stream state
-   * is enqueued. It resolves the current fallback directive once (promoting any
-   * directive deferred at onopen) and hands it to `build`, which stamps it onto
-   * the result. Call sites that carry their own directive source - an in-band
-   * goodbye directive, an error-response header, or a plain no-fallback goodbye
-   * or shutdown - enqueue directly instead.
+   * The single place a result derived from the fallback directive state is
+   * enqueued. It resolves the current directive once via `resolveFallback()`
+   * - passing `incoming` through when the call site has its own directive
+   * source - and hands the result to `build`, which stamps it onto the
+   * result. `shutdown()` is the only path with no fallback state to resolve,
+   * so it still enqueues directly.
    */
-  function putWithFallback(build: (fallback: FallbackDirective) => FDv2SourceResult): void {
-    resultQueue.put(build(resolveFallback()));
+  function putWithFallback(
+    build: (fallback: FallbackDirective) => FDv2SourceResult,
+    incoming?: FallbackDirective,
+  ): void {
+    resultQueue.put(build(resolveFallback(incoming)));
   }
 
   function handleAction(action: internal.ProtocolAction, rawData?: unknown): void {
@@ -183,22 +190,16 @@ export function createStreamingBase(config: {
         break;
 
       case 'goodbye': {
+        // An in-band fallback signal in the goodbye data (its own TTL) takes
+        // precedence over a directive deferred at onopen; putWithFallback()
+        // passes it through to resolveFallback() as the incoming override.
         const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
-        if (goodbyeDirective.fdv1Fallback) {
-          // An in-band fallback signal in the goodbye data overrides any pending
-          // or committed state and carries its own TTL, so it does not go through
-          // putWithFallback(). Clear the pending pair since it is superseded.
-          fdv1Fallback = true;
-          pendingFallback = false;
-          pendingFallbackTtlMs = undefined;
-          resultQueue.put(terminalError(errorInfoFromUnknown(action.reason), goodbyeDirective));
-        } else if (pendingFallback) {
-          // No in-band signal, but a directive was deferred at onopen: let
-          // putWithFallback() consume the pending fallback and clear the values.
-          putWithFallback((fallback) => terminalError(errorInfoFromUnknown(action.reason), fallback));
-        } else {
-          resultQueue.put(goodbye(action.reason, { fdv1Fallback }));
-        }
+        putWithFallback(
+          (fallback) => (fallback.fdv1Fallback
+            ? terminalError(errorInfoFromUnknown(action.reason), fallback)
+            : goodbye(action.reason, fallback)),
+          goodbyeDirective,
+        );
         break;
       }
 
@@ -230,10 +231,11 @@ export function createStreamingBase(config: {
       // A fallback directive overrides normal retry handling, even for an
       // otherwise-recoverable HTTP status: the server is telling us to stop
       // trying FDv2 now rather than keep retrying this connection.
-      fdv1Fallback = true;
-      fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
       logConnectionResult(false);
-      resultQueue.put(terminalError(errorInfoFromHttpError(err.status ?? 0), directive));
+      putWithFallback(
+        (fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
+        directive,
+      );
       return false;
     }
 
