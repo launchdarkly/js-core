@@ -618,6 +618,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     defaultValue: any,
     eventFactory: EventFactory,
     typeChecker?: (value: any) => [boolean, string],
+    visited?: Set<string>,
   ): LDEvaluationDetail {
     // We are letting evaulations happen without a context. The main case for this
     // is when cached data is loaded, but the client is not fully initialized. In this
@@ -679,9 +680,28 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       successDetail.value = defaultValue;
     }
 
-    prerequisites?.forEach((prereqKey) => {
-      this._variationInternal(prereqKey, undefined, this._eventFactoryDefault);
-    });
+    if (prerequisites && prerequisites.length > 0) {
+      // Recurse on prerequisites to emulate prereq evaluations occurring with desirable side effects
+      // such as events for prereqs.
+      //
+      // `visited` tracks the chain of prerequisite dependencies from the top-level evaluation to
+      // (but not including) the current flag. It is allocated lazily: variation calls on
+      // prereq-less flags (the common case) allocate zero collections.
+      const ancestors = visited ?? new Set<string>();
+      ancestors.add(flagKey);
+      try {
+        for (const prereqKey of prerequisites) {
+          if (ancestors.has(prereqKey)) {
+            // Cyclic edge: skip descent, continue with remaining prerequisites at this level.
+            // The requested flag's value and reason are unaffected.
+            continue;
+          }
+          this._variationInternal(prereqKey, undefined, this._eventFactoryDefault, undefined, ancestors);
+        }
+      } finally {
+        ancestors.delete(flagKey);
+      }
+    }
     if (hasContext) {
       this._eventProcessor?.sendEvent(
         eventFactory.evalEventClient(
