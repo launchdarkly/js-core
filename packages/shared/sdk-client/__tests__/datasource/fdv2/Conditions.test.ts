@@ -33,12 +33,15 @@ function raceTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof DID
 function makeInterrupted(): FDv2SourceResult {
   return interrupted(
     { kind: DataSourceErrorKind.NetworkError, message: 'test error', time: Date.now() },
-    false,
+    { fdv1Fallback: false },
   );
 }
 
 function makeChangeSet(): FDv2SourceResult {
-  return changeSet({ version: 1, state: 'test-state', type: 'full', updates: [] }, false);
+  return changeSet(
+    { version: 1, state: 'test-state', type: 'full', updates: [] },
+    { fdv1Fallback: false },
+  );
 }
 
 // -- fallback condition --
@@ -101,7 +104,7 @@ it('fallback condition does not start timer on terminal error', async () => {
   condition.inform(
     terminalError(
       { kind: DataSourceErrorKind.ErrorResponse, message: 'unauthorized', time: Date.now() },
-      false,
+      { fdv1Fallback: false },
     ),
   );
   expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
@@ -117,14 +120,14 @@ it('fallback condition does not start timer on shutdown', async () => {
 
 it('fallback condition does not start timer on goodbye', async () => {
   const condition = createFallbackCondition(10);
-  condition.inform(goodbye('server-requested', false));
+  condition.inform(goodbye('server-requested', { fdv1Fallback: false }));
   expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
   condition.close();
 });
 
 it('fallback condition changeSet without active timer does not cause issues', async () => {
   const condition = createFallbackCondition(10);
-  // changeSet without a prior interrupted — should be safe
+  // changeSet without a prior interrupted, should be safe
   condition.inform(makeChangeSet());
   expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
   condition.close();
@@ -165,7 +168,7 @@ it('recovery condition does not fire after close', async () => {
 it('recovery condition close after timer fires does not cause error', async () => {
   const condition = createRecoveryCondition(10);
   expect(await condition.promise).toBe('recovery');
-  // Close after timer already fired — should not throw
+  // Close after timer already fired, should not throw
   condition.close();
 });
 

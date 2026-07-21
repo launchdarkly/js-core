@@ -33,7 +33,7 @@ it('resolves start() when initializer returns changeSet with selector', async ()
   const payload = makePayload({ state: 'my-selector' });
 
   const ds = createFDv2DataSource({
-    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, false)))],
+    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false })))],
     synchronizerSlots: [],
     dataCallback,
     statusManager,
@@ -56,8 +56,8 @@ it('continues to next initializer when changeSet has no selector', async () => {
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, false))),
-      makeInitFactory(makeMockInitializer(changeSet(payloadWithSelector, false))),
+      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(changeSet(payloadWithSelector, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -78,7 +78,7 @@ it('resolves start() when all initializers exhausted but data was received', asy
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, false))),
+      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -101,8 +101,8 @@ it('skips transfer-none initializer results without calling dataCallback', async
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
-      makeInitFactory(makeMockInitializer(changeSet(fullPayload, false))),
+      makeInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(changeSet(fullPayload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -123,7 +123,7 @@ it('does not mark data received for transfer-none initializer results', async ()
   const nonePayload = makePayload({ type: 'none' });
 
   const ds = createFDv2DataSource({
-    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(nonePayload, false)))],
+    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false })))],
     synchronizerSlots: [],
     dataCallback,
     statusManager,
@@ -142,7 +142,7 @@ it('resolves start() when only initializer is a cache initializer that returns t
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -170,8 +170,8 @@ it('does not overwrite an error status when a later initializer fails after data
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, false))),
-      makeInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), false))),
+      makeInitFactory(makeMockInitializer(changeSet(payloadNoSelector, { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -203,7 +203,7 @@ it('rejects start() when close() is called before cache-only initialization runs
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -231,7 +231,7 @@ it('does not overwrite error status when a cache-only initializer reports interr
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeCacheInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), false))),
+      makeCacheInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -260,8 +260,8 @@ it('rejects when a cache initializer is followed by a non-cache initializer and 
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
-      makeInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -279,14 +279,14 @@ it('rejects when a cache initializer returns transfer-none but synchronizers exi
   const statusManager = makeStatusManager();
   const nonePayload = makePayload({ type: 'none' });
 
-  // A synchronizer that produces a terminal error immediately -- no data will
-  // be delivered, so the orchestrator exhausts all sources and rejects.
-  const sync = makeMockSynchronizer([terminalError(makeErrorInfo(), false)]);
+  // A synchronizer that produces a terminal error immediately, so no data is
+  // delivered and the orchestrator exhausts all sources and rejects.
+  const sync = makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: false })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, false))),
+      makeCacheInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: slots,
     dataCallback,
@@ -306,8 +306,8 @@ it('continues past initializer errors', async () => {
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), false))),
-      makeInitFactory(makeMockInitializer(changeSet(payload, false))),
+      makeInitFactory(makeMockInitializer(interrupted(makeErrorInfo(), { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -331,8 +331,8 @@ it('continues past terminal errors in initializers', async () => {
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(terminalError(makeErrorInfo(), false))),
-      makeInitFactory(makeMockInitializer(changeSet(payload, false))),
+      makeInitFactory(makeMockInitializer(terminalError(makeErrorInfo(), { fdv1Fallback: false }))),
+      makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false }))),
     ],
     synchronizerSlots: [],
     dataCallback,
@@ -350,7 +350,7 @@ it('skips to synchronizers when no initializers are configured', async () => {
   const statusManager = makeStatusManager();
   const payload = makePayload({ state: 'selector' });
 
-  const sync = makeMockSynchronizer([changeSet(payload, false)]);
+  const sync = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
@@ -374,7 +374,7 @@ it('delivers changeSet from synchronizer to callback', async () => {
   const statusManager = makeStatusManager();
   const payload = makePayload({ state: 'sync-selector' });
 
-  const sync = makeMockSynchronizer([changeSet(payload, false)]);
+  const sync = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
@@ -398,8 +398,8 @@ it('blocks synchronizer on terminal error and moves to next', async () => {
   const logger = makeLogger();
   const payload = makePayload({ state: 'selector' });
 
-  const sync1 = makeMockSynchronizer([terminalError(makeErrorInfo(), false)]);
-  const sync2 = makeMockSynchronizer([changeSet(payload, false)]);
+  const sync1 = makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: false })]);
+  const sync2 = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({ create: () => sync1 }),
@@ -429,8 +429,8 @@ it('continues on interrupted results from synchronizer', async () => {
   const payload = makePayload({ state: 'selector' });
 
   const sync = makeMockSynchronizer([
-    interrupted(makeErrorInfo(), false),
-    changeSet(payload, false),
+    interrupted(makeErrorInfo(), { fdv1Fallback: false }),
+    changeSet(payload, { fdv1Fallback: false }),
   ]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
@@ -454,7 +454,7 @@ it('continues on goodbye results from synchronizer', async () => {
   const statusManager = makeStatusManager();
   const payload = makePayload({ state: 'selector' });
 
-  const sync = makeMockSynchronizer([goodbye('reconnect', false), changeSet(payload, false)]);
+  const sync = makeMockSynchronizer([goodbye('reconnect', { fdv1Fallback: false }), changeSet(payload, { fdv1Fallback: false })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
@@ -475,7 +475,7 @@ it('rejects start() when all synchronizers are exhausted without data', async ()
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();
 
-  const sync = makeMockSynchronizer([terminalError(makeErrorInfo(), false)]);
+  const sync = makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: false })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
@@ -499,8 +499,8 @@ it('triggers fdv1 fallback when synchronizer changeSet has fdv1Fallback flag', a
   const fdv2Payload = makePayload({ state: 'selector' });
   const fdv1Payload = makePayload({ state: 'fdv1-selector' });
 
-  const fdv2Sync = makeMockSynchronizer([changeSet(fdv2Payload, true)]);
-  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+  const fdv2Sync = makeMockSynchronizer([changeSet(fdv2Payload, { fdv1Fallback: true })]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({ create: () => fdv2Sync }),
@@ -533,8 +533,8 @@ it('triggers fdv1 fallback on terminal error with fdv1Fallback flag', async () =
 
   const fdv1Payload = makePayload({ state: 'fdv1-selector' });
 
-  const fdv2Sync = makeMockSynchronizer([terminalError(makeErrorInfo(), true)]);
-  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+  const fdv2Sync = makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: true })]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({ create: () => fdv2Sync }),
@@ -571,7 +571,7 @@ it('falls back to next synchronizer when fallback condition fires', async () => 
   const sync1: Synchronizer = {
     next: jest
       .fn<Promise<FDv2SourceResult>, []>()
-      .mockResolvedValueOnce(interrupted(makeErrorInfo(), false))
+      .mockResolvedValueOnce(interrupted(makeErrorInfo(), { fdv1Fallback: false }))
       .mockReturnValue(
         new Promise<FDv2SourceResult>((resolve) => {
           sync1NextResolve = resolve;
@@ -582,7 +582,7 @@ it('falls back to next synchronizer when fallback condition fires', async () => 
     },
   };
 
-  const sync2 = makeMockSynchronizer([changeSet(payload, false)]);
+  const sync2 = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({ create: () => sync1 }),
@@ -628,7 +628,7 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
       return {
         next: jest
           .fn<Promise<FDv2SourceResult>, []>()
-          .mockResolvedValueOnce(interrupted(makeErrorInfo(), false))
+          .mockResolvedValueOnce(interrupted(makeErrorInfo(), { fdv1Fallback: false }))
           .mockReturnValue(
             new Promise<FDv2SourceResult>((resolve) => {
               blockResolve = resolve;
@@ -640,7 +640,7 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
       } as Synchronizer;
     }
     // Second invocation (after recovery): sends data
-    return makeMockSynchronizer([changeSet(payload, false)]);
+    return makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
   };
 
   // sync2: blocks immediately (just waits)
@@ -672,8 +672,8 @@ it('recovers to primary synchronizer when recovery condition fires', async () =>
     recoveryTimeoutMs: 20,
   });
 
-  // start() resolves after: sync1 interrupted → fallback (10ms) → sync2 blocks →
-  // recovery (20ms) → sync1 second invocation delivers changeSet.
+  // start() resolves once sync1 interrupts, fallback (10ms) moves to sync2,
+  // recovery (20ms) moves back, and sync1's second invocation delivers the changeSet.
   await ds.start();
 
   expect(logger.info).toHaveBeenCalledWith(expect.stringContaining('Recovery condition fired'));
@@ -728,7 +728,7 @@ it('close during synchronization causes exit', async () => {
   const sync: Synchronizer = {
     next: jest
       .fn<Promise<FDv2SourceResult>, []>()
-      .mockResolvedValueOnce(changeSet(payload, false))
+      .mockResolvedValueOnce(changeSet(payload, { fdv1Fallback: false }))
       .mockReturnValue(
         new Promise<FDv2SourceResult>((resolve) => {
           pendingResolve = resolve;
@@ -767,7 +767,7 @@ it('passes selectorGetter from config through to source factories', async () => 
   const selectorGetter = jest.fn(() => 'test-selector');
   const payload = makePayload({ state: 'selector' });
 
-  const syncFactory = jest.fn(() => makeMockSynchronizer([changeSet(payload, false)]));
+  const syncFactory = jest.fn(() => makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]));
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: syncFactory })];
 
   const ds = createFDv2DataSource({
@@ -811,7 +811,7 @@ it('resolves with initializer data even when no synchronizers exist', async () =
   const payload = makePayload({ state: 'selector' });
 
   const ds = createFDv2DataSource({
-    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, false)))],
+    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false })))],
     synchronizerSlots: [],
     dataCallback,
     statusManager,
@@ -831,10 +831,10 @@ it('shutdown result from synchronizer exits without moving to next', async () =>
   const statusManager = makeStatusManager();
   const payload = makePayload({ state: 'selector' });
 
-  const secondSyncFactory = jest.fn(() => makeMockSynchronizer([changeSet(payload, false)]));
+  const secondSyncFactory = jest.fn(() => makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]));
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({
-      create: () => makeMockSynchronizer([changeSet(payload, false), shutdown()]),
+      create: () => makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false }), shutdown()]),
     }),
     createSynchronizerSlot({ create: secondSyncFactory }),
   ];
@@ -849,7 +849,7 @@ it('shutdown result from synchronizer exits without moving to next', async () =>
 
   await ds.start();
 
-  // Wait for the shutdown to be processed — the second synchronizer should not be created.
+  // Wait for the shutdown to be processed before asserting the second synchronizer was never created.
   await statusManager.waitForState('VALID', 1);
   expect(dataCallback).toHaveBeenCalledTimes(1);
   expect(secondSyncFactory).not.toHaveBeenCalled();
@@ -866,9 +866,9 @@ it('delivers multiple changeSets from synchronizer in order', async () => {
   const payload3 = makePayload({ state: 'selector-3' });
 
   const sync = makeMockSynchronizer([
-    changeSet(payload1, false),
-    changeSet(payload2, false),
-    changeSet(payload3, false),
+    changeSet(payload1, { fdv1Fallback: false }),
+    changeSet(payload2, { fdv1Fallback: false }),
+    changeSet(payload3, { fdv1Fallback: false }),
   ]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
@@ -900,12 +900,12 @@ it('first initializer with selector prevents second initializer from running', a
   const payload = makePayload({ state: 'good-selector' });
 
   const secondInitCreate = jest.fn(() =>
-    makeMockInitializer(changeSet(makePayload({ state: 'second' }), false)),
+    makeMockInitializer(changeSet(makePayload({ state: 'second' }), { fdv1Fallback: false })),
   );
 
   const ds = createFDv2DataSource({
     initializerFactories: [
-      makeInitFactory(makeMockInitializer(changeSet(payload, false))),
+      makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false }))),
       { create: secondInitCreate },
     ],
     synchronizerSlots: [],
@@ -930,7 +930,7 @@ it('multiple close calls do not throw', async () => {
   const payload = makePayload({ state: 'selector' });
 
   const ds = createFDv2DataSource({
-    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, false)))],
+    initializerFactories: [makeInitFactory(makeMockInitializer(changeSet(payload, { fdv1Fallback: false })))],
     synchronizerSlots: [],
     dataCallback,
     statusManager,
@@ -951,13 +951,13 @@ it('close during condition waiting exits cleanly', async () => {
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();
 
-  // Sync sends changeSet then interrupted, then blocks — condition timer starts
+  // Sync sends changeSet then interrupted, then blocks; the interrupted result starts the condition timer
   let pendingResolve: ((r: FDv2SourceResult) => void) | undefined;
   const sync: Synchronizer = {
     next: jest
       .fn<Promise<FDv2SourceResult>, []>()
-      .mockResolvedValueOnce(changeSet(makePayload({ state: 'selector' }), false))
-      .mockResolvedValueOnce(interrupted(makeErrorInfo(), false))
+      .mockResolvedValueOnce(changeSet(makePayload({ state: 'selector' }), { fdv1Fallback: false }))
+      .mockResolvedValueOnce(interrupted(makeErrorInfo(), { fdv1Fallback: false }))
       .mockReturnValue(
         new Promise<FDv2SourceResult>((resolve) => {
           pendingResolve = resolve;
@@ -984,7 +984,7 @@ it('close during condition waiting exits cleanly', async () => {
 
   await ds.start();
 
-  // Sync loop is running, condition timer is active — close should not hang.
+  // Sync loop is running and the condition timer is active; close should not hang.
   ds.close();
 });
 
@@ -998,7 +998,7 @@ it('fdv1 fallback not triggered when fdv1Fallback flag is absent', async () => {
   const fdv1Factory = jest.fn(() => makeMockSynchronizer([]));
 
   const slots: SynchronizerSlot[] = [
-    createSynchronizerSlot({ create: () => makeMockSynchronizer([changeSet(payload, false)]) }),
+    createSynchronizerSlot({ create: () => makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]) }),
     createSynchronizerSlot({ create: fdv1Factory }, { isFDv1Fallback: true }),
   ];
 
@@ -1027,11 +1027,11 @@ it('fdv1 fallback blocks other synchronizers', async () => {
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({
-      create: () => makeMockSynchronizer([changeSet(fdv2Payload, true)]),
+      create: () => makeMockSynchronizer([changeSet(fdv2Payload, { fdv1Fallback: true })]),
     }),
     createSynchronizerSlot({ create: secondSyncFactory }),
     createSynchronizerSlot(
-      { create: () => makeMockSynchronizer([changeSet(fdv1Payload, false)]) },
+      { create: () => makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]) },
       { isFDv1Fallback: true },
     ),
   ];
@@ -1049,7 +1049,7 @@ it('fdv1 fallback blocks other synchronizers', async () => {
   // Wait for fdv1 synchronizer to deliver its changeSet (second VALID).
   await statusManager.waitForState('VALID', 2);
 
-  // FDv1 fallback should block non-FDv1 synchronizers — second sync should not be called
+  // FDv1 fallback blocks non-FDv1 synchronizers: second sync should not be called
   expect(secondSyncFactory).not.toHaveBeenCalled();
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
   ds.close();
@@ -1061,7 +1061,7 @@ it('fdv1 fallback ignored when no FDv1 synchronizer is configured', async () => 
   const payload = makePayload({ state: 'selector' });
 
   // Synchronizer sends changeSet with fdv1Fallback flag but no FDv1 slot exists
-  const sync = makeMockSynchronizer([changeSet(payload, true)]);
+  const sync = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: true })]);
   const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => sync })];
 
   const ds = createFDv2DataSource({
@@ -1084,8 +1084,8 @@ it('fdv1 fallback triggered on interrupted result with fdv1Fallback flag', async
   const statusManager = makeStatusManager();
   const fdv1Payload = makePayload({ state: 'fdv1-selector' });
 
-  const fdv2Sync = makeMockSynchronizer([interrupted(makeErrorInfo(), true)]);
-  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, false)]);
+  const fdv2Sync = makeMockSynchronizer([interrupted(makeErrorInfo(), { fdv1Fallback: true })]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
 
   const slots: SynchronizerSlot[] = [
     createSynchronizerSlot({ create: () => fdv2Sync }),

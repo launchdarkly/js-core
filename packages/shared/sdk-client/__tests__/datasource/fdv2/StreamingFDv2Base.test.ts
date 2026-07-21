@@ -608,6 +608,37 @@ it('emits terminal_error for a goodbye when a deferred open directive is pending
   base.close();
 });
 
+it('prefers the in-band goodbye directive TTL over a pending onopen-deferred TTL', async () => {
+  // When onopen defers a fallback directive AND the goodbye event itself carries
+  // its own protocolFallbackTTL, the in-band directive wins: it uses its own TTL
+  // (not the pending one) and still clears the pending state.
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Open with fallback headers (defers a directive with TTL 45s)
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '45' },
+  });
+
+  // Goodbye fires with its own, different TTL (60s) before any payload
+  simulateEvent(mockEventSource, 'goodbye', {
+    reason: 'falling back',
+    protocolFallbackTTL: 60,
+  });
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('terminal_error');
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(60000);
+
+  base.close();
+});
+
 it('clears a pending fallback directive when onopen fires without the fallback header', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);
@@ -850,6 +881,40 @@ it('backfills the deferred TTL into a ping-triggered poll result that already si
   const result = await base.takeResult();
   expect(result.fdv1Fallback).toBe(true);
   expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('does not mutate the ping handler result object when applying a deferred fallback', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const pingResult = {
+    type: 'changeSet' as const,
+    payload: { events: [], selector: undefined },
+    fdv1Fallback: false,
+  };
+  const pingHandler: PingHandler = {
+    handlePing: jest.fn().mockResolvedValue(pingResult),
+  };
+  const base = createBase(mockRequests, logger, { pingHandler });
+  base.start();
+
+  mockEventSource.onopen({
+    type: 'open',
+    headers: { 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '75' },
+  });
+
+  const { calls } = mockEventSource.addEventListener.mock;
+  const pingListener = calls.find((c: any[]) => c[0] === 'ping')?.[1];
+  await pingListener();
+
+  const result = await base.takeResult();
+  // The queued result carries the deferred fallback...
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBe(75000);
+  // ...but the object handed back by the ping handler is left untouched.
+  expect(pingResult.fdv1Fallback).toBe(false);
+  expect((pingResult as any).fdv1FallbackTtlMs).toBeUndefined();
 
   base.close();
 });
