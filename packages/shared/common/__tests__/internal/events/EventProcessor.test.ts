@@ -472,8 +472,17 @@ describe('given an event processor', () => {
     const userObj = { key: 'user-key', kind: 'user', name: 'Example user', anonymous: true };
     const context = Context.fromLDContext(userObj);
 
+    // Migration events are server-only; servers set redactAnonymousAllEvents: true so anonymous
+    // contexts are redacted.
+    const serverEventProcessor = new EventProcessor(
+      { ...eventProcessorConfig, redactAnonymousAllEvents: true },
+      clientContext,
+      {},
+      new ContextDeduplicator(),
+    );
+
     Date.now = jest.fn(() => 1000);
-    eventProcessor.sendEvent({
+    serverEventProcessor.sendEvent({
       kind: 'migration_op',
       operation: 'read',
       creationDate: 1000,
@@ -488,7 +497,8 @@ describe('given an event processor', () => {
       samplingRatio: 1,
     });
 
-    await eventProcessor.flush();
+    await serverEventProcessor.flush();
+    serverEventProcessor.close();
 
     const redactedContext = {
       kind: 'user',
@@ -737,8 +747,46 @@ describe('given an event processor', () => {
 
     await eventProcessor.flush();
 
-    // The custom event inlines the context, so an anonymous context's attributes are redacted.
-    // The index event is not subject to anonymous redaction and keeps the full context.
+    // By default (redactAnonymousAllEvents unset -> false, the client-side behavior) custom events
+    // do NOT redact an anonymous context's attributes; the full context is sent.
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      {
+        kind: 'index',
+        creationDate: 1000,
+        context: { ...anonUser, kind: 'user' },
+      },
+      {
+        kind: 'custom',
+        key: 'eventkey',
+        data: { thing: 'stuff' },
+        creationDate: 1000,
+        context: { ...anonUser, kind: 'user' },
+      },
+    ]);
+  });
+
+  it('redacts anonymous context in custom event when redactAnonymousAllEvents is true', async () => {
+    // Server-side SDKs set redactAnonymousAllEvents: true so custom events redact an anonymous
+    // context's attributes, just like feature events.
+    const serverEventProcessor = new EventProcessor(
+      { ...eventProcessorConfig, redactAnonymousAllEvents: true },
+      clientContext,
+      {},
+      new ContextDeduplicator(),
+    );
+
+    serverEventProcessor.sendEvent({
+      kind: 'custom',
+      creationDate: 1000,
+      context: Context.fromLDContext(anonUser),
+      key: 'eventkey',
+      data: { thing: 'stuff' },
+      samplingRatio: 1,
+    });
+
+    await serverEventProcessor.flush();
+    serverEventProcessor.close();
+
     const redactedAnonUser = {
       key: 'anon-user',
       kind: 'user',
