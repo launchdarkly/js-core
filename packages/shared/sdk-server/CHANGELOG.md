@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.19.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.4...js-server-sdk-common-v2.19.5) (2026-07-21)
+
+
+### Bug Fixes
+
+* ability to handle FDv1 `flagValues` shorthand map to FDv2FiledataInitializer ([#1811](https://github.com/launchdarkly/js-core/issues/1811)) ([cbdaf6e](https://github.com/launchdarkly/js-core/commit/cbdaf6ec020e0567c640ce73c9978c1252c7ff35))
+
 ## [2.19.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.3...js-server-sdk-common-v2.19.4) (2026-07-21)
 
 

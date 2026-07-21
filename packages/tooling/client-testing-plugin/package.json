@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/client-testing-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Testing plugin for LaunchDarkly client-side JavaScript SDKs. Uses the experimental plugin debug-override mechanism to inject flag values for unit tests and local development.",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/tooling/client-testing-plugin",
   "repository": {
@@ -65,7 +65,7 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@launchdarkly/js-client-sdk": "4.9.2",
-    "@launchdarkly/react-sdk": "4.1.6",
+    "@launchdarkly/react-sdk": "4.1.7",
     "@types/jest": "^29.5.0",
     "eslint": "^9.0.0",
     "eslint-import-resolver-typescript": "^4.0.0",
