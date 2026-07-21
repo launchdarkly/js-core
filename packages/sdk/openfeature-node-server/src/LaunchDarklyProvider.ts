@@ -24,7 +24,7 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
       const client = init(sdkKey, {
         ...options,
         wrapperName: 'open-feature-node-server',
-        wrapperVersion: '1.3.3', // x-release-please-version
+        wrapperVersion: '1.3.4', // x-release-please-version
       });
 
       this.setClient(client);

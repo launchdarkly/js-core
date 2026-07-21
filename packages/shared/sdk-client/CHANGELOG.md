@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.30.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.29.1...js-client-sdk-common-v1.30.0) (2026-07-21)
+
+
+### Features
+
+* add FDv1 fallback directive parsing and TTL data model ([#1781](https://github.com/launchdarkly/js-core/issues/1781)) ([4a213c3](https://github.com/launchdarkly/js-core/commit/4a213c31f8afc9f5713a60f3a5517ddbc8004cd5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.25.1 to 2.25.2
+
 ## [1.29.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.29.0...js-client-sdk-common-v1.29.1) (2026-06-29)
 
 
