@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/js-server-sdk-common-edge",
-  "version": "2.6.25",
+  "version": "2.6.26",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server-edge",
   "repository": {
     "type": "git",
@@ -34,7 +34,7 @@
     "check": "yarn lint && yarn build && yarn test && yarn doc"
   },
   "dependencies": {
-    "@launchdarkly/js-server-sdk-common": "2.19.4",
+    "@launchdarkly/js-server-sdk-common": "2.19.5",
     "crypto-js": "^4.1.1"
   },
   "devDependencies": {

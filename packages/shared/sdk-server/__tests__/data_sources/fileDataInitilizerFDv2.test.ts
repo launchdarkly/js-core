@@ -74,6 +74,12 @@ const allPropertiesJson = JSON.stringify({
   },
 });
 
+const flagValuesOnlyJson = JSON.stringify({
+  flagValues: {
+    flag1: 'value1',
+  },
+});
+
 describe('FileDataInitializerFDv2', () => {
   let mockFilesystem: MockFilesystem;
   let logger: TestLogger;
@@ -373,5 +379,151 @@ describe('FileDataInitializerFDv2', () => {
     const flag1Update = flag1Updates[0];
     expect(flag1Update.version).toBe(2);
     expect(flag1Update.object.on).toBe(false); // Should be from file2
+  });
+
+  it('loads flags from the flagValues shorthand map', async () => {
+    mockFilesystem.fileData['flagValues.json'] = { timestamp: 0, data: flagValuesOnlyJson };
+
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['flagValues.json'],
+    };
+
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
+    initializer.start(mockDataCallback, mockStatusCallback);
+
+    await jest.runAllTimersAsync();
+
+    expect(mockStatusCallback).toHaveBeenCalledWith(subsystem.DataSourceState.Valid);
+    expect(mockDataCallback).toHaveBeenCalled();
+
+    const dataCall = mockDataCallback.mock.calls[0];
+    const { payload } = dataCall[1];
+    const flagUpdates = payload.updates.filter((update: any) => update.kind === 'flag');
+    expect(flagUpdates.length).toBe(1);
+
+    const flag1Update = flagUpdates.find((update: any) => update.key === 'flag1');
+    expect(flag1Update).toBeDefined();
+    expect(flag1Update.version).toBe(1);
+    expect(flag1Update.object).toEqual({
+      key: 'flag1',
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: ['value1'],
+      version: 1,
+    });
+  });
+
+  it('loads flagValues alongside flags and segments in the same file', async () => {
+    const combinedFile = JSON.stringify({
+      flags: { flag1 },
+      flagValues: { flag2: 'value2' },
+      segments: { segment1 },
+    });
+    mockFilesystem.fileData['combined.json'] = { timestamp: 0, data: combinedFile };
+
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['combined.json'],
+    };
+
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
+    initializer.start(mockDataCallback, mockStatusCallback);
+
+    await jest.runAllTimersAsync();
+
+    const { payload } = mockDataCallback.mock.calls[0][1];
+    const flagUpdates = payload.updates.filter((update: any) => update.kind === 'flag');
+    const segmentUpdates = payload.updates.filter((update: any) => update.kind === 'segment');
+
+    expect(flagUpdates.length).toBe(2);
+    expect(segmentUpdates.length).toBe(1);
+
+    const flag1Update = flagUpdates.find((update: any) => update.key === 'flag1');
+    expect(flag1Update.object).toEqual(flag1);
+
+    const flag2Update = flagUpdates.find((update: any) => update.key === 'flag2');
+    expect(flag2Update.version).toBe(1);
+    expect(flag2Update.object).toEqual({
+      key: 'flag2',
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: ['value2'],
+      version: 1,
+    });
+
+    const segment1Update = segmentUpdates.find((update: any) => update.key === 'segment1');
+    expect(segment1Update.object).toEqual(segment1);
+  });
+
+  it('merges flagValues from multiple files', async () => {
+    const file1 = JSON.stringify({ flagValues: { flag1: 'value1' } });
+    const file2 = JSON.stringify({ flagValues: { flag2: 'value2' } });
+    mockFilesystem.fileData['file1.json'] = { timestamp: 0, data: file1 };
+    mockFilesystem.fileData['file2.json'] = { timestamp: 0, data: file2 };
+
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['file1.json', 'file2.json'],
+    };
+
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
+    initializer.start(mockDataCallback, mockStatusCallback);
+
+    await jest.runAllTimersAsync();
+
+    const { payload } = mockDataCallback.mock.calls[0][1];
+    const flagUpdates = payload.updates.filter((update: any) => update.kind === 'flag');
+    expect(flagUpdates.length).toBe(2);
+
+    expect(flagUpdates.find((update: any) => update.key === 'flag1').object).toEqual({
+      key: 'flag1',
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: ['value1'],
+      version: 1,
+    });
+    expect(flagUpdates.find((update: any) => update.key === 'flag2').object).toEqual({
+      key: 'flag2',
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: ['value2'],
+      version: 1,
+    });
+  });
+
+  it('applies last-file-wins when a key appears in flags and flagValues across files', async () => {
+    // file1 defines flag1 via the full flags key, file2 redefines it via flagValues
+    const file1 = JSON.stringify({
+      flags: { flag1: { ...flag1, variations: ['fromFlags'] } },
+    });
+    const file2 = JSON.stringify({
+      flagValues: { flag1: 'fromFlagValues' },
+    });
+    mockFilesystem.fileData['file1.json'] = { timestamp: 0, data: file1 };
+    mockFilesystem.fileData['file2.json'] = { timestamp: 0, data: file2 };
+
+    const options: FileSystemDataSourceConfiguration = {
+      type: 'file',
+      paths: ['file1.json', 'file2.json'],
+    };
+
+    const initializer = new FileDataInitializerFDv2(options, platform, logger);
+    initializer.start(mockDataCallback, mockStatusCallback);
+
+    await jest.runAllTimersAsync();
+
+    const { payload } = mockDataCallback.mock.calls[0][1];
+    const flagUpdates = payload.updates.filter((update: any) => update.kind === 'flag');
+
+    const flag1Updates = flagUpdates.filter((update: any) => update.key === 'flag1');
+    expect(flag1Updates.length).toBe(1);
+    expect(flag1Updates[0].object).toEqual({
+      key: 'flag1',
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: ['fromFlagValues'],
+      version: 1,
+    });
   });
 });

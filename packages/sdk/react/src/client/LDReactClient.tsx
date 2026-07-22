@@ -57,7 +57,7 @@ export function createClient(
   const baseClientOptions: LDOptions = {
     ...ldOptions,
     wrapperName: ldOptions?.wrapperName ?? 'react-client-sdk',
-    wrapperVersion: ldOptions?.wrapperVersion ?? '4.1.6', // x-release-please-version
+    wrapperVersion: ldOptions?.wrapperVersion ?? '4.1.7', // x-release-please-version
   };
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);
