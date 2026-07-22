@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.0...js-client-sdk-common-v1.30.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* add defensive cycle guard to prerequisite evaluation ([#1816](https://github.com/launchdarkly/js-core/issues/1816)) ([9426b42](https://github.com/launchdarkly/js-core/commit/9426b42dbb5e96914c62462ff7281ec6e24727b3))
+
 ## [1.30.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.29.1...js-client-sdk-common-v1.30.0) (2026-07-21)
 
 

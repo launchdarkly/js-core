@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.9.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.9.2...js-client-sdk-v4.9.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* add defensive cycle guard to prerequisite evaluation ([#1816](https://github.com/launchdarkly/js-core/issues/1816)) ([9426b42](https://github.com/launchdarkly/js-core/commit/9426b42dbb5e96914c62462ff7281ec6e24727b3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.30.0 to 1.30.1
+
 ## [4.9.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.9.1...js-client-sdk-v4.9.2) (2026-07-21)
 
 

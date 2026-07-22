@@ -1,5 +1,14 @@
 # Changelog
 
+## [10.19.3](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.19.2...react-native-client-sdk-v10.19.3) (2026-07-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.30.0 to 1.30.1
+
 ## [10.19.2](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.19.1...react-native-client-sdk-v10.19.2) (2026-07-21)
 
 

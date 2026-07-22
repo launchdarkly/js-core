@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.2.3...server-sdk-ai-v1.3.0) (2026-07-22)
+
+
+### Features
+
+* **server-ai:** stamp modelKey and modelVersion on AI usage events (AIC-2858) ([#1794](https://github.com/launchdarkly/js-core/issues/1794)) ([a91a1e7](https://github.com/launchdarkly/js-core/commit/a91a1e7927262dcdbe1098b33095f529c48f7e8c))
+
 ## [1.2.3](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.2.2...server-sdk-ai-v1.2.3) (2026-07-21)
 
 
