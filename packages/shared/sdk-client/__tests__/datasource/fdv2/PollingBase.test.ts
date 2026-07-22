@@ -486,60 +486,58 @@ describe('given a delete-object event', () => {
   });
 });
 
-describe('given x-ld-fd-fallback-ttl header', () => {
-  it('reads TTL in seconds and converts to ms on a changeSet', async () => {
-    const body = makeFullPayloadBody({ flagA: { value: true } });
-    const requestor = makeRequestor({
-      status: 200,
-      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' }),
-      body,
-    });
-
-    const result = await poll(requestor, undefined, logger);
-
-    expect(result.fdv1Fallback).toBe(true);
-    expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+it('reads TTL in seconds and converts to ms on a changeSet', async () => {
+  const body = makeFullPayloadBody({ flagA: { value: true } });
+  const requestor = makeRequestor({
+    status: 200,
+    headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '60' }),
+    body,
   });
 
-  it('treats TTL "0" as indefinite (0 ms)', async () => {
-    const body = makeFullPayloadBody({ flagA: { value: true } });
-    const requestor = makeRequestor({
-      status: 200,
-      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '0' }),
-      body,
-    });
+  const result = await poll(requestor, undefined, logger);
 
-    const result = await poll(requestor, undefined, logger);
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(60000);
+});
 
-    expect(result.fdv1Fallback).toBe(true);
-    expect((result as any).fdv1FallbackTtlMs).toBe(0);
+it('treats TTL "0" as indefinite (0 ms)', async () => {
+  const body = makeFullPayloadBody({ flagA: { value: true } });
+  const requestor = makeRequestor({
+    status: 200,
+    headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '0' }),
+    body,
   });
 
-  it('leaves TTL undefined when the ttl header is absent but fallback is true', async () => {
-    const body = makeFullPayloadBody({ flagA: { value: true } });
-    const requestor = makeRequestor({
-      status: 200,
-      headers: makeHeaders({ 'x-ld-fd-fallback': 'true' }),
-      body,
-    });
+  const result = await poll(requestor, undefined, logger);
 
-    const result = await poll(requestor, undefined, logger);
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(0);
+});
 
-    expect(result.fdv1Fallback).toBe(true);
-    expect((result as any).fdv1FallbackTtlMs).toBeUndefined();
+it('leaves TTL undefined when the ttl header is absent but fallback is true', async () => {
+  const body = makeFullPayloadBody({ flagA: { value: true } });
+  const requestor = makeRequestor({
+    status: 200,
+    headers: makeHeaders({ 'x-ld-fd-fallback': 'true' }),
+    body,
   });
 
-  it('stamps TTL on a non-success error response', async () => {
-    const requestor = makeRequestor({
-      status: 503,
-      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '30' }),
-      body: null,
-    });
+  const result = await poll(requestor, undefined, logger);
 
-    const result = await poll(requestor, undefined, logger);
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBeUndefined();
+});
 
-    expect(result.fdv1Fallback).toBe(true);
-    expect((result as any).fdv1FallbackTtlMs).toBe(30000);
+it('stamps TTL on a non-success error response', async () => {
+  const requestor = makeRequestor({
+    status: 503,
+    headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '30' }),
+    body: null,
   });
+
+  const result = await poll(requestor, undefined, logger);
+
+  expect(result.fdv1Fallback).toBe(true);
+  expect((result as any).fdv1FallbackTtlMs).toBe(30000);
 });
 
