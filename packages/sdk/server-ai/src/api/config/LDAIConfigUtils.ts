@@ -26,6 +26,8 @@ export interface LDAIConfigFlagValue {
     enabled: boolean;
     version?: number;
     mode?: LDAIConfigMode;
+    modelKey?: string;
+    modelVersion?: number;
   };
   model?: LDModelConfig;
   messages?: LDMessage[];
