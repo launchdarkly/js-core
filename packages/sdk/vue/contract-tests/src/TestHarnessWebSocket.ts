@@ -44,8 +44,10 @@ export default class TestHarnessWebSocket {
             'strongly-typed',
             'client-prereq-events',
             'client-per-context-summaries',
+            'client-prereq-cycle-detection',
             'evaluation-hooks',
             'track-hooks',
+            'secure-mode-hash',
             'flag-change-listeners',
           ];
 
