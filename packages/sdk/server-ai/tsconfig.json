@@ -14,6 +14,8 @@
     "declarationMap": true,
     "resolveJsonModule": true,
     "stripInternal": true,
+    "types": ["jest", "node"],
+    "ignoreDeprecations": "6.0",
     "moduleResolution": "bundler"
   },
   "include": ["src"],

@@ -5,6 +5,7 @@
     "target": "ES2020",
     "lib": ["ES2020", "DOM"],
     "module": "ESNext",
+    "types": ["node"],
     "moduleResolution": "node",
     "strict": true,
     "noImplicitOverride": true,
