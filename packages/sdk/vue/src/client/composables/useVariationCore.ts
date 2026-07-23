@@ -2,7 +2,6 @@ import {
   onScopeDispose,
   readonly,
   ref,
-  shallowRef,
   toValue,
   watch,
   type InjectionKey,
@@ -17,9 +16,14 @@ import { injectLDVueInstance } from './useLDClient';
  * Shared core for the variation composables. Evaluates a flag and keeps the returned ref in sync.
  *
  * @remarks
- * Re-evaluates when the flag changes (`change:<key>` event), the key changes, the context changes
- * (after `identify()`), or the client becomes ready. The base SDK emits `change:<key>` with the
- * context, not the new value, so we always call the client rather than reading the event payload.
+ * Re-evaluates on two independent triggers:
+ *  - the flag's value changing (`change:<key>` event), and
+ *  - the context changing, via {@link LDVueClient.onContextChange}, which fires for every settled
+ *    `start()` outcome (complete, timeout, failed) and for every completed `identify()`.
+ *
+ * This means that there is a possible case that we evaluate the flag 2x when switching
+ * contexts (both triggers fire). This is expected behavior for now as it is more stable
+ * than trying to consolidate two unrelated signals.
  *
  * @internal
  */
@@ -30,7 +34,7 @@ export function useVariationCore<T, R = T>(
   injectionKey?: InjectionKey<LDVueInstance>,
   notReadyDefault?: (defaultValue: T) => R,
 ): Readonly<Ref<R>> {
-  const { client, context, initializedState } = injectLDVueInstance(injectionKey);
+  const { client } = injectLDVueInstance(injectionKey);
 
   const evaluateValue = (): R => {
     if (client.isReady()) {
@@ -45,26 +49,28 @@ export function useVariationCore<T, R = T>(
   };
 
   let currentKey = toValue(key);
+  client.on(`change:${currentKey}`, update);
 
-  const flagChanged = shallowRef(0);
-  const changeHandler = () => {
-    flagChanged.value += 1;
-  };
-  client.on(`change:${currentKey}`, changeHandler);
+  // Context-driven re-evaluation that will trigger for every settled
+  // start()/identify() outcome.
+  const unsubscribeContext = client.onContextChange(update);
 
-  // Batch all synchronous source mutations into one watch run.
-  const stop = watch([() => toValue(key), context, initializedState, flagChanged], ([newKey]) => {
-    if (newKey !== currentKey) {
-      client.off(`change:${currentKey}`, changeHandler);
+  const stopWatch = watch(
+    () => toValue(key),
+    (newKey) => {
+      client.off(`change:${currentKey}`, update);
       currentKey = newKey;
-      client.on(`change:${currentKey}`, changeHandler);
-    }
-    update();
-  });
+      client.on(`change:${currentKey}`, update);
+      update();
+    },
+  );
 
   onScopeDispose(() => {
-    client.off(`change:${currentKey}`, changeHandler);
-    stop();
+    // client.on/onContextChange are plain event-emitter subscriptions, invisible to Vue's
+    // reactivity system, so they leak on unmount unless torn down explicitly here.
+    client.off(`change:${currentKey}`, update);
+    unsubscribeContext();
+    stopWatch();
   });
 
   return readonly(valueRef) as Readonly<Ref<R>>;
