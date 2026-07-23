@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/node-client-sdk",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "LaunchDarkly Client-Side SDK for Node.js",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/node-client",
   "repository": {
@@ -42,7 +42,7 @@
     "contract-tests": "./contract-tests/run-contract-tests.sh"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk-common": "1.30.0",
+    "@launchdarkly/js-client-sdk-common": "1.30.1",
     "launchdarkly-eventsource": "2.2.0"
   },
   "devDependencies": {

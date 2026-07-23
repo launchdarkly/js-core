@@ -8,7 +8,7 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@launchdarkly/node-client-sdk": "0.4.2"
+    "@launchdarkly/node-client-sdk": "0.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
