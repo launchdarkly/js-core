@@ -71,7 +71,7 @@ jobs:
           done
           sleep 5
       - name: Run contract tests
-        uses: launchdarkly/gh-actions/actions/contract-tests@a848aec9c87c29470093b22154107b83a7696374
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
