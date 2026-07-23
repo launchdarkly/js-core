@@ -374,6 +374,7 @@
     "packages/sdk/react": {
       "extra-files": [
         "src/client/LDReactClient.tsx",
+        "src/server/LDServerSession.ts",
         {
           "type": "json",
           "path": "examples/features/data-saving-mode/package.json",

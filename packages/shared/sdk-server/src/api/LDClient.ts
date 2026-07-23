@@ -6,11 +6,12 @@ import {
   LDLogger,
 } from '@launchdarkly/js-sdk-common';
 
-import { LDMigrationOpEvent, LDMigrationVariation } from './data';
+import { LDMigrationOpEvent, LDMigrationVariation, LDScopedClientOptions } from './data';
 import { LDFlagsState } from './data/LDFlagsState';
 import { LDFlagsStateOptions } from './data/LDFlagsStateOptions';
 import { LDMigrationStage } from './data/LDMigrationStage';
 import { Hook } from './integrations/Hook';
+import { LDScopedClient } from './LDScopedClient';
 import { LDWaitForInitializationOptions } from './LDWaitForInitializationOptions';
 
 /**
@@ -452,6 +453,21 @@ export interface LDClient {
    *   fails, so be sure to attach a rejection handler to it.
    */
   flush(callback?: (err: Error | null, res: boolean) => void): Promise<void>;
+
+  /**
+   * Creates a scoped client bound to the given evaluation context.
+   *
+   * @remarks
+   * The scoped client wraps this base client with a mutable context container,
+   * providing a client-side-like API where variation and track calls do not require
+   * a context parameter. Multiple scoped clients created from the same base client
+   * are fully independent.
+   *
+   * @param context The initial evaluation context for the scoped client.
+   * @param options Optional scoped client options for wrapper reporting.
+   * @returns A new {@link LDScopedClient} bound to the given context.
+   */
+  forContext(context: LDContext, options?: LDScopedClientOptions): LDScopedClient;
 
   /**
    * Add a hook to the client. In order to register a hook before the client
