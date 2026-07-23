@@ -24,7 +24,7 @@ import {
 import { LDAIConfigFlagValue, LDAIConfigUtils } from './api/config/LDAIConfigUtils';
 import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './api/graph';
 import { Evaluator } from './api/judge/Evaluator';
-import { Judge, stripLegacyJudgeMessages } from './api/judge/Judge';
+import { Judge } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
 import { RunnerFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
@@ -239,41 +239,13 @@ export class LDAIClientImpl implements LDAIClient {
     defaultValue: LDAIJudgeConfigDefault,
     variables?: Record<string, unknown>,
   ): Promise<LDAIJudgeConfig> {
-    if (variables?.message_history !== undefined) {
-      this._logger?.warn(
-        "The variable 'message_history' is reserved by the judge and will be ignored.",
-      );
-    }
-    if (variables?.response_to_evaluate !== undefined) {
-      this._logger?.warn(
-        "The variable 'response_to_evaluate' is reserved by the judge and will be ignored.",
-      );
-    }
-
-    // Re-inject the reserved variables as their literal placeholders so they
-    // survive Mustache interpolation in `_evaluate`. Without this, legacy
-    // templates like `{{message_history}}` get rendered to empty strings and
-    // `stripLegacyJudgeMessages` below cannot detect them.
-    const extendedVariables = {
-      ...variables,
-      message_history: '{{message_history}}',
-      response_to_evaluate: '{{response_to_evaluate}}',
-    };
-
     const config = (await this._evaluate(
       key,
       context,
       defaultValue,
       'judge',
-      extendedVariables,
+      variables,
     )) as LDAIJudgeConfig;
-
-    // Strip legacy judge template messages (containing {{message_history}} or
-    // {{response_to_evaluate}}) before returning the config. New-style configs
-    // omit these and rely on Judge._buildEvaluationInput.
-    if (config.messages) {
-      return { ...config, messages: stripLegacyJudgeMessages(config.messages) };
-    }
 
     return config;
   }
