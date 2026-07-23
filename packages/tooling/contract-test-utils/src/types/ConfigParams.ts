@@ -100,6 +100,12 @@ export interface SDKConfigClientSideParams {
   evaluationReasons?: boolean;
   useReport?: boolean;
   includeEnvironmentAttributes?: boolean;
+  /**
+   * A pre-computed secure mode hash supplied by the test harness. When present, the
+   * client-side SDK includes it as the `h` query parameter on streaming/polling requests.
+   * The SDK does not compute this value; it forwards it.
+   */
+  hash?: string;
 }
 
 export interface SDKConfigEvaluationHookData {

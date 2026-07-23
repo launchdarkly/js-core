@@ -381,7 +381,13 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
 
   let failed = false;
   try {
-    const result = await client.start({ timeout: timeout / 1000 });
+    // Forward a harness-supplied secure mode hash as the `h` query parameter, only when
+    // the harness actually configured one.
+    const secureModeHash = options.configuration.clientSide?.hash;
+    const result = await client.start({
+      timeout: timeout / 1000,
+      ...(secureModeHash !== undefined && { identifyOptions: { hash: secureModeHash } }),
+    });
     if (result.status !== 'complete') {
       failed = true;
     }
