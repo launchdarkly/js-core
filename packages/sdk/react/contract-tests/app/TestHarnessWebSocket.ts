@@ -46,6 +46,7 @@ export default class TestHarnessWebSocket {
             'anonymous-redaction',
             'strongly-typed',
             'client-prereq-events',
+            'client-prereq-cycle-detection',
             'client-per-context-summaries',
             'track-hooks',
           ];

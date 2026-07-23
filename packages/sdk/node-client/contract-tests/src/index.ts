@@ -29,6 +29,7 @@ app.get('/', (req: Request, res: Response) => {
       'inline-context',
       'inline-context-all',
       'client-prereq-events',
+      'client-prereq-cycle-detection',
       'client-per-context-summaries',
       'evaluation-hooks',
       'track-hooks',
