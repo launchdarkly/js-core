@@ -7,7 +7,6 @@ const DEFAULT_DIR_NAME = 'ldclient-user-cache';
 const STORAGE_FILE_NAME = 'ldcache.json';
 
 const ERROR_PREFIX = {
-  get: 'Error getting key from storage',
   set: 'Error setting key in storage',
   clear: 'Error clearing key from storage',
 } as const;
@@ -18,9 +17,9 @@ export default class NodeStorage implements Storage {
   private readonly _storageDir: string;
   private readonly _storageFile: string;
   private readonly _tempFile: string;
-  private readonly _initialized: Promise<boolean>;
+  private readonly _initialized: Promise<void>;
   private readonly _logger?: LDLogger;
-  private _initError?: Error;
+  private _persistenceDisabled: boolean = false;
   private _cache: Map<string, string> = new Map();
   private _flushPending: boolean = false;
   private _flushQueue: Promise<void> = Promise.resolve();
@@ -33,9 +32,16 @@ export default class NodeStorage implements Storage {
     this._initialized = this._initialize();
   }
 
-  private async _initialize(): Promise<boolean> {
+  private async _initialize(): Promise<void> {
     try {
       await fs.mkdir(this._storageDir, { recursive: true });
+
+      // fs.mkdir succeeds silently if the path already exists as a symlink to a directory, so a
+      // pre-planted symlink would otherwise redirect where the cache is read from and written to
+      // without ever surfacing as an init failure.
+      if ((await fs.lstat(this._storageDir)).isSymbolicLink()) {
+        throw new Error(`Storage directory path is a symlink, not a real directory: ${this._storageDir}`);
+      }
 
       try {
         await fs.unlink(this._tempFile);
@@ -44,6 +50,11 @@ export default class NodeStorage implements Storage {
       }
 
       try {
+        const fileStat = await fs.lstat(this._storageFile);
+        if (!fileStat.isFile()) {
+          throw new Error(`Storage file exists but is not a regular file: ${this._storageFile}`);
+        }
+
         const data = await fs.readFile(this._storageFile, 'utf8');
         const parsed = JSON.parse(data);
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
@@ -60,11 +71,11 @@ export default class NodeStorage implements Storage {
           await this._atomicWriteToFile(this._cache);
         }
       }
-
-      return true;
     } catch (error) {
-      this._initError = error instanceof Error ? error : new Error(String(error));
-      return false;
+      this._persistenceDisabled = true;
+      this._logger?.warn(
+        `Failed to initialize local flag cache at ${this._storageDir}: ${error instanceof Error ? error.message : error}. Using in-memory storage as a fallback - flags will not persist across restarts.`,
+      );
     }
   }
 
@@ -108,26 +119,17 @@ export default class NodeStorage implements Storage {
     this._logger?.error(`${ERROR_PREFIX[op]}: ${key}, reason: ${reason}`);
   }
 
-  private _initFailureReason(): string {
-    return `not initialized${this._initError ? `: ${this._initError.message}` : ''}`;
-  }
-
   async get(key: string): Promise<string | null> {
-    const initialized = await this._initialized;
-    if (!initialized) {
-      this._logError('get', key, this._initFailureReason());
-      return null;
-    }
+    await this._initialized;
     return this._cache.get(key) ?? null;
   }
 
   async set(key: string, value: string): Promise<void> {
-    const initialized = await this._initialized;
-    if (!initialized) {
-      this._logError('set', key, this._initFailureReason());
+    await this._initialized;
+    this._cache.set(key, value);
+    if (this._persistenceDisabled) {
       return;
     }
-    this._cache.set(key, value);
     try {
       await this._scheduleFlush();
     } catch (error) {
@@ -136,13 +138,12 @@ export default class NodeStorage implements Storage {
   }
 
   async clear(key: string): Promise<void> {
-    const initialized = await this._initialized;
-    if (!initialized) {
-      this._logError('clear', key, this._initFailureReason());
-      return;
-    }
+    await this._initialized;
     if (this._cache.has(key)) {
       this._cache.delete(key);
+      if (this._persistenceDisabled) {
+        return;
+      }
       try {
         await this._scheduleFlush();
       } catch (error) {
