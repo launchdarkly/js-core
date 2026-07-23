@@ -3,6 +3,11 @@ import {
   browserFdv1Endpoints,
   Configuration,
   ConnectionMode,
+  createDefaultSourceFactoryProvider,
+  createFDv2DataManagerBase,
+  DESKTOP_DATA_SYSTEM_DEFAULTS,
+  DESKTOP_TRANSITION_TABLE,
+  FDv2DataManagerControl,
   FlagManager,
   internal,
   LDClientImpl,
@@ -12,9 +17,12 @@ import {
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
+  LDIdentifyOptions,
   LDIdentifyResult,
   LDPluginEnvironmentMetadata,
   mobileFdv1Endpoints,
+  MODE_TABLE,
+  resolveForegroundMode,
 } from '@launchdarkly/js-client-sdk-common';
 
 import basicLogger from './basicLogger';
@@ -28,6 +36,14 @@ import NodePlatform from './platform/NodePlatform';
 
 export class NodeClient extends LDClientImpl {
   private readonly _plugins: LDPlugin[];
+  // Connection mode for both paths. FDv2 updates this inside the
+  // serialized queue task; FDv1 reads it back from the data manager after each
+  // transition.
+  private _connectionMode: ConnectionMode;
+  // Serializes FDv2 mode transitions so concurrent callers cannot interleave
+  // flush() and setEventSendingEnabled() across the offline branch's await.
+  private _fdv2ConnectionModeQueue: Promise<void> = Promise.resolve();
+  private _closed: boolean = false;
 
   constructor(envKey: string, initialContext: LDContext, options: NodeOptions = {}) {
     const { logger: customLogger, debug } = options;
@@ -48,6 +64,7 @@ export class NodeClient extends LDClientImpl {
       credentialType: useMobileKey ? 'mobileKey' : 'clientSideId',
       requiresStart: true,
       initialContext,
+      dataSystemDefaults: DESKTOP_DATA_SYSTEM_DEFAULTS,
     };
 
     const platform = new NodePlatform(logger, validatedNodeOptions);
@@ -64,8 +81,46 @@ export class NodeClient extends LDClientImpl {
         baseHeaders: LDHeaders,
         emitter: LDEmitter,
         diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new NodeDataManager(
+      ) => {
+        if (configuration.dataSystem) {
+          const foregroundMode = resolveForegroundMode(
+            configuration.dataSystem,
+            DESKTOP_DATA_SYSTEM_DEFAULTS,
+          );
+          return createFDv2DataManagerBase({
+            platform,
+            flagManager,
+            credential: envKey,
+            config: configuration,
+            baseHeaders,
+            emitter,
+            transitionTable: DESKTOP_TRANSITION_TABLE,
+            foregroundMode,
+            backgroundMode: undefined,
+            modeTable: MODE_TABLE,
+            sourceFactoryProvider: createDefaultSourceFactoryProvider(),
+            fdv1Endpoints: useMobileKey ? mobileFdv1Endpoints() : browserFdv1Endpoints(envKey),
+            buildQueryParams: (identifyOptions?: LDIdentifyOptions) => {
+              if (useMobileKey) {
+                // Mobile mode authenticates via Authorization header, not query params.
+                if ((identifyOptions as NodeIdentifyOptions | undefined)?.hash) {
+                  logger.warn('[NodeClient] \'hash\' is ignored in mobile key mode.');
+                }
+                return [];
+              }
+              const params: { key: string; value: string }[] = [{ key: 'auth', value: envKey }];
+              // Per-identify hash overrides the construction-time hash, mirroring FDv1 behavior.
+              const hash =
+                (identifyOptions as NodeIdentifyOptions | undefined)?.hash ||
+                validatedNodeOptions.hash;
+              if (hash) {
+                params.push({ key: 'h', value: hash });
+              }
+              return params;
+            },
+          });
+        }
+        return new NodeDataManager(
           platform,
           flagManager,
           envKey,
@@ -76,12 +131,30 @@ export class NodeClient extends LDClientImpl {
           baseHeaders,
           emitter,
           diagnosticsManager,
-        ),
+        );
+      },
       internalOptions,
     );
 
+    // Initialize _connectionMode for whichever path is active.
+    // FDv2ConnectionMode is a superset of ConnectionMode; map platform-only modes
+    // (e.g. 'one-shot', 'background') to 'streaming' since the source is active.
+    if (this.dataSystemConfig) {
+      const initialFdv2Mode = resolveForegroundMode(this.dataSystemConfig, DESKTOP_DATA_SYSTEM_DEFAULTS);
+      this._connectionMode =
+        initialFdv2Mode === 'offline' || initialFdv2Mode === 'polling'
+          ? initialFdv2Mode
+          : 'streaming';
+    } else {
+      this._connectionMode = validatedNodeOptions.initialConnectionMode;
+    }
     this._plugins = validatedNodeOptions.plugins;
     this.setEventSendingEnabled(!this.isOffline(), false);
+  }
+
+  override async close(): Promise<void> {
+    this._closed = true;
+    return super.close();
   }
 
   /**
@@ -104,22 +177,51 @@ export class NodeClient extends LDClientImpl {
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
-    const dataManager = this.dataManager as NodeDataManager;
-    await dataManager.setConnectionMode(
-      mode,
-      () => this.flush(),
-      (enabled) => this.setEventSendingEnabled(enabled, false),
-    );
+    if (this.isFDv2) {
+      // JS callers can pass arbitrary strings; validate before the debounce timer fires.
+      if (mode !== 'offline' && mode !== 'streaming' && mode !== 'polling') {
+        this.logger.warn(`[NodeClient] Unknown connection mode "${mode}", ignoring.`);
+        return;
+      }
+      if (this._closed) {
+        return;
+      }
+      const task = this._fdv2ConnectionModeQueue.then(async () => {
+        // Re-check: close() may have been called while this task was queued.
+        if (this._closed) {
+          return;
+        }
+        if (mode === this._connectionMode) {
+          return;
+        }
+        if (mode === 'offline') {
+          await this.flush();
+          this.setEventSendingEnabled(false, false);
+        }
+        (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
+        this._connectionMode = mode;
+        if (mode !== 'offline') {
+          this.setEventSendingEnabled(true, false);
+        }
+      });
+      this._fdv2ConnectionModeQueue = task.catch(() => {});
+      await task;
+    } else {
+      await (this.dataManager as NodeDataManager).setConnectionMode(
+        mode,
+        () => this.flush(),
+        (enabled) => this.setEventSendingEnabled(enabled, false),
+      );
+      this._connectionMode = (this.dataManager as NodeDataManager).getConnectionMode();
+    }
   }
 
   getConnectionMode(): ConnectionMode {
-    const dataManager = this.dataManager as NodeDataManager;
-    return dataManager.getConnectionMode();
+    return this._connectionMode;
   }
 
   isOffline(): boolean {
-    const dataManager = this.dataManager as NodeDataManager;
-    return dataManager.getConnectionMode() === 'offline';
+    return this._connectionMode === 'offline';
   }
 }
 
