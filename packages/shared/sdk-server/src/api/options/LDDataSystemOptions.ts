@@ -121,6 +121,13 @@ export interface StreamingDataSourceConfiguration {
   type: 'streaming';
 
   /**
+   * Optional per-source base URI for this streaming data source. When set, this source
+   * connects to the given URI instead of the SDK's shared streaming service endpoint.
+   * Defaults to the SDK's configured streaming base URI.
+   */
+  baseUri?: string;
+
+  /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
    * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
@@ -134,6 +141,12 @@ export interface StreamingDataSourceConfiguration {
 
 export interface PollingDataSourceConfiguration {
   type: 'polling';
+  /**
+   * Optional per-source base URI for this polling data source. When set, this source
+   * polls the given URI instead of the SDK's shared polling service endpoint.
+   * Defaults to the SDK's configured polling base URI.
+   */
+  baseUri?: string;
   /**
    * The time between polling requests, in seconds. Default if omitted.
    */

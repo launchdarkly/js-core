@@ -6,6 +6,7 @@ import {
   LDFlagDeliveryFallbackError,
   LDLogger,
   LDStreamingError,
+  ServiceEndpoints,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -205,6 +206,33 @@ describe('given a stream processor with mock event source', () => {
         retryResetIntervalMillis: 60000,
       },
     );
+  });
+
+  it('prefers a per-source serviceEndpoints override over the clientContext streaming endpoint', () => {
+    const override = new ServiceEndpoints('https://override.stream.com', '');
+    const processor = new StreamingProcessorFDv2(
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
+      '/all',
+      [],
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
+      diagnosticsManager,
+      1,
+      override,
+    );
+    processor.start(jest.fn(), jest.fn());
+
+    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
+      'https://override.stream.com/all',
+      expect.anything(),
+    );
+    processor.close();
   });
 
   it('adds listeners', () => {

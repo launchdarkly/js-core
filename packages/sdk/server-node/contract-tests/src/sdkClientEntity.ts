@@ -110,11 +110,9 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
     if (options.dataSystem.initializers) {
       options.dataSystem.initializers.forEach((initializer) => {
         if (initializer.polling) {
-          cf.baseUri = initializer.polling.baseUri;
-          cf.pollInterval = maybeTime(initializer.polling.pollIntervalMs);
-
           const initializerOptions: PollingDataSourceConfiguration = {
             type: 'polling',
+            baseUri: initializer.polling.baseUri,
             pollInterval: maybeTime(initializer.polling.pollIntervalMs),
           };
 
@@ -126,23 +124,17 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
     if (options.dataSystem.synchronizers) {
       options.dataSystem.synchronizers.forEach((synchronizer) => {
         if (synchronizer.streaming) {
-          cf.streamUri = synchronizer.streaming.baseUri;
-
           const synchronizerOptions: StreamingDataSourceConfiguration = {
             type: 'streaming',
+            baseUri: synchronizer.streaming.baseUri,
+            streamInitialReconnectDelay: maybeTime(synchronizer.streaming.initialRetryDelayMs),
           };
-
-          synchronizerOptions.streamInitialReconnectDelay = maybeTime(
-            synchronizer.streaming.initialRetryDelayMs,
-          );
 
           dataSourceOptions.synchronizers.push(synchronizerOptions);
         } else if (synchronizer.polling) {
-          cf.baseUri = synchronizer.polling.baseUri;
-          cf.pollInterval = maybeTime(synchronizer.polling.pollIntervalMs);
-
           const synchronizerOptions: PollingDataSourceConfiguration = {
             type: 'polling',
+            baseUri: synchronizer.polling.baseUri,
             pollInterval: maybeTime(synchronizer.polling.pollIntervalMs),
           };
 

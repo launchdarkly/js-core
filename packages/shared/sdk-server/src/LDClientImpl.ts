@@ -249,6 +249,25 @@ function constructFDv1(
   };
 }
 
+/**
+ * Build a copy of {@link base} with the streaming and/or polling base URIs overridden; every
+ * other field carries over unchanged.
+ */
+function scopedServiceEndpoints(
+  base: ServiceEndpoints,
+  overrides: { streaming?: string; polling?: string },
+): ServiceEndpoints {
+  return new ServiceEndpoints(
+    overrides.streaming ?? base.streaming,
+    overrides.polling ?? base.polling,
+    base.events,
+    base.analyticsEventPath,
+    base.diagnosticEventPath,
+    base.includeAuthorizationHeader,
+    base.payloadFilterKey,
+  );
+}
+
 function constructFDv2(
   sdkKey: string,
   platform: Platform,
@@ -368,10 +387,22 @@ function constructFDv2(
             break;
           }
           case 'polling': {
+            const pollingEndpoints = initializerConfig.baseUri
+              ? scopedServiceEndpoints(config.serviceEndpoints, {
+                  polling: initializerConfig.baseUri,
+                })
+              : undefined;
             initializers.push(
               () =>
                 new OneShotInitializerFDv2(
-                  new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+                  new Requestor(
+                    config,
+                    platform.requests,
+                    baseHeaders,
+                    '/sdk/poll',
+                    config.logger,
+                    pollingEndpoints,
+                  ),
                   config.logger,
                 ),
             );
@@ -387,6 +418,11 @@ function constructFDv2(
           case 'streaming': {
             const { streamInitialReconnectDelay = DEFAULT_STREAM_RECONNECT_DELAY } =
               synchronizerConfig;
+            const streamingEndpoints = synchronizerConfig.baseUri
+              ? scopedServiceEndpoints(config.serviceEndpoints, {
+                  streaming: synchronizerConfig.baseUri,
+                })
+              : undefined;
             synchronizers.push(
               () =>
                 new StreamingProcessorFDv2(
@@ -396,16 +432,29 @@ function constructFDv2(
                   baseHeaders,
                   diagnosticsManager,
                   streamInitialReconnectDelay,
+                  streamingEndpoints,
                 ),
             );
             break;
           }
           case 'polling': {
             const { pollInterval = DEFAULT_POLL_INTERVAL } = synchronizerConfig;
+            const pollingEndpoints = synchronizerConfig.baseUri
+              ? scopedServiceEndpoints(config.serviceEndpoints, {
+                  polling: synchronizerConfig.baseUri,
+                })
+              : undefined;
             synchronizers.push(
               () =>
                 new PollingProcessorFDv2(
-                  new Requestor(config, platform.requests, baseHeaders, '/sdk/poll', config.logger),
+                  new Requestor(
+                    config,
+                    platform.requests,
+                    baseHeaders,
+                    '/sdk/poll',
+                    config.logger,
+                    pollingEndpoints,
+                  ),
                   pollInterval,
                   config.logger,
                 ),
@@ -473,15 +522,9 @@ function constructFDv2(
       const fdv1FallbackPollInterval =
         fdv1FallbackConfig?.pollInterval ?? config.pollInterval ?? DEFAULT_POLL_INTERVAL;
       const fdv1FallbackEndpoints = fdv1FallbackConfig?.baseUri
-        ? new ServiceEndpoints(
-            config.serviceEndpoints.streaming,
-            fdv1FallbackConfig.baseUri,
-            config.serviceEndpoints.events,
-            config.serviceEndpoints.analyticsEventPath,
-            config.serviceEndpoints.diagnosticEventPath,
-            config.serviceEndpoints.includeAuthorizationHeader,
-            config.serviceEndpoints.payloadFilterKey,
-          )
+        ? scopedServiceEndpoints(config.serviceEndpoints, {
+            polling: fdv1FallbackConfig.baseUri,
+          })
         : undefined;
       fdv1FallbackSynchronizers.push(
         () =>
