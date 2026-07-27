@@ -688,3 +688,89 @@ describe('when setting different options', () => {
     ]);
   });
 });
+
+// baseUri is a valid top-level LDOptions field, but standard/streamingOnly/pollingOnly
+// dataSource shapes never read it -- each already gets its endpoint from
+// Configuration.serviceEndpoints. The validator drops it and warns, mirroring how fdv1Fallback
+// rejects fields outside its own table; custom mode and the top-level baseUri/streamUri/eventsUri
+// options are unaffected.
+describe('dataSystem.dataSource baseUri is scoped to custom mode only', () => {
+  it.each([
+    ['standard', { dataSourceOptionsType: 'standard', baseUri: 'https://example.com' }],
+    [
+      'streamingOnly',
+      { dataSourceOptionsType: 'streamingOnly', baseUri: 'https://example.com' },
+    ],
+    ['pollingOnly', { dataSourceOptionsType: 'pollingOnly', baseUri: 'https://example.com' }],
+  ])('drops baseUri and warns on the %s dataSource shape', (_mode, dataSource) => {
+    const opts = withLogger({
+      dataSystem: { dataSource: dataSource as unknown as DataSourceOptions },
+    });
+    const config = new Configuration(opts);
+    expect((config.dataSystem!.dataSource as any).baseUri).toBeUndefined();
+    expect(logger(opts).getCount()).toEqual(1);
+    logger(opts).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Ignoring unknown config option "dataSystem.dataSource.baseUri"/,
+      },
+    ]);
+  });
+
+  it.each([
+    [
+      'standard',
+      { dataSourceOptionsType: 'standard', pollInterval: 60, streamInitialReconnectDelay: 5 },
+    ],
+    ['streamingOnly', { dataSourceOptionsType: 'streamingOnly', streamInitialReconnectDelay: 5 }],
+    ['pollingOnly', { dataSourceOptionsType: 'pollingOnly', pollInterval: 60 }],
+  ])(
+    'still validates pollInterval/streamInitialReconnectDelay on the %s dataSource shape',
+    (_mode, dataSource) => {
+      const opts = withLogger({
+        dataSystem: { dataSource: dataSource as unknown as DataSourceOptions },
+      });
+      const config = new Configuration(opts);
+      const validated = config.dataSystem!.dataSource as any;
+      if ('pollInterval' in dataSource) {
+        expect(validated.pollInterval).toEqual((dataSource as any).pollInterval);
+      }
+      if ('streamInitialReconnectDelay' in dataSource) {
+        expect(validated.streamInitialReconnectDelay).toEqual(
+          (dataSource as any).streamInitialReconnectDelay,
+        );
+      }
+      expect(logger(opts).getCount()).toEqual(0);
+    },
+  );
+
+  it('does not affect baseUri inside a custom mode data source entry', () => {
+    const opts = withLogger({
+      dataSystem: {
+        dataSource: {
+          dataSourceOptionsType: 'custom',
+          initializers: [{ type: 'polling', baseUri: 'https://custom-init.example.com' }],
+          synchronizers: [{ type: 'streaming', baseUri: 'https://custom-sync.example.com' }],
+        } as unknown as DataSourceOptions,
+      },
+    });
+    const config = new Configuration(opts);
+    expect(config.dataSystem!.dataSource).toEqual({
+      dataSourceOptionsType: 'custom',
+      initializers: [{ type: 'polling', baseUri: 'https://custom-init.example.com' }],
+      synchronizers: [{ type: 'streaming', baseUri: 'https://custom-sync.example.com' }],
+    });
+    expect(logger(opts).getCount()).toEqual(0);
+  });
+
+  it('does not affect the top-level baseUri option', () => {
+    const opts = withLogger({
+      baseUri: 'https://example.com',
+      streamUri: 'https://stream.example.com',
+      eventsUri: 'https://events.example.com',
+    });
+    const config = new Configuration(opts);
+    expect(config.serviceEndpoints.polling).toEqual('https://example.com');
+    expect(logger(opts).getCount()).toEqual(0);
+  });
+});
