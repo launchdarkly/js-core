@@ -40,13 +40,16 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     baseHeaders: LDHeaders,
     private readonly _diagnosticsManager?: internal.DiagnosticsManager,
     private readonly _streamInitialReconnectDelay = 1,
+    // set when this source needs its own endpoint in a composite chain; leave undefined
+    // to fall back to the shared config.serviceEndpoints
+    serviceEndpointsOverride?: ServiceEndpoints,
   ) {
     const { basicConfiguration, platform } = clientContext;
     const { logger, serviceEndpoints } = basicConfiguration;
     const { requests } = platform;
 
     this._headers = { ...baseHeaders };
-    this._serviceEndpoints = serviceEndpoints;
+    this._serviceEndpoints = serviceEndpointsOverride ?? serviceEndpoints;
     this._logger = logger;
     this._requests = requests;
   }

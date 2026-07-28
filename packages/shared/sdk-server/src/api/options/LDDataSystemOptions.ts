@@ -121,6 +121,13 @@ export interface StreamingDataSourceConfiguration {
   type: 'streaming';
 
   /**
+   * Optional per-source base URI for this streaming data source. When set, this source
+   * connects to the given URI instead of the SDK's shared streaming service endpoint.
+   * Defaults to the SDK's configured streaming base URI.
+   */
+  baseUri?: string;
+
+  /**
    * Sets the initial reconnect delay for the streaming connection, in seconds. Default if omitted.
    *
    * The streaming service uses a backoff algorithm (with jitter) every time the connection needs
@@ -135,6 +142,12 @@ export interface StreamingDataSourceConfiguration {
 export interface PollingDataSourceConfiguration {
   type: 'polling';
   /**
+   * Optional per-source base URI for this polling data source. When set, this source
+   * polls the given URI instead of the SDK's shared polling service endpoint.
+   * Defaults to the SDK's configured polling base URI.
+   */
+  baseUri?: string;
+  /**
    * The time between polling requests, in seconds. Default if omitted.
    */
   pollInterval?: number;
@@ -145,10 +158,12 @@ export interface PollingDataSourceConfiguration {
  * a combination of streaming and polling to initialize the SDK, provide real time updates,
  * and can switch between streaming and polling automatically to provide redundancy.
  */
+// baseUri is omitted here: standard mode always uses Configuration.serviceEndpoints and has
+// no per-source override, unlike the same field on a CustomDataSourceOptions initializer.
 export interface StandardDataSourceOptions
   extends
-    Omit<StreamingDataSourceConfiguration, 'type'>,
-    Omit<PollingDataSourceConfiguration, 'type'> {
+    Omit<StreamingDataSourceConfiguration, 'type' | 'baseUri'>,
+    Omit<PollingDataSourceConfiguration, 'type' | 'baseUri'> {
   dataSourceOptionsType: 'standard';
 }
 
@@ -156,14 +171,18 @@ export interface StandardDataSourceOptions
  * This data source will make best effort to maintain a streaming connection to LaunchDarkly services
  * to provide real time data updates.
  */
-export interface StreamingDataSourceOptions extends Omit<StreamingDataSourceConfiguration, 'type'> {
+// baseUri omitted for the same reason as StandardDataSourceOptions above
+export interface StreamingDataSourceOptions
+  extends Omit<StreamingDataSourceConfiguration, 'type' | 'baseUri'> {
   dataSourceOptionsType: 'streamingOnly';
 }
 
 /**
  * This data source will periodically make a request to LaunchDarkly services to retrieve updated data.
  */
-export interface PollingDataSourceOptions extends Omit<PollingDataSourceConfiguration, 'type'> {
+// baseUri omitted for the same reason as StandardDataSourceOptions above
+export interface PollingDataSourceOptions
+  extends Omit<PollingDataSourceConfiguration, 'type' | 'baseUri'> {
   dataSourceOptionsType: 'pollingOnly';
 }
 
