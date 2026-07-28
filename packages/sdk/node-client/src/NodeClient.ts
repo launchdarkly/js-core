@@ -136,15 +136,16 @@ export class NodeClient extends LDClientImpl {
       internalOptions,
     );
 
-    // Initialize _connectionMode for whichever path is active.
-    // FDv2ConnectionMode is a superset of ConnectionMode; map platform-only modes
-    // (e.g. 'one-shot', 'background') to 'streaming' since the source is active.
     if (this.dataSystemConfig) {
-      const initialFdv2Mode = resolveForegroundMode(this.dataSystemConfig, DESKTOP_DATA_SYSTEM_DEFAULTS);
-      this._connectionMode =
-        initialFdv2Mode === 'offline' || initialFdv2Mode === 'polling'
-          ? initialFdv2Mode
-          : 'streaming';
+      const rawMode = resolveForegroundMode(this.dataSystemConfig, DESKTOP_DATA_SYSTEM_DEFAULTS);
+      if (rawMode !== 'offline' && rawMode !== 'streaming' && rawMode !== 'polling') {
+        this.logger.warn(
+          `[NodeClient] Connection mode '${rawMode}' is not supported; defaulting to 'streaming'.`,
+        );
+        this._connectionMode = 'streaming';
+      } else {
+        this._connectionMode = rawMode;
+      }
     } else {
       this._connectionMode = validatedNodeOptions.initialConnectionMode;
     }

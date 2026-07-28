@@ -23,6 +23,7 @@ app.get('/', (req: Request, res: Response) => {
   res.json({
     capabilities: [
       'client-side',
+      'mobile',
       'service-endpoints',
       'tags',
       'user-type',
