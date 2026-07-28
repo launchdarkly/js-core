@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.13.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.12.3...node-server-sdk-v9.13.0) (2026-07-28)
+
+
+### Features
+
+* **sdk-server-common:** add support for custom base uris in FDv2 datasources  ([#1827](https://github.com/launchdarkly/js-core/issues/1827)) ([5d028c3](https://github.com/launchdarkly/js-core/commit/5d028c36ab308973957dff226839026994b70fd2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.19.5 to 2.20.0
+
 ## [9.12.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.12.2...node-server-sdk-v9.12.3) (2026-07-21)
 
 
