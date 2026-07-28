@@ -83,10 +83,16 @@ export class NodeClient extends LDClientImpl {
         diagnosticsManager?: internal.DiagnosticsManager,
       ) => {
         if (configuration.dataSystem) {
-          const foregroundMode = resolveForegroundMode(
+          const rawForegroundMode = resolveForegroundMode(
             configuration.dataSystem,
             DESKTOP_DATA_SYSTEM_DEFAULTS,
           );
+          const foregroundMode =
+            rawForegroundMode === 'streaming' ||
+            rawForegroundMode === 'polling' ||
+            rawForegroundMode === 'offline'
+              ? rawForegroundMode
+              : 'streaming';
           return createFDv2DataManagerBase({
             platform,
             flagManager,
