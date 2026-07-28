@@ -15,7 +15,7 @@ export type TraversalFn = (
  * Encapsulates an agent graph configuration and its pre-built node collection.
  *
  * Provides graph-level orchestration including relationship queries (parent/child),
- * breadth-first traversal in both forward and reverse directions, and graph tracker creation.
+ * topological traversal in both forward and reverse directions, and graph tracker creation.
  *
  * Obtain an instance via {@link LDAIClient.agentGraph}. When the graph is disabled
  * or invalid, the returned instance has {@link enabled} set to `false` and an
@@ -123,17 +123,21 @@ export class AgentGraphDefinition {
   }
 
   /**
-   * Traverses the graph breadth-first from the root to all terminal nodes.
+   * Traverses the graph in topological order from the root (predecessors-first).
    *
-   * Nodes at the same depth are processed before advancing to the next depth.
-   * The value returned by `fn` is stored in the mutable `executionContext` under
-   * the node's key, making upstream results available to downstream nodes.
+   * A node is visited only after every reachable predecessor has been visited.
+   * The root is visited first. When multiple nodes are simultaneously eligible,
+   * they are visited in graph-discovery order (BFS from root following declared
+   * edge order) for determinism. Cyclic graphs are cycle-safe — each reachable
+   * node is visited exactly once.
    *
-   * Cyclic graphs are handled safely — each node is visited at most once.
+   * Each call to `fn` receives a fresh context containing the caller-provided
+   * `initialExecutionContext` plus the return values of exactly that node's
+   * reachable predecessors — not results from unrelated parallel-branch nodes.
    *
-   * @param fn Callback invoked for each node. Its return value is added to
-   *   `executionContext` keyed by the node's config key.
-   * @param initialExecutionContext Optional initial context to seed the traversal.
+   * @param fn Callback invoked for each node. Its return value is stored under
+   *   the node's config key for use by dependent nodes.
+   * @param initialExecutionContext Optional initial context visible to every node.
    */
   traverse(fn: TraversalFn, initialExecutionContext: Record<string, unknown> = {}): void {
     const root = this.rootNode();
@@ -141,94 +145,170 @@ export class AgentGraphDefinition {
       return;
     }
 
-    const executionContext = { ...initialExecutionContext };
+    const { reachable, order } = this._reachableAndDiscovery(root.getKey());
+
+    const indeg = new Map<string, number>();
+    reachable.forEach((k) => indeg.set(k, 0));
+    reachable.forEach((k) => {
+      this._nodes[k]!.getEdges().forEach((e) => {
+        if (reachable.has(e.key)) {
+          indeg.set(e.key, indeg.get(e.key)! + 1);
+        }
+      });
+    });
+    indeg.set(root.getKey(), 0);
+
     const visited = new Set<string>();
-    const queue: AgentGraphNode[] = [root];
-    visited.add(root.getKey());
+    const results: Record<string, unknown> = {};
+    const ancestors = new Map<string, Set<string>>();
+    const scoped = (deps: Set<string>) => {
+      const c: Record<string, unknown> = { ...initialExecutionContext };
+      deps.forEach((k) => {
+        c[k] = results[k];
+      });
+      return c;
+    };
 
-    while (queue.length > 0) {
-      const node = queue.shift()!;
-      const result = fn(node, executionContext);
-      executionContext[node.getKey()] = result;
+    while (visited.size < reachable.size) {
+      let next = order.find((k) => !visited.has(k) && indeg.get(k)! <= 0);
+      if (next === undefined) {
+        // Cycle break: lowest remaining in-degree, tie-broken by discovery order
+        next = order
+          .filter((k) => !visited.has(k))
+          .sort((a, b) => indeg.get(a)! - indeg.get(b)!)[0];
+      }
 
-      node.getEdges().forEach((edge) => {
-        if (!visited.has(edge.key)) {
-          const child = this._nodes[edge.key];
-          if (child) {
-            visited.add(edge.key);
-            queue.push(child);
-          }
+      const anc = new Set<string>();
+      this.getParentNodes(next).forEach((p) => {
+        const pk = p.getKey();
+        if (!visited.has(pk)) {
+          return;
+        }
+        anc.add(pk);
+        ancestors.get(pk)?.forEach((a) => anc.add(a));
+      });
+      ancestors.set(next, anc);
+      visited.add(next);
+
+      results[next] = fn(this._nodes[next]!, scoped(anc));
+      this._nodes[next]!.getEdges().forEach((e) => {
+        if (reachable.has(e.key)) {
+          indeg.set(e.key, indeg.get(e.key)! - 1);
         }
       });
     }
   }
 
   /**
-   * Traverses the graph from terminal nodes up to the root.
+   * Traverses the graph in reverse topological order (descendants-first).
    *
-   * Uses BFS upward via parent edges so that each node is processed only after
-   * all of its reachable descendants have been processed. The root is always
-   * visited last. Cyclic graphs are handled safely — each node is visited at
-   * most once; if the graph has no terminal nodes, this method returns without
-   * invoking `fn`.
+   * A node is visited only after every reachable descendant has been visited.
+   * The root is always visited last. When multiple nodes are simultaneously
+   * eligible, they are visited in graph-discovery order for determinism. Cyclic
+   * graphs are cycle-safe — each reachable node is visited exactly once (including
+   * graphs with no terminal nodes).
    *
-   * **Ordering note:** Within a single BFS level (nodes at the same depth from a
-   * terminal) the visit order is not strictly guaranteed. The guarantee is only
-   * that a node is visited before any of its ancestors — not that siblings at the
-   * same depth are visited in a specific order relative to each other.
+   * Each call to `fn` receives a fresh context containing the caller-provided
+   * `initialExecutionContext` plus the return values of exactly that node's
+   * reachable descendants — not results from unrelated parallel-branch nodes.
    *
-   * The value returned by `fn` is stored in the mutable `executionContext` under
-   * the node's key.
-   *
-   * @param fn Callback invoked for each node. Its return value is added to
-   *   `executionContext` keyed by the node's config key.
-   * @param initialExecutionContext Optional initial context to seed the traversal.
+   * @param fn Callback invoked for each node. Its return value is stored under
+   *   the node's config key for use by dependent nodes.
+   * @param initialExecutionContext Optional initial context visible to every node.
    */
   reverseTraverse(fn: TraversalFn, initialExecutionContext: Record<string, unknown> = {}): void {
-    const terminals = this.terminalNodes();
-    if (terminals.length === 0) {
+    const root = this.rootNode();
+    if (!root) {
       return;
     }
 
-    const executionContext = { ...initialExecutionContext };
-    const rootKey = this._agentGraph.root;
+    const rootKey = root.getKey();
+    const { reachable, order } = this._reachableAndDiscovery(rootKey);
+
+    const outdeg = new Map<string, number>();
+    reachable.forEach((k) => {
+      outdeg.set(
+        k,
+        this._nodes[k]!.getEdges().filter((e) => reachable.has(e.key)).length,
+      );
+    });
+
     const visited = new Set<string>();
-    let queue: AgentGraphNode[] = terminals;
+    const results: Record<string, unknown> = {};
+    const descendants = new Map<string, Set<string>>();
+    const scoped = (deps: Set<string>) => {
+      const c: Record<string, unknown> = { ...initialExecutionContext };
+      deps.forEach((k) => {
+        c[k] = results[k];
+      });
+      return c;
+    };
+
+    const nonRootRemaining = () => [...reachable].some((k) => k !== rootKey && !visited.has(k));
+    while (nonRootRemaining()) {
+      let next = order.find(
+        (k) => k !== rootKey && !visited.has(k) && outdeg.get(k)! <= 0,
+      );
+      if (next === undefined) {
+        // Cycle break: lowest remaining out-degree, tie-broken by discovery order
+        next = order
+          .filter((k) => k !== rootKey && !visited.has(k))
+          .sort((a, b) => outdeg.get(a)! - outdeg.get(b)!)[0];
+      }
+
+      const desc = new Set<string>();
+      this._nodes[next]!.getEdges().forEach((e) => {
+        if (!reachable.has(e.key) || !visited.has(e.key)) {
+          return;
+        }
+        desc.add(e.key);
+        descendants.get(e.key)?.forEach((d) => desc.add(d));
+      });
+      descendants.set(next, desc);
+      visited.add(next);
+
+      results[next] = fn(this._nodes[next]!, scoped(desc));
+      this.getParentNodes(next).forEach((p) => {
+        const pk = p.getKey();
+        if (pk !== rootKey && reachable.has(pk)) {
+          outdeg.set(pk, outdeg.get(pk)! - 1);
+        }
+      });
+    }
+
+    // Root last; depends on every reachable non-root node
+    const rootDeps = new Set<string>([...reachable].filter((k) => k !== rootKey));
+    visited.add(rootKey);
+    results[rootKey] = fn(root, scoped(rootDeps));
+  }
+
+  /**
+   * Reachable set from root plus deterministic discovery order (BFS following
+   * declared edge order, root first). Used as a tie-break for topological traversal.
+   */
+  private _reachableAndDiscovery(rootKey: string): { reachable: Set<string>; order: string[] } {
+    const reachable = new Set<string>();
+    const order: string[] = [];
+    const queue: string[] = [rootKey];
+    reachable.add(rootKey);
+    order.push(rootKey);
 
     while (queue.length > 0) {
-      const nextQueue: AgentGraphNode[] = [];
-
-      queue.forEach((node) => {
-        const key = node.getKey();
-        if (visited.has(key)) {
-          return;
+      const key = queue.shift()!;
+      const node = this._nodes[key];
+      if (!node) {
+        continue;
+      }
+      node.getEdges().forEach((edge) => {
+        if (this._nodes[edge.key] && !reachable.has(edge.key)) {
+          reachable.add(edge.key);
+          order.push(edge.key);
+          queue.push(edge.key);
         }
-        visited.add(key);
-
-        // Defer the root so it is always processed last
-        if (key === rootKey) {
-          return;
-        }
-
-        const result = fn(node, executionContext);
-        executionContext[key] = result;
-
-        this.getParentNodes(key).forEach((parent) => {
-          if (!visited.has(parent.getKey())) {
-            nextQueue.push(parent);
-          }
-        });
       });
-
-      queue = nextQueue;
     }
 
-    // Root is always last — only invoke if it was reached during traversal
-    const root = this._nodes[rootKey];
-    if (root && visited.has(rootKey)) {
-      const result = fn(root, executionContext);
-      executionContext[rootKey] = result;
-    }
+    return { reachable, order };
   }
 
   /**

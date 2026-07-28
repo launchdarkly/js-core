@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Breaking Changes
+
+* **server-ai:** `AgentGraphDefinition.traverse` / `reverseTraverse` now use topological (dependency) order instead of shortest-path BFS. On convergent graphs a node is deferred until all predecessors (forward) or descendants (reverse) have run. `reverseTraverse` on graphs with no terminal nodes now visits every reachable node (root last) instead of no-opping. Each node's callback also receives a context scoped to the initial context plus that node's dependency results only — unrelated parallel-branch results are no longer included.
+
 ## [1.3.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.2.3...server-sdk-ai-v1.3.0) (2026-07-22)
 
 

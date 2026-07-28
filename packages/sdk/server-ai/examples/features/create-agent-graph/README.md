@@ -29,7 +29,7 @@ yarn workspace create-agent-graph start
 
 The example demonstrates both traversal directions:
 
-- **Forward traversal** (`graph.traverse`) walks root → terminals (BFS). Use this when your framework expects a parent to be defined first so that child agents can be registered on it (e.g. OpenAI Agents SDK).
-- **Reverse traversal** (`graph.reverseTraverse`) walks terminals → root. Use this when your framework expects children to be defined first so they can be attached to their parent as tools or sub-graphs (e.g. LangGraph).
+- **Forward traversal** (`graph.traverse`) walks root → terminals in topological order (a node only after its predecessors). Use this when your framework expects a parent to be defined first so that child agents can be registered on it (e.g. OpenAI Agents SDK).
+- **Reverse traversal** (`graph.reverseTraverse`) walks terminals → root in reverse topological order (a node only after its descendants). Use this when your framework expects children to be defined first so they can be attached to their parent as tools or sub-graphs (e.g. LangGraph).
 
 Each callback receives an `executionContext` map where the previously processed nodes' return values are available by node key.
