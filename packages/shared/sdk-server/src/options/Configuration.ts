@@ -260,6 +260,18 @@ function validateFDv1FallbackOptions(
   return { errors, validatedOptions: validatedOptions as FDv1FallbackConfiguration };
 }
 
+// validateTypesAndNames shares its `validations` table with the top-level options, so baseUri
+// passes type checking here too -- but standard/streamingOnly/pollingOnly never read it off
+// dataSource; each already gets its endpoint from Configuration.serviceEndpoints. Reject it
+// explicitly, mirroring how validateFDv1FallbackOptions rejects fields outside its own table.
+function rejectDataSourceBaseUri(dataSource: Options, validatedDataSource: Options): string[] {
+  if (!Object.prototype.hasOwnProperty.call(dataSource, 'baseUri')) {
+    return [];
+  }
+  delete validatedDataSource.baseUri;
+  return [OptionMessages.unknownOption('dataSystem.dataSource.baseUri')];
+}
+
 function validateDataSystemOptions(options: Options): {
   errors: string[];
   validatedOptions: Options;
@@ -310,16 +322,19 @@ function validateDataSystemOptions(options: Options): {
         options.dataSource,
         defaultStandardDataSourceOptions,
       ));
+      errors.push(...rejectDataSourceBaseUri(options.dataSource, validatedDataSourceOptions));
     } else if (isStreamingOnlyOptions(options.dataSource)) {
       ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
         options.dataSource,
         defaultStreamingDataSourceOptions,
       ));
+      errors.push(...rejectDataSourceBaseUri(options.dataSource, validatedDataSourceOptions));
     } else if (isPollingOnlyOptions(options.dataSource)) {
       ({ errors, validatedOptions: validatedDataSourceOptions } = validateTypesAndNames(
         options.dataSource,
         defaultPollingDataSourceOptions,
       ));
+      errors.push(...rejectDataSourceBaseUri(options.dataSource, validatedDataSourceOptions));
     } else if (isCustomOptions(options.dataSource)) {
       validatedDataSourceOptions = options.dataSource;
       errors = [];
