@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.20.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.5...js-server-sdk-common-v2.20.0) (2026-07-28)
+
+
+### Features
+
+* **sdk-server-common:** add support for custom base uris in FDv2 datasources  ([#1827](https://github.com/launchdarkly/js-core/issues/1827)) ([5d028c3](https://github.com/launchdarkly/js-core/commit/5d028c36ab308973957dff226839026994b70fd2))
+
 ## [2.19.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.4...js-server-sdk-common-v2.19.5) (2026-07-21)
 
 
