@@ -448,6 +448,231 @@ function collectOrder(
   return order;
 }
 
+/** Canonical G1–G6/G2b vectors from sdk-specs AIGRAPH test-vectors/vectors.json. */
+type TraversalVector = {
+  id: string;
+  root: string;
+  nodes: string[];
+  edges: [string, string][];
+  traverse: string[];
+  reverseTraverse: string[];
+  traverseContext: Record<string, string[]>;
+  reverseTraverseContext: Record<string, string[]>;
+};
+
+const TRAVERSAL_VECTORS: TraversalVector[] = [
+  {
+    id: 'G1',
+    root: 'a',
+    nodes: ['a', 'b', 'c'],
+    edges: [
+      ['a', 'b'],
+      ['b', 'c'],
+    ],
+    traverse: ['a', 'b', 'c'],
+    reverseTraverse: ['c', 'b', 'a'],
+    traverseContext: { a: [], b: ['a'], c: ['a', 'b'] },
+    reverseTraverseContext: { a: ['b', 'c'], b: ['c'], c: [] },
+  },
+  {
+    id: 'G2',
+    root: 'a',
+    nodes: ['a', 'b', 'c', 'd', 'e'],
+    edges: [
+      ['a', 'b'],
+      ['a', 'c'],
+      ['c', 'd'],
+      ['d', 'e'],
+      ['b', 'e'],
+    ],
+    traverse: ['a', 'b', 'c', 'd', 'e'],
+    reverseTraverse: ['e', 'b', 'd', 'c', 'a'],
+    traverseContext: {
+      a: [],
+      b: ['a'],
+      c: ['a'],
+      d: ['a', 'c'],
+      e: ['a', 'b', 'c', 'd'],
+    },
+    reverseTraverseContext: {
+      a: ['b', 'c', 'd', 'e'],
+      b: ['e'],
+      c: ['d', 'e'],
+      d: ['e'],
+      e: [],
+    },
+  },
+  {
+    id: 'G2b',
+    root: 'a',
+    nodes: ['a', 'b', 'c', 'd', 'e'],
+    edges: [
+      ['a', 'c'],
+      ['a', 'b'],
+      ['c', 'd'],
+      ['d', 'e'],
+      ['b', 'e'],
+    ],
+    traverse: ['a', 'c', 'b', 'd', 'e'],
+    reverseTraverse: ['e', 'b', 'd', 'c', 'a'],
+    traverseContext: {
+      a: [],
+      b: ['a'],
+      c: ['a'],
+      d: ['a', 'c'],
+      e: ['a', 'b', 'c', 'd'],
+    },
+    reverseTraverseContext: {
+      a: ['b', 'c', 'd', 'e'],
+      b: ['e'],
+      c: ['d', 'e'],
+      d: ['e'],
+      e: [],
+    },
+  },
+  {
+    id: 'G3',
+    root: 'a',
+    nodes: ['a', 'b', 'c', 'd'],
+    edges: [
+      ['a', 'b'],
+      ['a', 'c'],
+      ['b', 'd'],
+      ['c', 'd'],
+    ],
+    traverse: ['a', 'b', 'c', 'd'],
+    reverseTraverse: ['d', 'b', 'c', 'a'],
+    traverseContext: {
+      a: [],
+      b: ['a'],
+      c: ['a'],
+      d: ['a', 'b', 'c'],
+    },
+    reverseTraverseContext: {
+      a: ['b', 'c', 'd'],
+      b: ['d'],
+      c: ['d'],
+      d: [],
+    },
+  },
+  {
+    id: 'G4',
+    root: 'a',
+    nodes: ['a', 'n', 'm', 't'],
+    edges: [
+      ['a', 'n'],
+      ['n', 'm'],
+      ['n', 't'],
+      ['m', 't'],
+    ],
+    traverse: ['a', 'n', 'm', 't'],
+    reverseTraverse: ['t', 'm', 'n', 'a'],
+    traverseContext: {
+      a: [],
+      n: ['a'],
+      m: ['a', 'n'],
+      t: ['a', 'm', 'n'],
+    },
+    reverseTraverseContext: {
+      a: ['m', 'n', 't'],
+      n: ['m', 't'],
+      m: ['t'],
+      t: [],
+    },
+  },
+  {
+    id: 'G5',
+    root: 'a',
+    nodes: ['a', 'b', 'c', 'd'],
+    edges: [
+      ['a', 'b'],
+      ['a', 'c'],
+      ['b', 'd'],
+    ],
+    traverse: ['a', 'b', 'c', 'd'],
+    reverseTraverse: ['c', 'd', 'b', 'a'],
+    traverseContext: {
+      a: [],
+      b: ['a'],
+      c: ['a'],
+      d: ['a', 'b'],
+    },
+    reverseTraverseContext: {
+      a: ['b', 'c', 'd'],
+      b: ['d'],
+      c: [],
+      d: [],
+    },
+  },
+  {
+    id: 'G6',
+    root: 'a',
+    nodes: ['a', 'b', 'c'],
+    edges: [
+      ['a', 'b'],
+      ['b', 'c'],
+      ['c', 'b'],
+    ],
+    traverse: ['a', 'b', 'c'],
+    reverseTraverse: ['b', 'c', 'a'],
+    traverseContext: { a: [], b: ['a'], c: ['a', 'b'] },
+    reverseTraverseContext: { a: ['b', 'c'], b: [], c: ['b'] },
+  },
+];
+
+/** Converts [src, tgt] pairs into makeGraph edges, preserving declaration order. */
+function edgesFromPairs(pairs: [string, string][]): Record<string, LDGraphEdge[]> {
+  const edges: Record<string, LDGraphEdge[]> = {};
+  for (const [src, tgt] of pairs) {
+    if (!edges[src]) {
+      edges[src] = [];
+    }
+    edges[src].push({ key: tgt });
+  }
+  return edges;
+}
+
+function makeDefinitionFromVector(v: TraversalVector): AgentGraphDefinition {
+  const configs: Record<string, LDAIAgentConfig> = {};
+  for (const key of v.nodes) {
+    configs[key] = makeAgentConfig(key);
+  }
+  return makeDefinition(makeGraph(v.root, edgesFromPairs(v.edges)), configs);
+}
+
+it.each(TRAVERSAL_VECTORS)(
+  '$id asserts traverse/reverse order and exact scoped context',
+  (v) => {
+    const def = makeDefinitionFromVector(v);
+
+    const fwdOrder: string[] = [];
+    const fwdCtx: Record<string, string[]> = {};
+    def.traverse((node, ctx) => {
+      const key = node.getKey();
+      fwdOrder.push(key);
+      fwdCtx[key] = Object.keys(ctx).sort();
+      return `${key}-result`;
+    });
+    expect(fwdOrder).toEqual(v.traverse);
+    for (const [key, expected] of Object.entries(v.traverseContext)) {
+      expect(fwdCtx[key]).toEqual([...expected].sort());
+    }
+
+    const revOrder: string[] = [];
+    const revCtx: Record<string, string[]> = {};
+    def.reverseTraverse((node, ctx) => {
+      const key = node.getKey();
+      revOrder.push(key);
+      revCtx[key] = Object.keys(ctx).sort();
+      return `${key}-result`;
+    });
+    expect(revOrder).toEqual(v.reverseTraverse);
+    for (const [key, expected] of Object.entries(v.reverseTraverseContext)) {
+      expect(revCtx[key]).toEqual([...expected].sort());
+    }
+  },
+);
+
 describe('given G1 linear graph a→b→c', () => {
   const graph = makeGraph('a', {
     a: [{ key: 'b' }],
