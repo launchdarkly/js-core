@@ -7,7 +7,7 @@ Most of the LaunchDarkly-related code can be found in [src/app/api/hello/route.t
 
 ## Prerequisites
 
-A node environment of version 16 and yarn are required to develop in this repository.
+A node environment of version 22 and yarn are required to develop in this repository.
 You will also need the [Vercel CLI](https://vercel.com/docs/cli) installed and a Vercel account to setup
 the test data required by this example. See the [Vercel docs](https://vercel.com/docs/storage/edge-config/get-started) on how to setup your Edge Config store.
 
