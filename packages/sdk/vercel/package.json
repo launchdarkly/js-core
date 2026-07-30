@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@launchdarkly/js-server-sdk-common-edge": "2.6.27",
-    "@vercel/edge-config": "^1.1.0"
+    "@vercel/edge-config": "^1.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
