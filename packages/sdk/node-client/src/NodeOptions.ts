@@ -48,6 +48,12 @@ export interface NodeOptions extends LDOptionsBase {
    * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
    *
    * Defaults to streaming.
+   *
+   * This option applies only when the FDv2 data system is not configured. When `dataSystem` is
+   * set, the FDv2 data system owns the initial connection mode and this option is ignored; a
+   * warning is logged in that case. Use
+   * `dataSystem.automaticModeSwitching.initialConnectionMode` (with `automaticModeSwitching.type`
+   * set to `'manual'`) to set the initial connection mode for the FDv2 data system.
    */
   initialConnectionMode?: ConnectionMode;
 
