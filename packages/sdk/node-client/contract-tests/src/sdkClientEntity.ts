@@ -94,6 +94,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
     withReasons: options.clientSide.evaluationReasons,
     useReport: options.clientSide.useReport ?? undefined,
     disableCache: true,
+    useMobileKey: true,
   };
 
   if (options.serviceEndpoints) {

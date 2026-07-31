@@ -23,6 +23,7 @@ app.get('/', (req: Request, res: Response) => {
   res.json({
     capabilities: [
       'client-side',
+      'mobile',
       'service-endpoints',
       'tags',
       'user-type',
@@ -40,6 +41,10 @@ app.get('/', (req: Request, res: Response) => {
       'tls:skip-verify-peer',
       'tls:custom-ca',
       'wrapper',
+      'client-event-source-http-errors',
+      // NOTE: this needs additional fixes to the shared
+      // SDK code to support
+      // 'fdv1-fallback',
     ],
   });
 });

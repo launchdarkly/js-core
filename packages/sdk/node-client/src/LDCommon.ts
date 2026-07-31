@@ -49,3 +49,8 @@ export type {
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
 } from '@launchdarkly/js-client-sdk-common';
+
+/**
+ * The subset of FDv2 connection modes supported by the Node.js client SDK.
+ */
+export type FDv2ConnectionMode = 'streaming' | 'polling' | 'offline';

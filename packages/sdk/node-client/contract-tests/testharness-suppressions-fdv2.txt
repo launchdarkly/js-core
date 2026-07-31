@@ -5,3 +5,11 @@ streaming/fdv2/reconnection state management/saves previously known state
 streaming/fdv2/reconnection state management/replaces previously known state
 streaming/fdv2/reconnection state management/updates previously known state
 streaming/fdv2/can discard partial events on errors
+
+# The harness adds a secondary SDKDataSystem for all client-side SDKs in the streaming
+# wrapper test (to satisfy the poll-before-stream assumption). Both data systems share the
+# same "streaming" connection mode name, so the secondary's Configure call overwrites the
+# primary's endpoints in the entity config. The SDK correctly connects to the secondary's
+# endpoints, but the test checks the primary's Synchronizers[0] endpoint which never
+# receives a request. This is a harness-level design issue; the SDK behavior is correct.
+wrapper/stream requests/wrapper name and version
