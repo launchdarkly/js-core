@@ -8,7 +8,7 @@ This example was scaffolded with [Electron Forge](https://www.electronforge.io/)
 
 ## Prerequisites
 
-- Node.js 16 or later
+- Node.js 22 or later
 - Yarn
 
 ## Build instructions

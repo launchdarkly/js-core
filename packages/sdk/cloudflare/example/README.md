@@ -5,7 +5,7 @@ SDK. This app was created with wrangler v2.
 
 ## Prerequisites
 
-A node environment of version 16 and yarn are required to develop in this repository.
+A node environment of version 22 and yarn are required to develop in this repository.
 You will also need the wrangler cli installed and a Cloudflare account to setup
 the test data required by this example. See the [wrangler docs](https://developers.cloudflare.com/workers/wrangler/commands/#login)
 on how to login to your Cloudflare account. Make sure you are logged in before
