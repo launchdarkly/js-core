@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         # Node versions to run on.
-        version: [20, 22]
+        version: [22, 24]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./actions/setup-yarn
         with:
-          node-version: 20
+          node-version: 22
       # Installs and starts Dante directly on the runner rather than in a container - see
       # proxy/setup.sh.
       - name: Install and start Dante (SOCKS proxy)
