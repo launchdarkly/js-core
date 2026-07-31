@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.10](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.9...react-sdk-v4.1.10) (2026-07-31)
+
+
+### Bug Fixes
+
+* Bump vercel SDK to latest  ([#1832](https://github.com/launchdarkly/js-core/issues/1832)) ([b0167a2](https://github.com/launchdarkly/js-core/commit/b0167a20b3ac599a231946b03efd9f790cf27d39))
+
 ## [4.1.9](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.8...react-sdk-v4.1.9) (2026-07-28)
 
 

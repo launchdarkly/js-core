@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.4.3...node-client-sdk-v0.5.0) (2026-07-31)
+
+
+### Features
+
+* Add FDv2 data system support to NodeClient ([#1775](https://github.com/launchdarkly/js-core/issues/1775)) ([3ea0f33](https://github.com/launchdarkly/js-core/commit/3ea0f3398d25e8881775937a6ce2872242e4cbcc))
+
 ## [0.4.3](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.4.2...node-client-sdk-v0.4.3) (2026-07-22)
 
 
