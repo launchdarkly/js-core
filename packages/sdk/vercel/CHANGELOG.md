@@ -20,6 +20,13 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [1.3.54](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.53...vercel-server-sdk-v1.3.54) (2026-07-31)
+
+
+### Bug Fixes
+
+* Bump vercel SDK to latest  ([#1832](https://github.com/launchdarkly/js-core/issues/1832)) ([b0167a2](https://github.com/launchdarkly/js-core/commit/b0167a20b3ac599a231946b03efd9f790cf27d39))
+
 ## [1.3.53](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.52...vercel-server-sdk-v1.3.53) (2026-07-28)
 
 
