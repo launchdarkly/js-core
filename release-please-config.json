@@ -159,7 +159,6 @@
       ]
     },
     "packages/sdk/node-client": {
-      "release-as": "4.0.0",
       "extra-files": [
         "src/platform/NodeInfo.ts",
         {
