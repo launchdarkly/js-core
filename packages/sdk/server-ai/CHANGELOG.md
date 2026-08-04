@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.3.1...server-sdk-ai-v2.0.0) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* Make AgentGraph traversal topological ([#1830](https://github.com/launchdarkly/js-core/issues/1830))
+
+### Bug Fixes
+
+* Make AgentGraph traversal topological ([#1830](https://github.com/launchdarkly/js-core/issues/1830)) ([d240b07](https://github.com/launchdarkly/js-core/commit/d240b07bd584f282b8588bfe111c1361e09d2328))
+
 ## [1.3.1](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v1.3.0...server-sdk-ai-v1.3.1) (2026-07-28)
 
 
