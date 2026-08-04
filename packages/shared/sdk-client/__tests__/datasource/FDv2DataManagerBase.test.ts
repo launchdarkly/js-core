@@ -84,6 +84,7 @@ function makeFlagManager() {
     init: jest.fn(),
     upsert: jest.fn(),
     applyChanges: jest.fn().mockResolvedValue(undefined),
+    setBootstrap: jest.fn(),
     get: jest.fn(),
     getAll: jest.fn(),
     on: jest.fn(),
@@ -216,6 +217,51 @@ it('resolves identify immediately when bootstrap is provided', async () => {
   const { resolve } = await identifyManager(manager, { bootstrap: {} });
 
   expect(resolve).toHaveBeenCalledTimes(1);
+
+  manager.close();
+});
+
+it('applies bootstrap data to the flag manager on identify', async () => {
+  const flagManager = makeFlagManager();
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
+  const bootstrap = {
+    'string-flag': 'is bob',
+    $flagsState: { 'string-flag': { variation: 1, version: 3 } },
+    $valid: true,
+  };
+
+  await identifyManager(manager, { bootstrap });
+
+  expect(flagManager.setBootstrap).toHaveBeenCalledWith(expect.anything(), {
+    'string-flag': { version: 3, flag: { version: 3, variation: 1, value: 'is bob' } },
+  });
+
+  manager.close();
+});
+
+it('applies new bootstrap data to the flag manager on re-identify', async () => {
+  const flagManager = makeFlagManager();
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
+
+  await identifyManager(manager, {
+    bootstrap: {
+      'string-flag': 'is bob',
+      $flagsState: { 'string-flag': { variation: 1, version: 3 } },
+      $valid: true,
+    },
+  });
+  await identifyManager(manager, {
+    bootstrap: {
+      'string-flag': 'is alice',
+      $flagsState: { 'string-flag': { variation: 0, version: 4 } },
+      $valid: true,
+    },
+  });
+
+  expect(flagManager.setBootstrap).toHaveBeenCalledTimes(2);
+  expect(flagManager.setBootstrap).toHaveBeenLastCalledWith(expect.anything(), {
+    'string-flag': { version: 4, flag: { version: 4, variation: 0, value: 'is alice' } },
+  });
 
   manager.close();
 });
