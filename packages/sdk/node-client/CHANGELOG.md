@@ -1,5 +1,31 @@
 # Changelog
 
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.5.0...node-client-sdk-v4.0.0) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `identify()` resolves an identify result and no longer throws
+* The on-disk persistent cache format changed; v3 cache data will not be read by v4 and the anonymous key will be regenerated on first identify.
+
+### BREAKING-CHANGE
+
+* The package name changed from `launchdarkly-node-client-sdk` to `@launchdarkly/node-client-sdk`. ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+
+
+### Features
+
+* `identify()` resolves an identify result and no longer throws ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Add useMobileKey option to NodeOptions ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Evaluation, identify, and track hooks ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Inspector support for flag and context state ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Plugin extension surface with `applicationInfo` metadata ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Runtime connection-mode control via `setConnectionMode` ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Storage configuration with file-backed default and custom-implementation override ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* support client side secure mode with client side id ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* support wrapper header ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* TLS configuration via `tlsParams` ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+
 ## [0.5.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.4.3...node-client-sdk-v0.5.0) (2026-07-31)
 
 
