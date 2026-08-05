@@ -160,9 +160,8 @@ it('includes authorization and user-agent headers on the events request', async 
   expect(headers).toMatchObject({
     authorization: 'client-side-id',
   });
-  // The SDK user-agent header is keyed off NodeInfo.sdkData().userAgentBase. The mocked
-  // platform reports 'NodeClient', so the header value should start with that prefix.
-  expect(headers['user-agent']).toMatch(/^NodeClient\//);
+  // user-agent comes from NodeInfo.sdkData().userAgentBase, hardcoded to 'NodeClientSide' in makeMockPlatform.
+  expect(headers['user-agent']).toMatch(/^NodeClientSide\//);
 
   await client.close();
 });
