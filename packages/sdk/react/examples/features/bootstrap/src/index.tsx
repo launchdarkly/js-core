@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 
 import {
+  basicLogger,
   createLDReactProvider,
   LDContext,
   LDReactProviderOptions,
@@ -40,7 +41,13 @@ if (!bootstrapData || !context) {
 } else {
   // Pass the server-evaluated payload as `bootstrap` so the client renders real flag values
   // on first paint instead of waiting for the SDK to fetch them.
-  const options: LDReactProviderOptions = { bootstrap: bootstrapData };
+  //
+  // basicLogger is used here instead of the default logger so this example doubles as an
+  // example on how to override the default logger.
+  const options: LDReactProviderOptions = {
+    bootstrap: bootstrapData,
+    ldOptions: { logger: basicLogger({ level: 'info', destination: console.log }) },
+  };
   const LDReactProvider = createLDReactProvider(clientSideId, context, options);
 
   root.render(
