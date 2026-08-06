@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.1](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.0...node-client-sdk-v4.0.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **node-client-sdk:** adding docs to clarify FDv2 datasystem will ignore `initialConnectionMode` ([#1835](https://github.com/launchdarkly/js-core/issues/1835)) ([b43c784](https://github.com/launchdarkly/js-core/commit/b43c78460a738b38eabc8b72698ca86cf1faafd3))
+* **node-client-sdk:** correct sdk_metadata.json entry and restore userAgentBase ([#1840](https://github.com/launchdarkly/js-core/issues/1840)) ([5da9ef6](https://github.com/launchdarkly/js-core/commit/5da9ef63716d7b5aa24c2199149ea32ef8f76d57))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.30.1 to 1.30.2
+
 ## [4.0.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.5.0...node-client-sdk-v4.0.0) (2026-08-04)
 
 

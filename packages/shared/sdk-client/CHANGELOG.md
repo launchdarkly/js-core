@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.30.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.1...js-client-sdk-common-v1.30.2) (2026-08-06)
+
+
+### Bug Fixes
+
+* **sdk-client-common:** `identify()` bootstrap does not set flagstore in FDv2 ([#1837](https://github.com/launchdarkly/js-core/issues/1837)) ([574f816](https://github.com/launchdarkly/js-core/commit/574f8164ed930423c44d82d4c1ad210387bfc5b9))
+
 ## [1.30.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.0...js-client-sdk-common-v1.30.1) (2026-07-22)
 
 
