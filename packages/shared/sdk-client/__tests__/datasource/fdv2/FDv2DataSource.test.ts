@@ -1106,3 +1106,38 @@ it('fdv1 fallback triggered on interrupted result with fdv1Fallback flag', async
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
   ds.close();
 });
+
+it('stops initializer chain when a status result triggers fdv1 fallback', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const secondInit = makeMockInitializer(
+    changeSet(makePayload({ state: 'second-selector' }), { fdv1Fallback: false }),
+  );
+  const secondInitRunSpy = jest.spyOn(secondInit, 'run');
+
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeInitFactory(makeMockInitializer(terminalError(makeErrorInfo(), { fdv1Fallback: true }))),
+      makeInitFactory(secondInit),
+    ],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  // Start resolves when the fdv1 synchronizer delivers its changeSet.
+  await ds.start();
+
+  expect(secondInitRunSpy).not.toHaveBeenCalled();
+  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  ds.close();
+});
