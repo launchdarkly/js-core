@@ -15,6 +15,7 @@ import {
 import { LDIdentifyOptions } from '../api/LDIdentifyOptions';
 import { Configuration } from '../configuration/Configuration';
 import { DataManager } from '../DataManager';
+import { readFlagsFromBootstrap } from '../flag-manager/bootstrap';
 import { FlagManager } from '../flag-manager/FlagManager';
 import LDEmitter from '../LDEmitter';
 import { namespaceForEnvironment } from '../storage/namespaceUtils';
@@ -559,10 +560,14 @@ export function createFDv2DataManagerBase(
       bootstrapped = identifyOptions?.bootstrap !== undefined;
 
       if (bootstrapped) {
-        // Bootstrap data was already applied to the flag store by the
-        // caller (BrowserClient.start → presetFlags) before identify
-        // was called. Resolve immediately — flag evaluations will use
-        // the bootstrap data synchronously.
+        let { bootstrapParsed } = identifyOptions!;
+        if (!bootstrapParsed) {
+          bootstrapParsed = readFlagsFromBootstrap(logger, identifyOptions!.bootstrap);
+        }
+        flagManager.setBootstrap(context, bootstrapParsed);
+
+        // Resolve immediately - flag evaluations will use the bootstrap
+        // data right away.
         initialized = true;
         statusManager.requestStateUpdate('VALID');
         // selector remains undefined — bootstrap data has no selector.
