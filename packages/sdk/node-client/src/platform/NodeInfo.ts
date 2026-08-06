@@ -39,7 +39,7 @@ export default class NodeInfo implements Info {
     const data: SdkData = {
       name: sdkName,
       version: sdkVersion,
-      userAgentBase: 'NodeClient',
+      userAgentBase: 'NodeClientSide',
     };
     if (this._config.wrapperName) {
       data.wrapperName = this._config.wrapperName;
