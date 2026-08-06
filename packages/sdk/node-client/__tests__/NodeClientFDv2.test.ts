@@ -161,6 +161,37 @@ it('getConnectionMode reflects FDv2 manual polling mode at construction', () => 
   expect(client.isOffline()).toBe(false);
 });
 
+it('warns that initialConnectionMode is ignored when dataSystem is also configured', () => {
+  const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    dataSystem: {},
+    initialConnectionMode: 'offline',
+    diagnosticOptOut: true,
+    sendEvents: false,
+    logger,
+    localStoragePath: tmpRoot,
+  });
+
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
+
+  // The warning is diagnostic only: the FDv2 data system still owns mode resolution,
+  // so the FDv1-style initialConnectionMode does not take effect.
+  expect(client.getConnectionMode()).toBe('streaming');
+  expect(client.isOffline()).toBe(false);
+});
+
+it('does not warn about initialConnectionMode when only dataSystem is configured', () => {
+  createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    dataSystem: {},
+    diagnosticOptOut: true,
+    sendEvents: false,
+    logger,
+    localStoragePath: tmpRoot,
+  });
+
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
 // ------ buildQueryParams coverage ------
 
 it('buildQueryParams returns [] in FDv2 mobile key mode', () => {

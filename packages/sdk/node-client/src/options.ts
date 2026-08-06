@@ -115,6 +115,21 @@ export default function validateOptions(opts: NodeOptions, logger: LDLogger): Va
     );
   }
 
+  const dataSystemConfigured =
+    typeof opts.dataSystem === 'object' && opts.dataSystem !== null && !Array.isArray(opts.dataSystem);
+  if (
+    dataSystemConfigured &&
+    opts.initialConnectionMode !== undefined &&
+    opts.initialConnectionMode !== null
+  ) {
+    logger.warn(
+      'Both "dataSystem" and "initialConnectionMode" are set. "initialConnectionMode" applies ' +
+        'only when the FDv2 data system is not configured and will be ignored. Use ' +
+        '"dataSystem.automaticModeSwitching.initialConnectionMode" (with automaticModeSwitching.type ' +
+        'set to "manual") to set the initial connection mode for the FDv2 data system.',
+    );
+  }
+
   if (output.tlsParams?.rejectUnauthorized === false) {
     logger.warn(
       'TLS certificate verification is disabled via tlsParams.rejectUnauthorized=false. ' +
