@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.4](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v0.1.3...vue-client-sdk-v0.1.4) (2026-08-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped to 4.9.4
+
 ## [0.1.3](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v0.1.2...vue-client-sdk-v0.1.3) (2026-07-22)
 
 
