@@ -1141,3 +1141,42 @@ it('stops initializer chain when a status result triggers fdv1 fallback', async 
   expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
   ds.close();
 });
+
+it('stops initializer chain when a transfer-none changeSet triggers fdv1 fallback', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  // Shape produced by PollingBase on an HTTP 304: no payload content and no
+  // selector, but the response headers still carried the fallback directive.
+  const nonePayload = makePayload({ type: 'none', state: '' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const secondInit = makeMockInitializer(
+    changeSet(makePayload({ state: 'second-selector' }), { fdv1Fallback: false }),
+  );
+  const secondInitRunSpy = jest.spyOn(secondInit, 'run');
+
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeInitFactory(makeMockInitializer(changeSet(nonePayload, { fdv1Fallback: true }))),
+      makeInitFactory(secondInit),
+    ],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+  });
+
+  // Start resolves when the fdv1 synchronizer delivers its changeSet.
+  await ds.start();
+
+  expect(secondInitRunSpy).not.toHaveBeenCalled();
+  expect(dataCallback).not.toHaveBeenCalledWith(nonePayload);
+  expect(dataCallback).toHaveBeenCalledWith(fdv1Payload);
+  ds.close();
+});

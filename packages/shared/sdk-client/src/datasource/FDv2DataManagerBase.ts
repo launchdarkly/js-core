@@ -330,7 +330,12 @@ export function createFDv2DataManagerBase(
       `${logTag} dataCallback: type=${payload.type}, updates=${payload.updates.length}, state=${payload.state}`,
     );
 
-    selector = payload.state;
+    // A 'none' payload (e.g. an HTTP 304, or a streaming 'none' intent)
+    // carries no state -- it confirms existing data is still current and
+    // must not clear a selector already obtained from a prior payload.
+    if (payload.type !== 'none') {
+      selector = payload.state;
+    }
 
     const context = identifiedContext;
     if (!context) {

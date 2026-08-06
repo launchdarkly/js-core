@@ -162,21 +162,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       if (result.type === 'changeSet' && result.payload.type !== 'none') {
         applyChangeSet(result);
 
-        if (handleFdv1Fallback(result)) {
-          // FDv1 fallback triggered during initialization -- data was received
-          // but we should move to synchronizers where the FDv1 adapter will run.
-          dataReceived = true;
-          break;
-        }
-
-        if (result.payload.state) {
-          // Got basis data with a selector -- initialization is complete.
-          markInitialized();
-          return;
-        }
-
-        // Got data but no selector (e.g., cache). Record that data was
-        // received and continue to the next initializer.
+        // Data was received. Recorded before the fallback check below so that
+        // a directive arriving alongside a payload still counts as
+        // initialization data; the exhaustion branch marks initialization
+        // complete in that case.
         dataReceived = true;
       } else if (result.type === 'status') {
         switch (result.state) {
@@ -193,14 +182,26 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           default:
             break;
         }
-
-        if (handleFdv1Fallback(result)) {
-          // FDv1 fallback triggered during initialization - no further
-          // initializers should run once the server has directed the SDK
-          // off FDv2.
-          break;
-        }
       }
+
+      // Check for FDv1 fallback after all result handling, in one place. Any
+      // result can carry the directive, including a changeSet with a 'none'
+      // payload (an unchanged poll response), so the check must not be gated
+      // on the result type or the payload type. No further initializers run
+      // once the server has directed the SDK off FDv2; the FDv1 fallback
+      // synchronizer takes over.
+      if (handleFdv1Fallback(result)) {
+        break;
+      }
+
+      if (result.type === 'changeSet' && result.payload.type !== 'none' && result.payload.state) {
+        // Got basis data with a selector -- initialization is complete.
+        markInitialized();
+        return;
+      }
+
+      // Otherwise (data with no selector, e.g. cache; or a non-fatal status)
+      // continue to the next initializer.
     }
 
     // close() between the last loop iteration and the exhaustion branch.
