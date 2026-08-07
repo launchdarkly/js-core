@@ -1,4 +1,8 @@
-import { LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';
+import {
+  LDClientImpl,
+  LDOptions,
+  ServerInternalOptions,
+} from '@launchdarkly/js-server-sdk-common';
 
 import Platform from './platform';
 import platformInfo from './platform/OxygenInfo';
@@ -10,9 +14,13 @@ export * from '@launchdarkly/js-server-sdk-common';
 export type { OxygenLDOptions };
 
 class LDClient extends LDClientImpl {
-  // sdkKey is only used to query featureStore, not to initialize with LD servers
   constructor(sdkKey: string, platform: Platform, options: LDOptions) {
-    super(sdkKey, platform, options, createCallbacks(options.logger));
+    const internalOptions: ServerInternalOptions = {
+      // Oxygen's execution context ends when the response is returned, which makes keeping a
+      // background flush loop meaningless.
+      disableBackgroundEventFlush: true,
+    };
+    super(sdkKey, platform, options, createCallbacks(options.logger), internalOptions);
   }
 }
 
