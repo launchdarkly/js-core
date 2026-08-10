@@ -6,12 +6,6 @@
 [![NPM][node-client-dm-badge]][node-client-npm-link]
 [![NPM][node-client-dt-badge]][node-client-npm-link]
 
-> [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
-
 ## Getting started
 
 Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/node-js#getting-started) for instructions on getting started with using the SDK.

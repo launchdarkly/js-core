@@ -132,6 +132,38 @@
         "variationDetail": { "introduced": "4.1.2" }
       }
     },
+    "node-client-sdk": {
+      "name": "Node.js Client SDK",
+      "type": "client-side",
+      "path": "packages/sdk/node-client",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "node-client-sdk-"
+      },
+      "userAgents": ["NodeClientSide"],
+      "features": {
+        "allFlags": { "introduced": "1.0" },
+        "appMetadata": { "introduced": "2.0.4" },
+        "bigSegments": { "introduced": "1.0" },
+        "bootstrapping": { "introduced": "1.0" },
+        "contexts": { "introduced": "3.0" },
+        "eventCompression": { "introduced": "4.0" },
+        "experimentation": { "introduced": "1.1" },
+        "fdv2": { "introduced": "4.0" },
+        "flagChanges": { "introduced": "1.0" },
+        "hooks": { "introduced": "3.4" },
+        "inlineContextCustomEvents": { "introduced": "3.4" },
+        "offlineMode": { "introduced": "4.0" },
+        "perContextSummaryEvents": { "introduced": "3.4" },
+        "pluginSupport": { "introduced": "3.4" },
+        "pollingResponseCompression": { "introduced": "4.0" },
+        "privateAttrs": { "introduced": "1.0" },
+        "relayProxyProxy": { "introduced": "1.0" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" },
+        "variationDetail": { "introduced": "1.0" }
+      }
+    },
     "node-server": {
       "name": "Node.js Server SDK",
       "type": "server-side",

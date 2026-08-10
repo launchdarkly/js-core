@@ -26,8 +26,8 @@ it('returns sdk data with the package name, version, and user-agent base', () =>
   const info = new NodeInfo();
   const data = info.sdkData();
 
-  expect(data.name).toEqual('node-client-sdk')
-  expect(data.userAgentBase).toEqual('NodeClient')
+  expect(data.name).toEqual('node-client-sdk');
+  expect(data.userAgentBase).toEqual('NodeClientSide');
 });
 
 it('reports the runtime node version under platformData additional', () => {

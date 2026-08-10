@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@launchdarkly/node-server-sdk": "9.13.0",
-    "@launchdarkly/react-sdk": "4.1.10",
+    "@launchdarkly/react-sdk": "4.1.12",
     "ejs": "^5.0.2",
     "express": "^4.21.0",
     "react": "^19",

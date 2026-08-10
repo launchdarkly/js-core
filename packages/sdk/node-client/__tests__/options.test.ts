@@ -135,6 +135,81 @@ it('does not warn when only localStoragePath is set', () => {
   expect(logger.warn).not.toHaveBeenCalled();
 });
 
+it('warns when both dataSystem and initialConnectionMode are set', () => {
+  const out = validateOptions({ dataSystem: {}, initialConnectionMode: 'offline' }, logger);
+
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('dataSystem.automaticModeSwitching.initialConnectionMode'),
+  );
+  // Warning only: the validated value passes through unchanged. NodeClient ignores it
+  // on the FDv2 path.
+  expect(out.initialConnectionMode).toBe('offline');
+});
+
+it('warns when dataSystem is set alongside an explicit streaming initialConnectionMode', () => {
+  validateOptions({ dataSystem: {}, initialConnectionMode: 'streaming' }, logger);
+
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
+});
+
+it('warns when initialConnectionMode is set alongside a manual-mode dataSystem', () => {
+  validateOptions(
+    {
+      dataSystem: { automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' } },
+      initialConnectionMode: 'offline',
+    },
+    logger,
+  );
+
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
+});
+
+it('does not warn when dataSystem is set without initialConnectionMode', () => {
+  const out = validateOptions({ dataSystem: {} }, logger);
+
+  // The default is applied but the user did not opt in, so no warning is appropriate.
+  expect(out.initialConnectionMode).toBe('streaming');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('does not warn when initialConnectionMode is set without dataSystem', () => {
+  const out = validateOptions({ initialConnectionMode: 'offline' }, logger);
+
+  expect(out.initialConnectionMode).toBe('offline');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('does not warn when dataSystem is null', () => {
+  const out = validateOptions({ dataSystem: null as any, initialConnectionMode: 'offline' }, logger);
+
+  // null dataSystem never activates FDv2 (Configuration's validator skips nullish values),
+  // so initialConnectionMode is honored and warning here would be wrong.
+  expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
+  expect(out.initialConnectionMode).toBe('offline');
+});
+
+it('does not warn when dataSystem is a non-object value', () => {
+  validateOptions({ dataSystem: 'streaming' as any, initialConnectionMode: 'offline' }, logger);
+
+  // A non-object dataSystem fails Configuration's own type check and falls back to FDv1
+  // there too, so this mirrors the null case above.
+  expect(logger.warn).not.toHaveBeenCalledWith(
+    expect.stringContaining('Both "dataSystem" and "initialConnectionMode"'),
+  );
+});
+
+it('does not warn when initialConnectionMode is null', () => {
+  validateOptions({ dataSystem: {}, initialConnectionMode: null as any }, logger);
+
+  // The dataSystem/initialConnectionMode conflict check excludes null explicitly, matching
+  // how a caller would clear the option to opt back into the FDv2 default.
+  expect(logger.warn).not.toHaveBeenCalledWith(
+    expect.stringContaining('Both "dataSystem" and "initialConnectionMode"'),
+  );
+});
+
 it('defaults useMobileKey to false when omitted', () => {
   const validated = validateOptions({}, logger);
   expect(validated.useMobileKey).toBe(false);

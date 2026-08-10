@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.1.12](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.11...react-sdk-v4.1.12) (2026-08-07)
+
+
+### Bug Fixes
+
+* **react-sdk:** `basicLogger` was not re-exported causing compile time errors ([#1843](https://github.com/launchdarkly/js-core/issues/1843)) ([459c891](https://github.com/launchdarkly/js-core/commit/459c891a718ad52d2f34a7b6b9b53e3c858459cc))
+
+## [4.1.11](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.10...react-sdk-v4.1.11) (2026-08-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.9.3 to ^4.9.4
+
 ## [4.1.10](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.9...react-sdk-v4.1.10) (2026-07-31)
 
 

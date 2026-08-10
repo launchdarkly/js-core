@@ -81,7 +81,7 @@ export function makeMockPlatform(options: MockPlatformOptions = {}): Platform {
         const sdkData: SdkData = {
           name: 'node-client-sdk',
           version: '0.0.1',
-          userAgentBase: 'NodeClient',
+          userAgentBase: 'NodeClientSide',
         };
         if (options.wrapperName) {
           sdkData.wrapperName = options.wrapperName;

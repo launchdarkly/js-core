@@ -1,5 +1,46 @@
 # Changelog
 
+## [4.0.1](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.0...node-client-sdk-v4.0.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **node-client-sdk:** adding docs to clarify FDv2 datasystem will ignore `initialConnectionMode` ([#1835](https://github.com/launchdarkly/js-core/issues/1835)) ([b43c784](https://github.com/launchdarkly/js-core/commit/b43c78460a738b38eabc8b72698ca86cf1faafd3))
+* **node-client-sdk:** correct sdk_metadata.json entry and restore userAgentBase ([#1840](https://github.com/launchdarkly/js-core/issues/1840)) ([5da9ef6](https://github.com/launchdarkly/js-core/commit/5da9ef63716d7b5aa24c2199149ea32ef8f76d57))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.30.1 to 1.30.2
+
+## [4.0.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.5.0...node-client-sdk-v4.0.0) (2026-08-04)
+
+
+### ⚠ BREAKING CHANGES
+
+* `identify()` resolves an identify result and no longer throws
+* The on-disk persistent cache format changed; v3 cache data will not be read by v4 and the anonymous key will be regenerated on first identify.
+
+### BREAKING-CHANGE
+
+* The package name changed from `launchdarkly-node-client-sdk` to `@launchdarkly/node-client-sdk`. ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+
+
+### Features
+
+* `identify()` resolves an identify result and no longer throws ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Add useMobileKey option to NodeOptions ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Evaluation, identify, and track hooks ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Inspector support for flag and context state ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Plugin extension surface with `applicationInfo` metadata ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Runtime connection-mode control via `setConnectionMode` ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* Storage configuration with file-backed default and custom-implementation override ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* support client side secure mode with client side id ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* support wrapper header ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+* TLS configuration via `tlsParams` ([4116d2f](https://github.com/launchdarkly/js-core/commit/4116d2f4cee34d0c2b8041b2b2a93a2a61820471))
+
 ## [0.5.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v0.4.3...node-client-sdk-v0.5.0) (2026-07-31)
 
 
