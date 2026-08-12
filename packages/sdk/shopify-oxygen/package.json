@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/shopify-oxygen-sdk",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "LaunchDarkly Server-Side SDK for Shopify Oxygen Runtime",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/shopify-oxygen",
   "repository": {
