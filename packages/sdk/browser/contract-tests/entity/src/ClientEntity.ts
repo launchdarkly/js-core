@@ -334,18 +334,8 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     initialContext,
     sdkConfig,
   );
-  let failed = false;
-  try {
-    await Promise.race([
-      client.start(),
-      new Promise((_resolve, reject) => {
-        setTimeout(reject, timeout);
-      }),
-    ]);
-  } catch (_) {
-    // we get here if waitForInitialization() rejects or if we timed out
-    failed = true;
-  }
+  const { status } = await client.start({ timeout: timeout / 1000 });
+  const failed = status !== 'complete';
   if (failed && !options.configuration.initCanFail) {
     client.close();
     throw new Error('client initialization failed');
