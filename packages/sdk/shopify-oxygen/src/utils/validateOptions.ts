@@ -1,15 +1,15 @@
 import { LDOptions as LDOptionsCommon } from '@launchdarkly/js-server-sdk-common';
 
 export type OxygenCacheOptions = {
-  // The time-to-live for the cache in seconds. The default is 30 seconds since that is the
-  // minimum allowed polling interval for other SDKs. If this SDK is too noisy, then we can
-  // enforce cache and a minimum ttl here.
+  // Defaults to 30 seconds, LaunchDarkly's floor for polling intervals, so caching below
+  // that buys nothing: a fresh poll couldn't arrive any faster anyway.
+  // TODO: enforce a minimum ttlSeconds here if real-world usage turns out too noisy.
   ttlSeconds?: number;
   name?: string;
   enabled?: boolean;
 };
 
-export type OxygenLDOptions = Pick<LDOptionsCommon, 'logger'> & {
+export type OxygenLDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents'> & {
   cache?: OxygenCacheOptions;
 };
 

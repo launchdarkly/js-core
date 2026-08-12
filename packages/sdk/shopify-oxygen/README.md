@@ -65,7 +65,24 @@ Basic SDK usage example
 const ldClient = await init(sdkKey, options);
 await ldClient.waitForInitialization({timeout: 10});
 const flagValue = await ldClient.variation(flagKey, context, defaultValue);
+
+// Flush events and close the client before returning your response.
+await ldClient.flush();
+ldClient.close();
 ```
+
+This SDK is designed to be created per request: call `init()` inside your request handler. Oxygen runs each
+request in its own execution context, and that execution context ends when your handler returns the response.
+The SDK therefore cannot use a periodic background flush to deliver analytics events, so how events are
+delivered is a decision you make in your handler:
+
+- **Do not call `flush()`.** Any events the SDK buffered during the request are discarded when the execution
+  context ends. This is a legitimate choice, and it is functionally equivalent to setting `sendEvents: false`.
+  The only difference is that the SDK still does the work of buffering events during the request.
+- **Call `flush()` before you return the response.** This is required for flag evaluation and identify
+  events to reach LaunchDarkly: call `await ldClient.flush()` at the end of every request that evaluates a
+  flag, as shown above. `close()` releases the client's timers but does not flush, so `close()` on its own
+  does not deliver events.
 
 Options
 -----------

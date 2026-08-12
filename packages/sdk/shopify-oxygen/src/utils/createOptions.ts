@@ -2,20 +2,20 @@ import { BasicLogger, LDOptions } from '@launchdarkly/js-server-sdk-common';
 
 import { OxygenLDOptions } from './validateOptions';
 
-// Most limitations could be explained in the following references:
+// The defaults below follow from Oxygen's platform constraints, documented here:
 // - https://shopify.dev/docs/storefronts/headless/hydrogen/fundamentals
 // - https://shopify.dev/docs/storefronts/headless/hydrogen/deployments/oxygen-runtime
 export const defaultOptions: LDOptions & OxygenLDOptions = {
-  // Streaming does not make sense for Oxygen worker environments as they are not designed to be long-lived.
-  // Specifically "Outbound API requests must complete within 2 minutes"
+  // Streaming doesn't fit Oxygen workers: they aren't long-lived, and outbound requests
+  // must complete within 2 minutes.
   stream: false,
 
-  // TODO: make sure this is necessary
+  // Diagnostics send an un-awaited POST per client, and Oxygen creates one client per
+  // request, so this stays off, this is consistent with our general edge sdk paradigm.
   diagnosticOptOut: true,
 
-  // 2 minutes is the maximum allowed time for outbound API requests
-  // so we set this to anything above that since we only want to have 1
-  // poll request per request handler execution.
+  // pollInterval only needs to clear that 2-minute limit, which caps this at one poll per
+  // request handler execution.
   pollInterval: 300,
 
   logger: new BasicLogger({ name: 'Shopify Oxygen SDK' }),

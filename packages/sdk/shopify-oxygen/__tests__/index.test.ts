@@ -1,7 +1,27 @@
-import { LDClient, LDContext } from '@launchdarkly/js-server-sdk-common';
+import { internal, LDClient, LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { init, OxygenLDOptions } from '../src/index';
+import { init } from '../src/index';
 import { setupTestEnvironment } from './setup';
+
+jest.mock('@launchdarkly/js-sdk-common', () => {
+  const actual = jest.requireActual('@launchdarkly/js-sdk-common');
+  return {
+    ...actual,
+    ...{
+      internal: {
+        ...actual.internal,
+        DiagnosticsManager: jest.fn(),
+        // Other tests in this file exercise variation()/allFlagsState()/close() against a real
+        // client, so the mock must still behave like a usable event processor.
+        EventProcessor: jest.fn().mockImplementation(() => ({
+          close: jest.fn(),
+          sendEvent: jest.fn(),
+          flush: jest.fn().mockResolvedValue(undefined),
+        })),
+      },
+    },
+  };
+});
 
 const sdkKey = 'test-sdk-key';
 const flagKey1 = 'testFlag1';
@@ -11,8 +31,12 @@ const context: LDContext = { kind: 'user', key: 'test-user-key-1' };
 
 describe('Shopify Oxygen SDK', () => {
   describe('initialization tests', () => {
+    let mockEventProcessor = internal.EventProcessor as jest.Mock;
+
     beforeEach(async () => {
       await setupTestEnvironment();
+      mockEventProcessor = internal.EventProcessor as jest.Mock;
+      mockEventProcessor.mockClear();
     });
 
     it('will initialize successfully with default options', async () => {
@@ -28,7 +52,7 @@ describe('Shopify Oxygen SDK', () => {
         cache: {
           enabled: false,
         },
-      } as OxygenLDOptions);
+      });
       await ldClient.waitForInitialization();
       expect(ldClient).toBeDefined();
       ldClient.close();
@@ -36,6 +60,18 @@ describe('Shopify Oxygen SDK', () => {
 
     it('will fail to initialize if there is no SDK key', () => {
       expect(() => init(null as any)).toThrow();
+    });
+
+    it('constructs the event processor without background flush timers', async () => {
+      const ldClient = init(sdkKey, { sendEvents: true });
+      await ldClient.waitForInitialization();
+
+      // EventProcessor's 6th positional argument is `start`; asserting it's false confirms
+      // disableBackgroundEventFlush actually reaches the underlying processor.
+      expect(mockEventProcessor).toHaveBeenCalled();
+      expect(mockEventProcessor.mock.calls[0][5]).toBe(false);
+
+      ldClient.close();
     });
   });
 
@@ -53,7 +89,7 @@ describe('Shopify Oxygen SDK', () => {
           cache: {
             enabled: false,
           },
-        } as OxygenLDOptions);
+        });
         await ldClient.waitForInitialization();
       });
 
