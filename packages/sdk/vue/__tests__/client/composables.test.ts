@@ -143,3 +143,21 @@ it('throws when used without a provider', () => {
 
   expect(() => mount(Child)).toThrow(/LaunchDarkly client was not found/);
 });
+
+it('subscribes to onContextChange on mount and unsubscribes on scope dispose', () => {
+  const { client, controls } = makeMockClient();
+  const Child = defineComponent({
+    setup() {
+      useBoolVariation('flag', false);
+      return () => h('div');
+    },
+  });
+
+  // Provider adds one onContextChange subscriber; the composable adds a second.
+  const wrapper = mountUnderProvider(client, Child);
+  expect(controls.contextSubscriberCount()).toBe(2);
+
+  // Unmounting disposes both scopes; every onContextChange subscription is removed.
+  wrapper.unmount();
+  expect(controls.contextSubscriberCount()).toBe(0);
+});

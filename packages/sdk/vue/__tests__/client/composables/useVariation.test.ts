@@ -137,7 +137,10 @@ it('useBoolVariation evaluates once when initialization completes', async () => 
   expect(wrapper.text()).toBe('false');
   expect(client.boolVariation).not.toHaveBeenCalled();
 
+  // start() resolving to complete flips the client to ready and notifies context
+  // subscribers; the composable re-evaluates via its onContextChange subscription.
   controls.emitInitStatus({ status: 'complete' });
+  controls.emitContextChange({ kind: 'user', key: 'context-key' });
   await nextTick();
 
   expect(client.boolVariation).toHaveBeenCalledTimes(1);
@@ -158,7 +161,12 @@ it('useBoolVariation evaluates when initialization fails (client returns default
   mountUnderProvider(client, Child);
   expect(client.boolVariation).not.toHaveBeenCalled();
 
+  // A failed start() still resolves (failure is a resolved result, not a rejection), so the
+  // base client notifies context subscribers exactly once. The composable must re-evaluate
+  // exactly once via onContextChange, not a second time via any init-status subscription
+  // (SDK-2640 double-eval-on-failure guard).
   controls.emitInitStatus({ status: 'failed', error: new Error('network error') });
+  controls.emitContextChange({ kind: 'user', key: 'context-key' });
   await nextTick();
 
   expect(client.boolVariation).toHaveBeenCalledTimes(1);
@@ -184,7 +192,7 @@ it('useBoolVariation re-evaluates when context changes after identify', async ()
   expect((client.boolVariation as jest.Mock).mock.calls.length).toBe(callsBefore + 1);
 });
 
-it('useBoolVariation evaluates only once per identify (no duplicate analytics impression)', async () => {
+it('useBoolVariation evaluates twice when a single identify changes BOTH context and the flag value', async () => {
   const { client, controls } = makeMockClient();
   (client.boolVariation as jest.Mock).mockReturnValue(true);
 
@@ -198,13 +206,54 @@ it('useBoolVariation evaluates only once per identify (no duplicate analytics im
   mountUnderProvider(client, Child);
   (client.boolVariation as jest.Mock).mockClear();
 
-  // A single identify() in the base SDK emits change:<key> synchronously AND notifies
-  // context subscribers, so model both for one identify.
+  // A single identify() that changes both the context and the watched flag's value fires
+  // change:<key> (flag-value trigger) and notifies context subscribers (context trigger).
+  // Each fires update() once -> two evaluations. Accepted react-parity cost (SDK-2194): the
+  // flagChanged counter that used to batch these into one flush is gone.
   controls.emitChange('my-flag');
   controls.emitContextChange({ kind: 'user', key: 'new-user' });
   await nextTick();
 
-  // One identify must produce exactly one evaluation -> one analytics impression.
+  expect(client.boolVariation as jest.Mock).toHaveBeenCalledTimes(2);
+});
+
+it('useBoolVariation evaluates exactly once when ONLY the flag value changes', async () => {
+  const { client, controls } = makeMockClient();
+  (client.boolVariation as jest.Mock).mockReturnValue(true);
+
+  const Child = defineComponent({
+    setup() {
+      const flag = useBoolVariation('my-flag', false);
+      return () => h('div', String(flag.value));
+    },
+  });
+
+  mountUnderProvider(client, Child);
+  (client.boolVariation as jest.Mock).mockClear();
+
+  controls.emitChange('my-flag');
+  await nextTick();
+
+  expect(client.boolVariation as jest.Mock).toHaveBeenCalledTimes(1);
+});
+
+it('useBoolVariation evaluates exactly once when ONLY the context changes', async () => {
+  const { client, controls } = makeMockClient();
+  (client.boolVariation as jest.Mock).mockReturnValue(true);
+
+  const Child = defineComponent({
+    setup() {
+      const flag = useBoolVariation('my-flag', false);
+      return () => h('div', String(flag.value));
+    },
+  });
+
+  mountUnderProvider(client, Child);
+  (client.boolVariation as jest.Mock).mockClear();
+
+  controls.emitContextChange({ kind: 'user', key: 'new-user' });
+  await nextTick();
+
   expect(client.boolVariation as jest.Mock).toHaveBeenCalledTimes(1);
 });
 
