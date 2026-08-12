@@ -18,6 +18,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/server-sdk-ai](packages/sdk/server-ai/README.md)                | [![NPM][sdk-server-ai-npm-badge]][sdk-server-ai-npm-link]         | [server-ai][package-sdk-server-ai-issues]         | [![Actions Status][sdk-server-ai-ci-badge]][sdk-server-ai-ci]         |
 | [@launchdarkly/shopify-oxygen-sdk](packages/sdk/shopify-oxygen/README.md)      | [![NPM][sdk-shopify-oxygen-npm-badge]][sdk-shopify-oxygen-npm-link] | [Shopify Oxygen][package-sdk-shopify-oxygen-issues] | [![Actions Status][sdk-shopify-oxygen-ci-badge]][sdk-shopify-oxygen-ci] |
 | [@launchdarkly/react-sdk](packages/sdk/react/README.md)                       | [![NPM][sdk-react-npm-badge]][sdk-react-npm-link]                   | [React][package-sdk-react-issues]                   | [![Actions Status][sdk-react-ci-badge]][sdk-react-ci]                   |
+| [@launchdarkly/vue-client-sdk](packages/sdk/vue/README.md)                     | [![NPM][sdk-vue-npm-badge]][sdk-vue-npm-link]                       | [Vue][package-sdk-vue-issues]                       | [![Actions Status][sdk-vue-ci-badge]][sdk-vue-ci]                       |
 | [@launchdarkly/openfeature-node-server](packages/sdk/openfeature-node-server/README.md) | [![NPM][sdk-openfeature-node-server-npm-badge]][sdk-openfeature-node-server-npm-link] | [OpenFeature Node Server][package-sdk-openfeature-node-server-issues] | [![Actions Status][sdk-openfeature-node-server-ci-badge]][sdk-openfeature-node-server-ci] |
 <!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
 
@@ -253,6 +254,12 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-react-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/react-sdk.svg?style=flat-square
 [sdk-react-npm-link]: https://www.npmjs.com/package/@launchdarkly/react-sdk
 [package-sdk-react-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Freact%22+
+[//]: # 'sdk/vue'
+[sdk-vue-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/vue.yml/badge.svg
+[sdk-vue-ci]: https://github.com/launchdarkly/js-core/actions/workflows/vue.yml
+[sdk-vue-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/vue-client-sdk.svg?style=flat-square
+[sdk-vue-npm-link]: https://www.npmjs.com/package/@launchdarkly/vue-client-sdk
+[package-sdk-vue-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fvue%22+
 [//]: # 'shared/openfeature-server-common'
 [openfeature-js-server-common-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/openfeature-js-server-common.svg?style=flat-square
 [openfeature-js-server-common-npm-link]: https://www.npmjs.com/package/@launchdarkly/openfeature-js-server-common
