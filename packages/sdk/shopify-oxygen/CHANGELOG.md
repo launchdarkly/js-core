@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.19](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.18...shopify-oxygen-sdk-v0.1.19) (2026-08-12)
+
+
+### Bug Fixes
+
+* **oxygen-sdk:** document event sending and align event sending logic with other edge sdks ([#1844](https://github.com/launchdarkly/js-core/issues/1844)) ([86ed0ad](https://github.com/launchdarkly/js-core/commit/86ed0adff8209d49725d6d10acb9f6b03c02239c))
+
 ## [0.1.18](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.17...shopify-oxygen-sdk-v0.1.18) (2026-07-28)
 
 
