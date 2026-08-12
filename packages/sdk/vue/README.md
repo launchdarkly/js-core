@@ -6,12 +6,6 @@
 [![NPM][vue-sdk-dm-badge]][vue-sdk-npm-link]
 [![NPM][vue-sdk-dt-badge]][vue-sdk-npm-link]
 
-> [!CAUTION]
-> This SDK is in pre-release and not subject to backwards compatibility
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
-
 ## Getting started
 
 Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/vue) for instructions on getting started with using the SDK.
