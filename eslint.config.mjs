@@ -30,6 +30,7 @@ export default tseslint.config(
       '**/electron/example/**',
       '**/svelte/.svelte-kit/**',
       '**/svelte/example/**',
+      '**/vue/examples/**',
       '**/fastly/example/build/**',
       '**/server-ai/examples/chat-judge/**',
       '**/server-ai/examples/direct-judge/**',
