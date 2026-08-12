@@ -421,7 +421,12 @@
       ]
     },
     "packages/sdk/vue": {
-      "bump-minor-pre-major": true
+      "bump-minor-pre-major": true,
+      "prerelease": true,
+      "prerelease-type": "beta",
+      "extra-files": [
+        "src/client/LDVueClient.ts"
+      ]
     }
   },
   "plugins": [

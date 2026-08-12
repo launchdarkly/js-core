@@ -37,7 +37,7 @@
     "check": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "workspace:^"
+    "@launchdarkly/js-client-sdk": "4.9.4"
   },
   "peerDependencies": {
     "vue": "^3.3.0"

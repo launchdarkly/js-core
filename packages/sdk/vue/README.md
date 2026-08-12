@@ -1,17 +1,14 @@
 # LaunchDarkly Vue SDK
 
-[![Actions Status][vue-sdk-ci-badge]][vue-sdk-ci]
-<!-- Badges below are commented out until the package is published to npm and docs are deployed.
 [![NPM][vue-sdk-npm-badge]][vue-sdk-npm-link]
+[![Actions Status][vue-sdk-ci-badge]][vue-sdk-ci]
 [![Documentation][vue-sdk-ghp-badge]][vue-sdk-ghp-link]
 [![NPM][vue-sdk-dm-badge]][vue-sdk-npm-link]
 [![NPM][vue-sdk-dt-badge]][vue-sdk-npm-link]
--->
 
 > [!CAUTION]
-> This SDK is experimental and should NOT be considered ready for production use.
-> It may change or be removed without notice and is not subject to backwards
-> compatibility guarantees.
+> This SDK is in pre-release and not subject to backwards compatibility
+> guarantees. The API may change based on feedback.
 >
 > Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
 
