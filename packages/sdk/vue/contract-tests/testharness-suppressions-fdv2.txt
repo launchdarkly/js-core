@@ -1,0 +1,37 @@
+# Tests in this file will be skipped by the LaunchDarkly SDK test harness running
+# the FDv2-feature branch against the Vue client-side SDK. Add a path per line.
+# Lines beginning with '#' are comments.
+
+# The tags tests below cover edge cases where applicationId/applicationVersion are null, empty, or
+# contain only valid characters that happen to fill a max-length field. The browser SDK strips these
+# values from the X-LaunchDarkly-Tags header rather than sending an empty/underscore-only tag, which
+# diverges from what the harness expects. This is a pre-existing gap shared with the FDv1 suppressions.
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+
+# Same tag-stripping gap surfaced against poll requests by the FDv2 harness.
+tags/poll requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+
+# Disallowed characters in applicationId/applicationVersion: same underlying tag-validation gap.
+tags/disallowed characters

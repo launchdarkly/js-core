@@ -100,6 +100,7 @@ export interface SDKConfigClientSideParams {
   evaluationReasons?: boolean;
   useReport?: boolean;
   includeEnvironmentAttributes?: boolean;
+  hash?: string;
 }
 
 export interface SDKConfigEvaluationHookData {
