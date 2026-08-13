@@ -608,6 +608,8 @@ jobs:
         with:
           workspace_path: packages/sdk/vue
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          # Vue SDK is publishing as a prerelease; remove this once it reaches GA so npm's `latest` tag starts tracking it.
+          prerelease: true
 
   manual-publish:
     runs-on: ubuntu-latest
