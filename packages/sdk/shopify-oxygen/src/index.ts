@@ -19,6 +19,7 @@ class LDClient extends LDClientImpl {
       // Oxygen's execution context ends when the response is returned, which makes keeping a
       // background flush loop meaningless.
       disableBackgroundEventFlush: true,
+      userAgentHeaderName: 'x-launchdarkly-user-agent',
     };
     super(sdkKey, platform, options, createCallbacks(options.logger), internalOptions);
   }

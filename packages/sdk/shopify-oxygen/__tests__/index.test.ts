@@ -73,6 +73,18 @@ describe('Shopify Oxygen SDK', () => {
 
       ldClient.close();
     });
+
+    it('sends the user-agent value under x-launchdarkly-user-agent, not user-agent', async () => {
+      const ldClient = init(sdkKey, { sendEvents: true });
+      await ldClient.waitForInitialization();
+
+      expect(mockEventProcessor).toHaveBeenCalled();
+      const baseHeaders = mockEventProcessor.mock.calls[0][2];
+      expect(baseHeaders).toHaveProperty('x-launchdarkly-user-agent');
+      expect(baseHeaders).not.toHaveProperty('user-agent');
+
+      ldClient.close();
+    });
   });
 
   describe('polling tests', () => {
