@@ -39,6 +39,7 @@ app.get('/', (req: Request, res: Response) => {
       'inline-context-all',
       'anonymous-redaction',
       'evaluation-hooks',
+      'hook-environment-id',
       'wrapper',
       'client-prereq-events',
       'event-gzip',
