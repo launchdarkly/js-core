@@ -1,3 +1,7 @@
+# Browser's native EventSource cannot read response headers/status on the streaming
+# connection, so it can never observe the directive this test relies on.
+tags/FDv1 fallback directive requests
+
 streaming/requests/method and headers/REPORT/http
 streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
 streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
