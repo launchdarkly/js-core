@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.2](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.1...node-client-sdk-v4.0.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **node-client-sdk:** better handling for bad filesystem states ([#1799](https://github.com/launchdarkly/js-core/issues/1799)) ([8f58b35](https://github.com/launchdarkly/js-core/commit/8f58b3515f004070034561c804dcb7586471906b))
+
 ## [4.0.1](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.0...node-client-sdk-v4.0.1) (2026-08-06)
 
 
