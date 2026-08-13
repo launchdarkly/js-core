@@ -1,0 +1,12 @@
+# Tests in this file will be skipped by the LaunchDarkly SDK test harness running
+# the FDv2-feature branch against the React Native client-side SDK. Add a path per line.
+# Lines beginning with '#' are comments.
+
+# RN's forked EventSource (react-native-sse) fires `open` too late (from
+# onreadystatechange at readyState DONE, not from onprogress at LOADING) and never
+# populates headers on error events, so FDv1 fallback directives carried on stream
+# response headers don't reach the SDK in time (or at all, on the error path).
+streaming/fdv2/FDv1 fallback directive/directive on streaming error engages FDv1 fallback
+streaming/fdv2/FDv1 fallback directive/directive on streaming success applies payload then engages FDv1
+streaming/fdv2/FDv1 fallback directive/directive without FDv1 fallback configured halts the data system
+tags/FDv1 fallback directive requests
