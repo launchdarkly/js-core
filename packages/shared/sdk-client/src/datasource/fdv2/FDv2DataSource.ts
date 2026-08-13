@@ -34,7 +34,7 @@ export interface FDv2DataSourceConfig {
 
   /**
    * Getter for the current selector (basis) string. The selector is managed
-   * externally by the consuming layer — the orchestrator reads it via this
+   * externally by the consuming layer; the orchestrator reads it via this
    * getter and passes it through to source factories.
    */
   selectorGetter: () => string | undefined;
@@ -95,8 +95,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   // synchronizers, the cache is the only possible data source. A cache miss
   // in that configuration must not fail initialization -- there is nowhere
   // else for data to come from, and reporting an error would be meaningless.
-  // Mirrors the Android SDK's InitializerFromCache / hasAvailableSources
-  // behavior.
   const cacheOnlyDataSystem =
     initializerFactories.length > 0 &&
     initializerFactories.every((f) => f.isCache === true) &&
@@ -142,7 +140,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   }
 
   // The orchestration loops intentionally use await-in-loop for sequential
-  // state machine processing — one result at a time.
+  // state machine processing, one result at a time.
   async function runInitializers(): Promise<void> {
     // Tracks whether any initializer reported interrupted/terminal_error.
     // Used below so the cache-only exhaustion branch does not overwrite
@@ -164,21 +162,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       if (result.type === 'changeSet' && result.payload.type !== 'none') {
         applyChangeSet(result);
 
-        if (handleFdv1Fallback(result)) {
-          // FDv1 fallback triggered during initialization -- data was received
-          // but we should move to synchronizers where the FDv1 adapter will run.
-          dataReceived = true;
-          break;
-        }
-
-        if (result.payload.state) {
-          // Got basis data with a selector -- initialization is complete.
-          markInitialized();
-          return;
-        }
-
-        // Got data but no selector (e.g., cache). Record that data was
-        // received and continue to the next initializer.
+        // Data was received. Recorded before the fallback check below so that
+        // a directive arriving alongside a payload still counts as
+        // initialization data; the exhaustion branch marks initialization
+        // complete in that case.
         dataReceived = true;
       } else if (result.type === 'status') {
         switch (result.state) {
@@ -195,9 +182,26 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           default:
             break;
         }
-
-        handleFdv1Fallback(result);
       }
+
+      // Check for FDv1 fallback after all result handling, in one place. Any
+      // result can carry the directive, including a changeSet with a 'none'
+      // payload (an unchanged poll response), so the check must not be gated
+      // on the result type or the payload type. No further initializers run
+      // once the server has directed the SDK off FDv2; the FDv1 fallback
+      // synchronizer takes over.
+      if (handleFdv1Fallback(result)) {
+        break;
+      }
+
+      if (result.type === 'changeSet' && result.payload.type !== 'none' && result.payload.state) {
+        // Got basis data with a selector -- initialization is complete.
+        markInitialized();
+        return;
+      }
+
+      // Otherwise (data with no selector, e.g. cache; or a non-fatal status)
+      // continue to the next initializer.
     }
 
     // close() between the last loop iteration and the exhaustion branch.
@@ -319,7 +323,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
               }
             }
 
-            // Check for FDv1 fallback after all result handling — single location.
+            // Check for FDv1 fallback after all result handling, in one place.
             if (handleFdv1Fallback(syncResult)) {
               synchronizerRunning = false;
             }
@@ -333,7 +337,8 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
 
 
   async function runOrchestration(): Promise<void> {
-    // No sources configured at all — nothing to wait for, immediately valid.
+    // No sources configured at all, so there is nothing to wait for.
+    // Report valid immediately.
     if (initializerFactories.length === 0 && synchronizerSlots.length === 0) {
       statusManager.requestStateUpdate('VALID');
       markInitialized();

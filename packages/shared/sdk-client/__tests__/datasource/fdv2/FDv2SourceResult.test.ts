@@ -20,7 +20,7 @@ it('creates a changeSet result with a payload', () => {
     type: 'full' as const,
     updates: [],
   };
-  const result = changeSet(payload, false, 'env-123');
+  const result = changeSet(payload, { fdv1Fallback: false }, 'env-123');
 
   expect(result.type).toBe('changeSet');
   expect(result).toEqual({
@@ -33,7 +33,7 @@ it('creates a changeSet result with a payload', () => {
 
 it('creates a changeSet result with fdv1Fallback flag', () => {
   const payload = { version: 1, type: 'full' as const, updates: [] };
-  const result = changeSet(payload, true);
+  const result = changeSet(payload, { fdv1Fallback: true });
 
   expect(result.type).toBe('changeSet');
   if (result.type === 'changeSet') {
@@ -47,7 +47,7 @@ it('creates an interrupted status result', () => {
     message: 'connection reset',
     time: 1000,
   };
-  const result = interrupted(errorInfo, false);
+  const result = interrupted(errorInfo, { fdv1Fallback: false });
 
   expect(result).toEqual({
     type: 'status',
@@ -74,7 +74,7 @@ it('creates a terminal error status result', () => {
     statusCode: 401,
     time: 2000,
   };
-  const result = terminalError(errorInfo, true);
+  const result = terminalError(errorInfo, { fdv1Fallback: true });
 
   expect(result).toEqual({
     type: 'status',
@@ -85,7 +85,7 @@ it('creates a terminal error status result', () => {
 });
 
 it('creates a goodbye status result', () => {
-  const result = goodbye('server-shutdown', false);
+  const result = goodbye('server-shutdown', { fdv1Fallback: false });
 
   expect(result).toEqual({
     type: 'status',
@@ -96,7 +96,7 @@ it('creates a goodbye status result', () => {
 });
 
 it('creates a goodbye status result with fdv1Fallback and a TTL', () => {
-  const result = goodbye('server-shutdown', true, 5000);
+  const result = goodbye('server-shutdown', { fdv1Fallback: true, fdv1FallbackTtlMs: 5000 });
 
   expect(result).toEqual({
     type: 'status',
@@ -108,7 +108,7 @@ it('creates a goodbye status result with fdv1Fallback and a TTL', () => {
 });
 
 it('creates a goodbye status result with TTL 0 (indefinite fallback)', () => {
-  const result = goodbye('server-shutdown', true, 0);
+  const result = goodbye('server-shutdown', { fdv1Fallback: true, fdv1FallbackTtlMs: 0 });
 
   expect(result).toEqual({
     type: 'status',

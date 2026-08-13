@@ -148,6 +148,54 @@ it('exhausts retries on recoverable error then returns terminal error', async ()
   expect(sleep).toHaveBeenCalledTimes(3);
 });
 
+it('returns a terminal error immediately when a recoverable error carries a fallback directive', async () => {
+  const requestor: FDv2Requestor = {
+    poll: jest.fn().mockResolvedValue({
+      status: 500,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '300' }),
+      body: null,
+    }),
+  };
+
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
+  const result = await initializer.run();
+
+  expect(result.type).toBe('status');
+  if (result.type === 'status') {
+    expect(result.state).toBe('terminal_error');
+    expect(result.errorInfo?.statusCode).toBe(500);
+    expect(result.fdv1Fallback).toBe(true);
+    expect(result.fdv1FallbackTtlMs).toBe(300000);
+  }
+  // The directive overrides retry handling: exactly one poll, no retry delay.
+  expect(requestor.poll).toHaveBeenCalledTimes(1);
+  expect(sleep).not.toHaveBeenCalled();
+});
+
+it('returns a terminal error immediately when a fallback directive accompanies an unparseable body', async () => {
+  const requestor: FDv2Requestor = {
+    poll: jest.fn().mockResolvedValue({
+      status: 200,
+      headers: makeHeaders({ 'x-ld-fd-fallback': 'true' }),
+      body: 'not json',
+    }),
+  };
+
+  const initializer = createPollingInitializer(requestor, logger, () => undefined);
+  const result = await initializer.run();
+
+  // The directive is read from headers before the body is parsed, so it still
+  // applies even though the body itself never parses.
+  expect(result.type).toBe('status');
+  if (result.type === 'status') {
+    expect(result.state).toBe('terminal_error');
+    expect(result.fdv1Fallback).toBe(true);
+    expect(result.fdv1FallbackTtlMs).toBeUndefined();
+  }
+  expect(requestor.poll).toHaveBeenCalledTimes(1);
+  expect(sleep).not.toHaveBeenCalled();
+});
+
 it('exhausts retries on network error then returns terminal error', async () => {
   const requestor: FDv2Requestor = {
     poll: jest.fn().mockRejectedValue(new Error('network failure')),
@@ -198,7 +246,7 @@ it('does not retry on goodbye result', async () => {
 it('returns shutdown when close is called during retry delay', async () => {
   let sleepResolve!: () => void;
   // sleepCalled resolves when the code enters sleep, proving the first poll failed
-  // and the retry delay has started — an observable effect, not a timing assumption.
+  // and the retry delay has started: an observable effect, not a timing assumption.
   let sleepCalledResolve!: () => void;
   const sleepCalled = new Promise<void>((resolve) => {
     sleepCalledResolve = resolve;

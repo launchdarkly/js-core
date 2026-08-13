@@ -24,6 +24,7 @@ function flagsToPayload(flags: Flags): internal.Payload {
   const updates: internal.Update[] = Object.entries(flags).map(([key, flag]) => ({
     kind: 'flag-eval',
     key,
+    // The envelope requires a numeric version; default to 1 if FDv1 omits it
     version: flag.version ?? 1,
     object: flag,
   }));
@@ -69,6 +70,8 @@ export function createFDv1PollingSynchronizer(
 
   function scheduleNextPoll(startTime: number): void {
     if (!stopped) {
+      // Subtract time already spent on the request so the poll cadence stays
+      // fixed to pollIntervalMs instead of drifting later with each slow response.
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.min(Math.max(pollIntervalMs - elapsed, 0), pollIntervalMs);
       // eslint-disable-next-line @typescript-eslint/no-use-before-define
@@ -84,6 +87,9 @@ export function createFDv1PollingSynchronizer(
     logger?.debug('Polling FDv1 endpoint for feature flag updates');
     const startTime = Date.now();
 
+    // Results below always carry fdv1Fallback: false; this synchronizer only
+    // runs once already on the FDv1 fallback path, so there's no further
+    // fallback for it to signal.
     try {
       const body = await requestor.requestPayload();
 
@@ -107,7 +113,7 @@ export function createFDv1PollingSynchronizer(
         return;
       }
 
-      resultQueue.put(changeSet(payload, false));
+      resultQueue.put(changeSet(payload, { fdv1Fallback: false }));
     } catch (err) {
       if (stopped) {
         return;
@@ -118,7 +124,9 @@ export function createFDv1PollingSynchronizer(
         if (!isHttpRecoverable(requestError.status)) {
           logger?.error(httpErrorMessage(err as HttpErrorResponse, 'FDv1 polling request'));
           stopped = true;
-          shutdownResolve?.(terminalError(errorInfoFromHttpError(requestError.status), false));
+          shutdownResolve?.(
+            terminalError(errorInfoFromHttpError(requestError.status), { fdv1Fallback: false }),
+          );
           shutdownResolve = undefined;
           return;
         }

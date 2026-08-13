@@ -13,8 +13,11 @@ const SHUTDOWN = Symbol('shutdown');
  * delay between attempts.
  *
  * Unrecoverable errors (401, 403, etc.) are returned immediately as terminal
- * errors. After exhausting retries on recoverable errors, the result is
- * converted to a terminal error.
+ * errors. A recoverable error that carries an FDv1 fallback directive is also
+ * returned immediately as a terminal error, without spending any retries:
+ * the server has explicitly directed the SDK off FDv2, so there is nothing
+ * to gain by retrying. After exhausting retries on recoverable errors that
+ * carry no directive, the result is converted to a terminal error.
  *
  * If `close()` is called during a poll or retry delay, the result will be
  * a shutdown status.
@@ -55,7 +58,16 @@ export function createPollingInitializer(
           return result;
         }
 
-        // Recoverable error — save and potentially retry
+        // A fallback directive overrides normal retry handling, even for an
+        // otherwise-recoverable error.
+        if (result.fdv1Fallback) {
+          return terminalError(result.errorInfo!, {
+            fdv1Fallback: result.fdv1Fallback,
+            fdv1FallbackTtlMs: result.fdv1FallbackTtlMs,
+          });
+        }
+
+        // Recoverable error: save it and retry if attempts remain
         lastResult = result;
 
         if (attempt < maxRetries) {
@@ -72,7 +84,10 @@ export function createPollingInitializer(
 
       // Convert final interrupted -> terminal_error
       const status = lastResult as StatusResult;
-      return terminalError(status.errorInfo!, status.fdv1Fallback);
+      return terminalError(status.errorInfo!, {
+        fdv1Fallback: status.fdv1Fallback,
+        fdv1FallbackTtlMs: status.fdv1FallbackTtlMs,
+      });
     },
 
     close(): void {

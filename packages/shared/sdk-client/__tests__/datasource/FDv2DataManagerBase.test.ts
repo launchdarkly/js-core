@@ -867,7 +867,6 @@ it('calls flagManager.applyChanges with type none on none payload to update fres
   dsConfig.dataCallback({
     type: 'none',
     updates: [],
-    state: 'selector-3',
   });
 
   // Spec 5.2.2: transfer-none confirms data is still current.
@@ -882,9 +881,12 @@ it('stores selector from payload state for subsequent data source creations', as
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager);
 
-  // Deliver a payload with a selector.
+  // Deliver a payload with a selector, then a subsequent none payload
+  // (no state, matching what a real transfer-none response carries) --
+  // the none payload must not clear the selector obtained above.
   const dsConfig = capturedDataSourceConfigs[0];
-  dsConfig.dataCallback({ type: 'none', updates: [], state: 'my-selector' });
+  dsConfig.dataCallback({ type: 'full', updates: [], state: 'my-selector' });
+  dsConfig.dataCallback({ type: 'none', updates: [] });
 
   // Now switch mode. Since selector exists, no initializers.
   mockCreateFDv2DataSource.mockClear();
@@ -907,6 +909,24 @@ it('stores selector from payload state for subsequent data source creations', as
   if (capturedDataSourceConfigs.length > 0) {
     expect(capturedDataSourceConfigs[0].initializerFactories).toHaveLength(0);
   }
+
+  manager.close();
+});
+
+it('does not clear a previously obtained selector on a none payload', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
+  await identifyManager(manager);
+
+  const dsConfig = capturedDataSourceConfigs[0];
+
+  // A full payload establishes a selector.
+  dsConfig.dataCallback({ type: 'full', updates: [], state: 'S1' });
+  expect(dsConfig.selectorGetter()).toBe('S1');
+
+  // A none payload (e.g. an HTTP 304) never carries a state -- it must not
+  // wipe the selector obtained from the previous full payload.
+  dsConfig.dataCallback({ type: 'none', updates: [] });
+  expect(dsConfig.selectorGetter()).toBe('S1');
 
   manager.close();
 });
