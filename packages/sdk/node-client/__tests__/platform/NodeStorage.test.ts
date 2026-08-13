@@ -129,26 +129,115 @@ it('does not follow a symlink planted at the temp file path', async () => {
   await expect(storage.get('alpha')).resolves.toBe('one');
 });
 
-it('logs and returns sentinel values when initialization fails', async () => {
-  const filePath = path.join(tmpRoot, 'not-a-dir');
-  await fs.writeFile(filePath, 'sentinel', 'utf8');
+it('falls back to in-memory storage instead of following a symlinked storage directory', async () => {
+  const victimDir = path.join(tmpRoot, 'victim-dir');
+  await fs.mkdir(victimDir);
+  const storagePath = path.join(tmpRoot, 'ldcache');
+  await fs.symlink(victimDir, storagePath);
 
   const logger = createMockLogger();
-  const storage = new NodeStorage(filePath, logger);
+  const storage = new NodeStorage(storagePath, logger);
+
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+  expect(logger.error).not.toHaveBeenCalled();
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Using in-memory storage as a fallback'),
+  );
+
+  // The victim directory the symlink pointed at was never written to.
+  await expect(fs.readdir(victimDir)).resolves.toEqual([]);
+});
+
+it('discards a symlink planted at the storage file path instead of reading through it', async () => {
+  const victim = path.join(tmpRoot, 'victim.json');
+  await fs.writeFile(victim, JSON.stringify({ secret: 'do-not-load' }), 'utf8');
+  await fs.symlink(victim, path.join(tmpRoot, 'ldcache.json'));
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(tmpRoot, logger);
+
+  // The symlinked "cache" is discarded rather than followed, so its contents never load.
+  await expect(storage.get('secret')).resolves.toBeNull();
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Discarding malformed flag cache'),
+  );
+  expect(logger.error).not.toHaveBeenCalled();
+
+  // The victim file itself is untouched, and the symlink has been replaced by a real file.
+  await expect(fs.readFile(victim, 'utf8')).resolves.toBe(JSON.stringify({ secret: 'do-not-load' }));
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+  const onDisk = await fs.readFile(path.join(tmpRoot, 'ldcache.json'), 'utf8');
+  expect(JSON.parse(onDisk)).toEqual({ alpha: 'one' });
+});
+
+it('falls back to in-memory storage when a file occupies the storage directory path', async () => {
+  // No prerelease (v0) installation has customer data to migrate, so a plain file sitting at
+  // the storage directory path is just treated as a generic, unrecoverable init failure.
+  const storagePath = path.join(tmpRoot, 'ldcache');
+  await fs.writeFile(storagePath, 'not a directory', 'utf8');
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(storagePath, logger);
+
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+  expect(logger.error).not.toHaveBeenCalled();
+  expect(logger.warn).toHaveBeenCalledTimes(1);
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Using in-memory storage as a fallback'),
+  );
+  expect((await fs.stat(storagePath)).isDirectory()).toBe(false);
+});
+
+it('falls back to in-memory storage and warns once when the storage directory cannot be created', async () => {
+  // An intermediate path segment that is a file (rather than the storage directory itself)
+  // means mkdir cannot traverse through it, so this must fall back to in-memory storage.
+  const fileInThePath = path.join(tmpRoot, 'not-a-dir');
+  await fs.writeFile(fileInThePath, 'sentinel', 'utf8');
+  const storagePath = path.join(fileInThePath, 'subdir');
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(storagePath, logger);
 
   await expect(storage.get('alpha')).resolves.toBeNull();
-  await expect(storage.set('alpha', 'one')).resolves.toBeUndefined();
-  await expect(storage.clear('alpha')).resolves.toBeUndefined();
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+  await storage.clear('alpha');
+  await expect(storage.get('alpha')).resolves.toBeNull();
 
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error getting key from storage'),
+  expect(logger.error).not.toHaveBeenCalled();
+  expect(logger.warn).toHaveBeenCalledTimes(1);
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Using in-memory storage as a fallback'),
   );
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error setting key in storage'),
+});
+
+it('falls back to in-memory storage when rewriting a discarded malformed cache fails', async () => {
+  // The storage directory itself is created successfully, but the rewrite that normally follows
+  // discarding a malformed cache file fails because a directory occupies the temp-file path.
+  // This exercises the fallback triggering from a site other than storage-directory creation.
+  await fs.writeFile(path.join(tmpRoot, 'ldcache.json'), 'not json', 'utf8');
+  await fs.mkdir(path.join(tmpRoot, 'ldcache.json.tmp'));
+
+  const logger = createMockLogger();
+  const storage = new NodeStorage(tmpRoot, logger);
+
+  await expect(storage.get('anything')).resolves.toBeNull();
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Discarding malformed flag cache'),
   );
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error clearing key from storage'),
+  expect(logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Using in-memory storage as a fallback'),
   );
+  expect(logger.error).not.toHaveBeenCalled();
+
+  await storage.set('alpha', 'one');
+  await expect(storage.get('alpha')).resolves.toBe('one');
+
+  // Persistence is disabled, so the untouched malformed file on disk proves no flush was attempted.
+  await expect(fs.readFile(path.join(tmpRoot, 'ldcache.json'), 'utf8')).resolves.toBe('not json');
 });
 
 it('returns the same singleton across getNodeStorage calls', () => {
