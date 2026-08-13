@@ -45,6 +45,8 @@ export default class TestHarnessWebSocket {
             'client-prereq-cycle-detection',
             'client-per-context-summaries',
             'track-hooks',
+            'fdv1-fallback',
+            'client-event-source-http-errors',
           ];
 
           break;
