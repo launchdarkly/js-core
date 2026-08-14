@@ -169,6 +169,7 @@ flowchart LR
     react[sdk/react]
     shopify-oxygen[sdk/shopify-oxygen]
     openfeature-node-server[sdk/openfeature-node-server]
+    vue[sdk/vue]
 
     %% Store packages
     redis[store/node-server-sdk-redis]
@@ -192,6 +193,7 @@ flowchart LR
     sdk-client --> browser
     sdk-client --> react-native
     browser --> react
+    browser --> vue
     sdk-server --> react
     
     sdk-server --> server-node
@@ -219,7 +221,7 @@ flowchart LR
     react-native -.-> jest
     
     class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker,openfeature-server-common shared
-    class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen,openfeature-node-server sdk
+    class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen,openfeature-node-server,vue sdk
     class redis,dynamodb store
     class node-otel telemetry
     class jest tooling
