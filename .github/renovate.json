@@ -7,5 +7,10 @@
       "matchPackageNames": ["reactivecircus/android-emulator-runner"],
       "enabled": false
     }
-  ]
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["* * * * *"]
+  },
+  "osvVulnerabilityAlerts": true
 }
