@@ -15,9 +15,9 @@ interface ConditionTimer {
 }
 
 /**
- * Wraps {@link cancelableTimedPromise} into a promise that resolves (not rejects)
- * with a {@link ConditionType} on timeout. `Promise.race` in the orchestration
- * loop cannot distinguish rejections from other racers, so we must resolve.
+ * Creates a cancelable timer that resolves with the given {@link ConditionType}
+ * when it fires. Wraps {@link cancelableTimedPromise} to convert its
+ * reject-on-timeout semantics into resolve-with-type semantics.
  */
 function conditionTimer(timeoutMs: number, type: ConditionType, taskName: string): ConditionTimer {
   const timed = cancelableTimedPromise(timeoutMs / 1000, taskName);
