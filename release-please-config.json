@@ -425,7 +425,12 @@
       "prerelease": true,
       "prerelease-type": "beta",
       "extra-files": [
-        "src/client/LDVueClient.ts"
+        "src/client/LDVueClient.ts",
+        {
+          "type": "json",
+          "path": "examples/getting-started/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/vue-client-sdk']"
+        }
       ]
     }
   },
