@@ -6,8 +6,3 @@ kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREV
 
 [build]
 command = "npx tsup"
-
-[miniflare]
-kv_persist = true
-cache_persist = true
-durable_objects_persist = true
