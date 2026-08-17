@@ -1,5 +1,5 @@
-import app from './index';
-import testData from './testData.json';
+import app from '../src/index';
+import testData from '../src/testData.json';
 
 const TEST_CLIENT_SIDE_ID = 'test-client-side-id';
 
