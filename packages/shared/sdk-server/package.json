@@ -2,8 +2,12 @@
   "name": "@launchdarkly/js-server-sdk-common",
   "version": "2.20.0",
   "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
+  "main": "./dist/cjs/index.js",
+  "types": "./dist/cjs/index.d.ts",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server",
   "repository": {
     "type": "git",
@@ -20,7 +24,7 @@
   ],
   "scripts": {
     "test": "npx jest --ci",
-    "build": "npx tsc",
+    "build": "../../../scripts/build-package.sh",
     "clean": "npx tsc --build --clean",
     "lint": "npx eslint .",
     "lint:fix": "yarn run lint --fix"
