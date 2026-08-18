@@ -12,12 +12,12 @@ export const initialContext: LDContext = {
 
 const options: LDReactProviderOptions = {
   ldOptions: {
-    // Enable the FDv2 data system. An empty object opts in with default
-    // behavior: a streaming connection for real-time flag updates, with
-    // polling as a fallback.
+    // Enable the FDv2 data system. An empty object opts in with the browser
+    // default: a one-time flag fetch at page load (cache, then polling, then
+    // streaming as fallbacks), with no further updates afterward.
     //
-    // Data saving mode is an Early Access feature. To pin a specific
-    // connection mode instead, use manual mode switching, for example:
+    // Data saving mode is an Early Access feature. To get live updates, or to
+    // pin a specific connection mode, use manual mode switching, for example:
     //   dataSystem: {
     //     automaticModeSwitching: { type: 'manual', initialConnectionMode: 'polling' },
     //   },

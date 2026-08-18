@@ -81,9 +81,9 @@ function addLog(line: string) {
 }
 
 function onSetConnectionMode(next?: ConnectionMode) {
-  // setConnectionMode is part of the FDv2 data saving mode EAP -- not yet on the public
-  // TypeScript interface. Cast required until the API stabilises.
-  (ldc as any).setConnectionMode(next);
+  // setConnectionMode is part of the FDv2 data saving mode Early Access feature, and is
+  // not subject to backwards compatibility guarantees until the API stabilizes.
+  ldc.setConnectionMode(next);
   mode.value = next ?? 'automatic';
   addLog(`setConnectionMode(${next ?? 'undefined'})`);
 }

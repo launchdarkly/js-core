@@ -12,8 +12,9 @@ FDv2 **data saving mode** (`dataSystem`) configuration.
 
 - Enabling the FDv2 data system through the provider's `ldOptions`
   (`dataSystem: {}`), in [`src/LDClient.tsx`](./src/LDClient.tsx).
-- Evaluating a flag with `useBoolVariation`, which updates live as the data
-  system delivers changes.
+- Evaluating a flag with `useBoolVariation`, which updates live once you switch
+  the connection mode to `streaming` or `polling` (the browser default,
+  `one-shot`, fetches once at page load and does not update afterward).
 - Switching the connection mode at runtime (`streaming`, `polling`, `offline`,
   `one-shot`, `background`, or automatic) via `useLDClient().setConnectionMode`.
 - Toggling streaming via `setStreaming`.

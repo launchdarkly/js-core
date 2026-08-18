@@ -23,10 +23,15 @@ jobs:
           workspace_name: '@launchdarkly/vue-client-sdk'
           workspace_path: packages/sdk/vue
           should_build_docs: false
-      - name: Build example
+      - name: Build getting-started example
         run: |
           yarn workspaces focus @launchdarkly/vue-client-sdk-example-getting-started
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/vue-client-sdk-example-getting-started' run build
+      - name: Build and type-check data-saving-mode example
+        run: |
+          yarn workspaces focus @launchdarkly/vue-client-sdk-example-data-saving-mode
+          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/vue-client-sdk-example-data-saving-mode' run build
+          yarn workspace @launchdarkly/vue-client-sdk-example-data-saving-mode run tsc
 
   run-example:
     runs-on: ubuntu-latest
