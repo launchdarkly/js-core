@@ -35,7 +35,7 @@ function conditionTimer(timeoutMs: number, type: ConditionType, taskName: string
  * - `'fallback'`: move to the next available synchronizer
  * - `'recovery'`: reset to the primary synchronizer
  */
-export type ConditionType = 'fallback' | 'recovery' | 'fdv2Recovery';
+export type ConditionType = 'fallback' | 'recovery';
 
 /**
  * A timed condition that races against `synchronizer.next()`. When the
@@ -109,6 +109,8 @@ function createCondition(
   });
 
   function startTimer() {
+    // idempotent: a fallback condition calls start() on every interrupted status,
+    // so a timer already running must not be restarted by a later one
     if (!timer && !closed) {
       timer = conditionTimer(timeoutMs, type, `${type} condition`);
       timer.promise.then((t) => {
@@ -123,7 +125,7 @@ function createCondition(
     timer = undefined;
   }
 
-  // No inform handler - start immediately (recovery behavior).
+  // No inform handler - start immediately (recovery behavior)
   if (!informHandler) {
     startTimer();
   }
@@ -139,6 +141,8 @@ function createCondition(
     },
 
     close() {
+      // left unresolved on purpose: getConditions() always builds a
+      // fresh group for the next iteration, so no caller is ever left waiting on this
       closed = true;
       cancelTimer();
     },
@@ -167,16 +171,6 @@ export function createFallbackCondition(timeoutMs: number): Condition {
  */
 export function createRecoveryCondition(timeoutMs: number): Condition {
   return createCondition(timeoutMs, 'recovery');
-}
-
-/**
- * Creates an FDv2 recovery condition. The condition starts a timer immediately
- * and resolves with `'fdv2Recovery'` when it fires. Used after an FDv1 fallback
- * to schedule a return to FDv2 once the fallback TTL has elapsed. It ignores
- * all `inform()` calls.
- */
-export function createFDv2RecoveryCondition(ttlMs: number): Condition {
-  return createCondition(ttlMs, 'fdv2Recovery');
 }
 
 /**
