@@ -28,6 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./actions/setup-yarn
+      # The example's test is a Playwright e2e test, so the browser has to be
+      # present before the shared CI steps run it. Installing dependencies first
+      # is what puts the playwright CLI on the path; ./actions/ci repeats that
+      # install harmlessly.
+      - name: Install Dependencies
+        run: yarn workspaces focus @launchdarkly/cloudflare-example
+      - name: Install Playwright browsers
+        run: yarn workspace @launchdarkly/cloudflare-example playwright install --with-deps chromium
       - id: shared
         name: Shared CI Steps
         uses: ./actions/ci

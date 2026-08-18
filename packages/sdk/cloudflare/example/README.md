@@ -78,20 +78,30 @@ The Cloudflare SDK reads flag data from a Cloudflare KV namespace rather than co
    yarn start
    ```
 
-   Then open the URL that `wrangler dev` prints (`http://localhost:8787` by default). You should receive the message:
+   Then open the URL that `wrangler dev` prints (`http://localhost:8787` by default). The page shows the message:
 
    > The sample-feature feature flag evaluates to true.
 
-   followed by some ASCII art, since the flag evaluates to `true`. The same output is written to the `wrangler dev` console.
+   in white text on a green (`#00844B`) background, because the flag evaluates to `true`. If it evaluated to `false`, the background would be dark grey (`#373841`).
 
-   If you're using a placeholder or otherwise non-real client-side ID, the `wrangler dev` console will also show an event-flush error line, something like `flushed events result: false, error: ...404...`. This is expected and does not mean the flag evaluation demo failed; only event delivery to LaunchDarkly is affected.
+   If you're using a placeholder or otherwise non-real client-side ID, the `wrangler dev` console will show an event-flush error line, something like `flushed events result: false, error: ...404...`. This is expected and does not mean the flag evaluation demo failed; only event delivery to LaunchDarkly is affected.
 
 Because a Cloudflare Worker only runs while it is handling a request, each request performs one flag evaluation. Update the flag data in KV and send another request to see the new value.
 
 ## Running the tests
 
+The test is an end-to-end test: it loads the running worker in a headless browser. The first time you run it, install that browser:
+
+```bash
+yarn workspace @launchdarkly/cloudflare-example playwright install chromium
+```
+
+Then:
+
 ```bash
 yarn workspace @launchdarkly/cloudflare-example test
 ```
 
-The tests run the worker's TypeScript source directly under [miniflare](https://miniflare.dev/) (which provides a real local KV namespace and worker bindings), seeding [src/testData.json](./src/testData.json) under the `clientSideID` constant hardcoded in [src/index.ts](./src/index.ts). The build step (which `yarn test` runs first) only produces `dist/index.mjs`, which is used to configure miniflare's script path/environment, not as the code actually under test.
+That command builds the worker, seeds the local KV namespace with [src/testData.json](./src/testData.json) under the `clientSideID` constant hardcoded in [src/index.ts](./src/index.ts) (the same command as step 5 above, also available on its own as `yarn seed-kv`), and then hands off to [Playwright](https://playwright.dev/), which starts `wrangler dev` for you, opens `http://localhost:8787` in headless Chromium, and asserts the rendered page reports `feature flag evaluates to true` in white text on the green background.
+
+If you already have `yarn start` running, Playwright reuses it instead of starting a second server.
