@@ -430,6 +430,11 @@
           "type": "json",
           "path": "examples/getting-started/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/vue-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "examples/features/data-saving-mode/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/vue-client-sdk']"
         }
       ]
     }
