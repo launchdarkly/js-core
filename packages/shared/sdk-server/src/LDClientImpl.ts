@@ -116,6 +116,7 @@ function constructFDv1(
   dataSourceErrorHandler: (e: any) => void,
   hooks: Hook[],
   instanceId: string | undefined,
+  userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' | undefined,
   startEventProcessor: boolean,
 ): {
   config: Configuration;
@@ -143,7 +144,7 @@ function constructFDv1(
     platform.info,
     config.tags,
     true,
-    'user-agent',
+    userAgentHeaderName,
     instanceId,
   );
 
@@ -276,6 +277,7 @@ function constructFDv2(
   initSuccess: () => void,
   hooks: Hook[],
   instanceId: string | undefined,
+  userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' | undefined,
   startEventProcessor: boolean,
 ): {
   config: Configuration;
@@ -305,7 +307,7 @@ function constructFDv2(
     platform.info,
     config.tags,
     true,
-    'user-agent',
+    userAgentHeaderName,
     instanceId,
   );
 
@@ -675,6 +677,7 @@ export default class LDClientImpl implements LDClient {
         (e) => this._dataSourceErrorHandler(e),
         hooks,
         internalOptions?.instanceId,
+        internalOptions?.userAgentHeaderName,
         startEventProcessor,
       ));
 
@@ -713,6 +716,7 @@ export default class LDClientImpl implements LDClient {
         () => this._initSuccess(),
         hooks,
         internalOptions?.instanceId,
+        internalOptions?.userAgentHeaderName,
         startEventProcessor,
       ));
       this._featureStore = transactionalStore;
