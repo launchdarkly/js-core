@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.20](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.19...shopify-oxygen-sdk-v0.1.20) (2026-08-18)
+
+
+### Bug Fixes
+
+* server sdk could send user agent headers under a different header name ([#1860](https://github.com/launchdarkly/js-core/issues/1860)) ([669662a](https://github.com/launchdarkly/js-core/commit/669662a304c10bcb2b683e0c7ea990f43679916b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.20.0 to 2.20.1
+
 ## [0.1.19](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.18...shopify-oxygen-sdk-v0.1.19) (2026-08-12)
 
 
