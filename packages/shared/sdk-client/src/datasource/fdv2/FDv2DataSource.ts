@@ -2,19 +2,14 @@ import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceStatusManager } from '../DataSourceStatusManager';
 import {
-  Condition,
   ConditionGroup,
   ConditionType,
-  createFDv2RecoveryCondition,
   DEFAULT_FALLBACK_TIMEOUT_MS,
   DEFAULT_RECOVERY_TIMEOUT_MS,
   getConditions,
 } from './Conditions';
 import { ChangeSetResult, FDv2SourceResult, StatusResult } from './FDv2SourceResult';
 import { createSourceManager, InitializerFactory, SynchronizerSlot } from './SourceManager';
-
-/** Default time to remain on FDv1 before attempting FDv2 recovery (1 hour). */
-export const DEFAULT_FDV2_RECOVERY_TIMEOUT_MS = 60 * 60 * 1000;
 
 /**
  * Callback invoked when the orchestrator produces a changeSet payload.
@@ -52,9 +47,6 @@ export interface FDv2DataSourceConfig {
 
   /** Recovery condition timeout in ms (default 300s). */
   recoveryTimeoutMs?: number;
-
-  /** FDv2 recovery timeout override in ms. When absent, DEFAULT_FDV2_RECOVERY_TIMEOUT_MS is used. */
-  fdv2RecoveryTimeoutMs?: number;
 }
 
 /**
@@ -91,13 +83,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     logger,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
-    fdv2RecoveryTimeoutMs,
   } = config;
 
   let initialized = false;
   let closed = false;
   let dataReceived = false;
-  let pendingFdv1FallbackTtlMs: number | undefined;
   let initResolve: (() => void) | undefined;
   let initReject: ((err: Error) => void) | undefined;
 
@@ -148,9 +138,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return false;
     }
     if (result.fdv1Fallback && sourceManager.hasFDv1Fallback()) {
-      // Remember the TTL (including 0 = indefinite) so runSynchronizers can
-      // schedule FDv2 recovery once the FDv1 synchronizer is active.
-      pendingFdv1FallbackTtlMs = result.fdv1FallbackTtlMs;
       sourceManager.fdv1Fallback();
       return true;
     }
@@ -273,21 +260,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         logger?.debug('Fallback condition active for current synchronizer.');
       }
 
-      // When the FDv1 fallback synchronizer is active, schedule an FDv2 recovery
-      // attempt after the fallback TTL. A TTL of 0 means indefinite fallback;
-      // no recovery condition is created. An absent TTL uses the 1-hour default.
-      let fdv2RecoveryCondition: Condition | undefined;
-      if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
-        // Priority: server-supplied TTL (from the fallback directive) wins;
-        // fall back to the caller-configured override, then the 1-hour hardcoded default.
-        const ttlMs = pendingFdv1FallbackTtlMs ?? fdv2RecoveryTimeoutMs ?? DEFAULT_FDV2_RECOVERY_TIMEOUT_MS;
-        pendingFdv1FallbackTtlMs = undefined;
-        if (ttlMs !== 0) {
-          fdv2RecoveryCondition = createFDv2RecoveryCondition(ttlMs);
-          logger?.debug(`FDv2 recovery scheduled in ${ttlMs} ms.`);
-        }
-      }
-
       // Conditions hold timers; close them even if the inner loop throws or breaks early.
       let synchronizerRunning = true;
       try {
@@ -300,14 +272,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           if (conditions.promise !== undefined) {
             racers.push(
               conditions.promise.then((value) => ({ source: 'condition' as const, value })),
-            );
-          }
-          if (fdv2RecoveryCondition !== undefined) {
-            racers.push(
-              fdv2RecoveryCondition.promise.then((value) => ({
-                source: 'condition' as const,
-                value,
-              })),
             );
           }
 
@@ -325,9 +289,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
             } else if (conditionType === 'recovery') {
               logger?.info('Recovery condition fired, resetting to primary synchronizer.');
               sourceManager.resetSourceIndex();
-            } else if (conditionType === 'fdv2Recovery') {
-              logger?.info('FDv2 recovery timer fired, re-engaging FDv2 synchronizers.');
-              sourceManager.fdv2Recovery();
             }
 
             synchronizerRunning = false;
@@ -375,7 +336,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         }
       } finally {
         conditions.close();
-        fdv2RecoveryCondition?.close();
       }
     }
   }
