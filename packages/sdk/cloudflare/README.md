@@ -31,6 +31,8 @@ Then turn on the Node.js compatibility flag in your `wrangler.toml`. This allows
 compatibility_flags = [ "nodejs_compat" ]
 ```
 
+If your build tooling bundles this SDK and strips the `node:` prefix from that import (some bundlers do this by default), also set `compatibility_date` to `2024-09-23` or later. Only that combination of flag and date makes `nodejs_compat` polyfill the bare (unprefixed) form of Node built-in imports.
+
 ## Additional JSR setup
 
 If you want to install this package as a JSR package, you will need to use [`esbuild` version >= 19.7](https://github.com/evanw/esbuild/releases/tag/v0.19.7) to enable support for `import attributes`.

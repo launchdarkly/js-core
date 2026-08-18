@@ -18,6 +18,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/.next/**',
       '**/.vite/**',
+      '**/.wrangler/**',
       // NOTE: we are ignoring these examples because they were being ignored
       // before, we will need to isolate specific rules for examples and
       // remove these in the future.
