@@ -5,7 +5,7 @@
     "declarationMap": true,
     "lib": ["ES2017", "dom"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noImplicitOverride": true,
     "resolveJsonModule": true,
     "rootDir": ".",
