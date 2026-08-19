@@ -69,6 +69,24 @@ There are several attributes with special handling within a single or multi-cont
 - `anonymous` - Must be a boolean. Equivalent to `anonymous` in the SDK.
 - `name` - Must be a string. Equivalent to `name` in the SDK.
 
+### Flag Metadata
+
+Evaluation results include LaunchDarkly specific information in the OpenFeature flag metadata. A key is only present when it applies to the evaluation.
+
+| Key | Type | Description |
+|---|---|---|
+| `variationIndex` | number | The index of the served variation. Absent when the default value was returned. |
+| `inExperiment` | boolean | Present, and `true`, when the evaluation was part of an experiment. |
+| `ruleIndex` | number | The index of the matched rule, for a `RULE_MATCH` reason. |
+| `ruleId` | string | The identifier of the matched rule, for a `RULE_MATCH` reason. |
+| `prerequisiteKey` | string | The key of the failed prerequisite flag, for a `PREREQUISITE_FAILED` reason. |
+| `bigSegmentsStatus` | string | The status of the Big Segment query, when the evaluation required one. |
+
+```typescript
+const details = await client.getBooleanDetails('my-boolean-flag', false);
+const inExperiment = details.flagMetadata.inExperiment === true;
+```
+
 ### Examples
 
 #### A single user context
