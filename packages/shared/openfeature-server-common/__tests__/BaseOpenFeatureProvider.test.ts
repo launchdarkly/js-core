@@ -25,6 +25,10 @@ class TestProvider extends BaseOpenFeatureProvider {
   emitChange(flagKey: string) {
     this.emitConfigurationChanged(flagKey);
   }
+
+  emitFailure(message: string) {
+    this.emitError(message);
+  }
 }
 
 const baseConfig = (logger: TestLogger): BaseProviderConfig => ({
@@ -282,6 +286,19 @@ it('emits ConfigurationChanged events with the affected flag key', () => {
   provider.emitChange('my-flag');
 
   expect(handler).toHaveBeenCalledWith({ flagsChanged: ['my-flag'] });
+});
+
+it('emits Error events with a general error code', () => {
+  const provider = new TestProvider(baseConfig(new TestLogger()), new MockLDClient());
+  const handler = jest.fn();
+  provider.events.addHandler(ProviderEvents.Error, handler);
+
+  provider.emitFailure('the data source is done for');
+
+  expect(handler).toHaveBeenCalledWith({
+    errorCode: ErrorCode.GENERAL,
+    message: 'the data source is done for',
+  });
 });
 
 it('onClose flushes and closes the client', async () => {

@@ -70,6 +70,37 @@ it('emits events for flag changes', async () => {
   await ldProvider.onClose();
 });
 
+it('emits an error event when the data source fails after initialization', async () => {
+  let failDataSource: (err: Error) => void = () => {};
+  const ldProvider = new LaunchDarklyProvider('sdk-key', {
+    updateProcessor: (
+      _clientContext: LDClientContext,
+      _dataSourceUpdates: any,
+      initSuccessHandler: () => void,
+      errorHandler?: (e: Error) => void,
+    ) => ({
+      start: () => {
+        failDataSource = (err) => errorHandler?.(err);
+        initSuccessHandler();
+      },
+      close: () => {},
+    }),
+    sendEvents: false,
+  });
+  await ldProvider.initialize({});
+
+  const errorDetails = new Promise((resolve) => {
+    ldProvider.events.addHandler(ProviderEvents.Error, resolve);
+  });
+  failDataSource(new Error('the stream is gone'));
+
+  await expect(errorDetails).resolves.toEqual({
+    errorCode: ErrorCode.GENERAL,
+    message: 'The LaunchDarkly client encountered an unrecoverable error: the stream is gone',
+  });
+  await ldProvider.onClose();
+});
+
 describe('given a mock LaunchDarkly client', () => {
   let ldClient: LDClient;
   let ofClient: Client;

@@ -33,6 +33,12 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
       client.on('update', ({ key }: { key: string }) => {
         this.emitConfigurationChanged(key);
       });
+
+      client.on('failed', (err: Error) => {
+        this.emitError(
+          `The LaunchDarkly client encountered an unrecoverable error: ${err.message}`,
+        );
+      });
     } catch (e) {
       this.setClientError(e);
     }
