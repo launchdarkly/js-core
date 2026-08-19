@@ -34,10 +34,14 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
         this.emitConfigurationChanged(key);
       });
 
+      // A failure before initialization completes is reported by initialize rejecting, so only
+      // failures of an initialized client need an event.
       client.on('failed', (err: Error) => {
-        this.emitError(
-          `The LaunchDarkly client encountered an unrecoverable error: ${err.message}`,
-        );
+        if (client.initialized()) {
+          this.emitError(
+            `The LaunchDarkly client encountered an unrecoverable error: ${err.message}`,
+          );
+        }
       });
     } catch (e) {
       this.setClientError(e);

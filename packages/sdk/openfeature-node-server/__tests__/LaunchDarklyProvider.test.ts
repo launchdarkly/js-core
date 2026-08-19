@@ -101,6 +101,32 @@ it('emits an error event when the data source fails after initialization', async
   await ldProvider.onClose();
 });
 
+it('does not emit an error event when the client never initializes', async () => {
+  const ldProvider = new LaunchDarklyProvider('sdk-key', {
+    updateProcessor: (
+      _clientContext: LDClientContext,
+      _dataSourceUpdates: any,
+      _initSuccessHandler: () => void,
+      errorHandler?: (e: Error) => void,
+    ) => ({
+      start: () => {
+        errorHandler?.({ code: 401 } as any);
+      },
+      close: () => {},
+    }),
+    sendEvents: false,
+  });
+  const handler = jest.fn();
+  ldProvider.events.addHandler(ProviderEvents.Error, handler);
+
+  await expect(ldProvider.initialize({})).rejects.toThrow(
+    'Authentication failed. Double check your SDK key.',
+  );
+
+  expect(handler).not.toHaveBeenCalled();
+  await ldProvider.onClose();
+});
+
 describe('given a mock LaunchDarkly client', () => {
   let ldClient: LDClient;
   let ofClient: Client;
