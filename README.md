@@ -20,6 +20,7 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/react-sdk](packages/sdk/react/README.md)                       | [![NPM][sdk-react-npm-badge]][sdk-react-npm-link]                   | [React][package-sdk-react-issues]                   | [![Actions Status][sdk-react-ci-badge]][sdk-react-ci]                   |
 | [@launchdarkly/vue-client-sdk](packages/sdk/vue/README.md)                     | [![NPM][sdk-vue-npm-badge]][sdk-vue-npm-link]                       | [Vue][package-sdk-vue-issues]                       | [![Actions Status][sdk-vue-ci-badge]][sdk-vue-ci]                       |
 | [@launchdarkly/openfeature-node-server](packages/sdk/openfeature-node-server/README.md) | [![NPM][sdk-openfeature-node-server-npm-badge]][sdk-openfeature-node-server-npm-link] | [OpenFeature Node Server][package-sdk-openfeature-node-server-issues] | [![Actions Status][sdk-openfeature-node-server-ci-badge]][sdk-openfeature-node-server-ci] |
+| [@launchdarkly/openfeature-cloudflare-server](packages/sdk/openfeature-cloudflare-server/README.md) | [![NPM][sdk-openfeature-cloudflare-server-npm-badge]][sdk-openfeature-cloudflare-server-npm-link] | [OpenFeature Cloudflare Server][package-sdk-openfeature-cloudflare-server-issues] | [![Actions Status][sdk-openfeature-cloudflare-server-ci-badge]][sdk-openfeature-cloudflare-server-ci] |
 <!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
 
 | Shared packages                                                                      | npm                                                                       | issues                                                      | tests                                                                           |
@@ -272,3 +273,9 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-openfeature-node-server-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/openfeature-node-server.svg?style=flat-square
 [sdk-openfeature-node-server-npm-link]: https://www.npmjs.com/package/@launchdarkly/openfeature-node-server
 [package-sdk-openfeature-node-server-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fopenfeature-node-server%22+
+[//]: # 'sdk/openfeature-cloudflare-server'
+[sdk-openfeature-cloudflare-server-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-cloudflare-server.yaml/badge.svg
+[sdk-openfeature-cloudflare-server-ci]: https://github.com/launchdarkly/js-core/actions/workflows/openfeature-cloudflare-server.yaml
+[sdk-openfeature-cloudflare-server-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/openfeature-cloudflare-server.svg?style=flat-square
+[sdk-openfeature-cloudflare-server-npm-link]: https://www.npmjs.com/package/@launchdarkly/openfeature-cloudflare-server
+[package-sdk-openfeature-cloudflare-server-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fopenfeature-cloudflare-server%22+
