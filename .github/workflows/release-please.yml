@@ -65,6 +65,7 @@ on:
           - packages/sdk/node-client
           - packages/sdk/react
           - packages/shared/openfeature-server-common
+          - packages/sdk/openfeature-cloudflare-server
           - packages/sdk/openfeature-node-server
           - packages/sdk/vue
       prerelease:
@@ -112,6 +113,7 @@ jobs:
       package-sdk-react-released: ${{ steps.release.outputs['packages/sdk/react--release_created'] }}
       package-shared-openfeature-server-common-released: ${{ steps.release.outputs['packages/shared/openfeature-server-common--release_created'] }}
       package-sdk-openfeature-node-server-released: ${{ steps.release.outputs['packages/sdk/openfeature-node-server--release_created'] }}
+      package-sdk-openfeature-cloudflare-server-released: ${{ steps.release.outputs['packages/sdk/openfeature-cloudflare-server--release_created'] }}
       package-tooling-client-testing-plugin-released: ${{ steps.release.outputs['packages/tooling/client-testing-plugin--release_created'] }}
       package-sdk-vue-released: ${{ steps.release.outputs['packages/sdk/vue--release_created'] }}
       package-node-client-released: ${{ steps.release.outputs['packages/sdk/node-client--release_created'] }}
@@ -591,6 +593,22 @@ jobs:
         uses: ./actions/full-release
         with:
           workspace_path: packages/sdk/openfeature-node-server
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+
+  release-openfeature-cloudflare-server:
+    runs-on: ubuntu-latest
+    needs: ['release-please', 'release-cloudflare', 'release-openfeature-server-common']
+    permissions:
+      id-token: write
+      contents: write
+    if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-openfeature-cloudflare-server-released == 'true'}}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: release-openfeature-cloudflare-server
+        name: Full release of packages/sdk/openfeature-cloudflare-server
+        uses: ./actions/full-release
+        with:
+          workspace_path: packages/sdk/openfeature-cloudflare-server
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
 
   release-vue:
