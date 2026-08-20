@@ -248,6 +248,12 @@ jobs:
         with:
           workspace_path: packages/sdk/react-native
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          # React Native SDK v11 is a breaking major version currently released as a
+          # prerelease, so npm publishes it under the generic `prerelease` dist-tag
+          # rather than `latest`, which keeps pointing at v10 until GA. Remove this
+          # line, and the matching `prerelease` entries in release-please-config.json,
+          # once v11 goes GA.
+          prerelease: true
 
   release-browser:
     runs-on: ubuntu-latest

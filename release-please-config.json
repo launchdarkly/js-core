@@ -144,6 +144,8 @@
       ]
     },
     "packages/sdk/react-native": {
+      "prerelease": true,
+      "prerelease-type": "beta",
       "extra-files": [
         "src/platform/PlatformInfo.ts",
         {
