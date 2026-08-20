@@ -23,7 +23,7 @@ function conditionTimer(timeoutMs: number, type: ConditionType, taskName: string
   const timed = cancelableTimedPromise(timeoutMs / 1000, taskName);
   return {
     promise: timed.promise.then(
-      () => new Promise<ConditionType>(() => {}), // cancelled — never settle
+      () => new Promise<ConditionType>(() => {}), // cancelled - never settle
       () => type, // timeout fired
     ),
     cancel: timed.cancel,
@@ -109,6 +109,8 @@ function createCondition(
   });
 
   function startTimer() {
+    // idempotent: a fallback condition calls start() on every interrupted status,
+    // so a timer already running must not be restarted by a later one
     if (!timer && !closed) {
       timer = conditionTimer(timeoutMs, type, `${type} condition`);
       timer.promise.then((t) => {
@@ -123,7 +125,7 @@ function createCondition(
     timer = undefined;
   }
 
-  // No inform handler — start immediately (recovery behavior).
+  // No inform handler - start immediately (recovery behavior)
   if (!informHandler) {
     startTimer();
   }
@@ -139,6 +141,8 @@ function createCondition(
     },
 
     close() {
+      // left unresolved on purpose: getConditions() always builds a
+      // fresh group for the next iteration, so no caller is ever left waiting on this
       closed = true;
       cancelTimer();
     },
