@@ -8,6 +8,7 @@ import {
   SDKConfigDataSynchronizer,
   SDKConfigModeDefinition,
   SDKConfigParams,
+  SDKConfigPollingParams,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils';
 import { ClientSideTestHook as TestHook } from '@launchdarkly/js-contract-test-utils/client';
@@ -68,7 +69,10 @@ function translateSynchronizer(sync: SDKConfigDataSynchronizer): SynchronizerEnt
   return undefined;
 }
 
-function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefinition {
+function translateModeDefinition(
+  modeDef: SDKConfigModeDefinition,
+  fdv1Fallback?: SDKConfigPollingParams | null,
+): ModeDefinition {
   const initializers: InitializerEntry[] = (modeDef.initializers ?? [])
     .map(translateInitializer)
     .filter((x): x is InitializerEntry => x !== undefined);
@@ -76,6 +80,19 @@ function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefiniti
   const synchronizers: SynchronizerEntry[] = (modeDef.synchronizers ?? [])
     .map(translateSynchronizer)
     .filter((x): x is SynchronizerEntry => x !== undefined);
+
+  if (fdv1Fallback?.baseUri) {
+    return {
+      initializers,
+      synchronizers,
+      fdv1Fallback: {
+        ...(fdv1Fallback.pollIntervalMs != null && {
+          pollInterval: fdv1Fallback.pollIntervalMs / 1000,
+        }),
+        endpoints: { pollingBaseUri: fdv1Fallback.baseUri },
+      },
+    };
+  }
 
   return { initializers, synchronizers };
 }
@@ -151,7 +168,7 @@ function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
         initialConnectionMode: 'streaming',
       };
       dataSystem.connectionModes = {
-        streaming: translateModeDefinition(modeDef),
+        streaming: translateModeDefinition(modeDef, options.dataSystem.fdv1Fallback),
       };
       applyEndpointOverrides(modeDef);
     }

@@ -27,6 +27,7 @@ export interface SDKConfigDataSystem {
   useDefaultDataSystem?: boolean;
   initializers?: SDKConfigDataInitializer[];
   synchronizers?: SDKConfigDataSynchronizer[];
+  fdv1Fallback?: SDKConfigPollingParams;
   payloadFilter?: string;
   connectionModeConfig?: SDKConfigConnectionModeConfig;
 }
