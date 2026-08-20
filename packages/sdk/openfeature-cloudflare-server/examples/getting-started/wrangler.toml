@@ -1,0 +1,11 @@
+name = "example"
+main = "dist/index.mjs"
+# Must be >= 2024-09-23 (the nodejs_compat v2 threshold): tsup's build strips the
+# "node:" prefix from the SDK's internal `events` import, and only nodejs_compat v2
+# auto-polyfills that bare form. Don't lower this without re-verifying the build.
+compatibility_date = "2024-09-23"
+compatibility_flags = [ "nodejs_compat" ]
+kv_namespaces = [{ binding = "LD_KV", id = "YOUR_KV_ID", preview_id = "YOUR_PREVIEW_KV_ID" }]
+
+[build]
+command = "npx tsup"
