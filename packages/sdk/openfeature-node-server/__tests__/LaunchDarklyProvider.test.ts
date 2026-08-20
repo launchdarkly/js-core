@@ -96,8 +96,51 @@ it('emits an error event when the data source fails after initialization', async
 
   await expect(errorDetails).resolves.toEqual({
     errorCode: ErrorCode.GENERAL,
-    message: 'The LaunchDarkly client encountered an unrecoverable error: the stream is gone',
+    message: 'The LaunchDarkly client encountered an error: the stream is gone',
   });
+  await ldProvider.onClose();
+});
+
+it('emits a ready event when the client receives flag data after a failure', async () => {
+  const td = new integrations.TestData();
+  const dataSourceFactory = td.getFactory();
+  let failDataSource: (err: Error) => void = () => {};
+  const ldProvider = new LaunchDarklyProvider('sdk-key', {
+    updateProcessor: (
+      clientContext: LDClientContext,
+      dataSourceUpdates: any,
+      initSuccessHandler: () => void,
+      errorHandler?: (e: Error) => void,
+    ) => {
+      failDataSource = (err) => errorHandler?.(err);
+      return dataSourceFactory(
+        clientContext,
+        dataSourceUpdates,
+        initSuccessHandler,
+        errorHandler,
+      );
+    },
+    sendEvents: false,
+  });
+  await ldProvider.initialize({});
+
+  const readyHandler = jest.fn();
+  ldProvider.events.addHandler(ProviderEvents.Ready, readyHandler);
+  const firstChange = new Promise((resolve) => {
+    ldProvider.events.addHandler(ProviderEvents.ConfigurationChanged, resolve);
+  });
+  td.update(td.flag('flagA').valueForAll('B'));
+  await firstChange;
+  expect(readyHandler).not.toHaveBeenCalled();
+
+  const ready = new Promise((resolve) => {
+    ldProvider.events.addHandler(ProviderEvents.Ready, resolve);
+  });
+  failDataSource(new Error('malformed data'));
+  td.update(td.flag('flagA').valueForAll('C'));
+  await ready;
+
+  expect(readyHandler).toHaveBeenCalledTimes(1);
   await ldProvider.onClose();
 });
 

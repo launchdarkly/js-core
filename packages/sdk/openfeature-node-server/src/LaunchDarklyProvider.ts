@@ -6,6 +6,8 @@ import { BaseOpenFeatureProvider } from '@launchdarkly/openfeature-js-server-com
  * An OpenFeature provider for the LaunchDarkly Server-Side SDK for Node.js.
  */
 export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClient> {
+  private _dataSourceFailed = false;
+
   /**
    * Construct a {@link LaunchDarklyProvider}.
    * @param sdkKey The SDK key.
@@ -29,8 +31,13 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
 
       this.setClient(client);
 
-      // Wire Node SDK update events to OpenFeature ConfigurationChanged events.
+      // Receiving flag data means the client can receive updates again. The Node SDK has no other
+      // signal that the data source recovered.
       client.on('update', ({ key }: { key: string }) => {
+        if (this._dataSourceFailed) {
+          this._dataSourceFailed = false;
+          this.emitReady();
+        }
         this.emitConfigurationChanged(key);
       });
 
@@ -38,9 +45,8 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
       // failures of an initialized client need an event.
       client.on('failed', (err: Error) => {
         if (client.initialized()) {
-          this.emitError(
-            `The LaunchDarkly client encountered an unrecoverable error: ${err.message}`,
-          );
+          this._dataSourceFailed = true;
+          this.emitError(`The LaunchDarkly client encountered an error: ${err.message}`);
         }
       });
     } catch (e) {

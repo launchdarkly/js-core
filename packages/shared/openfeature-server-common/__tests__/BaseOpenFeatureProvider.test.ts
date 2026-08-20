@@ -29,6 +29,10 @@ class TestProvider extends BaseOpenFeatureProvider {
   emitFailure(message: string) {
     this.emitError(message);
   }
+
+  emitRecovery() {
+    this.emitReady();
+  }
 }
 
 const baseConfig = (logger: TestLogger): BaseProviderConfig => ({
@@ -299,6 +303,16 @@ it('emits Error events with a general error code', () => {
     errorCode: ErrorCode.GENERAL,
     message: 'the data source is done for',
   });
+});
+
+it('emits Ready events', () => {
+  const provider = new TestProvider(baseConfig(new TestLogger()), new MockLDClient());
+  const handler = jest.fn();
+  provider.events.addHandler(ProviderEvents.Ready, handler);
+
+  provider.emitRecovery();
+
+  expect(handler).toHaveBeenCalledWith({});
 });
 
 it('onClose flushes and closes the client', async () => {
