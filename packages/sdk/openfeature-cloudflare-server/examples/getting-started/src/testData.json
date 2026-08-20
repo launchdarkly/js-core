@@ -1,0 +1,28 @@
+{
+  "flags": {
+    "sample-feature": {
+      "key": "sample-feature",
+      "on": true,
+      "prerequisites": [],
+      "targets": [],
+      "rules": [],
+      "fallthrough": {
+        "variation": 0
+      },
+      "offVariation": 1,
+      "variations": [true, false],
+      "clientSideAvailability": {
+        "usingMobileKey": true,
+        "usingEnvironmentId": true
+      },
+      "clientSide": true,
+      "salt": "aef830243d6640d0a973be89988e008d",
+      "trackEvents": false,
+      "trackEventsFallthrough": false,
+      "debugEventsUntilDate": null,
+      "version": 1,
+      "deleted": false
+    }
+  },
+  "segments": {}
+}
