@@ -50,6 +50,19 @@ OpenFeature.addHandler(ProviderEvents.ConfigurationChanged, (eventDetails) => {
 await OpenFeature.close();
 ```
 
+## Provider Events
+
+The provider emits `ConfigurationChanged` when flag data changes.
+
+It does not report the state of the connection to LaunchDarkly, so it never emits `ProviderEvents.Error` or
+`ProviderEvents.Stale`, and its status remains `READY` after a successful start even if the connection is later lost.
+Applications which need to react to connection problems can listen to the events of the
+[LaunchDarkly Node.js SDK](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/server-node) client returned
+by `getClient()`.
+
+Reporting connection state requires a data source status API in the LaunchDarkly Node.js SDK, which the other
+LaunchDarkly server-side SDKs provide and this one does not yet.
+
 ## OpenFeature Specific Considerations
 
 LaunchDarkly evaluates contexts, and it can either evaluate a single-context or a multi-context. When using OpenFeature, both single and multi-contexts must be encoded into a single `EvaluationContext`. This is accomplished by looking for an attribute named `kind` in the `EvaluationContext`.

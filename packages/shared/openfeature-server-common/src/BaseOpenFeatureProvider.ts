@@ -104,29 +104,6 @@ export abstract class BaseOpenFeatureProvider<
     });
   }
 
-  /**
-   * Emit an OpenFeature Error event. Per-SDK providers call this from their
-   * event wiring when the SDK can no longer receive flag updates.
-   *
-   * This is not reported as a fatal error, because the SDK continues to
-   * evaluate using the flag data it already has.
-   */
-  protected emitError(message: string): void {
-    this.events.emit(ProviderEvents.Error, {
-      errorCode: ErrorCode.GENERAL,
-      message,
-    });
-  }
-
-  /**
-   * Emit an OpenFeature Ready event. Per-SDK providers call this from their
-   * event wiring when the SDK is again able to receive flag updates after an
-   * Error event.
-   */
-  protected emitReady(): void {
-    this.events.emit(ProviderEvents.Ready, {});
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async initialize(context?: EvaluationContext): Promise<void> {
     if (!this._client) {
