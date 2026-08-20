@@ -439,8 +439,7 @@
       ]
     },
     "packages/sdk/openfeature-cloudflare-server": {
-      "bump-minor-pre-major": true,
-      "prerelease": true,
+      "release-as": "1.0.0",
       "extra-files": [
         {
           "type": "json",
