@@ -68,6 +68,7 @@
     "packages/sdk/openfeature-node-server",
     "packages/sdk/openfeature-node-server/examples/getting-started",
     "packages/sdk/openfeature-cloudflare-server",
+    "packages/sdk/openfeature-cloudflare-server/examples/getting-started",
     "packages/sdk/vue",
     "packages/sdk/vue/contract-tests",
     "packages/sdk/vue/examples/getting-started"

@@ -440,7 +440,14 @@
     },
     "packages/sdk/openfeature-cloudflare-server": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "examples/getting-started/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/openfeature-cloudflare-server']"
+        }
+      ]
     },
     "packages/sdk/vue": {
       "bump-minor-pre-major": true,
