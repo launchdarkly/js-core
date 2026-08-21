@@ -2,6 +2,7 @@ import { sleep } from '@launchdarkly/js-sdk-common';
 
 import { FDv2PollResponse, FDv2Requestor } from '../../../src/datasource/fdv2/FDv2Requestor';
 import { createPollingInitializer } from '../../../src/datasource/fdv2/PollingInitializer';
+import { DEFAULT_FDV1_FALLBACK_TTL_MS } from '../../../src/datasource/fdv2/fallbackDirective';
 import { makeFDv2Body, makeHeaders, makeLogger, makeSuccessResponse } from './testHelpers';
 
 jest.mock('@launchdarkly/js-sdk-common', () => ({
@@ -190,7 +191,8 @@ it('returns a terminal error immediately when a fallback directive accompanies a
   if (result.type === 'status') {
     expect(result.state).toBe('terminal_error');
     expect(result.fdv1Fallback).toBe(true);
-    expect(result.fdv1FallbackTtlMs).toBeUndefined();
+    expect(result.fdv1FallbackTtlMs).toBeGreaterThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS / 2);
+    expect(result.fdv1FallbackTtlMs).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
   }
   expect(requestor.poll).toHaveBeenCalledTimes(1);
   expect(sleep).not.toHaveBeenCalled();

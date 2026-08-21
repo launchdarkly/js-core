@@ -1,6 +1,7 @@
 import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 
 import { poll } from '../../../src/datasource/fdv2/PollingBase';
+import { DEFAULT_FDV1_FALLBACK_TTL_MS } from '../../../src/datasource/fdv2/fallbackDirective';
 import {
   makeErrorRequestor,
   makeFDv2Body,
@@ -500,7 +501,7 @@ it('reads TTL in seconds and converts to ms on a changeSet', async () => {
   expect((result as any).fdv1FallbackTtlMs).toBe(60000);
 });
 
-it('treats TTL "0" as indefinite (0 ms)', async () => {
+it('applies the default TTL for a TTL of "0"', async () => {
   const body = makeFullPayloadBody({ flagA: { value: true } });
   const requestor = makeRequestor({
     status: 200,
@@ -511,10 +512,13 @@ it('treats TTL "0" as indefinite (0 ms)', async () => {
   const result = await poll(requestor, undefined, logger);
 
   expect(result.fdv1Fallback).toBe(true);
-  expect((result as any).fdv1FallbackTtlMs).toBe(0);
+  expect((result as any).fdv1FallbackTtlMs).toBeGreaterThanOrEqual(
+    DEFAULT_FDV1_FALLBACK_TTL_MS / 2,
+  );
+  expect((result as any).fdv1FallbackTtlMs).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
 });
 
-it('leaves TTL undefined when the ttl header is absent but fallback is true', async () => {
+it('applies the default TTL when the ttl header is absent but fallback is true', async () => {
   const body = makeFullPayloadBody({ flagA: { value: true } });
   const requestor = makeRequestor({
     status: 200,
@@ -525,7 +529,10 @@ it('leaves TTL undefined when the ttl header is absent but fallback is true', as
   const result = await poll(requestor, undefined, logger);
 
   expect(result.fdv1Fallback).toBe(true);
-  expect((result as any).fdv1FallbackTtlMs).toBeUndefined();
+  expect((result as any).fdv1FallbackTtlMs).toBeGreaterThanOrEqual(
+    DEFAULT_FDV1_FALLBACK_TTL_MS / 2,
+  );
+  expect((result as any).fdv1FallbackTtlMs).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
 });
 
 it('stamps TTL on a non-success error response', async () => {
