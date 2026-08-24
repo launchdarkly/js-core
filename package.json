@@ -97,6 +97,8 @@
   },
   "packageManager": "yarn@4.15.0",
   "resolutions": {
-    "@types/node": "24.1.0"
+    "@types/node": "24.1.0",
+    "@bytecodealliance/jco/typescript": "5.9.3",
+    "@bytecodealliance/jco/typescript-compiler-api": "npm:typescript@5.1.6"
   }
 }
