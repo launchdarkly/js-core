@@ -3,13 +3,6 @@ import type { FlagMetadata, ResolutionDetails } from '@openfeature/server-sdk';
 
 import type { LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
 
-const VARIATION_INDEX_KEY = 'variationIndex';
-const IN_EXPERIMENT_KEY = 'inExperiment';
-const RULE_INDEX_KEY = 'ruleIndex';
-const RULE_ID_KEY = 'ruleId';
-const PREREQUISITE_KEY_KEY = 'prerequisiteKey';
-const BIG_SEGMENTS_STATUS_KEY = 'bigSegmentsStatus';
-
 /**
  * Convert an `errorKind` into an OpenFeature `errorCode`.
  */
@@ -29,27 +22,59 @@ function translateErrorKind(errorKind: string | undefined): ErrorCode {
 }
 
 /**
+ * The LaunchDarkly specific parts of an evaluation result, reported as OpenFeature flag metadata.
+ *
+ * Each entry is absent when it does not apply to the evaluation.
+ */
+export type LDFlagMetadata = FlagMetadata & {
+  /**
+   * The index of the returned variation. Absent for default values.
+   */
+  variationIndex?: number;
+  /**
+   * Present, and `true`, when the evaluation was part of an experiment.
+   */
+  inExperiment?: boolean;
+  /**
+   * The index of the rule that matched.
+   */
+  ruleIndex?: number;
+  /**
+   * The identifier of the rule that matched.
+   */
+  ruleId?: string;
+  /**
+   * The key of the prerequisite flag that failed.
+   */
+  prerequisiteKey?: string;
+  /**
+   * The status of the Big Segments query made during the evaluation.
+   */
+  bigSegmentsStatus?: string;
+};
+
+/**
  * Convert the LaunchDarkly specific parts of an evaluation into OpenFeature flag metadata.
  */
-function translateFlagMetadata(result: LDEvaluationDetail): FlagMetadata {
-  const metadata: FlagMetadata = {};
+function translateFlagMetadata(result: LDEvaluationDetail): LDFlagMetadata {
+  const metadata: LDFlagMetadata = {};
   if (result.variationIndex !== undefined && result.variationIndex !== null) {
-    metadata[VARIATION_INDEX_KEY] = result.variationIndex;
+    metadata.variationIndex = result.variationIndex;
   }
   if (result.reason.inExperiment) {
-    metadata[IN_EXPERIMENT_KEY] = true;
+    metadata.inExperiment = true;
   }
   if (result.reason.ruleIndex !== undefined) {
-    metadata[RULE_INDEX_KEY] = result.reason.ruleIndex;
+    metadata.ruleIndex = result.reason.ruleIndex;
   }
   if (result.reason.ruleId !== undefined) {
-    metadata[RULE_ID_KEY] = result.reason.ruleId;
+    metadata.ruleId = result.reason.ruleId;
   }
   if (result.reason.prerequisiteKey !== undefined) {
-    metadata[PREREQUISITE_KEY_KEY] = result.reason.prerequisiteKey;
+    metadata.prerequisiteKey = result.reason.prerequisiteKey;
   }
   if (result.reason.bigSegmentsStatus !== undefined) {
-    metadata[BIG_SEGMENTS_STATUS_KEY] = result.reason.bigSegmentsStatus;
+    metadata.bigSegmentsStatus = result.reason.bigSegmentsStatus;
   }
   return metadata;
 }
