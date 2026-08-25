@@ -21,7 +21,6 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
       providerName: 'launchdarkly-cloudflare-provider',
     });
 
-    // no ConfigurationChanged wiring: the KV-backed client has no update notifications to surface
     try {
       const client = init(clientSideID, kvNamespace, options);
       this.setClient(client);
