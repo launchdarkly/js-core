@@ -1,4 +1,17 @@
-import { parse, SemVer } from 'semver';
+/*
+ * We import the `semver/functions/parse` subpath instead of the package root to minimize
+ * package size for server SDKs.
+ *
+ * `parse` uses the `import ... = require(...)` form deliberately (see
+ * https://www.typescriptlang.org/docs/handbook/2/modules.html#es-module-syntax-with-commonjs-behavior).
+ * This package compiles with `"module": "commonjs"` and without `esModuleInterop`, and
+ * `@types/semver` declares that subpath with `export =`, so a default import would
+ * type-check but emit `parse_1.default(...)`, which throws at runtime. We will need to
+ * keep this syntax until this package enables `esModuleInterop` or compiles to ESM.
+ */
+import type SemVer from 'semver/classes/semver';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import parse = require('semver/functions/parse');
 
 import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
