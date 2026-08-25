@@ -316,28 +316,28 @@ describe('when deserializing patch data', () => {
   it('handles a flag with an attribute literal in a clause', () => {
     const jsonString = makeSerializedPatchData(flagWithAttributeNameInClause);
     const parsed = deserializePatch(jsonString);
-    const ref = (parsed?.data as Flag).rules?.[0].clauses?.[0].attributeReference;
+    const ref = (parsed?.data as Flag)?.rules?.[0].clauses?.[0].attributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
 
   it('handles a flag with an attribute ref in a clause', () => {
     const jsonString = makeSerializedPatchData(flagWithAttributeReferenceInClause);
     const parsed = deserializePatch(jsonString);
-    const ref = (parsed?.data as Flag).rules?.[0].clauses?.[0].attributeReference;
+    const ref = (parsed?.data as Flag)?.rules?.[0].clauses?.[0].attributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
 
   it('handles a flag with no references', () => {
     const jsonString = makeSerializedPatchData(flagWithNoReferences);
     const parsed = deserializePatch(jsonString);
-    const ref = (parsed?.data as Flag).rules?.[0].clauses?.[0].attributeReference;
+    const ref = (parsed?.data as Flag)?.rules?.[0].clauses?.[0].attributeReference;
     expect(ref).toBeUndefined();
   });
 
   it('handles a segment clause with attribute name', () => {
     const jsonString = makeSerializedPatchData(undefined, segmentWithClauseAttributeName);
     const parsed = deserializePatch(jsonString);
-    const refInSegment = (parsed?.data as Segment).rules?.[0].clauses?.[0].attributeReference;
+    const refInSegment = (parsed?.data as Segment)?.rules?.[0].clauses?.[0].attributeReference;
     expect(refInSegment?.isValid).toBeTruthy();
   });
 
@@ -351,14 +351,14 @@ describe('when deserializing patch data', () => {
   it('handles a flag with bucketBy in rollout', () => {
     const jsonString = makeSerializedPatchData(flagWithBucketByInRollout);
     const parsed = deserializePatch(jsonString);
-    const ref = (parsed?.data as Flag).fallthrough.rollout?.bucketByAttributeReference;
+    const ref = (parsed?.data as Flag)?.fallthrough.rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
 
   it('handles a flag with a rollout in a rule', () => {
     const jsonString = makeSerializedPatchData(flagWithBucketByInRolloutInRule);
     const parsed = deserializePatch(jsonString);
-    const ref = (parsed?.data as Flag).rules?.[0].rollout?.bucketByAttributeReference;
+    const ref = (parsed?.data as Flag)?.rules?.[0].rollout?.bucketByAttributeReference;
     expect(ref?.isValid).toBeTruthy();
   });
 

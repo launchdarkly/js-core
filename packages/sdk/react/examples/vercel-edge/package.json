@@ -5,7 +5,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "oxlint --no-error-on-unmatched-pattern",
     "test": "playwright test"
   },
   "dependencies": {
@@ -27,6 +27,7 @@
     "eslint-plugin-import-x": "^4.0.0",
     "eslint-plugin-jest": "^28.0.0",
     "globals": "^16.0.0",
+    "oxlint": "1.78.0",
     "typescript": "^5",
     "typescript-eslint": "^8.0.0"
   }

@@ -34,7 +34,7 @@ class NoopResponse implements Response {
 }
 
 export default class EdgeRequests implements Requests {
-  fetch(url: string, _options: Options = {}): Promise<Response> {
+  fetch(_url: string, _options: Options = {}): Promise<Response> {
     return Promise.resolve(new NoopResponse());
   }
 

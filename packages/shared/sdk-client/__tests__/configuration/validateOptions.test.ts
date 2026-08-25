@@ -44,7 +44,7 @@ describe('recordOf with built-in defaults', () => {
     const result = validator.validate({ b: { count: 99 } }, 'test', logger);
 
     // name comes from built-in default for key 'b'
-    expect((result?.value as any).b).toEqual({ name: 'beta', count: 99 });
+    expect((result?.value as any)?.b).toEqual({ name: 'beta', count: 99 });
   });
 
   it('returns built-in defaults when input is empty object', () => {
@@ -95,14 +95,14 @@ describe('recordOf without built-in defaults', () => {
 
     const result = validator.validate({ a: { name: 'custom' } }, 'test', logger, callerDefaults);
 
-    expect((result?.value as any).a).toEqual({ name: 'custom', count: 10 });
-    expect((result?.value as any).b).toEqual({ name: 'beta', count: 20 });
+    expect((result?.value as any)?.a).toEqual({ name: 'custom', count: 10 });
+    expect((result?.value as any)?.b).toEqual({ name: 'beta', count: 20 });
   });
 
   it('uses empty defaults when neither built-in nor caller defaults are provided', () => {
     const result = validator.validate({ a: { name: 'custom' } }, 'test', logger);
 
     // No defaults to fill in count, so only name is present.
-    expect((result?.value as any).a).toEqual({ name: 'custom' });
+    expect((result?.value as any)?.a).toEqual({ name: 'custom' });
   });
 });
