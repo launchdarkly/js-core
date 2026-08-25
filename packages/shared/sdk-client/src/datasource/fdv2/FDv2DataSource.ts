@@ -132,6 +132,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   }
 
   function handleFdv1Fallback(result: FDv2SourceResult): boolean {
+    // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
+    // fdv1Fallback, do not re-run the fallback machinery - we are already on FDv1.
+    if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
+      return false;
+    }
     if (result.fdv1Fallback && sourceManager.hasFDv1Fallback()) {
       sourceManager.fdv1Fallback();
       return true;
@@ -255,7 +260,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         logger?.debug('Fallback condition active for current synchronizer.');
       }
 
-      // try/finally ensures conditions are closed on all code paths.
+      // Conditions hold timers; close them even if the inner loop throws or breaks early.
       let synchronizerRunning = true;
       try {
         while (!closed && synchronizerRunning) {
