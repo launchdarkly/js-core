@@ -83,7 +83,12 @@ it('resolveBooleanEvaluation returns the translated result for boolean flags', a
     { kind: 'user', key: 'u' },
     false,
   );
-  expect(result).toEqual({ value: true, variant: '1', reason: 'OFF' });
+  expect(result).toEqual({
+    value: true,
+    variant: '1',
+    reason: 'OFF',
+    flagMetadata: { variationIndex: 1 },
+  });
 });
 
 it('resolveStringEvaluation returns the translated result for string flags', async () => {
@@ -97,7 +102,12 @@ it('resolveStringEvaluation returns the translated result for string flags', asy
 
   const result = await provider.resolveStringEvaluation('flag', 'red', { targetingKey: 'u' });
 
-  expect(result).toEqual({ value: 'green', variant: '0', reason: 'FALLTHROUGH' });
+  expect(result).toEqual({
+    value: 'green',
+    variant: '0',
+    reason: 'FALLTHROUGH',
+    flagMetadata: { variationIndex: 0 },
+  });
 });
 
 it('resolveNumberEvaluation returns the translated result for number flags', async () => {
@@ -111,7 +121,12 @@ it('resolveNumberEvaluation returns the translated result for number flags', asy
 
   const result = await provider.resolveNumberEvaluation('flag', 0, { targetingKey: 'u' });
 
-  expect(result).toEqual({ value: 42, variant: '2', reason: 'TARGET_MATCH' });
+  expect(result).toEqual({
+    value: 42,
+    variant: '2',
+    reason: 'TARGET_MATCH',
+    flagMetadata: { variationIndex: 2 },
+  });
 });
 
 it('resolveObjectEvaluation returns the translated result for object flags', async () => {
@@ -129,7 +144,12 @@ it('resolveObjectEvaluation returns the translated result for object flags', asy
     { targetingKey: 'u' },
   );
 
-  expect(result).toEqual({ value: { a: 1 }, variant: '3', reason: 'RULE_MATCH' });
+  expect(result).toEqual({
+    value: { a: 1 },
+    variant: '3',
+    reason: 'RULE_MATCH',
+    flagMetadata: { variationIndex: 3 },
+  });
 });
 
 it.each([
@@ -328,6 +348,11 @@ it('wraps a host logger that throws so flag evaluation does not crash', async ()
       targetingKey: 'u',
       kind: 42 as unknown as string,
     }),
-  ).resolves.toEqual({ value: true, variant: '0', reason: 'OFF' });
+  ).resolves.toEqual({
+    value: true,
+    variant: '0',
+    reason: 'OFF',
+    flagMetadata: { variationIndex: 0 },
+  });
 });
 
