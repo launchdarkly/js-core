@@ -77,7 +77,7 @@ function translateModeDefinition(
     .map(translateSynchronizer)
     .filter((x): x is SynchronizerEntry => x !== undefined);
 
-  if (fdv1Fallback?.baseUri) {
+  if (fdv1Fallback) {
     return {
       initializers,
       synchronizers,
@@ -85,7 +85,9 @@ function translateModeDefinition(
         ...(fdv1Fallback.pollIntervalMs != null && {
           pollInterval: fdv1Fallback.pollIntervalMs / 1000,
         }),
-        endpoints: { pollingBaseUri: fdv1Fallback.baseUri },
+        ...(fdv1Fallback.baseUri && {
+          endpoints: { pollingBaseUri: fdv1Fallback.baseUri },
+        }),
       },
     };
   }
@@ -145,9 +147,10 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
         : false;
 
       if (connMode.customConnectionModes) {
+        const { fdv1Fallback } = options.dataSystem;
         const connectionModes: Record<string, any> = {};
         Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
-          connectionModes[modeName] = translateModeDefinition(modeDef);
+          connectionModes[modeName] = translateModeDefinition(modeDef, fdv1Fallback);
           applyEndpointOverrides(modeDef);
         });
         dataSystem.connectionModes = connectionModes;
