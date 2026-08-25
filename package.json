@@ -89,17 +89,10 @@
     "check": "yarn && yarn lint && tsc && yarn build"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
-    "eslint": "^9.0.0",
-    "eslint-import-resolver-typescript": "^4.0.0",
-    "eslint-plugin-import-x": "^4.0.0",
-    "eslint-plugin-jest": "^28.0.0",
-    "globals": "^16.0.0",
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "typedoc": "0.25.0",
-    "typescript": "5.1.6",
-    "typescript-eslint": "^8.0.0"
+    "typescript": "5.1.6"
   },
   "packageManager": "yarn@4.15.0",
   "resolutions": {

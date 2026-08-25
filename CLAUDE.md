@@ -66,4 +66,10 @@
 - Auto-fix many issues with: `yarn workspace <package name> lint --fix`
 - Package names are in each package's `package.json`
 - Run lint on any package you've modified
-- When working with mocks in tests, `@ts-ignore` or ESLint ignore comments are acceptable for typing issues (test code only, not implementation)
+- When working with mocks in tests, `@ts-ignore` or lint ignore comments are acceptable for typing issues (test code only, not implementation)
+
+## Formatting Guidelines
+
+- Check formatting with: `yarn workspace <package name> format:check`
+- Apply formatting with: `yarn workspace <package name> format`
+- Run formatting on any package you've modified
