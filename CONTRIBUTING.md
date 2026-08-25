@@ -62,6 +62,25 @@ describe('given a mock filesystem and memory feature store', { /* tests */})
 These then combined to create an understandable test name:
 `given a mock filesystem and memory feature store > it does not load flags prior to start`
 
+### Linting and formatting
+
+This project uses [oxlint](https://oxc.rs/docs/guide/usage/linter.html) for linting and
+[oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) for formatting, configured in the root
+`.oxlintrc.json` and `.oxfmtrc.json`.
+
+Run these for an individual package with:
+
+```
+yarn workspace <package name> lint
+yarn workspace <package name> lint --fix
+yarn workspace <package name> format:check
+yarn workspace <package name> format
+```
+
+A handful of ESLint rules the previous config relied on (`@typescript-eslint/naming-convention`,
+`no-restricted-syntax`, `import/no-extraneous-dependencies`, `import-x/no-unresolved`) have no
+oxlint equivalent yet and are not enforced.
+
 ### Contract tests
 
 Contract tests are standardized tests that can be ran against all of our SDKs.
