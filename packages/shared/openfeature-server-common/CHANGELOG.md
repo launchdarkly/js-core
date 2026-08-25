@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v1.0.1...openfeature-js-server-common-v1.1.0) (2026-08-25)
+
+
+### Features
+
+* Populate OpenFeature flag metadata from the evaluation reason ([#1869](https://github.com/launchdarkly/js-core/issues/1869)) ([d5bdaeb](https://github.com/launchdarkly/js-core/commit/d5bdaebb515a5357cbdc6da52b5b911bc4af7351))
+
 ## [1.0.1](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v1.0.0...openfeature-js-server-common-v1.0.1) (2026-07-21)
 
 
