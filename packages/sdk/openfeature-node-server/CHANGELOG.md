@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.7...openfeature-node-server-v1.4.0) (2026-08-25)
+
+
+### Features
+
+* Populate OpenFeature flag metadata from the evaluation reason ([#1869](https://github.com/launchdarkly/js-core/issues/1869)) ([d5bdaeb](https://github.com/launchdarkly/js-core/commit/d5bdaebb515a5357cbdc6da52b5b911bc4af7351))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 1.0.1 to 1.1.0
+
 ## [1.3.7](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.6...openfeature-node-server-v1.3.7) (2026-08-18)
 
 
