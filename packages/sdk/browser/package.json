@@ -38,6 +38,8 @@
     "clean": "rimraf dist",
     "build": "tsup",
     "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "test": "npx jest --runInBand",
     "coverage": "yarn test --coverage",
     "check": "yarn lint && yarn build && yarn test"
@@ -56,6 +58,7 @@
     "globals": "^16.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "29.7.0",
+    "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",

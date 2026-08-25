@@ -1,0 +1,11 @@
+{
+  "singleQuote": true,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "**/fromExternal/**",
+    "**/CHANGELOG.md",
+    "packages/shared/common/__tests__/internal/json/testdata/output/**",
+    "packages/sdk/akamai-edgekv/src/edgekv/**",
+    "packages/shared/common/src/utils/fast-deep-equal/**"
+  ]
+}
