@@ -610,6 +610,8 @@ jobs:
         with:
           workspace_path: packages/sdk/openfeature-cloudflare-server
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          # openfeature-cloudflare-server is publishing as a prerelease; remove this once it reaches GA so npm's `latest` tag starts tracking it.
+          prerelease: true
 
   release-vue:
     runs-on: ubuntu-latest

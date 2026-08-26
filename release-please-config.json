@@ -133,11 +133,6 @@
         {
           "type": "json",
           "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
-          "jsonpath": "$.peerDependencies['@launchdarkly/cloudflare-server-sdk']"
-        },
-        {
-          "type": "json",
-          "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
           "jsonpath": "$.devDependencies['@launchdarkly/cloudflare-server-sdk']"
         }
       ]
@@ -440,7 +435,8 @@
     },
     "packages/sdk/openfeature-cloudflare-server": {
       "bump-minor-pre-major": true,
-      "prerelease": true
+      "prerelease": true,
+      "prerelease-type": "beta"
     },
     "packages/sdk/vue": {
       "bump-minor-pre-major": true,
