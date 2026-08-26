@@ -1,5 +1,5 @@
-# Tests in this file will be skipped by the LaunchDarkly SDK test harness running
-# the FDv2-feature branch against the Node.js client-side SDK. Add a path per line.
+# Tests in this file will be skipped by the LaunchDarkly SDK test harness FDv2
+# (v3) release line against the Node.js client-side SDK. Add a path per line.
 # Lines beginning with '#' are comments.
 streaming/fdv2/reconnection state management/saves previously known state
 streaming/fdv2/reconnection state management/replaces previously known state
@@ -13,3 +13,11 @@ streaming/fdv2/can discard partial events on errors
 # endpoints, but the test checks the primary's Synchronizers[0] endpoint which never
 # receives a request. This is a harness-level design issue; the SDK behavior is correct.
 wrapper/stream requests/wrapper name and version
+
+# Client SDKs always configure an FDv1 fallback synchronizer when the platform
+# provides FDv1 endpoints, regardless of whether a fallback config is present
+# (see FDv2DataManagerBase.ts's fdv1Endpoints && synchronizerSlots.length > 0
+# check). The "not configured" state this test exercises is unreachable, so it
+# currently passes for the wrong reason while also making the SDK fall back to
+# polling the default production endpoint.
+streaming/fdv2/FDv1 fallback directive/directive without FDv1 fallback configured halts the data system
