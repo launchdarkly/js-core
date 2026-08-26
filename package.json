@@ -70,7 +70,8 @@
     "packages/sdk/openfeature-cloudflare-server",
     "packages/sdk/vue",
     "packages/sdk/vue/contract-tests",
-    "packages/sdk/vue/examples/getting-started"
+    "packages/sdk/vue/examples/getting-started",
+    "packages/sdk/vue/examples/features/data-saving-mode"
   ],
   "private": true,
   "scripts": {
