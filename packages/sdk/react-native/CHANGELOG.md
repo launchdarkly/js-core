@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.20.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.19.4...react-native-client-sdk-v10.20.0) (2026-08-26)
+
+
+### Features
+
+* wire fdv1-fallback capability into node-client, browser, and react-native contract-test entities ([#1858](https://github.com/launchdarkly/js-core/issues/1858)) ([462c950](https://github.com/launchdarkly/js-core/commit/462c95098d2143802939cd010cfacd39e26a1c22))
+
 ## [10.19.4](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.19.3...react-native-client-sdk-v10.19.4) (2026-08-06)
 
 
