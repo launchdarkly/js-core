@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.1.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.2...node-client-sdk-v4.1.0) (2026-08-26)
+
+
+### Features
+
+* wire fdv1-fallback capability into node-client, browser, and react-native contract-test entities ([#1858](https://github.com/launchdarkly/js-core/issues/1858)) ([462c950](https://github.com/launchdarkly/js-core/commit/462c95098d2143802939cd010cfacd39e26a1c22))
+
 ## [4.0.2](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.0.1...node-client-sdk-v4.0.2) (2026-08-13)
 
 

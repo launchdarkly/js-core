@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@launchdarkly/node-server-sdk": "9.13.1",
-    "@launchdarkly/react-sdk": "4.1.13",
+    "@launchdarkly/react-sdk": "4.1.14",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19"

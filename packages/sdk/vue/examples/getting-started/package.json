@@ -11,7 +11,7 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@launchdarkly/vue-client-sdk": "0.2.0",
+    "@launchdarkly/vue-client-sdk": "0.2.1",
     "vue": "^3.2.36"
   },
   "devDependencies": {

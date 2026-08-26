@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/vue-client-sdk",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "LaunchDarkly Client-side SDK for Vue",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/vue",
   "repository": {
@@ -37,7 +37,7 @@
     "check": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.9.4"
+    "@launchdarkly/js-client-sdk": "4.10.0"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
