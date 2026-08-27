@@ -1,9 +1,17 @@
 {
   "name": "@launchdarkly/eventsource",
   "version": "0.0.1",
-  "type": "commonjs",
-  "main": "./dist/index.js",
+  "type": "module",
+  "main": "./dist/index.cjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/eventsource",
   "repository": {
     "type": "git",
@@ -21,12 +29,10 @@
     "streaming"
   ],
   "scripts": {
-    "build": "npx tsc",
-    "clean": "npx tsc --build --clean",
+    "build": "tsup",
     "test": "npx jest --ci",
     "lint": "oxlint .",
-    "lint:fix": "yarn run lint --fix",
-    "check": "yarn && yarn lint && tsc && yarn test"
+    "lint:fix": "yarn run lint --fix"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -41,6 +47,7 @@
     "launchdarkly-js-test-helpers": "^2.2.0",
     "oxlint": "1.78.0",
     "ts-jest": "^29.0.5",
+    "tsup": "^8.5.1",
     "typedoc": "0.25.0",
     "typescript": "5.1.6",
     "typescript-eslint": "^8.0.0"
