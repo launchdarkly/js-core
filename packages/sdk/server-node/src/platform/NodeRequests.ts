@@ -1,13 +1,11 @@
 import * as http from 'http';
 import * as https from 'https';
 import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
+import { EventSource as LDEventSource } from '@launchdarkly/eventsource';
 import {
   EventSourceCapabilities,
   LDLogger,

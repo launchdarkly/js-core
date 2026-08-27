@@ -1,6 +1,8 @@
 import * as http from 'http';
 import * as zlib from 'zlib';
 
+import { EventSource } from '@launchdarkly/eventsource';
+
 import ElectronRequests from '../../src/platform/ElectronRequests';
 
 const PORT = '3333';
@@ -206,4 +208,17 @@ describe('given an instance of NodeRequests with enableEventCompression turned o
     expect(serverResult.headers['content-encoding']).toBeUndefined();
     expect(serverResult.body).toEqual('BODY TEXT');
   });
+});
+
+it('creates an event source using the in-repo eventsource implementation', () => {
+  const requests = new ElectronRequests();
+  const es = requests.createEventSource(`http://localhost:${PORT}/`, {
+    headers: {},
+    initialRetryDelayMillis: 1000,
+    readTimeoutMillis: 1000,
+    retryResetIntervalMillis: 60_000,
+    errorFilter: () => true,
+  });
+  expect(es).toBeInstanceOf(EventSource);
+  es.close();
 });

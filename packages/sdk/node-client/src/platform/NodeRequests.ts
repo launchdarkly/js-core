@@ -1,11 +1,9 @@
 import * as http from 'http';
 import * as https from 'https';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
+import { EventSource as LDEventSource } from '@launchdarkly/eventsource';
 import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDTLSOptions } from '../NodeOptions';

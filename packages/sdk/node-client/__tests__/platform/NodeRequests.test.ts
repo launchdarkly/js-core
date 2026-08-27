@@ -1,5 +1,7 @@
 import { TestHttpHandlers, TestHttpServer, TestHttpServers } from 'launchdarkly-js-test-helpers';
 
+import { EventSource } from '@launchdarkly/eventsource';
+
 import NodeRequests from '../../src/platform/NodeRequests';
 
 it('reports event source capabilities (read timeout, custom headers, custom method)', () => {
@@ -145,8 +147,8 @@ describe('given a running HTTP server', () => {
       retryResetIntervalMillis: 30_000,
       errorFilter: () => true,
     });
-    expect(es).toBeDefined();
-    (es as { close: () => void }).close();
+    expect(es).toBeInstanceOf(EventSource);
+    es.close();
   });
 });
 

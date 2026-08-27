@@ -1,6 +1,8 @@
 import * as http from 'http';
 import * as zlib from 'zlib';
 
+import { EventSource } from '@launchdarkly/eventsource';
+
 import NodeRequests from '../../src/platform/NodeRequests';
 
 const PORT = '3333';
@@ -283,4 +285,17 @@ describe('given an instance of NodeRequests with only a proxyAgent supplied', ()
     // URL's embedded username/password) that the SDK has no way to inspect.
     expect(requests.usingProxyAuth()).toBe(true);
   });
+});
+
+it('creates an event source using the LaunchDarkly eventsource package', () => {
+  const requests = new NodeRequests();
+  const es = requests.createEventSource(`http://localhost:${PORT}/`, {
+    headers: {},
+    initialRetryDelayMillis: 1000,
+    readTimeoutMillis: 1000,
+    retryResetIntervalMillis: 60_000,
+    errorFilter: () => true,
+  });
+  expect(es).toBeInstanceOf(EventSource);
+  es.close();
 });
