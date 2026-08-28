@@ -10,7 +10,7 @@
     "tsc": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@launchdarkly/vue-client-sdk": "0.2.1",
+    "@launchdarkly/vue-client-sdk": "0.2.2",
     "vue": "^3.3.0"
   },
   "devDependencies": {
