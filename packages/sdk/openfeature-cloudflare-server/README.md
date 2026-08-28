@@ -16,6 +16,28 @@ This package provides an [OpenFeature](https://openfeature.dev/) provider that w
 
 This provider is designed primarily for use in multi-user Cloudflare Workers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
 
+## Feature matrix
+
+This matrix mirrors the [feature matrix of the OpenFeature SDK for JavaScript](https://github.com/open-feature/js-sdk/blob/main/packages/server/README.md#-features) and describes what this provider supports. Rows which are not supported state whether the limitation comes from the OpenFeature JavaScript SDK or from the provider.
+
+| Status | Feature                         | Notes                                                                                                                                                                                                                     |
+|--------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ✅      | Providers                       | Evaluates boolean, string, number, and object flags through the LaunchDarkly Cloudflare SDK.                                                                                                                              |
+| ✅      | Targeting                       | The `EvaluationContext` is converted to a LaunchDarkly single or multi-context. See [OpenFeature Specific Considerations](#openfeature-specific-considerations).                                                           |
+| ✅      | Hooks                           | Hooks are registered on the OpenFeature API and client; the provider requires no additional support and its results are visible to hooks, including [flag metadata](#flag-metadata).                                       |
+| ✅      | Logging                         | The provider logs through the logging configuration of the `LDOptions` it is given.                                                                                                                                       |
+| ✅      | Domains                         | Domains bind clients to providers in the OpenFeature SDK; a separate provider instance may be registered per domain.                                                                                                       |
+| ❌      | Eventing                        | This provider does not emit `ConfigurationChanged`, `Error`, or `Stale` events because the Cloudflare SDK reads flag data from a KV namespace on each evaluation and has no connection to LaunchDarkly to provide an underlying event to translate. This is a Cloudflare platform limitation, not an OpenFeature SDK or provider gap. See [ConfigurationChanged is not supported on this platform](#configurationchanged-is-not-supported-on-this-platform) and [#1886](https://github.com/launchdarkly/js-core/issues/1886). |
+| ✅      | Transaction Context Propagation | Provided by the OpenFeature SDK, which merges the transaction context into the evaluation context before the provider is called; no provider support is required.                                                          |
+| ✅      | Tracking                        | The common provider implementation translates tracking details and sends them through the Cloudflare LaunchDarkly client.                                                                                                 |
+| ✅      | Initialization                  | `initialize` waits for the Cloudflare LaunchDarkly client with the common provider's default 10-second timeout; the Cloudflare provider passes no initialization-timeout override.                                      |
+| ✅      | Shutdown                        | The common provider implementation flushes and closes the Cloudflare LaunchDarkly client. A closed client cannot be restarted, so a new provider instance is required afterward.                                         |
+| ✅      | Extending                       | The underlying LaunchDarkly client is available through `getClient()` for functionality with no OpenFeature equivalent.                                                                                                    |
+| ✅      | Multi-Provider                 | Provided by the OpenFeature SDK; no provider support is required.                                                                                                                                                          |
+| ✅      | Flag metadata                   | LaunchDarkly evaluation reason details are returned as OpenFeature flag metadata. See [Flag Metadata](#flag-metadata).                                                                                                     |
+
+<sub>Supported: ✅ | Partially supported: ⚠️ | Not supported: ❌</sub>
+
 ## Installation
 
 ```bash
