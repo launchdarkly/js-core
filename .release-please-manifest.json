@@ -27,5 +27,5 @@
   "packages/sdk/shopify-oxygen": "0.1.20",
   "packages/sdk/react": "4.1.14",
   "packages/sdk/openfeature-node-server": "1.4.0",
-  "packages/sdk/vue": "0.2.1"
+  "packages/sdk/vue": "0.2.2"
 }
