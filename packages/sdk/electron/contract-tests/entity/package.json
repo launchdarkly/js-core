@@ -26,7 +26,7 @@
     "@types/express": "^5.0.6",
     "electron": "^40.2.1",
     "playwright": "^1.49.1",
-    "typescript": "~4.5.4",
+    "typescript": "~7.0.2",
     "vite": "^8.0.16"
   },
   "peerDependencies": {
