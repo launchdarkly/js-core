@@ -21,3 +21,5 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "typescript"
