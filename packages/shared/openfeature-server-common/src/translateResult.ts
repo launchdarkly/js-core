@@ -16,6 +16,8 @@ function translateErrorKind(errorKind: string | undefined): ErrorCode {
       return ErrorCode.FLAG_NOT_FOUND;
     case 'USER_NOT_SPECIFIED':
       return ErrorCode.TARGETING_KEY_MISSING;
+    case 'WRONG_TYPE':
+      return ErrorCode.TYPE_MISMATCH;
     default:
       return ErrorCode.GENERAL;
   }

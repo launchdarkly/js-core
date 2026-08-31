@@ -61,6 +61,18 @@ it('does populate the errorCode when there is an error', () => {
   expect(translated.errorCode).toEqual('GENERAL');
 });
 
+it('maps the WRONG_TYPE error kind to TYPE_MISMATCH', () => {
+  const translated = translateResult<boolean>({
+    value: true,
+    variationIndex: 9,
+    reason: {
+      kind: 'ERROR',
+      errorKind: 'WRONG_TYPE',
+    },
+  });
+  expect(translated.errorCode).toEqual('TYPE_MISMATCH');
+});
+
 it('includes the variation index in the flag metadata', () => {
   expect(
     translateResult<boolean>({
