@@ -23,7 +23,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/react": "~18.2.55",
-    "typescript": "^5.2.2"
+    "typescript": "^7.0.2"
   },
   "installConfig": {
     "hoistingLimits": "workspaces"
