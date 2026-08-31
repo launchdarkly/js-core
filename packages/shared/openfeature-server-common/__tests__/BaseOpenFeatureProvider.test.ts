@@ -86,7 +86,7 @@ it('resolveBooleanEvaluation returns the translated result for boolean flags', a
   expect(result).toEqual({
     value: true,
     variant: '1',
-    reason: 'OFF',
+    reason: 'DISABLED',
     flagMetadata: { variationIndex: 1 },
   });
 });
@@ -124,7 +124,7 @@ it('resolveNumberEvaluation returns the translated result for number flags', asy
   expect(result).toEqual({
     value: 42,
     variant: '2',
-    reason: 'TARGET_MATCH',
+    reason: 'TARGETING_MATCH',
     flagMetadata: { variationIndex: 2 },
   });
 });
@@ -351,8 +351,7 @@ it('wraps a host logger that throws so flag evaluation does not crash', async ()
   ).resolves.toEqual({
     value: true,
     variant: '0',
-    reason: 'OFF',
+    reason: 'DISABLED',
     flagMetadata: { variationIndex: 0 },
   });
 });
-

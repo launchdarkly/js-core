@@ -1,3 +1,5 @@
+import { StandardResolutionReasons } from '@openfeature/server-sdk';
+
 import { translateResult } from '../src/translateResult';
 
 it.each([true, 'potato', 42, { yes: 'no' }])('puts the value into the result.', (value) => {
@@ -23,9 +25,13 @@ it('converts the variationIndex into a string variant', () => {
   ).toEqual('9');
 });
 
-it.each(['OFF', 'FALLTHROUGH', 'TARGET_MATCH', 'PREREQUISITE_FAILED', 'ERROR'])(
-  'populates the resolution reason',
-  (reason) => {
+it.each([
+  ['OFF', StandardResolutionReasons.DISABLED],
+  ['FALLTHROUGH', 'FALLTHROUGH'],
+  ['TARGET_MATCH', StandardResolutionReasons.TARGETING_MATCH],
+  ['PREREQUISITE_FAILED', 'PREREQUISITE_FAILED'],
+  ['ERROR', StandardResolutionReasons.ERROR],
+])('populates the resolution reason', (reason, expectedReason) => {
     expect(
       translateResult<boolean>({
         value: true,
@@ -34,9 +40,8 @@ it.each(['OFF', 'FALLTHROUGH', 'TARGET_MATCH', 'PREREQUISITE_FAILED', 'ERROR'])(
           kind: reason,
         },
       }).reason,
-    ).toEqual(reason);
-  },
-);
+    ).toEqual(expectedReason);
+});
 
 it('does not populate the errorCode when there is not an error', () => {
   const translated = translateResult<boolean>({

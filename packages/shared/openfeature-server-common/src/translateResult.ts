@@ -1,4 +1,4 @@
-import { ErrorCode } from '@openfeature/server-sdk';
+import { ErrorCode, StandardResolutionReasons } from '@openfeature/server-sdk';
 import type { FlagMetadata, ResolutionDetails } from '@openfeature/server-sdk';
 
 import type { LDEvaluationDetail } from '@launchdarkly/js-sdk-common';
@@ -20,6 +20,19 @@ function translateErrorKind(errorKind: string | undefined): ErrorCode {
       return ErrorCode.TYPE_MISMATCH;
     default:
       return ErrorCode.GENERAL;
+  }
+}
+
+function translateReason(reason: string): string {
+  switch (reason) {
+    case 'OFF':
+      return StandardResolutionReasons.DISABLED;
+    case 'TARGET_MATCH':
+      return StandardResolutionReasons.TARGETING_MATCH;
+    case 'ERROR':
+      return StandardResolutionReasons.ERROR;
+    default:
+      return reason;
   }
 }
 
@@ -89,7 +102,7 @@ export function translateResult<T>(result: LDEvaluationDetail): ResolutionDetail
   const resolution: ResolutionDetails<T> = {
     value: result.value,
     variant: result.variationIndex?.toString(),
-    reason: result.reason.kind,
+    reason: translateReason(result.reason.kind),
     flagMetadata: translateFlagMetadata(result),
   };
 
