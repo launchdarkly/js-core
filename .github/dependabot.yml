@@ -21,3 +21,10 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
+    groups:
+      npm-dependencies:
+        patterns:
+          - "*"
+        group-by: dependency-name
+    ignore:
+      - dependency-name: "typescript"
