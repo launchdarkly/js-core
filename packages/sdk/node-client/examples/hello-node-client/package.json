@@ -11,7 +11,7 @@
     "@launchdarkly/node-client-sdk": "4.1.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.2.0",
     "tsx": "^4.19.2",
     "typescript": "5.1.6"
   }
