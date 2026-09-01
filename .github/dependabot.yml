@@ -28,3 +28,5 @@ updates:
         group-by: dependency-name
     ignore:
       - dependency-name: "typescript"
+      - dependency-name: "@types/*"
+        update-types: ["version-update:semver-major"]
