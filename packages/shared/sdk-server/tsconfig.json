@@ -8,6 +8,7 @@
     "moduleResolution": "bundler",
     "strict": true,
     "noImplicitOverride": true,
+    "esModuleInterop": true,
     // Needed for CommonJS modules: markdown-it, fs-extra
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
