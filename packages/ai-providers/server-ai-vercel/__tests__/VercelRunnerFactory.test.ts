@@ -68,5 +68,4 @@ describe('VercelRunnerFactory', () => {
       ).rejects.toThrow('Unsupported Vercel AI provider: unsupported');
     });
   });
-
 });

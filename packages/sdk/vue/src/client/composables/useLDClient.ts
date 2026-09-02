@@ -27,8 +27,6 @@ export function injectLDVueInstance(
  *
  * @param injectionKey optional injection key for multiple environments @see {@link createLDVueInstanceKey}
  */
-export function useLDClient(
-  injectionKey?: InjectionKey<LDVueInstance>,
-): LDVueClient {
+export function useLDClient(injectionKey?: InjectionKey<LDVueInstance>): LDVueClient {
   return injectLDVueInstance(injectionKey).client;
 }

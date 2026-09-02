@@ -37,11 +37,9 @@ LaunchDarkly uses the [SLSA framework](https://slsa.dev/spec/v1.0/about) (Supply
 
 [vue-sdk-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/vue.yml/badge.svg
 [vue-sdk-ci]: https://github.com/launchdarkly/js-core/actions/workflows/vue.yml
-
 [vue-sdk-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/vue-client-sdk.svg?style=flat-square
 [vue-sdk-npm-link]: https://www.npmjs.com/package/@launchdarkly/vue-client-sdk
 [vue-sdk-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
 [vue-sdk-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/vue/docs/
 [vue-sdk-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/vue-client-sdk.svg?style=flat-square
 [vue-sdk-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/vue-client-sdk.svg?style=flat-square
-

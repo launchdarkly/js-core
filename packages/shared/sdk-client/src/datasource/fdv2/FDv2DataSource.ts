@@ -340,7 +340,6 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
   }
 
-
   async function runOrchestration(): Promise<void> {
     // No sources configured at all, so there is nothing to wait for.
     // Report valid immediately.

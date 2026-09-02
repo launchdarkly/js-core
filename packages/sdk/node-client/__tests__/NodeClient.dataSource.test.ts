@@ -105,7 +105,11 @@ it('polling mode without bootstrap uses identify callbacks on _setupConnection',
     requests: {
       fetch: mockFetch(JSON.stringify(bootstrapData), 200),
       createEventSource: jest.fn(),
-      getEventSourceCapabilities: () => ({ readTimeout: false, headers: true, customMethod: false }),
+      getEventSourceCapabilities: () => ({
+        readTimeout: false,
+        headers: true,
+        customMethod: false,
+      }),
     },
   });
   NodePlatformMock.mockImplementationOnce(() => fakePlatform);
@@ -139,7 +143,11 @@ it('polling mode opens a fetch request to the polling endpoint', async () => {
     requests: {
       fetch: fetchMock,
       createEventSource: jest.fn(),
-      getEventSourceCapabilities: () => ({ readTimeout: false, headers: true, customMethod: false }),
+      getEventSourceCapabilities: () => ({
+        readTimeout: false,
+        headers: true,
+        customMethod: false,
+      }),
     },
   });
   NodePlatformMock.mockImplementationOnce(() => fakePlatform);
@@ -176,7 +184,11 @@ it('streaming mode opens an EventSource to the streaming endpoint with authoriza
     requests: {
       fetch: jest.fn(),
       createEventSource: createEventSource as any,
-      getEventSourceCapabilities: () => ({ readTimeout: false, headers: true, customMethod: false }),
+      getEventSourceCapabilities: () => ({
+        readTimeout: false,
+        headers: true,
+        customMethod: false,
+      }),
     },
   });
   NodePlatformMock.mockImplementationOnce(() => fakePlatform);
@@ -283,7 +295,11 @@ it('setConnectionMode streaming -> offline tears down the EventSource', async ()
     requests: {
       fetch: jest.fn(),
       createEventSource: createEventSource as any,
-      getEventSourceCapabilities: () => ({ readTimeout: false, headers: true, customMethod: false }),
+      getEventSourceCapabilities: () => ({
+        readTimeout: false,
+        headers: true,
+        customMethod: false,
+      }),
     },
   });
   NodePlatformMock.mockImplementationOnce(() => fakePlatform);

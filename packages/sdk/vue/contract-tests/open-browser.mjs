@@ -16,7 +16,7 @@ console.log(`Opening headless browser at ${url}...`);
 
 const browser = await chromium.launch({
   headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
 });
 
 const context = await browser.newContext();

@@ -37,12 +37,12 @@ it('wraps and passes a custom storage through to the platform', async () => {
     clear: jest.fn(async () => {}),
   };
 
-  makeClient(
-    'client-side-id',
-    { key: 'user-key', kind: 'user' },
-    AutoEnvAttributes.Disabled,
-    { streaming: false, logger, diagnosticOptOut: true, storage: myStorage },
-  );
+  makeClient('client-side-id', { key: 'user-key', kind: 'user' }, AutoEnvAttributes.Disabled, {
+    streaming: false,
+    logger,
+    diagnosticOptOut: true,
+    storage: myStorage,
+  });
 
   const wired = getWiredStorage();
   expect(wired).toBeDefined();
@@ -58,12 +58,11 @@ it('wraps and passes a custom storage through to the platform', async () => {
 });
 
 it('does not pass a storage override when none is configured', () => {
-  makeClient(
-    'client-side-id',
-    { key: 'user-key', kind: 'user' },
-    AutoEnvAttributes.Disabled,
-    { streaming: false, logger, diagnosticOptOut: true },
-  );
+  makeClient('client-side-id', { key: 'user-key', kind: 'user' }, AutoEnvAttributes.Disabled, {
+    streaming: false,
+    logger,
+    diagnosticOptOut: true,
+  });
 
   expect(getWiredStorage()).toBeUndefined();
 });
@@ -81,12 +80,12 @@ it('does not let a throwing custom storage escape the wrapper', async () => {
     }),
   };
 
-  makeClient(
-    'client-side-id',
-    { key: 'user-key', kind: 'user' },
-    AutoEnvAttributes.Disabled,
-    { streaming: false, logger, diagnosticOptOut: true, storage: throwingStorage },
-  );
+  makeClient('client-side-id', { key: 'user-key', kind: 'user' }, AutoEnvAttributes.Disabled, {
+    streaming: false,
+    logger,
+    diagnosticOptOut: true,
+    storage: throwingStorage,
+  });
 
   const wired = getWiredStorage();
   await expect(wired.get('k')).resolves.toBeNull();

@@ -92,9 +92,7 @@ it('normalizes _call suffix to known hosted tool names', () => {
 });
 
 it('preserves unknown _call suffix types as-is', () => {
-  const items = [
-    { type: 'tool_call_item', rawItem: { type: 'custom_thing_call' } },
-  ];
+  const items = [{ type: 'tool_call_item', rawItem: { type: 'custom_thing_call' } }];
   expect(getToolCallsFromRunItems(items)).toEqual(['custom_thing_call']);
 });
 

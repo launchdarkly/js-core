@@ -17,20 +17,20 @@ This demo requires Node.js 20 or higher.
    project that you want to evaluate, set `LAUNCHDARKLY_FLAG_KEY` to the flag
    key; otherwise, a boolean flag of `sample-feature` will be assumed.
 
-    ```bash
-    export LAUNCHDARKLY_SDK_KEY="my-sdk-key"
-    export LAUNCHDARKLY_FLAG_KEY="my-boolean-flag"
-    ```
+   ```bash
+   export LAUNCHDARKLY_SDK_KEY="my-sdk-key"
+   export LAUNCHDARKLY_FLAG_KEY="my-boolean-flag"
+   ```
 
 2. From the example directory, install dependencies and run the example:
 
-    ```bash
-    yarn start
-    ```
+   ```bash
+   yarn start
+   ```
 
-    You should receive the message:
+   You should receive the message:
 
-    > The {flagKey} feature flag evaluates to {flagValue}.
+   > The {flagKey} feature flag evaluates to {flagValue}.
 
 The application will run continuously and react to flag changes in LaunchDarkly.
 Toggle the flag in the LaunchDarkly dashboard to watch the demo re-evaluate live.

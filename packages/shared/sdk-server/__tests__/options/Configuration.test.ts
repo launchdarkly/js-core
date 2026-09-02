@@ -146,7 +146,11 @@ describe('when setting different options', () => {
   it.each([
     [0, 1, [{ level: LogLevel.Warn, matches: /Config option "timeout" had invalid value/ }]],
     [6, 6, []],
-    ['potato', 10, [{ level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ }]],
+    [
+      'potato',
+      10,
+      [{ level: LogLevel.Warn, matches: /Config option "timeout" should be of type/ }],
+    ],
   ])('allow setting timeout and validates timeout', (value, expected, logs) => {
     // @ts-ignore
     const config = new Configuration(withLogger({ timeout: value }));
@@ -497,11 +501,7 @@ describe('when setting different options', () => {
 
   it('passes a native transactional persistent store through without wrapping', () => {
     const applyChanges = jest.fn(
-      (
-        _basis: boolean,
-        _data: Record<string, unknown>,
-        callback: () => void,
-      ) => {
+      (_basis: boolean, _data: Record<string, unknown>, callback: () => void) => {
         callback();
       },
     );
@@ -626,7 +626,8 @@ describe('when setting different options', () => {
     logger(opts).expectMessages([
       {
         level: LogLevel.Warn,
-        matches: /Config option "dataSystem.fdv1Fallback" should be of type FDv1FallbackConfiguration/,
+        matches:
+          /Config option "dataSystem.fdv1Fallback" should be of type FDv1FallbackConfiguration/,
       },
     ]);
   });
@@ -696,10 +697,7 @@ describe('when setting different options', () => {
 // options are unaffected.
 it.each([
   ['standard', { dataSourceOptionsType: 'standard', baseUri: 'https://example.com' }],
-  [
-    'streamingOnly',
-    { dataSourceOptionsType: 'streamingOnly', baseUri: 'https://example.com' },
-  ],
+  ['streamingOnly', { dataSourceOptionsType: 'streamingOnly', baseUri: 'https://example.com' }],
   ['pollingOnly', { dataSourceOptionsType: 'pollingOnly', baseUri: 'https://example.com' }],
 ])('drops baseUri and warns on the %s dataSource shape', (_mode, dataSource) => {
   const opts = withLogger({

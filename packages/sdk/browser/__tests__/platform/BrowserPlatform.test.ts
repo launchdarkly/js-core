@@ -14,7 +14,9 @@ jest.mock('../../src/platform/LocalStorage', () => {
 });
 
 const mockLocalStorage = LocalStorage as jest.MockedClass<typeof LocalStorage>;
-const mockIsSupported = isLocalStorageSupported as jest.MockedFunction<typeof isLocalStorageSupported>;
+const mockIsSupported = isLocalStorageSupported as jest.MockedFunction<
+  typeof isLocalStorageSupported
+>;
 
 let logger: LDLogger;
 

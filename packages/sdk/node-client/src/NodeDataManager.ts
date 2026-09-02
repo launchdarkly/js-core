@@ -238,13 +238,7 @@ export default class NodeDataManager extends BaseDataManager {
         );
         break;
       case 'polling':
-        this.createPollingProcessor(
-          rawContext,
-          context,
-          requestor,
-          wrappedResolve,
-          wrappedReject,
-        );
+        this.createPollingProcessor(rawContext, context, requestor, wrappedResolve, wrappedReject);
         break;
       default:
         this.logger.warn(

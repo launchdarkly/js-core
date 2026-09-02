@@ -114,12 +114,7 @@ export default class Requestor implements LDFeatureRequestor {
             );
         return cb(err, undefined, responseHeaders, fallbackToFDv1);
       }
-      return cb(
-        undefined,
-        res.status === 304 ? null : body,
-        responseHeaders,
-        fallbackToFDv1,
-      );
+      return cb(undefined, res.status === 304 ? null : body, responseHeaders, fallbackToFDv1);
     } catch (err) {
       return cb(err, undefined, undefined, false);
     }

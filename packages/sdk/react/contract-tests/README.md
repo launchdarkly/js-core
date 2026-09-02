@@ -3,6 +3,7 @@
 This directory contains the contract test implementation for the LaunchDarkly React SDK using the [SDK Test Harness](https://github.com/launchdarkly/sdk-test-harness).
 
 ## Architecture
+
 > NOTE: much of the test architecture is based off of
 > [browser contract test](../../browser/contract-tests).
 
@@ -43,18 +44,20 @@ yarn workspace @launchdarkly/react-sdk-contract-tests playwright install
 ```
 
 From the repository root
+
 ```bash
 ./packages/sdk/react/contract-tests/run-test-service.sh
 ```
 
 This script will:
+
 1. Start the adapter (WebSocket bridge)
 2. Start the app
 
 The services will be available at:
+
 - Adapter REST API: http://localhost:8000
 - Adapter WebSocket: ws://localhost:8001
 - Browser App: http://localhost:8002
 
 You then run the `sdk-test-harness`. More information is available here: https://github.com/launchdarkly/sdk-test-harness
-

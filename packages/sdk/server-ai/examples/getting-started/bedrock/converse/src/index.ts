@@ -59,7 +59,9 @@ function mapPromptToConversation(
   prompt: { role: 'user' | 'assistant' | 'system'; content: string }[],
 ): Message[] {
   return prompt
-    .filter((item): item is { role: 'user' | 'assistant'; content: string } => item.role !== 'system')
+    .filter(
+      (item): item is { role: 'user' | 'assistant'; content: string } => item.role !== 'system',
+    )
     .map((item) => ({
       role: item.role,
       content: [{ text: item.content }],
@@ -105,8 +107,7 @@ async function main() {
 
     const chatMessages = mapPromptToConversation(aiConfig.messages ?? []);
     const systemMessages =
-      aiConfig.messages?.filter((m) => m.role === 'system').map((m) => ({ text: m.content })) ??
-      [];
+      aiConfig.messages?.filter((m) => m.role === 'system').map((m) => ({ text: m.content })) ?? [];
 
     const sampleQuestion = 'What can you help me with?';
     chatMessages.push({ role: 'user', content: [{ text: sampleQuestion }] });

@@ -22,7 +22,7 @@ const lifetimePromise = new Promise((resolve) => {
 
 const browser = await chromium.launch({
   headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
 });
 
 const context = await browser.newContext();
@@ -47,7 +47,9 @@ for (let attempt = 1; attempt <= maxRetries; attempt++) {
     break;
   } catch (err) {
     if (attempt === maxRetries) throw err;
-    console.log(`[Browser] Connection to ${url} failed (attempt ${attempt}/${maxRetries}), retrying in ${retryDelayMs}ms...`);
+    console.log(
+      `[Browser] Connection to ${url} failed (attempt ${attempt}/${maxRetries}), retrying in ${retryDelayMs}ms...`,
+    );
     await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
   }
 }

@@ -94,7 +94,9 @@ it('notifies context subscribers after a successful identify', async () => {
 
 it('does not notify context subscribers when identify does not complete', async () => {
   createBaseClientMock.mockReturnValue(
-    makeBaseClient({ identify: jest.fn(() => Promise.resolve({ status: 'error', error: new Error('x') })) }),
+    makeBaseClient({
+      identify: jest.fn(() => Promise.resolve({ status: 'error', error: new Error('x') })),
+    }),
   );
   const client = createClient('env-id', { kind: 'user', key: 'k' });
 
@@ -172,7 +174,9 @@ it('does not let a getContext() throw affect the initialization result', async (
   createBaseClientMock.mockReturnValue(
     makeBaseClient({
       start: jest.fn(() => Promise.resolve<Result>({ status: 'complete' })),
-      getContext: jest.fn(() => { throw boom; }),
+      getContext: jest.fn(() => {
+        throw boom;
+      }),
     }),
   );
   const client = createClient('env-id', { kind: 'user', key: 'k' });

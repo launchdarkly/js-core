@@ -18,6 +18,7 @@ This example was scaffolded with [Electron Forge](https://www.electronforge.io/)
 2. If there is an existing boolean feature flag in your LaunchDarkly project you want to use, set the `LAUNCHDARKLY_FLAG_KEY` environment variable to that flag's key. If there is not an existing flag you can use, create a new boolean flag in your project and use that flag's key.
 
 3. Run the app from the repository root:
+
    ```bash
    yarn workspace @launchdarkly/electron-example start
    ```

@@ -49,13 +49,17 @@ const bootstrapDataWithReasons = {
 };
 
 it('start with bootstrap data resolves and exposes flags', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   const result = await client.start({ bootstrap: goodBootstrapData });
 
@@ -65,13 +69,17 @@ it('start with bootstrap data resolves and exposes flags', async () => {
 });
 
 it('exposes evaluation reasons from bootstrap data', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   await client.start({ bootstrap: bootstrapDataWithReasons });
 
@@ -93,13 +101,17 @@ it('re-identifying with new bootstrap data replaces previous flags', async () =>
     $valid: true,
   };
 
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   await client.start({ bootstrap: goodBootstrapData });
   expect(client.stringVariation('string-flag', 'default')).toBe('is bob');
@@ -110,13 +122,17 @@ it('re-identifying with new bootstrap data replaces previous flags', async () =>
 });
 
 it('warns that waitForNetworkResults is ignored when combined with bootstrap', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   await client.start({ bootstrap: goodBootstrapData });
   const result = await client.identify(
@@ -129,13 +145,17 @@ it('warns that waitForNetworkResults is ignored when combined with bootstrap', a
 });
 
 it('returns defaults when no bootstrap data is provided', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   await client.start();
 

@@ -1,4 +1,10 @@
-import type { LDAIMetrics, LDLogger, LDMessage, LDTool, LDTokenUsage } from '@launchdarkly/server-sdk-ai';
+import type {
+  LDAIMetrics,
+  LDLogger,
+  LDMessage,
+  LDTool,
+  LDTokenUsage,
+} from '@launchdarkly/server-sdk-ai';
 
 import type { ToolRegistry } from './OpenAIAgentRunner';
 
@@ -161,7 +167,11 @@ export function registryValueToAgentTool(
   return toolHelper({
     name: definition?.name ?? fn.name ?? 'unknown',
     description: definition?.description ?? '',
-    parameters: definition?.parameters ?? { type: 'object', properties: {}, additionalProperties: false },
+    parameters: definition?.parameters ?? {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    },
     strict: false,
     execute: async (args: any) => {
       const result = await fn(args);
