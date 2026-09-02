@@ -185,16 +185,18 @@ export function createRecoveryCondition(timeoutMs: number): Condition {
 /**
  * Creates the "not initialized" leg of the fallback condition. The timer
  * starts immediately (unlike {@link createFallbackCondition}, which only
- * starts once interrupted) and is cancelled once a `changeSet` is received.
- * If it fires first, it resolves with `'fallback'`, same as the
- * interrupted-based leg -- the two are alternatives (an OR), not a sequence.
+ * starts once interrupted) and is cancelled once a `changeSet` carrying real
+ * data is received. A `'none'` payload (e.g. an unchanged poll response)
+ * carries no data, so it does not cancel the timer. If it fires first, it
+ * resolves with `'fallback'`, same as the interrupted-based leg -- the two
+ * are alternatives (an OR), not a sequence.
  */
 export function createInitFallbackCondition(timeoutMs: number): Condition {
   return createCondition(
     timeoutMs,
     'fallback',
     (result, { cancel }) => {
-      if (result.type === 'changeSet') {
+      if (result.type === 'changeSet' && result.payload.type !== 'none') {
         cancel();
       }
     },
