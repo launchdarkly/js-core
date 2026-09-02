@@ -23,7 +23,9 @@
     "build": "npx tsc",
     "clean": "npx tsc --build --clean",
     "lint": "oxlint .",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "yarn run lint --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "license": "Apache-2.0",
   "dependencies": {
@@ -41,6 +43,7 @@
     "globals": "^16.0.0",
     "jest": "^29.5.0",
     "launchdarkly-js-test-helpers": "^2.2.0",
+    "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "ts-jest": "^29.0.5",
     "typedoc": "0.25.0",

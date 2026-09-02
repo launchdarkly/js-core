@@ -236,18 +236,17 @@
       "type": "ai",
       "path": "packages/sdk/server-ai",
       "languages": ["JavaScript", "TypeScript"],
+      "aiSdkNames": ["@launchdarkly/server-sdk-ai"],
       "releases": {
         "tag-prefix": "server-sdk-ai-"
       },
       "userAgents": ["NodeJSAIClient"],
       "features": {
         "aiAgentConfig": { "introduced": "0.11" },
+        "aiAgentGraph": { "introduced": "0.17" },
         "aiCompletionConfig": { "introduced": "0.1" },
         "aiJudgeConfig": { "introduced": "0.14" },
-        "aiTrackMetrics": { "introduced": "0.1" },
-        "contexts": { "introduced": "0.1" },
-        "experimentation": { "introduced": "0.1" },
-        "privateAttrs": { "introduced": "0.1" }
+        "aiTrackMetrics": { "introduced": "0.1" }
       }
     },
     "shopify-oxygen": {
