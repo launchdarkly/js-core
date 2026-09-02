@@ -138,6 +138,28 @@ it('returns undefined when all synchronizers are blocked', () => {
   expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
 });
 
+it('closes the active source when every synchronizer becomes blocked', () => {
+  const sync1 = makeMockSynchronizer();
+  const sync2 = makeMockSynchronizer();
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot(makeSyncFactory(sync1)),
+    createSynchronizerSlot(makeSyncFactory(sync2)),
+  ];
+
+  const manager = createSourceManager([], slots, () => undefined);
+
+  expect(manager.getNextAvailableSynchronizerAndSetActive()).toBe(sync1);
+
+  // Both slots become blocked while sync1 is still the active source --
+  // nothing will call next() on it again, so it must be closed rather than
+  // left running.
+  slots[0].state = 'blocked';
+  slots[1].state = 'blocked';
+
+  expect(manager.getNextAvailableSynchronizerAndSetActive()).toBeUndefined();
+  expect(sync1.closed).toBe(true);
+});
+
 it('wraps around to find available synchronizers', () => {
   const sync1a = makeMockSynchronizer();
   const sync1b = makeMockSynchronizer();
