@@ -1,3 +1,5 @@
+// import/extensions appears to misfire on this bare package specifier; revisit the rule config.
+// oxlint-disable-next-line import/extensions
 import {
   EvaluationSeriesContext,
   EvaluationSeriesData,
