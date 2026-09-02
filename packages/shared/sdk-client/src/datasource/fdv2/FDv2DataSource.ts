@@ -208,11 +208,23 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       scheduleFdv2Recovery(result);
     }
 
-    if (sourceManager.hasFDv1Fallback()) {
-      sourceManager.fdv1Fallback();
-      return true;
+    // With no synchronizers configured at all (e.g. one-shot mode), there
+    // is nothing to halt or recover to -- keep trying other initializers.
+    if (synchronizerSlots.length === 0) {
+      return false;
     }
-    return false;
+
+    if (!sourceManager.hasFDv1Fallback()) {
+      // No FDv1 fallback synchronizer configured: run no synchronizer and
+      // report interrupted while the recovery deadline is pending.
+      statusManager.requestStateUpdate('INTERRUPTED');
+    }
+
+    // Halts the current run: with an FDv1 fallback configured it becomes
+    // the sole active source; without one, every FDv2 slot is blocked and
+    // the orchestrator runs no synchronizer until recovery.
+    sourceManager.fdv1Fallback();
+    return true;
   }
 
   // The orchestration loops intentionally use await-in-loop for sequential
