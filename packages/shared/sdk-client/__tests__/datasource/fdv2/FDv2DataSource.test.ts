@@ -1,3 +1,5 @@
+import { internal } from '@launchdarkly/js-sdk-common';
+
 import { createFDv2DataSource } from '../../../src/datasource/fdv2/FDv2DataSource';
 import {
   changeSet,
@@ -1222,6 +1224,614 @@ it('does not re-trigger fallback when the fdv1 synchronizer itself yields a fall
   expect(dataCallback).toHaveBeenCalledWith(fdv1PayloadA);
   expect(dataCallback).toHaveBeenCalledWith(fdv1PayloadB);
   expect(fdv2Created).toBe(1);
+
+  ds.close();
+});
+
+// -- fdv2 recovery scheduling --
+
+it('logs the scheduled fdv2 retry using the directive TTL', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const fdv2Sync = makeMockSynchronizer([
+    changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 90000 }),
+  ]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv2Sync }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+
+  expect(logger.info).toHaveBeenCalledWith('FDv2 retry scheduled in 90s.');
+  ds.close();
+});
+
+it('schedules the jittered default TTL when the directive carries no TTL', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const fdv2Sync = makeMockSynchronizer([changeSet(fdv2Payload, { fdv1Fallback: true })]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv2Sync }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+
+  const scheduleLog = logger.info.mock.calls.find(
+    (call: unknown[]) =>
+      typeof call[0] === 'string' && call[0].startsWith('FDv2 retry scheduled in'),
+  );
+  expect(scheduleLog).toBeDefined();
+  const seconds = Number(/in (\d+)s/.exec(scheduleLog![0] as string)![1]);
+  expect(seconds).toBeGreaterThanOrEqual(internal.DEFAULT_FDV1_FALLBACK_TTL_MS / 2000);
+  expect(seconds).toBeLessThanOrEqual(internal.DEFAULT_FDV1_FALLBACK_TTL_MS / 1000);
+
+  // Cancels the pending default-length deadline so the suite does not hold a timer.
+  ds.close();
+});
+
+it('reschedules without restarting the fdv1 fallback synchronizer when a directive arrives during fallback', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const fdv2Sync = makeMockSynchronizer([
+    changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 1000 }),
+  ]);
+
+  let fdv1Creations = 0;
+  const fdv1Factory = () => {
+    fdv1Creations += 1;
+    // The fallback synchronizer's own response carries a fresh directive.
+    return makeMockSynchronizer([
+      changeSet(fdv1Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 5000 }),
+    ]);
+  };
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv2Sync }),
+    createSynchronizerSlot({ create: fdv1Factory }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 20);
+  });
+
+  expect(fdv1Creations).toBe(1);
+  expect(logger.info).toHaveBeenCalledWith('FDv2 retry scheduled in 1s.');
+  expect(logger.info).toHaveBeenCalledWith('FDv2 retry scheduled in 5s.');
+  ds.close();
+});
+
+it('restarts the primary fdv2 synchronizer once the fallback TTL elapses', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+  const recoveredPayload = makePayload({ state: 'recovered-selector' });
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    if (fdv2Creations === 1) {
+      return makeMockSynchronizer([
+        changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 20 }),
+      ]);
+    }
+    return makeMockSynchronizer([changeSet(recoveredPayload, { fdv1Fallback: false })]);
+  };
+
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  // VALID once for the fdv2 changeSet, once for the fdv1 fallback changeSet,
+  // and once for the changeSet from the restarted fdv2 synchronizer.
+  await statusManager.waitForState('VALID', 3);
+
+  expect(fdv2Creations).toBe(2);
+  expect(dataCallback).toHaveBeenCalledWith(recoveredPayload);
+  expect(logger.info).toHaveBeenCalledWith('Fallback TTL elapsed, restarting FDv2 data sources.');
+  ds.close();
+});
+
+it('does not restart the fdv2 synchronizers before the fallback TTL elapses', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    return makeMockSynchronizer([
+      changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 10000 }),
+    ]);
+  };
+
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 30);
+  });
+
+  expect(fdv2Creations).toBe(1);
+  expect(logger.info).not.toHaveBeenCalledWith(
+    'Fallback TTL elapsed, restarting FDv2 data sources.',
+  );
+  ds.close();
+});
+
+it('restarts the fdv2 synchronizers on TTL elapse when no fdv1 fallback synchronizer is configured', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const recoveredPayload = makePayload({ state: 'recovered-selector' });
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    if (fdv2Creations === 1) {
+      return makeMockSynchronizer([
+        changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 20 }),
+      ]);
+    }
+    return makeMockSynchronizer([changeSet(recoveredPayload, { fdv1Fallback: false })]);
+  };
+
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: fdv2Factory })];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+
+  expect(fdv2Creations).toBe(2);
+  expect(dataCallback).toHaveBeenCalledWith(recoveredPayload);
+  ds.close();
+});
+
+it('cancels the pending recovery deadline when close is called', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Payload = makePayload({ state: 'fdv2-selector' });
+  const fdv1Payload = makePayload({ state: 'fdv1-selector' });
+
+  const fdv2Sync = makeMockSynchronizer([
+    changeSet(fdv2Payload, { fdv1Fallback: true, fdv1FallbackTtlMs: 10000 }),
+  ]);
+  const fdv1Sync = makeMockSynchronizer([changeSet(fdv1Payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => fdv2Sync }),
+    createSynchronizerSlot({ create: () => fdv1Sync }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await ds.start();
+  await statusManager.waitForState('VALID', 2);
+
+  // Spy installed immediately before close() so the only clearTimeout call it
+  // can observe is the one that releases the recovery deadline; the condition
+  // timers are cancelled later, asynchronously, when the loop unwinds.
+  const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+  ds.close();
+  expect(clearTimeoutSpy).toHaveBeenCalled();
+  clearTimeoutSpy.mockRestore();
+});
+
+it('rejects the current attempt but keeps the recovery deadline armed when the synchronizer loop exits', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2RecoveredPayload = makePayload({ state: 'fdv2-recovered' });
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    if (fdv2Creations === 1) {
+      return makeMockSynchronizer([
+        terminalError(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 20 }),
+      ]);
+    }
+    return makeMockSynchronizer([changeSet(fdv2RecoveredPayload, { fdv1Fallback: false })]);
+  };
+  // A single slot and no FDv1 fallback slot: the terminal error blocks the
+  // only slot, so the loop exits with a deadline still armed.
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: fdv2Factory })];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted without receiving data.');
+
+  // The rejection above did not cancel the deadline -- it fires later and
+  // restarts the synchronizer via sourceManager.fdv2Recovery().
+  await statusManager.waitForState('VALID', 1);
+  expect(fdv2Creations).toBe(2);
+  expect(dataCallback).toHaveBeenCalledWith(fdv2RecoveredPayload);
+  expect(logger.info).toHaveBeenCalledWith('Fallback TTL elapsed, restarting FDv2 data sources.');
+
+  ds.close();
+});
+
+it('cancels the pending recovery deadline when an initializer throws after arming it', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  // First initializer carries a directive with no payload data, so it arms
+  // the recovery deadline without ever calling dataCallback, then the loop
+  // moves on to the next initializer. There is no fdv1 fallback slot, so
+  // handleFdv1Fallback does not break the loop early.
+  const armingInit = makeMockInitializer(
+    changeSet(makePayload({ type: 'none' }), { fdv1Fallback: true, fdv1FallbackTtlMs: 10000 }),
+  );
+
+  // Second initializer throws before runSynchronizers ever starts, exercising
+  // the uncaught-exception-during-initialization path.
+  const throwingInit: Initializer = {
+    run: () => Promise.reject(new Error('initializer failure')),
+    close: jest.fn(),
+  };
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [makeInitFactory(armingInit), makeInitFactory(throwingInit)],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+  await expect(ds.start()).rejects.toThrow('initializer failure');
+
+  expect(clearTimeoutSpy).toHaveBeenCalled();
+  clearTimeoutSpy.mockRestore();
+  ds.close();
+});
+
+// -- background recovery continuation --
+
+it('keeps recovering after an already-elapsed deadline is discovered at exhaustion', async () => {
+  // The exhaustion branch must handle a deadline that is ALREADY resolved
+  // when it checks recoveryTimer.promise -- rather than merely arming a
+  // short TTL and hoping the check lands late.
+  //
+  // Two things have to line up for that precondition to occur:
+  //  1. The deadline has to elapse while nothing is actively racing it. The
+  //     main synchronizer loop always re-reads recoveryTimer.promise fresh on
+  //     each iteration and races it live, so an elapsed deadline is normally
+  //     caught there, not by the exhaustion branch. The one place that never
+  //     races the deadline is initializer processing, so a short TTL armed by
+  //     the first initializer, followed by a second initializer that takes
+  //     real wall-clock time (via an actual setTimeout, comfortably longer
+  //     than the TTL) to resolve, elapses the deadline "off to the side."
+  //  2. Once synchronizers start, the deadline's own promise and the mock
+  //     synchronizer's (already-resolved) result promise are both settled by
+  //     the time Promise.race is called. Promise.race resolves in favor of
+  //     whichever racer's handler was registered first for already-settled
+  //     inputs, and the code always lists the sync result first -- so the
+  //     terminal error "wins," blocks the only slot, and only THEN does the
+  //     outer loop's exhaustion check discover the stale, already-elapsed
+  //     deadline promise.
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const secondRecoveryPayload = makePayload({ state: 'second-recovery' });
+
+  // Arms a 5ms recovery deadline, without itself carrying data or blocking
+  // the initializer chain.
+  const armingInit = makeMockInitializer(
+    changeSet(makePayload({ type: 'none', state: '' }), {
+      fdv1Fallback: true,
+      fdv1FallbackTtlMs: 5,
+    }),
+  );
+  // Resolves only after a real 20ms delay -- comfortably longer than the 5ms
+  // deadline above, so that deadline has genuinely elapsed in wall-clock time
+  // by the time this initializer (and thus initialization as a whole)
+  // finishes, well before any synchronizer has started racing it.
+  const delayingInit: Initializer = {
+    run: () =>
+      new Promise<FDv2SourceResult>((resolve) => {
+        setTimeout(() => {
+          resolve(changeSet(makePayload({ type: 'none', state: '' }), { fdv1Fallback: false }));
+        }, 20);
+      }),
+    close: jest.fn(),
+  };
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    if (fdv2Creations === 1) {
+      // Does not carry a directive: the stale deadline armed by armingInit
+      // is left untouched, so it is what the exhaustion branch discovers.
+      return makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: false })]);
+    }
+    if (fdv2Creations === 2) {
+      // Recovers, but immediately falls back again with a second short TTL --
+      // this forces a second exhaustion-with-pending-recovery pass, proving
+      // recovery still works after the first cycle.
+      return makeMockSynchronizer([
+        terminalError(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 5 }),
+      ]);
+    }
+    return makeMockSynchronizer([changeSet(secondRecoveryPayload, { fdv1Fallback: false })]);
+  };
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: fdv2Factory })];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [makeInitFactory(armingInit), makeInitFactory(delayingInit)],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted without receiving data.');
+
+  await statusManager.waitForState('VALID', 1);
+  expect(fdv2Creations).toBe(3);
+  expect(dataCallback).toHaveBeenCalledWith(secondRecoveryPayload);
+
+  ds.close();
+});
+
+it('does not act on a background recovery continuation if close is called first', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const fdv2Sync = makeMockSynchronizer([
+    terminalError(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 30 }),
+  ]);
+  const slots: SynchronizerSlot[] = [createSynchronizerSlot({ create: () => fdv2Sync })];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted without receiving data.');
+  ds.close();
+
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 60);
+  });
+
+  expect(logger.info).not.toHaveBeenCalledWith('Fallback TTL elapsed, restarting FDv2 data sources.');
+});
+
+it('does not arm a background recovery continuation with zero synchronizer slots', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  const initializer = makeMockInitializer(
+    changeSet(makePayload({ type: 'none', state: '' }), { fdv1Fallback: true, fdv1FallbackTtlMs: 30 }),
+  );
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [makeInitFactory(initializer)],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted without receiving data.');
+  expect(clearTimeoutSpy).toHaveBeenCalled();
+  clearTimeoutSpy.mockRestore();
+
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 60);
+  });
+
+  expect(logger.info).not.toHaveBeenCalledWith(
+    'Fallback TTL elapsed, restarting FDv2 data sources.',
+  );
+  ds.close();
+});
+
+it('closes a deadline armed and abandoned by a later recovery generation', async () => {
+  // A background recovery continuation can hand off to a recursive call that
+  // itself arms a fresh deadline (a new directive) and then returns normally
+  // -- via a shutdown result -- without going through the exhaustion branch
+  // that would otherwise arm its own continuation. Whichever generation
+  // returns normally without handing off is responsible for closing the
+  // timer, so the fresh deadline must not survive as a dangling timer.
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+
+  let fdv2Creations = 0;
+  const fdv2Factory = () => {
+    fdv2Creations += 1;
+    if (fdv2Creations === 1) {
+      // First generation: blocks the primary slot and arms a short deadline,
+      // switching to the fallback slot.
+      return makeMockSynchronizer([
+        terminalError(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 5 }),
+      ]);
+    }
+    // Second generation (after the continuation recovers): blocks the
+    // primary slot again and arms a fresh deadline -- long enough that it
+    // could not have elapsed naturally by the time the assertion below
+    // runs -- before switching back to the fallback slot.
+    return makeMockSynchronizer([
+      terminalError(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 500 }),
+    ]);
+  };
+
+  let fallbackCreations = 0;
+  const fallbackFactory = () => {
+    fallbackCreations += 1;
+    if (fallbackCreations === 1) {
+      // First generation: blocks the fallback slot too, without carrying a
+      // directive, so all slots end up blocked while the short deadline is
+      // still pending -- this is what arms the continuation.
+      return makeMockSynchronizer([terminalError(makeErrorInfo(), { fdv1Fallback: false })]);
+    }
+    // Second generation: returns normally via shutdown, without the
+    // exhaustion branch ever running, even though a fresh deadline is armed.
+    return makeMockSynchronizer([shutdown()]);
+  };
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: fdv2Factory }),
+    createSynchronizerSlot({ create: fallbackFactory }, { isFDv1Fallback: true }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+  });
+
+  await expect(ds.start()).rejects.toThrow('All data sources exhausted without receiving data.');
+
+  const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+
+  // Long enough for the short (5ms) deadline to elapse and for the second
+  // generation to run to completion (all synchronous/microtask work), but
+  // far short of the fresh 500ms deadline armed during that generation --
+  // so any clearTimeout call observed here can only be the orchestrator
+  // proactively closing that still-live deadline, not it elapsing on its
+  // own or ds.close() below cleaning it up after the fact.
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 30);
+  });
+
+  expect(fdv2Creations).toBe(2);
+  expect(fallbackCreations).toBe(2);
+  // Exactly one call: the abandoned 500ms deadline being proactively closed.
+  // Generation 1's own (already-fired) timer never calls clearTimeout, since
+  // its handle is already cleared by the time anything observes it elapsed.
+  expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
+  clearTimeoutSpy.mockRestore();
 
   ds.close();
 });
