@@ -108,7 +108,10 @@ it('useInitializationStatus surfaces the error on failure', async () => {
     setup() {
       const status = useInitializationStatus();
       return () =>
-        h('div', status.value.status === 'failed' ? status.value.error.message : status.value.status);
+        h(
+          'div',
+          status.value.status === 'failed' ? status.value.error.message : status.value.status,
+        );
     },
   });
 

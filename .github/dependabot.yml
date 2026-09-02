@@ -1,32 +1,32 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "monthly"
+      interval: 'monthly'
     cooldown:
       default-days: 7
 
-  - package-ecosystem: "npm"
+  - package-ecosystem: 'npm'
     directories:
-      - "packages/sdk/*/example"
-      - "packages/sdk/*/example-*"
-      - "packages/sdk/*/examples/*"
-      - "packages/sdk/*/examples/*/*"
-      - "packages/sdk/*/examples/*/*/*"
-      - "packages/sdk/*/contract-tests"
-      - "packages/sdk/*/contract-tests/*"
-      - "packages/tooling/jest/example/*"
+      - 'packages/sdk/*/example'
+      - 'packages/sdk/*/example-*'
+      - 'packages/sdk/*/examples/*'
+      - 'packages/sdk/*/examples/*/*'
+      - 'packages/sdk/*/examples/*/*/*'
+      - 'packages/sdk/*/contract-tests'
+      - 'packages/sdk/*/contract-tests/*'
+      - 'packages/tooling/jest/example/*'
     schedule:
-      interval: "monthly"
+      interval: 'monthly'
     cooldown:
       default-days: 7
     groups:
       npm-dependencies:
         patterns:
-          - "*"
+          - '*'
         group-by: dependency-name
     ignore:
-      - dependency-name: "typescript"
-      - dependency-name: "@types/*"
-        update-types: ["version-update:semver-major"]
+      - dependency-name: 'typescript'
+      - dependency-name: '@types/*'
+        update-types: ['version-update:semver-major']

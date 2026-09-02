@@ -2,11 +2,7 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { AgentGraphDefinition } from './graph/AgentGraphDefinition';
 import { LDGraphTracker } from './graph/LDGraphTracker';
-import {
-  AgentGraphRunnerResult,
-  LDAIGraphMetricSummary,
-  ManagedGraphResult,
-} from './graph/types';
+import { AgentGraphRunnerResult, LDAIGraphMetricSummary, ManagedGraphResult } from './graph/types';
 import { LDJudgeResult } from './judge/types';
 import { LDAIMetrics } from './metrics';
 import { LDAIMetricSummary } from './model/types';
@@ -78,7 +74,9 @@ export class ManagedAgentGraph {
     for (const [nodeKey, metrics] of Object.entries(nodeMetrics)) {
       const node = this._graphDefinition.getNode(nodeKey);
       if (!node) {
-        this._logger?.warn(`ManagedAgentGraph: no node found for key "${nodeKey}", skipping metrics`);
+        this._logger?.warn(
+          `ManagedAgentGraph: no node found for key "${nodeKey}", skipping metrics`,
+        );
         continue;
       }
 

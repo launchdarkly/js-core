@@ -95,9 +95,7 @@
     },
     "packages/sdk/shopify-oxygen": {
       "bump-minor-pre-major": true,
-      "extra-files": [
-        "src/platform/OxygenInfo.ts"
-      ]
+      "extra-files": ["src/platform/OxygenInfo.ts"]
     },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {

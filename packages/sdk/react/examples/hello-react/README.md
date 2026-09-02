@@ -41,6 +41,7 @@ This demo requires Node.js v18 or later.
    ```
 
    You should receive the message:
+
    > "The sample-feature feature flag evaluates to false."
 
 The application will run continuously and react to the flag changes in LaunchDarkly.

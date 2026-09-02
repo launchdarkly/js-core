@@ -116,7 +116,9 @@ export default function validateOptions(opts: NodeOptions, logger: LDLogger): Va
   }
 
   const dataSystemConfigured =
-    typeof opts.dataSystem === 'object' && opts.dataSystem !== null && !Array.isArray(opts.dataSystem);
+    typeof opts.dataSystem === 'object' &&
+    opts.dataSystem !== null &&
+    !Array.isArray(opts.dataSystem);
   if (
     dataSystemConfigured &&
     opts.initialConnectionMode !== undefined &&

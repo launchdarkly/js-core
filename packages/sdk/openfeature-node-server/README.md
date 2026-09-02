@@ -18,21 +18,21 @@ This version of the LaunchDarkly OpenFeature provider is compatible with Node.js
 
 This matrix mirrors the [feature matrix of the OpenFeature SDK for JavaScript](https://github.com/open-feature/js-sdk/blob/main/packages/server/README.md#-features) and describes what this provider supports. Rows which are not supported state whether the limitation comes from the OpenFeature JavaScript SDK or from the provider.
 
-| Status | Feature                         | Notes                                                                                                                                                                                                                     |
-|--------|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ✅      | Providers                       | Evaluates boolean, string, number, and object flags through the LaunchDarkly Node.js SDK.                                                                                                                                 |
-| ✅      | Targeting                       | The `EvaluationContext` is converted to a LaunchDarkly single or multi-context. See [OpenFeature Specific Considerations](#openfeature-specific-considerations).                                                           |
-| ✅      | Hooks                           | Hooks are registered on the OpenFeature API and client; the provider requires no additional support and its results are visible to hooks, including [flag metadata](#flag-metadata).                                       |
-| ✅      | Logging                         | The provider logs through the logging configuration of the `LDOptions` it is given.                                                                                                                                       |
-| ✅      | Domains                         | Domains bind clients to providers in the OpenFeature SDK; a separate provider instance may be registered per domain.                                                                                                       |
-| ⚠️      | Eventing                        | Only `ConfigurationChanged` is emitted; this provider never emits `Error` or `Stale` because the underlying LaunchDarkly Node.js SDK has no data source status API. This is a limitation of the provider's underlying SDK, not the OpenFeature SDK: [#1886](https://github.com/launchdarkly/js-core/issues/1886). |
-| ✅      | Transaction Context Propagation | Provided by the OpenFeature SDK, which merges the transaction context into the evaluation context before the provider is called; no provider support is required.                                                          |
-| ✅      | Tracking                        | `track` sends a LaunchDarkly custom event for the evaluation context, with the tracking event value and remaining details attached.                                                                                        |
-| ✅      | Initialization                  | `initialize` waits for the LaunchDarkly client with the `initTimeoutSeconds` constructor parameter, which defaults to 10 seconds.                                                                                          |
-| ✅      | Shutdown                        | `onClose` flushes and closes the LaunchDarkly client. A closed client cannot be restarted, so a new provider instance is required afterward.                                                                              |
-| ✅      | Extending                       | The underlying LaunchDarkly client is available through `getClient()` for functionality with no OpenFeature equivalent.                                                                                                    |
-| ✅      | Multi-Provider                 | Provided by the OpenFeature SDK; no provider support is required.                                                                                                                                                          |
-| ✅      | Flag metadata                   | LaunchDarkly evaluation reason details are returned as OpenFeature flag metadata. See [Flag Metadata](#flag-metadata).                                                                                                     |
+| Status | Feature                         | Notes                                                                                                                                                                                                                                                                                                             |
+| ------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅     | Providers                       | Evaluates boolean, string, number, and object flags through the LaunchDarkly Node.js SDK.                                                                                                                                                                                                                         |
+| ✅     | Targeting                       | The `EvaluationContext` is converted to a LaunchDarkly single or multi-context. See [OpenFeature Specific Considerations](#openfeature-specific-considerations).                                                                                                                                                  |
+| ✅     | Hooks                           | Hooks are registered on the OpenFeature API and client; the provider requires no additional support and its results are visible to hooks, including [flag metadata](#flag-metadata).                                                                                                                              |
+| ✅     | Logging                         | The provider logs through the logging configuration of the `LDOptions` it is given.                                                                                                                                                                                                                               |
+| ✅     | Domains                         | Domains bind clients to providers in the OpenFeature SDK; a separate provider instance may be registered per domain.                                                                                                                                                                                              |
+| ⚠️     | Eventing                        | Only `ConfigurationChanged` is emitted; this provider never emits `Error` or `Stale` because the underlying LaunchDarkly Node.js SDK has no data source status API. This is a limitation of the provider's underlying SDK, not the OpenFeature SDK: [#1886](https://github.com/launchdarkly/js-core/issues/1886). |
+| ✅     | Transaction Context Propagation | Provided by the OpenFeature SDK, which merges the transaction context into the evaluation context before the provider is called; no provider support is required.                                                                                                                                                 |
+| ✅     | Tracking                        | `track` sends a LaunchDarkly custom event for the evaluation context, with the tracking event value and remaining details attached.                                                                                                                                                                               |
+| ✅     | Initialization                  | `initialize` waits for the LaunchDarkly client with the `initTimeoutSeconds` constructor parameter, which defaults to 10 seconds.                                                                                                                                                                                 |
+| ✅     | Shutdown                        | `onClose` flushes and closes the LaunchDarkly client. A closed client cannot be restarted, so a new provider instance is required afterward.                                                                                                                                                                      |
+| ✅     | Extending                       | The underlying LaunchDarkly client is available through `getClient()` for functionality with no OpenFeature equivalent.                                                                                                                                                                                           |
+| ✅     | Multi-Provider                  | Provided by the OpenFeature SDK; no provider support is required.                                                                                                                                                                                                                                                 |
+| ✅     | Flag metadata                   | LaunchDarkly evaluation reason details are returned as OpenFeature flag metadata. See [Flag Metadata](#flag-metadata).                                                                                                                                                                                            |
 
 <sub>Supported: ✅ | Partially supported: ⚠️ | Not supported: ❌</sub>
 
@@ -90,6 +90,7 @@ LaunchDarkly server-side SDKs provide and this one does not yet.
 LaunchDarkly evaluates contexts, and it can either evaluate a single-context or a multi-context. When using OpenFeature, both single and multi-contexts must be encoded into a single `EvaluationContext`. This is accomplished by looking for an attribute named `kind` in the `EvaluationContext`.
 
 There are 4 different scenarios related to the `kind`:
+
 1. There is no `kind` attribute. The provider will treat the context as a single context of kind `"user"`.
 2. There is a `kind` attribute with the value `"multi"`. The provider will treat the context as a multi-context.
 3. There is a `kind` attribute with a string value other than `"multi"`. The provider will treat it as a single context of the specified kind.
@@ -100,6 +101,7 @@ The `kind` attribute should be a string containing only ASCII letters, numbers, 
 The OpenFeature specification allows for an optional targeting key, but LaunchDarkly requires a key for evaluation. A targeting key must be specified for each context being evaluated. It may be specified using either `targetingKey`, as defined in the OpenFeature specification, or `key`, which is the typical LaunchDarkly identifier. If both are specified, `targetingKey` takes precedence.
 
 There are several attributes with special handling within a single or multi-context:
+
 - `privateAttributes` - Must be an array of strings. Equivalent to `_meta.privateAttributes` in the SDK.
 - `anonymous` - Must be a boolean. Equivalent to `anonymous` in the SDK.
 - `name` - Must be a string. Equivalent to `name` in the SDK.
@@ -108,14 +110,14 @@ There are several attributes with special handling within a single or multi-cont
 
 Evaluation results include LaunchDarkly specific information in the OpenFeature flag metadata. A key is only present when it applies to the evaluation.
 
-| Key | Type | Description |
-|---|---|---|
-| `variationIndex` | number | The index of the served variation. Absent when the default value was returned. |
-| `inExperiment` | boolean | Present, and `true`, when the evaluation was part of an experiment. |
-| `ruleIndex` | number | The index of the matched rule, for a `RULE_MATCH` reason. |
-| `ruleId` | string | The identifier of the matched rule, for a `RULE_MATCH` reason. |
-| `prerequisiteKey` | string | The key of the failed prerequisite flag, for a `PREREQUISITE_FAILED` reason. |
-| `bigSegmentsStatus` | string | The status of the Big Segment query, when the evaluation required one. |
+| Key                 | Type    | Description                                                                    |
+| ------------------- | ------- | ------------------------------------------------------------------------------ |
+| `variationIndex`    | number  | The index of the served variation. Absent when the default value was returned. |
+| `inExperiment`      | boolean | Present, and `true`, when the evaluation was part of an experiment.            |
+| `ruleIndex`         | number  | The index of the matched rule, for a `RULE_MATCH` reason.                      |
+| `ruleId`            | string  | The identifier of the matched rule, for a `RULE_MATCH` reason.                 |
+| `prerequisiteKey`   | string  | The key of the failed prerequisite flag, for a `PREREQUISITE_FAILED` reason.   |
+| `bigSegmentsStatus` | string  | The status of the Big Segment query, when the evaluation required one.         |
 
 ```typescript
 const details = await client.getBooleanDetails('my-boolean-flag', false);

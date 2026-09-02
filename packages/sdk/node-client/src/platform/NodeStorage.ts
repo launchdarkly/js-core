@@ -40,7 +40,9 @@ export default class NodeStorage implements Storage {
       // pre-planted symlink would otherwise redirect where the cache is read from and written to
       // without ever surfacing as an init failure.
       if ((await fs.lstat(this._storageDir)).isSymbolicLink()) {
-        throw new Error(`Storage directory path is a symlink, not a real directory: ${this._storageDir}`);
+        throw new Error(
+          `Storage directory path is a symlink, not a real directory: ${this._storageDir}`,
+        );
       }
 
       try {
@@ -101,9 +103,7 @@ export default class NodeStorage implements Storage {
         try {
           await handle.close();
         } catch (closeError) {
-          this._logger?.warn(
-            `Failed to close storage temp file during cleanup: ${closeError}`,
-          );
+          this._logger?.warn(`Failed to close storage temp file during cleanup: ${closeError}`);
         }
       }
       try {

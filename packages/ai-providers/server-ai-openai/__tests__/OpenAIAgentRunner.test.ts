@@ -75,11 +75,7 @@ describe('OpenAIAgentRunner', () => {
     const runner = new OpenAIAgentRunner(agent, mockRun, {});
     await runner.run('test');
 
-    expect(mockRun).toHaveBeenCalledWith(
-      agent,
-      'test',
-      expect.objectContaining({ maxTurns: 25 }),
-    );
+    expect(mockRun).toHaveBeenCalledWith(agent, 'test', expect.objectContaining({ maxTurns: 25 }));
   });
 
   it('reuses the same Agent across multiple run() calls', async () => {

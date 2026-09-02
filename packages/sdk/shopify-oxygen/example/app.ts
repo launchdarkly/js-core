@@ -1,6 +1,5 @@
 import { createMiniOxygen } from '@shopify/mini-oxygen';
 
-
 /**
  * This is script is a simple runner for our example app. This script will run
  * the compiled example on a local worker implementation to emulate a Oxygen worker runtime.

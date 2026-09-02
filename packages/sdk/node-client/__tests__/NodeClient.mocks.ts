@@ -36,7 +36,10 @@ export interface MockEventSource extends EventSource {
   options?: EventSourceInitDict;
 }
 
-export function makeMockEventSource(streamUri: string = '', options?: EventSourceInitDict): MockEventSource {
+export function makeMockEventSource(
+  streamUri: string = '',
+  options?: EventSourceInitDict,
+): MockEventSource {
   return {
     streamUri,
     options,

@@ -36,9 +36,11 @@ yarn build
 ```
 
 To build a single project and all of its dependencies:
+
 ```
 yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
 ```
+
 Replacing `@launchdarkly/js-client-sdk` with the specific package you want to build.
 
 Running `yarn build` in an individual package will build that package, but will not rebuild any dependencies.
@@ -50,11 +52,13 @@ Unit tests should be implemented in a `__tests__` folder in the root of the pack
 Each package has its own testing requirements and tests should be only ran for single projects.
 
 Tests cases should be written using `it` and should read as a sentence including the `it`:
+
 ```TypeScript
 it('does not load flags prior to start', async () => {/* test code */}
 ```
 
 Describe blocks should be used for common setup for a series of tests:
+
 ```TypeScript
 describe('given a mock filesystem and memory feature store', { /* tests */})
 ```
@@ -92,6 +96,7 @@ For example, see the node server sdk contract test in
 [`packages/sdk/server-node/contract-tests`](./packages/sdk/server-node/contract-tests/).
 
 ---
+
 For docs on our module publishing process, see [our publishing doc](contributing/publishing.md)
 
 ## Development Guidelines
@@ -104,6 +109,7 @@ While we develop code in TypeScript we generally want to aim for the compiled Ja
 ### Avoid using TypeScript enumerations. Instead use unions of strings.
 
 Bad:
+
 ```TypeScript
 export enum ValueType {
   Bool = 'bool',
@@ -115,6 +121,7 @@ export enum ValueType {
 ```
 
 Good:
+
 ```TypeScript
 export type ValueType = 'bool' | 'int' | 'double' | 'string' | 'any'
 ```
@@ -125,6 +132,7 @@ Additionally the code size associated with enums is going to be larger. The enum
 ### Prefer interfaces over classes when reasonable, especially if publicly exposed.
 
 Bad:
+
 ```TypeScript
 class MyData {
   public mutable: string;
@@ -133,6 +141,7 @@ class MyData {
 ```
 
 Good:
+
 ```TypeScript
 interface MyData {
   readonly value: string;
@@ -207,22 +216,22 @@ flowchart LR
     common --> akamai-edgeworker
     common --> openfeature-server-common
     sdk-server --> sdk-server-edge
-    
+
     %% Dependencies for SDK packages
     sdk-client --> browser
     sdk-client --> react-native
     browser --> react
     browser --> vue
     sdk-server --> react
-    
+
     sdk-server --> server-node
     sdk-server --> server-ai
     sdk-server --> shopify-oxygen
-    
+
     sdk-server-edge --> cloudflare
     sdk-server-edge --> fastly
     sdk-server-edge --> vercel
-    
+
     akamai-edgeworker --> akamai-base
     akamai-edgeworker --> akamai-edgekv
 
@@ -232,13 +241,13 @@ flowchart LR
     %% Dependencies for store packages
     sdk-server --> redis
     sdk-server --> dynamodb
-    
+
     %% Dependencies for telemetry packages
     server-node --> node-otel
-    
+
     %% Dependencies for tooling packages
     react-native -.-> jest
-    
+
     class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker,openfeature-server-common shared
     class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen,openfeature-node-server,vue sdk
     class redis,dynamodb store

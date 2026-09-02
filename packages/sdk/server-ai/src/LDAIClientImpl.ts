@@ -56,8 +56,6 @@ const INIT_TRACK_CONTEXT: LDContext = {
 
 const disabledAIConfig: LDAIConfigDefault = { enabled: false };
 
-
-
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
 
@@ -518,7 +516,12 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const runner = await RunnerFactory.createAgent(config, undefined, this._logger, defaultAiProvider);
+    const runner = await RunnerFactory.createAgent(
+      config,
+      undefined,
+      this._logger,
+      defaultAiProvider,
+    );
     if (!runner) {
       return undefined;
     }

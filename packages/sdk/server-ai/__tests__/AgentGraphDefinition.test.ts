@@ -432,10 +432,7 @@ it('reverseTraverse visits each node once on a cyclic graph with root last', () 
 // Topological parity fixtures (G1–G6)
 // ---------------------------------------------------------------------------
 
-function collectOrder(
-  def: AgentGraphDefinition,
-  direction: 'forward' | 'reverse',
-): string[] {
+function collectOrder(def: AgentGraphDefinition, direction: 'forward' | 'reverse'): string[] {
   const order: string[] = [];
   const fn = (node: AgentGraphNode) => {
     order.push(node.getKey());
@@ -640,38 +637,35 @@ function makeDefinitionFromVector(v: TraversalVector): AgentGraphDefinition {
   return makeDefinition(makeGraph(v.root, edgesFromPairs(v.edges)), configs);
 }
 
-it.each(TRAVERSAL_VECTORS)(
-  '$id asserts traverse/reverse order and exact scoped context',
-  (v) => {
-    const def = makeDefinitionFromVector(v);
+it.each(TRAVERSAL_VECTORS)('$id asserts traverse/reverse order and exact scoped context', (v) => {
+  const def = makeDefinitionFromVector(v);
 
-    const fwdOrder: string[] = [];
-    const fwdCtx: Record<string, string[]> = {};
-    def.traverse((node, ctx) => {
-      const key = node.getKey();
-      fwdOrder.push(key);
-      fwdCtx[key] = Object.keys(ctx).sort();
-      return `${key}-result`;
-    });
-    expect(fwdOrder).toEqual(v.traverse);
-    for (const [key, expected] of Object.entries(v.traverseContext)) {
-      expect(fwdCtx[key]).toEqual([...expected].sort());
-    }
+  const fwdOrder: string[] = [];
+  const fwdCtx: Record<string, string[]> = {};
+  def.traverse((node, ctx) => {
+    const key = node.getKey();
+    fwdOrder.push(key);
+    fwdCtx[key] = Object.keys(ctx).sort();
+    return `${key}-result`;
+  });
+  expect(fwdOrder).toEqual(v.traverse);
+  for (const [key, expected] of Object.entries(v.traverseContext)) {
+    expect(fwdCtx[key]).toEqual([...expected].sort());
+  }
 
-    const revOrder: string[] = [];
-    const revCtx: Record<string, string[]> = {};
-    def.reverseTraverse((node, ctx) => {
-      const key = node.getKey();
-      revOrder.push(key);
-      revCtx[key] = Object.keys(ctx).sort();
-      return `${key}-result`;
-    });
-    expect(revOrder).toEqual(v.reverseTraverse);
-    for (const [key, expected] of Object.entries(v.reverseTraverseContext)) {
-      expect(revCtx[key]).toEqual([...expected].sort());
-    }
-  },
-);
+  const revOrder: string[] = [];
+  const revCtx: Record<string, string[]> = {};
+  def.reverseTraverse((node, ctx) => {
+    const key = node.getKey();
+    revOrder.push(key);
+    revCtx[key] = Object.keys(ctx).sort();
+    return `${key}-result`;
+  });
+  expect(revOrder).toEqual(v.reverseTraverse);
+  for (const [key, expected] of Object.entries(v.reverseTraverseContext)) {
+    expect(revCtx[key]).toEqual([...expected].sort());
+  }
+});
 
 describe('given G1 linear graph a→b→c', () => {
   const graph = makeGraph('a', {
@@ -975,9 +969,7 @@ it('traverse includes initial context keys alongside scoped predecessors', () =>
 
   def.traverse(
     (node, ctx) => {
-      expect(Object.keys(ctx).sort()).toEqual(
-        ['seed', ...expectedDeps[node.getKey()]].sort(),
-      );
+      expect(Object.keys(ctx).sort()).toEqual(['seed', ...expectedDeps[node.getKey()]].sort());
       expect(ctx).toHaveProperty('seed', 'value');
       return `result-of-${node.getKey()}`;
     },
