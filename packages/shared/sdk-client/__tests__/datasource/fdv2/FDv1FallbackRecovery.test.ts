@@ -111,21 +111,71 @@ it('does not let a data-less "none" changeSet mark the data system initialized o
     fallbackTimeoutMs: 1_000_000,
   });
 
+  let resolved = false;
   const startPromise = ds.start();
-  startPromise.catch(() => {});
+  // start() rejects once the orchestrator exhausts its sources (or is
+  // closed) without ever initializing; that rejection is expected and
+  // irrelevant to this assertion, so it must not surface as an unhandled
+  // rejection -- both branches of this single chain handle it.
+  startPromise.then(
+    () => {
+      resolved = true;
+    },
+    () => {},
+  );
 
   // Give the 10s ("15ms" in this test) init-fallback leg a chance to fire
   // and move the orchestrator on to the secondary synchronizer.
   await new Promise((resolve) => {
     setTimeout(resolve, 60);
   });
+
+  // Conditions.ts's createInitFallbackCondition() requires
+  // `payload.type !== 'none'` to cancel the leg, so a data-less response
+  // does not disarm it and the secondary synchronizer is tried.
+  expect(secondaryFactory.create).toHaveBeenCalled();
+  // FDv2DataSource.ts's synchronizer-phase changeSet handler requires the
+  // same check before calling markInitialized(), matching the initializer
+  // phase, so start() must not resolve on a response with no real data.
+  // Checked before close() -- close() itself rejects the still-pending
+  // start() promise, which must not be mistaken for a resolution here.
+  expect(resolved).toBe(false);
+  ds.close();
+});
+
+it('does not churn synchronizers on a "none" changeSet when the data system already has existing data', async () => {
+  const statusManager = makeStatusManager();
+
+  // Models a connection-mode switch after the SDK was already initialized:
+  // a new FDv2DataSource instance is created, but the server has nothing
+  // new to say -- a 'none' response is the correct, healthy answer, not
+  // evidence of an uninitialized system.
+  const nonePayload = makePayload({ type: 'none', state: '' });
+  const primary = makeMockSynchronizer([changeSet(nonePayload, { fdv1Fallback: false })]);
+  const secondaryFactory = { create: jest.fn(() => makeMockSynchronizer([])) };
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: [
+      createSynchronizerSlot({ create: () => primary }),
+      createSynchronizerSlot(secondaryFactory),
+    ],
+    dataCallback: jest.fn(),
+    statusManager,
+    selectorGetter: noSelector,
+    initFallbackTimeoutMs: 15,
+    fallbackTimeoutMs: 1_000_000,
+    hasExistingData: true,
+  });
+
+  await ds.start();
+
+  // Give the 10s ("15ms" in this test) init-fallback leg a chance to fire
+  // -- it must not, because hasExistingData suppresses it entirely.
+  await new Promise((resolve) => {
+    setTimeout(resolve, 60);
+  });
   ds.close();
 
-  // FDv2DataSource.ts's synchronizer-phase changeSet handler and
-  // Conditions.ts's createInitFallbackCondition() both require
-  // `payload.type !== 'none'`, matching the initializer phase. A response
-  // that carries no real data does not disarm the "10 seconds elapses while
-  // the data system is not initialized with data" leg (DATASYSTEM v2 spec,
-  // section 1.5), so the secondary synchronizer is tried.
-  expect(secondaryFactory.create).toHaveBeenCalled();
+  expect(secondaryFactory.create).not.toHaveBeenCalled();
 });

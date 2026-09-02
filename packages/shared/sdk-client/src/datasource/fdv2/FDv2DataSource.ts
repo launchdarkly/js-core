@@ -56,6 +56,19 @@ export interface FDv2DataSourceConfig {
    * synchronizer becoming active.
    */
   initFallbackTimeoutMs?: number;
+
+  /**
+   * Whether the data system already has data from a previous data source
+   * instance -- e.g. this instance was created for a connection-mode switch
+   * after the SDK was already initialized. A fresh instance otherwise has
+   * no way to know that, so without this flag a data-less `'none'` response
+   * (the server's "you're already up to date" answer) looks identical to a
+   * still-uninitialized system: it would never satisfy the init-fallback
+   * leg's data check, so that leg would keep firing forever. When true, the
+   * leg never applies, and a `'none'` response is enough to settle this
+   * instance's {@link FDv2DataSource.start} promise.
+   */
+  hasExistingData?: boolean;
 }
 
 /**
@@ -94,6 +107,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
     initFallbackTimeoutMs = DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
+    hasExistingData = false,
   } = config;
 
   let initialized = false;
@@ -347,7 +361,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       const conditions: ConditionGroup = getConditions(
         sourceManager.getAvailableSynchronizerCount(),
         sourceManager.isPrimeSynchronizer(),
-        initialized,
+        initialized || hasExistingData,
         fallbackTimeoutMs,
         recoveryTimeoutMs,
         initFallbackTimeoutMs,
@@ -412,7 +426,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
               // A 'none' payload (e.g. an unchanged poll response) carries no
               // data, so it must not count toward "initialized with data" --
               // matching the initializer phase's same payload.type check.
-              if (!initialized && syncResult.payload.type !== 'none') {
+              // Exception: if the data system already has data from a prior
+              // instance (hasExistingData), a 'none' response is a genuine
+              // "you're already up to date" answer, not evidence of an empty
+              // system, so it still settles this instance's start() promise.
+              if (!initialized && (syncResult.payload.type !== 'none' || hasExistingData)) {
                 markInitialized();
               }
             } else if (syncResult.type === 'status') {
