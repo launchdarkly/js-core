@@ -175,15 +175,23 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return false;
     }
 
-    // The deadline is armed whether or not an FDv1 fallback synchronizer is
-    // configured, and a newer directive always supersedes the pending one.
-    scheduleFdv2Recovery(result);
-
     // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
     // fdv1Fallback, do not re-run the fallback machinery - we are already on
-    // FDv1. Only the new deadline applies.
+    // FDv1. Its own traffic legitimately supersedes the pending deadline with
+    // the new TTL.
     if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
+      scheduleFdv2Recovery(result);
       return false;
+    }
+
+    // A directive observed while a deadline is already pending, but not from
+    // the FDv1 synchronizer's own traffic, is a repeated signal from a source
+    // that has not yet transitioned off FDv2 (e.g. because no FDv1 fallback
+    // synchronizer is configured, so the FDv2 source keeps running). The
+    // first directive's TTL already governs the return to FDv2; a repeat
+    // must not keep re-arming the deadline, or it could never elapse.
+    if (recoveryTimer.promise === undefined) {
+      scheduleFdv2Recovery(result);
     }
 
     if (sourceManager.hasFDv1Fallback()) {
@@ -401,7 +409,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
 
             if (syncResult.type === 'changeSet') {
               applyChangeSet(syncResult);
-              if (!initialized) {
+              // A 'none' payload (e.g. an unchanged poll response) carries no
+              // data, so it must not count toward "initialized with data" --
+              // matching the initializer phase's same payload.type check.
+              if (!initialized && syncResult.payload.type !== 'none') {
                 markInitialized();
               }
             } else if (syncResult.type === 'status') {
