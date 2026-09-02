@@ -4,6 +4,7 @@ import { FDv2SourceResult } from './FDv2SourceResult';
 
 export const DEFAULT_FALLBACK_TIMEOUT_MS = 2 * 60 * 1000; // 120 seconds
 export const DEFAULT_RECOVERY_TIMEOUT_MS = 5 * 60 * 1000; // 300 seconds
+export const DEFAULT_INIT_FALLBACK_TIMEOUT_MS = 10 * 1000; // 10 seconds
 
 /**
  * A timer that resolves with a {@link ConditionType} when it fires.
@@ -93,12 +94,18 @@ type InformHandler = (result: FDv2SourceResult, controls: TimerControls) => void
  * @param type The {@link ConditionType} to resolve with when the timer fires.
  * @param informHandler Optional callback invoked on each `inform()` call.
  *   When omitted, the timer starts immediately and `inform()` is a no-op.
- *   When provided, the timer must be started explicitly via `controls.start()`.
+ *   When provided, the timer must be started explicitly via `controls.start()`,
+ *   unless `autoStart` is set.
+ * @param autoStart Start the timer immediately at construction, in addition
+ *   to letting `informHandler` observe (and potentially cancel) it. Used by
+ *   conditions that must run from the moment the source becomes active but
+ *   still need to react to results (e.g. cancel on a changeSet).
  */
 function createCondition(
   timeoutMs: number,
   type: ConditionType,
   informHandler?: InformHandler,
+  autoStart?: boolean,
 ): Condition {
   let resolve: ((t: ConditionType) => void) | undefined;
   let timer: ConditionTimer | undefined;
@@ -125,8 +132,10 @@ function createCondition(
     timer = undefined;
   }
 
-  // No inform handler - start immediately (recovery behavior)
-  if (!informHandler) {
+  // No inform handler - start immediately (recovery behavior). An inform
+  // handler that opts into autoStart also starts immediately, but (unlike
+  // the no-handler case) can still have its timer cancelled via inform().
+  if (!informHandler || autoStart) {
     startTimer();
   }
 
@@ -174,6 +183,26 @@ export function createRecoveryCondition(timeoutMs: number): Condition {
 }
 
 /**
+ * Creates the "not initialized" leg of the fallback condition. The timer
+ * starts immediately (unlike {@link createFallbackCondition}, which only
+ * starts once interrupted) and is cancelled once a `changeSet` is received.
+ * If it fires first, it resolves with `'fallback'`, same as the
+ * interrupted-based leg -- the two are alternatives (an OR), not a sequence.
+ */
+export function createInitFallbackCondition(timeoutMs: number): Condition {
+  return createCondition(
+    timeoutMs,
+    'fallback',
+    (result, { cancel }) => {
+      if (result.type === 'changeSet') {
+        cancel();
+      }
+    },
+    true,
+  );
+}
+
+/**
  * Creates a group of conditions that are managed together.
  *
  * @param conditions The conditions to group.
@@ -193,8 +222,8 @@ export function createConditionGroup(conditions: Condition[]): ConditionGroup {
 }
 
 /**
- * Determines which conditions to create based on the synchronizer's position
- * and availability.
+ * Determines which conditions to create based on the synchronizer's position,
+ * availability, and whether the data system has ever been initialized.
  *
  * - If there is only one available synchronizer, no conditions are needed
  *   (there is nowhere to fall back to).
@@ -202,28 +231,42 @@ export function createConditionGroup(conditions: Condition[]): ConditionGroup {
  *   fallback condition is created.
  * - If the current synchronizer is non-primary, both fallback and recovery
  *   conditions are created.
+ * - Whenever the data system has not yet been initialized (regardless of
+ *   primacy), an additional fallback leg is added that fires if no data
+ *   arrives within `initFallbackTimeoutMs` -- this is the "10 seconds
+ *   elapses while data system not initialized with data" half of the
+ *   default Fallback Condition, distinct from the "interrupted" half. Once
+ *   the data system has initialized, this leg never applies again for the
+ *   lifetime of the SDK.
  *
  * @param availableSyncCount Number of available (non-blocked) synchronizers.
  * @param isPrime Whether the current synchronizer is the primary.
+ * @param initialized Whether the data system has ever received data.
  * @param fallbackTimeoutMs Fallback condition timeout.
  * @param recoveryTimeoutMs Recovery condition timeout.
+ * @param initFallbackTimeoutMs Not-yet-initialized fallback leg timeout.
  */
 export function getConditions(
   availableSyncCount: number,
   isPrime: boolean,
+  initialized: boolean,
   fallbackTimeoutMs: number = DEFAULT_FALLBACK_TIMEOUT_MS,
   recoveryTimeoutMs: number = DEFAULT_RECOVERY_TIMEOUT_MS,
+  initFallbackTimeoutMs: number = DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
 ): ConditionGroup {
   if (availableSyncCount <= 1) {
     return createConditionGroup([]);
   }
 
-  if (isPrime) {
-    return createConditionGroup([createFallbackCondition(fallbackTimeoutMs)]);
+  const conditions: Condition[] = [];
+  if (!initialized) {
+    conditions.push(createInitFallbackCondition(initFallbackTimeoutMs));
   }
 
-  return createConditionGroup([
-    createFallbackCondition(fallbackTimeoutMs),
-    createRecoveryCondition(recoveryTimeoutMs),
-  ]);
+  conditions.push(createFallbackCondition(fallbackTimeoutMs));
+  if (!isPrime) {
+    conditions.push(createRecoveryCondition(recoveryTimeoutMs));
+  }
+
+  return createConditionGroup(conditions);
 }
