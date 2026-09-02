@@ -47,8 +47,15 @@ export interface LDVuePluginOptions extends LDVueProviderOptions {
  */
 export const LDVuePlugin = {
   install(app: App, options: LDVuePluginOptions) {
-    const { clientSideID, context, deferInitialization, startOptions, ldOptions, bootstrap, injectionKey } =
-      options;
+    const {
+      clientSideID,
+      context,
+      deferInitialization,
+      startOptions,
+      ldOptions,
+      bootstrap,
+      injectionKey,
+    } = options;
 
     const client = createClient(clientSideID, context, ldOptions);
 

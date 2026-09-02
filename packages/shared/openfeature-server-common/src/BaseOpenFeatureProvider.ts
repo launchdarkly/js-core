@@ -225,7 +225,7 @@ export abstract class BaseOpenFeatureProvider<
       translateContext(this._logger, context),
       defaultValue,
     );
-   if (res.value !== null && typeof res.value === 'object') {
+    if (res.value !== null && typeof res.value === 'object') {
       return translateResult(res);
     }
     return wrongTypeResult<U>(defaultValue);
@@ -270,4 +270,3 @@ export abstract class BaseOpenFeatureProvider<
     );
   }
 }
-

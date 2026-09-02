@@ -1,8 +1,4 @@
-import {
-  LDClientImpl,
-  LDOptions,
-  ServerInternalOptions,
-} from '@launchdarkly/js-server-sdk-common';
+import { LDClientImpl, LDOptions, ServerInternalOptions } from '@launchdarkly/js-server-sdk-common';
 
 import Platform from './platform';
 import platformInfo from './platform/OxygenInfo';

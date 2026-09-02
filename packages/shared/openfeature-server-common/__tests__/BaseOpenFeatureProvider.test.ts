@@ -64,7 +64,9 @@ it('initialize rethrows the construction error when setClientError was called', 
 
 it('initialize throws a generic error when no client and no error were registered', async () => {
   const provider = new TestProvider(baseConfig(new TestLogger()));
-  await expect(provider.initialize()).rejects.toThrow('Unknown problem encountered during initialization');
+  await expect(provider.initialize()).rejects.toThrow(
+    'Unknown problem encountered during initialization',
+  );
 });
 
 it('resolveBooleanEvaluation returns the translated result for boolean flags', async () => {
@@ -78,11 +80,7 @@ it('resolveBooleanEvaluation returns the translated result for boolean flags', a
 
   const result = await provider.resolveBooleanEvaluation('flag', false, { targetingKey: 'u' });
 
-  expect(client.variationDetail).toHaveBeenCalledWith(
-    'flag',
-    { kind: 'user', key: 'u' },
-    false,
-  );
+  expect(client.variationDetail).toHaveBeenCalledWith('flag', { kind: 'user', key: 'u' }, false);
   expect(result).toEqual({
     value: true,
     variant: '1',
@@ -203,32 +201,35 @@ it.each([
   ['USER_NOT_SPECIFIED', ErrorCode.TARGETING_KEY_MISSING],
   ['UNSPECIFIED', ErrorCode.GENERAL],
   [undefined, ErrorCode.GENERAL],
-] as const)('translates ERROR-reason errorKind %s into OpenFeature error code', async (errorKind, expectedCode) => {
-  const client = new MockLDClient();
-  client.variationDetail.mockResolvedValue({
-    value: { yes: 'no' },
-    reason: { kind: 'ERROR', errorKind },
-  });
-  const provider = new TestProvider(baseConfig(new TestLogger()), client);
+] as const)(
+  'translates ERROR-reason errorKind %s into OpenFeature error code',
+  async (errorKind, expectedCode) => {
+    const client = new MockLDClient();
+    client.variationDetail.mockResolvedValue({
+      value: { yes: 'no' },
+      reason: { kind: 'ERROR', errorKind },
+    });
+    const provider = new TestProvider(baseConfig(new TestLogger()), client);
 
-  const result = await provider.resolveObjectEvaluation('flag', { yes: 'no' }, { targetingKey: 'u' });
+    const result = await provider.resolveObjectEvaluation(
+      'flag',
+      { yes: 'no' },
+      { targetingKey: 'u' },
+    );
 
-  expect(result).toMatchObject({
-    value: { yes: 'no' },
-    reason: 'ERROR',
-    errorCode: expectedCode,
-  });
-});
+    expect(result).toMatchObject({
+      value: { yes: 'no' },
+      reason: 'ERROR',
+      errorCode: expectedCode,
+    });
+  },
+);
 
 it('track forwards the translated context, event details, and metric value', () => {
   const client = new MockLDClient();
   const provider = new TestProvider(baseConfig(new TestLogger()), client);
 
-  provider.track(
-    'event',
-    { targetingKey: 'u', kind: 'user' },
-    { value: 1.5, foo: 'bar' },
-  );
+  provider.track('event', { targetingKey: 'u', kind: 'user' }, { value: 1.5, foo: 'bar' });
 
   expect(client.track).toHaveBeenCalledWith(
     'event',
@@ -244,12 +245,7 @@ it('track passes undefined data when only the value is provided', () => {
 
   provider.track('event', { targetingKey: 'u' }, { value: 7 });
 
-  expect(client.track).toHaveBeenCalledWith(
-    'event',
-    { kind: 'user', key: 'u' },
-    undefined,
-    7,
-  );
+  expect(client.track).toHaveBeenCalledWith('event', { kind: 'user', key: 'u' }, undefined, 7);
 });
 
 it('track with no event details passes undefined data and undefined metricValue', () => {
@@ -338,10 +334,7 @@ it('wraps a host logger that throws so flag evaluation does not crash', async ()
     variationIndex: 0,
     reason: { kind: 'OFF' },
   });
-  const provider = new TestProvider(
-    { logger: throwingLogger, providerName: 'p' },
-    client,
-  );
+  const provider = new TestProvider({ logger: throwingLogger, providerName: 'p' }, client);
 
   await expect(
     provider.resolveBooleanEvaluation('flag', false, {

@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig([
   {
     entry: {
-      'index': 'src/index.ts',
+      index: 'src/index.ts',
       'clients/js-client-sdk': 'src/clients/js-client-sdk.ts',
       'clients/react-sdk': 'src/clients/react-sdk.ts',
     },

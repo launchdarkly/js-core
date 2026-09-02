@@ -25,7 +25,6 @@ Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/n
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
 
-
 [node-client-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml/badge.svg
 [node-client-ci]: https://github.com/launchdarkly/js-core/actions/workflows/node-client.yml
 [node-client-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/node-client-sdk.svg?style=flat-square

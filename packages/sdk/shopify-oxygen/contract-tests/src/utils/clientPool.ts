@@ -4,7 +4,6 @@ import { ClientPool as GenericClientPool } from '@launchdarkly/js-contract-test-
 import { LDClient } from '@launchdarkly/js-server-sdk-common';
 import { init } from '@launchdarkly/shopify-oxygen-sdk';
 
-
 /**
  * ClientPool manages a pool of LDClient instances for contract tests.
  * It uses the shared generic ClientPool for client storage and ID generation, and

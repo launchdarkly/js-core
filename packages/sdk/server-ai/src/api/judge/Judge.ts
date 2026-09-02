@@ -174,9 +174,7 @@ export class Judge {
     samplingRatio?: number,
   ): Promise<LDJudgeResult> {
     const input =
-      messages.length === 0
-        ? ''
-        : messages.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
+      messages.length === 0 ? '' : messages.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
     const output = response.content;
 
     return this.evaluate(input, output, samplingRatio);

@@ -101,7 +101,9 @@ describe('Judge', () => {
     judgeConfig = {
       key: 'test-judge',
       enabled: true,
-      messages: [{ role: 'system', content: 'You are a helpful judge that evaluates AI responses.' }],
+      messages: [
+        { role: 'system', content: 'You are a helpful judge that evaluates AI responses.' },
+      ],
       model: { name: 'gpt-4' },
       provider: { name: 'openai' },
       createTracker: () => mockTracker,
@@ -617,12 +619,8 @@ describe('Judge', () => {
       const firstInput = mockRunner.run.mock.calls[0][0] as string;
       const secondInput = mockRunner.run.mock.calls[1][0] as string;
 
-      expect(firstInput).toBe(
-        'MESSAGE HISTORY:\nQ1\n\nRESPONSE TO EVALUATE:\nA1',
-      );
-      expect(secondInput).toBe(
-        'MESSAGE HISTORY:\nQ2\n\nRESPONSE TO EVALUATE:\nA2',
-      );
+      expect(firstInput).toBe('MESSAGE HISTORY:\nQ1\n\nRESPONSE TO EVALUATE:\nA1');
+      expect(secondInput).toBe('MESSAGE HISTORY:\nQ2\n\nRESPONSE TO EVALUATE:\nA2');
       // The second call's input must not reference the first call.
       expect(secondInput).not.toContain('Q1');
       expect(secondInput).not.toContain('A1');
@@ -735,6 +733,5 @@ describe('Judge', () => {
 
       expect(result).toBeUndefined();
     });
-
   });
 });

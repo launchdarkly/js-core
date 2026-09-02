@@ -195,9 +195,10 @@ export function createStreamingBase(config: {
         // passes it through to resolveFallback() as the incoming override.
         const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
         putWithFallback(
-          (fallback) => (fallback.fdv1Fallback
-            ? terminalError(errorInfoFromUnknown(action.reason), fallback)
-            : goodbye(action.reason, fallback)),
+          (fallback) =>
+            fallback.fdv1Fallback
+              ? terminalError(errorInfoFromUnknown(action.reason), fallback)
+              : goodbye(action.reason, fallback),
           goodbyeDirective,
         );
         break;
@@ -211,7 +212,9 @@ export function createStreamingBase(config: {
         // Only actionable errors are queued; informational ones (UNKNOWN_EVENT)
         // are logged by the protocol handler.
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
-          putWithFallback((fallback) => interrupted(errorInfoFromInvalidData(action.message), fallback));
+          putWithFallback((fallback) =>
+            interrupted(errorInfoFromInvalidData(action.message), fallback),
+          );
         }
         break;
 
@@ -242,7 +245,9 @@ export function createStreamingBase(config: {
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      putWithFallback((fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback));
+      putWithFallback((fallback) =>
+        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
+      );
       return false;
     }
 
@@ -334,7 +339,10 @@ export function createStreamingBase(config: {
 
         config.logger?.error(`Error handling ping: ${err?.message ?? err}`);
         putWithFallback((fallback) =>
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'), fallback),
+          interrupted(
+            errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'),
+            fallback,
+          ),
         );
       }
     });

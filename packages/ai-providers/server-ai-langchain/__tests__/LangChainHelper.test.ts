@@ -128,9 +128,7 @@ describe('buildStructuredTools', () => {
     const result = buildStructuredTools(toolDefs, {}, mockLogger);
 
     expect(result).toHaveLength(0);
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Tool 'missing'"),
-    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining("Tool 'missing'"));
   });
 
   it('skips non-function built-in tools and logs a warning', () => {
@@ -145,9 +143,7 @@ describe('buildStructuredTools', () => {
   });
 
   it('handles function-style tool definitions with nested function.name', () => {
-    const toolDefs = [
-      { type: 'function', function: { name: 'search', description: 'searches' } },
-    ];
+    const toolDefs = [{ type: 'function', function: { name: 'search', description: 'searches' } }];
     const registry = { search: jest.fn() };
 
     const result = buildStructuredTools(toolDefs, registry, mockLogger);
@@ -186,9 +182,7 @@ it('handles empty messages for extractToolCalls', () => {
 });
 
 it('extracts string content from the last message', () => {
-  expect(
-    extractLastMessageContent([new HumanMessage('hi'), new AIMessage('hello')]),
-  ).toBe('hello');
+  expect(extractLastMessageContent([new HumanMessage('hi'), new AIMessage('hello')])).toBe('hello');
 });
 
 it('returns empty string for empty array', () => {

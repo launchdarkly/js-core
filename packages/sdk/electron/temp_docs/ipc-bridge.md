@@ -9,6 +9,7 @@ The real LaunchDarkly client (streaming connection, flag storage, identify, and 
 The design has three layers:
 
 - **Main process**: [ElectronClient](src/ElectronClient.ts) is created via `createClient(credential, initialContext, options)`. The first argument is the credential (mobile key or client-side ID when `useClientSideId: true`). When `enableIPC: true` (the default), it registers IPC handlers so the renderer can call through to the real client.
+
   > NOTE: When `enableIPC` is set to `false`, no IPC handlers will be registered in browser windows. This means
   > that only the main process is able to use the LaunchDarkly SDK.
 

@@ -6,8 +6,6 @@
 [![NPM][jest-dm-badge]][jest-npm-link]
 [![NPM][jest-dt-badge]][jest-npm-link]
 
-
-
 **Easily unit test LaunchDarkly feature flagged applications with jest**
 
 For more information, see the [complete reference guide for unit testing](https://docs.launchdarkly.com/guides/sdk/unit-tests).
@@ -97,6 +95,7 @@ yarn && yarn build && cd packages/tooling/jest
 # run tests
 yarn test
 ```
+
 ## Note
 
 LaunchDarkly plans to support [test data sources](https://launchdarkly.com/docs/sdk/features/test-data-sources) for the React Native and other client-side SDKs in the future. Once this feature is avaliable, we will deprecate this package.

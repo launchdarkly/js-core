@@ -12,10 +12,10 @@ This demo requires Node.js v20 or later.
 
 ## What this example adds on top of [`hello-react`](../../hello-react/)
 
-* A small Express server (`server/index.ts`) initializes `@launchdarkly/node-server-sdk` and,
+- A small Express server (`server/index.ts`) initializes `@launchdarkly/node-server-sdk` and,
   on every request to `/`, evaluates the client-side flags for the example context with
   `allFlagsState(context, { clientSideOnly: true })`.
-* The server renders an EJS template (`views/index.ejs`) that injects the evaluated payload
+- The server renders an EJS template (`views/index.ejs`) that injects the evaluated payload
   into the page as a `<script>` blob:
 
   ```html
@@ -26,7 +26,7 @@ This demo requires Node.js v20 or later.
   </script>
   ```
 
-* `src/index.tsx` reads those values synchronously and hands the bootstrap payload to
+- `src/index.tsx` reads those values synchronously and hands the bootstrap payload to
   `LDReactProviderOptions.bootstrap`:
 
   ```ts

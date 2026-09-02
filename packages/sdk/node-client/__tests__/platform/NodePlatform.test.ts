@@ -66,7 +66,9 @@ it('does not throw when a custom storage get rejects', async () => {
   };
   const platform = new NodePlatform(logger, { storage: faultyStorage });
   await expect(platform.storage.get('alpha')).resolves.toBeNull();
-  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error getting key from storage'));
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error getting key from storage'),
+  );
 });
 
 it('does not throw when a custom storage set rejects', async () => {
@@ -77,7 +79,9 @@ it('does not throw when a custom storage set rejects', async () => {
   };
   const platform = new NodePlatform(logger, { storage: faultyStorage });
   await expect(platform.storage.set('alpha', 'one')).resolves.toBeUndefined();
-  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error setting key in storage'));
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error setting key in storage'),
+  );
 });
 
 it('does not throw when a custom storage clear rejects', async () => {
@@ -88,18 +92,24 @@ it('does not throw when a custom storage clear rejects', async () => {
   };
   const platform = new NodePlatform(logger, { storage: faultyStorage });
   await expect(platform.storage.clear('alpha')).resolves.toBeUndefined();
-  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error clearing key from storage'));
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error clearing key from storage'),
+  );
 });
 
 it('does not throw when a custom storage get throws synchronously', async () => {
   const faultyStorage = {
-    get: jest.fn().mockImplementation(() => { throw new Error('sync boom'); }),
+    get: jest.fn().mockImplementation(() => {
+      throw new Error('sync boom');
+    }),
     set: jest.fn().mockResolvedValue(undefined),
     clear: jest.fn().mockResolvedValue(undefined),
   };
   const platform = new NodePlatform(logger, { storage: faultyStorage });
   await expect(platform.storage.get('alpha')).resolves.toBeNull();
-  expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('Error getting key from storage'));
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Error getting key from storage'),
+  );
 });
 
 it('passes wrapperName and wrapperVersion to NodeInfo', () => {

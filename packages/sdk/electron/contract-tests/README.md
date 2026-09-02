@@ -26,40 +26,50 @@ The test harness sends HTTP requests to the entity’s REST API. The entity runs
 ### Quick start
 
 1. **Install dependencies** from the repository root:
+
    ```bash
    yarn
    ```
 
 2. **Build the entity** so the Electron app has a built main process. From the repository root:
+
    ```bash
    yarn workspaces foreach -pR --topological-dev --from @launchdarkly/electron-contract-tests-entity run build
    ```
 
 3. **Start the contract test entity** (the Electron app with the REST server on port 8000). From the repository root:
+
    ```bash
    yarn workspace @launchdarkly/electron-contract-tests-entity run start
    ```
+
    Or from `entity/`:
+
    ```bash
    yarn start
    ```
+
    The app window may open; the server runs in the main process. Keep it running while you run the harness.
 
    For a headless run (e.g. CI), use the open-electron script instead:
+
    ```bash
    yarn workspace @launchdarkly/electron-contract-tests-entity run open-electron
    ```
+
    This launches the built app via Playwright’s Electron API and keeps it running until you press Ctrl+C.
 
 4. **Run the SDK test harness** against the entity. The entity’s REST API is at:
    - **Base URL:** http://localhost:8000
 
    Example with a local clone of the test harness:
+
    ```bash
    go run . --url http://localhost:8000
    ```
 
    If you have a suppressions file (e.g. for known differences), pass it with `-skip-from`:
+
    ```bash
    go run . --url http://localhost:8000 -skip-from path-to-js-core/packages/sdk/electron/contract-tests/suppressions.txt
    ```

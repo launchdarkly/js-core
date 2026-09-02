@@ -228,9 +228,7 @@ describe('given a polling processor', () => {
 
     // The terminal status emitted to the composite must be the FDv1-fallback error so that
     // CompositeDataSource engages FDv1 instead of falling through to the next FDv2 source.
-    const errorCalls = statusCallback.mock.calls.filter(
-      (call: any[]) => call[1] !== undefined,
-    );
+    const errorCalls = statusCallback.mock.calls.filter((call: any[]) => call[1] !== undefined);
     expect(errorCalls.length).toBeGreaterThan(0);
     expect(errorCalls[errorCalls.length - 1][1]).toBeInstanceOf(LDFlagDeliveryFallbackError);
 
@@ -244,9 +242,7 @@ describe('given a polling processor', () => {
   // Error response + directive: emit the directive and don't reschedule a poll, even
   // when the HTTP status would otherwise be recoverable.
   it('signals fallback on an error response without retrying', async () => {
-    requestor.requestAllData = jest.fn((cb) =>
-      cb({ status: 500 }, undefined, headers, true),
-    );
+    requestor.requestAllData = jest.fn((cb) => cb({ status: 500 }, undefined, headers, true));
 
     const statusCallback = jest.fn();
     processor.start(mockDataCallback, statusCallback);

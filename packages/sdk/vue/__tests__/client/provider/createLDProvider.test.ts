@@ -53,7 +53,11 @@ it('does not start the client when deferInitialization is true', () => {
   const { client } = makeMockClient();
   createClientMock.mockReturnValue(client);
 
-  const Provider = createLDProvider('env-id', { kind: 'user', key: 'k' }, { deferInitialization: true });
+  const Provider = createLDProvider(
+    'env-id',
+    { kind: 'user', key: 'k' },
+    { deferInitialization: true },
+  );
   mount(Provider, { slots: { default: () => h('div') } });
 
   expect(client.start).not.toHaveBeenCalled();

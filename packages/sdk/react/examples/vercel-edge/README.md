@@ -11,11 +11,11 @@ directly, providing ultra-low latency flag evaluation at the edge.
 The demo shows 2 ways to use React server-side rendering:
 
 1. Using `createLDServerSession` and `useLDServerSession` to provide
-per-request session isolation: Nested Server Components access the session through React's `cache()`
-without any prop drilling.
+   per-request session isolation: Nested Server Components access the session through React's `cache()`
+   without any prop drilling.
 
 2. Using the `LDIsomorphicProvider` to bootstrap the browser SDK with server-evaluated flag values.
-This allows the browser SDK to start immediately with real values.
+   This allows the browser SDK to start immediately with real values.
 
 Below, you'll find the build procedure. For more comprehensive instructions, you can visit your
 [Quickstart page](https://app.launchdarkly.com/quickstart#/) or the
@@ -70,12 +70,12 @@ or grey when off.
 To simulate a different user, append the `?context=` query parameter. Each tab gets a
 completely independent `LDServerSession` with its own context:
 
-| URL | Context |
-|-----|---------|
-| `http://localhost:3000/` | Sandy (example-user-key) — default |
-| `http://localhost:3000/?context=sandy` | Sandy (example-user-key) |
-| `http://localhost:3000/?context=jamie` | Jamie (user-jamie) |
-| `http://localhost:3000/?context=alex` | Alex (user-alex) |
+| URL                                    | Context                            |
+| -------------------------------------- | ---------------------------------- |
+| `http://localhost:3000/`               | Sandy (example-user-key) — default |
+| `http://localhost:3000/?context=sandy` | Sandy (example-user-key)           |
+| `http://localhost:3000/?context=jamie` | Jamie (user-jamie)                 |
+| `http://localhost:3000/?context=alex`  | Alex (user-alex)                   |
 
 If you have targeting rules in LaunchDarkly that serve different values to different user keys,
 you will see different flag results for each context.

@@ -7,8 +7,6 @@
     "android": {
       "package": "com.launchdarkly.rncontracttestentity"
     },
-    "plugins": [
-      "./plugins/withCleartextTraffic"
-    ]
+    "plugins": ["./plugins/withCleartextTraffic"]
   }
 }

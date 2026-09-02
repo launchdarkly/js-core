@@ -1,10 +1,6 @@
 import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import {
-  LDAIAgentConfig,
-  LDAICompletionConfig,
-  LDAIJudgeConfig,
-} from '../config/types';
+import { LDAIAgentConfig, LDAICompletionConfig, LDAIJudgeConfig } from '../config/types';
 import { AgentGraphDefinition } from '../graph/AgentGraphDefinition';
 import { AIProvider, ToolRegistry } from './AIProvider';
 import { AgentGraphRunner, Runner } from './Runner';
