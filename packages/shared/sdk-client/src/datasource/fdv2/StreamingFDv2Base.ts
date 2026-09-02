@@ -25,11 +25,6 @@ import {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
-import {
-  FallbackDirective,
-  readFallbackDirective,
-  readGoodbyeFallbackDirective,
-} from './fallbackDirective';
 
 /**
  * Handler invoked when a legacy `"ping"` event is received on the stream.
@@ -150,7 +145,7 @@ export function createStreamingBase(config: {
    * the pending pair is cleared. Safe to call with neither; it just returns the
    * current committed state unchanged.
    */
-  function resolveFallback(incoming?: FallbackDirective): FallbackDirective {
+  function resolveFallback(incoming?: internal.FallbackDirective): internal.FallbackDirective {
     if (incoming?.fdv1Fallback) {
       fdv1Fallback = true;
       fdv1FallbackTtlMs = incoming.fdv1FallbackTtlMs;
@@ -176,8 +171,8 @@ export function createStreamingBase(config: {
    * so it still enqueues directly.
    */
   function putWithFallback(
-    build: (fallback: FallbackDirective) => FDv2SourceResult,
-    incoming?: FallbackDirective,
+    build: (fallback: internal.FallbackDirective) => FDv2SourceResult,
+    incoming?: internal.FallbackDirective,
   ): void {
     resultQueue.put(build(resolveFallback(incoming)));
   }
@@ -193,7 +188,7 @@ export function createStreamingBase(config: {
         // An in-band fallback signal in the goodbye data (its own TTL) takes
         // precedence over a directive deferred at onopen; putWithFallback()
         // passes it through to resolveFallback() as the incoming override.
-        const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
+        const goodbyeDirective = internal.readGoodbyeFallbackDirective(rawData);
         putWithFallback(
           (fallback) => (fallback.fdv1Fallback
             ? terminalError(errorInfoFromUnknown(action.reason), fallback)
@@ -224,7 +219,7 @@ export function createStreamingBase(config: {
   function handleError(err: HttpErrorResponse): boolean {
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
-    const directive = readFallbackDirective({
+    const directive = internal.readFallbackDirective({
       get: (name: string) => errHeaders[name.toLowerCase()] ?? null,
     });
     if (directive.fdv1Fallback) {
@@ -406,7 +401,7 @@ export function createStreamingBase(config: {
         // in flight is delivered first.
         const openHeaders = e?.headers;
         if (openHeaders) {
-          const directive = readFallbackDirective({
+          const directive = internal.readFallbackDirective({
             get: (name: string) => openHeaders[name.toLowerCase()] ?? null,
           });
           pendingFallback = directive.fdv1Fallback;

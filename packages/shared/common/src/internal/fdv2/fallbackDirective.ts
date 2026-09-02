@@ -9,7 +9,7 @@
  * - `> 0`: milliseconds to wait before attempting FDv2 recovery.
  *
  * This is the single place that interprets `x-ld-fd-fallback` and
- * `x-ld-fd-fallback-ttl`, shared by the streaming and polling sources.
+ * `x-ld-fd-fallback-ttl`.
  */
 export interface FallbackDirective {
   fdv1Fallback: boolean;
@@ -21,8 +21,8 @@ export interface FallbackDirective {
  * `{ fdv1Fallback: false }` when `x-ld-fd-fallback` is absent or not `"true"`.
  *
  * @param headers Header accessor. The `get` method must accept header names
- *   in any casing; both streaming and polling callers normalize to lowercase
- *   before calling this function.
+ *   in any casing; callers normalize to lowercase before calling this
+ *   function.
  */
 export function readFallbackDirective(headers: {
   get(name: string): string | null;
