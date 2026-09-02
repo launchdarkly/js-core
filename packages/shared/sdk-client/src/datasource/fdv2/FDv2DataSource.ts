@@ -5,6 +5,7 @@ import {
   ConditionGroup,
   ConditionType,
   DEFAULT_FALLBACK_TIMEOUT_MS,
+  DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
   DEFAULT_RECOVERY_TIMEOUT_MS,
   getConditions,
 } from './Conditions';
@@ -48,6 +49,13 @@ export interface FDv2DataSourceConfig {
 
   /** Recovery condition timeout in ms (default 300s). */
   recoveryTimeoutMs?: number;
+
+  /**
+   * Not-yet-initialized fallback leg timeout in ms (default 10s). Fires if
+   * the data system has never received data within this long of the current
+   * synchronizer becoming active.
+   */
+  initFallbackTimeoutMs?: number;
 }
 
 /**
@@ -85,6 +93,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     logger,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
+    initFallbackTimeoutMs = DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
   } = config;
 
   let initialized = false;
@@ -330,8 +339,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       const conditions: ConditionGroup = getConditions(
         sourceManager.getAvailableSynchronizerCount(),
         sourceManager.isPrimeSynchronizer(),
+        initialized,
         fallbackTimeoutMs,
         recoveryTimeoutMs,
+        initFallbackTimeoutMs,
       );
 
       if (conditions.promise) {

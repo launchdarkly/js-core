@@ -610,6 +610,51 @@ it('falls back to next synchronizer when fallback condition fires', async () => 
   ds.close();
 });
 
+it('falls back to next synchronizer when it never delivers data or a status, before initialization', async () => {
+  const dataCallback = jest.fn();
+  const statusManager = makeStatusManager();
+  const logger = makeLogger();
+  const payload = makePayload({ state: 'selector' });
+
+  // sync1 never resolves.
+  let sync1NextResolve: ((r: FDv2SourceResult) => void) | undefined;
+  const sync1: Synchronizer = {
+    next: () =>
+      new Promise<FDv2SourceResult>((resolve) => {
+        sync1NextResolve = resolve;
+      }),
+    close() {
+      sync1NextResolve?.(shutdown());
+    },
+  };
+
+  const sync2 = makeMockSynchronizer([changeSet(payload, { fdv1Fallback: false })]);
+
+  const slots: SynchronizerSlot[] = [
+    createSynchronizerSlot({ create: () => sync1 }),
+    createSynchronizerSlot({ create: () => sync2 }),
+  ];
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [],
+    synchronizerSlots: slots,
+    dataCallback,
+    statusManager,
+    selectorGetter: noSelector,
+    logger,
+    fallbackTimeoutMs: 100000,
+    initFallbackTimeoutMs: 10,
+  });
+
+  // start() resolves when the init-fallback leg fires (after 10ms) despite
+  // sync1 never reporting interrupted, moving to sync2 which delivers data.
+  await ds.start();
+
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Fallback condition fired'));
+  expect(dataCallback).toHaveBeenCalledWith(payload);
+  ds.close();
+});
+
 it('recovers to primary synchronizer when recovery condition fires', async () => {
   const dataCallback = jest.fn();
   const statusManager = makeStatusManager();
