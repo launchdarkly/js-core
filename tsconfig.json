@@ -68,9 +68,6 @@
       "path": "./packages/sdk/browser/tsconfig.ref.json"
     },
     {
-      "path": "./packages/sdk/browser/contract-tests/adapter/tsconfig.ref.json"
-    },
-    {
       "path": "./packages/sdk/browser/contract-tests/entity/tsconfig.ref.json"
     },
     {
