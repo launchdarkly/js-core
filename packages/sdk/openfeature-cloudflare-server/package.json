@@ -48,7 +48,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
-    "@launchdarkly/openfeature-js-server-common": "1.0.1"
+    "@launchdarkly/openfeature-js-server-common": "1.1.0"
   },
   "peerDependencies": {
     "@launchdarkly/cloudflare-server-sdk": "^2.7.0",
