@@ -1153,3 +1153,35 @@ it('populates polling and streaming config in the factory context', async () => 
 
   manager.close();
 });
+
+it('warns when a payload filter key is configured', () => {
+  const config = makeConfig({
+    serviceEndpoints: new ServiceEndpoints(
+      'https://stream',
+      'https://poll',
+      'https://events',
+      '/bulk',
+      '/diagnostic',
+      true,
+      'microservice-1',
+    ),
+  });
+
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ config }));
+
+  expect(config.logger.warn).toHaveBeenCalledWith(
+    expect.stringContaining('Payload filtering is not supported with the FDv2 data system'),
+  );
+
+  manager.close();
+});
+
+it('does not warn when no payload filter key is configured', () => {
+  const config = makeConfig();
+
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ config }));
+
+  expect(config.logger.warn).not.toHaveBeenCalled();
+
+  manager.close();
+});
