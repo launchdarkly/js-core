@@ -75,6 +75,27 @@ describe('OpenAIModelRunner', () => {
       });
     });
 
+    it('passes a LDMessage[] input directly without prepending config messages', async () => {
+      const mockResponse = {
+        choices: [{ message: { content: 'Evaluation result' } }],
+        usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+      };
+      (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
+
+      const messages = [
+        { role: 'system' as const, content: 'You are a judge' },
+        { role: 'user' as const, content: 'Rate this: hello' },
+      ];
+      const result = await runner.run(messages);
+
+      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith({
+        model: 'gpt-3.5-turbo',
+        messages,
+      });
+      expect(result.content).toBe('Evaluation result');
+      expect(result.metrics.success).toBe(true);
+    });
+
     it('marks the result unsuccessful when response has no content', async () => {
       const mockResponse = { choices: [{ message: {} }] };
       (mockOpenAI.chat.completions.create as jest.Mock).mockResolvedValue(mockResponse as any);
