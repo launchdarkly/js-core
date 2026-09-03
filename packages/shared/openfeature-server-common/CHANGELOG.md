@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v1.1.0...openfeature-js-server-common-v2.0.0) (2026-09-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Map LaunchDarkly evaluation reasons to OpenFeature reasons ([#1887](https://github.com/launchdarkly/js-core/issues/1887))
+* Map the WRONG_TYPE error kind to TYPE_MISMATCH ([#1888](https://github.com/launchdarkly/js-core/issues/1888))
+
+### Bug Fixes
+
+* Map LaunchDarkly evaluation reasons to OpenFeature reasons ([#1887](https://github.com/launchdarkly/js-core/issues/1887)) ([70291f4](https://github.com/launchdarkly/js-core/commit/70291f4862384f18ef4e9bf11045c7f4df73a116))
+* Map the WRONG_TYPE error kind to TYPE_MISMATCH ([#1888](https://github.com/launchdarkly/js-core/issues/1888)) ([2d60942](https://github.com/launchdarkly/js-core/commit/2d60942d15812fea1cf82be72101492422da813d))
+
 ## [1.1.0](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v1.0.1...openfeature-js-server-common-v1.1.0) (2026-08-25)
 
 
