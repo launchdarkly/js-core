@@ -1,9 +1,23 @@
 {
   "name": "@launchdarkly/js-server-sdk-common",
   "version": "2.20.1",
-  "type": "commonjs",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "sideEffects": false,
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/shared/sdk-server",
   "repository": {
     "type": "git",
@@ -20,8 +34,8 @@
   ],
   "scripts": {
     "test": "npx jest --ci",
-    "build": "npx tsc",
-    "clean": "npx tsc --build --clean",
+    "build": "tsup-node",
+    "clean": "rm -rf dist",
     "lint": "oxlint .",
     "lint:fix": "yarn run lint --fix",
     "format": "oxfmt .",
@@ -46,6 +60,7 @@
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "ts-jest": "^29.0.5",
+    "tsup": "^8.5.1",
     "typedoc": "0.25.0",
     "typescript": "5.1.6",
     "typescript-eslint": "^8.0.0"

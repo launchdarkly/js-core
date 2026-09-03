@@ -3,6 +3,12 @@ import LDClientImpl from './LDClientImpl';
 import { createMigration, LDMigrationError, LDMigrationSuccess } from './Migration';
 
 export * as integrations from './integrations';
+export {
+  FileDataSourceFactory,
+  TestData,
+  TestDataFlagBuilder,
+  TestDataRuleBuilder,
+} from './integrations';
 export * as platform from '@launchdarkly/js-sdk-common';
 export * from './api';
 export * from './store';
