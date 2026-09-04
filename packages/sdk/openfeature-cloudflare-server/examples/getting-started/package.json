@@ -5,7 +5,7 @@
   "type": "module",
   "module": "./dist/index.mjs",
   "dependencies": {
-    "@launchdarkly/openfeature-cloudflare-server": "0.1.0",
+    "@launchdarkly/openfeature-cloudflare-server": "0.1.1",
     "@openfeature/core": "^1.10.0",
     "@openfeature/server-sdk": "^1.16.0"
   },
