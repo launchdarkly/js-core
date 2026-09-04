@@ -11,21 +11,39 @@
 /// <reference types="@fastly/js-compute" />
 import { KVStore } from 'fastly:kv-store';
 
-import { BasicLogger, LDEvaluationReason } from '@launchdarkly/js-server-sdk-common';
+import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeFeatureStore, EdgeProvider, LDClient } from './api';
 import { DEFAULT_EVENTS_BACKEND_NAME } from './api/LDClient';
 import createPlatformInfo from './createPlatformInfo';
 import validateOptions, { FastlySDKOptions, LDOptionsCommon } from './utils/validateOptions';
 
-export type {
+export {
   BasicLogger,
-  FastlySDKOptions,
-  KVStore,
-  LDClient,
-  LDEvaluationReason,
-  LDOptionsCommon,
-};
+  type BasicLoggerOptions,
+  type LDClientContext,
+  type LDContext,
+  type LDEvaluationDetail,
+  type LDEvaluationDetailTyped,
+  type LDEvaluationReason,
+  type LDFlagValue,
+  type LDFlagsState,
+  type LDFlagsStateOptions,
+  type LDLogger,
+  type LDLogLevel,
+  type LDMultiKindContext,
+  type LDSingleKindContext,
+  type LDWaitForInitializationOptions,
+} from '@launchdarkly/js-server-sdk-common';
+
+export type { EdgeProvider, FastlySDKOptions, KVStore, LDClient, LDOptionsCommon };
+
+/**
+ * The LaunchDarkly Fastly Compute SDK configuration options. This is the
+ * name the other LaunchDarkly edge SDKs use for their options type.
+ * It is the same type as {@link FastlySDKOptions}.
+ */
+export type LDOptions = FastlySDKOptions;
 
 /**
  * Creates an instance of the Fastly LaunchDarkly client.
