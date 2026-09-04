@@ -1,3 +1,15 @@
+# Browser's native EventSource cannot read response headers/status on the streaming
+# connection, so it can never observe the directive this test relies on.
+tags/FDv1 fallback directive requests
+
+# Same root cause as above: DefaultBrowserEventSource reports headers: false
+# unconditionally on both open and error events, so none of the FDv1 fallback
+# directive scenarios below can be observed on browser, not just the error path.
+streaming/fdv2/FDv1 fallback directive/directive on streaming error engages FDv1 fallback
+streaming/fdv2/FDv1 fallback directive/directive on streaming success applies payload then engages FDv1
+streaming/fdv2/FDv1 fallback directive/directive without FDv1 fallback configured halts the data system
+streaming/fdv2/FDv1 fallback directive/directed fallback is terminal and does not revisit FDv2 sources
+
 streaming/requests/method and headers/REPORT/http
 streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
 streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT

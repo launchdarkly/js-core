@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.32](https://github.com/launchdarkly/js-core/compare/browser-v0.1.31...browser-v0.1.32) (2026-08-26)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from 4.9.4 to 4.10.0
+
 ## [0.1.31](https://github.com/launchdarkly/js-core/compare/browser-v0.1.30...browser-v0.1.31) (2026-08-06)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/vue-client-sdk",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "LaunchDarkly Client-side SDK for Vue",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/vue",
   "repository": {
@@ -31,13 +31,15 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "tsup",
-    "lint": "eslint .",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "test": "npx jest --ci",
     "coverage": "yarn test --coverage",
     "check": "yarn lint && yarn build && yarn test"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.9.4"
+    "@launchdarkly/js-client-sdk": "4.10.0"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
@@ -53,6 +55,8 @@
     "globals": "^16.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",
     "tsup": "^8.5.1",

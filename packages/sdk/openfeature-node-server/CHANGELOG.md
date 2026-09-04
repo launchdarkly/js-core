@@ -1,5 +1,48 @@
 # Changelog
 
+## [2.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.4.0...openfeature-node-server-v2.0.0) (2026-09-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Map LaunchDarkly evaluation reasons to OpenFeature reasons ([#1887](https://github.com/launchdarkly/js-core/issues/1887))
+
+### Bug Fixes
+
+* Map LaunchDarkly evaluation reasons to OpenFeature reasons ([#1887](https://github.com/launchdarkly/js-core/issues/1887)) ([70291f4](https://github.com/launchdarkly/js-core/commit/70291f4862384f18ef4e9bf11045c7f4df73a116))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 1.1.0 to 2.0.0
+
+## [1.4.0](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.7...openfeature-node-server-v1.4.0) (2026-08-25)
+
+
+### Features
+
+* Populate OpenFeature flag metadata from the evaluation reason ([#1869](https://github.com/launchdarkly/js-core/issues/1869)) ([d5bdaeb](https://github.com/launchdarkly/js-core/commit/d5bdaebb515a5357cbdc6da52b5b911bc4af7351))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 1.0.1 to 1.1.0
+
+## [1.3.7](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.6...openfeature-node-server-v1.3.7) (2026-08-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.13.0 to 9.13.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from ^9.0.0 to ^9.13.1
+
 ## [1.3.6](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v1.3.5...openfeature-node-server-v1.3.6) (2026-07-28)
 
 

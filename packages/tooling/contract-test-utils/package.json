@@ -49,8 +49,10 @@
     "build:adapter": "tsc -p tsconfig.adapter.json",
     "build:client": "tsc -p tsconfig.client.json",
     "build:server": "tsc -p tsconfig.server.json",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "lint:fix": "yarn run lint --fix",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "clean": "rimraf dist"
   },
   "dependencies": {
@@ -72,6 +74,8 @@
     "eslint-plugin-import-x": "^4.0.0",
     "eslint-plugin-jest": "^28.0.0",
     "globals": "^16.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "typescript": "^4.9.0",
     "typescript-eslint": "^8.0.0"
   }

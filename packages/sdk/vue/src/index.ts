@@ -22,6 +22,7 @@ export type {
   LDFlagValue,
   LDInspection,
   LDLogger,
+  LDPlugin,
   Hook,
   LDIdentifyOptions,
   LDIdentifyResult,

@@ -102,6 +102,16 @@ export interface SourceManager {
   /** Block all non-FDv1 synchronizers and unblock FDv1 synchronizers. */
   fdv1Fallback(): void;
 
+  /**
+   * Reverses {@link fdv1Fallback}: blocks all FDv1 fallback synchronizers and
+   * unblocks non-FDv1 synchronizers, then resets the synchronizer index so the
+   * next selection starts from the primary FDv2 synchronizer.
+   */
+  fdv2Recovery(): void;
+
+  /** True if the currently active synchronizer slot is an FDv1 fallback. */
+  readonly isCurrentSynchronizerFDv1Fallback: boolean;
+
   /** True if the current synchronizer is the first available (primary). */
   isPrimeSynchronizer(): boolean;
 
@@ -211,6 +221,17 @@ export function createSourceManager(
         slot.state = slot.isFDv1Fallback ? 'available' : 'blocked';
       });
       synchronizerIndex = -1;
+    },
+
+    fdv2Recovery() {
+      synchronizerSlots.forEach((slot) => {
+        slot.state = slot.isFDv1Fallback ? 'blocked' : 'available';
+      });
+      synchronizerIndex = -1;
+    },
+
+    get isCurrentSynchronizerFDv1Fallback(): boolean {
+      return synchronizerSlots[synchronizerIndex]?.isFDv1Fallback === true;
     },
 
     isPrimeSynchronizer(): boolean {

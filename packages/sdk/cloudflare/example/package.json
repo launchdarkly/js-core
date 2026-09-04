@@ -5,7 +5,7 @@
   "type": "module",
   "module": "./dist/index.mjs",
   "dependencies": {
-    "@launchdarkly/cloudflare-server-sdk": "2.7.30"
+    "@launchdarkly/cloudflare-server-sdk": "2.7.31"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",
@@ -16,6 +16,8 @@
     "eslint-plugin-import-x": "^4.0.0",
     "eslint-plugin-jest": "^28.0.0",
     "globals": "^16.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "playwright": "^1.49.1",
     "tsup": "^8.5.1",
     "typescript": "5.1.6",
@@ -26,7 +28,9 @@
     "build": "tsup",
     "start": "wrangler dev",
     "deploy": "wrangler deploy",
-    "lint": "eslint .",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "seed-kv": "wrangler kv key put --binding=LD_KV LD-Env-test-client-side-id --path ./src/testData.json --preview --local",
     "test": "yarn build && yarn seed-kv && playwright test",
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .yarn/cache && yarn build"

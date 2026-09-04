@@ -1,6 +1,7 @@
-import { algo as CryptoAlgo } from 'crypto-js';
-import Base64 from 'crypto-js/enc-base64';
-import Hex from 'crypto-js/enc-hex';
+import CryptoJS from 'crypto-js/core';
+import 'crypto-js/sha1';
+import 'crypto-js/sha256';
+import 'crypto-js/enc-base64';
 
 import { Hasher as LDHasher } from '@launchdarkly/js-server-sdk-common';
 
@@ -14,10 +15,10 @@ export default class CryptoJSHasher implements LDHasher {
 
     switch (algorithm) {
       case 'sha1':
-        algo = CryptoAlgo.SHA1;
+        algo = CryptoJS.algo.SHA1;
         break;
       case 'sha256':
-        algo = CryptoAlgo.SHA256;
+        algo = CryptoJS.algo.SHA256;
         break;
       default:
         throw new Error('unsupported hash algorithm. Only sha1 and sha256 are supported.');
@@ -32,10 +33,10 @@ export default class CryptoJSHasher implements LDHasher {
     let enc;
     switch (encoding) {
       case 'base64':
-        enc = Base64;
+        enc = CryptoJS.enc.Base64;
         break;
       case 'hex':
-        enc = Hex;
+        enc = CryptoJS.enc.Hex;
         break;
       default:
         throw new Error('unsupported output encoding. Only base64 and hex are supported.');

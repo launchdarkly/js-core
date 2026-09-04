@@ -34,7 +34,9 @@
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint",
     "prepublishOnly": "npm run package",
-    "lint": "eslint .",
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "check": "yarn lint && yarn build && yarn test",
     "test": "vitest run",
     "test:dev": "vitest dev",
@@ -46,7 +48,7 @@
     "svelte": "^4.0.0"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.9.4"
+    "@launchdarkly/js-client-sdk": "4.10.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
@@ -64,6 +66,8 @@
     "eslint-plugin-svelte": "^2.35.1",
     "globals": "^16.0.0",
     "jsdom": "^24.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "publint": "^0.1.9",
     "rimraf": "^5.0.5",
     "svelte": "^5.4.0",

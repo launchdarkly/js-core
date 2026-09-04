@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.20.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.20.0...js-server-sdk-common-v2.20.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* server sdk could send user agent headers under a different header name ([#1860](https://github.com/launchdarkly/js-core/issues/1860)) ([669662a](https://github.com/launchdarkly/js-core/commit/669662a304c10bcb2b683e0c7ea990f43679916b))
+
 ## [2.20.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.19.5...js-server-sdk-common-v2.20.0) (2026-07-28)
 
 

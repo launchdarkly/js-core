@@ -86,6 +86,22 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [2.0.30](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.29...akamai-edgeworker-sdk-common-v2.0.30) (2026-08-25)
+
+
+### Bug Fixes
+
+* **perf:** reduce Akamai CryptoJS bundle size ([#1877](https://github.com/launchdarkly/js-core/issues/1877)) ([0b3e1ec](https://github.com/launchdarkly/js-core/commit/0b3e1ec66ae1272733d4fc80d5bd82f8c9d1cf17))
+
+## [2.0.29](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.28...akamai-edgeworker-sdk-common-v2.0.29) (2026-08-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.20.0 to ^2.20.1
+
 ## [2.0.28](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.27...akamai-edgeworker-sdk-common-v2.0.28) (2026-07-28)
 
 

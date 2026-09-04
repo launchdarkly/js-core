@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-sdk",
-  "version": "4.1.12",
+  "version": "4.1.14",
   "description": "LaunchDarkly SDK for React frameworks",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
   "repository": {
@@ -20,7 +20,9 @@
     "clean": "rm -rf dist",
     "build": "tsup",
     "test": "npx jest --ci",
-    "lint": "eslint ."
+    "lint": "oxlint .",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
   },
   "type": "module",
   "exports": {
@@ -53,6 +55,8 @@
     "globals": "^16.0.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.0.0",
+    "oxfmt": "0.63.0",
+    "oxlint": "1.78.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tsup": "^8.5.1",
@@ -61,8 +65,8 @@
     "typescript-eslint": "^8.0.0"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "^4.9.4",
-    "@launchdarkly/js-server-sdk-common": "^2.20.0"
+    "@launchdarkly/js-client-sdk": "^4.10.0",
+    "@launchdarkly/js-server-sdk-common": "^2.20.1"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

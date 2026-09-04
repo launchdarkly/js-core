@@ -114,6 +114,10 @@ echo ""
 echo "=== Running test harness ==="
 cd "$TEST_HARNESS_PATH"
 
+# Only applies suppressions.txt (the FDv1 skip list). If SDK_TEST_HARNESS_PATH
+# points at a v3 (FDv2) harness checkout, the FDv2 scenarios this script runs
+# are not filtered by suppressions-fdv2.txt -- pass --skip-from manually with
+# that file (or a concatenation of both) if you need parity with CI's FDv2 run.
 SUPPRESSIONS="$SCRIPT_DIR/suppressions.txt"
 EXTRA_ARGS=""
 if [ -s "$SUPPRESSIONS" ]; then
