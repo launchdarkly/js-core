@@ -302,6 +302,13 @@ function constructFDv2(
   }
 
   const { logger } = config;
+
+  if (config.payloadFilterKey !== undefined) {
+    logger?.warn(
+      'Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests',
+    );
+  }
+
   const baseHeaders = defaultHeaders(
     sdkKey,
     platform.info,
