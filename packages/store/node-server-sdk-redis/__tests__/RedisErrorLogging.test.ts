@@ -40,8 +40,46 @@ it('logs at error level when the initialized check fails', (done) => {
   core.initialized((isInitialized) => {
     expect(isInitialized).toBe(false);
     expect(logger.error).toHaveBeenCalledWith(
-      'Error reading initialized state from Redis Error: connection refused',
+      'Error reading initialized state from Redis: Error: connection refused',
     );
+    done();
+  });
+});
+
+it('logs through the wrapper when a write fails', (done) => {
+  const { PersistentDataStoreWrapper: RealWrapper } = jest.requireActual(
+    '@launchdarkly/node-server-sdk',
+  );
+  const logger = makeLogger();
+  const fakeClient = {
+    watch: jest.fn(),
+    hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+      cb(null, null);
+    },
+    multi: () => ({
+      hset: jest.fn(),
+      discard: jest.fn(),
+      exec: (cb: (err: Error | null, replies: unknown) => void) => {
+        cb(new Error('Connection is closed.'), undefined);
+      },
+    }),
+  };
+  const state = {
+    prefixedKey: (key: string) => key,
+    isConnected: () => true,
+    isInitialConnection: () => false,
+    getClient: () => fakeClient,
+    close: jest.fn(),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state, logger);
+  const wrapper = new RealWrapper(core, 0, logger);
+
+  wrapper.upsert({ namespace: 'features' }, { key: 'flagA', version: 5 }, () => {
+    expect(logger.error).toHaveBeenCalledWith(
+      'Persistent store returned error: Connection is closed.',
+    );
+    wrapper.close();
     done();
   });
 });
@@ -59,5 +97,8 @@ it('passes the SDK logger to the persistent store wrapper', () => {
   expect(store).toBeDefined();
   const wrapperMock = PersistentDataStoreWrapper as unknown as jest.Mock;
   expect(wrapperMock).toHaveBeenCalledTimes(1);
-  expect(wrapperMock.mock.calls[0][2]).toBe(logger);
+  // The store wraps the logger, so verify the wrapper logger forwards to it.
+  const wrapperLogger: LDLogger = wrapperMock.mock.calls[0][2];
+  wrapperLogger.error('probe');
+  expect(logger.error).toHaveBeenCalledWith('probe');
 });

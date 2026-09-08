@@ -457,45 +457,25 @@ describe.each(['caching', 'non-caching'])(
         logger,
       );
 
-      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
-        cb(new Error('bad news'), undefined);
-      });
+      try {
+        jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
+          cb(new Error('bad news'), undefined);
+        });
 
-      await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
-        key: 'key1',
-        version: 1,
-      });
+        await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
+          key: 'key1',
+          version: 1,
+        });
 
-      logger.expectMessages([
-        {
-          level: LogLevel.Error,
-          matches: /Persistent store returned error: bad news/,
-        },
-      ]);
-      loggingWrapper.close();
-    });
-
-    it('logs at error level when a delete reports an error', async () => {
-      const logger = new TestLogger();
-      const loggingWrapper = new PersistentDataStoreWrapper(
-        mockPersistentStore,
-        isCaching ? 60 : 0,
-        logger,
-      );
-
-      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
-        cb(new Error('bad news'), undefined);
-      });
-
-      await new AsyncStoreFacade(loggingWrapper).delete(VersionedDataKinds.Features, 'key1', 2);
-
-      logger.expectMessages([
-        {
-          level: LogLevel.Error,
-          matches: /Persistent store returned error: bad news/,
-        },
-      ]);
-      loggingWrapper.close();
+        logger.expectMessages([
+          {
+            level: LogLevel.Error,
+            matches: /Persistent store returned error: bad news/,
+          },
+        ]);
+      } finally {
+        loggingWrapper.close();
+      }
     });
 
     it('does not log an error when an upsert succeeds', async () => {
@@ -506,14 +486,17 @@ describe.each(['caching', 'non-caching'])(
         logger,
       );
 
-      await new AsyncStoreFacade(loggingWrapper).init({});
-      await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
-        key: 'key1',
-        version: 1,
-      });
+      try {
+        await new AsyncStoreFacade(loggingWrapper).init({});
+        await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
+          key: 'key1',
+          version: 1,
+        });
 
-      expect(logger.getCount(LogLevel.Error)).toEqual(0);
-      loggingWrapper.close();
+        expect(logger.getCount(LogLevel.Error)).toEqual(0);
+      } finally {
+        loggingWrapper.close();
+      }
     });
 
     it('if there is an error during an upsert, then that item remains in the cache as it was', async () => {

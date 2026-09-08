@@ -1,4 +1,5 @@
 import {
+  createSafeLogger,
   interfaces,
   LDFeatureStore,
   LDFeatureStoreDataStorage,
@@ -21,10 +22,12 @@ export default class RedisFeatureStore implements LDFeatureStore {
   private _wrapper: PersistentDataStoreWrapper;
 
   constructor(options?: LDRedisOptions, logger?: LDLogger) {
+    // Wrap the logger so a failing logger cannot break store operations.
+    const actualLogger = logger ? createSafeLogger(logger) : undefined;
     this._wrapper = new PersistentDataStoreWrapper(
-      new RedisCore(new RedisClientState(options, logger), logger),
+      new RedisCore(new RedisClientState(options, actualLogger), actualLogger),
       TtlFromOptions(options),
-      logger,
+      actualLogger,
     );
   }
 

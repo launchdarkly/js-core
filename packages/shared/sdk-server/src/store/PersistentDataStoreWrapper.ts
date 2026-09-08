@@ -233,7 +233,13 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         persistKind.serialize(data),
         (err, updatedDescriptor) => {
           if (err) {
-            this._logger?.error(`Persistent store returned error: ${err.message}`);
+            try {
+              this._logger?.error(
+                `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
+              );
+            } catch {
+              // A logger failure must not stop the update queue.
+            }
           }
           if (!err && updatedDescriptor) {
             if (updatedDescriptor.serializedItem) {
