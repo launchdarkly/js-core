@@ -137,6 +137,13 @@ export function createFDv2DataManagerBase(
   } = baseConfig;
 
   const { logger } = config;
+
+  if (config.serviceEndpoints.payloadFilterKey !== undefined) {
+    logger?.warn(
+      `${logTag} Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests`,
+    );
+  }
+
   const statusManager: DataSourceStatusManager = createDataSourceStatusManager(emitter);
   const endpoints = fdv2Endpoints();
 
