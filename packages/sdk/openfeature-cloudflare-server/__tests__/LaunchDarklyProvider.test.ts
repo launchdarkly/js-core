@@ -91,7 +91,7 @@ describe('given a mock LaunchDarkly client', () => {
     expect(res).toMatchObject({
       flagKey: testFlagKey,
       value: true,
-      reason: 'OFF',
+      reason: 'DISABLED',
     });
   });
 
@@ -144,7 +144,7 @@ describe('given a mock LaunchDarkly client', () => {
     expect(res).toMatchObject({
       flagKey: testFlagKey,
       value: 'good',
-      reason: 'OFF',
+      reason: 'DISABLED',
     });
   });
 
@@ -197,7 +197,7 @@ describe('given a mock LaunchDarkly client', () => {
     expect(res).toMatchObject({
       flagKey: testFlagKey,
       value: 17,
-      reason: 'OFF',
+      reason: 'DISABLED',
     });
   });
 
@@ -250,7 +250,7 @@ describe('given a mock LaunchDarkly client', () => {
     expect(res).toMatchObject({
       flagKey: testFlagKey,
       value: { some: 'value' },
-      reason: 'OFF',
+      reason: 'DISABLED',
     });
   });
 
@@ -307,7 +307,7 @@ describe('given a mock LaunchDarkly client', () => {
       flagKey: testFlagKey,
       value: { yes: 'no' },
       variant: '22',
-      reason: 'OFF',
+      reason: 'DISABLED',
     });
   });
 

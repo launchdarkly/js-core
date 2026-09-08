@@ -129,7 +129,12 @@
           "path": "example/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/cloudflare-server-sdk']"
         },
-        "src/createPlatformInfo.ts"
+        "src/createPlatformInfo.ts",
+        {
+          "type": "json",
+          "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
+          "jsonpath": "$.devDependencies['@launchdarkly/cloudflare-server-sdk']"
+        }
       ]
     },
     "packages/sdk/fastly": {
@@ -409,7 +414,15 @@
         }
       ]
     },
-    "packages/shared/openfeature-server-common": {},
+    "packages/shared/openfeature-server-common": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/openfeature-js-server-common']"
+        }
+      ]
+    },
     "packages/sdk/openfeature-node-server": {
       "extra-files": [
         "src/LaunchDarklyProvider.ts",
@@ -419,6 +432,11 @@
           "jsonpath": "$.dependencies['@launchdarkly/openfeature-node-server']"
         }
       ]
+    },
+    "packages/sdk/openfeature-cloudflare-server": {
+      "bump-minor-pre-major": true,
+      "prerelease": true,
+      "prerelease-type": "beta"
     },
     "packages/sdk/vue": {
       "bump-minor-pre-major": true,
