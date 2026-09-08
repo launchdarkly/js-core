@@ -1,4 +1,12 @@
-import { parse, SemVer } from 'semver';
+/*
+ * We import the `semver/functions/parse` subpath instead of the package root to minimize
+ * package size for server SDKs. The `.js` extension is required: this package now
+ * compiles with `"module": "ESNext"` and `"moduleResolution": "bundler"`, and Node's own
+ * ESM resolver (unlike `require` or a bundler's resolution) does not probe for extensions
+ * on bare subpath specifiers, so the published ESM entry point fails to load without it.
+ */
+import type SemVer from 'semver/classes/semver';
+import parse from 'semver/functions/parse.js';
 
 import { TypeValidator, TypeValidators } from '@launchdarkly/js-sdk-common';
 
