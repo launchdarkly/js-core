@@ -5,6 +5,19 @@ import { EdgeFeatureStore } from '../../src/api/EdgeFeatureStore';
 import mockEdgeProvider from '../utils/mockEdgeProvider';
 import testData from './testData.json';
 
+const { reviveFullPayload: actualReviveFullPayload } = jest.requireActual<
+  typeof import('@launchdarkly/js-server-sdk-common-edge')
+>('@launchdarkly/js-server-sdk-common-edge');
+
+jest.mock('@launchdarkly/js-server-sdk-common-edge', () => {
+  const actual = jest.requireActual('@launchdarkly/js-server-sdk-common-edge');
+  return {
+    __esModule: true,
+    ...actual,
+    reviveFullPayload: jest.fn(),
+  };
+});
+
 describe('EdgeFeatureStore', () => {
   const sdkKey = 'sdkKey';
   const kvKey = `LD-Env-${sdkKey}`;
@@ -15,6 +28,10 @@ describe('EdgeFeatureStore', () => {
     debug: jest.fn(),
   };
   const mockGet = mockEdgeProvider.get as jest.Mock;
+  // The module mock above replaces this export with a shared `jest.fn`; the
+  // two tests below that care about call counts assert on it directly
+  // instead of installing a per-test spy.
+  const mockReviveFullPayload = edgeExports.reviveFullPayload as jest.Mock;
   let featureStore: LDFeatureStore;
   let asyncFeatureStore: AsyncStoreFacade;
 
@@ -22,6 +39,9 @@ describe('EdgeFeatureStore', () => {
     featureStore = new EdgeFeatureStore(mockEdgeProvider, sdkKey, 'MockEdgeProvider', mockLogger);
     asyncFeatureStore = new AsyncStoreFacade(featureStore);
     mockGet.mockImplementation(() => Promise.resolve(testData));
+    // `jest.resetAllMocks()` below strips this implementation after every
+    // test, so it must be re-established here rather than once at module load.
+    mockReviveFullPayload.mockImplementation(actualReviveFullPayload);
   });
 
   afterEach(() => {
@@ -63,19 +83,15 @@ describe('EdgeFeatureStore', () => {
     });
 
     test('get multiple flags with same payload', async () => {
-      const reviveSpy = jest.spyOn(edgeExports, 'reviveFullPayload');
-
       const flag1 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
       const flag2 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag2');
       const flag3 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag3');
 
       expect(mockGet).toHaveBeenCalledTimes(3);
-      expect(reviveSpy).toHaveBeenCalledTimes(1);
+      expect(mockReviveFullPayload).toHaveBeenCalledTimes(1);
       expect(flag1).toMatchObject(testData.flags.testFlag1);
       expect(flag2).toMatchObject(testData.flags.testFlag2);
       expect(flag3).toMatchObject(testData.flags.testFlag3);
-
-      reviveSpy.mockRestore();
     });
 
     test('get multiple flags with changing payload', async () => {
@@ -103,19 +119,15 @@ describe('EdgeFeatureStore', () => {
           flags: { ...testData.flags, testFlag3: { ...changedFlag3 } },
         }),
       );
-      const reviveSpy = jest.spyOn(edgeExports, 'reviveFullPayload');
-
       const flag1 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag1');
       const flag2 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag2');
       const flag3 = await asyncFeatureStore.get({ namespace: 'features' }, 'testFlag3');
 
       expect(mockGet).toHaveBeenCalledTimes(3);
-      expect(reviveSpy).toHaveBeenCalledTimes(3);
+      expect(mockReviveFullPayload).toHaveBeenCalledTimes(3);
       expect(flag1).toMatchObject(testData.flags.testFlag1);
       expect(flag2).toMatchObject(changedFlag2);
       expect(flag3).toMatchObject(changedFlag3);
-
-      reviveSpy.mockRestore();
     });
   });
 
