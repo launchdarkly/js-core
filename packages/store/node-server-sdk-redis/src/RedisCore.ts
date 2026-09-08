@@ -190,6 +190,9 @@ export default class RedisCore implements interfaces.PersistentDataStore {
 
   initialized(callback: (isInitialized: boolean) => void): void {
     this._state.getClient().exists(this._initedKey, (err, count) => {
+      if (err) {
+        this._logger?.error(`Error reading initialized state from Redis ${err}`);
+      }
       // Initialized if there is not an error and the key does exists.
       // (A count >= 1)
       callback(!!(!err && count));

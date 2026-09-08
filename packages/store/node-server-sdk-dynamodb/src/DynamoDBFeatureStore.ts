@@ -21,9 +21,12 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
   private _wrapper: PersistentDataStoreWrapper;
 
   constructor(tableName: string, options?: LDDynamoDBOptions, logger?: LDLogger) {
+    // Prefer the logger configured on the store options, then the SDK logger.
+    const actualLogger = options?.logger ?? logger;
     this._wrapper = new PersistentDataStoreWrapper(
-      new DynamoDBCore(tableName, new DynamoDBClientState(options), logger),
+      new DynamoDBCore(tableName, new DynamoDBClientState(options), actualLogger),
       TtlFromOptions(options),
+      actualLogger,
     );
   }
 

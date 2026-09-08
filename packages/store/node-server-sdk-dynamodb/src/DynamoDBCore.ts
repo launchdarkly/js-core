@@ -203,10 +203,15 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     ) => void,
   ) {
     const params = this._queryParamsForNamespace(kind.namespace);
-    const results = await this._state.query(params);
-    callback(
-      results.map((record) => ({ key: record!.key!.S!, item: this._unmarshalItem(record) })),
-    );
+    try {
+      const results = await this._state.query(params);
+      callback(
+        results.map((record) => ({ key: record!.key!.S!, item: this._unmarshalItem(record) })),
+      );
+    } catch (error) {
+      this._logger?.error(`Error reading ${kind.namespace}: ${error}`);
+      callback(undefined);
+    }
   }
 
   async upsert(

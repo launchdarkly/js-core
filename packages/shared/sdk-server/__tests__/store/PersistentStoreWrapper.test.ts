@@ -9,6 +9,7 @@ import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import PersistentDataStoreWrapper from '../../src/store/PersistentDataStoreWrapper';
 import { persistentStoreKinds } from '../../src/store/persistentStoreKinds';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
+import TestLogger, { LogLevel } from '../Logger';
 
 /**
  * Conditionally skip tests. Allows conditional tests within an describe.each.
@@ -446,6 +447,73 @@ describe.each(['caching', 'non-caching'])(
       // There are no exceptions or anything.
       const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
       expect(value).toBeNull();
+    });
+
+    it('logs at error level when an upsert reports an error', async () => {
+      const logger = new TestLogger();
+      const loggingWrapper = new PersistentDataStoreWrapper(
+        mockPersistentStore,
+        isCaching ? 60 : 0,
+        logger,
+      );
+
+      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
+        cb(new Error('bad news'), undefined);
+      });
+
+      await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
+        key: 'key1',
+        version: 1,
+      });
+
+      logger.expectMessages([
+        {
+          level: LogLevel.Error,
+          matches: /Persistent store returned error: bad news/,
+        },
+      ]);
+      loggingWrapper.close();
+    });
+
+    it('logs at error level when a delete reports an error', async () => {
+      const logger = new TestLogger();
+      const loggingWrapper = new PersistentDataStoreWrapper(
+        mockPersistentStore,
+        isCaching ? 60 : 0,
+        logger,
+      );
+
+      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
+        cb(new Error('bad news'), undefined);
+      });
+
+      await new AsyncStoreFacade(loggingWrapper).delete(VersionedDataKinds.Features, 'key1', 2);
+
+      logger.expectMessages([
+        {
+          level: LogLevel.Error,
+          matches: /Persistent store returned error: bad news/,
+        },
+      ]);
+      loggingWrapper.close();
+    });
+
+    it('does not log an error when an upsert succeeds', async () => {
+      const logger = new TestLogger();
+      const loggingWrapper = new PersistentDataStoreWrapper(
+        mockPersistentStore,
+        isCaching ? 60 : 0,
+        logger,
+      );
+
+      await new AsyncStoreFacade(loggingWrapper).init({});
+      await new AsyncStoreFacade(loggingWrapper).upsert(VersionedDataKinds.Features, {
+        key: 'key1',
+        version: 1,
+      });
+
+      expect(logger.getCount(LogLevel.Error)).toEqual(0);
+      loggingWrapper.close();
     });
 
     it('if there is an error during an upsert, then that item remains in the cache as it was', async () => {

@@ -1,3 +1,5 @@
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+
 import {
   DataKind,
   PersistentDataStore,
@@ -108,6 +110,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   constructor(
     private readonly _core: PersistentDataStore,
     ttl: number,
+    private readonly _logger?: LDLogger,
   ) {
     if (ttl) {
       this._itemCache = new TtlCache({
@@ -229,6 +232,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         data.key,
         persistKind.serialize(data),
         (err, updatedDescriptor) => {
+          if (err) {
+            this._logger?.error(`Persistent store returned error: ${err.message}`);
+          }
           if (!err && updatedDescriptor) {
             if (updatedDescriptor.serializedItem) {
               const value = deserialize(persistKind, updatedDescriptor);
