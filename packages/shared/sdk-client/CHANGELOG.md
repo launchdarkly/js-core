@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.2...js-client-sdk-common-v1.31.0) (2026-09-08)
+
+
+### Features
+
+* warn that payload filtering has no effect with FDv2 ([#1984](https://github.com/launchdarkly/js-core/issues/1984)) ([5e37aca](https://github.com/launchdarkly/js-core/commit/5e37aca49398ff01aa0c71b75d106699a1461cd3))
+
 ## [1.30.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.1...js-client-sdk-common-v1.30.2) (2026-08-06)
 
 
