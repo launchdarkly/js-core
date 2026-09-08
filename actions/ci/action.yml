@@ -31,6 +31,14 @@ runs:
       shell: bash
       run: yarn workspace ${{ inputs.workspace_name }} lint
 
+    - name: Format Check
+      shell: bash
+      # TODO: Most packages aren't reformatted to the new oxfmt style yet.
+      # continue-on-error keeps this step visible in CI without blocking merges
+      # until the repo-wide reformat lands incrementally. Remove once that's done.
+      continue-on-error: true
+      run: yarn workspace ${{ inputs.workspace_name }} format:check
+
     - name: Test
       shell: bash
       # Run just the tests for the targeted package.

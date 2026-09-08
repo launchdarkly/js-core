@@ -1,9 +1,14 @@
+// import/extensions appears to misfire on bare package specifiers here; revisit the rule config.
+// oxlint-disable-next-line import/extensions
 import bodyParser from 'body-parser';
+// oxlint-disable-next-line import/extensions
 import cors from 'cors';
 import { randomUUID } from 'crypto';
+// oxlint-disable-next-line import/extensions
 import express from 'express';
 import http from 'node:http';
 import util from 'node:util';
+// oxlint-disable-next-line import/extensions
 import { WebSocketServer } from 'ws';
 
 export interface AdapterOptions {
