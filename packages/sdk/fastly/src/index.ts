@@ -11,30 +11,38 @@
 /// <reference types="@fastly/js-compute" />
 import { KVStore } from 'fastly:kv-store';
 
-import { BasicLogger } from '@launchdarkly/js-server-sdk-common';
+import {
+  BasicLogger,
+  type BasicLoggerOptions,
+  type LDLogger,
+} from '@launchdarkly/js-server-sdk-common';
 
 import { EdgeFeatureStore, EdgeProvider, LDClient } from './api';
 import { DEFAULT_EVENTS_BACKEND_NAME } from './api/LDClient';
 import createPlatformInfo from './createPlatformInfo';
 import validateOptions, { FastlySDKOptions, LDOptionsCommon } from './utils/validateOptions';
 
-export {
-  BasicLogger,
-  type BasicLoggerOptions,
-  type LDClientContext,
-  type LDContext,
-  type LDEvaluationDetail,
-  type LDEvaluationDetailTyped,
-  type LDEvaluationReason,
-  type LDFlagValue,
-  type LDFlagsState,
-  type LDFlagsStateOptions,
-  type LDLogger,
-  type LDLogLevel,
-  type LDMultiKindContext,
-  type LDSingleKindContext,
-  type LDWaitForInitializationOptions,
+export type {
+  BasicLoggerOptions,
+  LDClientContext,
+  LDContext,
+  LDEvaluationDetail,
+  LDEvaluationDetailTyped,
+  LDEvaluationReason,
+  LDFlagValue,
+  LDFlagsState,
+  LDFlagsStateOptions,
+  LDLogger,
+  LDLogLevel,
+  LDMultiKindContext,
+  LDSingleKindContext,
+  LDWaitForInitializationOptions,
 } from '@launchdarkly/js-server-sdk-common';
+
+// BasicLogger stays available as a type so existing code keeps compiling.
+// The next major version removes it from the exports. Use basicLogger() to
+// create a logger.
+export type { BasicLogger };
 
 export type { EdgeProvider, FastlySDKOptions, KVStore, LDClient, LDOptionsCommon };
 
@@ -44,6 +52,32 @@ export type { EdgeProvider, FastlySDKOptions, KVStore, LDClient, LDOptionsCommon
  * It is the same type as {@link FastlySDKOptions}.
  */
 export type LDOptions = FastlySDKOptions;
+
+/**
+ * Provides a simple {@link LDLogger} implementation.
+ *
+ * This logging implementation uses a simple format that includes only the log level
+ * and the message text. Output is written to the standard error stream (`console.error`).
+ * You can filter by log level as described in {@link BasicLoggerOptions.level}.
+ *
+ * To use the logger created by this function, put it into {@link LDOptions.logger}. If
+ * you do not set {@link LDOptions.logger} to anything, the SDK uses a default logger
+ * that is equivalent to `basicLogger({ level: 'info' })`.
+ *
+ * @param options Configuration for the logger.
+ *
+ * @example
+ * This example shows how to use `basicLogger` in your SDK options to enable console
+ * logging only at `warn` and `error` levels.
+ * ```javascript
+ *   const ldOptions = {
+ *     logger: basicLogger({ level: 'warn' }),
+ *   };
+ * ```
+ */
+export function basicLogger(options: BasicLoggerOptions): LDLogger {
+  return new BasicLogger(options);
+}
 
 /**
  * Creates an instance of the Fastly LaunchDarkly client.

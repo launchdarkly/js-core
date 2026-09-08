@@ -1,14 +1,17 @@
 /// <reference types="@fastly/js-compute" />
-import { BasicLogger, init, LDContext, LDLogger, LDOptions } from '../src/index';
+import { basicLogger, init, LDContext, LDLogger, LDOptions } from '../src/index';
 
 // The index module imports the KV store type from the Fastly runtime.
 jest.mock('fastly:kv-store');
 
 describe('package exports', () => {
-  it('exports BasicLogger as a runtime value', () => {
-    expect(typeof BasicLogger).toBe('function');
-    const logger: LDLogger = new BasicLogger({ level: 'debug' });
+  it('exports a basicLogger factory that returns an LDLogger', () => {
+    expect(typeof basicLogger).toBe('function');
+    const logger: LDLogger = basicLogger({ level: 'debug' });
     expect(typeof logger.debug).toBe('function');
+    expect(typeof logger.info).toBe('function');
+    expect(typeof logger.warn).toBe('function');
+    expect(typeof logger.error).toBe('function');
   });
 
   it('exports init as a runtime value', () => {
@@ -19,7 +22,7 @@ describe('package exports', () => {
     // These assignments only compile when the types are exported.
     const context: LDContext = { kind: 'user', key: 'example-user-key', anonymous: true };
     const options: LDOptions = {
-      logger: new BasicLogger({ level: 'debug' }),
+      logger: basicLogger({ level: 'debug' }),
       eventsBackendName: 'launchdarkly',
     };
     expect(context.key).toBe('example-user-key');
