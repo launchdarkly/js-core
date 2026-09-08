@@ -20,7 +20,11 @@ import {
 import { EdgeFeatureStore, EdgeProvider, LDClient } from './api';
 import { DEFAULT_EVENTS_BACKEND_NAME } from './api/LDClient';
 import createPlatformInfo from './createPlatformInfo';
-import validateOptions, { FastlySDKOptions, LDOptionsCommon } from './utils/validateOptions';
+import validateOptions, {
+  FastlySDKOptions,
+  LDOptions,
+  LDOptionsCommon,
+} from './utils/validateOptions';
 
 export type {
   BasicLoggerOptions,
@@ -44,14 +48,7 @@ export type {
 // create a logger.
 export type { BasicLogger };
 
-export type { EdgeProvider, FastlySDKOptions, KVStore, LDClient, LDOptionsCommon };
-
-/**
- * The LaunchDarkly Fastly Compute SDK configuration options. This is the
- * name the other LaunchDarkly edge SDKs use for their options type.
- * It is the same type as {@link FastlySDKOptions}.
- */
-export type LDOptions = FastlySDKOptions;
+export type { EdgeProvider, FastlySDKOptions, KVStore, LDClient, LDOptions, LDOptionsCommon };
 
 /**
  * Provides a simple {@link LDLogger} implementation.
@@ -96,14 +93,14 @@ export function basicLogger(options: BasicLoggerOptions): LDLogger {
  * @param kvStore
  *  The Fastly KV store configured for LaunchDarkly.
  * @param options
- *  Optional {@link FastlySDKOptions | configuration settings}.
+ *  Optional {@link LDOptions | configuration settings}.
  * @return
  *  The new {@link LDClient} instance.
  */
 export const init = (
   clientSideId: string,
   kvStore: KVStore,
-  options: FastlySDKOptions = { eventsBackendName: DEFAULT_EVENTS_BACKEND_NAME },
+  options: LDOptions = { eventsBackendName: DEFAULT_EVENTS_BACKEND_NAME },
 ) => {
   const logger = options.logger ?? BasicLogger.get();
 
