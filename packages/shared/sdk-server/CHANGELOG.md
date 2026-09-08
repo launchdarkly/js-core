@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.21.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.20.1...js-server-sdk-common-v2.21.0) (2026-09-08)
+
+
+### Features
+
+* warn that payload filtering has no effect with FDv2 ([#1984](https://github.com/launchdarkly/js-core/issues/1984)) ([5e37aca](https://github.com/launchdarkly/js-core/commit/5e37aca49398ff01aa0c71b75d106699a1461cd3))
+
 ## [2.20.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.20.0...js-server-sdk-common-v2.20.1) (2026-08-18)
 
 
