@@ -11,6 +11,7 @@
     "customGroups": [{ "groupName": "launchdarkly", "elementNamePattern": ["@launchdarkly/**"] }]
   },
   "ignorePatterns": [
+    "packages/sdk/cloudflare/jsr.json",
     "**/fromExternal/**",
     "**/CHANGELOG.md",
     "packages/shared/common/__tests__/internal/json/testdata/**",
