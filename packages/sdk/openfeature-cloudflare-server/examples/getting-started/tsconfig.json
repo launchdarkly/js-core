@@ -1,16 +1,12 @@
 {
   "compilerOptions": {
     "target": "es2021",
-    "lib": [
-      "es2021"
-    ],
+    "lib": ["es2021"],
     "jsx": "react",
     "esModuleInterop": true,
     "module": "es2022",
     "moduleResolution": "node",
-    "types": [
-      "@cloudflare/workers-types"
-    ] ,
+    "types": ["@cloudflare/workers-types"],
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,

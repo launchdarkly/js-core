@@ -5,9 +5,12 @@ it('renders the flag value in white on the toggle-on background color', async ({
   await page.goto('/');
 
   // The seeded flag data in src/testData.json evaluates sample-feature to true.
-  await expect(page.locator('#flag-value')).toHaveText('The sample-feature feature flag evaluates to true.', {
-    timeout: 10_000,
-  });
+  await expect(page.locator('#flag-value')).toHaveText(
+    'The sample-feature feature flag evaluates to true.',
+    {
+      timeout: 10_000,
+    },
+  );
 
   // The message is displayed in #FFFFFF.
   await expect(page.locator('#flag-value')).toHaveCSS('color', 'rgb(255, 255, 255)');
