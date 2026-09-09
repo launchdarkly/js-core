@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.23](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.22...fastly-server-sdk-v0.2.23) (2026-09-09)
+
+
+### Bug Fixes
+
+* Export BasicLogger, LDContext, and LDOptions from the Fastly SDK ([#1987](https://github.com/launchdarkly/js-core/issues/1987)) ([f5c3170](https://github.com/launchdarkly/js-core/commit/f5c3170469c8aee4d821f163116eb11492ce1999))
+
 ## [0.2.22](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.21...fastly-server-sdk-v0.2.22) (2026-09-08)
 
 
