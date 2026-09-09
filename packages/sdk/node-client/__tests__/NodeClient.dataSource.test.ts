@@ -1,8 +1,8 @@
 import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 import { createClient } from '../src';
-import NodeDataManager from '../src/NodeDataManager';
 import { NodeClient } from '../src/NodeClient';
+import NodeDataManager from '../src/NodeDataManager';
 import { makeMockPlatform, mockFetch } from './NodeClient.mocks';
 
 // Replace NodePlatform's constructor with one that returns the mock platform. Lets us

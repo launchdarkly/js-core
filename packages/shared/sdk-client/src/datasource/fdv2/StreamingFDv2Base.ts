@@ -14,6 +14,11 @@ import {
 import { processFlagEval } from '../flagEvalMapper';
 import { createAsyncQueue } from './AsyncQueue';
 import {
+  FallbackDirective,
+  readFallbackDirective,
+  readGoodbyeFallbackDirective,
+} from './fallbackDirective';
+import {
   changeSet,
   errorInfoFromHttpError,
   errorInfoFromInvalidData,
@@ -25,11 +30,6 @@ import {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
-import {
-  FallbackDirective,
-  readFallbackDirective,
-  readGoodbyeFallbackDirective,
-} from './fallbackDirective';
 
 /**
  * Handler invoked when a legacy `"ping"` event is received on the stream.

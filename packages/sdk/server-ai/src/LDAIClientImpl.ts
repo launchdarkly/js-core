@@ -3,8 +3,6 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedAgent } from './api/ManagedAgent';
-import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -26,6 +24,8 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge, stripLegacyJudgeMessages } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
+import { ManagedAgent } from './api/ManagedAgent';
+import { ManagedModel } from './api/ManagedModel';
 import { RunnerFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';

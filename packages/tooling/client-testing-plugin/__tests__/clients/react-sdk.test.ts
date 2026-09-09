@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { createTestClient, createTestClientProvider } from '../../src/clients/react-sdk';
 import TestData from '../../src/TestData';
 

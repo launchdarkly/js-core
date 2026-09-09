@@ -1,8 +1,8 @@
-import { ManagedAgent } from '../src/api/ManagedAgent';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAIAgentConfig } from '../src/api/config/types';
 import { Evaluator } from '../src/api/judge/Evaluator';
 import { LDJudgeResult } from '../src/api/judge/types';
+import { ManagedAgent } from '../src/api/ManagedAgent';
 import { RunnerResult } from '../src/api/model/types';
 import { Runner } from '../src/api/providers/Runner';
 

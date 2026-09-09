@@ -1,5 +1,6 @@
-import type { LDContext } from '@launchdarkly/js-client-sdk';
 import type { App } from 'vue';
+
+import type { LDContext } from '@launchdarkly/js-client-sdk';
 
 import type { LDVueProviderOptions } from './client/LDOptions';
 import { createClient } from './client/LDVueClient';

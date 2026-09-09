@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { render, screen } from '@testing-library/react-native';
 
 import { mockFlags, resetLDMocks } from '@launchdarkly/jest/react-native';

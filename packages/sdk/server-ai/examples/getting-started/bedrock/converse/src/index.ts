@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 import {
   BedrockRuntimeClient,
   ConverseCommand,

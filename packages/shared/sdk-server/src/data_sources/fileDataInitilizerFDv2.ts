@@ -12,8 +12,8 @@ import { FileSystemDataSourceConfiguration } from '../api';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
-import FileLoader from './FileLoader';
 import { makeFlagWithValue } from './FileDataSource';
+import FileLoader from './FileLoader';
 
 /**
  * Loads flag/segment data from one or more files. Each file may contain `flags`

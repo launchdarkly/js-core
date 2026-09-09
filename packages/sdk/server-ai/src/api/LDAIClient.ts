@@ -1,7 +1,5 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedAgent } from './ManagedAgent';
-import { ManagedModel } from './ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -14,6 +12,8 @@ import {
 } from './config';
 import { AgentGraphDefinition, LDGraphTracker } from './graph';
 import { Judge } from './judge/Judge';
+import { ManagedAgent } from './ManagedAgent';
+import { ManagedModel } from './ManagedModel';
 import { SupportedAIProvider } from './providers';
 
 /**

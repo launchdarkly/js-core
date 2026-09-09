@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
 import { useBoolVariation, useInitializationStatus, useLDClient } from '../src/client/composables';

@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+
 import { LDVuePlugin } from '@launchdarkly/vue-client-sdk';
 
 import App from './App.vue';

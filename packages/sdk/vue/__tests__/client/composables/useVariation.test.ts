@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import type { LDVueClient } from '../../../src/client/LDClient';
+
 import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Component } from 'vue';
 
@@ -11,6 +11,7 @@ import {
   useNumberVariation,
   useStringVariation,
 } from '../../../src/client/composables';
+import type { LDVueClient } from '../../../src/client/LDClient';
 import { createLDProviderWithClient } from '../../../src/client/provider/LDProvider';
 import { makeMockClient } from '../mockClient';
 

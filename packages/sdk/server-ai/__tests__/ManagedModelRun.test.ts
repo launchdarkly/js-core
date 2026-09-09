@@ -1,8 +1,8 @@
-import { ManagedModel } from '../src/api/ManagedModel';
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAICompletionConfig } from '../src/api/config/types';
 import { Evaluator } from '../src/api/judge/Evaluator';
 import { LDJudgeResult } from '../src/api/judge/types';
+import { ManagedModel } from '../src/api/ManagedModel';
 import { RunnerResult } from '../src/api/model/types';
 import { Runner } from '../src/api/providers/Runner';
 

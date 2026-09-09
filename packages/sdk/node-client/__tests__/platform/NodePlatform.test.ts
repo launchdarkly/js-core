@@ -2,9 +2,9 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
-import { createMockLogger } from '../testHelpers';
-import { resetNodeStorage } from '../../src/platform/NodeStorage';
 import NodePlatform from '../../src/platform/NodePlatform';
+import { resetNodeStorage } from '../../src/platform/NodeStorage';
+import { createMockLogger } from '../testHelpers';
 
 let tmpRoot: string;
 let logger: ReturnType<typeof createMockLogger>;

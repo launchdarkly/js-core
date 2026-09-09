@@ -1,10 +1,19 @@
 {
   "singleQuote": true,
+  "printWidth": 100,
   "sortPackageJson": false,
+  "sortImports": {
+    "groups": [
+      ["builtin", "external"],
+      "launchdarkly",
+      ["internal", "subpath", "parent", "sibling", "index", "unknown"]
+    ],
+    "customGroups": [{ "groupName": "launchdarkly", "elementNamePattern": ["@launchdarkly/**"] }]
+  },
   "ignorePatterns": [
     "**/fromExternal/**",
     "**/CHANGELOG.md",
-    "packages/shared/common/__tests__/internal/json/testdata/output/**",
+    "packages/shared/common/__tests__/internal/json/testdata/**",
     "packages/sdk/akamai-edgekv/src/edgekv/**",
     "packages/shared/common/src/utils/fast-deep-equal/**"
   ]

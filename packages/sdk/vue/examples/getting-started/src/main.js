@@ -1,5 +1,6 @@
-import { createLDProvider } from '@launchdarkly/vue-client-sdk';
 import { createApp, h } from 'vue';
+
+import { createLDProvider } from '@launchdarkly/vue-client-sdk';
 
 import App from './App.vue';
 

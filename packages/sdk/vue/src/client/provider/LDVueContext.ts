@@ -1,5 +1,6 @@
-import type { LDContextStrict } from '@launchdarkly/js-client-sdk';
 import { ref, type InjectionKey } from 'vue';
+
+import type { LDContextStrict } from '@launchdarkly/js-client-sdk';
 
 import type { InitializedState, LDVueClient, LDVueInstance } from '../LDClient';
 

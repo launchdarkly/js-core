@@ -15,6 +15,7 @@
  *   you need to configure the client further before calling `client.start()`,
  *   or when you need to call `createLDReactProviderWithClient` yourself.
  */
+
 import '@testing-library/jest-dom';
 import { act, render, screen } from '@testing-library/react';
 

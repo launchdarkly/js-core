@@ -5,10 +5,10 @@ import * as path from 'path';
 import type { Response } from '@launchdarkly/js-client-sdk-common';
 
 import { createClient } from '../src';
-import { resetNodeStorage } from '../src/platform/NodeStorage';
 import NodeCrypto from '../src/platform/NodeCrypto';
 import NodeEncoding from '../src/platform/NodeEncoding';
 import NodeInfo from '../src/platform/NodeInfo';
+import { resetNodeStorage } from '../src/platform/NodeStorage';
 import { createMockLogger } from './testHelpers';
 
 function mockResponse(value: string, statusCode: number) {

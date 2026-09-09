@@ -8,8 +8,8 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
-import type { LDTLSOptions, NodeOptions } from './NodeOptions';
 import type { LDPlugin } from './LDPlugin';
+import type { LDTLSOptions, NodeOptions } from './NodeOptions';
 
 class ConnectionModeValidator implements TypeValidator {
   is(u: unknown): u is ConnectionMode {

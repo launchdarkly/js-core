@@ -1,5 +1,6 @@
-import type { LDOptions, LDStartOptions } from '@launchdarkly/js-client-sdk';
 import type { InjectionKey } from 'vue';
+
+import type { LDOptions, LDStartOptions } from '@launchdarkly/js-client-sdk';
 
 import type { LDVueInstance } from './LDClient';
 
