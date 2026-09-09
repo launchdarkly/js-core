@@ -7,6 +7,7 @@
  * This demonstrates the exact usage pattern that library consumers would use
  * when writing unit tests for their applications.
  */
+
 import { createClient } from '@launchdarkly/js-client-sdk';
 
 import { TestData } from '../../src/index';

@@ -1,6 +1,6 @@
-import type { LDFlagValue } from '@launchdarkly/js-client-sdk-common';
 import type { LDClient, LDContext, LDOptions } from '@launchdarkly/js-client-sdk';
 import { createClient } from '@launchdarkly/js-client-sdk';
+import type { LDFlagValue } from '@launchdarkly/js-client-sdk-common';
 
 import TestData from '../TestData';
 

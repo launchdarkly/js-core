@@ -1,7 +1,4 @@
-import {
-  LDAIAgentConfig,
-  LDAICompletionConfig,
-} from '../src/api/config/types';
+import { LDAIAgentConfig, LDAICompletionConfig } from '../src/api/config/types';
 import { AIProvider, ToolRegistry } from '../src/api/providers/AIProvider';
 import { AgentGraphRunner, Runner } from '../src/api/providers/Runner';
 import { RunnerFactory, SupportedAIProvider } from '../src/api/providers/RunnerFactory';
@@ -83,7 +80,11 @@ describe('RunnerFactory.createModel', () => {
       .spyOn(RunnerFactory as any, '_getProviderFactory')
       .mockResolvedValue(mockFactory);
 
-    await RunnerFactory.createModel(makeConfig('langchain'), undefined, 'openai' as SupportedAIProvider);
+    await RunnerFactory.createModel(
+      makeConfig('langchain'),
+      undefined,
+      'openai' as SupportedAIProvider,
+    );
 
     // _getProviderFactory should only have been called once, with 'openai'
     expect(getProviderSpy).toHaveBeenCalledTimes(1);
@@ -267,11 +268,7 @@ describe('RunnerFactory.createAgentGraph', () => {
 
     jest.spyOn(RunnerFactory as any, '_getProviderFactory').mockResolvedValue(undefined);
 
-    const result = await RunnerFactory.createAgentGraph(
-      graphDef,
-      undefined,
-      logger as any,
-    );
+    const result = await RunnerFactory.createAgentGraph(graphDef, undefined, logger as any);
 
     expect(result).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('AgentGraphRunner'));

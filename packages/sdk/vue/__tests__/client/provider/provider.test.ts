@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { mount } from '@vue/test-utils';
 import { h, nextTick } from 'vue';
 
@@ -55,7 +56,9 @@ it('renders the #failed slot with the error when initialization fails', async ()
 it('mounts without crashing when getContext() throws during setup', () => {
   const { client } = makeMockClient();
   // @ts-ignore -- simulates a context with a circular reference that clone() would throw on
-  client.getContext = jest.fn(() => { throw new Error('circular reference'); });
+  client.getContext = jest.fn(() => {
+    throw new Error('circular reference');
+  });
 
   const Provider = createLDProviderWithClient(client);
   expect(() => mount(Provider, { slots: { default: () => h('div', 'app') } })).not.toThrow();

@@ -8,12 +8,12 @@ This is a **internal** package used only within this monorepo. We do not have an
 
 The package uses subpath exports to organize code by platform:
 
-| Import Path | Contents | Resolution |
-|---|---|---|
-| `@launchdarkly/js-contract-test-utils` | Universal types, logging, `ClientPool` | Source `.ts` (for bundlers) |
-| `@launchdarkly/js-contract-test-utils/adapter` | `startAdapter()`, `AdapterOptions` | Compiled `.js` |
-| `@launchdarkly/js-contract-test-utils/client` | Client-side `TestHook` | Source `.ts` (for bundlers) |
-| `@launchdarkly/js-contract-test-utils/server` | Server-side `ServerSideTestHook`, `ServerSDKConfigParams` | Compiled `.js` |
+| Import Path                                    | Contents                                                  | Resolution                  |
+| ---------------------------------------------- | --------------------------------------------------------- | --------------------------- |
+| `@launchdarkly/js-contract-test-utils`         | Universal types, logging, `ClientPool`                    | Source `.ts` (for bundlers) |
+| `@launchdarkly/js-contract-test-utils/adapter` | `startAdapter()`, `AdapterOptions`                        | Compiled `.js`              |
+| `@launchdarkly/js-contract-test-utils/client`  | Client-side `TestHook`                                    | Source `.ts` (for bundlers) |
+| `@launchdarkly/js-contract-test-utils/server`  | Server-side `ServerSideTestHook`, `ServerSDKConfigParams` | Compiled `.js`              |
 
 ## Adapter (`"./adapter"`)
 

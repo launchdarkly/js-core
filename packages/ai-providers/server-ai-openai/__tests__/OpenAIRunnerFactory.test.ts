@@ -43,7 +43,10 @@ describe('OpenAIRunnerFactory', () => {
     });
 
     it('builds a model runner from a minimal config', async () => {
-      const runner = await factory.createModel({ key: 'completion', enabled: true } as unknown as LDAICompletionConfig);
+      const runner = await factory.createModel({
+        key: 'completion',
+        enabled: true,
+      } as unknown as LDAICompletionConfig);
       expect(runner).toBeInstanceOf(OpenAIModelRunner);
     });
   });
@@ -125,7 +128,9 @@ describe('OpenAIRunnerFactory', () => {
         key: 'agent',
         enabled: true,
         model: { name: 'gpt-4o' },
-        tools: { missing: { name: 'missing', description: 'not provided', parameters: { type: 'object' } } },
+        tools: {
+          missing: { name: 'missing', description: 'not provided', parameters: { type: 'object' } },
+        },
         instructions: '',
       } as unknown as LDAIAgentConfig;
 

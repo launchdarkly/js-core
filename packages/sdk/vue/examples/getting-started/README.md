@@ -39,6 +39,7 @@ This demo requires Node.js v18 or later.
    ```
 
    You should see the message:
+
    > "The sample-feature feature flag evaluates to false."
 
 The application will run continuously and react to flag changes in LaunchDarkly: the background turns green (#00844B) when the flag evaluates to true and dark gray (#373841) when it evaluates to false.

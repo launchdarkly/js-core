@@ -60,7 +60,9 @@ it('track() sends a custom event over HTTP after flush', async () => {
   client.track('eventkey', { thing: 'stuff' }, 42);
   await client.flush();
 
-  const analyticsCall = fetchMock.mock.calls.find(([url]: [string]) => url.includes('/events/bulk/'));
+  const analyticsCall = fetchMock.mock.calls.find(([url]: [string]) =>
+    url.includes('/events/bulk/'),
+  );
   expect(analyticsCall).toBeDefined();
 
   const body = JSON.parse(analyticsCall![1].body);
@@ -153,7 +155,9 @@ it('includes authorization and user-agent headers on the events request', async 
   client.track('hello');
   await client.flush();
 
-  const analyticsCall = fetchMock.mock.calls.find(([url]: [string]) => url.includes('/events/bulk/'));
+  const analyticsCall = fetchMock.mock.calls.find(([url]: [string]) =>
+    url.includes('/events/bulk/'),
+  );
   expect(analyticsCall).toBeDefined();
 
   const headers = analyticsCall![1].headers;

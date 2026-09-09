@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { createApp, defineComponent, h, nextTick } from 'vue';
 
 import { useBoolVariation, useInitializationStatus, useLDClient } from '../src/client/composables';
@@ -61,7 +62,11 @@ it('does not start the client when deferInitialization is true', () => {
   const { client } = makeMockClient();
   createClientMock.mockReturnValue(client);
 
-  makeApp({ clientSideID: 'env-id', context: { kind: 'user', key: 'k' }, deferInitialization: true });
+  makeApp({
+    clientSideID: 'env-id',
+    context: { kind: 'user', key: 'k' },
+    deferInitialization: true,
+  });
 
   expect(client.start).not.toHaveBeenCalled();
 });
@@ -133,7 +138,11 @@ it('provides via a custom injection key when specified', () => {
   });
 
   const app = createApp(Child);
-  app.use(LDVuePlugin, { clientSideID: 'env-id', context: { kind: 'user', key: 'k' }, injectionKey: key });
+  app.use(LDVuePlugin, {
+    clientSideID: 'env-id',
+    context: { kind: 'user', key: 'k' },
+    injectionKey: key,
+  });
   app.mount(document.createElement('div'));
 
   expect(injected).toBe(client);

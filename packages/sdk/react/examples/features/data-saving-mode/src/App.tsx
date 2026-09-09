@@ -1,10 +1,6 @@
 import { useState } from 'react';
 
-import {
-  useBoolVariation,
-  useInitializationStatus,
-  useLDClient,
-} from '@launchdarkly/react-sdk';
+import { useBoolVariation, useInitializationStatus, useLDClient } from '@launchdarkly/react-sdk';
 import type { FDv2ConnectionMode, LDContext } from '@launchdarkly/react-sdk';
 
 import './App.css';

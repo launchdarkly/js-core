@@ -1,6 +1,7 @@
 import { internal, isHttpRecoverable, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { processFlagEval } from '../flagEvalMapper';
+import { FallbackDirective, readFallbackDirective } from './fallbackDirective';
 import { FDv2Requestor } from './FDv2Requestor';
 import {
   changeSet,
@@ -13,7 +14,6 @@ import {
   interrupted,
   terminalError,
 } from './FDv2SourceResult';
-import { FallbackDirective, readFallbackDirective } from './fallbackDirective';
 
 function getEnvironmentId(headers: { get(name: string): string | null }): string | undefined {
   return headers.get('x-ld-envid') ?? undefined;

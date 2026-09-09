@@ -1,6 +1,7 @@
 <script setup>
-import { useBoolVariation, useInitializationStatus } from '@launchdarkly/vue-client-sdk';
 import { computed } from 'vue';
+
+import { useBoolVariation, useInitializationStatus } from '@launchdarkly/vue-client-sdk';
 
 // Set flagKey to the feature flag key you want to evaluate.
 const flagKey = import.meta.env.LAUNCHDARKLY_FLAG_KEY || 'sample-feature';

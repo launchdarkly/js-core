@@ -12,7 +12,9 @@
 
     <section>
       <h2>Connection mode</h2>
-      <p>Current: <strong>{{ mode }}</strong></p>
+      <p>
+        Current: <strong>{{ mode }}</strong>
+      </p>
       <div class="buttons">
         <button v-for="m in CONNECTION_MODES" :key="m" @click="onSetConnectionMode(m)">
           {{ m }}
@@ -23,7 +25,9 @@
 
     <section>
       <h2>Streaming</h2>
-      <p>Current: <strong>{{ streaming }}</strong></p>
+      <p>
+        Current: <strong>{{ streaming }}</strong>
+      </p>
       <div class="buttons">
         <button @click="onSetStreaming(true)">setStreaming(true)</button>
         <button @click="onSetStreaming(false)">setStreaming(false)</button>
@@ -33,7 +37,9 @@
 
     <section>
       <h2>Context</h2>
-      <p>Current: <code>{{ JSON.stringify(CONTEXTS[contextIndex]) }}</code></p>
+      <p>
+        Current: <code>{{ JSON.stringify(CONTEXTS[contextIndex]) }}</code>
+      </p>
       <div class="buttons">
         <button @click="onSwitchContext">Switch context (identify)</button>
       </div>

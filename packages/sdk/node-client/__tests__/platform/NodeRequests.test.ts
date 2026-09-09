@@ -79,9 +79,7 @@ describe('given a running HTTP server', () => {
     });
 
     const requests = new NodeRequests();
-    await expect(requests.fetch(server.url, { timeout: 50 })).rejects.toThrow(
-      /Request timed out/,
-    );
+    await expect(requests.fetch(server.url, { timeout: 50 })).rejects.toThrow(/Request timed out/);
   });
 
   it('requests gzip on GET requests by default', async () => {

@@ -1,9 +1,9 @@
 import { LDContext } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from './api/config';
-import { LDAIMetricSummary } from './api/model/types';
 import { LDJudgeResult } from './api/judge/types';
 import { LDAIMetrics, LDFeedbackKind, LDTokenUsage } from './api/metrics';
+import { LDAIMetricSummary } from './api/model/types';
 import { LDClientMin } from './LDClientMin';
 
 export class LDAIConfigTrackerImpl implements LDAIConfigTracker {

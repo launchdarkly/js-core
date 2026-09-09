@@ -1,5 +1,4 @@
 import * as http from 'http';
-
 import {
   AsyncQueue,
   SSEItem,

@@ -110,7 +110,7 @@ export class NodeClient extends LDClientImpl {
               if (useMobileKey) {
                 // Mobile mode authenticates via Authorization header, not query params.
                 if ((identifyOptions as NodeIdentifyOptions | undefined)?.hash) {
-                  logger.warn('[NodeClient] \'hash\' is ignored in mobile key mode.');
+                  logger.warn("[NodeClient] 'hash' is ignored in mobile key mode.");
                 }
                 return [];
               }

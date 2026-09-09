@@ -126,10 +126,7 @@ export class CompositeDataSource implements DataSource {
           // through the sanitizer, cancels any pending scheduled transition, and resolves
           // a switchToSync transition. The directive is one-way; the engagement flag is
           // checked by the callers so we don't re-enter this branch on repeated signals.
-          const engageFDv1Fallback = (
-            statusToReport: DataSourceState,
-            err: unknown,
-          ) => {
+          const engageFDv1Fallback = (statusToReport: DataSourceState, err: unknown) => {
             if (this._fdv1Synchronizers.length() > 0) {
               this._logger?.warn(`Falling back to FDv1`);
             } else {

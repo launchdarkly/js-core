@@ -40,13 +40,11 @@ When retrieving AI configurations, you need to provide default values that will 
 ```typescript
 const defaultConfig = {
   enabled: true,
-  model: { 
+  model: {
     name: 'gpt-4',
-    parameters: { temperature: 0.7, maxTokens: 1000 }
+    parameters: { temperature: 0.7, maxTokens: 1000 },
   },
-  messages: [
-    { role: 'system', content: 'You are a helpful assistant.' }
-  ]
+  messages: [{ role: 'system', content: 'You are a helpful assistant.' }],
 };
 ```
 
@@ -63,7 +61,7 @@ const aiConfig = await aiClient.completionConfig(
   aiConfigKey,
   context,
   defaultConfig,
-  { myVariable: 'My User Defined Variable' } // Variables for template interpolation
+  { myVariable: 'My User Defined Variable' }, // Variables for template interpolation
 );
 
 // Ensure configuration is enabled
@@ -86,12 +84,9 @@ if (aiConfig.enabled) {
 
 ```typescript
 // Use the same defaultConfig from the retrieval section above
-const model = await aiClient.createModel(
-  'customer-support-chat',
-  context,
-  defaultConfig,
-  { customerName: 'John' }
-);
+const model = await aiClient.createModel('customer-support-chat', context, defaultConfig, {
+  customerName: 'John',
+});
 
 if (model) {
   // Metrics are automatically tracked by run()
@@ -121,7 +116,7 @@ const llm = await LangChainProvider.createLangChainModel(aiConfig);
 // Use with tracking
 const response = await aiConfig.tracker.trackMetricsOf(
   LangChainProvider.getAIMetricsFromResponse,
-  () => llm.invoke(messages)
+  () => llm.invoke(messages),
 );
 
 console.log('AI Response:', response.content);
@@ -141,17 +136,16 @@ const mapCustomProviderMetrics = (response: any): LDAIMetrics => ({
     total: response.usage?.total_tokens || 0,
     input: response.usage?.prompt_tokens || 0,
     output: response.usage?.completion_tokens || 0,
-  }
+  },
 });
 
 // Use with custom provider and tracking
-const result = await aiConfig.tracker.trackMetricsOf(
-  mapCustomProviderMetrics,
-  () => customProvider.generate({
+const result = await aiConfig.tracker.trackMetricsOf(mapCustomProviderMetrics, () =>
+  customProvider.generate({
     messages: aiConfig.messages || [],
     model: aiConfig.model?.name || 'custom-model',
     temperature: aiConfig.model?.parameters?.temperature ?? 0.5,
-  })
+  }),
 );
 
 console.log('AI Response:', result.content);

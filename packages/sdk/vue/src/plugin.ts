@@ -1,5 +1,6 @@
-import type { LDContext } from '@launchdarkly/js-client-sdk';
 import type { App } from 'vue';
+
+import type { LDContext } from '@launchdarkly/js-client-sdk';
 
 import type { LDVueProviderOptions } from './client/LDOptions';
 import { createClient } from './client/LDVueClient';
@@ -47,8 +48,15 @@ export interface LDVuePluginOptions extends LDVueProviderOptions {
  */
 export const LDVuePlugin = {
   install(app: App, options: LDVuePluginOptions) {
-    const { clientSideID, context, deferInitialization, startOptions, ldOptions, bootstrap, injectionKey } =
-      options;
+    const {
+      clientSideID,
+      context,
+      deferInitialization,
+      startOptions,
+      ldOptions,
+      bootstrap,
+      injectionKey,
+    } = options;
 
     const client = createClient(clientSideID, context, ldOptions);
 
