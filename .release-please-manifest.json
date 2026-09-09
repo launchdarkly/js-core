@@ -6,7 +6,6 @@
   "packages/sdk/akamai-edgekv": "1.4.35",
   "packages/sdk/browser": "4.10.1",
   "packages/sdk/cloudflare": "2.7.34",
-  "packages/sdk/combined-browser": "0.1.33",
   "packages/sdk/fastly": "0.2.24",
   "packages/sdk/node-client": "4.1.1",
   "packages/sdk/react-native": "10.20.1",

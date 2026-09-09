@@ -59,7 +59,6 @@
     "packages/sdk/server-ai/examples/features/create-agent",
     "packages/sdk/server-ai/examples/features/create-agent-graph",
     "packages/sdk/server-ai/examples/features/create-judge",
-    "packages/sdk/combined-browser",
     "packages/sdk/shopify-oxygen",
     "packages/sdk/shopify-oxygen/contract-tests",
     "packages/sdk/shopify-oxygen/example",

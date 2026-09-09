@@ -369,9 +369,6 @@
         }
       ]
     },
-    "packages/sdk/combined-browser": {
-      "bump-minor-pre-major": true
-    },
     "packages/sdk/react": {
       "extra-files": [
         "src/client/LDReactClient.tsx",
