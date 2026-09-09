@@ -21,6 +21,13 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.7.33](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.32...cloudflare-server-sdk-v2.7.33) (2026-09-09)
+
+
+### Bug Fixes
+
+* Export LDMigrationError and LDMigrationTracker from the Cloudflare SDK ([#1988](https://github.com/launchdarkly/js-core/issues/1988)) ([33c5433](https://github.com/launchdarkly/js-core/commit/33c5433b44ff3664698d669ce8543dbaeedb42e6))
+
 ## [2.7.32](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.31...cloudflare-server-sdk-v2.7.32) (2026-09-08)
 
 

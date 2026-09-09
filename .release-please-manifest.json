@@ -5,9 +5,9 @@
   "packages/sdk/akamai-base": "3.0.32",
   "packages/sdk/akamai-edgekv": "1.4.34",
   "packages/sdk/browser": "4.10.1",
-  "packages/sdk/cloudflare": "2.7.32",
+  "packages/sdk/cloudflare": "2.7.33",
   "packages/sdk/combined-browser": "0.1.33",
-  "packages/sdk/fastly": "0.2.22",
+  "packages/sdk/fastly": "0.2.23",
   "packages/sdk/node-client": "4.1.1",
   "packages/sdk/react-native": "10.20.1",
   "packages/sdk/server-ai": "2.0.2",
@@ -28,5 +28,5 @@
   "packages/sdk/react": "4.1.15",
   "packages/sdk/openfeature-node-server": "2.0.1",
   "packages/sdk/vue": "0.2.3",
-  "packages/sdk/openfeature-cloudflare-server": "0.1.2"
+  "packages/sdk/openfeature-cloudflare-server": "0.1.3"
 }
