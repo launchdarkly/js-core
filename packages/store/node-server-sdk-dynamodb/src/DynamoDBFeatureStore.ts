@@ -23,9 +23,8 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
 
   constructor(tableName: string, options?: LDDynamoDBOptions, logger?: LDLogger) {
     // Prefer the logger configured on the store options, then the SDK logger.
-    // Wrap it so a failing logger cannot break store operations.
-    const configuredLogger = options?.logger ?? logger;
-    const actualLogger = configuredLogger ? createSafeLogger(configuredLogger) : undefined;
+    // The SDK logger is already safe. Wrap the raw options logger at its entry.
+    const actualLogger = options?.logger ? createSafeLogger(options.logger) : logger;
     this._wrapper = new PersistentDataStoreWrapper(
       new DynamoDBCore(tableName, new DynamoDBClientState(options), actualLogger),
       TtlFromOptions(options),

@@ -97,8 +97,5 @@ it('passes the SDK logger to the persistent store wrapper', () => {
   expect(store).toBeDefined();
   const wrapperMock = PersistentDataStoreWrapper as unknown as jest.Mock;
   expect(wrapperMock).toHaveBeenCalledTimes(1);
-  // The store wraps the logger, so verify the wrapper logger forwards to it.
-  const wrapperLogger: LDLogger = wrapperMock.mock.calls[0][2];
-  wrapperLogger.error('probe');
-  expect(logger.error).toHaveBeenCalledWith('probe');
+  expect(wrapperMock.mock.calls[0][2]).toBe(logger);
 });
