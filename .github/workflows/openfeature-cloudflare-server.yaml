@@ -41,10 +41,9 @@ jobs:
         run: yarn workspaces focus @launchdarkly/hello-openfeature-cloudflare-server
       - name: Install Playwright browsers
         run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server playwright install --with-deps chromium
-      - id: shared
-        name: Shared CI Steps
-        uses: ./actions/ci
-        with:
-          workspace_name: '@launchdarkly/hello-openfeature-cloudflare-server'
-          workspace_path: packages/sdk/openfeature-cloudflare-server/examples/getting-started
-          should_build_docs: false
+      - name: Build
+        run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openfeature-cloudflare-server' run build
+      - name: Lint
+        run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server lint
+      - name: Test
+        run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server test
