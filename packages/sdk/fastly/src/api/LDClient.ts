@@ -1,7 +1,7 @@
 import { Info, LDClientImpl, ServerInternalOptions } from '@launchdarkly/js-server-sdk-common';
 
 import EdgePlatform from '../platform';
-import { FastlySDKOptions } from '../utils/validateOptions';
+import { LDOptions } from '../utils/validateOptions';
 import createCallbacks from './createCallbacks';
 import createOptions from './createOptions';
 
@@ -12,7 +12,7 @@ export const DEFAULT_EVENTS_BACKEND_NAME = 'launchdarkly';
  */
 export default class LDClient extends LDClientImpl {
   // clientSideID is only used to query the edge key-value store and send analytics, not to initialize with LD servers
-  constructor(clientSideID: string, platformInfo: Info, options: FastlySDKOptions) {
+  constructor(clientSideID: string, platformInfo: Info, options: LDOptions) {
     const { eventsBackendName, ...ldOptions } = options;
     const platform = new EdgePlatform(
       platformInfo,

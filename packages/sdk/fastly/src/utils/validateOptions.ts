@@ -4,7 +4,7 @@ export type { LDOptionsCommon };
 /**
  * The Launchdarkly Fastly Compute SDK configuration options. See {@link LDOptionsCommon} for more information on the 'logger', 'sendEvents', and 'eventsUri' options.
  */
-export type FastlySDKOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | 'eventsUri'> & {
+export type LDOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | 'eventsUri'> & {
   /**
    * The Fastly Backend name to send LaunchDarkly events. Backends are configured using the Fastly service backend configuration. This option can be ignored if the `sendEvents` option is set to `false`. See [Fastly's Backend documentation](https://developer.fastly.com/reference/api/services/backend/) for more information. The default value is `launchdarkly`.
    */
@@ -12,10 +12,17 @@ export type FastlySDKOptions = Pick<LDOptionsCommon, 'logger' | 'sendEvents' | '
 };
 
 /**
+ * The Launchdarkly Fastly Compute SDK configuration options.
+ *
+ * @deprecated Use {@link LDOptions} instead. FastlySDKOptions will be removed in a future version.
+ */
+export type FastlySDKOptions = LDOptions;
+
+/**
  * The internal options include featureStore because that's how the LDClient
  * implementation expects it.
  */
-export type LDOptionsInternal = FastlySDKOptions & Pick<LDOptionsCommon, 'featureStore'>;
+export type LDOptionsInternal = LDOptions & Pick<LDOptionsCommon, 'featureStore'>;
 
 const validators = {
   clientSideId: TypeValidators.String,
