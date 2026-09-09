@@ -24,6 +24,7 @@ export default class RedisFeatureStore implements LDFeatureStore {
     this._wrapper = new PersistentDataStoreWrapper(
       new RedisCore(new RedisClientState(options, logger), logger),
       TtlFromOptions(options),
+      logger,
     );
   }
 

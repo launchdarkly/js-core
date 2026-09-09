@@ -126,7 +126,14 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: () => void,
   ) {
-    const items = await this._readExistingItems(allData);
+    let items: Record<string, AttributeValue>[];
+    try {
+      items = await this._readExistingItems(allData);
+    } catch (error) {
+      this._logger?.error(`Error reading existing items from DynamoDB: ${error}`);
+      callback();
+      return;
+    }
 
     // Make a key from an existing DB item.
     function makeNamespaceKey(item: Record<string, AttributeValue>) {
@@ -180,20 +187,20 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     key: string,
     callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
   ) {
+    let descriptor: interfaces.SerializedItemDescriptor | undefined;
     try {
       const read = await this._state.get(this._tableName, {
         namespace: stringValue(this._state.prefixedKey(kind.namespace)),
         key: stringValue(key),
       });
       if (read) {
-        callback(this._unmarshalItem(read));
-      } else {
-        callback(undefined);
+        descriptor = this._unmarshalItem(read);
       }
     } catch (error) {
       this._logger?.error(`Error reading ${kind.namespace}:${key}: ${error}`);
-      callback(undefined);
     }
+    // Callback outside the try. In case it raised an exception.
+    callback(descriptor);
   }
 
   async getAll(
@@ -203,10 +210,20 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     ) => void,
   ) {
     const params = this._queryParamsForNamespace(kind.namespace);
-    const results = await this._state.query(params);
-    callback(
-      results.map((record) => ({ key: record!.key!.S!, item: this._unmarshalItem(record) })),
-    );
+    let descriptors:
+      | interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[]
+      | undefined;
+    try {
+      const results = await this._state.query(params);
+      descriptors = results.map((record) => ({
+        key: record!.key!.S!,
+        item: this._unmarshalItem(record),
+      }));
+    } catch (error) {
+      this._logger?.error(`Error reading ${kind.namespace}: ${error}`);
+    }
+    // Callback outside the try. In case it raised an exception.
+    callback(descriptors);
   }
 
   async upsert(
