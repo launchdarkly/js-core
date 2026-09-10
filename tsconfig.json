@@ -80,9 +80,6 @@
       "path": "./packages/sdk/server-node/contract-tests/tsconfig.ref.json"
     },
     {
-      "path": "./packages/sdk/combined-browser/tsconfig.ref.json"
-    },
-    {
       "path": "./packages/ai-providers/server-ai-langchain/tsconfig.ref.json"
     },
     {

@@ -22,8 +22,6 @@ This includes shared libraries, used by SDKs and other tools, as well as SDKs.
 | [@launchdarkly/openfeature-node-server](packages/sdk/openfeature-node-server/README.md)             | [![NPM][sdk-openfeature-node-server-npm-badge]][sdk-openfeature-node-server-npm-link]             | [OpenFeature Node Server][package-sdk-openfeature-node-server-issues]             | [![Actions Status][sdk-openfeature-node-server-ci-badge]][sdk-openfeature-node-server-ci]             |
 | [@launchdarkly/openfeature-cloudflare-server](packages/sdk/openfeature-cloudflare-server/README.md) | [![NPM][sdk-openfeature-cloudflare-server-npm-badge]][sdk-openfeature-cloudflare-server-npm-link] | [OpenFeature Cloudflare Server][package-sdk-openfeature-cloudflare-server-issues] | [![Actions Status][sdk-openfeature-cloudflare-server-ci-badge]][sdk-openfeature-cloudflare-server-ci] |
 
-<!--| [@launchdarkly/browser](packages/sdk/combined-browser/README.md)                  | [![NPM][sdk-combined-browser-npm-badge]][sdk-browser-npm-link]             | [Combined Browser][package-sdk-combined-browser-issues]             | [![Actions Status][sdk-combined-browser-ci-badge]][sdk-combined-browser-ci]             |-->
-
 | Shared packages                                                                                   | npm                                                                                     | issues                                                                       | tests                                                                                               |
 | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | [@launchdarkly/js-sdk-common](packages/shared/common/README.md)                                   | [![NPM][common-npm-badge]][common-npm-link]                                             | [Common][package-shared-common-issues]                                       | [![Actions Status][shared-common-ci-badge]][shared-common-ci]                                       |
@@ -216,16 +214,6 @@ We encourage pull requests and other contributions from the community. Check out
 [sdk-server-ai-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/server-sdk-ai.svg?style=flat-square
 [sdk-server-ai-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/server-sdk-ai.svg?style=flat-square
 [package-sdk-server-ai-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fserver-ai%22+
-[//]: # 'sdk/combined-browser'
-[sdk-combined-browser-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml/badge.svg
-[sdk-combined-browser-ci]: https://github.com/launchdarkly/js-core/actions/workflows/combined-browser.yml
-[sdk-combined-browser-npm-badge]: https://img.shields.io/npm/v/@launchdarkly/browser.svg?style=flat-square
-[sdk-combined-browser-npm-link]: https://www.npmjs.com/package/@launchdarkly/browser
-[sdk-combined-browser-ghp-badge]: https://img.shields.io/static/v1?label=GitHub+Pages&message=API+reference&color=00add8
-[sdk-combined-browser-ghp-link]: https://launchdarkly.github.io/js-core/packages/sdk/combined-browser/docs/
-[sdk-combined-browser-dm-badge]: https://img.shields.io/npm/dm/@launchdarkly/browser.svg?style=flat-square
-[sdk-combined-browser-dt-badge]: https://img.shields.io/npm/dt/@launchdarkly/browser.svg?style=flat-square
-[package-sdk-browser-issues]: https://github.com/launchdarkly/js-core/issues?q=is%3Aissue+is%3Aopen+label%3A%22package%3A+sdk%2Fcombined-browser%22+
 [//]: # 'ai-providers/server-ai-langchain'
 [server-ai-langchain-ci-badge]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml/badge.svg
 [server-ai-langchain-ci]: https://github.com/launchdarkly/js-core/actions/workflows/server-ai-langchain.yml
