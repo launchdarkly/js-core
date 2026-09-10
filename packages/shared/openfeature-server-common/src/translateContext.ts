@@ -84,10 +84,20 @@ function translateContextCommon(
       return;
     }
     if (key === 'privateAttributes') {
-      // eslint-disable-next-line no-underscore-dangle
-      convertedContext._meta = {
-        privateAttributes: value as string[],
-      };
+      if (!Array.isArray(value)) {
+        logger.error("The attribute 'privateAttributes' must be an array");
+        return;
+      }
+
+      const privateAttributes = value.filter((item): item is string => typeof item === 'string');
+      if (privateAttributes.length !== value.length) {
+        logger.error("'privateAttributes' must be an array of only string values");
+      }
+
+      if (privateAttributes.length) {
+        // eslint-disable-next-line no-underscore-dangle
+        convertedContext._meta = { privateAttributes };
+      }
     } else if (key in LDContextBuiltIns) {
       if (typeof value === LDContextBuiltIns[key]) {
         (convertedContext as any)[key] = value;
