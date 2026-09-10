@@ -3,11 +3,23 @@ function isStale(record: CacheRecord): boolean {
 }
 
 /**
+ * Check if a TTL value represents an infinite TTL.
+ *
+ * A negative TTL, or Infinity, means that cached items never expire.
+ * @param ttl The TTL, in seconds, to check.
+ * @returns True if the TTL is infinite.
+ */
+export function isInfiniteTtl(ttl: number): boolean {
+  return ttl < 0 || ttl === Infinity;
+}
+
+/**
  * Options for the TTL cache.
  */
 export interface TtlCacheOptions {
   /**
-   * The TTL for all items in seconds.
+   * The TTL for all items in seconds. A negative value, or Infinity, means
+   * that items never expire.
    */
   ttl: number;
 
@@ -30,10 +42,16 @@ export default class TtlCache {
 
   private _checkIntervalHandle: any;
 
+  private _neverExpire: boolean;
+
   constructor(private readonly _options: TtlCacheOptions) {
-    this._checkIntervalHandle = setInterval(() => {
-      this._purgeStale();
-    }, _options.checkInterval * 1000);
+    this._neverExpire = isInfiniteTtl(_options.ttl);
+    // When items never expire there is nothing to purge.
+    if (!this._neverExpire) {
+      this._checkIntervalHandle = setInterval(() => {
+        this._purgeStale();
+      }, _options.checkInterval * 1000);
+    }
   }
 
   /**
@@ -53,14 +71,15 @@ export default class TtlCache {
 
   /**
    * Set an item in the cache. It will expire after the TTL specified
-   * in the cache configuration.
+   * in the cache configuration. If the TTL is infinite, then the item
+   * will not expire.
    * @param key The key for the value.
    * @param value The value to set.
    */
   public set(key: string, value: any) {
     this._storage.set(key, {
       value,
-      expiration: Date.now() + this._options.ttl * 1000,
+      expiration: this._neverExpire ? Infinity : Date.now() + this._options.ttl * 1000,
     });
   }
 

@@ -14,7 +14,7 @@ import {
   LDFeatureStoreKindData,
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
-import TtlCache from '../cache/TtlCache';
+import TtlCache, { isInfiniteTtl } from '../cache/TtlCache';
 import { persistentStoreKinds } from './persistentStoreKinds';
 import sortDataSet from './sortDataSet';
 import UpdateQueue from './UpdateQueue';
@@ -107,11 +107,19 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    */
   private _queue: UpdateQueue = new UpdateQueue();
 
+  /**
+   * True when the cache TTL is infinite. In this mode cached items never
+   * expire, and the caches update even when a store write fails. This keeps
+   * the cached data current when the store has an outage.
+   */
+  private _isInfiniteTtl: boolean;
+
   constructor(
     private readonly _core: PersistentDataStore,
     ttl: number,
     private readonly _logger?: LDLogger,
   ) {
+    this._isInfiniteTtl = isInfiniteTtl(ttl);
     if (ttl) {
       this._itemCache = new TtlCache({
         ttl,
@@ -221,8 +229,11 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
     this._queue.enqueue((cb) => {
-      // Clear the caches which contain all the values of a specific kind.
-      if (this._allItemsCache) {
+      // With a finite TTL, clear the caches which contain all the values of
+      // a specific kind. They will re-populate from the store on the next
+      // read. With an infinite TTL, the caches instead update in place after
+      // the write completes.
+      if (this._allItemsCache && !this._isInfiniteTtl) {
         this._allItemsCache.clear();
       }
 
@@ -241,19 +252,49 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             if (updatedDescriptor.serializedItem) {
               const value = deserialize(persistKind, updatedDescriptor);
               this._itemCache?.set(cacheKey(kind, data.key), value);
+              this._updateAllItemsCacheInPlace(kind, data.key, value);
             } else if (updatedDescriptor.deleted) {
               // Deleted and there was not a serialized representation.
-              this._itemCache?.set(data.key, {
-                key: data.key,
-                version: updatedDescriptor.version,
-                deleted: true,
-              });
+              const value = deletedDescriptor(updatedDescriptor.version);
+              this._itemCache?.set(cacheKey(kind, data.key), value);
+              this._updateAllItemsCacheInPlace(kind, data.key, value);
             }
+          } else if (err && this._isInfiniteTtl) {
+            // The write failed, but the cached items never expire. Update the
+            // caches with the new item, so the SDK continues to serve current
+            // data. Without this update the process would serve the old value
+            // until it restarts.
+            const value: ItemDescriptor = { version: data.version, item: data };
+            this._itemCache?.set(cacheKey(kind, data.key), value);
+            this._updateAllItemsCacheInPlace(kind, data.key, value);
           }
           cb();
         },
       );
     }, callback);
+  }
+
+  /**
+   * Update a single item in the cached all-items data for a kind. This only
+   * applies to the infinite TTL mode. With a finite TTL, the all-items cache
+   * is cleared instead, and it re-populates from the store on the next read.
+   */
+  private _updateAllItemsCacheInPlace(kind: DataKind, key: string, item: ItemDescriptor): void {
+    if (!this._isInfiniteTtl || !this._allItemsCache) {
+      return;
+    }
+    const cached = this._allItemsCache.get(allForKindCacheKey(kind));
+    if (!cached) {
+      return;
+    }
+    const updated: LDFeatureStoreKindData = { ...cached };
+    const value = itemIfNotDeleted(item);
+    if (value) {
+      updated[key] = value;
+    } else {
+      delete updated[key];
+    }
+    this._allItemsCache.set(allForKindCacheKey(kind), updated);
   }
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {

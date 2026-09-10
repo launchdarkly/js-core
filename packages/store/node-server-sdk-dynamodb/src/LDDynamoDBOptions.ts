@@ -29,6 +29,11 @@ export default interface LDDynamoDBOptions {
    * The amount of time, in seconds, that recently read or updated items should remain in an
    * in-memory cache. If it is zero, there will be no in-memory caching.
    *
+   * A negative value, or `Infinity`, means infinite caching: cached items never expire, and the
+   * cache is updated even when a write to DynamoDB fails. Use this mode when DynamoDB is only a
+   * source of data at startup. After the cache is populated, the SDK serves all reads from the
+   * cache, and a DynamoDB outage cannot make the served data stale.
+   *
    * This parameter applies only to {@link DynamoDBFeatureStore}. It is ignored for {@link DynamoDBBigSegmentStore}.
    * Caching for {@link DynamoDBBigSegmentStore} is configured separately, in the SDK's
    * `LDBigSegmentsOptions` type, since it is independent of what database implementation is used.

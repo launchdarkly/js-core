@@ -551,3 +551,129 @@ describe.each(['caching', 'non-caching'])(
     });
   },
 );
+
+describe.each([-1, Infinity])(
+  'given a persistent store implementation and a wrapper with an infinite TTL (%p)',
+  (ttl) => {
+    let mockPersistentStore: MockPersistentStore;
+    let wrapper: PersistentDataStoreWrapper;
+    let asyncWrapper: AsyncStoreFacade;
+
+    beforeEach(async () => {
+      mockPersistentStore = new MockPersistentStore();
+      wrapper = new PersistentDataStoreWrapper(mockPersistentStore, ttl);
+      asyncWrapper = new AsyncStoreFacade(wrapper);
+
+      await asyncWrapper.init({
+        features: {
+          key1: {
+            deleted: false,
+            version: 1,
+          },
+        },
+        segments: {
+          key2: {
+            deleted: false,
+            version: 2,
+          },
+        },
+      });
+    });
+
+    afterEach(() => {
+      wrapper.close();
+      jest.restoreAllMocks();
+    });
+
+    it('cached items do not expire', async () => {
+      const spy = jest.spyOn(mockPersistentStore, 'get');
+      jest.spyOn(Date, 'now').mockImplementation(() => Number.MAX_SAFE_INTEGER);
+
+      const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      expect(value).toEqual({
+        deleted: false,
+        version: 1,
+      });
+      expect(spy).toBeCalledTimes(0);
+    });
+
+    it('after a successful upsert, the all-items cache is updated in place', async () => {
+      const spy = jest.spyOn(mockPersistentStore, 'getAll');
+
+      await asyncWrapper.upsert(VersionedDataKinds.Features, {
+        key: 'key3',
+        version: 5,
+      });
+
+      const allFlags = await asyncWrapper.all(VersionedDataKinds.Features);
+      expect(allFlags).toEqual({
+        key1: {
+          deleted: false,
+          version: 1,
+        },
+        key3: {
+          key: 'key3',
+          version: 5,
+        },
+      });
+      // The all-items cache was updated in place, so the store is not read.
+      expect(spy).toBeCalledTimes(0);
+    });
+
+    it('after a successful delete, the item is removed from the all-items cache', async () => {
+      const spy = jest.spyOn(mockPersistentStore, 'getAll');
+
+      await asyncWrapper.delete(VersionedDataKinds.Features, 'key1', 7);
+
+      const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      expect(value).toBeNull();
+
+      const allFlags = await asyncWrapper.all(VersionedDataKinds.Features);
+      expect(allFlags).toEqual({});
+      expect(spy).toBeCalledTimes(0);
+    });
+
+    it('when an upsert fails, the caches are still updated with the new item', async () => {
+      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
+        cb(new Error('bad news'), undefined);
+      });
+      const getSpy = jest.spyOn(mockPersistentStore, 'get');
+      const getAllSpy = jest.spyOn(mockPersistentStore, 'getAll');
+
+      await asyncWrapper.upsert(VersionedDataKinds.Features, {
+        key: 'key1',
+        version: 2,
+      });
+
+      const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      expect(value).toEqual({
+        key: 'key1',
+        version: 2,
+      });
+
+      const allFlags = await asyncWrapper.all(VersionedDataKinds.Features);
+      expect(allFlags).toEqual({
+        key1: {
+          key: 'key1',
+          version: 2,
+        },
+      });
+      expect(getSpy).toBeCalledTimes(0);
+      expect(getAllSpy).toBeCalledTimes(0);
+    });
+
+    it('when a delete fails, the caches still remove the item', async () => {
+      jest.spyOn(mockPersistentStore, 'upsert').mockImplementation((_kind, _key, _data, cb) => {
+        cb(new Error('bad news'), undefined);
+      });
+
+      await asyncWrapper.delete(VersionedDataKinds.Features, 'key1', 2);
+
+      const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      expect(value).toBeNull();
+
+      const allFlags = await asyncWrapper.all(VersionedDataKinds.Features);
+      expect(allFlags).toEqual({});
+    });
+  },
+);

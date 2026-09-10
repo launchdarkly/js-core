@@ -94,6 +94,47 @@ describe('given a ttl cache', () => {
   });
 });
 
+describe.each([-1, Infinity])('given a ttl cache with an infinite ttl (%p)', (ttl) => {
+  let ttlCache: TtlCache;
+
+  beforeEach(() => {
+    ttlCache = new TtlCache({ ttl, checkInterval: 600 });
+  });
+
+  afterEach(() => {
+    ttlCache.close();
+    jest.restoreAllMocks();
+  });
+
+  it('items in the cache do not expire.', () => {
+    jest.spyOn(Date, 'now').mockImplementation(() => 0);
+
+    ttlCache.set('0', 0);
+
+    jest.spyOn(Date, 'now').mockImplementation(() => Number.MAX_SAFE_INTEGER);
+
+    expect(ttlCache.get('0')).toEqual(0);
+  });
+
+  it('items can be deleted.', () => {
+    ttlCache.set('0', 0);
+    ttlCache.set('1', 1);
+
+    ttlCache.delete('0');
+
+    expect(ttlCache.get('0')).toBeUndefined();
+    expect(ttlCache.get('1')).toEqual(1);
+  });
+
+  it('the cache can be cleared.', () => {
+    ttlCache.set('0', 0);
+
+    ttlCache.clear();
+
+    expect(ttlCache.get('0')).toBeUndefined();
+  });
+});
+
 describe('given a ttl cache with short check period and TTL', () => {
   let ttlCache: TtlCache;
 

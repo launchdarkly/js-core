@@ -31,6 +31,11 @@ export default interface LDRedisOptions {
    * in-memory cache. If it is zero, there will be no in-memory caching. The default TTL will be
    * 30 seconds if one is not set.
    *
+   * A negative value, or `Infinity`, means infinite caching: cached items never expire, and the
+   * cache is updated even when a write to Redis fails. Use this mode when Redis is only a source
+   * of data at startup. After the cache is populated, the SDK serves all reads from the cache,
+   * and a Redis outage cannot make the served data stale.
+   *
    * This parameter applies only to RedisFeatureStore. It is ignored for RedisBigSegmentStore.
    * Caching for RedisBigSegmentStore is configured separately, in the SDK's
    * `LDBigSegmentsOptions` type, since it is independent of what database implementation is used.
