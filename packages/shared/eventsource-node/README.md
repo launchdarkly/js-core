@@ -13,8 +13,7 @@
 > Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
 
 This package contains a W3C-compliant EventSource (server-sent events) client for Node, using
-`http`/`https`. It is used for streaming connections by the LaunchDarkly server-side and
-client-side Node SDKs and the Electron SDK.
+`http`/`https`. It is used for streaming connections by the LaunchDarkly SDKs.
 
 This package is not intended to be used directly.
 
