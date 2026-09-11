@@ -58,7 +58,7 @@ async function handleRequest(event: FetchEvent) {
       key: 'test-user',
     },
     'fastly-request': {
-      key: env('FASTLY_TRACE_ID'),
+      key: env('FASTLY_TRACE_ID') ?? 'unknown',
       fastly_service_version: env('FASTLY_SERVICE_VERSION'),
       fastly_cache_generation: env('FASTLY_CACHE_GENERATION'),
       fastly_hostname: env('FASTLY_HOSTNAME'),
