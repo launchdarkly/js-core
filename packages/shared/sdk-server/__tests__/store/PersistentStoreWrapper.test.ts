@@ -527,6 +527,38 @@ describe.each(['caching', 'non-caching'])(
       expect(allFlags).toEqual({});
     });
 
+    itif(isCaching)(
+      'does not include a deleted item in the cached all() result after init',
+      async () => {
+        await asyncWrapper.init({
+          features: {
+            key1: {
+              deleted: false,
+              version: 1,
+            },
+            key2: {
+              deleted: true,
+              version: 2,
+            },
+          },
+        });
+
+        const spy = jest.spyOn(mockPersistentStore, 'getAll');
+        const allFlags = await asyncWrapper.all(VersionedDataKinds.Features);
+        expect(allFlags).toEqual({
+          key1: {
+            deleted: false,
+            version: 1,
+          },
+        });
+        // The result came from the cache, not a fresh store query.
+        expect(spy).toBeCalledTimes(0);
+
+        const liveItem = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+        expect(liveItem).toEqual({ deleted: false, version: 1 });
+      },
+    );
+
     it('correctly handles getting deleted items', async () => {
       mockPersistentStore.isInitialized = true;
       mockPersistentStore.allData?.push({
@@ -551,3 +583,66 @@ describe.each(['caching', 'non-caching'])(
     });
   },
 );
+
+describe('given a wrapper around a core that reports errors', () => {
+  class ErroringPersistentStore extends MockPersistentStore {
+    override init(
+      _allData: KindKeyedStore<PersistentStoreDataKind>,
+      callback: (err?: Error) => void,
+    ): void {
+      callback(new Error('init failed'));
+    }
+
+    override upsert(
+      _kind: PersistentStoreDataKind,
+      _key: string,
+      _descriptor: SerializedItemDescriptor,
+      callback: (err?: Error, updatedDescriptor?: SerializedItemDescriptor) => void,
+    ): void {
+      callback(new Error('upsert failed'));
+    }
+  }
+
+  let wrapper: PersistentDataStoreWrapper;
+
+  beforeEach(() => {
+    wrapper = new PersistentDataStoreWrapper(new ErroringPersistentStore(), 0);
+  });
+
+  afterEach(() => {
+    wrapper.close();
+  });
+
+  it('reports an init error through the callback', (done) => {
+    wrapper.init({ features: {} }, (err) => {
+      expect(err).toEqual(new Error('init failed'));
+      done();
+    });
+  });
+
+  it('reports an upsert error through the callback', (done) => {
+    wrapper.upsert(VersionedDataKinds.Features, { key: 'flagA', version: 1 }, (err) => {
+      expect(err).toEqual(new Error('upsert failed'));
+      done();
+    });
+  });
+});
+
+it('exposes isStoreAvailable when the core implements it', (done) => {
+  const core = new MockPersistentStore();
+  // @ts-ignore Assigning an optional method to the mock.
+  core.isStoreAvailable = (callback: (isAvailable: boolean) => void) => callback(true);
+  const wrapper = new PersistentDataStoreWrapper(core, 0);
+  expect(typeof wrapper.isStoreAvailable).toEqual('function');
+  wrapper.isStoreAvailable?.((isAvailable) => {
+    expect(isAvailable).toBe(true);
+    wrapper.close();
+    done();
+  });
+});
+
+it('does not expose isStoreAvailable when the core does not implement it', () => {
+  const wrapper = new PersistentDataStoreWrapper(new MockPersistentStore(), 0);
+  expect(wrapper.isStoreAvailable).toBeUndefined();
+  wrapper.close();
+});
