@@ -498,7 +498,7 @@ export default class Configuration {
           if (TypeValidators.Function.is((store as LDTransactionalFeatureStore).applyChanges)) {
             return store as LDTransactionalFeatureStore;
           }
-          return new TransactionalFeatureStore(store);
+          return new TransactionalFeatureStore(store, this.logger);
         },
       };
       dsErrors.forEach((error) => {
