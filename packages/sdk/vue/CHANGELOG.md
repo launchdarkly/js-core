@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.0.0](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v0.2.3...vue-client-sdk-v3.0.0) (2026-09-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* Implicit anonymous-user fallback removed; context is now required in LDVuePluginOptions and createLDProvider.
+
+### Features
+
+* Bootstrap support to eliminate initialization waterfall ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* createClient for programmatic client creation (BYO client pattern) ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* LDVueClient type extending base LDClient with Vue lifecycle helpers ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Multi-environment support via createLDVueInstanceKey ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Provider component API: createLDProvider, createLDProviderWithClient ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Provider slots for initialization states (default, initializing, failed) ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Reactive flag keys (MaybeRefOrGetter&lt;string&gt;) on all variation composables ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* startOptions for controlling initialization timeout ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Typed variation composables: useBoolVariation, useStringVariation, ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* useInitializationStatus replaces useLDReady with richer status object ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+* Variation detail composables for each type (useBoolVariationDetail, etc.) ([d3b97a8](https://github.com/launchdarkly/js-core/commit/d3b97a8c3c8e00774b6edcba07f0d6542233a4a2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from 4.10.1 to 4.10.2
+
 ## [0.2.3](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v0.2.2...vue-client-sdk-v0.2.3) (2026-09-08)
 
 

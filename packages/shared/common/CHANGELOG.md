@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.26.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.2...js-sdk-common-v2.26.0) (2026-09-11)
+
+
+### Features
+
+* Move FDv1 fallback directive parsing to the shared package ([#1981](https://github.com/launchdarkly/js-core/issues/1981)) ([e7a3b66](https://github.com/launchdarkly/js-core/commit/e7a3b6647caf3210c9cea40e7818f164537aa50f))
+
 ## [2.25.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.1...js-sdk-common-v2.25.2) (2026-07-21)
 
 

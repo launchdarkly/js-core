@@ -47,7 +47,7 @@ export function createClient(
   const baseClientOptions: LDOptions = {
     ...options,
     wrapperName: options.wrapperName ?? 'vue-client-sdk',
-    wrapperVersion: options.wrapperVersion ?? '0.2.3', // x-release-please-version
+    wrapperVersion: options.wrapperVersion ?? '3.0.0', // x-release-please-version
   };
 
   const baseClient = createBaseClient(clientSideID, context, baseClientOptions);

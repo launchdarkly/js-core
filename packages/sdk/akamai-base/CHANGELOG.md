@@ -30,6 +30,15 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
     * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^1.1.1 to ^1.1.2
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [3.0.34](https://github.com/launchdarkly/js-core/compare/akamai-server-base-sdk-v3.0.33...akamai-server-base-sdk-v3.0.34) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/akamai-edgeworker-sdk-common bumped from ^2.0.32 to ^2.0.33
+
 ## [3.0.33](https://github.com/launchdarkly/js-core/compare/akamai-server-base-sdk-v3.0.32...akamai-server-base-sdk-v3.0.33) (2026-09-09)
 
 
