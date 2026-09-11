@@ -434,7 +434,6 @@
       "prerelease-type": "beta"
     },
     "packages/sdk/vue": {
-      "release-as": "3.0.0",
       "extra-files": [
         "src/client/LDVueClient.ts",
         {
