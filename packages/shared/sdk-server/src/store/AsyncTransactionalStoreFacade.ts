@@ -40,19 +40,21 @@ export default class AsyncTransactionalStoreFacade {
     initMetadata?: internal.InitMetadata,
   ): Promise<void> {
     return promisify((cb) => {
-      this._store.init(allData, cb, initMetadata);
+      // The store may report an error through its callback. The promise resolves
+      // either way, so drop the callback arguments.
+      this._store.init(allData, () => cb(undefined), initMetadata);
     });
   }
 
   async delete(kind: DataKind, key: string, version: number): Promise<void> {
     return promisify((cb) => {
-      this._store.delete(kind, key, version, cb);
+      this._store.delete(kind, key, version, () => cb(undefined));
     });
   }
 
   async upsert(kind: DataKind, data: LDKeyedFeatureStoreItem): Promise<void> {
     return promisify((cb) => {
-      this._store.upsert(kind, data, cb);
+      this._store.upsert(kind, data, () => cb(undefined));
     });
   }
 

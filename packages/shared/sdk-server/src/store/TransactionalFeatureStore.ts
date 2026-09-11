@@ -96,11 +96,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
               (previousPromise, nextParams) =>
                 previousPromise.then(
                   () =>
-                    new Promise((resolve) => {
+                    new Promise<void>((resolve) => {
+                      // Drop the callback arguments so a store error cannot become
+                      // the resolved value of this void promise.
                       this._nonTransPersistenceStore.upsert(
                         nextParams.dataKind,
                         nextParams.item,
-                        resolve,
+                        () => resolve(),
                       );
                     }),
                 ),
