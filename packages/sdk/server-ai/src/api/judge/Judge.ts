@@ -24,27 +24,6 @@ const EVALUATION_SCHEMA = {
 } as const;
 
 /**
- * Remove legacy judge template messages from a message list.
- *
- * Strips any non-system message whose content contains `{{message_history}}`
- * or `{{response_to_evaluate}}`. These were used by older judge configs to
- * indicate where the SDK should interpolate the evaluated conversation; new
- * configs omit them entirely and rely on the string input built by
- * `Judge._buildEvaluationInput`.
- *
- * @param messages The raw message list from the judge AI config.
- * @returns A new list with legacy template messages removed.
- */
-export function stripLegacyJudgeMessages(messages: LDMessage[]): LDMessage[] {
-  return messages.filter(
-    (msg) =>
-      msg.role === 'system' ||
-      (!msg.content.includes('{{message_history}}') &&
-        !msg.content.includes('{{response_to_evaluate}}')),
-  );
-}
-
-/**
  * Judge implementation that handles evaluation functionality and conversation management.
  *
  * According to the AIEval spec, judges are AI Configs with mode: "judge" that evaluate

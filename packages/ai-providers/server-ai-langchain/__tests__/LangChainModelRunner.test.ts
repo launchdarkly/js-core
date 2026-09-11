@@ -1,6 +1,6 @@
 import { AIMessage } from '@langchain/core/messages';
 
-import type { LDAICompletionConfig } from '@launchdarkly/server-sdk-ai';
+import type { LDAICompletionConfig, LDMessage } from '@launchdarkly/server-sdk-ai';
 
 import { LangChainModelRunner } from '../src/LangChainModelRunner';
 
@@ -61,6 +61,25 @@ describe('LangChainModelRunner', () => {
     expect(passed).toHaveLength(2);
     expect(passed[0].content).toBe('You are X');
     expect(passed[1].content).toBe('hi');
+  });
+
+  it('uses a LDMessage[] as-is without prepending config messages', async () => {
+    const response = new AIMessage('direct reply');
+    mockLLM.invoke.mockResolvedValue(response);
+
+    const configWithMessages: LDAICompletionConfig = {
+      ...baseConfig,
+      messages: [{ role: 'system', content: 'You are X' }],
+    };
+    const r = new LangChainModelRunner(mockLLM, configWithMessages, mockLogger);
+    const inputMessages: LDMessage[] = [
+      { role: 'user', content: 'direct question' },
+    ];
+    await r.run(inputMessages);
+
+    const passed = mockLLM.invoke.mock.calls[0][0];
+    expect(passed).toHaveLength(1);
+    expect(passed[0].content).toBe('direct question');
   });
 
   it('marks success=false and warns when content is non-string (multimodal)', async () => {
