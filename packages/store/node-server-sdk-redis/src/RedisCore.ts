@@ -35,7 +35,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
 
   init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void,
+    callback: (err?: Error) => void,
   ): void {
     const multi = this._state.getClient().multi();
     allData.forEach((keyedItems) => {
@@ -66,7 +66,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       if (err) {
         this._logger?.error(`Error initializing Redis store ${err}`);
       }
-      callback();
+      callback(err ?? undefined);
     });
   }
 
@@ -196,6 +196,20 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       // Initialized if there is not an error and the key does exists.
       // (A count >= 1)
       callback(!!(!err && count));
+    });
+  }
+
+  isStoreAvailable(callback: (isAvailable: boolean) => void): void {
+    // During the initial connection ioredis queues the command and may still connect.
+    // Fail fast only once a prior connection has dropped.
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      callback(false);
+      return;
+    }
+    // A cheap read. The store is available when the command round-trip succeeds.
+    // The value of the key does not matter.
+    this._state.getClient().exists(this._initedKey, (err) => {
+      callback(!err);
     });
   }
 
