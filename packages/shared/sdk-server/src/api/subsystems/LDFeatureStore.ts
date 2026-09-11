@@ -95,12 +95,18 @@ export interface LDFeatureStore {
    *   `interfaces.FullDataSet<VersionedData>`.
    *
    * @param callback
-   *   Will be called when the store has been initialized.
+   *   Will be called when the store has been initialized. If the store could not apply the
+   *   data, then it may be called with an error. Implementations are not required to report
+   *   errors.
    *
    * @param initMetadata
    *   Optional metadata to initialize the feature store with.
    */
-  init(allData: LDFeatureStoreDataStorage, callback: () => void, initMetadata?: InitMetadata): void;
+  init(
+    allData: LDFeatureStoreDataStorage,
+    callback: (err?: Error) => void,
+    initMetadata?: InitMetadata,
+  ): void;
 
   /**
    * Delete an entity from the store.
@@ -140,9 +146,11 @@ export interface LDFeatureStore {
    *   The actual type of this parameter is {@link interfaces.VersionedData}.
    *
    * @param callback
-   *   Will be called after the upsert operation is complete.
+   *   Will be called after the upsert operation is complete. If the store could not apply
+   *   the update, then it may be called with an error. Implementations are not required to
+   *   report errors.
    */
-  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void;
+  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: (err?: Error) => void): void;
 
   /**
    * Tests whether the store is initialized.
@@ -155,6 +163,19 @@ export interface LDFeatureStore {
    *   Will be called back with the boolean result.
    */
   initialized(callback: (isInitialized: boolean) => void): void;
+
+  /**
+   * Check if the underlying storage can be accessed.
+   *
+   * The check must be inexpensive, for example a read of a single key. It must not write
+   * any data. The SDK can call this method at a fixed interval while the store is in an
+   * error state.
+   *
+   * @param callback
+   *   Will be called with true when the storage responds to the check, or with false when
+   *   it does not.
+   */
+  isStoreAvailable?(callback: (isAvailable: boolean) => void): void;
 
   /**
    * Releases any resources being used by the feature store.
