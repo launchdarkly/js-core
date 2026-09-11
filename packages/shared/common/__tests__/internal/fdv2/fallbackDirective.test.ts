@@ -1,7 +1,7 @@
 import {
   readFallbackDirective,
   readGoodbyeFallbackDirective,
-} from '../../../src/datasource/fdv2/fallbackDirective';
+} from '../../../src/internal/fdv2/fallbackDirective';
 
 function makeHeaders(map: Record<string, string>): { get(name: string): string | null } {
   const lower: Record<string, string> = {};
