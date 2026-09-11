@@ -44,7 +44,7 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
     this._wrapper.all(kind, callback);
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+  init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
     this._wrapper.init(allData, callback);
   }
 
@@ -52,12 +52,27 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
     this._wrapper.delete(kind, key, version, callback);
   }
 
-  upsert(kind: interfaces.DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
+  upsert(
+    kind: interfaces.DataKind,
+    data: LDKeyedFeatureStoreItem,
+    callback: (err?: Error) => void,
+  ): void {
     this._wrapper.upsert(kind, data, callback);
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
     this._wrapper.initialized(callback);
+  }
+
+  isStoreAvailable(callback: (isAvailable: boolean) => void): void {
+    if (this._wrapper.isStoreAvailable) {
+      this._wrapper.isStoreAvailable(callback);
+      return;
+    }
+    // No availability check on the wrapped core. Report unavailable so recovery
+    // falls back to the next successful write instead of a probe that can never
+    // report true.
+    callback(false);
   }
 
   close(): void {
