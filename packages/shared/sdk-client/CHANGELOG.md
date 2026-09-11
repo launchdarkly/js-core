@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.32.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.31.0...js-client-sdk-common-v1.32.0) (2026-09-11)
+
+
+### Features
+
+* Move FDv1 fallback directive parsing to the shared package ([#1981](https://github.com/launchdarkly/js-core/issues/1981)) ([e7a3b66](https://github.com/launchdarkly/js-core/commit/e7a3b6647caf3210c9cea40e7818f164537aa50f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.25.2 to 2.26.0
+
 ## [1.31.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.30.2...js-client-sdk-common-v1.31.0) (2026-09-08)
 
 

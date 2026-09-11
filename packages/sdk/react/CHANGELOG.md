@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.1.17](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.16...react-sdk-v4.1.17) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.10.1 to ^4.10.2
+    * @launchdarkly/js-server-sdk-common bumped from ^2.21.1 to ^2.21.2
+
 ## [4.1.16](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.15...react-sdk-v4.1.16) (2026-09-09)
 
 
