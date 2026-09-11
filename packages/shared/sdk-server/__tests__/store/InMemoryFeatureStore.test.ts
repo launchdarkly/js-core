@@ -165,3 +165,51 @@ describe('given an initialized feature store with metadata', () => {
     expect(featureStore.getInitMetadata?.()).toEqual({ environmentId: '12345' });
   });
 });
+
+describe('given a feature store with flags, segments, and a deleted flag', () => {
+  let memoryStore: InMemoryFeatureStore;
+  let facade: AsyncStoreFacade;
+
+  beforeEach(async () => {
+    memoryStore = new InMemoryFeatureStore();
+    facade = new AsyncStoreFacade(memoryStore);
+    await facade.init({
+      features: {
+        flagA: { key: 'flagA', version: 1 },
+        flagB: { key: 'flagB', version: 2 },
+      },
+      segments: {
+        segmentA: { key: 'segmentA', version: 3 },
+      },
+    });
+    await facade.delete(VersionedDataKinds.Features, 'flagB', 3);
+  });
+
+  it('includes tombstones and all kinds in the raw snapshot', () => {
+    expect(memoryStore.getAllRaw()).toEqual({
+      features: {
+        flagA: { key: 'flagA', version: 1 },
+        flagB: { key: 'flagB', version: 3, deleted: true },
+      },
+      segments: {
+        segmentA: { key: 'segmentA', version: 3 },
+      },
+    });
+  });
+
+  it('does not reflect later upserts in a raw snapshot', async () => {
+    const snapshot = memoryStore.getAllRaw();
+    await facade.upsert(VersionedDataKinds.Features, { key: 'flagC', version: 1 });
+    expect(snapshot.features.flagC).toBeUndefined();
+  });
+
+  it('filters tombstones from all results but not from raw snapshots', async () => {
+    const allFlags = await facade.all(VersionedDataKinds.Features);
+    expect(allFlags.flagB).toBeUndefined();
+    expect(memoryStore.getAllRaw().features.flagB).toEqual({
+      key: 'flagB',
+      version: 3,
+      deleted: true,
+    });
+  });
+});
