@@ -14,11 +14,6 @@ import {
 import { processFlagEval } from '../flagEvalMapper';
 import { createAsyncQueue } from './AsyncQueue';
 import {
-  FallbackDirective,
-  readFallbackDirective,
-  readGoodbyeFallbackDirective,
-} from './fallbackDirective';
-import {
   changeSet,
   errorInfoFromHttpError,
   errorInfoFromInvalidData,
