@@ -1,4 +1,4 @@
-type CallbackFunction = () => void;
+type CallbackFunction = (err?: Error) => void;
 type UpdateFunction = (cb: CallbackFunction) => void;
 
 export default class UpdateQueue {
@@ -16,7 +16,7 @@ export default class UpdateQueue {
   executePendingUpdates() {
     if (this._queue.length > 0) {
       const [fn, cb] = this._queue[0];
-      const newCb = () => {
+      const newCb = (err?: Error) => {
         // We just completed work, so remove it from the queue.
         // Don't remove it before the work is done, because then the
         // count could hit 0, and overlapping execution chains could be started.
@@ -26,7 +26,7 @@ export default class UpdateQueue {
           setTimeout(() => this.executePendingUpdates(), 0);
         }
         // Call the original callback.
-        cb?.();
+        cb?.(err);
       };
 
       fn(newCb);
