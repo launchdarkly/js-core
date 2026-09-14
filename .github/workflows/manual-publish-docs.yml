@@ -26,6 +26,7 @@ on:
           - packages/sdk/electron
           - packages/sdk/react
           - packages/sdk/openfeature-node-server
+          - packages/sdk/vue
 name: Publish Documentation
 jobs:
   build-publish:
