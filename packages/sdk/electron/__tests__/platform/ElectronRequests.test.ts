@@ -182,7 +182,7 @@ describe('given a default instance of NodeRequests', () => {
 });
 
 describe('given an instance of NodeRequests with enableEventCompression turned on', () => {
-  const requests = new ElectronRequests(undefined, undefined, undefined, true);
+  const requests = new ElectronRequests(true);
   it('can make a basic post with compressBodyIfPossible enabled', async () => {
     await requests.fetch(`http://localhost:${PORT}`, {
       method: 'POST',

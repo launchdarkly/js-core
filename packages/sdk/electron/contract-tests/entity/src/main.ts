@@ -24,16 +24,11 @@ const capabilities = [
   'client-prereq-cycle-detection',
   'client-per-context-summaries',
   'track-hooks',
-  'tls:skip-verify-peer',
   'event-gzip',
 
   /// ////////////////////////////
   // TODO: this is not working for some reason. sdk-1873
   // 'http-proxy',
-  // TODO: something is wrong here where the client is
-  // hanging when TLS fails to verify. sdk-1876
-  // 'tls:verify-peer',
-  'tls:custom-ca',
 ];
 
 const clientFactory = new ClientFactory();
