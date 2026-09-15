@@ -89,32 +89,10 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     cf.hooks = TestHook.forClient(options.hooks.hooks);
   }
 
-  if (options.tls) {
-    cf.tlsParams = {
-      rejectUnauthorized: !options.tls.skipVerifyPeer,
-    };
-    if (options.tls.customCAFile) {
-      cf.tlsParams.ca = fs.readFileSync(options.tls.customCAFile);
-    }
-  }
-
   if (options.wrapper) {
     cf.wrapperName = options.wrapper.name;
     cf.wrapperVersion = options.wrapper.version;
   }
-
-  // if (options.proxy) {
-  //   const { httpProxy } = options.proxy;
-
-  //   const scheme = httpProxy.startsWith('https') ? 'https' : 'http';
-  //   const [host, port] = httpProxy.replace(scheme + '://', '').split(':');
-
-  //   cf.proxyOptions = {
-  //     scheme,
-  //     host,
-  //     port: parseInt(port),
-  //   }
-  // }
 
   cf.enableIPC = false;
 
