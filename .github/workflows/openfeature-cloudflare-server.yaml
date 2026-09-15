@@ -45,5 +45,7 @@ jobs:
         run: yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/hello-openfeature-cloudflare-server' run build
       - name: Lint
         run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server lint
+      - name: Format Check
+        run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server format:check
       - name: Test
         run: yarn workspace @launchdarkly/hello-openfeature-cloudflare-server test
