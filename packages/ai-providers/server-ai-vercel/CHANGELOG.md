@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.15](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.7.14...server-sdk-ai-vercel-v0.7.15) (2026-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^2.0.4 to ^2.0.5
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^1.1.1 to ^2.0.5
+
 ## [0.7.14](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.7.13...server-sdk-ai-vercel-v0.7.14) (2026-09-11)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.6.32](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.31...js-server-sdk-common-edge-v2.6.32) (2026-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.2 to 2.21.3
+
 ## [2.6.31](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.30...js-server-sdk-common-edge-v2.6.31) (2026-09-11)
 
 
