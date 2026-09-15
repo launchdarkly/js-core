@@ -132,6 +132,11 @@
           "type": "json",
           "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
           "jsonpath": "$.devDependencies['@launchdarkly/cloudflare-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/openfeature-cloudflare-server/examples/getting-started/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/cloudflare-server-sdk']"
         }
       ]
     },
