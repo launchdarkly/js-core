@@ -34,8 +34,13 @@ let providerReady: Promise<unknown> | undefined;
 
 function ensureProviderReady(env: Bindings): Promise<unknown> {
   if (!providerReady) {
-    provider = new LaunchDarklyProvider(clientSideID, env.LD_KV);
-    providerReady = OpenFeature.setProviderAndWait(provider);
+    provider = new LaunchDarklyProvider(clientSideID, env.LD_KV, { sendEvents: true });
+    // Clear providerReady on failure so a later request can retry with a fresh provider,
+    // instead of every request in this isolate rethrowing the same stale rejection forever.
+    providerReady = OpenFeature.setProviderAndWait(provider).catch((err) => {
+      providerReady = undefined;
+      throw err;
+    });
   }
   return providerReady;
 }
