@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.21.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.2...js-server-sdk-common-v2.21.3) (2026-09-15)
+
+
+### Bug Fixes
+
+* Log the cached-data evaluation warning only once per client ([#2015](https://github.com/launchdarkly/js-core/issues/2015)) ([0bb2164](https://github.com/launchdarkly/js-core/commit/0bb2164fb9e60817af3a5b11e714d14bc7681cdc))
+
 ## [2.21.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.1...js-server-sdk-common-v2.21.2) (2026-09-11)
 
 
