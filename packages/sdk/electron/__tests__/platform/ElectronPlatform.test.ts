@@ -1,16 +1,17 @@
 import type { LDLogger } from '@launchdarkly/js-client-sdk-common';
 
+import ElectronInfo from '../../src/platform/ElectronInfo';
 import ElectronPlatform from '../../src/platform/ElectronPlatform';
+import ElectronRequests from '../../src/platform/ElectronRequests';
+import { getElectronStorage } from '../../src/platform/ElectronStorage';
 
-const failingStorage = {
-  get: jest.fn().mockRejectedValue(new Error('disk read failed')),
-  set: jest.fn().mockRejectedValue(new Error('disk write failed')),
-  clear: jest.fn().mockRejectedValue(new Error('disk clear failed')),
-};
+const storageInstance = { get: jest.fn(), set: jest.fn(), clear: jest.fn() };
 
 jest.mock('../../src/platform/ElectronStorage', () => ({
-  getElectronStorage: () => failingStorage,
+  getElectronStorage: jest.fn(() => storageInstance),
 }));
+jest.mock('../../src/platform/ElectronInfo');
+jest.mock('../../src/platform/ElectronRequests');
 
 const logger: LDLogger = {
   debug: jest.fn(),
@@ -19,34 +20,32 @@ const logger: LDLogger = {
   error: jest.fn(),
 };
 
-let platform: ElectronPlatform;
-
 beforeEach(() => {
   jest.clearAllMocks();
-  platform = new ElectronPlatform(logger, {});
 });
 
-it('logs error and returns null when storage get fails', async () => {
-  const result = await platform.storage!.get('some-key');
+it('uses the shared ElectronStorage singleton, passing the logger through', () => {
+  const platform = new ElectronPlatform(logger, {});
 
-  expect(result).toBeNull();
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error getting key from storage: some-key'),
-  );
+  expect(getElectronStorage).toHaveBeenCalledWith(logger);
+  expect(platform.storage).toBe(storageInstance);
 });
 
-it('logs error and swallows when storage set fails', async () => {
-  await platform.storage!.set('some-key', 'some-value');
+it('threads wrapperName/wrapperVersion into ElectronInfo', () => {
+  // eslint-disable-next-line no-new
+  new ElectronPlatform(logger, { wrapperName: 'my-wrapper', wrapperVersion: '1.2.3' });
 
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error setting key in storage: some-key'),
-  );
+  expect(ElectronInfo).toHaveBeenCalledWith({
+    wrapperName: 'my-wrapper',
+    wrapperVersion: '1.2.3',
+  });
 });
 
-it('logs error and swallows when storage clear fails', async () => {
-  await platform.storage!.clear('some-key');
+it('constructs ElectronRequests with enableEventCompression', () => {
+  // eslint-disable-next-line no-new
+  new ElectronPlatform(logger, {
+    enableEventCompression: true,
+  });
 
-  expect(logger.error).toHaveBeenCalledWith(
-    expect.stringContaining('Error clearing key from storage: some-key'),
-  );
+  expect(ElectronRequests).toHaveBeenCalledWith(true);
 });

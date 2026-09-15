@@ -88,3 +88,21 @@ describe('given an information instance with mock data', () => {
     expect(data.os?.name).toEqual(processed);
   });
 });
+
+describe('given a wrapper name and version', () => {
+  it('includes them in sdkData', () => {
+    const info = new ElectronInfo({ wrapperName: 'my-wrapper', wrapperVersion: '1.2.3' });
+
+    const sdkInfo = info.sdkData();
+    expect(sdkInfo.wrapperName).toEqual('my-wrapper');
+    expect(sdkInfo.wrapperVersion).toEqual('1.2.3');
+  });
+
+  it('omits them from sdkData when not provided', () => {
+    const info = new ElectronInfo();
+
+    const sdkInfo = info.sdkData();
+    expect(sdkInfo.wrapperName).toBeUndefined();
+    expect(sdkInfo.wrapperVersion).toBeUndefined();
+  });
+});

@@ -96,7 +96,7 @@ export class ElectronClient extends LDClientImpl {
       initialContext,
     };
 
-    const platform = new ElectronPlatform(logger, options);
+    const platform = new ElectronPlatform(logger, validatedElectronOptions);
     const derivedNs = deriveNamespace(credential, validatedElectronOptions.namespace);
     const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
