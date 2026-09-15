@@ -6,12 +6,6 @@
 [![NPM][sdk-openfeature-cloudflare-server-dm-badge]][sdk-openfeature-cloudflare-server-npm-link]
 [![NPM][sdk-openfeature-cloudflare-server-dt-badge]][sdk-openfeature-cloudflare-server-npm-link]
 
-> [!CAUTION]
-> This provider is in pre-release and not subject to backwards compatibility
-> guarantees. The API may change based on feedback.
->
-> Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
-
 This package provides an [OpenFeature](https://openfeature.dev/) provider that wraps the [LaunchDarkly Cloudflare SDK](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/cloudflare).
 
 This provider is designed primarily for use in multi-user Cloudflare Workers. It follows the server-side LaunchDarkly model for multi-user contexts. It is not intended for use in desktop and embedded systems applications.
