@@ -1,23 +1,13 @@
-import * as http from 'http';
-import { pipeline, Writable } from 'stream';
-import * as zlib from 'zlib';
+import type { IncomingMessage } from 'electron';
 
 import { platform } from '@launchdarkly/js-client-sdk-common';
 
 import HeaderWrapper from './HeaderWrapper';
 
 export default class ElectronResponse implements platform.Response {
-  incomingMessage: http.IncomingMessage;
+  incomingMessage: IncomingMessage;
 
-  chunks: any[] = [];
-
-  memoryStream: Writable = new Writable({
-    decodeStrings: true,
-    write: (chunk, _enc, next) => {
-      this.chunks.push(chunk);
-      next();
-    },
-  });
+  chunks: Buffer[] = [];
 
   promise: Promise<string>;
 
@@ -28,32 +18,41 @@ export default class ElectronResponse implements platform.Response {
   listened: boolean = false;
   rejection?: Error;
 
-  constructor(res: http.IncomingMessage) {
+  // Electron's net module response object implements the Readable-stream 'data'/'end'
+  // events. Its TypeScript declarations aren't a `stream.Readable`, so it isn't type-compatible
+  // with `stream.pipeline()` the way `http.IncomingMessage` is -- collect chunks manually instead.
+  constructor(res: IncomingMessage) {
     this.headers = new HeaderWrapper(res.headers);
-    // Status code is optionally typed, but will always be present for this
-    // use case.
-    this.status = res.statusCode || 0;
+    this.status = res.statusCode;
     this.incomingMessage = res;
 
     this.promise = new Promise((resolve, reject) => {
-      // Called on error or completion of the pipeline.
-      const pipelineCallback = (err: any) => {
+      let settled = false;
+
+      // Called on error, abort, or completion of the response. Idempotent: only the first
+      // call has any effect, since a body already resolved from 'end' should not be retroactively
+      // poisoned by a late 'error'/'aborted' that fires after the transaction is otherwise done.
+      const finish = (err?: unknown) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
         if (err) {
-          this.rejection = err;
+          this.rejection = err instanceof Error ? err : new Error(String(err));
           if (this.listened) {
-            reject(err);
+            reject(this.rejection);
+            return;
           }
         }
-        return resolve(Buffer.concat(this.chunks).toString());
+        resolve(Buffer.concat(this.chunks).toString());
       };
-      switch (res.headers['content-encoding']) {
-        case 'gzip':
-          pipeline(res, zlib.createGunzip(), this.memoryStream, pipelineCallback);
-          break;
-        default:
-          pipeline(res, this.memoryStream, pipelineCallback);
-          break;
-      }
+
+      res.on('data', (chunk: Buffer) => {
+        this.chunks.push(chunk);
+      });
+      res.on('error', finish);
+      res.on('aborted', () => finish(new Error('Response aborted')));
+      res.on('end', () => finish());
     });
   }
 
