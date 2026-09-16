@@ -44,8 +44,11 @@ export interface BaseProviderConfig {
   logger: LDLogger;
   /** The provider name reported in OpenFeature metadata. */
   providerName: string;
-  /** The default timeout in seconds for waitForInitialization. Defaults to 10. */
-  initTimeoutSeconds?: number;
+  /**
+   * The maximum number of seconds initialization waits for the LaunchDarkly client to become
+   * ready. Defaults to 10. Zero does not wait, and null waits indefinitely.
+   */
+  initTimeoutSeconds?: number | null;
 }
 
 /**
@@ -70,12 +73,13 @@ export abstract class BaseOpenFeatureProvider<
 
   private _logger: LDLogger;
 
-  private _initTimeoutSeconds: number;
+  private _initTimeoutSeconds: number | null;
 
   protected constructor(config: BaseProviderConfig) {
     this.metadata = { name: config.providerName };
     this._logger = createSafeLogger(config.logger);
-    this._initTimeoutSeconds = config.initTimeoutSeconds ?? 10;
+    this._initTimeoutSeconds =
+      config.initTimeoutSeconds === undefined ? 10 : config.initTimeoutSeconds;
   }
 
   /**
@@ -111,6 +115,23 @@ export abstract class BaseOpenFeatureProvider<
         throw this._clientConstructionError;
       }
       throw new Error('Unknown problem encountered during initialization');
+    }
+    if (this._initTimeoutSeconds === null) {
+      await this._client.waitForInitialization();
+      return;
+    }
+    if (this._initTimeoutSeconds === 0) {
+      const pending = this._client.waitForInitialization({ timeout: 0 });
+      pending.catch(() => {});
+      await Promise.race([
+        pending,
+        Promise.reject(
+          new Error(
+            'The LaunchDarkly client was not ready and the initialization timeout was zero',
+          ),
+        ),
+      ]);
+      return;
     }
     await this._client.waitForInitialization({ timeout: this._initTimeoutSeconds });
   }
