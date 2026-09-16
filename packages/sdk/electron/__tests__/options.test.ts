@@ -7,8 +7,6 @@ it('logs no warnings when all configuration is valid', () => {
 
   validateOptions(
     {
-      proxyOptions: {},
-      tlsParams: {},
       enableEventCompression: true,
       initialConnectionMode: 'streaming',
       enableIPC: true,
@@ -30,10 +28,6 @@ it('warns for invalid configuration', () => {
   validateOptions(
     {
       // @ts-ignore
-      proxyOptions: false,
-      // @ts-ignore
-      tlsParams: true,
-      // @ts-ignore
       enableEventCompression: 'toast',
       // @ts-ignore
       initialConnectionMode: 42,
@@ -45,13 +39,7 @@ it('warns for invalid configuration', () => {
     logger,
   );
 
-  expect(logger.warn).toHaveBeenCalledTimes(6);
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "proxyOptions" should be of type object, got boolean, using default value',
-  );
-  expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "tlsParams" should be of type object, got boolean, using default value',
-  );
+  expect(logger.warn).toHaveBeenCalledTimes(4);
   expect(logger.warn).toHaveBeenCalledWith(
     'Config option "enableEventCompression" should be of type boolean, got string, using default value',
   );
@@ -70,8 +58,6 @@ it('applies default options', () => {
   const logger = createMockLogger();
   const opts = validateOptions({}, logger);
 
-  expect(opts.proxyOptions).toBeUndefined();
-  expect(opts.tlsParams).toBeUndefined();
   expect(opts.enableEventCompression).toBeUndefined();
   expect(opts.initialConnectionMode).toEqual('streaming');
   expect(opts.plugins).toEqual([]);
@@ -137,8 +123,6 @@ it('filters to base options', () => {
 
   const opts: ElectronOptions = {
     debug: false,
-    proxyOptions: {},
-    tlsParams: {},
     enableEventCompression: true,
     initialConnectionMode: 'streaming',
     enableIPC: true,
