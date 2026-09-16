@@ -18,9 +18,6 @@ export default class ElectronResponse implements platform.Response {
   listened: boolean = false;
   rejection?: Error;
 
-  // Electron's net module response object implements the Readable-stream 'data'/'end'
-  // events. Its TypeScript declarations aren't a `stream.Readable`, so it isn't type-compatible
-  // with `stream.pipeline()` the way `http.IncomingMessage` is -- collect chunks manually instead.
   constructor(res: IncomingMessage) {
     this.headers = new HeaderWrapper(res.headers);
     this.status = res.statusCode;
@@ -29,9 +26,6 @@ export default class ElectronResponse implements platform.Response {
     this.promise = new Promise((resolve, reject) => {
       let settled = false;
 
-      // Called on error, abort, or completion of the response. Idempotent: only the first
-      // call has any effect, since a body already resolved from 'end' should not be retroactively
-      // poisoned by a late 'error'/'aborted' that fires after the transaction is otherwise done.
       const finish = (err?: unknown) => {
         if (settled) {
           return;

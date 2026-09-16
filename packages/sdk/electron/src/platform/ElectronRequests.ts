@@ -1,4 +1,4 @@
-import { app , net } from 'electron';
+import { app, net } from 'electron';
 import type { ClientRequest, IncomingMessage } from 'electron';
 // No types for the event source.
 // TODO: once we merge in the shared @launchdarkly/eventsource, we will replace
@@ -24,9 +24,7 @@ export default class ElectronRequests implements platform.Requests {
   /**
    * Uses Electron's `net` module (Chromium's networking stack) for polling, analytics,
    * and diagnostic requests. The `net` module is only usable once Electron's `ready` event
-   * has fired; this method transparently waits for that milestone (which Electron reaches
-   * on its own, independent of application code) rather than requiring callers to
-   * sequence their own calls around it.
+   * has fired.
    *
    * https://www.electronjs.org/docs/latest/api/net
    */
@@ -60,14 +58,18 @@ export default class ElectronRequests implements platform.Requests {
       const req: ClientRequest = net.request({
         method: options.method,
         url,
-        // Node's http/https never followed redirects, sent ambient session credentials, or
-        // served requests from a shared cache; net.request() defaults to all three (`redirect:
-        // 'follow'`, session-ambient auth, `cache: 'default'`). Preserve the prior behavior:
+        // These options are set to be compatible with Node's http/https never
+        // (which was used in the previous version implementation).
+
         // surface any redirect as an error instead of silently following it with credentials
-        // attached, don't attach ambient session auth, and don't let polling/analytics/
-        // diagnostic responses be served from or written into the app's shared HTTP cache.
+        // attached.
         redirect: 'error',
+
+        // don't attach ambient session auth.
         credentials: 'omit',
+
+        // don't let polling/analytics/diagnostic responses be served from or written into
+        // the app's shared HTTP cache.
         cache: 'no-store',
       });
 
