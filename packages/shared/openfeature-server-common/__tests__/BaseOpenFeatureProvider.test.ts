@@ -56,6 +56,37 @@ it('initialize defaults the timeout to 10 seconds', async () => {
   expect(client.waitForInitialization).toHaveBeenCalledWith({ timeout: 10 });
 });
 
+it('initialize waits indefinitely when the timeout is null', async () => {
+  const client = new MockLDClient();
+  const provider = new TestProvider(
+    { logger: new TestLogger(), providerName: 'p', initTimeoutSeconds: null },
+    client,
+  );
+  await provider.initialize();
+  expect(client.waitForInitialization).toHaveBeenCalledWith();
+});
+
+it('initialize fails without waiting when the timeout is zero and the client is not ready', async () => {
+  const client = new MockLDClient();
+  client.waitForInitialization.mockReturnValue(new Promise(() => {}));
+  const provider = new TestProvider(
+    { logger: new TestLogger(), providerName: 'p', initTimeoutSeconds: 0 },
+    client,
+  );
+  await expect(provider.initialize()).rejects.toThrow(
+    'The LaunchDarkly client was not ready and the initialization timeout was zero',
+  );
+});
+
+it('initialize succeeds when the timeout is zero and the client is already ready', async () => {
+  const client = new MockLDClient();
+  const provider = new TestProvider(
+    { logger: new TestLogger(), providerName: 'p', initTimeoutSeconds: 0 },
+    client,
+  );
+  await expect(provider.initialize()).resolves.toBeUndefined();
+});
+
 it('initialize rethrows the construction error when setClientError was called', async () => {
   const error = new Error('boom');
   const provider = new TestProvider(baseConfig(new TestLogger()), undefined, error);
