@@ -67,9 +67,6 @@ export default {
       }),
     );
 
-    // The worker renders the page itself, so the flag value is styled inline.
-    // Both interpolations are safe to inline unescaped: flagKey is developer-supplied
-    // source code, not runtime input, and flagValue is a boolean.
     const html = `<!DOCTYPE html>
 <html lang="en">
   <head>
