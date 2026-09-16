@@ -2,6 +2,20 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.13.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.13.5...node-server-sdk-v9.13.6) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sdk-server-common:** use subpath import for `semver` module ([#1885](https://github.com/launchdarkly/js-core/issues/1885)) ([2de6c8c](https://github.com/launchdarkly/js-core/commit/2de6c8cc39e6b7a4e4092af0731b2de124d56b94))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.3 to 2.21.4
+
 ## [9.13.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.13.4...node-server-sdk-v9.13.5) (2026-09-15)
 
 

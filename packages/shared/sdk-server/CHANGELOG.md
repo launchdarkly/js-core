@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.21.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.3...js-server-sdk-common-v2.21.4) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sdk-server-common:** use subpath import for `semver` module ([#1885](https://github.com/launchdarkly/js-core/issues/1885)) ([2de6c8c](https://github.com/launchdarkly/js-core/commit/2de6c8cc39e6b7a4e4092af0731b2de124d56b94))
+
 ## [2.21.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.2...js-server-sdk-common-v2.21.3) (2026-09-15)
 
 
