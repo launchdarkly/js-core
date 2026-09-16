@@ -13,7 +13,10 @@ function makeErroringStore(): LDTransactionalFeatureStore {
     delete: (_kind, _key, _version, callback) =>
       (callback as (err?: Error) => void)(new Error('delete failed')),
     upsert: (_kind, _data, callback) => callback(new Error('upsert failed')),
-    applyChanges: (_basis, _data, callback) => callback(),
+    // A native transactional store can pass an argument at runtime even though
+    // the declared applyChanges callback has no parameters.
+    applyChanges: (_basis, _data, callback) =>
+      (callback as (err?: Error) => void)(new Error('applyChanges failed')),
     initialized: (callback) => callback(true),
     close: () => {},
     getDescription: () => 'erroring store',
@@ -52,4 +55,9 @@ it('resolves transactional upsert to undefined when the store reports an error',
 it('resolves transactional delete to undefined when the store reports an error', async () => {
   const facade = new AsyncTransactionalStoreFacade(makeErroringStore());
   await expect(facade.delete(VersionedDataKinds.Features, 'flagA', 2)).resolves.toBeUndefined();
+});
+
+it('resolves transactional applyChanges to undefined when the store reports an error', async () => {
+  const facade = new AsyncTransactionalStoreFacade(makeErroringStore());
+  await expect(facade.applyChanges(true, {})).resolves.toBeUndefined();
 });

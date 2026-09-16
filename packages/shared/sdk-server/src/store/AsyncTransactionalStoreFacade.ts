@@ -71,7 +71,9 @@ export default class AsyncTransactionalStoreFacade {
     selector?: string,
   ): Promise<void> {
     return promisify((cb) => {
-      this._store.applyChanges(basis, data, cb, initMetadata, selector);
+      // The store may report an error through its callback. The promise resolves
+      // either way, so drop the callback arguments.
+      this._store.applyChanges(basis, data, () => cb(undefined), initMetadata, selector);
     });
   }
 
