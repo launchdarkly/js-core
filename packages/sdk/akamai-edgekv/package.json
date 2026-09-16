@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/akamai-server-edgekv-sdk",
-  "version": "1.4.36",
+  "version": "1.4.37",
   "description": "Akamai LaunchDarkly EdgeWorker SDK for EdgeKV feature store",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/akamai-edgekv",
   "repository": {
@@ -62,7 +62,7 @@
     "typescript": "5.1.6"
   },
   "dependencies": {
-    "@launchdarkly/akamai-edgeworker-sdk-common": "^2.0.33",
-    "@launchdarkly/js-server-sdk-common": "^2.21.2"
+    "@launchdarkly/akamai-edgeworker-sdk-common": "^2.0.34",
+    "@launchdarkly/js-server-sdk-common": "^2.21.3"
   }
 }
