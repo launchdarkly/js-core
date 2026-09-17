@@ -26,8 +26,9 @@ export interface ChangeSetResult {
   freshness?: number;
   /**
    * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
-   * attempting FDv2 recovery. `undefined` means no TTL was provided (caller
-   * uses a default); `0` means indefinite (no recovery).
+   * attempting FDv2 recovery. Always set by the source that read the directive:
+   * an absent, unparseable, or out-of-range server TTL is replaced with the
+   * jittered default, so fallback is never indefinite.
    */
   fdv1FallbackTtlMs?: number;
 }
@@ -43,8 +44,9 @@ export interface StatusResult {
   fdv1Fallback: boolean;
   /**
    * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
-   * attempting FDv2 recovery. `undefined` means no TTL was provided (caller
-   * uses a default); `0` means indefinite (no recovery).
+   * attempting FDv2 recovery. Always set by the source that read the directive:
+   * an absent, unparseable, or out-of-range server TTL is replaced with the
+   * jittered default, so fallback is never indefinite.
    */
   fdv1FallbackTtlMs?: number;
 }
@@ -125,9 +127,8 @@ export function terminalError(
  * @param reason Human-readable description of why the server closed the stream.
  * @param fallback The FDv1 fallback directive. `fdv1Fallback === true` means the
  *   server directed the client to fall back to FDv1. `fdv1FallbackTtlMs` is how
- *   long (ms) to remain on FDv1 before attempting FDv2 recovery (omit for the
- *   caller's default; `0` for indefinite). Same semantics as
- *   {@link StatusResult.fdv1FallbackTtlMs}.
+ *   long (ms) to remain on FDv1 before attempting FDv2 recovery. Same semantics
+ *   as {@link StatusResult.fdv1FallbackTtlMs}.
  */
 export function goodbye(reason: string, fallback: internal.FallbackDirective): FDv2SourceResult {
   return {
