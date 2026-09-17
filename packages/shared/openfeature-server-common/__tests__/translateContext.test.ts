@@ -172,6 +172,48 @@ it('can handle privateAttributes in a single context', () => {
   expect(logger.logs.length).toEqual(0);
 });
 
+it('logs an error when privateAttributes is not an array', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      targetingKey: 'my-key',
+      myCustomAttribute: 'myCustomValue',
+      privateAttributes: 'myCustomAttribute' as unknown as string[],
+    }),
+  ).toEqual({
+    kind: 'user',
+    key: 'my-key',
+    myCustomAttribute: 'myCustomValue',
+  });
+  expect(logger.logs).toEqual(["The attribute 'privateAttributes' must be an array"]);
+});
+
+it('omits non-string privateAttributes entries and logs an error', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      targetingKey: 'my-key',
+      privateAttributes: ['myCustomAttribute', 17 as unknown as string],
+    }),
+  ).toEqual({
+    kind: 'user',
+    key: 'my-key',
+    _meta: {
+      privateAttributes: ['myCustomAttribute'],
+    },
+  });
+  expect(logger.logs).toEqual(["'privateAttributes' must be an array of only string values"]);
+});
+
+it('does not set metadata when privateAttributes is empty', () => {
+  const logger = new TestLogger();
+  expect(translateContext(logger, { targetingKey: 'my-key', privateAttributes: [] })).toEqual({
+    kind: 'user',
+    key: 'my-key',
+  });
+  expect(logger.logs.length).toEqual(0);
+});
+
 it('detects a cycle and logs an error', () => {
   const a: any = {
     b: { c: {} },
