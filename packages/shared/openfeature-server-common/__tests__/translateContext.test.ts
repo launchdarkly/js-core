@@ -271,6 +271,52 @@ it('preserves null values inside nested structure attributes', () => {
   expect(logger.logs.length).toEqual(0);
 });
 
+it('ignores a non-string key and logs a warning and an error', () => {
+  const logger = new TestLogger();
+  expect(translateContext(logger, { key: 42 as unknown as string })).toEqual({
+    key: undefined,
+    kind: 'user',
+  });
+  expect(logger.logs).toEqual([
+    "A non-string 'key' attribute was provided.",
+    "The EvaluationContext must contain either a 'targetingKey' or a 'key' and the type must be a string.",
+  ]);
+});
+
+it('uses the key attribute when the targetingKey is empty', () => {
+  const logger = new TestLogger();
+  expect(translateContext(logger, { targetingKey: '', key: 'the-key' })).toEqual({
+    key: 'the-key',
+    kind: 'user',
+  });
+  expect(logger.logs.length).toEqual(0);
+});
+
+it('logs an error when the only key is empty', () => {
+  const logger = new TestLogger();
+  expect(translateContext(logger, { targetingKey: '' })).toEqual({
+    key: undefined,
+    kind: 'user',
+  });
+  expect(logger.logs).toEqual([
+    "The EvaluationContext must contain either a 'targetingKey' or a 'key' and the type must be a string.",
+  ]);
+});
+
+it('ignores a non-string targetingKey within a multi-context', () => {
+  const logger = new TestLogger();
+  expect(
+    translateContext(logger, {
+      kind: 'multi',
+      user: { targetingKey: 42 as unknown as string, key: 'user-key' },
+    }),
+  ).toEqual({
+    kind: 'multi',
+    user: { key: 'user-key' },
+  });
+  expect(logger.logs.length).toEqual(0);
+});
+
 it('logs an error and skips null sub-contexts in a multi-context without crashing', () => {
   const logger = new TestLogger();
   expect(
