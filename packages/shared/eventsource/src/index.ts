@@ -1,3 +1,4 @@
-// TODO(scaffold): the EventSource client exports arrive with the client implementation.
+export { CLOSED, CONNECTING, createEventSource, OPEN } from './EventSource';
+export type { EventSource } from './EventSource';
 export { createDefaultEventRegistry } from './listenerRegistry';
 export * from './types';
