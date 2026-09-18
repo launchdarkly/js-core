@@ -46,8 +46,11 @@ export default interface PersistentDataStore {
    *
    * @param allData a list of {@link PersistentStoreDataKind} instances and their corresponding data
    * sets
+   * @param callback will be called when the init completes. If the store could not apply the
+   * data, then it may be called with an error. Implementations are not required to report
+   * errors.
    */
-  init(allData: KindKeyedStore<PersistentStoreDataKind>, callback: () => void): void;
+  init(allData: KindKeyedStore<PersistentStoreDataKind>, callback: (err?: Error) => void): void;
 
   /**
    * Retrieves an item from the specified collection, if available.
@@ -129,6 +132,19 @@ export default interface PersistentDataStore {
    *   Will be called back with the boolean result.
    */
   initialized(callback: (isInitialized: boolean) => void): void;
+
+  /**
+   * Check if the underlying storage can be accessed.
+   *
+   * The check must be inexpensive, for example a read of a single key. It must not write
+   * any data. The SDK can call this method at a fixed interval while the store is in an
+   * error state.
+   *
+   * @param callback
+   *   Will be called with true when the storage responds to the check, or with false when
+   *   it does not.
+   */
+  isStoreAvailable?(callback: (isAvailable: boolean) => void): void;
 
   /**
    * Releases any resources being used by the feature store.
