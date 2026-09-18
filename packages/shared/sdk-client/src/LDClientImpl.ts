@@ -127,6 +127,25 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     }
 
     this._config = new ConfigurationImpl(options, internalOptions);
+
+    // A dataSystem-configured client has no fallback for a transport that can't send POST --
+    // unlike the legacy streaming path's useReport, which falls back to a ping-based GET instead
+    // of failing. This is a config-level check, not a mode-level one: it fires even if the
+    // resolved connection mode never opens a stream, since mode switching can start streaming
+    // later.
+    if (
+      !!this._config.dataSystem &&
+      this._config.usePost &&
+      !platform.requests.getEventSourceCapabilities().customMethod
+    ) {
+      throw new Error(
+        'usePost requires an EventSource that supports a custom HTTP method (the ' +
+          '"customMethod" capability) when the dataSystem option is configured. The default ' +
+          'EventSource does not support this; supply an EventSource implementation that ' +
+          'supports custom HTTP methods.',
+      );
+    }
+
     this.logger = this._config.logger;
     this._requiresStart = internalOptions?.requiresStart ?? false;
     this.initialContext = internalOptions?.initialContext;

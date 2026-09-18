@@ -78,6 +78,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
       sendEvents: false,
       sendLDHeaders: true,
       useReport: false,
+      usePost: false,
       withReasons: true,
       privateAttributes: [],
       tags: new ApplicationTags({}),
