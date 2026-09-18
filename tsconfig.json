@@ -23,6 +23,9 @@
       "path": "./packages/shared/openfeature-server-common/tsconfig.ref.json"
     },
     {
+      "path": "./packages/shared/eventsource/tsconfig.ref.json"
+    },
+    {
       "path": "./packages/sdk/server-node/tsconfig.ref.json"
     },
     {
