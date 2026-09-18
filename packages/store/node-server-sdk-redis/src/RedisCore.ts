@@ -35,7 +35,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
 
   init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void,
+    callback: (err?: Error) => void,
   ): void {
     const multi = this._state.getClient().multi();
     allData.forEach((keyedItems) => {
@@ -66,7 +66,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       if (err) {
         this._logger?.error(`Error initializing Redis store ${err}`);
       }
-      callback();
+      callback(err ?? undefined);
     });
   }
 
@@ -138,9 +138,29 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ): void {
+    // The watch rejection and the exec completion race independently, so the callback
+    // must only ever fire once. A second fire would shift the persistent store wrapper's
+    // update queue twice and silently drop the next queued operation.
+    let settled = false;
+    const settleOnce = (err?: Error, updatedDescriptor?: interfaces.SerializedItemDescriptor) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      callback(err, updatedDescriptor);
+    };
+
     // The persistent store wrapper manages interactions with a queue, so we can use watch like
     // this without concerns for overlapping transactions.
-    this._state.getClient().watch(this._state.prefixedKey(kind.namespace));
+    this._state
+      .getClient()
+      .watch(this._state.prefixedKey(kind.namespace))
+      .catch((err: unknown) => {
+        // Without this handler a rejected watch (for example during a store outage)
+        // becomes an unhandled promise rejection and can crash the process.
+        this._logger?.error(`Error watching '${kind.namespace}' in Redis ${err}`);
+        settleOnce(err as Error, undefined);
+      });
     const multi = this._state.getClient().multi();
 
     this.get(kind, key, (old) => {
@@ -153,7 +173,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
         if ((deserializedOld?.version || 0) >= descriptor.version) {
           multi.discard();
 
-          callback(undefined, {
+          settleOnce(undefined, {
             version: deserializedOld!.version,
             deleted: !deserializedOld?.item, // If there is no item, then it is deleted.
             serializedItem: old.serializedItem,
@@ -161,28 +181,33 @@ export default class RedisCore implements interfaces.PersistentDataStore {
           return;
         }
       }
-      if (descriptor.deleted) {
+      if (descriptor.serializedItem) {
+        multi.hset(this._state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
+      } else if (descriptor.deleted) {
+        // The SDK contract guarantees a serializedItem is always provided for writes,
+        // including deletes, so this only runs if that contract is violated. It keeps
+        // today's placeholder shape, but adds the key so the tombstone stays identifiable.
         multi.hset(
           this._state.prefixedKey(kind.namespace),
           key,
-          JSON.stringify({ version: descriptor.version, deleted: true }),
+          JSON.stringify({ key, version: descriptor.version, deleted: true }),
         );
-      } else if (descriptor.serializedItem) {
-        multi.hset(this._state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
       } else {
         // This call violates the contract.
         multi.discard();
         this._logger?.error('Attempt to write a non-deleted item without data to Redis.');
-        callback(undefined, undefined);
+        settleOnce(undefined, undefined);
         return;
       }
       multi.exec((err, replies) => {
         if (!err && (replies === null || replies === undefined)) {
           // This means the EXEC failed because someone modified the watched key
           this._logger?.debug('Concurrent modification detected, retrying');
+          // This is a fresh attempt with its own watch/settle guard, not a
+          // completion of this one, so it gets the original callback, not settleOnce.
           this.upsert(kind, key, descriptor, callback);
         } else {
-          callback(err || undefined, descriptor);
+          settleOnce(err || undefined, descriptor);
         }
       });
     });
@@ -196,6 +221,20 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       // Initialized if there is not an error and the key does exists.
       // (A count >= 1)
       callback(!!(!err && count));
+    });
+  }
+
+  isStoreAvailable(callback: (isAvailable: boolean) => void): void {
+    // During the initial connection ioredis queues the command and may still connect.
+    // Fail fast only once a prior connection has dropped.
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      callback(false);
+      return;
+    }
+    // A cheap read. The store is available when the command round-trip succeeds.
+    // The value of the key does not matter.
+    this._state.getClient().exists(this._initedKey, (err) => {
+      callback(!err);
     });
   }
 
