@@ -2,6 +2,7 @@ import {
   Crypto,
   Encoding,
   Info,
+  LDEventSourceFactory,
   LDLogger,
   Platform,
   Requests,
@@ -20,11 +21,17 @@ export default class BrowserPlatform implements Platform {
   info: Info;
   // fileSystem?: Filesystem;
   crypto: Crypto = new BrowserCrypto();
-  requests: Requests = new BrowserRequests();
+  requests: Requests;
   storage?: Storage;
 
-  constructor(logger: LDLogger, options: BrowserOptions, storage?: Storage) {
+  constructor(
+    logger: LDLogger,
+    options: BrowserOptions,
+    storage?: Storage,
+    eventSourceFactory?: LDEventSourceFactory,
+  ) {
     this.storage = storage ?? (isLocalStorageSupported() ? new LocalStorage(logger) : undefined);
+    this.requests = new BrowserRequests(eventSourceFactory);
     this.info = new BrowserInfo(options);
   }
 }
