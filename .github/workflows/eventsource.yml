@@ -25,3 +25,23 @@ jobs:
         with:
           workspace_name: '@launchdarkly/eventsource'
           workspace_path: packages/shared/eventsource
+      - name: Install contract-tests dependencies
+        run: yarn workspaces focus @launchdarkly/eventsource-contract-tests
+      - name: Build the contract-tests service
+        run: yarn workspace @launchdarkly/eventsource-contract-tests build
+      - name: Launch the contract-tests service in the background
+        run: |
+          yarn workspace @launchdarkly/eventsource-contract-tests start \
+            > /tmp/eventsource-contract-tests.log 2>&1 &
+      - name: Run SSE contract tests
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        with:
+          repo: sse-contract-tests
+          version: v2
+          branch: main
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          enable_persistence_tests: 'false'
+      - name: Print contract-tests service log on failure
+        if: failure()
+        run: cat /tmp/eventsource-contract-tests.log || echo "No contract-tests service log"
