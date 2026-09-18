@@ -66,6 +66,7 @@
     "packages/sdk/shopify-oxygen/example",
     "packages/sdk/browser/example",
     "packages/sdk/browser/example-fdv2",
+    "packages/sdk/browser/examples/features/custom-eventsource",
     "packages/sdk/openfeature-node-server",
     "packages/sdk/openfeature-node-server/examples/getting-started",
     "packages/sdk/openfeature-cloudflare-server",

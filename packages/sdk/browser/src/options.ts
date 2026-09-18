@@ -1,5 +1,6 @@
 import {
   LDClientDataSystemOptions,
+  LDEventSourceFactory,
   LDLogger,
   LDOptions as LDOptionsBase,
   LDStorage,
@@ -113,6 +114,27 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * than crashing the application.
    */
   storage?: LDStorage;
+
+  /**
+   * Custom EventSource implementation, used for the streaming connection.
+   *
+   * By default the browser SDK uses the native browser `EventSource`, which cannot send request
+   * headers, cannot use a method other than GET, and has no read timeout. Set this to a factory
+   * that produces an implementation supporting those features -- for instance the `fetch()`-based
+   * one this package ships:
+   *
+   * ```javascript
+   * import { fetchBrowserEventSource } from '@launchdarkly/js-client-sdk/fetch-eventsource';
+   *
+   * const options = { eventSource: fetchBrowserEventSource };
+   * ```
+   *
+   * @remarks
+   * A factory should declare what its event sources support through the optional `capabilities`
+   * property. The SDK only uses REPORT streaming, for example, when `capabilities.customMethod` is
+   * true; a factory that declares nothing is treated as supporting nothing.
+   */
+  eventSource?: LDEventSourceFactory;
 }
 
 export interface ValidatedOptions {
@@ -122,6 +144,7 @@ export interface ValidatedOptions {
   automaticBackgroundHandling?: boolean;
   plugins: LDPlugin[];
   storage?: LDStorage;
+  eventSource?: LDEventSourceFactory;
 }
 
 const optDefaults = {
@@ -130,6 +153,7 @@ const optDefaults = {
   streaming: undefined,
   plugins: [],
   storage: undefined,
+  eventSource: undefined,
 };
 
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
@@ -138,6 +162,7 @@ const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefine
   streaming: TypeValidators.Boolean,
   plugins: TypeValidators.createTypeArray('LDPlugin', {}),
   storage: TypeValidators.Object,
+  eventSource: TypeValidators.Object,
 };
 
 function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {
