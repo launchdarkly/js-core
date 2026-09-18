@@ -52,7 +52,7 @@ it('logs through the wrapper when a write fails', (done) => {
   );
   const logger = makeLogger();
   const fakeClient = {
-    watch: jest.fn(),
+    watch: jest.fn().mockResolvedValue('OK'),
     hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
       cb(null, null);
     },
