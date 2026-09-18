@@ -124,14 +124,14 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
   async init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void,
+    callback: (err?: Error) => void,
   ) {
     let items: Record<string, AttributeValue>[];
     try {
       items = await this._readExistingItems(allData);
     } catch (error) {
       this._logger?.error(`Error reading existing items from DynamoDB: ${error}`);
-      callback();
+      callback(error as Error);
       return;
     }
 
@@ -178,6 +178,8 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       await this._state.batchWrite(this._tableName, ops);
     } catch (error) {
       this._logger?.error(`Error writing to DynamoDB: ${error}`);
+      callback(error as Error);
+      return;
     }
     callback();
   }
@@ -265,6 +267,26 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     }
     // Callback outside the try. In case it raised an exception.
     callback(initialized);
+  }
+
+  async isStoreAvailable(callback: (isAvailable: boolean) => void) {
+    let isAvailable = false;
+    try {
+      // A cheap read. The store is available when the request succeeds. The result
+      // value does not matter.
+      await this._state.get(this._tableName, this._initializedToken());
+      isAvailable = true;
+    } catch {
+      isAvailable = false;
+    }
+    // Callback outside the try for the read above, so a failed read is never
+    // mistaken for a callback error. It gets its own try/catch so a throw from the
+    // caller's callback cannot reject this method's returned promise.
+    try {
+      callback(isAvailable);
+    } catch {
+      // The caller's callback is responsible for handling its own errors.
+    }
   }
 
   close(): void {
