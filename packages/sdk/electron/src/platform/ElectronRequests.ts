@@ -1,21 +1,23 @@
 import * as http from 'http';
 import * as https from 'https';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
+import { createEventSource, FetchFn } from '@launchdarkly/eventsource';
 import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
+import createElectronFetch from './ElectronFetch';
 import ElectronResponse from './ElectronResponse';
 
 const gzip = promisify(zlib.gzip);
 
 export default class ElectronRequests implements platform.Requests {
+  private _eventSourceFetch: FetchFn;
+
   private _enableBodyCompression: boolean = false;
 
   constructor(enableEventCompression?: boolean) {
+    this._eventSourceFetch = createElectronFetch();
     this._enableBodyCompression = !!enableEventCompression;
   }
 
@@ -71,12 +73,12 @@ export default class ElectronRequests implements platform.Requests {
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
+    return createEventSource(url, {
       ...eventSourceInitDict,
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
-    };
-    return new LDEventSource(url, expandedOptions);
+      fetch: this._eventSourceFetch,
+    });
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {
