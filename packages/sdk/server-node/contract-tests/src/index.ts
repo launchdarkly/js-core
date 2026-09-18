@@ -47,6 +47,8 @@ app.get('/', (req: Request, res: Response) => {
       'flag-change-listeners',
       'fdv1-fallback',
       'instance-id',
+      'persistent-data-store-redis',
+      'persistent-data-store-recovery',
     ],
   });
 });

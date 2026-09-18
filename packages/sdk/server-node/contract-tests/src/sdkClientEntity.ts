@@ -20,12 +20,79 @@ import ld, {
   PollingDataSourceConfiguration,
   StreamingDataSourceConfiguration,
 } from '@launchdarkly/node-server-sdk';
+import { RedisFeatureStore } from '@launchdarkly/node-server-sdk-redis';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
 
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
+
+// The shared ServerSDKConfigParams/SDKDataSystemParams types don't yet
+// declare the persistent-store fields the harness sends for the
+// persistent-store recovery suite. These mirror servicedef/sdk_config.go's
+// DataSystem.Store/StoreMode until that shared type is updated.
+interface SDKConfigPersistentStoreParams {
+  type: 'redis' | 'dynamodb' | 'consul';
+  prefix?: string;
+  dsn: string;
+}
+
+interface SDKConfigPersistentCacheParams {
+  mode: 'off' | 'ttl' | 'infinite';
+  ttl?: number;
+}
+
+interface SDKConfigPersistentDataStoreParams {
+  store: SDKConfigPersistentStoreParams;
+  cache: SDKConfigPersistentCacheParams;
+}
+
+interface SDKConfigDataSystemWithStore {
+  store?: {
+    persistentDataStore?: SDKConfigPersistentDataStoreParams;
+  };
+  storeMode?: 0 | 1;
+}
+
+// A cache TTL, in seconds, used to approximate the harness's "infinite"
+// cache mode. The SDK's persistent store wrapper has no dedicated infinite
+// cache mode, so this is a TTL far longer than any contract test run.
+const infiniteCacheTTLSeconds = 24 * 60 * 60;
+
+function makePersistentStore(params: SDKConfigPersistentDataStoreParams) {
+  if (params.store.type !== 'redis') {
+    throw new Error(`Unsupported persistent data store type: ${params.store.type}`);
+  }
+
+  const dsn = new URL(params.store.dsn);
+  let cacheTTL: number;
+  switch (params.cache.mode) {
+    case 'off':
+      cacheTTL = 0;
+      break;
+    case 'infinite':
+      cacheTTL = infiniteCacheTTLSeconds;
+      break;
+    case 'ttl':
+    default:
+      cacheTTL = params.cache.ttl ?? 0;
+      break;
+  }
+
+  return RedisFeatureStore({
+    // The harness simulates outages with a TCP proxy, and buffered commands would
+    // otherwise hide write failures from the SDK.
+    redisOpts: {
+      host: dsn.hostname,
+      port: Number(dsn.port),
+      enableOfflineQueue: false,
+      maxRetriesPerRequest: 1,
+    },
+    prefix: params.store.prefix,
+    cacheTTL,
+  });
+}
 
 export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
   const cf: LDOptions = {
@@ -150,6 +217,14 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
     cf.dataSystem = {
       dataSource: dataSourceOptions,
     };
+
+    // The persistent-store fields aren't in the shared SDKDataSystemParams type yet
+    // (see the local interfaces above), so they're read via this cast.
+    const persistentDataStore = (options.dataSystem as SDKConfigDataSystemWithStore).store
+      ?.persistentDataStore;
+    if (persistentDataStore) {
+      cf.dataSystem.persistentStore = makePersistentStore(persistentDataStore);
+    }
 
     // FDv1Fallback configures the SDK's FDv1 Fallback Synchronizer -- engaged only in
     // response to a server-directed FDv1 Fallback Directive, separate from the FDv2
