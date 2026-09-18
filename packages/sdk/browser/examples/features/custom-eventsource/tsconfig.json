@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "lib": ["ES2017", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "strict": true,
+    "stripInternal": true,
+    "target": "ES2017",
+    "allowJs": true
+  },
+  "include": ["src"]
+}
