@@ -105,6 +105,11 @@
       "extra-files": [
         {
           "type": "json",
+          "path": "/packages/sdk/browser/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/eventsource']"
+        },
+        {
+          "type": "json",
           "path": "/packages/sdk/node-client/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/eventsource']"
         },
@@ -312,6 +317,11 @@
         {
           "type": "json",
           "path": "example-fdv2/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "examples/features/custom-eventsource/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         },
         {
