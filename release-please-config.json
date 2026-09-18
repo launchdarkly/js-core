@@ -98,6 +98,11 @@
       "extra-files": ["src/platform/OxygenInfo.ts"]
     },
     "packages/shared/common": {},
+    "packages/shared/eventsource": {
+      "bump-minor-pre-major": true,
+      "prerelease": true,
+      "prerelease-type": "beta"
+    },
     "packages/shared/sdk-client": {
       "extra-files": [
         {
