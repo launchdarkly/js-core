@@ -82,6 +82,8 @@ export function useFlags<T extends LDFlagSet = LDFlagSet>(
     client.logger.warn(
       '[LaunchDarkly] useFlags is deprecated and will be removed in a future major version.',
     );
+    // Warn once on mount only. A dependency on the client would repeat the warning.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [flags, setFlags] = useState<T>(() => client.allFlags() as T);
@@ -99,5 +101,6 @@ export function useFlags<T extends LDFlagSet = LDFlagSet>(
 
   // Context is included so the proxy is recreated on every identity change,
   // ensuring variations are re-called for the new LaunchDarkly context.
+  // oxlint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => toFlagsProxy(client, flags), [client, flags, context]) as T;
 }
