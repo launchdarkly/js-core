@@ -3,6 +3,7 @@ import { generateObject, generateText, jsonSchema, LanguageModel, ModelMessage }
 import type {
   LDAICompletionConfig,
   LDLogger,
+  LDMessage,
   Runner,
   RunnerResult,
 } from '@launchdarkly/server-sdk-ai';
@@ -38,25 +39,34 @@ export class VercelModelRunner implements Runner {
   }
 
   /**
-   * Run the Vercel AI model with the given user prompt.
+   * Run the Vercel AI model with the given user prompt or message array.
    *
-   * The runner maintains a conversation history (as Vercel AI SDK
-   * `ModelMessage`s) that is initialized from any messages on the AI config
-   * (system prompt, etc.). On every invocation the user prompt is appended to
-   * the existing history before being sent to the model. When `multiTurn` is
-   * `true` (the default) and the call succeeds with non-empty content, the
-   * user prompt and the assistant's reply are persisted to the history so
-   * subsequent calls continue the conversation. When `multiTurn` is `false`,
-   * history is treated as read-only — useful for stateless runners (e.g.
-   * judges) where every call should see only the initial config messages
-   * plus the current input. Failed calls leave the history unchanged so the
-   * next call can retry cleanly.
+   * When `input` is a string, the runner maintains a conversation history (as
+   * Vercel AI SDK `ModelMessage`s) initialized from any messages on the AI
+   * config. The user prompt is appended to the existing history before being
+   * sent to the model. When `multiTurn` is `true` (the default) and the call
+   * succeeds with non-empty content, the user prompt and the assistant's reply
+   * are persisted to the history so subsequent calls continue the
+   * conversation. When `multiTurn` is `false`, history is treated as
+   * read-only — useful for stateless runners (e.g. judges) where every call
+   * should see only the initial config messages plus the current input. Failed
+   * calls leave the history unchanged so the next call can retry cleanly.
    *
-   * @param input The user prompt string.
+   * When `input` is a pre-built `LDMessage[]` it is used as-is — config
+   * messages are not prepended and history is not updated.
+   *
+   * @param input The user prompt string, or a pre-built message array.
    * @param outputType Optional JSON schema for structured output. When provided,
    *   the parsed object is exposed via {@link RunnerResult.parsed}.
    */
-  async run(input: string, outputType?: Record<string, unknown>): Promise<RunnerResult> {
+  async run(input: string | LDMessage[], outputType?: Record<string, unknown>): Promise<RunnerResult> {
+    if (Array.isArray(input)) {
+      const vercelMessages = convertMessagesToVercel(input) as ModelMessage[];
+      return outputType !== undefined
+        ? this._runStructured(vercelMessages, outputType)
+        : this._runCompletion(vercelMessages);
+    }
+
     const userMessage: ModelMessage = { role: 'user', content: input };
     const messages: ModelMessage[] = [...this._history, userMessage];
 
