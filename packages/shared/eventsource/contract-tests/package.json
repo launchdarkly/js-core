@@ -1,0 +1,25 @@
+{
+  "name": "@launchdarkly/eventsource-contract-tests",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "type": "module",
+  "author": "",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "@launchdarkly/eventsource": "workspace:^",
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.11.9",
+    "typescript": "5.1.6"
+  }
+}
