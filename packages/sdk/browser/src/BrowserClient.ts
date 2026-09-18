@@ -77,7 +77,9 @@ class BrowserClientImpl extends LDClientImpl {
     const safeStorage = validatedBrowserOptions.storage
       ? createSafeStorage(validatedBrowserOptions.storage, logger)
       : undefined;
-    const platform = overridePlatform ?? new BrowserPlatform(logger, options, safeStorage);
+    const platform =
+      overridePlatform ??
+      new BrowserPlatform(logger, options, safeStorage, validatedBrowserOptions.eventSource);
     // The base options are in baseOptionsWithDefaults.
     const baseOptionsWithDefaults = filterToBaseOptionsWithDefaults({ ...options, logger });
     const { eventUrlTransformer } = validatedBrowserOptions;
