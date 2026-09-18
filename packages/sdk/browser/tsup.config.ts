@@ -5,12 +5,15 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    'fetch-eventsource': 'src/fetch-eventsource.ts',
   },
   minify: true,
   format: ['esm', 'cjs'],
   splitting: false,
   sourcemap: true,
   clean: true,
+  // `@launchdarkly/eventsource` must stay external (the tsup default for a package.json
+  // dependency) so mangleProps never rewrites its `_`-prefixed internals.
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,
   metafile: true,

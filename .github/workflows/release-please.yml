@@ -269,7 +269,7 @@ jobs:
 
   release-browser:
     runs-on: ubuntu-latest
-    needs: ['release-please', 'release-sdk-client']
+    needs: ['release-please', 'release-sdk-client', 'release-eventsource']
     permissions:
       id-token: write
       contents: write
