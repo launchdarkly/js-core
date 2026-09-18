@@ -29,6 +29,23 @@
         "types": "./dist/index.d.ts",
         "import": "./dist/index.js"
       }
+    },
+    "./fetch-eventsource": {
+      "require": {
+        "types": "./dist/fetch-eventsource.d.cts",
+        "require": "./dist/fetch-eventsource.cjs"
+      },
+      "import": {
+        "types": "./dist/fetch-eventsource.d.ts",
+        "import": "./dist/fetch-eventsource.js"
+      }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "fetch-eventsource": [
+        "./dist/fetch-eventsource.d.ts"
+      ]
     }
   },
   "files": [
@@ -46,6 +63,9 @@
   },
   "dependencies": {
     "@launchdarkly/js-client-sdk-common": "1.32.1"
+  },
+  "optionalDependencies": {
+    "@launchdarkly/eventsource": "0.0.1"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",

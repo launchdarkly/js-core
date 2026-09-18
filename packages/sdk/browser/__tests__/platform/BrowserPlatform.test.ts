@@ -1,4 +1,9 @@
-import { LDLogger, Storage } from '@launchdarkly/js-client-sdk-common';
+import {
+  EventSourceInitDict,
+  LDEventSourceFactory,
+  LDLogger,
+  Storage,
+} from '@launchdarkly/js-client-sdk-common';
 
 import BrowserPlatform from '../../src/platform/BrowserPlatform';
 import LocalStorage, { isLocalStorageSupported } from '../../src/platform/LocalStorage';
@@ -62,4 +67,39 @@ it('uses the provided storage override even when localStorage is unsupported', (
 
   expect(platform.storage).toBe(custom);
   expect(mockLocalStorage).not.toHaveBeenCalled();
+});
+
+it('reports no optional event source capabilities when no factory override is provided', () => {
+  const platform = new BrowserPlatform(logger, {});
+
+  expect(platform.requests.getEventSourceCapabilities()).toEqual({
+    customMethod: false,
+    readTimeout: false,
+    headers: false,
+  });
+});
+
+it('uses the provided event source factory override', () => {
+  const created = { close: jest.fn() };
+  const factory: LDEventSourceFactory = {
+    createEventSource: jest.fn().mockReturnValue(created),
+    capabilities: { customMethod: true, readTimeout: true, headers: true },
+  };
+
+  const platform = new BrowserPlatform(logger, {}, undefined, factory);
+  const initDict: EventSourceInitDict = {
+    headers: { authorization: 'sdk-key' },
+    errorFilter: () => true,
+    initialRetryDelayMillis: 1000,
+    readTimeoutMillis: 300000,
+    retryResetIntervalMillis: 60000,
+  };
+
+  expect(platform.requests.createEventSource('http://example.com/stream', initDict)).toBe(created);
+  expect(factory.createEventSource).toHaveBeenCalledWith('http://example.com/stream', initDict);
+  expect(platform.requests.getEventSourceCapabilities()).toEqual({
+    customMethod: true,
+    readTimeout: true,
+    headers: true,
+  });
 });
