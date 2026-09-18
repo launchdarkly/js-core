@@ -127,8 +127,8 @@ export interface LDOptions {
    * @remarks
    * Set a custom {@link LDLogger} if you want full control of logging behavior.
    *
-   * @defaultValue The default logging implementation will varybased on platform. For the browser
-   * the default logger will log "info" level and higher priorty messages and it will log messages to
+   * @defaultValue The default logging implementation will vary based on platform. For the browser
+   * the default logger will log "info" level and higher priority messages and it will log messages to
    * console.info, console.warn, and console.error. Other platforms may use a `BasicLogger` instance
    * also defaulted to the "info" level.
    */
@@ -206,8 +206,31 @@ export interface LDOptions {
    *
    * This setting applies both to requests to the streaming service, as well as flag requests when the SDK is in polling
    * mode.
+   *
+   * This option only applies to the legacy (non-`dataSystem`) data source. If the `dataSystem`
+   * option is also configured, this option has no effect and a warning is logged -- use
+   * `usePost` instead.
    */
   useReport?: boolean;
+
+  /**
+   * Directs the SDK to use the POST method, with the evaluation context in the request body,
+   * for polling and streaming requests instead of GET with the context encoded in the URL path.
+   * (Default: `false`)
+   *
+   * This is the FDv2 equivalent of `useReport`, and only takes effect when the `dataSystem`
+   * option is also configured.
+   *
+   * For streaming specifically, this also requires an EventSource implementation that supports a
+   * custom HTTP method (the `customMethod` capability) -- the platform's default EventSource
+   * generally does not. The SDK throws synchronously at construction time if `usePost` is set for
+   * streaming without a compatible EventSource.
+   *
+   * This is not stable, and not subject to any backwards compatibility guarantees or semantic
+   * versioning. It is in early access. If you want access to this feature please join the EAP.
+   * https://launchdarkly.com/docs/sdk/features/data-saving-mode
+   */
+  usePost?: boolean;
 
   /**
    * Whether LaunchDarkly should provide additional information about how flag values were
@@ -310,7 +333,7 @@ export interface LDOptions {
    *
    * @remarks
    * Unlike setting {@link LDOptions.maxCachedContexts} to `0`,
-   * this does **not** remove previously cached data — existing entries are left
+   * this does **not** remove previously cached data: existing entries are left
    * intact. This takes precedence over `maxCachedContexts`.
    *
    * @defaultValue false
