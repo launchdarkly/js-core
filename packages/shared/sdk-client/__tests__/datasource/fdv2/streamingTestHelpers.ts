@@ -191,6 +191,8 @@ export function createBase(
     streamUriPath?: string;
     parameters?: { key: string; value: string }[];
     selectorGetter?: () => string | undefined;
+    method?: string;
+    body?: string;
   } = {},
 ) {
   return createStreamingBase({
@@ -203,5 +205,7 @@ export function createBase(
     initialRetryDelayMillis: 1000,
     logger,
     pingHandler: options.pingHandler,
+    method: options.method,
+    body: options.body,
   });
 }

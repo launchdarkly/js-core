@@ -525,6 +525,7 @@ export function createFDv2DataManagerBase(
         platform.encoding!,
         baseHeaders,
         queryParams,
+        config.usePost,
       );
 
       const environmentNamespace = await namespaceForEnvironment(
@@ -547,6 +548,7 @@ export function createFDv2DataManagerBase(
         baseHeaders,
         queryParams,
         plainContextString,
+        usePost: config.usePost,
         logger,
         polling: {
           paths: pollingEndpoints,

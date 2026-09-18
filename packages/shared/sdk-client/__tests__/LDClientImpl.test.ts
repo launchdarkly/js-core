@@ -468,3 +468,116 @@ describe('sdk-client object', () => {
     expect(mockEventSource.closed).toBe(true);
   });
 });
+
+describe('usePost validation', () => {
+  it('throws when dataSystem is configured with usePost but the EventSource lacks customMethod', () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+
+    expect(
+      () =>
+        new LDClientImpl(
+          testSdkKey,
+          AutoEnvAttributes.Enabled,
+          platform,
+          { usePost: true, dataSystem: {} },
+          makeTestDataManagerFactory(testSdkKey, platform),
+        ),
+    ).toThrow(/usePost/);
+  });
+
+  it('does not throw when dataSystem is configured with usePost and the EventSource supports customMethod', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    }));
+
+    let client: LDClientImpl | undefined;
+    expect(() => {
+      client = new LDClientImpl(
+        testSdkKey,
+        AutoEnvAttributes.Enabled,
+        platform,
+        { usePost: true, dataSystem: {}, sendEvents: false },
+        makeTestDataManagerFactory(testSdkKey, platform),
+      );
+    }).not.toThrow();
+    await client?.close();
+  });
+
+  it('does not throw when usePost is set without dataSystem, even if the EventSource lacks customMethod (usePost only applies to FDv2)', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+
+    let client: LDClientImpl | undefined;
+    expect(() => {
+      client = new LDClientImpl(
+        testSdkKey,
+        AutoEnvAttributes.Enabled,
+        platform,
+        { usePost: true, sendEvents: false },
+        makeTestDataManagerFactory(testSdkKey, platform),
+      );
+    }).not.toThrow();
+    await client?.close();
+  });
+});
+
+describe('useReport under dataSystem (CSFDV2 Requirement 2.1.4)', () => {
+  it('ignores useReport and logs a warning when dataSystem is also configured', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+    const warnLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { useReport: true, dataSystem: {}, sendEvents: false, logger: warnLogger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(warnLogger.warn).toHaveBeenCalledWith(expect.stringContaining('useReport'));
+    await client.close();
+  });
+
+  it('does not warn when useReport is set without dataSystem', async () => {
+    const platform = createBasicPlatform();
+    const warnLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { useReport: true, sendEvents: false, logger: warnLogger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(warnLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('useReport'));
+    await client.close();
+  });
+});
