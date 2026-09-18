@@ -101,7 +101,19 @@
     "packages/shared/eventsource": {
       "bump-minor-pre-major": true,
       "prerelease": true,
-      "prerelease-type": "beta"
+      "prerelease-type": "beta",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/sdk/node-client/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/eventsource']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/server-node/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/eventsource']"
+        }
+      ]
     },
     "packages/shared/sdk-client": {
       "extra-files": [
