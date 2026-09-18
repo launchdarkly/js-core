@@ -827,6 +827,33 @@ it('surfaces a deferred fallback directive on the network-error path', async () 
   base.close();
 });
 
+it('does not misreport a server-sent FDv2 error frame as a network failure', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  const payload = { reason: 'server error', payload_id: 'p1' };
+  // The mock dispatches an 'error' frame to the assigned onerror slot and to every listener
+  // registered for that type, like the real transport.
+  simulateEvent(mockEventSource, 'error', payload);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.errorInfo?.kind).not.toBe('NETWORK_ERROR');
+
+  // No second, spurious result should ever be queued for this one frame.
+  const raced = await Promise.race([
+    base.takeResult().then(() => 'second-result'),
+    new Promise((resolve) => setTimeout(() => resolve('no-second-result'), 50)),
+  ]);
+  expect(raced).toBe('no-second-result');
+
+  base.close();
+});
+
 it('merges a deferred fallback directive into a successful ping-triggered poll result', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);

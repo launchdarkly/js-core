@@ -362,15 +362,24 @@ export function createStreamingBase(config: {
       });
       eventSource = es;
 
-      attachFDv2Listeners(es);
-      attachPingListener(es);
-
+      // Assign every on* slot before attachFDv2Listeners/attachPingListener register listeners
+      // below. An EventSource implementation may implement on* assignment by replacing the
+      // registered listeners of that type; this order keeps the protocol listeners intact
+      // either way. onclose fires only for a deliberate close().
       es.onclose = () => {
         config.logger?.info('Closed LaunchDarkly stream connection');
       };
 
       es.onerror = (err?: HttpErrorResponse) => {
         if (stopped) {
+          return;
+        }
+
+        // Server-sent FDv2 error frames and connection failures share the 'error' type, and
+        // both reach this slot. The protocol listener owns the frames; reporting one here too
+        // would replace the real reason with a fabricated network error. Only a protocol frame
+        // carries string `data`; typeof keeps a non-object payload from throwing.
+        if (typeof (err as { data?: unknown } | undefined)?.data === 'string') {
           return;
         }
 
@@ -420,6 +429,9 @@ export function createStreamingBase(config: {
       es.onretrying = (e) => {
         config.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
       };
+
+      attachFDv2Listeners(es);
+      attachPingListener(es);
     },
 
     close(): void {
