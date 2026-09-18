@@ -88,6 +88,10 @@ export function createStreamingBase(config: {
   logger?: LDLogger;
   diagnosticsManager?: internal.DiagnosticsManager;
   pingHandler?: PingHandler;
+  /** HTTP method override for the stream request (e.g. `'POST'`). Omit for the default GET. */
+  method?: string;
+  /** Request body to send with `method`. Only meaningful together with `method`. */
+  body?: string;
 }): StreamingFDv2Base {
   const resultQueue = createAsyncQueue<FDv2SourceResult>();
   const protocolHandler = internal.createProtocolHandler(
@@ -352,8 +356,15 @@ export function createStreamingBase(config: {
 
       logConnectionAttempt();
 
+      if (config.method) {
+        // POST includes a body, so content type is required.
+        headers['content-type'] = 'application/json';
+      }
+
       const es = config.requests.createEventSource(buildStreamUri(), {
         headers,
+        method: config.method,
+        body: config.body,
         errorFilter: (error: HttpErrorResponse) => handleError(error),
         initialRetryDelayMillis: config.initialRetryDelayMillis,
         readTimeoutMillis: 5 * 60 * 1000,

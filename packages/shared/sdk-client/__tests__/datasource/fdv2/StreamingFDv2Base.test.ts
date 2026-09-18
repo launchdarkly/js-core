@@ -39,6 +39,25 @@ it('creates EventSource with correct URI and options', () => {
   );
 });
 
+it('sends a POST request with the context body and a content-type header when configured', () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger, {
+    method: 'POST',
+    body: '{"kind":"user","key":"test-user"}',
+  });
+  base.start();
+
+  expect(mockRequests.createEventSource).toHaveBeenCalledWith(
+    expect.any(String),
+    expect.objectContaining({
+      method: 'POST',
+      body: '{"kind":"user","key":"test-user"}',
+      headers: expect.objectContaining({ 'content-type': 'application/json' }),
+    }),
+  );
+});
+
 it('produces a changeSet result for a full transfer', async () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);

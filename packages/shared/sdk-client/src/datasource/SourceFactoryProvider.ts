@@ -41,6 +41,14 @@ export interface SourceFactoryContext {
   queryParams: { key: string; value: string }[];
   /** JSON-serialized evaluation context. */
   plainContextString: string;
+  /**
+   * Whether streaming should request via POST instead of GET (CSFDV2 Requirement 2.1.3).
+   * `buildStreamingBase` below acts on this flag unconditionally -- it does not check whether
+   * the platform's EventSource actually supports a custom HTTP method (the `customMethod`
+   * capability). The caller is responsible for ensuring `usePost` is only set when that
+   * capability is present.
+   */
+  usePost: boolean;
   /** Logger. */
   logger: LDLogger;
 
@@ -147,6 +155,7 @@ function resolvePollingRequestor(
     ctx.encoding,
     ctx.baseHeaders,
     ctx.queryParams,
+    ctx.usePost,
   );
 }
 
@@ -162,7 +171,9 @@ function buildStreamingBase(
 ) {
   const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
   const requestor = resolvePollingRequestor(ctx, entry.endpoints);
-  const streamUriPath = ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
+  const streamUriPath = ctx.usePost
+    ? ctx.streaming.paths.pathPost(ctx.encoding, ctx.plainContextString)
+    : ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
   return createStreamingBase({
     requests: ctx.requests,
     serviceEndpoints: entryEndpoints,
@@ -174,6 +185,7 @@ function buildStreamingBase(
       (entry.initialReconnectDelay ?? ctx.streaming.initialReconnectDelaySeconds) * 1000,
     logger: ctx.logger,
     pingHandler: createPingHandler(requestor, sg, ctx.logger),
+    ...(ctx.usePost ? { method: 'POST' as const, body: ctx.plainContextString } : {}),
   });
 }
 
