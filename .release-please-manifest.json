@@ -27,5 +27,5 @@
   "packages/sdk/react": "4.1.19",
   "packages/sdk/openfeature-node-server": "2.0.5",
   "packages/sdk/vue": "3.0.0",
-  "packages/sdk/openfeature-cloudflare-server": "0.1.7"
+  "packages/sdk/openfeature-cloudflare-server": "1.0.0"
 }

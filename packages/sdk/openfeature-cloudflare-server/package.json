@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/openfeature-cloudflare-server",
-  "version": "0.1.7",
+  "version": "1.0.0",
   "description": "LaunchDarkly OpenFeature provider for the Cloudflare server SDK",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/openfeature-cloudflare-server",
   "repository": {
