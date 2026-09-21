@@ -626,6 +626,71 @@ describe('given a wrapper around a core that reports errors', () => {
       done();
     });
   });
+
+  it('does not report initialized after a failed init', (done) => {
+    wrapper.init({ features: {} }, () => {
+      wrapper.initialized((isInitialized) => {
+        expect(isInitialized).toBe(false);
+        done();
+      });
+    });
+  });
+
+  it('does not serve the rejected data from the cache after a failed init', async () => {
+    const cachingWrapper = new PersistentDataStoreWrapper(new ErroringPersistentStore(), 60);
+    try {
+      const facade = new AsyncStoreFacade(cachingWrapper);
+      await facade.init({ features: { key1: { version: 1 } } });
+
+      const value = await facade.get(VersionedDataKinds.Features, 'key1');
+      expect(value).toBeNull();
+    } finally {
+      cachingWrapper.close();
+    }
+  });
+
+  it('clears previously cached data when a later init fails', async () => {
+    const core = new MockPersistentStore();
+    const cachingWrapper = new PersistentDataStoreWrapper(core, 60);
+    try {
+      const facade = new AsyncStoreFacade(cachingWrapper);
+      await facade.init({ features: { key1: { version: 1 } } });
+
+      jest
+        .spyOn(core, 'init')
+        // @ts-ignore The mock widens the callback to the error-reporting form.
+        .mockImplementation((_allData, cb: (err?: Error) => void) => cb(new Error('init failed')));
+      await facade.init({ features: { key1: { version: 2 } } });
+
+      const spy = jest.spyOn(core, 'get');
+      const value = await facade.get(VersionedDataKinds.Features, 'key1');
+
+      // The cache was cleared, so the read fell through to the store, which still
+      // holds the first init's data.
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(value).toEqual({ version: 1 });
+    } finally {
+      cachingWrapper.close();
+      jest.restoreAllMocks();
+    }
+  });
+
+  it('logs at error level when an init reports an error', async () => {
+    const logger = new TestLogger();
+    const loggingWrapper = new PersistentDataStoreWrapper(new ErroringPersistentStore(), 0, logger);
+    try {
+      await new AsyncStoreFacade(loggingWrapper).init({});
+
+      logger.expectMessages([
+        {
+          level: LogLevel.Error,
+          matches: /Persistent store returned error: init failed/,
+        },
+      ]);
+    } finally {
+      loggingWrapper.close();
+    }
+  });
 });
 
 it('exposes isStoreAvailable when the core implements it', (done) => {

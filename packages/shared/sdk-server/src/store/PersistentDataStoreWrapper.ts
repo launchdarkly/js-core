@@ -142,6 +142,18 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
     this._queue.enqueue((cb) => {
       const afterStoreInit = (err?: Error) => {
+        if (err) {
+          // A failed init must not present the rejected data as current. Clear the
+          // caches and do not mark the store initialized, so reads fall through to
+          // the persistence layer's actual state.
+          this._logger?.error(
+            `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
+          );
+          this._itemCache?.clear();
+          this._allItemsCache?.clear();
+          cb(err);
+          return;
+        }
         this._isInitialized = true;
         if (this._itemCache) {
           this._itemCache.clear();
@@ -168,7 +180,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             this._allItemsCache!.set(allForKindCacheKey(kind), filteredItems);
           });
         }
-        cb(err);
+        cb();
       };
 
       this._core.init(sortDataSet(allData), afterStoreInit);
