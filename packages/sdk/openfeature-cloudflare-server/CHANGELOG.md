@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v0.1.7...openfeature-cloudflare-server-v1.0.0) (2026-09-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* Promote @launchdarkly/openfeature-cloudflare-server to stable v1 ([#1873](https://github.com/launchdarkly/js-core/issues/1873))
+
+### Features
+
+* Promote @launchdarkly/openfeature-cloudflare-server to stable v1 ([#1873](https://github.com/launchdarkly/js-core/issues/1873)) ([4f9b349](https://github.com/launchdarkly/js-core/commit/4f9b3496e81d5d2d552a4e36c870f913137703fd))
+
 ## [0.1.7](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v0.1.6...openfeature-cloudflare-server-v0.1.7) (2026-09-16)
 
 
