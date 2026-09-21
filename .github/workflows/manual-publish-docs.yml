@@ -25,6 +25,7 @@ on:
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
           - packages/sdk/react
+          - packages/sdk/openfeature-cloudflare-server
           - packages/sdk/openfeature-node-server
           - packages/sdk/vue
 name: Publish Documentation
