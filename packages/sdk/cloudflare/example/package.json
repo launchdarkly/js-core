@@ -5,7 +5,7 @@
   "type": "module",
   "module": "./dist/index.mjs",
   "dependencies": {
-    "@launchdarkly/cloudflare-server-sdk": "2.7.37"
+    "@launchdarkly/cloudflare-server-sdk": "2.7.38"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230321.0",

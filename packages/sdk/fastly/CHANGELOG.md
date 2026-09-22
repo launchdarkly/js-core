@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.28](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.27...fastly-server-sdk-v0.2.28) (2026-09-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.4 to 2.21.5
+
 ## [0.2.27](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.26...fastly-server-sdk-v0.2.27) (2026-09-16)
 
 

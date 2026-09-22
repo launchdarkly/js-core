@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.0...js-sdk-common-v2.26.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* Preserve FDv2 protocol error listeners and stop misreporting server error frames ([#2028](https://github.com/launchdarkly/js-core/issues/2028)) ([3d80bef](https://github.com/launchdarkly/js-core/commit/3d80bef9f56872ed1c625ba1518aed2ebe30c1fd))
+
 ## [2.26.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.2...js-sdk-common-v2.26.0) (2026-09-11)
 
 
