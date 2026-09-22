@@ -61,14 +61,98 @@ beforeEach(() => {
   };
 });
 
-const createMockEventSource = (streamUri: string = '', options: any = {}) => ({
-  streamUri,
-  options,
-  onopen: jest.fn(),
-  onclose: jest.fn(),
-  addEventListener: jest.fn(),
-  close: jest.fn(),
-});
+type MockListener = (event?: { data?: any }) => void;
+
+const createMockEventSource = (streamUri: string = '', options: any = {}) => {
+  // Live registry of the addEventListener registrations. The on* slots are independent of it:
+  // assigning a slot never adds to or removes from the registry. Existing tests key off
+  // `addEventListener.mock.calls` by position to find the PayloadStreamReader's registrations.
+  const registry = new Map<string, MockListener[]>();
+
+  const addEventListener = jest.fn((type: string, listener: any) => {
+    const current = registry.get(type) ?? [];
+    current.push(listener);
+    registry.set(type, current);
+  });
+
+  let assignedOnOpen: any;
+  let assignedOnClose: any;
+  let assignedOnError: any;
+  let assignedOnRetrying: any;
+  let closed = false;
+
+  // Returns the slot that a dispatch of `type` invokes. There is no entry for 'closed':
+  // onclose runs only from close(), never as part of a 'closed' dispatch.
+  const slotFor = (type: string): any => {
+    switch (type) {
+      case 'open':
+        return assignedOnOpen;
+      case 'error':
+        return assignedOnError;
+      case 'retrying':
+        return assignedOnRetrying;
+      default:
+        return undefined;
+    }
+  };
+
+  return {
+    streamUri,
+    options,
+    addEventListener,
+    // close() invokes the onclose slot once, then dispatches 'closed' to the registered
+    // listeners, and does nothing on a later call.
+    close: jest.fn(() => {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      try {
+        assignedOnClose?.();
+      } finally {
+        registry
+          .get('closed')
+          ?.slice()
+          .forEach((listener) => listener());
+      }
+    }),
+    listenersFor(type: string): MockListener[] {
+      return registry.get(type) ?? [];
+    },
+    dispatch(type: string, event?: { data?: any }) {
+      // The matching on* slot runs first, then the addEventListener listeners.
+      slotFor(type)?.(event);
+      registry
+        .get(type)
+        ?.slice()
+        .forEach((listener) => listener(event));
+    },
+    get onopen(): any {
+      return assignedOnOpen;
+    },
+    set onopen(listener: any) {
+      assignedOnOpen = listener;
+    },
+    get onclose(): any {
+      return assignedOnClose;
+    },
+    set onclose(listener: any) {
+      assignedOnClose = listener;
+    },
+    get onerror(): any {
+      return assignedOnError;
+    },
+    set onerror(listener: any) {
+      assignedOnError = listener;
+    },
+    get onretrying(): any {
+      return assignedOnRetrying;
+    },
+    set onretrying(listener: any) {
+      assignedOnRetrying = listener;
+    },
+  };
+};
 
 describe('given a stream processor with mock event source', () => {
   let info: Info;
@@ -379,6 +463,36 @@ describe('given a stream processor with mock event source', () => {
     );
   });
 
+  // A server-sent FDv2 "event: error" frame reaches the reader only through its
+  // addEventListener('error') registration. This test protects that registration against loss,
+  // however it might arise: without it, a malformed frame would dispatch only to the onerror
+  // slot and never get reported.
+  it('reports a malformed server-sent error frame through the payload reader', () => {
+    mockEventSource.dispatch('error', {
+      data: '{"reason INTENTIONAL CORRUPTION MUWAHAHAHA',
+    });
+
+    expect(mockStatusCallback).toHaveBeenNthCalledWith(
+      2,
+      subsystem.DataSourceState.Interrupted,
+      new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed data in EventStream.'),
+    );
+  });
+
+  // A genuine connection-level ErrorEvent (no `data`) also dispatches to type 'error', reaching
+  // both the onerror slot and the payload reader's listener. Retry/close for that case is
+  // already decided by `errorFilter`; the reader must not also report it as a protocol
+  // violation and defensively close the stream out from under an in-progress retry.
+  it('does not report a spurious error for a connection-level error event without data', () => {
+    mockEventSource.dispatch('error', { status: 500, message: 'boom' });
+
+    expect(mockStatusCallback).not.toHaveBeenCalledWith(
+      subsystem.DataSourceState.Interrupted,
+      new LDStreamingError(DataSourceErrorKind.Unknown, 'Event from EventStream missing data.'),
+    );
+    expect(streamingProcessor.stop).not.toBeCalled();
+  });
+
   it('closes and stops', async () => {
     streamingProcessor.close();
 
@@ -386,6 +500,18 @@ describe('given a stream processor with mock event source', () => {
     expect(mockEventSource.close).toBeCalled();
     // @ts-ignore
     expect(streamingProcessor.eventSource).toBeUndefined();
+  });
+
+  // The composite data source, not this processor, reports the terminal status on shutdown.
+  // Reporting Closed from onclose here would reach the composite as a spurious Interrupted, so
+  // onclose must stay log-only, matching the two FDv1 processors.
+  it('logs but does not report a new status when stop() closes the event source', () => {
+    const statusCallCountBeforeStop = mockStatusCallback.mock.calls.length;
+
+    streamingProcessor.stop();
+
+    expect(logger.info).toBeCalledWith('Closed LaunchDarkly stream connection');
+    expect(mockStatusCallback.mock.calls.length).toEqual(statusCallCountBeforeStop);
   });
 
   it('creates a stream init event', async () => {

@@ -140,6 +140,37 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       retryResetIntervalMillis: 60 * 1000,
     });
     this._eventSource = eventSource;
+
+    // Assign every on* handler before the PayloadStreamReader below registers its listeners.
+    // An EventSource implementation may implement on* assignment by replacing the registered
+    // listeners of that type; this order keeps the reader's registrations intact either way.
+
+    // Log-only, like the FDv1 processors. onclose signals a deliberate close(); errorFilter
+    // already reports terminal errors. A Closed report from here would surface as a spurious
+    // Interrupted from the composite data source during shutdown.
+    eventSource.onclose = () => {
+      this._logger?.info('Closed LaunchDarkly stream connection');
+    };
+
+    eventSource.onerror = () => {
+      // The work is done by `errorFilter`.
+    };
+
+    eventSource.onopen = (e) => {
+      this._logger?.info('Opened LaunchDarkly stream connection');
+      this._initMetadata = internal.initMetadataFromHeaders(e.headers);
+      // The fallback signal is captured here from the connection-open response headers and
+      // is honored by the payload listener above once the next payload has been applied.
+      if (e.headers?.[`x-ld-fd-fallback`] === `true`) {
+        fallbackRequested = true;
+      }
+      statusCallback(subsystemCommon.DataSourceState.Valid);
+    };
+
+    eventSource.onretrying = (e) => {
+      this._logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
+    };
+
     const payloadReader = new internal.PayloadStreamReader(
       eventSource,
       {
@@ -202,30 +233,6 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
         this.stop();
       }
     });
-
-    eventSource.onclose = () => {
-      this._logger?.info('Closed LaunchDarkly stream connection');
-      statusCallback(subsystemCommon.DataSourceState.Closed);
-    };
-
-    eventSource.onerror = () => {
-      // The work is done by `errorFilter`.
-    };
-
-    eventSource.onopen = (e) => {
-      this._logger?.info('Opened LaunchDarkly stream connection');
-      this._initMetadata = internal.initMetadataFromHeaders(e.headers);
-      // The fallback signal is captured here from the connection-open response headers and
-      // is honored by the payload listener above once the next payload has been applied.
-      if (e.headers?.[`x-ld-fd-fallback`] === `true`) {
-        fallbackRequested = true;
-      }
-      statusCallback(subsystemCommon.DataSourceState.Valid);
-    };
-
-    eventSource.onretrying = (e) => {
-      this._logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
-    };
   }
 
   stop() {
