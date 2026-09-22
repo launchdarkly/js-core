@@ -14,7 +14,7 @@ import InMemoryFeatureStore from './InMemoryFeatureStore';
 // How often to check the persistence store for recovery while it is unavailable.
 const RECOVERY_POLL_INTERVAL_MS = 500;
 
-// Ceiling on the exponential backoff between write-back attempts, in wall-clock ms.
+// Ceiling on the exponential backoff between write-back attempts.
 const MAX_WRITE_BACK_BACKOFF_MS = 30000;
 
 // Delay after a successful write-back. Limits a flapping store to about one
@@ -26,10 +26,8 @@ const WRITE_BACK_SUCCESS_EMBARGO_MS = 1000;
 const HUNG_TIMEOUT_MS = 30000;
 
 // True when a value looks like a Promise.
-// Some persistence store implementations declare a callback but are actually async. If
-// their promise rejects before the callback runs, this handles it here so it cannot
-// surface as an unhandled rejection and crash the process.
-function isThenable(value: unknown): value is PromiseLike<unknown> {
+// Some persistence store implementations declare a callback but are actually async.
+function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -50,6 +48,41 @@ function toError(reason: unknown): Error {
     return new Error(
       'Persistent store operation failed with a reason that could not be described.',
     );
+  }
+}
+
+// Wraps a callback so only its first call has an effect and NOOP the later calls.
+function once(fn: (err?: Error) => void): (err?: Error) => void {
+  let settled = false;
+  return (err?: Error) => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    fn(err);
+  };
+}
+
+// The failure channel of a persistence store call: a rejected promise from a store
+// that is actually async, or a synchronous throw.
+type StoreCallFailure = 'rejection' | 'sync-throw';
+
+// Invokes a persistence store operation and contains both failure channels.
+// The store reports its result through the callback that `call` gives to it. A store
+// may declare a callback but actually be async. This helper catches that rejection so
+// it cannot surface as an unhandled rejection and crash the process. It also catches a
+// synchronous throw so it cannot escape the call site.
+function invokeStoreCall(
+  call: () => unknown,
+  onFailure: (err: Error, channel: StoreCallFailure) => void,
+): void {
+  try {
+    const result = call();
+    if (isPromiseLike(result)) {
+      result.then(undefined, (reason: unknown) => onFailure(toError(reason), 'rejection'));
+    }
+  } catch (reason) {
+    onFailure(toError(reason), 'sync-throw');
   }
 }
 
@@ -119,12 +152,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   private _pollHandle?: ReturnType<typeof setInterval>;
 
   constructor(
-    private readonly _nonTransPersistenceStore: LDFeatureStore,
+    private readonly _basePersistenceStore: LDFeatureStore,
     private readonly _logger?: LDLogger,
   ) {
     // The persistence store starts as the active store. It may already hold data
     // from a previous run, so reads go there until a basis write arrives.
-    this._activeStore = this._nonTransPersistenceStore;
+    this._activeStore = this._basePersistenceStore;
     this._memoryStore = new InMemoryFeatureStore();
   }
 
@@ -185,29 +218,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
           // over to the memory store.
           this._activeStore = this._memoryStore;
 
-          // Settles exactly once no matter how the store answers: callback, a rejected
-          // promise if it is actually async, or a synchronous throw. Whichever fires
-          // first wins.
-          //
           // A persistence failure must not fail the change. The memory store already
           // holds the data, so the change's own callback must still fire.
-          let settled = false;
-          const settleOnce = (err?: Error) => {
-            if (settled) {
-              return;
-            }
-            settled = true;
+          const settleOnce = once((err?: Error) => {
             this._handleWriteResult(err, true);
             callback();
-          };
-          try {
-            const result = this._nonTransPersistenceStore.init(data, settleOnce);
-            if (isThenable(result)) {
-              result.then(undefined, (err: unknown) => settleOnce(toError(err)));
-            }
-          } catch (err) {
-            settleOnce(toError(err));
-          }
+          });
+          invokeStoreCall(() => this._basePersistenceStore.init(data, settleOnce), settleOnce);
         } else {
           const params: { dataKind: DataKind; item: LDKeyedFeatureStoreItem }[] = [];
           Object.entries(data).forEach(([namespace, items]) => {
@@ -224,27 +241,19 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
                     new Promise<void>((resolve) => {
                       // Same once-only containment as the basis write above, applied
                       // per mirrored item.
-                      let settled = false;
-                      const settleOnce = (err?: Error) => {
-                        if (settled) {
-                          return;
-                        }
-                        settled = true;
+                      const settleOnce = once((err?: Error) => {
                         this._handleWriteResult(err, false);
                         resolve();
-                      };
-                      try {
-                        const result = this._nonTransPersistenceStore.upsert(
-                          nextParams.dataKind,
-                          nextParams.item,
-                          settleOnce,
-                        );
-                        if (isThenable(result)) {
-                          result.then(undefined, (err: unknown) => settleOnce(toError(err)));
-                        }
-                      } catch (err) {
-                        settleOnce(toError(err));
-                      }
+                      });
+                      invokeStoreCall(
+                        () =>
+                          this._basePersistenceStore.upsert(
+                            nextParams.dataKind,
+                            nextParams.item,
+                            settleOnce,
+                          ),
+                        settleOnce,
+                      );
                     }),
                 ),
               Promise.resolve(),
@@ -272,7 +281,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     }
     this._closed = true;
     this._stopRecoveryPolling();
-    this._nonTransPersistenceStore.close();
+    this._basePersistenceStore.close();
     this._memoryStore.close();
   }
 
@@ -375,7 +384,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     if (this._pollHandle || this._closed) {
       return;
     }
-    if (typeof this._nonTransPersistenceStore.isStoreAvailable !== 'function') {
+    if (typeof this._basePersistenceStore.isStoreAvailable !== 'function') {
       return;
     }
     this._pollHandle = setInterval(() => {
@@ -398,9 +407,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
         // Backing off after a write-back failure.
         return;
       }
-      const probe = this._nonTransPersistenceStore.isStoreAvailable?.bind(
-        this._nonTransPersistenceStore,
-      );
+      const probe = this._basePersistenceStore.isStoreAvailable?.bind(this._basePersistenceStore);
       if (!probe) {
         return;
       }
@@ -421,28 +428,33 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
           this._attemptRecovery();
         }
       };
-      try {
-        const result = probe(onAnswer);
-        if (isThenable(result)) {
-          result.then(undefined, (err: unknown) => {
-            // A rejected probe promise is treated as an unavailable answer. It is
-            // not a write-back failure, so it does not affect the error log or backoff.
-            if (generation !== this._probeGeneration || !this._probeInFlight) {
-              return;
-            }
+      // A probe that fails through either channel is treated as an unavailable
+      // answer. It is not a write-back failure, so it does not affect the error log
+      // or backoff.
+      invokeStoreCall(
+        () => probe(onAnswer),
+        (err, channel) => {
+          // A synchronous throw happens in the same stack frame that set
+          // _probeInFlight to true. No newer probe can exist yet, so this branch
+          // skips the generation and closed guard used below.
+          if (channel === 'sync-throw') {
             this._probeInFlight = false;
-            if (this._closed) {
-              return;
-            }
-            this._logger?.debug(`Persistent store availability check rejected: ${toError(err)}`);
-          });
-        }
-      } catch (err) {
-        // A probe that throws synchronously is treated as an unavailable answer. It is
-        // not a write-back failure, so it does not affect the error log or backoff.
-        this._probeInFlight = false;
-        this._logger?.debug(`Persistent store availability check threw: ${toError(err)}`);
-      }
+            this._logger?.debug(`Persistent store availability check failed: ${err}`);
+            return;
+          }
+          // A rejection can arrive late. Ignore it when a newer probe or an
+          // availability transition superseded this one. After close, this still
+          // clears _probeInFlight but skips the log below.
+          if (generation !== this._probeGeneration || !this._probeInFlight) {
+            return;
+          }
+          this._probeInFlight = false;
+          if (this._closed) {
+            return;
+          }
+          this._logger?.debug(`Persistent store availability check rejected: ${err}`);
+        },
+      );
     }, RECOVERY_POLL_INTERVAL_MS);
   }
 
@@ -542,17 +554,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       }
       this._handleWriteBackSuccess();
     };
-    try {
-      const result = this._nonTransPersistenceStore.init(this._memoryStore.getAllRaw(), onSettled);
-      if (isThenable(result)) {
-        result.then(undefined, (err: unknown) => onSettled(toError(err)));
-      }
-    } catch (err) {
-      // A synchronous throw from init(), or from getAllRaw(), is handled the same way
-      // as a failed write-back. This way it cannot escape the poll timer or the
-      // write path.
-      onSettled(toError(err));
-    }
+    // A rejected promise, or a synchronous throw from init() or getAllRaw(), is
+    // handled the same way as a failed write-back. This way it cannot escape the
+    // poll timer or the write path.
+    invokeStoreCall(
+      () => this._basePersistenceStore.init(this._memoryStore.getAllRaw(), onSettled),
+      onSettled,
+    );
   }
 
   /**
