@@ -48,7 +48,7 @@
     "svelte": "^4.0.0"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.10.2"
+    "@launchdarkly/js-client-sdk": "4.10.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.28.1",
