@@ -5,7 +5,6 @@ import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { createEventSource, FetchFn } from '@launchdarkly/eventsource';
 import {
   EventSourceCapabilities,
   LDLogger,
@@ -14,7 +13,7 @@ import {
   platform,
 } from '@launchdarkly/js-server-sdk-common';
 
-import createNodeFetch from './NodeFetch';
+import createNodeEventSourceFactory, { NodeEventSourceFactory } from './NodeEventSource';
 import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
@@ -123,7 +122,7 @@ export default class NodeRequests implements platform.Requests {
 
   private _tlsOptions: LDTLSOptions | undefined;
 
-  private _eventSourceFetch: FetchFn;
+  private _createEventSource: NodeEventSourceFactory;
 
   private _hasProxy: boolean = false;
 
@@ -142,7 +141,7 @@ export default class NodeRequests implements platform.Requests {
     // The agent owns connection setup when the caller supplies one, so the TLS parameters are
     // only forwarded when this class built the agent itself (or no agent exists).
     this._tlsOptions = proxyAgent ? undefined : tlsOptions;
-    this._eventSourceFetch = createNodeFetch(this._agent, this._tlsOptions);
+    this._createEventSource = createNodeEventSourceFactory(this._agent, this._tlsOptions);
     // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
     // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
     // certificate-only agent for mTLS). Reporting true is the better default here because
@@ -214,13 +213,7 @@ export default class NodeRequests implements platform.Requests {
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
-      ...eventSourceInitDict,
-      maxBackoffMillis: 30 * 1000,
-      jitterRatio: 0.5,
-      fetch: this._eventSourceFetch,
-    };
-    return createEventSource(url, expandedOptions);
+    return this._createEventSource(url, eventSourceInitDict);
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {
