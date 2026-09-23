@@ -61,11 +61,31 @@ it('calls back without an error when init succeeds', (done) => {
     prefixedKey: (key: string) => key,
     query: jest.fn().mockResolvedValue([]),
     batchWrite: jest.fn().mockResolvedValue(undefined),
+    put: jest.fn().mockResolvedValue(undefined),
   };
   // @ts-ignore Partial state mock for testing.
   const core = new DynamoDBCore('test-table', state);
   core.init(allData, (err) => {
     expect(err).toBeUndefined();
+    expect(state.put).toHaveBeenCalledWith({
+      TableName: 'test-table',
+      Item: { namespace: { S: '$inited' }, key: { S: '$inited' } },
+    });
+    done();
+  });
+});
+
+it('reports an init error through the callback when writing the initialized token fails', (done) => {
+  const state = {
+    prefixedKey: (key: string) => key,
+    query: jest.fn().mockResolvedValue([]),
+    batchWrite: jest.fn().mockResolvedValue(undefined),
+    put: jest.fn().mockRejectedValue(new Error('token write failed')),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state);
+  core.init(allData, (err) => {
+    expect(err).toEqual(new Error('token write failed'));
     done();
   });
 });
