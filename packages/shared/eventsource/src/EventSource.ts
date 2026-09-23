@@ -82,6 +82,10 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
  * because `fetch()` has no equivalent for them; a caller that needs transport control injects
  * a `fetch`-shaped function instead.
  *
+ * @remark
+ * There is no `onmessage` slot. The LaunchDarkly SDKs register their message listeners with
+ * `addEventListener('message', ...)`, so this implementation leaves the slot out on purpose.
+ *
  * @see https://html.spec.whatwg.org/multipage/server-sent-events.html
  */
 export interface EventSource {
@@ -90,9 +94,9 @@ export interface EventSource {
   readonly url: string;
 
   /**
-   * Mirrors the most recent server `retry:` field, in milliseconds; initially the configured
-   * base reconnect delay, before any `retry:` field has arrived. The retry strategy owns the
-   * actual reconnect timing; writing to this slot has no effect on it.
+   * Mirrors the most recent server `retry:` field, in milliseconds; starts at 1000 before any
+   * `retry:` field has arrived. The retry strategy owns the actual reconnect timing; writing to
+   * this slot has no effect on it.
    */
   reconnectInterval: number;
 
@@ -345,18 +349,20 @@ export function createEventSource(
     lineLength: number,
   ): void => {
     if (lineLength === 0) {
+      // A blank line commits a pending id, even when the block has no data and thus
+      // dispatches no event. A reconnect after an id-only block then resumes from that id.
+      if (eventId !== undefined) {
+        lastEventId = eventId;
+        eventId = undefined;
+      }
       if (data.length > 0) {
         const type = eventName || 'message';
-        if (eventId !== undefined) {
-          lastEventId = eventId;
-        }
         const event = makeEvent(type, {
           data: data.slice(0, -1), // remove trailing newline
           lastEventId,
           origin: streamOriginUrl,
         });
         data = '';
-        eventId = undefined;
         receivedEvent(event);
       }
       eventName = undefined;
@@ -390,8 +396,10 @@ export function createEventSource(
           eventId = value;
         }
       } else if (field === 'retry') {
-        const retry = parseInt(value, 10);
-        if (!Number.isNaN(retry)) {
+        // The value must be all ASCII digits; any other form is ignored. `parseInt` alone
+        // would accept forms such as `5.5`, `1e3`, or `+5`.
+        if (/^\d+$/.test(value)) {
+          const retry = parseInt(value, 10);
           self.reconnectInterval = retry;
           retryDelayStrategy.setBaseDelay(retry);
         }
@@ -478,6 +486,8 @@ export function createEventSource(
         return;
       }
 
+      const responseHeaders = headersToObject(res.headers);
+
       // A real fetch() has followed each redirect before this point, and an injected transport
       // that does not follow redirects surfaces the redirect status itself. Thus each status
       // other than 200 is a failure. This includes a 301 or 307 without a Location header, which
@@ -485,7 +495,7 @@ export function createEventSource(
       if (res.status !== 200) {
         failOnce({
           status: res.status,
-          headers: headersToObject(res.headers),
+          headers: responseHeaders,
           message: res.statusText,
         });
         // This path never reads the body. The abort in destroyRequest() releases the body and
@@ -495,8 +505,28 @@ export function createEventSource(
         return;
       }
 
+      // A 200 response must carry an event-stream content type; any other declared type (an
+      // HTML error page, a JSON body from a misconfigured proxy) is a failure, not a stream to
+      // parse. A response with no Content-Type header at all is accepted, because a minimal
+      // injected transport can omit response headers.
+      const contentTypeKey = Object.keys(responseHeaders).find(
+        (key) => key.toLowerCase() === 'content-type',
+      );
+      const contentType =
+        contentTypeKey === undefined ? undefined : responseHeaders[contentTypeKey];
+      if (contentType !== undefined && !contentType.toLowerCase().startsWith('text/event-stream')) {
+        failOnce({
+          status: res.status,
+          headers: responseHeaders,
+          message: `unexpected Content-Type '${contentType}', expected 'text/event-stream'`,
+        });
+        destroyRequest();
+        return;
+      }
+
       if (!res.body) {
         failOnce({ message: 'stream response has no body' });
+        destroyRequest();
         return;
       }
 
@@ -510,7 +540,7 @@ export function createEventSource(
 
       readyState = OPEN;
       resetReadTimeout(failOnce);
-      emit(makeEvent('open', { headers: headersToObject(res.headers) }));
+      emit(makeEvent('open', { headers: responseHeaders }));
 
       // text/event-stream parser adapted from webkit
       // @see https://github.com/WebKit/webkit/blob/main/Source/WebCore/page/EventSource.cpp
@@ -598,6 +628,13 @@ export function createEventSource(
           const fieldLength = buf.subarray(pos, terminatorPos).indexOf(colon);
 
           parseEventStreamLine(buf, pos, fieldLength, lineLength);
+
+          // A listener can call close() while its event dispatches. The close bumps the
+          // generation counter, so this check stops the parse of the rest of the chunk and no
+          // event dispatches after the close.
+          if (thisGeneration !== generation) {
+            return;
+          }
 
           pos = terminatorPos + 1;
         }

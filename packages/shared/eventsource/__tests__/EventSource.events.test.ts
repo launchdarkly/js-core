@@ -114,6 +114,18 @@ it('ignores an event id that contains a null character', async () => {
   });
 });
 
+it('ignores an event id that a request header cannot carry', async () => {
+  await withServer(async (server) => {
+    // The id value is outside Latin-1, so the Last-Event-ID header could not carry it on a
+    // reconnect. The client drops such an id instead of storing it.
+    server.byDefault(writeEvents(['id: 事件\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      expect((await messages.take()).lastEventId).toEqual('');
+    });
+  });
+});
+
 it('populates messages with enumerable properties so they can be inspected', async () => {
   await withServer(async (server) => {
     server.byDefault(writeEvents(['data: World\n\n']));

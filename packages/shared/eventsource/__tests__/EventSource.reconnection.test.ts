@@ -1,5 +1,6 @@
 import {
   AsyncQueue,
+  sleepAsync,
   TestHttpHandlers,
   TestHttpRequest,
   withCloseable,
@@ -152,6 +153,21 @@ it('sends the Last-Event-ID header when the server previously sent an event id',
   });
 });
 
+it('commits an id from a block that has no data, for use on reconnect', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 1\ndata: Hello\n\n', 'id: 2\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'Hello' }]);
+      // An id-only block dispatches nothing this test could wait for; the pause lets the parser
+      // consume it before the connection drops.
+      await sleepAsync(100);
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toEqual('2');
+    });
+  });
+});
+
 it('does not send the Last-Event-ID header when the server never sent an event id', async () => {
   await withServer(async (server) => {
     server.byDefault(writeEvents(['data: hello\n\n']));
@@ -229,6 +245,16 @@ it('uses a server-sent retry: field as the next retry delay', async () => {
       await server.closeAndWait();
       expect(await delays.take()).toEqual(serverRetryDelay);
       expect(es.reconnectInterval).toEqual(serverRetryDelay);
+    });
+  });
+});
+
+it('ignores a retry: field whose value is not all ASCII digits', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['retry: 5.5\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      expect(es.reconnectInterval).toEqual(1000);
     });
   });
 });
