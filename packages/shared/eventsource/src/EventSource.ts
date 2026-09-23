@@ -1,7 +1,7 @@
-/* This implementation is derived from `eventsource.js` of LaunchDarkly's original
- * `launchdarkly-eventsource` (js-eventsource) package, with `fetch()`, `ReadableStream`, and
- * `AbortController` in place of the Node `http` transport. This implementation preserves the
- * parser algorithm and retry behavior of that original package.
+/**
+ * @remark
+ * This implementation is derived from `eventsource.js` of LaunchDarkly's original
+ * `launchdarkly-eventsource` (js-eventsource) package.
  */
 
 import CalculateCapacity from './capacity';
@@ -72,6 +72,7 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
  * source built by this package supports request headers, a custom method with a request body,
  * and a read timeout.
  *
+ * @remark
  * The SSE behavior stays as close as possible to the behavior of the original
  * `launchdarkly-eventsource` package: the same event names and shapes, the same retry and
  * backoff timing, and the same `text/event-stream` parser algorithm.
@@ -156,12 +157,7 @@ export interface EventSource {
 
   /**
    * Closes the connection, if one is made, and sets the readyState attribute to 2 (closed).
-   * Invokes `onclose` and dispatches the `closed` event, once; later calls do nothing. The
-   * `closed` event still dispatches even when `onclose` throws, so a throwing `onclose` cannot
-   * permanently starve the `closed` listeners; the exception propagates to the caller of
-   * `close()` after that dispatch runs. When both `onclose` and a `closed` listener throw, the
-   * listener's exception is the one that propagates: standard `try`/`finally` semantics let the
-   * later exception replace the earlier one.
+   * Invokes `onclose` and dispatches the `closed` event. This function is idepotent.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/EventSource/close
    */
@@ -222,7 +218,6 @@ export function createEventSource(
   let eventName: string | undefined;
   let eventId: string | undefined;
 
-  // RetryDelayStrategy is a factory function, not a class; the call takes no `new`.
   const retryDelayStrategy = retryDelay.RetryDelayStrategy(
     config.initialRetryDelayMillis !== null && config.initialRetryDelayMillis !== undefined
       ? config.initialRetryDelayMillis
@@ -246,10 +241,7 @@ export function createEventSource(
 
   /**
    * Each connection attempt increases this counter. A read loop, or a `fetch()` promise, from an
-   * old attempt compares its own generation against this counter and stops. Thus a stale response
-   * cannot feed the parser, and cannot report a failure for the current attempt. The check exists
-   * because a promise continuation cannot be detached the way an event listener can; this
-   * comparison is the teardown.
+   * old attempt compares its own generation against this counter and stops.
    */
   let generation = 0;
 
@@ -267,21 +259,11 @@ export function createEventSource(
    *
    * A server-sent SSE frame whose `event:` name is `open`, `error`, or `retrying` also reaches
    * the matching slot, with the frame's `MessageEvent` payload, exactly as it reaches the
-   * registered listeners of that type. There is no case for `closed` on purpose: only `close()`
-   * invokes `onclose`, so neither a data frame nor an internal termination can look like a
-   * user-initiated close.
+   * registered listeners of that type.
    *
-   * An exception from the matching slot cannot reach this function's own caller. Uncaught, that
-   * exception would skip the registry dispatch below, and it would also skip whatever the
-   * caller does right after `emit` returns: `scheduleReconnect()` after `failed()`'s emit, the
-   * read loop's start after the `open` emit, and the reconnect timer's arming after the
-   * `retrying` emit. This function catches the exception instead, queues it to rethrow on a later
-   * microtask so it still reaches the host as an uncaught error, and then runs the registry
-   * dispatch regardless of the slot's outcome.
-   *
-   * A registered listener's exception propagates synchronously out of `dispatch`, stopping any
-   * later listener for this same event. On dispatches driven by the connection, that exception
-   * surfaces as a stream failure or stalls the retry flow.
+   * @remark
+   * Excluding `close` is intentional as only `close()` invokes `onclose`, so neither a data
+   * frame nor an internal termination can look like a user-initiated close.
    */
   const emit = (event: EventSourceEventMap[keyof EventSourceEventMap]): void => {
     let slotThrew = false;
@@ -314,19 +296,20 @@ export function createEventSource(
       default:
         break;
     }
+
+    // We do this to avoid throwing the error synchronously which could disrupt the running
+    // handler. Instead, we queue the throw to run sychronously after the last handler runs.
+    // This is also consistent with NodeJS EventEmitter.
     if (slotThrew) {
       queueMicrotask(() => {
         throw slotError;
       });
     }
-    // `event.type` is stamped by `makeEvent` and is always present at runtime; the payload
-    // interfaces declare it optional only because a caller constructing one directly does not
-    // need to supply it.
+
     registry.dispatch(event.type as string, event);
   };
 
-  // A `fetch()` request has no options object of the same kind, so this function builds only the
-  // headers.
+  // Builds common headers
   const makeHeaders = (): Record<string, string> => {
     const headers: Record<string, string> = {};
     if (!config.skipDefaultHeaders) {
@@ -425,11 +408,7 @@ export function createEventSource(
 
   const destroyRequest = (): void => {
     // The counter increases here, not only in connect(). Thus close() also invalidates each
-    // callback that is still in flight for the attempt under teardown. An example: a fetch() or a
-    // reader.read() that resolved just before close() ran, whose continuation has not run yet.
-    // Without the increase, the `generation` captured in that callback would still match. The
-    // callback could then set readyState back to open, or deliver a message after the `closed`
-    // event.
+    // callback that is still in flight for the attempt under teardown.
     generation += 1;
     clearReadTimeout();
     // Each teardown path goes through here: close(), the read timeout, and a superseded attempt.
@@ -484,8 +463,7 @@ export function createEventSource(
     });
 
     // Each attempt can require a new URL, for example when a query parameter changes between
-    // reconnects. The builder runs for the first connection and for reconnects. This agrees with
-    // the platform EventSource that this client replaces.
+    // reconnects. The builder runs for the first connection and for reconnects.
     if (config.urlBuilder) {
       try {
         currentUrl = config.urlBuilder();
@@ -534,20 +512,13 @@ export function createEventSource(
       resetReadTimeout(failOnce);
       emit(makeEvent('open', { headers: headersToObject(res.headers) }));
 
-      // text/event-stream parser adapted from webkit's
-      // Source/WebCore/page/EventSource.cpp
+      // text/event-stream parser adapted from webkit
+      // @see https://github.com/WebKit/webkit/blob/main/Source/WebCore/page/EventSource.cpp
       let isFirst = true;
       let buf: Uint8Array | undefined;
       let startingPos = 0;
       let sizeUsed = 0;
 
-      // The buffering mirrors the `res.on('data', ...)` handler in the original
-      // `launchdarkly-eventsource` package, with `Uint8Array` operations in place of the
-      // `Buffer` operations. The line scan does not mirror it: the original walks every
-      // byte in a JS loop and restarts at index 0 for each line, which makes one large
-      // chunk cost O(lines^2). A fetch transport hands over large coalesced chunks, so
-      // this parser scans with `indexOf` instead and resumes where the last scan ended.
-      // The dispatched events are identical; only the scan mechanics differ.
       const onData = (chunk: Uint8Array): void => {
         if (!buf) {
           buf = chunk;
