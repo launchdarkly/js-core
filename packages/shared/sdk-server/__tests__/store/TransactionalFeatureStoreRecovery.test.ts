@@ -41,6 +41,14 @@ class MockPersistenceStore implements LDFeatureStore {
   // `async` persistence client whose promise rejects before it reaches its callback.
   rejectOnUpsert = false;
 
+  // Calls the init() callback with success and then also returns a rejected promise.
+  // Simulates a persistence client that answers through two channels.
+  rejectAfterInitCallback = false;
+
+  // Calls the upsert() callback with success and then also throws synchronously.
+  // Simulates a persistence client that answers through two channels.
+  throwAfterUpsertCallback = false;
+
   // Defers the init() callback instead of invoking it. Lets a test hold a write-back
   // attempt open, e.g. to simulate one completing after the store is closed.
   deferInit = false;
@@ -73,6 +81,11 @@ class MockPersistenceStore implements LDFeatureStore {
       // client that is actually `async` can return a rejected promise at runtime.
       return Promise.reject(new Error('init rejected')) as unknown as void;
     }
+    if (this.rejectAfterInitCallback) {
+      callback(undefined);
+      // Cast needed: same as rejectOnInit above.
+      return Promise.reject(new Error('init rejected after callback')) as unknown as void;
+    }
     if (this.deferInit) {
       this.pendingInitCallbacks.push(callback);
       return;
@@ -94,6 +107,10 @@ class MockPersistenceStore implements LDFeatureStore {
       // persistence client that is actually `async` can return a rejected promise
       // at runtime.
       return Promise.reject(new Error('upsert rejected')) as unknown as void;
+    }
+    if (this.throwAfterUpsertCallback) {
+      callback(undefined);
+      throw new Error('upsert exploded after callback');
     }
     callback(this.failUpserts ? new Error('upsert failed') : undefined);
   }
@@ -450,6 +467,53 @@ describe('given a transactional store over a persistence store that can fail wri
     });
     expect(callbackCalls).toEqual(1);
     expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a rejected init promise when the basis write already answered through its callback', async () => {
+    const unhandled = jest.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      persistence.rejectAfterInitCallback = true;
+      let callbackCalls = 0;
+      await new Promise<void>((resolve) => {
+        recoveryStore.applyChanges(
+          true,
+          { features: { flagB: { version: 5 } } },
+          () => {
+            callbackCalls += 1;
+            resolve();
+          },
+          undefined,
+          's2',
+        );
+      });
+      // Flush any pending microtask that might invoke the callback a second time.
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(callbackCalls).toEqual(1);
+      // The callback answered success first, so the late rejection must not
+      // report a write failure.
+      expect(logger.warn).not.toHaveBeenCalled();
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+  });
+
+  it('ignores a synchronous throw when the mirrored upsert already answered through its callback', async () => {
+    persistence.throwAfterUpsertCallback = true;
+    let callbackCalls = 0;
+    await new Promise<void>((resolve) => {
+      recoveryStore.upsert(VersionedDataKinds.Features, { key: 'flagB', version: 1 }, () => {
+        callbackCalls += 1;
+        resolve();
+      });
+    });
+    await Promise.resolve();
+    expect(callbackCalls).toEqual(1);
+    // The callback answered success first, so the late throw must not report
+    // a write failure.
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 });
 
