@@ -3,11 +3,10 @@ import * as https from 'https';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { createEventSource, FetchFn } from '@launchdarkly/eventsource';
 import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDTLSOptions } from '../NodeOptions';
-import createNodeFetch from './NodeFetch';
+import createNodeEventSourceFactory, { NodeEventSourceFactory } from './NodeEventSource';
 import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
@@ -44,14 +43,14 @@ export default class NodeRequests implements platform.Requests {
 
   private _tlsOptions: LDTLSOptions | undefined;
 
-  private _eventSourceFetch: FetchFn;
+  private _createEventSource: NodeEventSourceFactory;
 
   private _enableBodyCompression: boolean = false;
 
   constructor(tlsOptions?: LDTLSOptions, enableEventCompression?: boolean) {
     this._agent = tlsOptions ? new https.Agent(processTlsOptions(tlsOptions)) : undefined;
     this._tlsOptions = tlsOptions;
-    this._eventSourceFetch = createNodeFetch(this._agent, this._tlsOptions);
+    this._createEventSource = createNodeEventSourceFactory(this._agent, this._tlsOptions);
     this._enableBodyCompression = !!enableEventCompression;
   }
 
@@ -106,13 +105,7 @@ export default class NodeRequests implements platform.Requests {
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
-      ...eventSourceInitDict,
-      maxBackoffMillis: 30 * 1000,
-      jitterRatio: 0.5,
-      fetch: this._eventSourceFetch,
-    };
-    return createEventSource(url, expandedOptions);
+    return this._createEventSource(url, eventSourceInitDict);
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {

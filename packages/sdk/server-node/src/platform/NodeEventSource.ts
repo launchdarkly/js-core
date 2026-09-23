@@ -1,9 +1,13 @@
 import * as http from 'http';
 import * as https from 'https';
 
-import type { FetchFn, FetchRequestOptions, FetchResponse } from '@launchdarkly/eventsource';
-
-import type { LDTLSOptions } from '../NodeOptions';
+import {
+  createEventSource,
+  type FetchFn,
+  type FetchRequestOptions,
+  type FetchResponse,
+} from '@launchdarkly/eventsource';
+import type { LDTLSOptions, platform } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * The TLS options that are copied onto each `https` request. The names match the options of
@@ -76,7 +80,10 @@ function wrapResponse(res: http.IncomingMessage): FetchResponse {
  * original URL. It applies no read or socket timeout; the caller owns the read timeout and
  * cancels through the request's `AbortSignal`.
  */
-export default function createNodeFetch(agent?: https.Agent, tlsOptions?: LDTLSOptions): FetchFn {
+export function createNodeFetch(
+  agent?: https.Agent | http.Agent,
+  tlsOptions?: LDTLSOptions,
+): FetchFn {
   const tlsParams = tlsRequestOptions(tlsOptions);
   return async (url: string, init: FetchRequestOptions): Promise<FetchResponse> => {
     const isSecure = url.startsWith('https://');
@@ -111,4 +118,29 @@ export default function createNodeFetch(agent?: https.Agent, tlsOptions?: LDTLSO
       req.end();
     });
   };
+}
+
+export type NodeEventSourceFactory = (
+  url: string,
+  eventSourceInitDict: platform.EventSourceInitDict,
+) => platform.EventSource;
+
+/**
+ * Creates the event source factory used by `NodeRequests.createEventSource`.
+ *
+ * The factory bakes in the connection configuration (agent and TLS parameters, through the fetch
+ * adapter above) and the SDK retry policy (backoff cap and jitter).
+ */
+export default function createNodeEventSourceFactory(
+  agent?: https.Agent | http.Agent,
+  tlsOptions?: LDTLSOptions,
+): NodeEventSourceFactory {
+  const fetch = createNodeFetch(agent, tlsOptions);
+  return (url, eventSourceInitDict) =>
+    createEventSource(url, {
+      ...eventSourceInitDict,
+      maxBackoffMillis: 30 * 1000,
+      jitterRatio: 0.5,
+      fetch,
+    });
 }
