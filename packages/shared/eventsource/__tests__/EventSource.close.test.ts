@@ -5,6 +5,7 @@ import { sleepAsync } from 'launchdarkly-js-test-helpers';
 
 import { createEventSource } from '../src/EventSource';
 import { MessageEvent } from '../src/types';
+import { withServer, writeEvents } from './helpers';
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -91,4 +92,23 @@ it('does not deliver a message from a read() that resolved after close() was alr
   await sleepAsync(50);
 
   expect(messages).toEqual(['first']);
+});
+
+it('does not dispatch an event parsed after a listener calls close()', async () => {
+  await withServer(async (server) => {
+    // Both blocks arrive in one chunk, so the second is already parsed-ready when the first
+    // listener runs.
+    server.byDefault(writeEvents(['data: first\n\ndata: second\n\n']));
+    const es = createEventSource(server.url, { initialRetryDelayMillis: 1 });
+    es.onerror = () => {};
+    const received: string[] = [];
+    es.addEventListener('message', (m: MessageEvent) => {
+      received.push(m.data);
+      es.close();
+    });
+    // close() runs inside the first dispatch; the pause gives any incorrect later dispatch time
+    // to surface before the assertion.
+    await sleepAsync(100);
+    expect(received).toEqual(['first']);
+  });
 });

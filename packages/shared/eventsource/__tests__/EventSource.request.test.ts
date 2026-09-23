@@ -1,4 +1,4 @@
-import { TestHttpHandlers, TestHttpHeaders } from 'launchdarkly-js-test-helpers';
+import { AsyncQueue, TestHttpHandlers, TestHttpHeaders } from 'launchdarkly-js-test-helpers';
 
 import {
   shouldReceiveMessages,
@@ -229,6 +229,37 @@ describe.each([401, 403])('given a %s response', (status) => {
         expect(err.status).toEqual(status);
         expect(err.headers).not.toBeUndefined();
       });
+    });
+  });
+});
+
+it('fails when a 200 response declares a content type other than text/event-stream', async () => {
+  await withServer(async (server) => {
+    server.byDefault(
+      TestHttpHandlers.respond(200, { 'Content-Type': 'text/html' }, '<html></html>'),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      const errors = startErrorQueue(es);
+      const err = await errors.take();
+      expect(err.status).toEqual(200);
+      expect(err.message).toContain('text/event-stream');
+    });
+  });
+});
+
+it('accepts an event-stream content type that carries parameters', async () => {
+  await withServer(async (server) => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('data: hello\n\n');
+    server.byDefault(
+      TestHttpHandlers.chunkedStream(
+        200,
+        { 'Content-Type': 'text/event-stream; charset=utf-8' },
+        chunks,
+      ),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
     });
   });
 });

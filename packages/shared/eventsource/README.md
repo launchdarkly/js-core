@@ -50,8 +50,12 @@ Beyond the standard `open`/`message`/`error` events, this implementation dispatc
   `close()`. When `close()` closes the stream, the `onclose` slot is invoked at the same point,
   before the `closed` listeners; a non-retryable error dispatches `closed` without invoking
   `onclose`.
-- `end`: the server ended the stream. Not reported as an `error`, but still passed to
-  `errorFilter` for retry purposes.
+- `end`: the server ended the stream cleanly, with a complete response body. Not reported as an
+  `error`, but still passed to `errorFilter` for retry purposes. A mid-stream connection drop --
+  a reset, or a socket that closes without completing the response -- surfaces from the fetch
+  transport as a read failure, so it dispatches `error` and invokes `onerror`. The original Node
+  transport reported the incomplete-close case as `end`; a caller that treats `end` and `error`
+  differently sees `error` more often here.
 - `retrying`: after an error, indicates a reconnect is scheduled. The event's `delayMillis`
   property gives the delay.
 
@@ -76,7 +80,10 @@ logic; the exception surfaces later, asynchronously, as an uncaught error.
 ### Error retry behavior
 
 By default, connection failures and I/O errors are always retried; HTTP error responses are
-retried only for 500, 502, 503, and 504. Set `errorFilter` to override this -- it receives the
+retried only for 500, 502, 503, and 504. A 200 response that declares a Content-Type other than
+`text/event-stream` is also treated as an error; it carries `status: 200` and goes through the
+same filter (a response with no Content-Type header at all is accepted, so a minimal injected
+transport can omit response headers). Set `errorFilter` to override this -- it receives the
 error and returns `true` to retry or `false` to close the stream and raise `error`. There is no
 guard against a filter that throws, matching the original package: the exception propagates into
 the transport's callback, and the stream does not recover. Redirect handling is described in

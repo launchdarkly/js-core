@@ -8,6 +8,7 @@ import {
   ErrorEvent,
   EventSourceInitDict,
   FetchFn,
+  FetchHeaders,
   FetchRequestOptions,
   FetchResponse,
   MessageEvent,
@@ -25,13 +26,13 @@ import {
  * A canned response whose body hands out the given chunks and then stays pending forever, like an
  * idle SSE connection. The shape matches what the Node SDK http/https adapters produce.
  */
-function idleStreamResponse(chunks: string[]): FetchResponse {
+function idleStreamResponse(chunks: string[], headers?: FetchHeaders): FetchResponse {
   const encoder = new TextEncoder();
   const pending = [...chunks];
   return {
     status: 200,
     statusText: 'OK',
-    headers: {
+    headers: headers ?? {
       forEach(callback: (value: string, key: string) => void): void {
         callback('text/event-stream', 'content-type');
       },
@@ -136,6 +137,43 @@ it('reports a non-200 response from an injected fetch as an error', async () => 
   try {
     const err = await errors.take();
     expect(err?.status).toEqual(401);
+  } finally {
+    es.close();
+  }
+});
+
+it('accepts a response whose transport supplies no headers at all', async () => {
+  const injected: FetchFn = async () => idleStreamResponse(['data: hello\n\n'], { forEach() {} });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('aborts the request when a 200 response has no body', async () => {
+  let signal: AbortSignal | undefined;
+  const injected: FetchFn = async (_url, init) => {
+    signal = init.signal;
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: { forEach: () => {} },
+      body: null,
+    };
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = () => {};
+  try {
+    const closed = new AsyncQueue<unknown>();
+    es.addEventListener('closed', (e) => closed.add(e));
+    await closed.take();
+    expect(signal?.aborted).toBe(true);
   } finally {
     es.close();
   }
