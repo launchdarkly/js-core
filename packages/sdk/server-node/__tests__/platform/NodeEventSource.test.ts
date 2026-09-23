@@ -6,7 +6,7 @@ import {
   TestHttpServers,
 } from 'launchdarkly-js-test-helpers';
 
-import createNodeFetch from '../../src/platform/NodeFetch';
+import { createNodeFetch } from '../../src/platform/NodeEventSource';
 import NodeRequests from '../../src/platform/NodeRequests';
 
 describe('given a running HTTP server', () => {
