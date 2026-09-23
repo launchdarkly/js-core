@@ -214,8 +214,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       () => {
         // TODO: SDK-1047 conditional propgation to persistence based on parameter
         if (basis) {
-          // Only a basis carries the full data set, so only a basis switches reads
-          // over to the memory store.
+          // basis causes memory store to become the active store
           this._activeStore = this._memoryStore;
 
           // A persistence failure must not fail the change. The memory store already
