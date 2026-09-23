@@ -13,30 +13,12 @@
 > Pin to a specific minor version and review the [changelog](CHANGELOG.md) before upgrading.
 
 This package contains a W3C-compliant EventSource (server-sent events) client built on `fetch()`,
-`ReadableStream` and `AbortController`. It is used by the LaunchDarkly SDKs in this repository:
-the browser SDK offers it as an alternative to the native `EventSource`, and the Node-based SDKs
-(server-node, node-client, electron) use it with an injected `fetch`-shaped transport over
-`node:http`/`node:https`.
+`ReadableStream` and `AbortController`.
 
-This package is not intended to be used directly.
+This package is intended to be used by LaunchDarkly SDKs and not as a general EventSource implementation.
 
 This package is derived from the [`eventsource`](https://www.npmjs.com/package/eventsource) npm
 package. See [LICENSE](LICENSE) for the original license terms.
-
-## Implementation notes
-
-The `createEventSource` factory requires a streaming `Response.body`, which every evergreen
-browser provides. There is no reference implementation for this platform -- the original
-package's own "browser" build was the same Node `http`-based code, bundled through browserify --
-so this is written from scratch to satisfy the W3C `EventSource` surface, derived from
-`eventsource.js` of the original `launchdarkly-eventsource` (js-eventsource) package with a fetch
-transport. The package exports an `EventSource` interface for the instance type, and a
-`createEventSource(url, eventSourceInitDict?)` function that builds an instance and starts the
-connection; it implements the event API directly instead of emulating `EventEmitter`. The option
-and event payload types are exported from the package root, alongside the factory.
-
-The `RetryDelayStrategy` factory (ported from `retry-delay.js`) and `calculateCapacity` (ported
-from `capacity.js`) live in their own modules, mirroring how the original package split them out.
 
 ## Options reference
 
@@ -141,28 +123,6 @@ client uses (see `FetchFn` in `src/types.ts`), so a real `fetch` implementation 
 without casts. This is how the Node-based SDKs connect this client to `node:http`/`node:https`
 with their agent, proxy, and TLS configuration: the client itself knows nothing about any of
 those.
-
-### Redirects and bodies
-
-`fetch()` follows every redirect status -- 301, 302, 303, 307, and 308 -- itself. Per the Fetch
-standard's HTTP-redirect algorithm, a 301 or 302 rewrites the method to GET and drops the body
-only when the original method was POST; a 303 does the same for any method other than GET/HEAD. A
-307 or 308 always preserves both the original method and body, regardless of what that method is.
-Two further consequences follow from this:
-
-- The redirect _status_ is never observable to this implementation (`fetch()` follows it before
-  returning a response), so it cannot distinguish a permanent redirect from a temporary one; every
-  reconnect starts from the configured (or `urlBuilder`-supplied) URL and re-follows the redirect
-  each time.
-- `body` is dropped when the method is GET or HEAD, because a `fetch()` request with either method
-  and a body is a `TypeError`.
-
-An injected transport may not follow redirects at all. The Node SDK adapters do not: a redirect
-status surfaces as a non-200 error, subject to `errorFilter`, and each retry starts from the
-configured URL.
-
-There are no TLS, proxy, or agent options in this package. A transport that needs them bakes them
-into the injected `fetch` function.
 
 ## Contributing
 
