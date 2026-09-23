@@ -37,6 +37,11 @@ jobs:
         run: yarn workspace @launchdarkly/node-server-sdk-contract-tests install --no-immutable
       - name: Build shared contract test utils (server)
         run: yarn workspace @launchdarkly/js-contract-test-utils build:server
+      - name: Install and start Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+          sudo service redis-server start
       - name: Build the redis store used by the test service
         run: yarn workspace @launchdarkly/node-server-sdk-redis build
       - name: Build the test service
