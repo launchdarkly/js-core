@@ -1,6 +1,7 @@
 import { interfaces } from '@launchdarkly/node-server-sdk';
 
 import RedisCore from '../src/RedisCore';
+import { expectNoUnhandledRejection } from './testUtils';
 
 const featuresKind = { namespace: 'features', deserialize: (data: string) => JSON.parse(data) };
 
@@ -18,10 +19,6 @@ beforeEach(() => {
 });
 
 it('reports an error through the callback when watch rejects, with no unhandled rejection', async () => {
-  const unhandledRejections: unknown[] = [];
-  const onUnhandledRejection = (reason: unknown) => unhandledRejections.push(reason);
-  process.on('unhandledRejection', onUnhandledRejection);
-
   const watchError = new Error('connection is closed.');
   const state = makeState({
     getClient: () => ({
@@ -39,31 +36,23 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   // @ts-ignore Partial state mock for testing.
   const core = new RedisCore(state);
 
-  const result = await new Promise<{
-    err?: Error;
-    updated?: interfaces.SerializedItemDescriptor;
-  }>((resolve) => {
-    core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, (err, updated) => {
-      resolve({ err, updated });
-    });
-  });
-
-  // Flush the microtask queue so an unhandled rejection, if any, would surface.
-  await new Promise((resolve) => {
-    setImmediate(resolve);
-  });
-  process.off('unhandledRejection', onUnhandledRejection);
+  const result = await expectNoUnhandledRejection(
+    () =>
+      new Promise<{
+        err?: Error;
+        updated?: interfaces.SerializedItemDescriptor;
+      }>((resolve) => {
+        core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, (err, updated) => {
+          resolve({ err, updated });
+        });
+      }),
+  );
 
   expect(result.err).toBe(watchError);
   expect(result.updated).toBeUndefined();
-  expect(unhandledRejections).toEqual([]);
 });
 
 it('settles the callback exactly once when watch rejects and exec also errors', async () => {
-  const unhandledRejections: unknown[] = [];
-  const onUnhandledRejection = (reason: unknown) => unhandledRejections.push(reason);
-  process.on('unhandledRejection', onUnhandledRejection);
-
   const watchError = new Error('watch: connection is closed.');
   const execError = new Error('exec: connection is closed.');
   const state = makeState({
@@ -85,18 +74,14 @@ it('settles the callback exactly once when watch rejects and exec also errors', 
   const core = new RedisCore(state);
 
   const callback = jest.fn();
-  core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, callback);
-
-  // Flush the microtask queue so the watch rejection's handler runs after exec's
-  // synchronous callback has already settled the upsert.
-  await new Promise((resolve) => {
-    setImmediate(resolve);
+  // The helper's event-loop turn also lets the watch rejection's handler run after
+  // exec's synchronous callback has already settled the upsert.
+  await expectNoUnhandledRejection(async () => {
+    core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, callback);
   });
-  process.off('unhandledRejection', onUnhandledRejection);
 
   expect(callback).toHaveBeenCalledTimes(1);
   expect(callback).toHaveBeenCalledWith(execError, { version: 1, serializedItem: '{}' });
-  expect(unhandledRejections).toEqual([]);
 });
 
 it('stores the serializedItem verbatim for a deleted descriptor', (done) => {
