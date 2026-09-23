@@ -171,11 +171,13 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       });
     });
 
-    // Always write the initialized token when we initialize.
-    ops.push({ PutRequest: { Item: this._initializedToken() } });
-
     try {
       await this._state.batchWrite(this._tableName, ops);
+      // Write the initialized token on its own, after the data batch
+      // succeeds. A batch write is not atomic, so writing the token as
+      // part of the batch could leave it durably set while data items
+      // are still unprocessed.
+      await this._state.put({ TableName: this._tableName, Item: this._initializedToken() });
     } catch (error) {
       this._logger?.error(`Error writing to DynamoDB: ${error}`);
       callback(error as Error);

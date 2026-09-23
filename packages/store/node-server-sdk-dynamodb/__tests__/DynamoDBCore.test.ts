@@ -170,6 +170,85 @@ describe('given an empty store', () => {
       },
     ]);
   });
+
+  it('does not write the initialized token when the batch write fails', async () => {
+    const mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const errorCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, mockLogger);
+    const errorFacade = new AsyncCoreFacade(errorCore);
+
+    const putSpy = jest.spyOn(state, 'put');
+    const error = new Error('write failed');
+    jest.spyOn(state, 'batchWrite').mockRejectedValueOnce(error);
+
+    await errorFacade.init([]);
+
+    // The token write must not happen when the data batch fails.
+    expect(putSpy).not.toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(`Error writing to DynamoDB: ${error}`);
+
+    errorCore.close();
+  });
+
+  it('writes the initialized token only after the data batch succeeds', async () => {
+    const flags = [
+      { key: 'first', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
+    ];
+
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const successCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const successFacade = new AsyncCoreFacade(successCore);
+
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+
+    await successFacade.init([{ key: dataKind.features, item: flags }]);
+
+    // The data batch must not include the token.
+    const [, ops] = batchWriteSpy.mock.calls[0];
+    expect(
+      ops.some(
+        (op) =>
+          op.PutRequest?.Item?.namespace.S === '$inited' &&
+          op.PutRequest?.Item?.key.S === '$inited',
+      ),
+    ).toBe(false);
+
+    // The token is written on its own, after the data batch succeeds.
+    expect(putSpy).toHaveBeenCalledWith({
+      TableName: DEFAULT_TABLE_NAME,
+      Item: { namespace: { S: '$inited' }, key: { S: '$inited' } },
+    });
+    expect(batchWriteSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      putSpy.mock.invocationCallOrder[0],
+    );
+
+    successCore.close();
+  });
+
+  it('writes the initialized token even when there is no data to batch', async () => {
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const emptyCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const emptyFacade = new AsyncCoreFacade(emptyCore);
+
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+
+    await emptyFacade.init([]);
+
+    expect(batchWriteSpy).toHaveBeenCalledWith(DEFAULT_TABLE_NAME, []);
+    expect(putSpy).toHaveBeenCalledWith({
+      TableName: DEFAULT_TABLE_NAME,
+      Item: { namespace: { S: '$inited' }, key: { S: '$inited' } },
+    });
+
+    emptyCore.close();
+  });
 });
 
 describe('given a store with basic data', () => {
