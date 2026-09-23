@@ -23,8 +23,6 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   const state = makeState({
     getClient: () => ({
       watch: () => Promise.reject(watchError),
-      // The get() call reads via hget; leaving it uncalled isolates the
-      // watch-rejection path so the callback observed below only comes from it.
       hget: jest.fn(),
       multi: () => ({
         discard: jest.fn(),
@@ -52,21 +50,27 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   expect(result.updated).toBeUndefined();
 });
 
-it('settles the callback exactly once when watch rejects and exec also errors', async () => {
-  const watchError = new Error('watch: connection is closed.');
-  const execError = new Error('exec: connection is closed.');
+it('does not read or run the transaction when watch rejects', async () => {
+  const watchError = new Error('connection is closed.');
+  // Both mocks respond immediately, so this attempt would commit if it were not
+  // abandoned. A commit after a failed watch could clear the watch of the next
+  // queued update on the shared connection.
+  const hget = jest.fn(
+    (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+      cb(null, null);
+    },
+  );
+  const exec = jest.fn((cb: (err: Error | null, replies: unknown) => void) => {
+    cb(null, ['OK']);
+  });
   const state = makeState({
     getClient: () => ({
       watch: () => Promise.reject(watchError),
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, null);
-      },
+      hget,
       multi: () => ({
         hset: jest.fn(),
         discard: jest.fn(),
-        exec: (cb: (err: Error | null, replies: unknown) => void) => {
-          cb(execError, undefined);
-        },
+        exec,
       }),
     }),
   });
@@ -74,14 +78,15 @@ it('settles the callback exactly once when watch rejects and exec also errors', 
   const core = new RedisCore(state);
 
   const callback = jest.fn();
-  // The helper's event-loop turn also lets the watch rejection's handler run after
-  // exec's synchronous callback has already settled the upsert.
+  // The helper's event-loop turn lets the watch rejection propagate through the chain.
   await expectNoUnhandledRejection(async () => {
     core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, callback);
   });
 
   expect(callback).toHaveBeenCalledTimes(1);
-  expect(callback).toHaveBeenCalledWith(execError, { version: 1, serializedItem: '{}' });
+  expect(callback).toHaveBeenCalledWith(watchError, undefined);
+  expect(hget).not.toHaveBeenCalled();
+  expect(exec).not.toHaveBeenCalled();
 });
 
 it('stores the serializedItem verbatim for a deleted descriptor', (done) => {
