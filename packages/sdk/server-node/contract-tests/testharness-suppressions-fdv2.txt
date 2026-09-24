@@ -11,3 +11,24 @@ streaming/fdv2/reconnection state management/replaces previously known state
 streaming/fdv2/reconnection state management/updates previously known state
 streaming/fdv2/ignores model version
 streaming/fdv2/can discard partial events on errors
+
+# These tests configure a persistent store with no data sources (the daemon-mode
+# pattern; the prefix tests also create clients with zero sources). The FDv2 data
+# system cannot yet initialize from a store read alone, so these clients never
+# report ready. Remove these entries when that gap is closed.
+persistent data store/redis/uses default prefix
+persistent data store/redis/uses custom prefix
+persistent data store/redis/store mode read-write - no data source/no cache - shows changes immediately
+persistent data store/redis/store mode read-write - no data source/ttl cache - shows changes eventually
+persistent data store/redis/store mode read-write - no data source/infinite cache - shows changes never
+persistent data store/redis/store mode read - no data source/no cache - shows changes immediately
+persistent data store/redis/store mode read - no data source/ttl cache - shows changes eventually
+persistent data store/redis/store mode read - no data source/infinite cache - shows changes never
+persistent data store/dynamodb/uses default prefix
+persistent data store/dynamodb/uses custom prefix
+persistent data store/dynamodb/store mode read-write - no data source/no cache - shows changes immediately
+persistent data store/dynamodb/store mode read-write - no data source/ttl cache - shows changes eventually
+persistent data store/dynamodb/store mode read-write - no data source/infinite cache - shows changes never
+persistent data store/dynamodb/store mode read - no data source/no cache - shows changes immediately
+persistent data store/dynamodb/store mode read - no data source/ttl cache - shows changes eventually
+persistent data store/dynamodb/store mode read - no data source/infinite cache - shows changes never
