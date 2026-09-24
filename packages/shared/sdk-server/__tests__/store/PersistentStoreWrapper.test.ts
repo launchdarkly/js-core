@@ -675,6 +675,36 @@ describe('given a wrapper around a core that reports errors', () => {
     }
   });
 
+  it('stops reporting initialized when a later init fails', async () => {
+    const core = new MockPersistentStore();
+    const cachingWrapper = new PersistentDataStoreWrapper(core, 60);
+    try {
+      const facade = new AsyncStoreFacade(cachingWrapper);
+      await facade.init({ features: { key1: { version: 1 } } });
+      expect(await facade.initialized()).toBe(true);
+
+      const initSpy = jest
+        .spyOn(core, 'init')
+        // @ts-ignore The mock widens the callback to the error-reporting form.
+        .mockImplementation((_allData, cb: (err?: Error) => void) => cb(new Error('init failed')));
+      await facade.init({ features: { key1: { version: 2 } } });
+      // A real store removes its initialized marker before it writes data.
+      core.isInitialized = false;
+
+      // The wrapper must consult the store instead of a stale short-circuit.
+      const initializedSpy = jest.spyOn(core, 'initialized');
+      expect(await facade.initialized()).toBe(false);
+      expect(initializedSpy).toHaveBeenCalledTimes(1);
+
+      initSpy.mockRestore();
+      await facade.init({ features: { key1: { version: 3 } } });
+      expect(await facade.initialized()).toBe(true);
+    } finally {
+      cachingWrapper.close();
+      jest.restoreAllMocks();
+    }
+  });
+
   it('logs at error level when an init reports an error', async () => {
     const logger = new TestLogger();
     const loggingWrapper = new PersistentDataStoreWrapper(new ErroringPersistentStore(), 0, logger);

@@ -144,11 +144,12 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
       const afterStoreInit = (err?: Error) => {
         if (err) {
           // A failed init must not present the rejected data as current. Clear the
-          // caches and do not mark the store initialized, so reads fall through to
-          // the persistence layer's actual state.
+          // caches and the initialized state, so reads and initialization checks
+          // fall through to the persistence layer's actual state.
           this._logger?.error(
             `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
           );
+          this._isInitialized = false;
           this._itemCache?.clear();
           this._allItemsCache?.clear();
           cb(err);
