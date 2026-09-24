@@ -213,14 +213,23 @@ export function createEventSource(
   let readyState: number = CONNECTING;
 
   let lastEventId = '';
-  if (config.headers && config.headers['Last-Event-ID']) {
-    lastEventId = config.headers['Last-Event-ID'] as string;
+  if (config.headers) {
+    // The header name is matched without regard to case, like an HTTP header. An array value
+    // cannot form one id; its first element is the seed.
+    const seedKey = Object.keys(config.headers).find(
+      (key) => key.toLowerCase() === 'last-event-id',
+    );
+    if (seedKey !== undefined) {
+      const seedValue = config.headers[seedKey];
+      lastEventId = Array.isArray(seedValue) ? String(seedValue[0] ?? '') : String(seedValue);
+    }
   }
 
   let discardTrailingNewline = false;
   let data = '';
   let eventName: string | undefined;
   let eventId: string | undefined;
+  let goodSinceAnchored = false;
 
   const retryDelayStrategy = retryDelay.RetryDelayStrategy(
     config.initialRetryDelayMillis !== null && config.initialRetryDelayMillis !== undefined
@@ -310,7 +319,17 @@ export function createEventSource(
       });
     }
 
-    registry.dispatch(event.type as string, event);
+    // A registered listener that throws must not disrupt the stream's own control flow. A
+    // synchronous throw here would skip the reconnect logic in the caller, or turn into a
+    // false transport error inside the read loop. The exception surfaces later,
+    // asynchronously, exactly like a slot exception.
+    try {
+      registry.dispatch(event.type as string, event);
+    } catch (err) {
+      queueMicrotask(() => {
+        throw err;
+      });
+    }
   };
 
   // Builds common headers
@@ -322,6 +341,12 @@ export function createEventSource(
     }
     if (config.headers) {
       Object.keys(config.headers).forEach((key) => {
+        // The live id below is the only source of this header. The filter covers every case
+        // variant of the key; a copied caller variant would otherwise combine with the live
+        // value into one joined, invalid id on the wire.
+        if (key.toLowerCase() === 'last-event-id') {
+          return;
+        }
         const value = config.headers[key];
         if (value === undefined) {
           return;
@@ -331,8 +356,9 @@ export function createEventSource(
         headers[key] = Array.isArray(value) ? value.join(', ') : String(value);
       });
     }
-    // The live id is applied last so it wins over a caller-supplied Last-Event-ID header.
-    // That header only seeds the initial resume point; each received event id replaces it.
+    // A caller-supplied Last-Event-ID header only seeds the initial resume point, read in the
+    // constructor; each received event id replaces it. An empty id: field from the server
+    // clears the id, and then no header is sent.
     if (lastEventId) {
       headers['Last-Event-ID'] = lastEventId;
     }
@@ -340,7 +366,12 @@ export function createEventSource(
   };
 
   const receivedEvent = (event: MessageEvent): void => {
-    retryDelayStrategy.setGoodSince(new Date().getTime());
+    // The reset interval measures how long the current connection has been delivering
+    // data, so the "good since" time is anchored to the first event of each connection.
+    if (!goodSinceAnchored) {
+      goodSinceAnchored = true;
+      retryDelayStrategy.setGoodSince(new Date().getTime());
+    }
     emit(event);
   };
 
@@ -438,12 +469,16 @@ export function createEventSource(
       return;
     }
     readTimeoutHandle = setTimeout(() => {
-      failOnce({
-        message: `Read timeout, received no data in ${timeout}ms, assuming connection is dead`,
-      });
-      // A timeout does not cancel the request. The abort releases the connection and the reader,
-      // so they do not leak across reconnects.
-      destroyRequest();
+      try {
+        failOnce({
+          message: `Read timeout, received no data in ${timeout}ms, assuming connection is dead`,
+        });
+      } finally {
+        // A timeout does not cancel the request. The abort releases the connection and the
+        // reader, so they do not leak across reconnects. The finally block keeps that release
+        // in place even when an errorFilter exception escapes failOnce.
+        destroyRequest();
+      }
     }, timeout);
   };
 
@@ -535,6 +570,7 @@ export function createEventSource(
       data = '';
       eventName = '';
       eventId = undefined;
+      goodSinceAnchored = false;
       // A connection can drop between a carriage return and its line feed, which leaves the
       // flag set. A stale flag only skips one inert leading empty line, but the reset keeps
       // all parser state scoped to one connection.
@@ -744,13 +780,26 @@ export function createEventSource(
     const shouldRetry = (config.errorFilter || defaultErrorFilter)(
       errorEvent as unknown as ErrorEvent,
     );
+    // The filter can call close(). That close is final: the state must not move back to
+    // CONNECTING, and no further event dispatches for this failure.
+    if (readyState === CLOSED) {
+      return;
+    }
     if (shouldRetry) {
       readyState = CONNECTING;
       emit(errorEvent);
       scheduleReconnect();
     } else {
       emit(errorEvent);
+      // An error listener can also call close(). close() has already dispatched `closed` and
+      // released the request, so a second teardown here would dispatch `closed` twice.
+      if (readyState === CLOSED) {
+        return;
+      }
       readyState = CLOSED;
+      // The stream ends here and a later close() is a no-op once the state is CLOSED, so this
+      // is the last place that can release the connection and any pending read.
+      destroyRequest();
       emit(makeEvent('closed'));
     }
   };
