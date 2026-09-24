@@ -67,6 +67,21 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
 }
 
 /**
+ * Computes the origin that message events report.
+ *
+ * A relative URL resolves against the document location when one exists. When no absolute URL
+ * can form, the origin is an empty string.
+ */
+function resolveStreamOrigin(candidate: string): string {
+  const base = typeof location !== 'undefined' ? location.href : undefined;
+  try {
+    return new URL(candidate, base).origin;
+  } catch {
+    return '';
+  }
+}
+
+/**
  * A W3C-compliant EventSource (server-sent events) client built on a `fetch()`-shaped transport,
  * `ReadableStream`, and `AbortController`. Unlike the native browser `EventSource`, an event
  * source built by this package supports request headers, a custom method with a request body,
@@ -240,7 +255,10 @@ export function createEventSource(
     config.jitterRatio ? retryDelay.defaultJitter(config.jitterRatio) : null,
   );
 
-  const streamOriginUrl = new URL(url).origin;
+  // The origin that message events report. Each connection computes it in the response
+  // callback, because urlBuilder can pick a new URL between reconnects and the transport can
+  // follow redirects.
+  let streamOriginUrl = '';
 
   // The transport is injectable. `defaultFetch` documents the default behavior.
   const doFetch: FetchFn = config.fetch ?? defaultFetch;
@@ -350,6 +368,15 @@ export function createEventSource(
         const value = config.headers[key];
         if (value === undefined) {
           return;
+        }
+        // A caller key replaces an already-set header with the same name in any case form.
+        // Without the removal, a caller's `accept` and the default `Accept` would both go to
+        // the transport as two separate headers.
+        const existingKey = Object.keys(headers).find(
+          (existing) => existing.toLowerCase() === key.toLowerCase(),
+        );
+        if (existingKey !== undefined && existingKey !== key) {
+          delete headers[existingKey];
         }
         // `fetch()` accepts only strings. The client sends a multi-valued header as one
         // comma-joined value. HTTP defines that form as equivalent to a repeated field.
@@ -544,14 +571,18 @@ export function createEventSource(
 
       // A 200 response must carry an event-stream content type; any other declared type (an
       // HTML error page, a JSON body from a misconfigured proxy) is a failure, not a stream to
-      // parse. A response with no Content-Type header at all is accepted, because a minimal
+      // parse. The media type must match exactly; parameters after it, such as a charset, are
+      // allowed. A response with no Content-Type header at all is accepted, because a minimal
       // injected transport can omit response headers.
       const contentTypeKey = Object.keys(responseHeaders).find(
         (key) => key.toLowerCase() === 'content-type',
       );
       const contentType =
         contentTypeKey === undefined ? undefined : responseHeaders[contentTypeKey];
-      if (contentType !== undefined && !contentType.toLowerCase().startsWith('text/event-stream')) {
+      if (
+        contentType !== undefined &&
+        contentType.split(';', 1)[0].trim().toLowerCase() !== 'text/event-stream'
+      ) {
         failOnce({
           status: res.status,
           headers: responseHeaders,
@@ -566,6 +597,10 @@ export function createEventSource(
         destroyRequest();
         return;
       }
+
+      // The final response URL wins when the transport reports one; the request URL is the
+      // fallback for a minimal transport that does not.
+      streamOriginUrl = resolveStreamOrigin(res.url || currentUrl);
 
       data = '';
       eventName = '';
@@ -757,6 +792,12 @@ export function createEventSource(
     const delay = retryDelayStrategy.nextRetryDelay(new Date().getTime());
 
     emit(makeEvent('retrying', { delayMillis: delay }));
+
+    // A retrying listener can call close(). close() moves the state to CLOSED and clears the
+    // timer, so a new timer must not arm after it.
+    if (readyState !== CONNECTING) {
+      return;
+    }
 
     clearTimeout(reconnectTimer);
 
