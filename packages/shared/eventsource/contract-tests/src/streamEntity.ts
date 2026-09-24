@@ -99,6 +99,12 @@ export function newStreamEntity(options: StreamOptions): StreamEntity {
   }
 
   const onMessage = (event: MessageEvent): void => {
+    // Internal lifecycle events (a connection error, a clean end) also reach the listeners
+    // registered for their type. Only a server-sent frame carries a data property; the rest
+    // must not be reported as events. The onerror slot reports the connection errors.
+    if (!('data' in event)) {
+      return;
+    }
     log(tag, `Received message from stream (${event.type})`);
     sendMessage({
       kind: 'event',
