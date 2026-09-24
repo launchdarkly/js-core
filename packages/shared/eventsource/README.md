@@ -65,8 +65,9 @@ also dispatches under the `error` type, with a `MessageEvent` payload; only that
 string `data` property.
 
 An exception thrown by the `onopen`, `onerror`, or `onretrying` slot does not stop dispatch to
-the `addEventListener` listeners for that event, and does not stop the stream's own reconnection
-logic; the exception surfaces later, asynchronously, as an uncaught error.
+the `addEventListener` listeners for that event. An exception from a registered listener does
+not stop the parse of the current chunk. Neither stops the stream's own reconnection logic; the
+exception surfaces later, asynchronously, as an uncaught error.
 
 ### Retry delay: backoff and jitter
 
@@ -74,8 +75,9 @@ logic; the exception surfaces later, asynchronously, as an uncaught error.
 - `maxBackoffMillis` -- if set, the delay grows exponentially on each successive retry, up to this
   ceiling.
 - `jitterRatio` -- if set, each computed delay is randomly reduced by up to this fraction.
-- `retryResetIntervalMillis` -- how long the stream must have been healthy before the backoff
-  counter resets to the initial delay.
+- `retryResetIntervalMillis` -- how long the current connection must have been delivering
+  events, measured from its first event, before the backoff counter resets to the initial
+  delay. A connection that fails before it delivers an event does not count as healthy.
 
 ### Error retry behavior
 
@@ -85,8 +87,9 @@ retried only for 500, 502, 503, and 504. A 200 response that declares a Content-
 same filter (a response with no Content-Type header at all is accepted, so a minimal injected
 transport can omit response headers). Set `errorFilter` to override this -- it receives the
 error and returns `true` to retry or `false` to close the stream and raise `error`. There is no
-guard against a filter that throws, matching the original package: the exception propagates into
-the transport's callback, and the stream does not recover. Redirect handling is described in
+guard against a filter that throws, matching the original package: the stream does not recover.
+Depending on the code path, the exception can be swallowed silently or surface as an uncaught
+error, so a filter must not throw. Redirect handling is described in
 [Redirects and bodies](#redirects-and-bodies) below.
 
 ### Headers, method, and body

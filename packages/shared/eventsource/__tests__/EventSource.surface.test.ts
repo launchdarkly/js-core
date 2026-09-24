@@ -234,12 +234,12 @@ it('still arms the reconnect timer and reconnects when onretrying throws', async
   expect(swallowed.map((err) => (err as Error).message)).toEqual(['onretrying boom']);
 });
 
-it('still captures the slot error when a registry listener for the same event also throws', async () => {
-  // A registered listener's exception propagates synchronously out of dispatch (see `emit`'s
-  // doc comment), which used to run before the slot's queued rethrow was scheduled -- losing the
-  // slot's error entirely. Scheduling the rethrow before dispatch fixes that: the slot's error is
-  // captured regardless of what the listener does, and the listener still runs.
-  const listenerCalls = new AsyncQueue<string>();
+it('still reconnects, and captures both errors, when the onerror slot and an error listener throw', async () => {
+  // The slot's rethrow is queued before the listeners dispatch, and a registered listener's
+  // exception is deferred the same way. Both errors surface asynchronously, in dispatch order,
+  // and neither disturbs the stream's own control flow. The reconnect below proves the
+  // reconnect logic survived both throws.
+  const errorSeen = new AsyncQueue<string>();
   const swallowed = await withSlotRethrowSwallowed(async () => {
     await withServer(async (server) => {
       server.byDefault(TestHttpHandlers.respond(500));
@@ -248,12 +248,25 @@ it('still captures the slot error when a registry listener for the same event al
         throw new Error('onerror boom');
       };
       es.addEventListener('error', () => {
-        listenerCalls.add('listener');
+        errorSeen.add('error');
         throw new Error('listener boom');
       });
-      expect(await listenerCalls.take()).toEqual('listener');
+      await errorSeen.take();
+      await server.closeAndWait();
+      await withServerOnPort(server.port, async (reconnected) => {
+        reconnected.byDefault(writeEvents(['data: got it\n\n']));
+        const messages = new AsyncQueue<MessageEvent>();
+        es.addEventListener('message', (m) => messages.add(m));
+        const m = await messages.take();
+        expect(m.data).toEqual('got it');
+      });
       es.close();
     });
   });
-  expect(swallowed.map((err) => (err as Error).message)).toEqual(['onerror boom']);
+  // The stream keeps retrying between the two servers, so the pair can repeat; the order of
+  // the first pair is what matters.
+  expect(swallowed.slice(0, 2).map((err) => (err as Error).message)).toEqual([
+    'onerror boom',
+    'listener boom',
+  ]);
 });
