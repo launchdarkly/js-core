@@ -1,10 +1,10 @@
 // launchdarkly-js-test-helpers is a dev dependency and the linter doesn't understand that this
 // file is only used by tests.
 // eslint-disable-next-line import/no-extraneous-dependencies
-import { sleepAsync } from 'launchdarkly-js-test-helpers';
+import { sleepAsync, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
 
-import { createEventSource } from '../src/EventSource';
-import { MessageEvent } from '../src/types';
+import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
+import { FetchFn, FetchResponse, MessageEvent } from '../src/types';
 import { withServer, writeEvents } from './helpers';
 
 afterEach(() => {
@@ -110,5 +110,97 @@ it('does not dispatch an event parsed after a listener calls close()', async () 
     // to surface before the assertion.
     await sleepAsync(100);
     expect(received).toEqual(['first']);
+  });
+});
+
+it('aborts the request when the error filter declines a retry mid-stream', async () => {
+  const encoder = new TextEncoder();
+  let reads = 0;
+  const reader = {
+    read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+      reads += 1;
+      if (reads === 1) {
+        return { done: false, value: encoder.encode('data: one\n\n') };
+      }
+      throw new Error('mid-stream drop');
+    },
+  };
+  const response: FetchResponse = {
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: { getReader: () => reader },
+  };
+  let aborted = false;
+  const injected: FetchFn = (_url, init) => {
+    init.signal?.addEventListener('abort', () => {
+      aborted = true;
+    });
+    return Promise.resolve(response);
+  };
+
+  const eventLog: string[] = [];
+  const es = createEventSource('http://example.test/stream', {
+    fetch: injected,
+    errorFilter: () => false,
+  });
+  es.onerror = () => {};
+  es.addEventListener('closed', () => eventLog.push('closed'));
+
+  await sleepAsync(50);
+
+  // The non-retry path must release the connection itself: close() is a no-op once the state
+  // is CLOSED, so nothing later can abort the transport.
+  expect(eventLog).toEqual(['closed']);
+  expect(aborted).toBe(true);
+});
+
+it('keeps the stream closed when the error filter calls close() and returns true', async () => {
+  let fetchCalls = 0;
+  const injected: FetchFn = () => {
+    fetchCalls += 1;
+    return Promise.reject(new Error('connection refused'));
+  };
+  const closedEvents: string[] = [];
+  // The filter body runs only after the first (asynchronous) failure, so the reference to
+  // `es` inside it is safe.
+  const es: EventSource = createEventSource('http://example.test/stream', {
+    fetch: injected,
+    initialRetryDelayMillis: 1,
+    errorFilter: () => {
+      es.close();
+      return true;
+    },
+  });
+  es.onerror = () => {};
+  es.addEventListener('closed', () => closedEvents.push('closed'));
+
+  await sleepAsync(50);
+
+  // The close inside the filter is final: the retry decision must not bring the state back to
+  // CONNECTING or start another attempt.
+  expect(es.readyState).toEqual(CLOSED);
+  expect(fetchCalls).toEqual(1);
+  expect(closedEvents).toEqual(['closed']);
+});
+
+it('dispatches closed only once when an error listener calls close() on a non-retryable error', async () => {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(401));
+    const es = createEventSource(server.url, { initialRetryDelayMillis: 1 });
+    es.onerror = () => {};
+    const closedEvents: string[] = [];
+    es.addEventListener('closed', () => closedEvents.push('closed'));
+    es.addEventListener('error', () => es.close());
+
+    await sleepAsync(100);
+
+    // close() already dispatched `closed`; the non-retry teardown must not dispatch a second.
+    expect(closedEvents).toEqual(['closed']);
+    expect(es.readyState).toEqual(CLOSED);
   });
 });
