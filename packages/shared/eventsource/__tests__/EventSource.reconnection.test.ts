@@ -153,6 +153,20 @@ it('sends the Last-Event-ID header when the server previously sent an event id',
   });
 });
 
+it('replaces an initial Last-Event-ID header with the id from the stream on reconnect', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 10\ndata: Hello\n\n']));
+    const opts = { ...delayOpts, headers: { 'Last-Event-ID': '5' } };
+    await withEventSource(server.url, opts, async (es) => {
+      const messages = startMessageQueue(es);
+      await messages.take();
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toEqual('10');
+    });
+  });
+});
+
 it('commits an id from a block that has no data, for use on reconnect', async () => {
   await withServer(async (server) => {
     server.byDefault(writeEvents(['id: 1\ndata: Hello\n\n', 'id: 2\n\n']));
