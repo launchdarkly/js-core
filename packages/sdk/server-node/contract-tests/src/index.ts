@@ -10,7 +10,9 @@ import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClien
 const app = express();
 let server: Server | null = null;
 
-const port = 8000;
+// The port is configurable so the service can move out of the way of a local
+// DynamoDB instance, which the harness expects on port 8000.
+const port = Number(process.env.PORT ?? 8000);
 
 const clients = new ClientPool<SdkClientEntity>();
 
@@ -48,6 +50,7 @@ app.get('/', (req: Request, res: Response) => {
       'fdv1-fallback',
       'instance-id',
       'persistent-data-store-redis',
+      'persistent-data-store-dynamodb',
       'persistent-data-store-recovery',
     ],
   });

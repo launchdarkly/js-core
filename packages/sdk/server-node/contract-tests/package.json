@@ -14,6 +14,7 @@
   "dependencies": {
     "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/node-server-sdk": "workspace:^",
+    "@launchdarkly/node-server-sdk-dynamodb": "workspace:^",
     "@launchdarkly/node-server-sdk-redis": "workspace:^",
     "body-parser": "^2.3.0",
     "express": "^5.2.1"
