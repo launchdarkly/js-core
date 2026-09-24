@@ -20,6 +20,7 @@ import ld, {
   PollingDataSourceConfiguration,
   StreamingDataSourceConfiguration,
 } from '@launchdarkly/node-server-sdk';
+import { DynamoDBFeatureStore } from '@launchdarkly/node-server-sdk-dynamodb';
 import { RedisFeatureStore } from '@launchdarkly/node-server-sdk-redis';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
@@ -60,12 +61,10 @@ interface SDKConfigDataSystemWithStore {
 // cache mode, so this is a TTL far longer than any contract test run.
 const infiniteCacheTTLSeconds = 24 * 60 * 60;
 
-function makePersistentStore(params: SDKConfigPersistentDataStoreParams) {
-  if (params.store.type !== 'redis') {
-    throw new Error(`Unsupported persistent data store type: ${params.store.type}`);
-  }
+// The harness creates this DynamoDB table itself before each test.
+const dynamoDBTableName = 'sdk-contract-tests';
 
-  const dsn = new URL(params.store.dsn);
+function makePersistentStore(params: SDKConfigPersistentDataStoreParams) {
   let cacheTTL: number;
   switch (params.cache.mode) {
     case 'off':
@@ -80,18 +79,41 @@ function makePersistentStore(params: SDKConfigPersistentDataStoreParams) {
       break;
   }
 
-  return RedisFeatureStore({
-    // The harness simulates outages with a TCP proxy, and buffered commands would
-    // otherwise hide write failures from the SDK.
-    redisOpts: {
-      host: dsn.hostname,
-      port: Number(dsn.port),
-      enableOfflineQueue: false,
-      maxRetriesPerRequest: 1,
-    },
-    prefix: params.store.prefix,
-    cacheTTL,
-  });
+  switch (params.store.type) {
+    case 'redis': {
+      const dsn = new URL(params.store.dsn);
+      return RedisFeatureStore({
+        // The harness simulates outages with a TCP proxy, and buffered commands would
+        // otherwise hide write failures from the SDK.
+        redisOpts: {
+          host: dsn.hostname,
+          port: Number(dsn.port),
+          enableOfflineQueue: false,
+          maxRetriesPerRequest: 1,
+        },
+        prefix: params.store.prefix,
+        cacheTTL,
+      });
+    }
+    case 'dynamodb':
+      return DynamoDBFeatureStore(dynamoDBTableName, {
+        // The harness sends the local DynamoDB endpoint as the DSN. The region
+        // and static credentials match what the harness's own client uses.
+        clientOptions: {
+          endpoint: params.store.dsn,
+          region: 'us-east-1',
+          credentials: {
+            accessKeyId: 'dummy',
+            secretAccessKey: 'dummy',
+            sessionToken: 'dummy',
+          },
+        },
+        prefix: params.store.prefix,
+        cacheTTL,
+      });
+    default:
+      throw new Error(`Unsupported persistent data store type: ${params.store.type}`);
+  }
 }
 
 export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
