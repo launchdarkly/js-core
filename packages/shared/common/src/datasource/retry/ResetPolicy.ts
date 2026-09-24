@@ -1,7 +1,6 @@
 /**
  * Decides when a component has operated well enough, for long enough, that its
- * retry state should reset. This is the only behavioral difference between the
- * streaming and polling retry configurations.
+ * retry state should reset.
  */
 export interface ResetPolicy {
   /**
