@@ -292,6 +292,15 @@ export async function makeSdkConfig(
       const handle = await makePersistentStore(persistentDataStore);
       cf.dataSystem.persistentStore = handle.store;
       closeStore = handle.close;
+      // A store with zero initializers and zero synchronizers is the harness's
+      // daemon-mode configuration: the SDK reads from the store and starts
+      // no data source of its own.
+      if (
+        dataSourceOptions.initializers.length === 0 &&
+        dataSourceOptions.synchronizers.length === 0
+      ) {
+        cf.dataSystem.useLdd = true;
+      }
     }
 
     // FDv1Fallback configures the SDK's FDv1 Fallback Synchronizer -- engaged only in
