@@ -87,7 +87,8 @@ export function newStreamEntity(options: StreamOptions): StreamEntity {
   if (options.readTimeoutMs) {
     eventSourceParams.readTimeoutMillis = options.readTimeoutMs;
   }
-  if (options.initialDelayMs) {
+  // A zero delay is a valid value, so the check must not use truthiness.
+  if (options.initialDelayMs !== undefined) {
     eventSourceParams.initialRetryDelayMillis = options.initialDelayMs;
   }
   if (options.lastEventId) {
@@ -119,6 +120,12 @@ export function newStreamEntity(options: StreamOptions): StreamEntity {
   });
   sse.addEventListener('message', onMessage);
   sse.onerror = (error?: ErrorEvent) => {
+    // A server-named "error" frame also reaches this slot, as a MessageEvent with a data
+    // property. That frame is not a connection error. The listener registered through the
+    // "listen" command reports it, so this slot must ignore it.
+    if (error && 'data' in error) {
+      return;
+    }
     const errorString =
       error?.message ?? (error?.status ? `HTTP ${error.status}` : 'unknown error');
     log(tag, `Received error from stream: ${errorString}`);
@@ -133,9 +140,14 @@ export function newStreamEntity(options: StreamOptions): StreamEntity {
       switch (params.command) {
         case 'listen': {
           const eventType = params.listen?.type;
+          // A listen command without a type is malformed. Report it as a bad command
+          // instead of a silent success that registers nothing.
+          if (!eventType) {
+            return false;
+          }
           // The default "message" type is registered once above; registering it again here
           // would deliver every message twice.
-          if (eventType && eventType !== 'message' && !listeningForType[eventType]) {
+          if (eventType !== 'message' && !listeningForType[eventType]) {
             listeningForType[eventType] = true;
             sse.addEventListener(eventType, onMessage);
           }
