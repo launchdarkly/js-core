@@ -247,6 +247,20 @@ it('fails when a 200 response declares a content type other than text/event-stre
   });
 });
 
+it('rejects a content type whose media type only begins with text/event-stream', async () => {
+  await withServer(async (server) => {
+    server.byDefault(
+      TestHttpHandlers.respond(200, { 'Content-Type': 'text/event-streaming' }, 'nope'),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      const errors = startErrorQueue(es);
+      const err = await errors.take();
+      expect(err.status).toEqual(200);
+      expect(err.message).toContain('text/event-stream');
+    });
+  });
+});
+
 it('accepts an event-stream content type that carries parameters', async () => {
   await withServer(async (server) => {
     const chunks = new AsyncQueue<string>();

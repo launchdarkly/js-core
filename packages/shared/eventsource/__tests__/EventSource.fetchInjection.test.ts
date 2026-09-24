@@ -103,6 +103,54 @@ it('passes the url, method, headers, body, and signal to an injected fetch', () 
   expect(init.signal?.aborted).toBe(true);
 });
 
+it('replaces a default header when the caller overrides it with a different case', () => {
+  const injected = jest.fn<Promise<FetchResponse>, [string, FetchRequestOptions]>(
+    () => new Promise<never>(() => {}),
+  );
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, headers: { accept: 'application/json' } });
+  const [, init] = injected.mock.calls[0];
+  expect(init.headers).toEqual({
+    'Cache-Control': 'no-cache',
+    accept: 'application/json',
+  });
+  es.close();
+});
+
+it('connects with a relative url and reports an empty origin', async () => {
+  // With no document location to resolve against, a relative url cannot produce an origin, but
+  // it must not throw either: the injected transport decides what to do with it.
+  const injected: FetchFn = async () => idleStreamResponse(['data: hello\n\n']);
+  const es = createEventSource('/relative/stream', { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    const m = await messages.take();
+    expect(m.data).toEqual('hello');
+    expect(m.origin).toEqual('');
+  } finally {
+    es.close();
+  }
+});
+
+it('reports the origin of the final response url when the transport supplies one', async () => {
+  const injected: FetchFn = async () => ({
+    ...idleStreamResponse(['data: hello\n\n']),
+    url: 'https://redirected.example.com/other/stream',
+  });
+  const es = createEventSource(`http://localhost:${deliberatelyUnusedPort}/stream`, {
+    fetch: injected,
+  });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    const m = await messages.take();
+    expect(m.origin).toEqual('https://redirected.example.com');
+  } finally {
+    es.close();
+  }
+});
+
 it('parses events that stream through an injected fetch', async () => {
   const injected: FetchFn = async () =>
     idleStreamResponse(['event: put\ndata: {"flag":true}\n\n', 'data: plain\n\n']);

@@ -40,6 +40,12 @@ export interface FetchResponse {
   readonly statusText: string;
   readonly headers: FetchHeaders;
   readonly body?: FetchResponseBody | null;
+  /**
+   * The final response URL, after any redirects. A standard `fetch` response always carries it.
+   * The field is optional because a minimal injected transport can omit it; the client then
+   * derives the message origin from the request URL.
+   */
+  readonly url?: string;
 }
 
 /**

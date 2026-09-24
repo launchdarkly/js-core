@@ -9,6 +9,7 @@ import {
 import { createEventSource, EventSource } from '../src/EventSource';
 import { EventSourceInitDict } from '../src/types';
 import {
+  deliberatelyUnusedPort,
   expectInRange,
   expectNothingReceived,
   initiallyDownServerPort,
@@ -305,4 +306,29 @@ it('ignores a retry: field whose value is not all ASCII digits', async () => {
       expect(es.reconnectInterval).toEqual(1000);
     });
   });
+});
+
+it('does not arm a reconnect timer when a retrying listener calls close', async () => {
+  jest.useFakeTimers();
+  try {
+    const es = createEventSource(`http://localhost:${deliberatelyUnusedPort}`, {
+      fetch: async () => {
+        throw new Error('connection refused');
+      },
+      initialRetryDelayMillis: 30000,
+    });
+    es.onerror = () => {};
+    const retried = new Promise<void>((resolve) => {
+      es.onretrying = () => {
+        es.close();
+        resolve();
+      };
+    });
+    await retried;
+    // The close inside the listener must stop the timer from arming at all; a timer that stays
+    // armed would hold the event loop open for the full delay.
+    expect(jest.getTimerCount()).toEqual(0);
+  } finally {
+    jest.useRealTimers();
+  }
 });
