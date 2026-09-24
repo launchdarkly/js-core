@@ -1,5 +1,5 @@
 import { LDLogger } from '../../api/logging/LDLogger';
-import { FailureKind } from './classification';
+import { FailureKind } from '../../errors';
 import { AfterConsecutiveSuccesses, AfterHealthyFor, ResetPolicy } from './ResetPolicy';
 
 // The delay bounds of the extended regime, in milliseconds. A component enters
