@@ -151,6 +151,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
 
   private _pollHandle?: ReturnType<typeof setInterval>;
 
+  // One-shot timer for a store without an availability check. It re-runs, at the
+  // embargo deadline, a recovery signal that arrived during the embargo. Such a
+  // store has no poller, so a dropped signal would leave no later trigger.
+  private _embargoRetryHandle?: ReturnType<typeof setTimeout>;
+
   constructor(
     private readonly _basePersistenceStore: LDFeatureStore,
     private readonly _logger?: LDLogger,
@@ -280,6 +285,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     }
     this._closed = true;
     this._stopRecoveryPolling();
+    this._cancelEmbargoRetry();
     this._basePersistenceStore.close();
     this._memoryStore.close();
   }
@@ -371,6 +377,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS,
     );
     this._stopRecoveryPolling();
+    this._cancelEmbargoRetry();
     this._logger?.info('Persistent store is available again.');
   }
 
@@ -465,6 +472,36 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
+   * Keeps a recovery signal that arrived during the write-back embargo, for a store
+   * without an availability check.
+   *
+   * Such a store has no poller, so a signal the embargo drops would leave no later
+   * trigger, and the persistence store would stay stale until the next mirrored
+   * write. This schedules one retry at the embargo deadline instead. The retry only
+   * acts on evidence a successful write already provided; it never uses a write as
+   * an availability check. At most one timer runs. Recovery and close cancel it.
+   */
+  private _scheduleEmbargoRetry(): void {
+    if (this._pollHandle || this._embargoRetryHandle || this._closed) {
+      return;
+    }
+    this._embargoRetryHandle = setTimeout(
+      () => {
+        this._embargoRetryHandle = undefined;
+        this._attemptRecovery();
+      },
+      Math.max(this._writeBackEmbargoUntil - Date.now(), 0),
+    );
+  }
+
+  private _cancelEmbargoRetry(): void {
+    if (this._embargoRetryHandle) {
+      clearTimeout(this._embargoRetryHandle);
+      this._embargoRetryHandle = undefined;
+    }
+  }
+
+  /**
    * Abandons the outstanding write-back once it is past its deadline.
    *
    * Bumps the generation so a late callback is ignored, and clears the in-flight
@@ -511,6 +548,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     if (Date.now() < this._writeBackEmbargoUntil) {
       // Backing off after a write-back failure. A write-signal or probe answer that
       // arrives inside the embargo must not flood the persistence store with retries.
+      // A store with a poller retries on a later poll tick. A store without one
+      // must keep the signal, or it would have no later trigger.
+      this._scheduleEmbargoRetry();
       return;
     }
     this._writeBackGeneration += 1;
