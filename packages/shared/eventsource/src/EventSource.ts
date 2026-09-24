@@ -320,9 +320,6 @@ export function createEventSource(
       headers['Cache-Control'] = 'no-cache';
       headers.Accept = 'text/event-stream';
     }
-    if (lastEventId) {
-      headers['Last-Event-ID'] = lastEventId;
-    }
     if (config.headers) {
       Object.keys(config.headers).forEach((key) => {
         const value = config.headers[key];
@@ -333,6 +330,11 @@ export function createEventSource(
         // comma-joined value. HTTP defines that form as equivalent to a repeated field.
         headers[key] = Array.isArray(value) ? value.join(', ') : String(value);
       });
+    }
+    // The live id is applied last so it wins over a caller-supplied Last-Event-ID header.
+    // That header only seeds the initial resume point; each received event id replaces it.
+    if (lastEventId) {
+      headers['Last-Event-ID'] = lastEventId;
     }
     return headers;
   };
