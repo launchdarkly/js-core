@@ -172,6 +172,13 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     });
 
     try {
+      // Remove the initialized token before any data changes. The batch
+      // write is not atomic, so a partial failure can leave a mix of old
+      // and new items. If the token stayed in place, other readers would
+      // see that mixed data as a complete dataset. A delete for a key
+      // that does not exist is a successful no-op, so this is safe on the
+      // first initialization.
+      await this._state.delete(this._tableName, this._initializedToken());
       await this._state.batchWrite(this._tableName, ops);
       // Write the initialized token on its own, after the data batch
       // succeeds. A batch write is not atomic, so writing the token as

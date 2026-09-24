@@ -2,6 +2,7 @@ import {
   AttributeValue,
   BatchWriteItemCommand,
   ConditionalCheckFailedException,
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   paginateQuery,
@@ -155,6 +156,15 @@ export default class DynamoDBClientState {
         throw err;
       }
     }
+  }
+
+  async delete(table: string, key: Record<string, AttributeValue>): Promise<void> {
+    await this._client.send(
+      new DeleteItemCommand({
+        TableName: table,
+        Key: key,
+      }),
+    );
   }
 
   close() {

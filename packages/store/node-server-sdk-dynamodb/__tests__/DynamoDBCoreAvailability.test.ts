@@ -31,6 +31,7 @@ it('reports an init error through the callback when the batch write fails', (don
   const state = {
     prefixedKey: (key: string) => key,
     query: jest.fn().mockResolvedValue([]),
+    delete: jest.fn().mockResolvedValue(undefined),
     batchWrite: jest.fn().mockRejectedValue(new Error('write failed')),
   };
   // @ts-ignore Partial state mock for testing.
@@ -60,6 +61,7 @@ it('calls back without an error when init succeeds', (done) => {
   const state = {
     prefixedKey: (key: string) => key,
     query: jest.fn().mockResolvedValue([]),
+    delete: jest.fn().mockResolvedValue(undefined),
     batchWrite: jest.fn().mockResolvedValue(undefined),
     put: jest.fn().mockResolvedValue(undefined),
   };
@@ -79,6 +81,7 @@ it('reports an init error through the callback when writing the initialized toke
   const state = {
     prefixedKey: (key: string) => key,
     query: jest.fn().mockResolvedValue([]),
+    delete: jest.fn().mockResolvedValue(undefined),
     batchWrite: jest.fn().mockResolvedValue(undefined),
     put: jest.fn().mockRejectedValue(new Error('token write failed')),
   };
