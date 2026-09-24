@@ -349,6 +349,185 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
+  it('retries at the embargo deadline a recovery signal that arrived during the embargo', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      persistence.failInits = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A successful mirrored write triggers a write-back, which fails and embargoes
+      // retries for 1000ms.
+      persistence.failUpserts = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(logger.error).toHaveBeenCalledTimes(1);
+
+      // A final mirrored write succeeds inside the embargo. No writes follow it.
+      persistence.failInits = false;
+      await jest.advanceTimersByTimeAsync(500);
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      expect(logger.info).not.toHaveBeenCalled();
+
+      // The kept signal runs at the embargo deadline and recovers the store.
+      await jest.advanceTimersByTimeAsync(500);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Persistent store is available again.');
+      expect(persistence.initCalls[persistence.initCalls.length - 1]).toEqual({
+        features: {
+          flagA: { key: 'flagA', version: 2, deleted: true },
+          flagB: { key: 'flagB', version: 1 },
+          flagC: { key: 'flagC', version: 1 },
+          flagD: { key: 'flagD', version: 1 },
+        },
+        segments: {},
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('runs at most one write-back for several signals inside the same embargo', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      persistence.failInits = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+      persistence.failUpserts = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+
+      persistence.failInits = false;
+      const initCallsBefore = persistence.initCalls.length;
+      await jest.advanceTimersByTimeAsync(300);
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagE: { version: 1 } } },
+        undefined,
+        's5',
+      );
+
+      await jest.advanceTimersByTimeAsync(700);
+      expect(persistence.initCalls.length).toEqual(initCallsBefore + 1);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not run an embargoed recovery signal after close', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      persistence.failInits = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+      persistence.failUpserts = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+
+      // A signal inside the embargo schedules the retry, then the store closes
+      // before the embargo deadline.
+      persistence.failInits = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      expect(jest.getTimerCount()).toEqual(1);
+      const initCallsBefore = persistence.initCalls.length;
+      recoveryStore.close();
+      // Close cancels the retry timer, so it cannot keep the process alive.
+      expect(jest.getTimerCount()).toEqual(0);
+
+      await jest.advanceTimersByTimeAsync(5000);
+      expect(persistence.initCalls.length).toEqual(initCallsBefore);
+      expect(logger.info).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('cancels the embargoed recovery signal when a basis write recovers the store first', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      persistence.failInits = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+      persistence.failUpserts = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+
+      // A signal inside the embargo schedules the retry, then a basis write
+      // recovers the store directly before the embargo deadline.
+      persistence.failInits = false;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      expect(jest.getTimerCount()).toEqual(1);
+      await recoveryFacade.applyChanges(
+        true,
+        { features: { flagE: { version: 1 } }, segments: {} },
+        undefined,
+        's5',
+      );
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(jest.getTimerCount()).toEqual(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('ignores a write-back init that completes after close', async () => {
     persistence.failUpserts = true;
     persistence.failInits = true;
