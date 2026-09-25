@@ -140,8 +140,15 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
-    this._queue.enqueue((cb) => {
+    this._queue.enqueue((cb, isAbandoned) => {
       const afterStoreInit = (err?: Error) => {
+        if (isAbandoned()) {
+          // The queue timed this init out and moved on, so a newer operation may
+          // already have run. This late result must not touch the caches or the
+          // initialized state.
+          cb(err);
+          return;
+        }
         if (err) {
           // A failed init must not present the rejected data as current. Clear the
           // caches and the initialized state, so reads and initialization checks
@@ -254,7 +261,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: (err?: Error) => void): void {
-    this._queue.enqueue((cb) => {
+    this._queue.enqueue((cb, isAbandoned) => {
       // Clear the caches which contain all the values of a specific kind.
       if (this._allItemsCache) {
         this._allItemsCache.clear();
@@ -266,6 +273,12 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         data.key,
         persistKind.serialize(data),
         (err, updatedDescriptor) => {
+          if (isAbandoned()) {
+            // The queue timed this upsert out and moved on. This late result must
+            // not overwrite a newer operation's cache entries.
+            cb(err);
+            return;
+          }
           if (err) {
             this._logger?.error(
               `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
