@@ -30,6 +30,7 @@ export default class FlagsStateBuilder {
     reason: LDEvaluationReason,
     trackEvents: boolean,
     trackReason: boolean,
+    debugEventsUntilDate: number | undefined,
     detailsOnlyIfTracked: boolean,
     prerequisites?: string[],
   ) {
@@ -39,10 +40,7 @@ export default class FlagsStateBuilder {
       meta.variation = variation;
     }
     const omitDetails =
-      detailsOnlyIfTracked &&
-      !trackEvents &&
-      !trackReason &&
-      flag.debugEventsUntilDate === undefined; // 0 probably doesn't matter.
+      detailsOnlyIfTracked && !trackEvents && !trackReason && debugEventsUntilDate === undefined; // 0 probably doesn't matter.
     if (!omitDetails) {
       meta.version = flag.version;
     }
@@ -55,8 +53,8 @@ export default class FlagsStateBuilder {
     if (trackReason) {
       meta.trackReason = true;
     }
-    if (flag.debugEventsUntilDate !== undefined) {
-      meta.debugEventsUntilDate = flag.debugEventsUntilDate;
+    if (debugEventsUntilDate !== undefined) {
+      meta.debugEventsUntilDate = debugEventsUntilDate;
     }
     if (prerequisites && prerequisites.length) {
       meta.prerequisites = prerequisites;
