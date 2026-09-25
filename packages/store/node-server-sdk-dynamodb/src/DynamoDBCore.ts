@@ -63,6 +63,12 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * above: both processes receive the same data from LaunchDarkly, so the store converges
  * once the slower init completes.
  *
+ * The initialized token is read with a strongly consistent read, but flag and segment
+ * reads stay eventually consistent to keep read cost down. A reader in another process
+ * can therefore see the token before it sees the writes the token advertises, and can
+ * briefly read a stale item. The lag is bounded by DynamoDB's replication delay and
+ * heals through cache expiry and later updates from LaunchDarkly.
+ *
  * DynamoDB has a maximum item size of 400KB. Since each feature flag or user segment is
  * stored as a single item, this mechanism will not work for extremely large flags or segments.
  * @internal
