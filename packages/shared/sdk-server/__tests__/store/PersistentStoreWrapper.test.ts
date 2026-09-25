@@ -896,3 +896,30 @@ it('clears the caches and the initialized state when an init times out', async (
     jest.useRealTimers();
   }
 });
+
+it('ignores a duplicate answer from an already-completed init', async () => {
+  const core = new MockPersistentStore();
+  const initCallbacks: (() => void)[] = [];
+  core.init = (allData, callback) => {
+    core.allData = allData;
+    initCallbacks.push(() => callback());
+    callback();
+  };
+  const wrapper = new PersistentDataStoreWrapper(core, 60);
+
+  await new Promise<void>((resolve) => {
+    wrapper.init({ features: { key1: { version: 1 } } }, () => resolve());
+  });
+  await new Promise<void>((resolve) => {
+    wrapper.init({ features: { key1: { version: 2 } } }, () => resolve());
+  });
+
+  // The first init answers a second time. Its data must not repopulate the
+  // caches over the newer init's data.
+  initCallbacks[0]();
+  const item = await new Promise<any>((resolve) => {
+    wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+  });
+  expect(item).toEqual(expect.objectContaining({ version: 2 }));
+  wrapper.close();
+});

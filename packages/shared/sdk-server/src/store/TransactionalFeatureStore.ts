@@ -1,4 +1,4 @@
-import { Backoff, DefaultBackoff, internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { DefaultBackoff, internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { DataKind } from '../api/interfaces';
 import {
@@ -10,6 +10,7 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from './InMemoryFeatureStore';
+import { monotonicNow } from './monotonicTime';
 import { toError } from './storeErrors';
 import SupervisedOperation from './SupervisedOperation';
 
@@ -111,7 +112,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // a time. An abandoned attempt may still execute inside the persistence store.
   private _writeBackOp = new SupervisedOperation();
 
-  // Epoch ms before which a new write-back attempt is not issued. Persists across
+  // Monotonic ms before which a new write-back attempt is not issued. Persists across
   // flapping available/unavailable cycles instead of resetting on each transition,
   // so a fast-flapping store cannot dodge the backoff. Recovery replaces it with
   // the short success embargo in _markAvailable.
@@ -151,7 +152,10 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     private readonly _basePersistenceStore: LDFeatureStore,
     private readonly _logger?: LDLogger,
     // Injectable so tests can remove the jitter.
-    private readonly _backoff: Backoff = new DefaultBackoff(
+    // Pick keeps the timestamp parameters visible: the store passes its monotonic
+    // clock explicitly, so the backoff's reset interval uses the same clock as the
+    // embargo it feeds.
+    private readonly _backoff: Pick<DefaultBackoff, 'fail' | 'success'> = new DefaultBackoff(
       WRITE_BACK_INITIAL_BACKOFF_MS,
       WRITE_BACK_BACKOFF_RESET_MS,
     ),
@@ -372,7 +376,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     this._persistenceAvailable = true;
     // The store just proved it is healthy. Reset the backoff and the log edge, so
     // this outage's failures do not carry into the next one.
-    this._backoff.success();
+    this._backoff.success(monotonicNow());
     this._failureLoggedThisOutage = false;
     this._hungWarnedThisOutage = false;
     this._writeFailedDuringWriteBack = false;
@@ -383,7 +387,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     // Rate-limit the next write-back, so a flapping store triggers about one
     // write-back per second at most. This also replaces any longer failure
     // backoff: recovery just proved the store is healthy.
-    this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
+    this._writeBackEmbargoUntil = monotonicNow() + WRITE_BACK_SUCCESS_EMBARGO_MS;
     this._stopRecoveryPolling();
     this._cancelEmbargoRetry();
     this._cancelWriteBackDeadline();
@@ -418,7 +422,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       if (this._persistenceAvailable) {
         return;
       }
-      if (Date.now() < this._writeBackEmbargoUntil) {
+      if (monotonicNow() < this._writeBackEmbargoUntil) {
         // Backing off after a write-back failure.
         return;
       }
@@ -491,7 +495,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
         this._embargoRetryHandle = undefined;
         this._attemptRecovery();
       },
-      Math.max(this._writeBackEmbargoUntil - Date.now(), 0),
+      Math.max(this._writeBackEmbargoUntil - monotonicNow(), 0),
     );
   }
 
@@ -575,7 +579,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     if (this._persistenceAvailable) {
       return;
     }
-    if (Date.now() < this._writeBackEmbargoUntil) {
+    if (monotonicNow() < this._writeBackEmbargoUntil) {
       // Backing off after a write-back failure. A write-signal or probe answer that
       // arrives inside the embargo must not flood the persistence store with
       // retries. The retry timer keeps the signal until the embargo passes.
@@ -597,12 +601,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     if (this._activeStore !== this._memoryStore) {
-      // No basis has been received, so there is no full data set to write: memory
-      // holds only the deltas so far, and writing them through init() would replace
-      // the persistence store's full data with a partial set. A mirrored delta that
-      // failed before the basis stays absent from persistence until the first
-      // basis, which fully populates the store and which FDv2 sends before any
-      // delta. _markAvailable() below already invalidates this attempt.
+      // No basis has been received, so memory holds no data to write back. In
+      // practice this branch is only a guard: every data source delivers a full
+      // payload before any delta, so no mirrored write, and therefore no outage,
+      // can precede the basis. The first basis fully populates the persistence
+      // store. _markAvailable() below already invalidates this attempt.
       this._markAvailable();
       return;
     }
@@ -627,7 +630,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
         // A mirrored write failed while this write-back was in flight, so this
         // snapshot predates that item. Stay unavailable and run another write-back
         // with the current data once the flap embargo passes.
-        this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
+        this._writeBackEmbargoUntil = monotonicNow() + WRITE_BACK_SUCCESS_EMBARGO_MS;
         this._attemptRecovery();
         return;
       }
@@ -647,7 +650,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
    * schedules that attempt at the backoff deadline.
    */
   private _armFailureEmbargo(): void {
-    this._writeBackEmbargoUntil = Date.now() + this._backoff.fail();
+    this._writeBackEmbargoUntil = monotonicNow() + this._backoff.fail(monotonicNow());
     this._scheduleEmbargoRetry();
   }
 

@@ -104,9 +104,11 @@ export default class UpdateQueue {
     }, this._hangTimeoutMs);
 
     // A synchronous throw from the update must fail this update only, not escape
-    // into the timer chain that started it.
+    // into the timer chain that started it. isAbandoned also reports true once the
+    // update has settled, so a store that answers a second time after a normal
+    // completion is fenced the same way as a timed-out one.
     try {
-      fn(complete, () => abandoned);
+      fn(complete, () => settled || abandoned);
     } catch (reason) {
       complete(toError(reason, QUEUE_FAILURE_FALLBACK_MESSAGE));
     }
