@@ -10,10 +10,14 @@ import LDEventSummarizer, {
 } from './LDEventSummarizer';
 import SummaryCounter from './SummaryCounter';
 
+// The override marker is part of the key, so override-affected and other evaluations of the same
+// flag, variation, and version accumulate into separate counters.
 function counterKey(event: InputEvalEvent) {
   return `${event.key}:${
     event.variation !== null && event.variation !== undefined ? event.variation : ''
-  }:${event.version !== null && event.version !== undefined ? event.version : ''}`;
+  }:${event.version !== null && event.version !== undefined ? event.version : ''}:${
+    event.overrideAffected ? 'overrideAffected' : ''
+  }`;
 }
 
 /**
@@ -59,6 +63,7 @@ export default class EventSummarizer implements LDEventSummarizer {
           event.default,
           event.version,
           event.variation,
+          event.overrideAffected,
         );
       }
 
@@ -95,6 +100,10 @@ export default class EventSummarizer implements LDEventSummarizer {
           counterOut.version = counter.version;
         } else {
           counterOut.unknown = true;
+        }
+        if (counter.overrideAffected) {
+          // The marker is present only when true, like the unknown marker.
+          counterOut.overrideAffected = true;
         }
         flagSummary.counters.push(counterOut);
 

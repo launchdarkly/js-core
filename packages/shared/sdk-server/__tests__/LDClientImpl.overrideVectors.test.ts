@@ -6,12 +6,14 @@ import {
   fdv2FullPayload,
   makeFDv2Client,
   makeFDv2Platform,
+  summaryCountersFor,
 } from './overrides/overridesTestSupport';
 import TestOverrideSource from './overrides/TestOverrideSource';
 
 // These vectors come from the OVERRIDE specification. Each vector sets up LaunchDarkly data, an
 // override layer, and an initialization state. The test evaluates one flag through the full
-// client stack and checks the value, the variation index, and the reason.
+// client stack and checks the value, the variation index, the reason, and the marking of the
+// summary counter that the evaluation contributes to.
 const vectorsPath = path.join(__dirname, 'overrides', 'override-vectors', 'vectors.json');
 
 // The vectors' semantics are versioned. A schema change means this runner needs review.
@@ -67,12 +69,17 @@ describe.each(
       ],
       segments: Object.values(vector.overrides.segments ?? {}),
     });
+    const capturedEvents: any[] = [];
     const platform = vector.launchDarklyData.initialized
       ? makeFDv2Platform(
           fdv2FullPayload(vector.launchDarklyData.flags, vector.launchDarklyData.segments),
+          capturedEvents,
         )
-      : makeFDv2Platform();
-    const client = makeFDv2Client(platform, { dataSystem: { overrides: source } });
+      : makeFDv2Platform(undefined, capturedEvents);
+    const client = makeFDv2Client(platform, {
+      sendEvents: true,
+      dataSystem: { overrides: source },
+    });
     try {
       if (vector.launchDarklyData.initialized) {
         await client.waitForInitialization({ timeout: 5 });
@@ -100,6 +107,20 @@ describe.each(
       });
       if (!('overrideAffected' in vector.expect.reason)) {
         expect(actualReason.overrideAffected ?? false).toBe(false);
+      }
+
+      // summaryOverrideAffected is the marking of the summary counter that this single
+      // evaluation contributes to. The event processor keys the counter on the marking the
+      // client hands it, not on the reason.
+      if (vector.expect.summaryOverrideAffected !== undefined) {
+        await client.flush();
+        const counters = summaryCountersFor(capturedEvents, vector.evaluate.flagKey);
+        expect(counters).toHaveLength(1);
+        if (vector.expect.summaryOverrideAffected) {
+          expect(counters[0].overrideAffected).toBe(true);
+        } else {
+          expect(counters[0]).not.toHaveProperty('overrideAffected');
+        }
       }
     } finally {
       client.close();
