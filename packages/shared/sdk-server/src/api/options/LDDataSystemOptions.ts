@@ -99,14 +99,86 @@ export interface LDDataSystemOptions {
 }
 
 /**
- * The ways an override source can be configured: the source itself, or a factory function that
- * creates it from the client context.
+ * Configuration of the file-based override source. Flag overrides are currently experimental and
+ * subject to change.
+ *
+ * The source reads flag and segment overrides from one or more local files and reloads them as
+ * the files change. The files use the same document format as the file data source: a JSON or
+ * YAML document with optional `flags`, `flagValues`, and `segments` members. `flagValues` entries
+ * expand into full flag definitions that return the given value for every context.
+ *
+ * A configured file that does not exist contributes no overrides. It can be created later, and
+ * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
+ * reload: the previously loaded overrides stay in effect, the failure is logged, and the source
+ * retries. Every applied change is logged at Info level with the overrides in effect and what
+ * each file supplied.
+ *
+ * @example
+ * ```typescript
+ * const client = init(sdkKey, {
+ *   dataSystem: {
+ *     overrides: { type: 'file', paths: ['/etc/launchdarkly/overrides.json'] },
+ *   },
+ * });
+ * ```
+ */
+export interface FileOverrideSourceOptions {
+  type: 'file';
+
+  /**
+   * The paths of the files to read, in precedence order. At least one path is required. The
+   * order decides which file wins under the duplicate keys handling when the same key appears in
+   * more than one file.
+   */
+  paths: string[];
+
+  /**
+   * What to do when the same flag or segment key appears in more than one file. `fail`, the
+   * default, treats the reload as failed and keeps the previously loaded overrides. `ignore`
+   * keeps the entry from the first configured file that defines the key and discards the others.
+   */
+  duplicateKeysHandling?: 'fail' | 'ignore';
+
+  /**
+   * How the source detects file changes. The two modes are alternatives.
+   *
+   * `polling`, the default, examines the files on a fixed interval and reloads when the
+   * modification time or the size of a file changes. It works on every filesystem, including
+   * network mounts and directories whose contents are swapped through symbolic links.
+   *
+   * `watching` reloads in response to filesystem change notifications for the directories that
+   * contain the files. It reacts faster than polling. It depends on notifications, which some
+   * filesystems do not deliver reliably.
+   */
+  changeDetection?: 'polling' | 'watching';
+
+  /**
+   * The interval between examinations of the files in polling mode, in seconds. The default is
+   * 1. An interval below 1 is raised to 1. Watching mode ignores it.
+   */
+  pollInterval?: number;
+
+  /**
+   * A YAML parser for YAML files. The parser must produce the same structure as `JSON.parse`.
+   * The Node.js SDK supplies one by default. Other platforms need one to read YAML files.
+   */
+  yamlParser?: (data: string) => any;
+}
+
+/**
+ * The ways an override source can be configured: the file-based source, a source object, or a
+ * factory function that creates a source from the client context.
  *
  * Flag overrides are currently experimental and subject to change.
  */
 export type LDOverrideSourceOptions =
+  | FileOverrideSourceOptions
   | LDOverrideSource
   | ((clientContext: LDClientContext) => LDOverrideSource);
+
+export function isFileOverrideSourceOptions(u: any): u is FileOverrideSourceOptions {
+  return typeof u === 'object' && u !== null && u.type === 'file';
+}
 
 /**
  * Configuration options for the FDv1 Fallback Synchronizer.

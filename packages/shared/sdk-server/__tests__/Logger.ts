@@ -93,6 +93,13 @@ export default class TestLogger implements LDLogger {
     });
   }
 
+  /**
+   * The messages received at a level, in order.
+   */
+  getMessages(level: LogLevel): string[] {
+    return [...this._messages[level]];
+  }
+
   getCount(level?: LogLevel) {
     if (level === undefined) {
       return this._callCount;
