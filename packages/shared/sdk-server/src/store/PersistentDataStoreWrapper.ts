@@ -83,16 +83,16 @@ function deserialize(
   };
 }
 
+// Minimum time between store-error logs at error level. A store that fails every
+// write while flapping logs the rest at debug, so it cannot flood the log.
+const ERROR_LOG_INTERVAL_MS = 10000;
+
 /**
  * Internal implementation of {@link LDFeatureStore} that delegates the basic functionality to an
  * instance of {@link PersistentDataStore}. It provides optional caching behavior and other logic
  * that would otherwise be repeated in every data store implementation. This makes it easier to
  * create new database integrations by implementing only the database-specific logic.
  */
-// Minimum time between store-error logs at error level. A store that fails every
-// write while flapping logs the rest at debug, so it cannot flood the log.
-const ERROR_LOG_INTERVAL_MS = 10000;
-
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private _isInitialized = false;
 
@@ -147,57 +147,69 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   }
 
   init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
-    this._queue.enqueue((cb, isAbandoned) => {
-      const afterStoreInit = (err?: Error) => {
-        if (isAbandoned()) {
-          // The queue timed this init out and moved on, so a newer operation may
-          // already have run. This late result must not touch the caches or the
-          // initialized state.
-          cb(err);
-          return;
-        }
+    this._queue.enqueue(
+      (cb, isAbandoned) => {
+        const afterStoreInit = (err?: Error) => {
+          if (isAbandoned()) {
+            // The queue timed this init out and moved on, so a newer operation may
+            // already have run. This late result must not touch the caches or the
+            // initialized state.
+            cb(err);
+            return;
+          }
+          if (err) {
+            // A failed init must not present the rejected data as current. Clear the
+            // caches and the initialized state, so reads and initialization checks
+            // fall through to the persistence layer's actual state.
+            this._logStoreError(err);
+            this._isInitialized = false;
+            this._itemCache?.clear();
+            this._allItemsCache?.clear();
+            cb(err);
+            return;
+          }
+          this._isInitialized = true;
+          if (this._itemCache) {
+            this._itemCache.clear();
+            this._allItemsCache!.clear();
+
+            Object.keys(allData).forEach((kindNamespace) => {
+              const kind = persistentStoreKinds[kindNamespace];
+              const items = allData[kindNamespace];
+              // The all-items cache backs all(), which never returns tombstones, so it
+              // must be populated with the same filtering the cache-miss path applies.
+              const filteredItems: LDFeatureStoreKindData = {};
+              Object.keys(items).forEach((key) => {
+                const itemForKey = items[key];
+
+                const itemDescriptor: ItemDescriptor = {
+                  version: itemForKey.version,
+                  item: itemForKey,
+                };
+                this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
+                if (!itemForKey.deleted) {
+                  filteredItems[key] = itemForKey;
+                }
+              });
+              this._allItemsCache!.set(allForKindCacheKey(kind), filteredItems);
+            });
+          }
+          cb();
+        };
+
+        this._core.init(sortDataSet(allData), afterStoreInit);
+      },
+      (err) => {
         if (err) {
-          // A failed init must not present the rejected data as current. Clear the
-          // caches and the initialized state, so reads and initialization checks
-          // fall through to the persistence layer's actual state.
-          this._logStoreError(err);
+          // Covers the queue-timeout path, which never reaches afterStoreInit. A
+          // failed init must not keep presenting the previous data as current.
           this._isInitialized = false;
           this._itemCache?.clear();
           this._allItemsCache?.clear();
-          cb(err);
-          return;
         }
-        this._isInitialized = true;
-        if (this._itemCache) {
-          this._itemCache.clear();
-          this._allItemsCache!.clear();
-
-          Object.keys(allData).forEach((kindNamespace) => {
-            const kind = persistentStoreKinds[kindNamespace];
-            const items = allData[kindNamespace];
-            // The all-items cache backs all(), which never returns tombstones, so it
-            // must be populated with the same filtering the cache-miss path applies.
-            const filteredItems: LDFeatureStoreKindData = {};
-            Object.keys(items).forEach((key) => {
-              const itemForKey = items[key];
-
-              const itemDescriptor: ItemDescriptor = {
-                version: itemForKey.version,
-                item: itemForKey,
-              };
-              this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
-              if (!itemForKey.deleted) {
-                filteredItems[key] = itemForKey;
-              }
-            });
-            this._allItemsCache!.set(allForKindCacheKey(kind), filteredItems);
-          });
-        }
-        cb();
-      };
-
-      this._core.init(sortDataSet(allData), afterStoreInit);
-    }, callback);
+        callback(err);
+      },
+    );
   }
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
@@ -315,7 +327,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    * debug level otherwise, so a store that fails every write cannot flood the log.
    */
   private _logStoreError(err: Error): void {
-    const message = `Persistent store returned error: ${err instanceof Error ? err.message : err}`;
+    const message = `Persistent store returned error: ${err.message}`;
     const now = Date.now();
     if (now - this._lastErrorLogMs >= ERROR_LOG_INTERVAL_MS) {
       this._lastErrorLogMs = now;

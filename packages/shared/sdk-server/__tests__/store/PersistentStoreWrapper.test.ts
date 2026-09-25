@@ -866,3 +866,33 @@ it('throttles store-error logs to one error level entry per interval', async () 
     jest.useRealTimers();
   }
 });
+
+it('clears the caches and the initialized state when an init times out', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    // A successful init populates the caches.
+    await new Promise<void>((resolve) => {
+      wrapper.init({ features: { key1: { version: 1 } } }, () => resolve());
+    });
+
+    // The next init hangs and times out.
+    core.init = () => {};
+    const initCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 2 } } }, initCallback);
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(initCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The previous data must no longer be served from the caches. With the core
+    // emptied, a cached item would be the only way to still see key1.
+    core.allData = [];
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
