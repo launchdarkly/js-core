@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { DefaultBackoff, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import {
   DataKind,
@@ -128,6 +128,12 @@ class MockPersistenceStore implements LDFeatureStore {
   }
 }
 
+// The production backoff jitters its delays. Tests inject this jitter-free variant so
+// timer advances stay exact: 1000ms after the first failure, then 2000, 4000, and so on.
+function deterministicBackoff(): DefaultBackoff {
+  return new DefaultBackoff(1000, 30000, () => 0);
+}
+
 function makeLogger(): LDLogger {
   return {
     error: jest.fn(),
@@ -168,7 +174,7 @@ describe('given a transactional store over a persistence store that can fail wri
   beforeEach(async () => {
     persistence = new MockPersistenceStore();
     logger = makeLogger();
-    recoveryStore = new TransactionalFeatureStore(persistence, logger);
+    recoveryStore = new TransactionalFeatureStore(persistence, logger, deterministicBackoff());
     recoveryFacade = new AsyncTransactionalStoreFacade(recoveryStore);
 
     await recoveryFacade.applyChanges(
@@ -486,6 +492,137 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
+  it('retries a failed write-back at the backoff deadline without a new write', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A recovery signal starts a write-back, which fails.
+      persistence.failUpserts = false;
+      persistence.failInits = true;
+      const initCallsBefore = persistence.initCalls.length;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+      expect(logger.error).toHaveBeenCalledTimes(1);
+
+      // No further mirrored writes arrive. The retry runs at the backoff deadline.
+      persistence.failInits = false;
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('does not mark the store recovered when a mirrored write fails during an in-flight write-back', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A recovery signal starts a write-back, held open.
+      persistence.failUpserts = false;
+      persistence.deferInit = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(persistence.pendingInitCallbacks.length).toEqual(1);
+
+      // A newer mirrored write fails while that write-back is in flight.
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+
+      // The write-back completes successfully, but its snapshot predates flagD.
+      persistence.deferInit = false;
+      persistence.failUpserts = false;
+      persistence.pendingInitCallbacks[0]();
+      expect(logger.info).not.toHaveBeenCalled();
+
+      // Another write-back runs after the flap embargo, with the current data.
+      const initCallsBefore = persistence.initCalls.length;
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+      const lastInit = persistence.initCalls[persistence.initCalls.length - 1];
+      expect(lastInit.features.flagD).toEqual({ key: 'flagD', version: 1 });
+      expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('rate-limits the next write-back after a basis write recovers the store', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A basis write recovers the store directly.
+      persistence.failUpserts = false;
+      await recoveryFacade.applyChanges(
+        true,
+        { features: { flagA: { key: 'flagA', version: 3 } } },
+        undefined,
+        's3',
+      );
+      expect(logger.info).toHaveBeenCalledTimes(1);
+
+      // A new outage and a recovery signal arrive right after the recovery.
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      persistence.failUpserts = false;
+      const initCallsBefore = persistence.initCalls.length;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's5',
+      );
+
+      // The flap embargo from the basis recovery defers the write-back.
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(0);
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+      expect(logger.info).toHaveBeenCalledTimes(2);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('cancels the embargoed recovery signal when a basis write recovers the store first', async () => {
     jest.useFakeTimers();
     try {
@@ -714,7 +851,7 @@ describe('given a transactional store whose persistence store has an availabilit
       callback(probeResult);
     };
     logger = makeLogger();
-    pollingStore = new TransactionalFeatureStore(persistence, logger);
+    pollingStore = new TransactionalFeatureStore(persistence, logger, deterministicBackoff());
     pollingFacade = new AsyncTransactionalStoreFacade(pollingStore);
 
     await pollingFacade.applyChanges(
@@ -1264,10 +1401,11 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(logger.info).toHaveBeenCalledTimes(1);
 
     // A genuine write-back failure in outage 2 must log at error level, proving
-    // the counter/log gate was not left contaminated by the ignored settle. This
-    // also proves the store is still unavailable: if the stale settle had
-    // incorrectly recovered it, _attemptRecovery() would have returned early and
-    // no write-back (and so no failure) would have been attempted here.
+    // the log gate was not left contaminated by the ignored settle. This also
+    // proves the store is still unavailable: if the stale settle had incorrectly
+    // recovered it, _attemptRecovery() would have returned early and no write-back
+    // (and so no failure) would have been attempted here. The basis recovery armed
+    // the flap embargo, so the signal defers to a poll tick past the embargo.
     persistence.failUpserts = false;
     persistence.failInits = true;
     await pollingFacade.applyChanges(
@@ -1276,6 +1414,8 @@ describe('given a transactional store whose persistence store has an availabilit
       undefined,
       's-outage2-writeback',
     );
+    probeResult = true;
+    await jest.advanceTimersByTimeAsync(1000);
     expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
