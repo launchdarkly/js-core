@@ -604,3 +604,53 @@ it('serializes null values without issue', () => {
   // After serialization nulls should still be there, and any memo generated items should be gone.
   expect(JSON.parse(serialized)).toEqual(flagWithNullInJsonVariation);
 });
+
+it('serialization omits the override marker and leaves the entity marked', () => {
+  const flag: Flag = {
+    key: 'flag',
+    version: 1,
+    on: false,
+    fallthrough: { variation: 0 },
+    variations: [true],
+    // eslint-disable-next-line no-underscore-dangle
+    _sdk_override: true,
+  };
+  const segment: Segment = {
+    key: 'segment',
+    version: 1,
+    generated_includedSet: new Set(['a', 'b']),
+    // eslint-disable-next-line no-underscore-dangle
+    _sdk_override: true,
+  };
+
+  expect(JSON.parse(serializeFlag(flag))).toEqual({
+    key: 'flag',
+    version: 1,
+    on: false,
+    fallthrough: { variation: 0 },
+    variations: [true],
+  });
+  expect(JSON.parse(serializeSegment(segment))).toEqual({
+    key: 'segment',
+    version: 1,
+    included: ['a', 'b'],
+  });
+
+  // eslint-disable-next-line no-underscore-dangle
+  expect(flag._sdk_override).toBe(true);
+  // eslint-disable-next-line no-underscore-dangle
+  expect(segment._sdk_override).toBe(true);
+  expect(segment.generated_includedSet).toEqual(new Set(['a', 'b']));
+});
+
+it('the replacer omits the override marker at any depth', () => {
+  const data = {
+    flags: {
+      // eslint-disable-next-line no-underscore-dangle
+      flag: { key: 'flag', version: 1, _sdk_override: true },
+    },
+  };
+  expect(JSON.parse(JSON.stringify(data, replacer))).toEqual({
+    flags: { flag: { key: 'flag', version: 1 } },
+  });
+});

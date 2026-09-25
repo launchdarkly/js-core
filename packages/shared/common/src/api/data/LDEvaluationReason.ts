@@ -59,4 +59,16 @@ export interface LDEvaluationReason {
    *   instance due to a database error.
    */
   bigSegmentsStatus?: 'HEALTHY' | 'STALE' | 'NOT_CONFIGURED' | 'STORE_ERROR';
+
+  /**
+   * True when an override affected the evaluation, directly or transitively.
+   *
+   * This is the case when the evaluated flag came from the SDK's override store, or when a
+   * prerequisite flag at any depth or a segment read during the evaluation came from that store.
+   * Otherwise it is false or undefined. In the JSON representation of the reason the property is
+   * present only when it is true.
+   *
+   * Flag overrides are currently experimental and subject to change.
+   */
+  overrideAffected?: boolean;
 }
