@@ -1,4 +1,4 @@
-import { internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Backoff, DefaultBackoff, internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { DataKind } from '../api/interfaces';
 import {
@@ -14,8 +14,13 @@ import InMemoryFeatureStore from './InMemoryFeatureStore';
 // How often to check the persistence store for recovery while it is unavailable.
 const RECOVERY_POLL_INTERVAL_MS = 500;
 
-// Ceiling on the exponential backoff between write-back attempts.
-const MAX_WRITE_BACK_BACKOFF_MS = 30000;
+// Initial delay of the write-back retry backoff. The backoff doubles it per
+// consecutive failure, with jitter, up to its own 30 second cap.
+const WRITE_BACK_INITIAL_BACKOFF_MS = 1000;
+
+// How long the store must stay healthy before the backoff resets. A store that
+// flaps faster than this keeps its escalated backoff.
+const WRITE_BACK_BACKOFF_RESET_MS = 30000;
 
 // Delay after a successful write-back. Limits a flapping store to about one
 // write-back per second instead of one per successful mirrored write.
@@ -130,21 +135,21 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // whose callback never fires.
   private _writeBackStartedAt = 0;
 
-  // Consecutive write-back failures in the current outage, including hung
-  // write-backs abandoned at their deadline. Drives the retry backoff. Reset only on
-  // recovery, since that is the only proof the store is healthy again.
-  private _consecutiveWriteBackFailures = 0;
-
   // Epoch ms before which a new write-back attempt is not issued. Persists across
   // flapping available/unavailable cycles instead of resetting on each transition,
-  // so a fast-flapping store cannot dodge the backoff. Recovery only lowers it,
-  // capping it to the success embargo floor in _markAvailable.
+  // so a fast-flapping store cannot dodge the backoff. Recovery replaces it with
+  // the short success embargo in _markAvailable.
   private _writeBackEmbargoUntil = 0;
 
+  // True when a mirrored write failed while a write-back was in flight. That
+  // write-back's snapshot predates the failed item, so its success alone must not
+  // mark the store recovered.
+  private _writeFailedDuringWriteBack = false;
+
   // True once the current outage has logged a write-back failure at error level. A
-  // hung write-back that gets released by its deadline also counts toward
-  // _consecutiveWriteBackFailures but never logs, so this flag tracks the log
-  // separately and keeps the outage's first genuine failure at error level.
+  // hung write-back that gets released by its deadline advances the backoff but
+  // never logs, so this flag tracks the log separately and keeps the outage's
+  // first genuine failure at error level.
   private _failureLoggedThisOutage = false;
 
   private _closed = false;
@@ -159,6 +164,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   constructor(
     private readonly _basePersistenceStore: LDFeatureStore,
     private readonly _logger?: LDLogger,
+    // Injectable so tests can remove the jitter.
+    private readonly _backoff: Backoff = new DefaultBackoff(
+      WRITE_BACK_INITIAL_BACKOFF_MS,
+      WRITE_BACK_BACKOFF_RESET_MS,
+    ),
   ) {
     // The persistence store starts as the active store. It may already hold data
     // from a previous run, so reads go there until a basis write arrives.
@@ -320,6 +330,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     if (err) {
+      if (this._writeBackInFlight) {
+        this._writeFailedDuringWriteBack = true;
+      }
       this._markUnavailable();
     } else if (!this._persistenceAvailable) {
       if (isBasisWrite) {
@@ -336,13 +349,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     this._persistenceAvailable = false;
-    // A stale probe from before this outage must never answer into it.
+    // Invalidate outstanding probe and write-back callbacks from before this outage.
     this._probeGeneration += 1;
     this._probeInFlight = false;
-    // No write-back can be in flight here, since a write-back only starts once the
-    // store is already unavailable. This bump is a no-op today, kept only for
-    // symmetry with the probe reset above. The guard that matters lives in
-    // _markAvailable() below.
     this._writeBackGeneration += 1;
     this._writeBackInFlight = false;
     this._failureLoggedThisOutage = false;
@@ -357,25 +366,21 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     this._persistenceAvailable = true;
-    // The store just proved it is healthy.
-    // Failures left over from this outage must not carry into the next one, or
-    // suppress its first error log.
-    this._consecutiveWriteBackFailures = 0;
+    // The store just proved it is healthy. Reset the backoff and the log edge, so
+    // this outage's failures do not carry into the next one.
+    this._backoff.success();
     this._failureLoggedThisOutage = false;
-    // A stale probe answer from this outage must never fire a redundant write-back.
+    this._writeFailedDuringWriteBack = false;
+    // Invalidate outstanding probe and write-back callbacks from this outage, so a
+    // stale answer cannot flip state out from under the next outage.
     this._probeGeneration += 1;
     this._probeInFlight = false;
-    // A stale write-back from this outage must never be honored after recovery, or
-    // flip state out from under the next outage.
     this._writeBackGeneration += 1;
     this._writeBackInFlight = false;
-    // A failure embargo built up during this outage must not delay the next
-    // outage's first write-back attempt. Recovery just proved the store is healthy.
-    // The success floor below already covers flap damping.
-    this._writeBackEmbargoUntil = Math.min(
-      this._writeBackEmbargoUntil,
-      Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS,
-    );
+    // Rate-limit the next write-back, so a flapping store triggers about one
+    // write-back per second at most. This also replaces any longer failure
+    // backoff: recovery just proved the store is healthy.
+    this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
     this._stopRecoveryPolling();
     this._cancelEmbargoRetry();
     this._logger?.info('Persistent store is available again.');
@@ -472,14 +477,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
-   * Keeps a recovery signal that arrived during the write-back embargo, for a store
-   * without an availability check.
+   * Schedules, for a store without an availability check, the next write-back
+   * attempt at the embargo deadline.
    *
-   * Such a store has no poller, so a signal the embargo drops would leave no later
-   * trigger, and the persistence store would stay stale until the next mirrored
-   * write. This schedules one retry at the embargo deadline instead. The retry only
-   * acts on evidence a successful write already provided; it never uses a write as
-   * an availability check. At most one timer runs. Recovery and close cancel it.
+   * Such a store has no poller. Without this timer, a recovery signal that arrived
+   * during the embargo, or a failed write-back with no follow-up write, would leave
+   * no later trigger, and the persistence store would stay stale until the next
+   * mirrored write. At most one timer runs. Recovery and close cancel it.
    */
   private _scheduleEmbargoRetry(): void {
     if (this._pollHandle || this._embargoRetryHandle || this._closed) {
@@ -577,6 +581,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       this._markAvailable();
       return;
     }
+    // This attempt's snapshot is taken below, so a mirrored write can only fail
+    // after it. Track those failures against this attempt from a clean slate.
+    this._writeFailedDuringWriteBack = false;
     const onSettled = (err?: Error) => {
       // Ignore a late callback from an abandoned (timed-out) write-back.
       // It must not flip state out from under a newer one.
@@ -591,7 +598,15 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
         this._handleWriteBackFailure();
         return;
       }
-      this._handleWriteBackSuccess();
+      if (this._writeFailedDuringWriteBack) {
+        // A mirrored write failed while this write-back was in flight, so this
+        // snapshot predates that item. Stay unavailable and run another write-back
+        // with the current data once the flap embargo passes.
+        this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
+        this._attemptRecovery();
+        return;
+      }
+      this._markAvailable();
     };
     // A rejected promise, or a synchronous throw from init() or getAllRaw(), is
     // handled the same way as a failed write-back. This way it cannot escape the
@@ -603,28 +618,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
-   * Records a successful write-back.
-   *
-   * Clears the failure count and arms a short embargo, so a flapping store cannot
-   * trigger more than about one write-back per second.
-   */
-  private _handleWriteBackSuccess(): void {
-    this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
-    this._markAvailable();
-  }
-
-  /**
-   * Increments the current outage's failure count.
-   *
-   * Sets the exponential backoff embargo that gates the next write-back attempt.
+   * Backs off the next write-back attempt after a failed or abandoned one, and, for
+   * a store without a poller, schedules that attempt at the backoff deadline.
    */
   private _armFailureEmbargo(): void {
-    this._consecutiveWriteBackFailures += 1;
-    const backoffMs = Math.min(
-      2 ** this._consecutiveWriteBackFailures * 500,
-      MAX_WRITE_BACK_BACKOFF_MS,
-    );
-    this._writeBackEmbargoUntil = Date.now() + backoffMs;
+    this._writeBackEmbargoUntil = Date.now() + this._backoff.fail();
+    this._scheduleEmbargoRetry();
   }
 
   /**
@@ -632,15 +631,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
    *
    * Only the first failure of an outage logs at error level. Later failures in the
    * same outage log at debug level, so an unhealthy store cannot flood the log
-   * every poll tick. See _failureLoggedThisOutage for why this is tracked
-   * separately from _consecutiveWriteBackFailures.
+   * every poll tick.
    */
   private _handleWriteBackFailure(): void {
     if (this._persistenceAvailable) {
-      // A stale write-back from a prior, already-recovered outage.
-      // The generation guard in _writeBack() should already have dropped this.
-      // This check is a second, cheap defense against a spurious failure log while
-      // the store is healthy.
+      // Defense against a stale write-back from an already-recovered outage.
       return;
     }
     this._armFailureEmbargo();
