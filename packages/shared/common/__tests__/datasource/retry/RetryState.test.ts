@@ -3,6 +3,7 @@ import {
   AfterHealthyFor,
 } from '../../../src/datasource/retry/ResetPolicy';
 import {
+  createRetryState,
   forPolling,
   forStreaming,
   RetryState,
@@ -22,7 +23,7 @@ beforeEach(() => {
 });
 
 function streamingState(overrides: Partial<RetryStateConfig> = {}): RetryState {
-  return new RetryState({
+  return createRetryState({
     normalInitialDelayMs: 1000,
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 5 * MINUTE,
@@ -35,7 +36,7 @@ function streamingState(overrides: Partial<RetryStateConfig> = {}): RetryState {
 }
 
 function pollingState(intervalMs: number, overrides: Partial<RetryStateConfig> = {}): RetryState {
-  return new RetryState({
+  return createRetryState({
     normalInitialDelayMs: intervalMs,
     normalCeilingMs: intervalMs,
     extendedInitialDelayMs: Math.max(5 * MINUTE, intervalMs),
@@ -401,7 +402,7 @@ it('leaves a configured delay below the normal ceiling untouched', () => {
 });
 
 it('defaults the operating cadence to zero for direct construction', () => {
-  const state = new RetryState({
+  const state = createRetryState({
     normalInitialDelayMs: 1000,
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 5 * MINUTE,
@@ -415,7 +416,7 @@ it('defaults the operating cadence to zero for direct construction', () => {
 });
 
 it('floors the extended ceiling at the extended initial delay on the transition', () => {
-  const state = new RetryState({
+  const state = createRetryState({
     normalInitialDelayMs: 1000,
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 10 * MINUTE,

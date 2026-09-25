@@ -89,97 +89,31 @@ export interface RetryStateConfig {
  * while the retry state is raised, because a backoff wait applies to a retry
  * and not to every operation.
  *
- * This class never starts timers, performs I/O, or logs; callers schedule the
- * waits it computes. Use one instance per component; instances are never
+ * A retry state never starts timers, performs I/O, or logs; callers schedule
+ * the waits it computes. Use one instance per component; instances are never
  * shared between components.
  */
-export class RetryState {
-  private _attempts = 0;
-  private _extended = false;
-  private _minDelayMs: number;
-  private _maxDelayMs: number;
-  private _nextDelayMs: number;
-  private _serverDirectedBaseMs?: number;
-  private readonly _normalInitialDelayMs: number;
-  private readonly _normalCeilingMs: number;
-  private readonly _extendedInitialDelayMs: number;
-  private readonly _extendedCeilingMs: number;
-  private readonly _operatingCadenceMs: number;
-  private readonly _resetPolicy: ResetPolicy;
-  private readonly _random: () => number;
-
-  constructor(config: RetryStateConfig) {
-    this._normalInitialDelayMs = config.normalInitialDelayMs;
-    this._normalCeilingMs = config.normalCeilingMs;
-    this._extendedInitialDelayMs = config.extendedInitialDelayMs;
-    this._extendedCeilingMs = config.extendedCeilingMs;
-    this._operatingCadenceMs = config.operatingCadenceMs ?? 0;
-    this._resetPolicy = config.resetPolicy;
-    this._random = config.random ?? Math.random;
-    this._minDelayMs = this._normalInitialDelayMs;
-    this._maxDelayMs = this._normalCeilingMs;
-    // Before any outcome is recorded, the next wait is the ordinary interval.
-    this._nextDelayMs = this._operatingCadenceMs;
-  }
-
+export interface RetryState {
   /**
    * The wait, in milliseconds, before the next operation, as the last
    * recorded outcome decided it. Reading it has no side effects.
    */
-  get nextDelay(): number {
-    return this._nextDelayMs;
-  }
+  readonly nextDelay: number;
 
   /**
    * Records a failed attempt and decides the wait before the next one.
    *
-   * The state advances before the wait is computed, so {@link nextDelay}
+   * The state advances before the wait is computed, so {@link RetryState.nextDelay}
    * always reflects the failure just recorded. Callers should read it in the
    * same turn, before any other outcome is recorded.
    */
-  recordFailure(kind: FailureKind): void {
-    // A reset that fell due during healthy operation is applied before the
-    // new failure is counted, so the failure computes from a fresh sequence.
-    this._resetIfDue();
-    this._resetPolicy.noteFailure();
-
-    if (kind === 'unexpected' && !this._extended) {
-      // Moving to the extended regime raises both bounds and starts the delay
-      // sequence over. Only the move does this: a later unexpected failure
-      // keeps counting up rather than re-pinning the initial delay.
-      this._extended = true;
-      this._minDelayMs = this._extendedInitialDelayMs;
-      this._maxDelayMs = Math.max(this._extendedCeilingMs, this._extendedInitialDelayMs);
-      this._attempts = 1;
-    } else {
-      this._attempts += 1;
-    }
-
-    const base = this._serverDirectedBaseMs ?? this._minDelayMs;
-    // Compare against the ceiling scaled down rather than the base scaled up, so
-    // the computed value can never overflow the ceiling. A base of zero doubles
-    // to zero forever, so it short-circuits.
-    let target = 0;
-    if (base > 0) {
-      const exponent = this._attempts - 1;
-      target = base >= this._maxDelayMs / 2 ** exponent ? this._maxDelayMs : base * 2 ** exponent;
-    }
-    const jitter = (this._random() * target) / 2;
-    this._nextDelayMs = Math.max(target - jitter, this._operatingCadenceMs);
-  }
+  recordFailure(kind: FailureKind): void;
 
   /**
    * Records a successful operation and resets the retry state if that is now
    * enough to satisfy the reset policy.
    */
-  recordSuccess(): void {
-    this._resetPolicy.noteHealthy();
-    this._resetIfDue();
-    // A backoff wait applies to a retry, not to every operation, so after a
-    // success the next wait is the ordinary interval even while the retry
-    // state is raised.
-    this._nextDelayMs = this._operatingCadenceMs;
-  }
+  recordSuccess(): void;
 
   /**
    * Applies a server-directed retry time.
@@ -192,23 +126,93 @@ export class RetryState {
    * ignored; callers are expected to have validated and capped the value at
    * its point of entry.
    */
-  applyServerDirectedRetry(delayMs: number): void {
-    if (typeof delayMs !== 'number' || !Number.isFinite(delayMs) || delayMs < 0) {
+  applyServerDirectedRetry(delayMs: number): void;
+}
+
+/**
+ * Builds a retry state from explicit bounds. See {@link RetryStateConfig} for
+ * the contract on the values.
+ */
+export function createRetryState(config: RetryStateConfig): RetryState {
+  const normalInitialDelayMs = config.normalInitialDelayMs;
+  const normalCeilingMs = config.normalCeilingMs;
+  const extendedInitialDelayMs = config.extendedInitialDelayMs;
+  const extendedCeilingMs = config.extendedCeilingMs;
+  const operatingCadenceMs = config.operatingCadenceMs ?? 0;
+  const { resetPolicy } = config;
+  const random = config.random ?? Math.random;
+
+  let attempts = 0;
+  let extended = false;
+  let minDelayMs = normalInitialDelayMs;
+  let maxDelayMs = normalCeilingMs;
+  let serverDirectedBaseMs: number | undefined;
+  // Before any outcome is recorded, the next wait is the ordinary interval.
+  let nextDelayMs = operatingCadenceMs;
+
+  function resetIfDue(): void {
+    if (!resetPolicy.isSatisfied()) {
       return;
     }
-    this._serverDirectedBaseMs = delayMs;
-    this._attempts = 0;
+    attempts = 0;
+    extended = false;
+    minDelayMs = normalInitialDelayMs;
+    maxDelayMs = normalCeilingMs;
   }
 
-  private _resetIfDue(): void {
-    if (!this._resetPolicy.isSatisfied()) {
-      return;
-    }
-    this._attempts = 0;
-    this._extended = false;
-    this._minDelayMs = this._normalInitialDelayMs;
-    this._maxDelayMs = this._normalCeilingMs;
-  }
+  return {
+    get nextDelay(): number {
+      return nextDelayMs;
+    },
+
+    recordFailure(kind: FailureKind): void {
+      // A reset that fell due during healthy operation is applied before the
+      // new failure is counted, so the failure computes from a fresh sequence.
+      resetIfDue();
+      resetPolicy.noteFailure();
+
+      if (kind === 'unexpected' && !extended) {
+        // Moving to the extended regime raises both bounds and starts the delay
+        // sequence over. Only the move does this: a later unexpected failure
+        // keeps counting up rather than re-pinning the initial delay.
+        extended = true;
+        minDelayMs = extendedInitialDelayMs;
+        maxDelayMs = Math.max(extendedCeilingMs, extendedInitialDelayMs);
+        attempts = 1;
+      } else {
+        attempts += 1;
+      }
+
+      const base = serverDirectedBaseMs ?? minDelayMs;
+      // Compare against the ceiling scaled down rather than the base scaled up, so
+      // the computed value can never overflow the ceiling. A base of zero doubles
+      // to zero forever, so it short-circuits.
+      let target = 0;
+      if (base > 0) {
+        const exponent = attempts - 1;
+        target = base >= maxDelayMs / 2 ** exponent ? maxDelayMs : base * 2 ** exponent;
+      }
+      const jitter = (random() * target) / 2;
+      nextDelayMs = Math.max(target - jitter, operatingCadenceMs);
+    },
+
+    recordSuccess(): void {
+      resetPolicy.noteHealthy();
+      resetIfDue();
+      // A backoff wait applies to a retry, not to every operation, so after a
+      // success the next wait is the ordinary interval even while the retry
+      // state is raised.
+      nextDelayMs = operatingCadenceMs;
+    },
+
+    applyServerDirectedRetry(delayMs: number): void {
+      if (typeof delayMs !== 'number' || !Number.isFinite(delayMs) || delayMs < 0) {
+        return;
+      }
+      serverDirectedBaseMs = delayMs;
+      attempts = 0;
+    },
+  };
 }
 
 /**
@@ -229,7 +233,7 @@ export function forStreaming(initialReconnectDelayMs: number, logger?: LDLogger)
     'initialReconnectDelayMs',
     logger,
   );
-  return new RetryState({
+  return createRetryState({
     normalInitialDelayMs: validated,
     normalCeilingMs: STREAMING_NORMAL_CEILING_MS,
     extendedInitialDelayMs: Math.max(EXTENDED_INITIAL_DELAY_MS, validated),
@@ -257,7 +261,7 @@ export function forPolling(pollIntervalMs: number, logger?: LDLogger): RetryStat
     'pollIntervalMs',
     logger,
   );
-  return new RetryState({
+  return createRetryState({
     normalInitialDelayMs: validated,
     normalCeilingMs: validated,
     extendedInitialDelayMs: Math.max(EXTENDED_INITIAL_DELAY_MS, validated),

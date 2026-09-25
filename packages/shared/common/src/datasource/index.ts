@@ -11,6 +11,7 @@ import {
 import {
   AfterConsecutiveSuccesses,
   AfterHealthyFor,
+  createRetryState,
   forPolling,
   forStreaming,
   ResetPolicy,
@@ -23,6 +24,7 @@ export {
   AfterHealthyFor,
   Backoff,
   CompositeDataSource,
+  createRetryState,
   DefaultBackoff,
   DataSourceErrorKind,
   forPolling,

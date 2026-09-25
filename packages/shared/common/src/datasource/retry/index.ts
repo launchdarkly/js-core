@@ -1,9 +1,16 @@
 import { AfterConsecutiveSuccesses, AfterHealthyFor, ResetPolicy } from './ResetPolicy';
-import { forPolling, forStreaming, RetryState, RetryStateConfig } from './RetryState';
+import {
+  createRetryState,
+  forPolling,
+  forStreaming,
+  RetryState,
+  RetryStateConfig,
+} from './RetryState';
 
 export {
   AfterConsecutiveSuccesses,
   AfterHealthyFor,
+  createRetryState,
   forPolling,
   forStreaming,
   ResetPolicy,
