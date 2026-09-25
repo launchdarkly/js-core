@@ -6,14 +6,96 @@ import {
   CommandParams,
   CommandType,
   makeLogger,
+  SDKConfigDataInitializer,
+  SDKConfigDataSynchronizer,
+  SDKConfigModeDefinition,
   SDKConfigParams,
+  SDKConfigPollingParams,
   ClientSideTestHook as TestHook,
   ValueType,
 } from '@launchdarkly/js-contract-test-utils/client';
-import { LDOptions, LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
+import {
+  InitializerEntry,
+  LDOptions,
+  LDReactClient,
+  ModeDefinition,
+  SynchronizerEntry,
+  useLDClient,
+} from '@launchdarkly/react-sdk';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
+
+function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
+  if (init.polling) {
+    return {
+      type: 'polling',
+      ...(init.polling.pollIntervalMs !== undefined && {
+        pollInterval: init.polling.pollIntervalMs / 1000,
+      }),
+      ...(init.polling.baseUri && {
+        endpoints: { pollingBaseUri: init.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateSynchronizer(sync: SDKConfigDataSynchronizer): SynchronizerEntry | undefined {
+  if (sync.streaming) {
+    return {
+      type: 'streaming',
+      ...(sync.streaming.initialRetryDelayMs !== undefined && {
+        initialReconnectDelay: sync.streaming.initialRetryDelayMs / 1000,
+      }),
+      ...(sync.streaming.baseUri && {
+        endpoints: { streamingBaseUri: sync.streaming.baseUri },
+      }),
+    };
+  }
+  if (sync.polling) {
+    return {
+      type: 'polling',
+      ...(sync.polling.pollIntervalMs !== undefined && {
+        pollInterval: sync.polling.pollIntervalMs / 1000,
+      }),
+      ...(sync.polling.baseUri && {
+        endpoints: { pollingBaseUri: sync.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateModeDefinition(
+  modeDef: SDKConfigModeDefinition,
+  fdv1Fallback?: SDKConfigPollingParams | null,
+): ModeDefinition {
+  const initializers: InitializerEntry[] = (modeDef.initializers ?? [])
+    .map(translateInitializer)
+    .filter((x): x is InitializerEntry => x !== undefined);
+
+  const synchronizers: SynchronizerEntry[] = (modeDef.synchronizers ?? [])
+    .map(translateSynchronizer)
+    .filter((x): x is SynchronizerEntry => x !== undefined);
+
+  if (fdv1Fallback) {
+    return {
+      initializers,
+      synchronizers,
+      fdv1Fallback: {
+        ...(fdv1Fallback.pollIntervalMs != null && {
+          pollInterval: fdv1Fallback.pollIntervalMs / 1000,
+        }),
+        ...(fdv1Fallback.baseUri && {
+          endpoints: { pollingBaseUri: fdv1Fallback.baseUri },
+        }),
+      },
+    };
+  }
+
+  return { initializers, synchronizers };
+}
 
 export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
   if (!options.clientSide) {
@@ -35,18 +117,78 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
     cf.eventsUri = options.serviceEndpoints.events;
   }
 
-  if (options.polling) {
-    if (options.polling.baseUri) {
-      cf.baseUri = options.polling.baseUri;
-    }
+  if (options.dataSystem?.payloadFilter) {
+    cf.payloadFilterKey = options.dataSystem.payloadFilter;
   }
 
-  if (options.streaming) {
-    if (options.streaming.baseUri) {
-      cf.streamUri = options.streaming.baseUri;
+  if (options.dataSystem) {
+    const dataSystem: any = {};
+
+    // Helper to apply endpoint overrides from a mode definition to global URIs.
+    const applyEndpointOverrides = (modeDef: SDKConfigModeDefinition) => {
+      (modeDef.synchronizers ?? []).forEach((sync) => {
+        if (sync.streaming?.baseUri) {
+          cf.streamUri = sync.streaming.baseUri;
+          cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+        }
+        if (sync.polling?.baseUri) {
+          cf.baseUri = sync.polling.baseUri;
+        }
+      });
+      (modeDef.initializers ?? []).forEach((init) => {
+        if (init.polling?.baseUri) {
+          cf.baseUri = init.polling.baseUri;
+        }
+      });
+    };
+
+    if (options.dataSystem.connectionModeConfig) {
+      const connMode = options.dataSystem.connectionModeConfig;
+      dataSystem.automaticModeSwitching = connMode.initialConnectionMode
+        ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
+        : false;
+
+      if (connMode.customConnectionModes) {
+        const { fdv1Fallback } = options.dataSystem;
+        const connectionModes: Record<string, any> = {};
+        Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
+          connectionModes[modeName] = translateModeDefinition(modeDef, fdv1Fallback);
+          applyEndpointOverrides(modeDef);
+        });
+        dataSystem.connectionModes = connectionModes;
+      }
+    } else if (options.dataSystem.initializers || options.dataSystem.synchronizers) {
+      // Top-level initializers/synchronizers (no connection modes). Wrap them
+      // into a single 'streaming' connection mode for the React SDK.
+      const modeDef: SDKConfigModeDefinition = {
+        initializers: options.dataSystem.initializers,
+        synchronizers: options.dataSystem.synchronizers,
+      };
+      dataSystem.automaticModeSwitching = {
+        type: 'manual',
+        initialConnectionMode: 'streaming',
+      };
+      dataSystem.connectionModes = {
+        streaming: translateModeDefinition(modeDef, options.dataSystem.fdv1Fallback),
+      };
+      applyEndpointOverrides(modeDef);
     }
-    cf.streaming = true;
-    cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+
+    (cf as any).dataSystem = dataSystem;
+  } else {
+    if (options.polling) {
+      if (options.polling.baseUri) {
+        cf.baseUri = options.polling.baseUri;
+      }
+    }
+
+    if (options.streaming) {
+      if (options.streaming.baseUri) {
+        cf.streamUri = options.streaming.baseUri;
+      }
+      cf.streaming = true;
+      cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+    }
   }
 
   if (options.events) {
