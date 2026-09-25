@@ -198,6 +198,7 @@ it('never waits less than the poll interval in the normal regime', () => {
 });
 
 it('jitters the wait into the upper half of the target delay', () => {
+  const delays: number[] = [];
   for (let i = 0; i < 100; i += 1) {
     const state = streamingState({ random: Math.random });
     state.recordFailure('normal');
@@ -205,7 +206,44 @@ it('jitters the wait into the upper half of the target delay', () => {
     // Target is 2000; the wait must be in (1000, 2000].
     expect(state.nextDelay).toBeGreaterThan(1000);
     expect(state.nextDelay).toBeLessThanOrEqual(2000);
+    delays.push(state.nextDelay);
   }
+  // A disabled jitter would pass the range checks with a constant value.
+  expect(new Set(delays).size).toBeGreaterThan(1);
+});
+
+it('keeps the wait above half the target under the largest jitter draw', () => {
+  const state = streamingState({ random: () => 0.9999999 });
+  state.recordFailure('normal');
+  state.recordFailure('normal');
+  // Target is 2000; the largest draw removes just under half of it.
+  expect(state.nextDelay).toBeGreaterThan(1000);
+  expect(state.nextDelay).toBeLessThan(1001);
+});
+
+it('replaces an earlier server-directed retry time with a later one', () => {
+  const state = streamingState();
+  state.applyServerDirectedRetry(2500);
+  state.applyServerDirectedRetry(4000);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(4000);
+});
+
+it('does not enter the extended regime no matter how fast a connection flaps', () => {
+  const state = streamingState();
+  const delays: number[] = [];
+  // Twenty cycles of connect, deliver briefly, and drop: never enough healthy
+  // time to reset, and never anything but normal failures. The delay may climb
+  // to the normal ceiling but must never reach the extended regime.
+  for (let i = 0; i < 20; i += 1) {
+    state.recordSuccess();
+    now += 5 * 1000;
+    state.recordFailure('normal');
+    delays.push(state.nextDelay);
+    now += 1000;
+  }
+  delays.forEach((delay) => expect(delay).toBeLessThanOrEqual(30 * 1000));
+  expect(delays[delays.length - 1]).toEqual(30 * 1000);
 });
 
 it('uses a server-directed retry time as the new base and restarts the doubling', () => {
@@ -310,6 +348,49 @@ it.each([0, -5, Number.NaN, Number.POSITIVE_INFINITY])(
     expect(state.nextDelay).toEqual(30 * 1000);
   },
 );
+
+it('raises the normal ceiling to a configured delay that exceeds it', () => {
+  // A 10 minute configured delay is above the 30 second normal ceiling; the
+  // configured value wins rather than being cut down to the ceiling.
+  const state = forStreaming(10 * MINUTE);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toBeGreaterThan(5 * MINUTE);
+  expect(state.nextDelay).toBeLessThanOrEqual(10 * MINUTE);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toBeGreaterThan(5 * MINUTE);
+  expect(state.nextDelay).toBeLessThanOrEqual(10 * MINUTE);
+});
+
+it('raises the extended bounds to a configured delay that exceeds them', () => {
+  // A 2 hour configured delay is above both the 5 minute extended initial and
+  // the 1 hour extended ceiling.
+  const state = forStreaming(2 * HOUR);
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toBeGreaterThan(HOUR);
+  expect(state.nextDelay).toBeLessThanOrEqual(2 * HOUR);
+});
+
+it('leaves a configured delay below the normal ceiling untouched', () => {
+  const state = forStreaming(1000);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toBeGreaterThan(500);
+  expect(state.nextDelay).toBeLessThanOrEqual(1000);
+});
+
+it('collapses the extended regime when the poll interval exceeds its bounds', () => {
+  // With a 2 hour interval the cadence floor makes every wait exactly the
+  // interval: failures of either kind cannot escalate past it, and a success
+  // returns to it.
+  const state = forPolling(2 * HOUR);
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toEqual(2 * HOUR);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(2 * HOUR);
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toEqual(2 * HOUR);
+  state.recordSuccess();
+  expect(state.nextDelay).toEqual(2 * HOUR);
+});
 
 it('does not warn for valid factory inputs', () => {
   const warn = jest.fn();
