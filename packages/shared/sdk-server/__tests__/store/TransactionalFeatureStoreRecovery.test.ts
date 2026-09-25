@@ -53,6 +53,10 @@ class MockPersistenceStore implements LDFeatureStore {
   // attempt open, e.g. to simulate one completing after the store is closed.
   deferInit = false;
 
+  // Invokes the init() callback twice. Simulates a persistence client that
+  // answers through two channels.
+  doubleCallbackInits = false;
+
   pendingInitCallbacks: ((err?: Error) => void)[] = [];
 
   initCalls: LDFeatureStoreDataStorage[] = [];
@@ -91,6 +95,9 @@ class MockPersistenceStore implements LDFeatureStore {
       return;
     }
     callback(this.failInits ? new Error('init failed') : undefined);
+    if (this.doubleCallbackInits) {
+      callback(this.failInits ? new Error('init failed') : undefined);
+    }
   }
 
   delete(_kind: DataKind, _key: string, _version: number, callback: () => void): void {
@@ -151,7 +158,7 @@ it('marks the store available without a write-back when a pre-basis write recove
   try {
     persistence.failUpserts = true;
     await facade.applyChanges(false, { features: { flagA: { version: 1 } } }, undefined, 's1');
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
 
     persistence.failUpserts = false;
     const initCallsBefore = persistence.initCalls.length;
@@ -210,7 +217,10 @@ describe('given a transactional store over a persistence store that can fail wri
       undefined,
       's3',
     );
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'The persistent store has no availability check. Recovery relies on later successful writes and timed retries.',
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       'Persistent store is unavailable. Updates will be kept in memory until it recovers.',
     );
@@ -224,7 +234,7 @@ describe('given a transactional store over a persistence store that can fail wri
       undefined,
       's2',
     );
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
     expect(await recoveryFacade.all(VersionedDataKinds.Features)).toEqual({
       flagB: { version: 5 },
     });
@@ -325,7 +335,7 @@ describe('given a transactional store over a persistence store that can fail wri
         undefined,
         's2',
       );
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledTimes(2);
 
       // Mirrored writes succeed again, but the write-back init still fails.
       persistence.failUpserts = false;
@@ -349,7 +359,7 @@ describe('given a transactional store over a persistence store that can fail wri
         's4',
       );
       expect(logger.info).toHaveBeenCalledTimes(1);
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledTimes(2);
     } finally {
       jest.useRealTimers();
     }
@@ -602,6 +612,10 @@ describe('given a transactional store over a persistence store that can fail wri
       persistence.deferInit = false;
       const initCallsBefore = persistence.initCalls.length;
       await jest.advanceTimersByTimeAsync(30000);
+      // The first abandonment of an outage logs at warn level.
+      expect(logger.warn).toHaveBeenCalledWith(
+        'A write-back to the persistent store did not complete in time. Retrying.',
+      );
       await jest.advanceTimersByTimeAsync(1000);
       expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
       expect(logger.info).toHaveBeenCalledTimes(1);
@@ -609,6 +623,97 @@ describe('given a transactional store over a persistence store that can fail wri
       // The abandoned write-back's late settle is ignored.
       persistence.pendingInitCallbacks[0]();
       expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('arms the backoff exactly once when a failed write-back answers twice', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A recovery signal starts a write-back that fails and answers through two
+      // channels. The duplicate answer must not advance the backoff a second time.
+      persistence.failUpserts = false;
+      persistence.failInits = true;
+      persistence.doubleCallbackInits = true;
+      const initCallsBefore = persistence.initCalls.length;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+
+      // The retry runs at the single-failure backoff deadline of one second, not
+      // at the doubled deadline a second arming would produce.
+      persistence.failInits = false;
+      persistence.doubleCallbackInits = false;
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('resets the backoff after the store stays healthy past the reset interval', async () => {
+    jest.useFakeTimers();
+    try {
+      // Outage 1: two failed write-backs escalate the backoff to two seconds.
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+      persistence.failUpserts = false;
+      persistence.failInits = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      await jest.advanceTimersByTimeAsync(1000);
+      // Recover through the retry.
+      persistence.failInits = false;
+      await jest.advanceTimersByTimeAsync(2000);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+
+      // The store stays healthy past the reset interval, so outage 2 starts at
+      // the initial backoff again.
+      await jest.advanceTimersByTimeAsync(31000);
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagD: { version: 1 } } },
+        undefined,
+        's4',
+      );
+      persistence.failUpserts = false;
+      persistence.failInits = true;
+      const initCallsBefore = persistence.initCalls.length;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagE: { version: 1 } } },
+        undefined,
+        's5',
+      );
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+      persistence.failInits = false;
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+      expect(logger.info).toHaveBeenCalledTimes(2);
     } finally {
       jest.useRealTimers();
     }
@@ -713,7 +818,7 @@ describe('given a transactional store over a persistence store that can fail wri
       undefined,
       's2',
     );
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
 
     // The next mirrored write succeeds and triggers a write-back attempt, but the
     // persistence store holds the init callback open instead of calling it back.
@@ -732,7 +837,58 @@ describe('given a transactional store over a persistence store that can fail wri
     persistence.pendingInitCallbacks[0]();
 
     expect(logger.info).not.toHaveBeenCalled();
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not mirror a change to the persistence store after close', async () => {
+    recoveryStore.close();
+    const upsertCallsBefore = persistence.upsertCalls.length;
+    const initCallsBefore = persistence.initCalls.length;
+    // The change callbacks must still fire.
+    await recoveryFacade.applyChanges(
+      false,
+      { features: { flagB: { version: 1 } } },
+      undefined,
+      's2',
+    );
+    await recoveryFacade.applyChanges(
+      true,
+      { features: { flagA: { key: 'flagA', version: 3 } } },
+      undefined,
+      's3',
+    );
+    expect(persistence.upsertCalls.length).toEqual(upsertCallsBefore);
+    expect(persistence.initCalls.length).toEqual(initCallsBefore);
+  });
+
+  it('fires the change callback even when a throwing logger escapes the availability handling', async () => {
+    const throwingLogger: LDLogger = {
+      error: jest.fn(() => {
+        throw new Error('logger exploded');
+      }),
+      warn: jest.fn(() => {
+        throw new Error('logger exploded');
+      }),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const store = new TransactionalFeatureStore(persistence, throwingLogger);
+    const facade = new AsyncTransactionalStoreFacade(store);
+    try {
+      await facade.applyChanges(
+        true,
+        { features: { flagA: { key: 'flagA', version: 1 } } },
+        undefined,
+        's1',
+      );
+      persistence.failUpserts = true;
+      // The failing write makes the availability handling log through the
+      // throwing logger. The change must still complete.
+      await facade.applyChanges(false, { features: { flagB: { version: 1 } } }, undefined, 's2');
+      expect(throwingLogger.warn).toHaveBeenCalled();
+    } finally {
+      store.close();
+    }
   });
 
   it('closes the underlying persistence store exactly once even if close is called twice', () => {
@@ -763,7 +919,7 @@ describe('given a transactional store over a persistence store that can fail wri
       await Promise.resolve();
       await Promise.resolve();
       expect(callbackCalls).toEqual(1);
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledTimes(2);
       expect(unhandled).not.toHaveBeenCalled();
     } finally {
       process.off('unhandledRejection', unhandled);
@@ -785,7 +941,7 @@ describe('given a transactional store over a persistence store that can fail wri
       await Promise.resolve();
       await Promise.resolve();
       expect(callbackCalls).toEqual(1);
-      expect(logger.warn).toHaveBeenCalledTimes(1);
+      expect(logger.warn).toHaveBeenCalledTimes(2);
       expect(unhandled).not.toHaveBeenCalled();
     } finally {
       process.off('unhandledRejection', unhandled);
@@ -808,7 +964,7 @@ describe('given a transactional store over a persistence store that can fail wri
       );
     });
     expect(callbackCalls).toEqual(1);
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
   });
 
   it('fires the callback exactly once when a mirrored upsert throws synchronously', async () => {
@@ -821,7 +977,7 @@ describe('given a transactional store over a persistence store that can fail wri
       });
     });
     expect(callbackCalls).toEqual(1);
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
   });
 
   it('ignores a rejected init promise when the basis write already answered through its callback', async () => {
@@ -950,6 +1106,8 @@ describe('given a transactional store whose persistence store has an availabilit
     const callsAfterRecovery = probeCalls;
     await jest.advanceTimersByTimeAsync(5000);
     expect(probeCalls).toEqual(callsAfterRecovery);
+    // The poll interval itself is gone, not only idle.
+    expect(jest.getTimerCount()).toEqual(0);
   });
 
   it('logs an error and keeps polling when the write-back fails', async () => {
@@ -1458,6 +1616,32 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
+  it('retries an embargoed recovery signal even when the availability check disagrees', async () => {
+    // The probe keeps reporting unavailable while writes succeed. A recovery
+    // signal that arrives during the failure embargo must still be retried, or
+    // the store would stay stale until the probe changes its answer.
+    probeResult = false;
+    persistence.failUpserts = false;
+    persistence.failInits = true;
+    const initCallsBefore = persistence.initCalls.length;
+    // A successful mirrored write signals recovery; the write-back fails and
+    // arms the embargo.
+    await pollingFacade.applyChanges(
+      false,
+      { features: { flagC: { version: 1 } } },
+      undefined,
+      's3',
+    );
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+
+    // No further writes arrive and every probe answers false. The retry timer
+    // still runs the next attempt at the backoff deadline.
+    persistence.failInits = false;
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+    expect(logger.info).toHaveBeenCalledTimes(1);
+  });
+
   it('releases a hung probe after its deadline and issues a fresh one', async () => {
     const pendingCallbacks: ((isAvailable: boolean) => void)[] = [];
     persistence.isStoreAvailable = (callback: (isAvailable: boolean) => void) => {
@@ -1691,7 +1875,7 @@ it('captures a snapshot of a key before a concurrent newer write to that key rea
 
     persistence.failUpserts = true;
     await facade.applyChanges(false, { features: { flagB: { version: 1 } } }, undefined, 's2');
-    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledTimes(2);
 
     persistence.failUpserts = false;
     const initCallsBeforeRecovery = persistence.initCalls.length;
