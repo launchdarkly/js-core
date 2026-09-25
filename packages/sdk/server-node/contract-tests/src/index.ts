@@ -55,6 +55,7 @@ app.get('/', (req: Request, res: Response) => {
       'persistent-data-store-dynamodb',
       // TODO: enable this capability once it is added to contract tests.
       // 'persistent-data-store-recovery',
+      'flag-overrides',
     ],
   });
 });
