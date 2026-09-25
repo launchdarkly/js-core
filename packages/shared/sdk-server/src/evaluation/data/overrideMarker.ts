@@ -27,6 +27,17 @@ export function isOverrideEntry(item: OverrideMarkable | undefined | null): bool
 }
 
 /**
+ * Marks an entity as an override entry. Only the override store calls this, on copies that it
+ * owns.
+ *
+ * @internal
+ */
+export function markOverrideEntry<T extends OverrideMarkable>(item: T): T {
+  item._sdk_override = true;
+  return item;
+}
+
+/**
  * Reports whether a value carries the override marker key at all.
  *
  * @internal

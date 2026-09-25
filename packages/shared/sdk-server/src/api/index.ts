@@ -5,6 +5,7 @@ export * from './LDMigration';
 export * from './interfaces/DataKind';
 export * from './subsystems/LDFeatureStore';
 export * from './subsystems/LDTransactionalFeatureStore';
+export * from './subsystems/LDOverrideSource';
 export * from './LDWaitForInitializationOptions';
 
 // These are items that should be less frequently used, and therefore they
