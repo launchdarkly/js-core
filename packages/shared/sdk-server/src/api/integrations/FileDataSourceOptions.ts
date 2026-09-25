@@ -11,8 +11,12 @@ export interface FileDataSourceOptions {
 
   /**
    * True if FileDataSource should reload flags whenever one of the data files is modified.
-   * This feature uses Node's `fs.watch()` API, so it is subject to
-   * the limitations described [here](https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener).
+   * This feature uses Node's `fs.watch()` API on the directories that contain the files, so it
+   * is subject to the limitations described
+   * [here](https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener).
+   * A file that is replaced by a rename, or deleted and created again, is detected. A load
+   * that fails, for example because a file was read while it was written, is retried after a
+   * short delay and the previously loaded data stays in effect until it succeeds.
    */
   autoUpdate?: boolean;
 

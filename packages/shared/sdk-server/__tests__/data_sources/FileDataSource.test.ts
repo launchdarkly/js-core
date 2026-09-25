@@ -327,13 +327,12 @@ describe('given a mock filesystem and memory feature store', () => {
     );
 
     expect(await asyncFeatureStore.initialized()).toBeTruthy();
-    expect(filesystem.watch).toHaveBeenCalledTimes(2);
-    expect(filesystem.watches['file1.json'].length).toEqual(1);
-    expect(filesystem.watches['file2.json'].length).toEqual(1);
+    // The directory that contains the files is watched. Both files are in the same directory.
+    expect(filesystem.watch).toHaveBeenCalledTimes(1);
+    expect(filesystem.watches['.'].length).toEqual(1);
     fds.close();
 
-    expect(filesystem.watches['file1.json'].length).toEqual(0);
-    expect(filesystem.watches['file2.json'].length).toEqual(0);
+    expect(filesystem.watches['.'].length).toEqual(0);
   });
 
   it('reloads modified files when auto update is enabled', async () => {
@@ -349,7 +348,7 @@ describe('given a mock filesystem and memory feature store', () => {
 
     // Need to update the timestamp, or it will think the file has not changed.
     filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
 
     await jest.runAllTimersAsync();
     const flags2 = await asyncFeatureStore.all(VersionedDataKinds.Features);
@@ -372,13 +371,13 @@ describe('given a mock filesystem and memory feature store', () => {
 
     // Trigger several change callbacks.
     filesystem.fileData['file1.json'] = { timestamp: 100, data: segmentOnlyJson };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
     filesystem.fileData['file1.json'] = { timestamp: 101, data: segmentOnlyJson };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
     filesystem.fileData['file1.json'] = { timestamp: 102, data: segmentOnlyJson };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
     filesystem.fileData['file1.json'] = { timestamp: 103, data: segmentOnlyJson };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
 
     // The handling of the file loading is async, and additionally we debounce
     // the callback. So we have to wait a bit to account for the awaits and the debounce.
@@ -398,8 +397,8 @@ describe('given a mock filesystem and memory feature store', () => {
     const segments = await asyncFeatureStore.all(VersionedDataKinds.Segments);
     expect(Object.keys(segments).length).toEqual(0);
 
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
 
     await jest.runAllTimersAsync();
     // Once for the start.
@@ -480,7 +479,7 @@ describe('given a mock filesystem and memory feature store', () => {
       }
     }`,
     };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
 
     await jest.runAllTimersAsync();
 
@@ -524,7 +523,7 @@ describe('given a mock filesystem and memory feature store', () => {
       }
     }`,
     };
-    filesystem.watches['file1.json'][0].cb('change', 'file1.json');
+    filesystem.watches['.'][0].cb('change', 'file1.json');
 
     await jest.runAllTimersAsync();
 
