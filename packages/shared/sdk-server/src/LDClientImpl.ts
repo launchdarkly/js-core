@@ -22,12 +22,14 @@ import {
   IsMigrationStage,
   LDClient,
   LDFeatureStore,
+  LDFeatureStoreKindData,
   LDFlagsState,
   LDFlagsStateOptions,
   LDMigrationOpEvent,
   LDMigrationStage,
   LDMigrationVariation,
   LDOptions,
+  LDOverrideSource,
   LDTransactionalFeatureStore,
 } from './api';
 import { Hook } from './api/integrations/Hook';
@@ -72,6 +74,13 @@ import Configuration, {
   DEFAULT_STREAM_RECONNECT_DELAY,
 } from './options/Configuration';
 import { ServerInternalOptions } from './options/ServerInternalOptions';
+import {
+  createOverrideSource,
+  OverrideLayer,
+  OverrideSink,
+  ReadStore,
+  ReadStoreOverlay,
+} from './overrides';
 import VersionedDataKinds from './store/VersionedDataKinds';
 
 const { ClientMessages, ErrorKinds, NullEventProcessor } = internal;
@@ -284,6 +293,8 @@ function constructFDv2(
   logger: LDLogger | undefined;
   evaluator: Evaluator;
   featureStore: LDTransactionalFeatureStore;
+  readStore: ReadStore;
+  overrides: OverrideComponents | undefined;
   dataSource: subsystem.DataSource | undefined;
   payloadListener: ((payload: any) => void) | undefined;
   eventProcessor: subsystem.LDEventProcessor;
@@ -328,6 +339,22 @@ function constructFDv2(
     onUpdate,
   );
 
+  // The override layer sits at the store read boundary. Evaluation, prerequisite and segment
+  // resolution, and the all-flags read go through the overlay, so an override entry wins over
+  // LaunchDarkly data for its key. The data system never sees the layer. The source is created
+  // here so that an invalid configuration fails client construction.
+  let readStore: ReadStore = featureStore;
+  let overrides: OverrideComponents | undefined;
+  if (dataSystem.overrides !== undefined && !config.offline) {
+    const layer = new OverrideLayer();
+    readStore = new ReadStoreOverlay(featureStore, layer);
+    overrides = {
+      layer,
+      sink: new OverrideSink(layer, featureStore, onUpdate, hasEventListeners, logger),
+      source: createOverrideSource(dataSystem.overrides, clientContext),
+    };
+  }
+
   let diagnosticsManager: internal.DiagnosticsManager | undefined;
   if (config.sendEvents && !config.offline && !config.diagnosticOptOut) {
     diagnosticsManager = new internal.DiagnosticsManager(
@@ -362,10 +389,10 @@ function constructFDv2(
 
   const queries: Queries = {
     getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
-      featureStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
+      readStore.get(VersionedDataKinds.Features, key, (item) => cb(item as Flag));
     },
     getSegment(key: string, cb: (segment: Segment | undefined) => void): void {
-      featureStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
+      readStore.get(VersionedDataKinds.Segments, key, (item) => cb(item as Segment));
     },
     getBigSegmentsMembership(
       userKey: string,
@@ -567,6 +594,8 @@ function constructFDv2(
     logger,
     evaluator,
     featureStore,
+    readStore,
+    overrides,
     dataSource,
     payloadListener,
     eventProcessor,
@@ -576,6 +605,15 @@ function constructFDv2(
     onFailed: callbacks.onFailed,
     onReady: callbacks.onReady,
   };
+}
+
+/**
+ * The parts of the override system that the client owns when an override source is configured.
+ */
+interface OverrideComponents {
+  layer: OverrideLayer;
+  sink: OverrideSink;
+  source: LDOverrideSource;
 }
 
 /**
@@ -590,7 +628,22 @@ export default class LDClientImpl implements LDClient {
   // The allFlagsState last-known-values warning is logged once per client.
   private _allFlagsStateLastKnownValuesWarningLogged = false;
 
+  // The allFlagsState overrides-only warning is logged once per client.
+  private _allFlagsStateOverridesOnlyWarningLogged = false;
+
   private _featureStore: LDFeatureStore | LDTransactionalFeatureStore;
+
+  // The store read boundary. With an override source this is the overlay of the override layer
+  // over the feature store. Otherwise it is the feature store itself.
+  private _readStore: ReadStore;
+
+  private _overrideLayer?: OverrideLayer;
+
+  private _overrideSource?: LDOverrideSource;
+
+  // Settles when the override source's initial load has completed. Undefined once it has, or when
+  // there is no override source.
+  private _overridesReady?: Promise<void>;
 
   private _updateProcessor?: subsystem.LDStreamProcessor;
 
@@ -693,6 +746,7 @@ export default class LDClientImpl implements LDClient {
         internalOptions?.userAgentHeaderName,
         startEventProcessor,
       ));
+      this._readStore = this._featureStore;
 
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
         .statusProvider as BigSegmentStoreStatusProvider;
@@ -708,11 +762,14 @@ export default class LDClientImpl implements LDClient {
       // setup for FDv2
       let transactionalStore: LDTransactionalFeatureStore;
       let payloadListener: ((payload: any) => void) | undefined;
+      let overrides: OverrideComponents | undefined;
       ({
         config: this._config,
         logger: this._logger,
         evaluator: this._evaluator,
         featureStore: transactionalStore,
+        readStore: this._readStore,
+        overrides,
         dataSource: this._dataSource,
         payloadListener,
         eventProcessor: this._eventProcessor,
@@ -735,6 +792,15 @@ export default class LDClientImpl implements LDClient {
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
         .statusProvider as BigSegmentStoreStatusProvider;
+
+      if (overrides) {
+        // The source starts before the data source, so an override that loads synchronously is in
+        // place before the client evaluates anything. The evaluation methods wait for an
+        // asynchronous initial load to complete.
+        this._overrideLayer = overrides.layer;
+        this._overrideSource = overrides.source;
+        this._overridesReady = this._startOverrideSource(overrides.source, overrides.sink);
+      }
 
       if (this._dataSource) {
         this._dataSource.start(
@@ -1146,52 +1212,73 @@ export default class LDClientImpl implements LDClient {
     }
 
     return new Promise<LDFlagsState>((resolve) => {
-      const doEval = (valid: boolean) =>
-        this._featureStore.all(VersionedDataKinds.Features, (allFlags) => {
-          const builder = new FlagsStateBuilder(valid, !!options?.withReasons);
-          const clientOnly = !!options?.clientSideOnly;
-          const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
+      const evaluateAll = (valid: boolean, allFlags: LDFeatureStoreKindData) => {
+        const builder = new FlagsStateBuilder(valid, !!options?.withReasons);
+        const clientOnly = !!options?.clientSideOnly;
+        const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
 
-          allAsync(
-            Object.values(allFlags),
-            (storeItem, iterCb) => {
-              const flag = storeItem as Flag;
-              if (clientOnly && !flag.clientSideAvailability?.usingEnvironmentId) {
-                iterCb(true);
-                return;
-              }
-              this._evaluator.evaluateCb(flag, evalContext, (res) => {
-                if (res.isError) {
-                  this._onError(
-                    new Error(
-                      `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
-                    ),
-                  );
-                }
-                const requireExperimentData = isExperiment(flag, res.detail.reason);
-                builder.addFlag(
-                  flag,
-                  res.detail.value,
-                  res.detail.variationIndex ?? undefined,
-                  res.detail.reason,
-                  flag.trackEvents || requireExperimentData,
-                  requireExperimentData,
-                  detailsOnlyIfTracked,
-                  res.prerequisites,
+        allAsync(
+          Object.values(allFlags),
+          (storeItem, iterCb) => {
+            const flag = storeItem as Flag;
+            if (clientOnly && !flag.clientSideAvailability?.usingEnvironmentId) {
+              iterCb(true);
+              return;
+            }
+            this._evaluator.evaluateCb(flag, evalContext, (res) => {
+              if (res.isError) {
+                this._onError(
+                  new Error(
+                    `Error for feature flag "${flag.key}" while evaluating all flags: ${res.message}`,
+                  ),
                 );
-                iterCb(true);
-              });
-            },
-            () => {
-              const res = builder.build();
-              callback?.(null, res);
-              resolve(res);
-            },
-          );
-        });
-      if (!this.initialized()) {
+              }
+              const requireExperimentData = isExperiment(flag, res.detail.reason);
+              let trackEvents = flag.trackEvents || requireExperimentData;
+              let trackReason = requireExperimentData;
+              let { debugEventsUntilDate } = flag;
+              if (res.overrideAffected) {
+                // A consumer of this state sends individual events according to these fields. An
+                // override-affected evaluation produces no individual events, so the state turns
+                // them off for this flag. The flag, its value, and its reason stay.
+                trackEvents = false;
+                trackReason = false;
+                debugEventsUntilDate = undefined;
+              }
+              builder.addFlag(
+                flag,
+                res.detail.value,
+                res.detail.variationIndex ?? undefined,
+                res.detail.reason,
+                trackEvents,
+                trackReason,
+                debugEventsUntilDate,
+                detailsOnlyIfTracked,
+                res.prerequisites,
+              );
+              iterCb(true);
+            });
+          },
+          () => {
+            const res = builder.build();
+            callback?.(null, res);
+            resolve(res);
+          },
+        );
+      };
+      // The read goes through the store read boundary, so it has override precedence and includes
+      // flags that exist only in the override layer.
+      const doEval = (valid: boolean) =>
+        this._readStore.all(VersionedDataKinds.Features, (allFlags) =>
+          evaluateAll(valid, allFlags),
+        );
+
+      this._afterOverridesReady(() => {
+        if (this.initialized()) {
+          doEval(true);
+          return;
+        }
         this._featureStore.initialized((storeInitialized) => {
-          let valid = true;
           if (storeInitialized) {
             if (!this._allFlagsStateLastKnownValuesWarningLogged) {
               this._allFlagsStateLastKnownValuesWarningLogged = true;
@@ -1200,18 +1287,29 @@ export default class LDClientImpl implements LDClient {
                   ' values from data store. This message is logged once.',
               );
             }
-          } else {
-            this._logger?.warn(
-              'Called allFlagsState before client initialization. Data store not available; ' +
-                'returning empty state',
-            );
-            valid = false;
+            doEval(true);
+            return;
           }
-          doEval(valid);
+          if (this._overrideLayer && !this._overrideLayer.isEmpty()) {
+            // No LaunchDarkly data is available. The state holds only the flags that the
+            // override layer holds.
+            if (!this._allFlagsStateOverridesOnlyWarningLogged) {
+              this._allFlagsStateOverridesOnlyWarningLogged = true;
+              this._logger?.warn(
+                'Called allFlagsState before client initialization; returning only flags from' +
+                  ' the override layer. This message is logged once.',
+              );
+            }
+            doEval(true);
+            return;
+          }
+          this._logger?.warn(
+            'Called allFlagsState before client initialization. Data store not available; ' +
+              'returning empty state',
+          );
+          doEval(false);
         });
-      } else {
-        doEval(true);
-      }
+      });
     });
   }
 
@@ -1232,6 +1330,7 @@ export default class LDClientImpl implements LDClient {
   }
 
   close(): void {
+    this._overrideSource?.close();
     this._eventProcessor.close();
     this._updateProcessor?.close();
     this._dataSource?.stop();
@@ -1315,7 +1414,7 @@ export default class LDClientImpl implements LDClient {
       return;
     }
 
-    this._featureStore.get(VersionedDataKinds.Features, flagKey, (item) => {
+    this._readStore.get(VersionedDataKinds.Features, flagKey, (item) => {
       const flag = item as Flag;
       if (!flag) {
         const error = new LDClientError(
@@ -1349,6 +1448,12 @@ export default class LDClientImpl implements LDClient {
                 `Did not receive expected type (${type}) evaluating feature flag "${flagKey}"`,
                 defaultValue,
               );
+              if (evalRes.overrideAffected) {
+                // The type mismatch replaces the reason. The evaluation read the same definitions,
+                // so the new result keeps the override-affected marking.
+                errorRes.detail.reason = { ...errorRes.detail.reason, overrideAffected: true };
+                errorRes.overrideAffected = true;
+              }
               this._sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);
               cb(errorRes, flag);
               return;
@@ -1386,29 +1491,72 @@ export default class LDClientImpl implements LDClient {
     cb: (res: EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
-    if (!this.initialized()) {
-      this._featureStore.initialized((storeInitialized) => {
-        if (storeInitialized) {
-          if (!this._lastKnownValuesWarningLogged) {
-            this._lastKnownValuesWarningLogged = true;
-            this._logger?.warn(
-              'Variation called before LaunchDarkly client initialization completed' +
-                " (did you wait for the 'ready' event?) - using last known values from feature store." +
-                ' This message is logged once.',
-            );
+    this._afterOverridesReady(() => {
+      if (!this.initialized()) {
+        this._featureStore.initialized((storeInitialized) => {
+          if (storeInitialized) {
+            if (!this._lastKnownValuesWarningLogged) {
+              this._lastKnownValuesWarningLogged = true;
+              this._logger?.warn(
+                'Variation called before LaunchDarkly client initialization completed' +
+                  " (did you wait for the 'ready' event?) - using last known values from feature store." +
+                  ' This message is logged once.',
+              );
+            }
+            this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+            return;
           }
-          this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
-          return;
-        }
-        this._logger?.warn(
-          'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-            "'ready' event?) - using default value",
-        );
-        cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
+          if (this._overrideLayer?.get(VersionedDataKinds.Features, flagKey)) {
+            // No LaunchDarkly data is available, but the override layer holds this flag. The
+            // override is served before the not-initialized short-circuit. A flag the layer does
+            // not hold still gets the not-ready default.
+            this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+            return;
+          }
+          this._logger?.warn(
+            'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
+              "'ready' event?) - using default value",
+          );
+          cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
+        });
+        return;
+      }
+      this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+    });
+  }
+
+  /**
+   * Starts the override source. The returned promise settles when the source's initial load has
+   * completed, also when it failed. A failure never prevents the client from operating: the
+   * layer stays as it was and the failure is logged.
+   */
+  private _startOverrideSource(source: LDOverrideSource, sink: OverrideSink): Promise<void> {
+    let started: Promise<void>;
+    try {
+      started = Promise.resolve(source.start(sink));
+    } catch (err) {
+      started = Promise.reject(err);
+    }
+    return started
+      .catch((err) => {
+        this._logger?.error(`Unable to start the override source: ${err}`);
+      })
+      .then(() => {
+        this._overridesReady = undefined;
       });
+  }
+
+  /**
+   * Runs the action once the override source's initial load has completed, so an override that
+   * is present when the client is created takes effect from the first evaluation. Without an
+   * override source, or once the load has completed, the action runs immediately.
+   */
+  private _afterOverridesReady(action: () => void): void {
+    if (this._overridesReady) {
+      this._overridesReady.then(action);
       return;
     }
-    this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+    action();
   }
 
   private _dataSourceErrorHandler(e: any) {

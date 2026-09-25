@@ -22,6 +22,7 @@ import {
   isStandardOptions,
   isStreamingOnlyOptions,
   LDDataSystemOptions,
+  LDOverrideSourceOptions,
   PollingDataSourceOptions,
   StandardDataSourceOptions,
   StreamingDataSourceOptions,
@@ -312,6 +313,19 @@ function validateDataSystemOptions(options: Options): {
     }
   }
 
+  // The override source is either a source object or a factory function. Anything else is a
+  // misconfiguration. Drop it so the client runs without overrides, and warn.
+  if (options.overrides !== undefined && !TypeValidators.ObjectOrFactory.is(options.overrides)) {
+    validatedOptions.overrides = undefined;
+    allErrors.push(
+      OptionMessages.wrongOptionType(
+        'dataSystem.overrides',
+        'LDOverrideSourceOptions',
+        typeof options.overrides,
+      ),
+    );
+  }
+
   if (options.dataSource) {
     let errors: string[];
     let validatedDataSourceOptions: Options;
@@ -367,6 +381,7 @@ export interface DataSystemConfiguration {
   featureStoreFactory: (clientContext: LDClientContext) => LDTransactionalFeatureStore;
   useLdd?: boolean;
   fdv1Fallback?: FDv1FallbackConfiguration | null;
+  overrides?: LDOverrideSourceOptions;
 }
 
 /**
@@ -478,6 +493,7 @@ export default class Configuration {
         dataSource: validatedDSOptions.dataSource,
         useLdd: validatedDSOptions.useLdd,
         fdv1Fallback: validatedDSOptions.fdv1Fallback,
+        overrides: validatedDSOptions.overrides,
         featureStoreFactory: (clientContext): LDTransactionalFeatureStore => {
           const { persistentStore } = validatedDSOptions;
           let store: LDFeatureStore;
