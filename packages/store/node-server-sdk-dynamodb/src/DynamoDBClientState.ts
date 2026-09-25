@@ -86,64 +86,40 @@ export default class DynamoDBClientState {
   }
 
   async batchWrite(table: string, params: WriteRequest[]) {
-    let pending = params;
-    // The first attempt writes all the items. Each retry writes only the
-    // items that DynamoDB returned as unprocessed.
-    for (let attempt = 0; attempt <= MAX_UNPROCESSED_RETRIES && pending.length > 0; attempt += 1) {
-      if (attempt > 0) {
-        // eslint-disable-next-line no-await-in-loop
-        await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
-      }
-      // eslint-disable-next-line no-await-in-loop
-      pending = await this._writeBatches(table, pending);
-    }
-    if (pending.length > 0) {
-      throw new Error(
-        `DynamoDB batch write returned ${pending.length} unprocessed item(s) after ${MAX_UNPROCESSED_RETRIES} retries`,
-      );
-    }
-  }
-
-  private async _writeBatches(table: string, requests: WriteRequest[]): Promise<WriteRequest[]> {
     const batches: WriteRequest[][] = [];
     // Split into batches of at most 25 commands.
-    for (let i = 0; i < requests.length; i += WRITE_BATCH_SIZE) {
-      batches.push(requests.slice(i, i + WRITE_BATCH_SIZE));
+    for (let i = 0; i < params.length; i += WRITE_BATCH_SIZE) {
+      batches.push(params.slice(i, i + WRITE_BATCH_SIZE));
     }
 
-    // Execute all the batches and wait for every one to settle. Failing on the
-    // first rejection alone would let sibling requests keep running after the
-    // caller has already handled the error, and such a stray write could land
-    // after a newer queued operation.
-    const results = await Promise.all(
-      batches.map((batch) =>
-        this._client
-          .send(
-            new BatchWriteItemCommand({
-              RequestItems: { [table]: batch },
-            }),
-          )
-          .then(
-            (output) => ({ output, reason: undefined }),
-            (reason: unknown) => ({ output: undefined, reason }),
-          ),
-      ),
-    );
-
-    const failed = results.find((result) => result.output === undefined);
-    if (failed) {
-      throw failed.reason;
-    }
-
-    // Collect the items that DynamoDB did not process.
-    const unprocessed: WriteRequest[] = [];
-    results.forEach((result) => {
-      const items = result.output?.UnprocessedItems?.[table];
-      if (items) {
-        unprocessed.push(...items);
+    // Write the batches strictly in order, and finish retrying a batch's
+    // unprocessed items before advancing. The caller orders the items so that
+    // prerequisites come before their dependents, and a deferred item written
+    // after a later batch would break that order for concurrent readers. This
+    // also means no request is in flight after a failure is reported.
+    for (const batch of batches) {
+      let pending = batch;
+      // The first attempt writes the whole batch. Each retry writes only the
+      // items that DynamoDB returned as unprocessed.
+      for (let attempt = 0; attempt <= MAX_UNPROCESSED_RETRIES && pending.length > 0; attempt += 1) {
+        if (attempt > 0) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
+        }
+        // eslint-disable-next-line no-await-in-loop
+        const result = await this._client.send(
+          new BatchWriteItemCommand({
+            RequestItems: { [table]: pending },
+          }),
+        );
+        pending = result.UnprocessedItems?.[table] ?? [];
       }
-    });
-    return unprocessed;
+      if (pending.length > 0) {
+        throw new Error(
+          `DynamoDB batch write returned ${pending.length} unprocessed item(s) after ${MAX_UNPROCESSED_RETRIES} retries`,
+        );
+      }
+    }
   }
 
   async get(

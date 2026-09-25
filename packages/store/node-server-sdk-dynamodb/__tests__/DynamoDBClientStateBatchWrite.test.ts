@@ -117,34 +117,40 @@ it('waits with exponential backoff before each retry', async () => {
   await assertion;
 });
 
-it('waits for every batch to settle before throwing a failed batch error', async () => {
+it('stops issuing later batches after a failed batch', async () => {
   const requests = Array.from({ length: 26 }, (_, i) => makeWriteRequest(`flag${i}`));
-  let completeSecondBatch: (() => void) | undefined;
-  const send = jest
-    .fn()
-    .mockRejectedValueOnce(new Error('batch one failed'))
-    .mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          completeSecondBatch = () => resolve({});
-        }),
-    );
+  const send = jest.fn().mockRejectedValueOnce(new Error('batch one failed'));
   const state = makeState(send);
 
-  let settledError: Error | undefined;
-  const pendingWrite = state.batchWrite(TABLE_NAME, requests).catch((err) => {
-    settledError = err;
-  });
+  await expect(state.batchWrite(TABLE_NAME, requests)).rejects.toEqual(
+    new Error('batch one failed'),
+  );
+  // The second batch is never sent, so no request outlives the reported failure.
+  expect(send).toHaveBeenCalledTimes(1);
+});
 
-  // The first batch has rejected, but the call must not settle while the second
-  // batch is still in flight.
-  await new Promise((resolve) => {
-    setTimeout(resolve, 0);
-  });
-  expect(settledError).toBeUndefined();
+it("retries a batch's unprocessed items before writing the next batch", async () => {
+  jest.useFakeTimers();
+  try {
+    const requests = Array.from({ length: 26 }, (_, i) => makeWriteRequest(`flag${i}`));
+    const deferred = requests[0];
+    const send = jest
+      .fn()
+      .mockResolvedValueOnce({ UnprocessedItems: { [TABLE_NAME]: [deferred] } })
+      .mockResolvedValue({});
+    const state = makeState(send);
 
-  completeSecondBatch?.();
-  await pendingWrite;
-  expect(settledError).toEqual(new Error('batch one failed'));
-  expect(send).toHaveBeenCalledTimes(2);
+    const pendingWrite = state.batchWrite(TABLE_NAME, requests);
+    await jest.runAllTimersAsync();
+    await pendingWrite;
+
+    // Batch one, then its retry, then batch two: a deferred item never lands
+    // after an item from a later batch.
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(send.mock.calls[0][0].input.RequestItems[TABLE_NAME]).toHaveLength(25);
+    expect(send.mock.calls[1][0].input.RequestItems[TABLE_NAME]).toEqual([deferred]);
+    expect(send.mock.calls[2][0].input.RequestItems[TABLE_NAME]).toHaveLength(1);
+  } finally {
+    jest.useRealTimers();
+  }
 });
