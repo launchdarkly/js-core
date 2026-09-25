@@ -741,3 +741,63 @@ it('does not expose isStoreAvailable when the core does not implement it', () =>
   expect(wrapper.isStoreAvailable).toBeUndefined();
   wrapper.close();
 });
+
+it('ignores the late completion of an init the queue abandoned', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    let lateInit: (() => void) | undefined;
+    core.init = (_allData, callback) => {
+      lateInit = () => callback();
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const initCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 1 } } }, initCallback);
+
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(initCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The abandoned init finally answers. Its result must not populate the caches
+    // or the initialized state.
+    lateInit?.();
+    const isInitialized = await new Promise((resolve) => {
+      wrapper.initialized(resolve);
+    });
+    expect(isInitialized).toBe(false);
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('ignores the late completion of an upsert the queue abandoned', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    let lateUpsert: (() => void) | undefined;
+    core.upsert = (_kind, _key, descriptor, callback) => {
+      lateUpsert = () => callback(undefined, descriptor);
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const upsertCallback = jest.fn();
+    wrapper.upsert(VersionedDataKinds.Features, { key: 'flagA', version: 1 }, upsertCallback);
+
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(upsertCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The abandoned upsert finally answers. Its result must not enter the item
+    // cache.
+    lateUpsert?.();
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'flagA', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});

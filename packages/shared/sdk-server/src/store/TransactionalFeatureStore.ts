@@ -92,6 +92,67 @@ function invokeStoreCall(
 }
 
 /**
+ * Tracks one kind of in-flight persistence store operation.
+ *
+ * At most one attempt is outstanding at a time. Every attempt gets a generation,
+ * and an answer is honored only while its generation is current, so a stale or
+ * duplicate answer from an earlier attempt can never be mistaken for the current
+ * one. An attempt that never answers can be released once it is past a deadline.
+ */
+class SupervisedOperation {
+  private _inFlight = false;
+  private _generation = 0;
+  private _startedAt = 0;
+
+  get inFlight(): boolean {
+    return this._inFlight;
+  }
+
+  /** Starts a new attempt and returns its generation. */
+  begin(): number {
+    this._generation += 1;
+    this._inFlight = true;
+    this._startedAt = Date.now();
+    return this._generation;
+  }
+
+  /**
+   * Records the answer of the given attempt. Returns false for a stale or
+   * duplicate answer, which the caller must ignore.
+   */
+  settle(generation: number): boolean {
+    if (!this.isCurrent(generation)) {
+      return false;
+    }
+    this._inFlight = false;
+    return true;
+  }
+
+  /** True while the given attempt is the outstanding one. */
+  isCurrent(generation: number): boolean {
+    return generation === this._generation && this._inFlight;
+  }
+
+  /** Invalidates the outstanding attempt, so a late answer is ignored. */
+  invalidate(): void {
+    this._generation += 1;
+    this._inFlight = false;
+  }
+
+  /**
+   * Invalidates the outstanding attempt once it is past its deadline. Returns
+   * whether it was released.
+   */
+  releaseIfHung(timeoutMs: number): boolean {
+    if (Date.now() - this._startedAt < timeoutMs) {
+      return false;
+    }
+    this.invalidate();
+    return true;
+  }
+}
+
+/**
  * Wraps a non-transactional {@link LDFeatureStore} and makes it transactional through
  * an in-memory store acting as a cache.
  *
@@ -109,31 +170,14 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // The persistence store is considered available until a write reports an error.
   private _persistenceAvailable = true;
 
-  // True while a poll tick's availability probe is outstanding. Guards only the
-  // poller, so a hung probe cannot block write-signal-triggered recovery.
-  private _probeInFlight = false;
+  // The poller's availability probe. In-flight only while a poll tick's probe is
+  // outstanding, so a hung probe cannot block write-signal-triggered recovery.
+  private _probe = new SupervisedOperation();
 
-  // Bumped on every new probe and on every availability transition. A probe answer
-  // is honored only when its generation still matches, so a stale or duplicate
-  // answer from an earlier probe can never be mistaken for the current one.
-  private _probeGeneration = 0;
-
-  // Date.now() when the outstanding probe was issued. Detects a probe whose callback
-  // never fires.
-  private _probeStartedAt = 0;
-
-  // True while a write-back attempt is outstanding. Guards both the probe-triggered
-  // and write-signal-triggered recovery paths, so at most one write-back runs at a
+  // The full-data-set write-back. In-flight across both the probe-triggered and
+  // write-signal-triggered recovery paths, so at most one write-back runs at a
   // time.
-  private _writeBackInFlight = false;
-
-  // Bumped on every new write-back and when a hung one is abandoned. Same role as
-  // _probeGeneration, for write-back callbacks.
-  private _writeBackGeneration = 0;
-
-  // Date.now() when the outstanding write-back was issued. Detects a write-back
-  // whose callback never fires.
-  private _writeBackStartedAt = 0;
+  private _writeBackOp = new SupervisedOperation();
 
   // Epoch ms before which a new write-back attempt is not issued. Persists across
   // flapping available/unavailable cycles instead of resetting on each transition,
@@ -160,6 +204,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // embargo deadline, a recovery signal that arrived during the embargo. Such a
   // store has no poller, so a dropped signal would leave no later trigger.
   private _embargoRetryHandle?: ReturnType<typeof setTimeout>;
+
+  // One-shot deadline for an in-flight write-back on a store without an
+  // availability check. Such a store has no poller, so nothing else would notice
+  // the write-back hanging.
+  private _writeBackDeadlineHandle?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly _basePersistenceStore: LDFeatureStore,
@@ -296,6 +345,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     this._closed = true;
     this._stopRecoveryPolling();
     this._cancelEmbargoRetry();
+    this._cancelWriteBackDeadline();
     this._basePersistenceStore.close();
     this._memoryStore.close();
   }
@@ -330,7 +380,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     if (err) {
-      if (this._writeBackInFlight) {
+      if (this._writeBackOp.inFlight) {
         this._writeFailedDuringWriteBack = true;
       }
       this._markUnavailable();
@@ -350,10 +400,8 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     }
     this._persistenceAvailable = false;
     // Invalidate outstanding probe and write-back callbacks from before this outage.
-    this._probeGeneration += 1;
-    this._probeInFlight = false;
-    this._writeBackGeneration += 1;
-    this._writeBackInFlight = false;
+    this._probe.invalidate();
+    this._writeBackOp.invalidate();
     this._failureLoggedThisOutage = false;
     this._logger?.warn(
       'Persistent store is unavailable. Updates will be kept in memory until it recovers.',
@@ -373,16 +421,15 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     this._writeFailedDuringWriteBack = false;
     // Invalidate outstanding probe and write-back callbacks from this outage, so a
     // stale answer cannot flip state out from under the next outage.
-    this._probeGeneration += 1;
-    this._probeInFlight = false;
-    this._writeBackGeneration += 1;
-    this._writeBackInFlight = false;
+    this._probe.invalidate();
+    this._writeBackOp.invalidate();
     // Rate-limit the next write-back, so a flapping store triggers about one
     // write-back per second at most. This also replaces any longer failure
     // backoff: recovery just proved the store is healthy.
     this._writeBackEmbargoUntil = Date.now() + WRITE_BACK_SUCCESS_EMBARGO_MS;
     this._stopRecoveryPolling();
     this._cancelEmbargoRetry();
+    this._cancelWriteBackDeadline();
     this._logger?.info('Persistent store is available again.');
   }
 
@@ -399,13 +446,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     this._pollHandle = setInterval(() => {
-      if (this._writeBackInFlight) {
+      if (this._writeBackOp.inFlight) {
         if (!this._releaseWriteBackIfHung()) {
           // Still within the deadline. Wait for it to answer before probing again.
           return;
         }
       }
-      if (this._probeInFlight) {
+      if (this._probe.inFlight) {
         if (!this._releaseProbeIfHung()) {
           // Still within the deadline. Wait for it to answer before probing again.
           return;
@@ -422,16 +469,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       if (!probe) {
         return;
       }
-      this._probeGeneration += 1;
-      const generation = this._probeGeneration;
-      this._probeInFlight = true;
-      this._probeStartedAt = Date.now();
+      const generation = this._probe.begin();
       const onAnswer = (isAvailable: boolean) => {
         // Ignore a stale or duplicate answer from a superseded probe.
-        if (generation !== this._probeGeneration || !this._probeInFlight) {
+        if (!this._probe.settle(generation)) {
           return;
         }
-        this._probeInFlight = false;
         if (this._closed) {
           return;
         }
@@ -445,21 +488,17 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       invokeStoreCall(
         () => probe(onAnswer),
         (err, channel) => {
-          // A synchronous throw happens in the same stack frame that set
-          // _probeInFlight to true. No newer probe can exist yet, so this branch
-          // skips the generation and closed guard used below.
+          // A synchronous throw happens in the same stack frame that began the
+          // probe, so its settle is always current. A rejection can arrive late,
+          // and settle rejects it when a newer probe or an availability
+          // transition superseded this one.
+          if (!this._probe.settle(generation)) {
+            return;
+          }
           if (channel === 'sync-throw') {
-            this._probeInFlight = false;
             this._logger?.debug(`Persistent store availability check failed: ${err}`);
             return;
           }
-          // A rejection can arrive late. Ignore it when a newer probe or an
-          // availability transition superseded this one. After close, this still
-          // clears _probeInFlight but skips the log below.
-          if (generation !== this._probeGeneration || !this._probeInFlight) {
-            return;
-          }
-          this._probeInFlight = false;
           if (this._closed) {
             return;
           }
@@ -506,6 +545,33 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
+   * Arms, for a store without an availability check, a one-shot deadline that
+   * releases the write-back issued under the given generation if it is still in
+   * flight when the deadline passes. Stores with a check are covered by the
+   * poller's own tick instead.
+   */
+  private _armWriteBackDeadline(generation: number): void {
+    if (typeof this._basePersistenceStore.isStoreAvailable === 'function' || this._closed) {
+      return;
+    }
+    this._cancelWriteBackDeadline();
+    this._writeBackDeadlineHandle = setTimeout(() => {
+      this._writeBackDeadlineHandle = undefined;
+      if (!this._writeBackOp.isCurrent(generation)) {
+        return;
+      }
+      this._releaseWriteBackIfHung();
+    }, HUNG_TIMEOUT_MS);
+  }
+
+  private _cancelWriteBackDeadline(): void {
+    if (this._writeBackDeadlineHandle) {
+      clearTimeout(this._writeBackDeadlineHandle);
+      this._writeBackDeadlineHandle = undefined;
+    }
+  }
+
+  /**
    * Abandons the outstanding write-back once it is past its deadline.
    *
    * Bumps the generation so a late callback is ignored, and clears the in-flight
@@ -514,11 +580,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
    * failure instead of retrying every poll tick. Returns whether it was released.
    */
   private _releaseWriteBackIfHung(): boolean {
-    if (Date.now() - this._writeBackStartedAt < HUNG_TIMEOUT_MS) {
+    if (!this._writeBackOp.releaseIfHung(HUNG_TIMEOUT_MS)) {
       return false;
     }
-    this._writeBackGeneration += 1;
-    this._writeBackInFlight = false;
     this._armFailureEmbargo();
     this._logger?.debug('A write-back to the persistent store did not complete in time. Retrying.');
     return true;
@@ -531,11 +595,9 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
    * so a fresh probe can be issued. Returns whether it was released.
    */
   private _releaseProbeIfHung(): boolean {
-    if (Date.now() - this._probeStartedAt < HUNG_TIMEOUT_MS) {
+    if (!this._probe.releaseIfHung(HUNG_TIMEOUT_MS)) {
       return false;
     }
-    this._probeGeneration += 1;
-    this._probeInFlight = false;
     this._logger?.debug(
       'A persistent store availability check did not complete in time. Retrying.',
     );
@@ -543,7 +605,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   private _attemptRecovery(): void {
-    if (this._writeBackInFlight && !this._releaseWriteBackIfHung()) {
+    if (this._writeBackOp.inFlight && !this._releaseWriteBackIfHung()) {
       return;
     }
     if (this._persistenceAvailable) {
@@ -557,27 +619,24 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       this._scheduleEmbargoRetry();
       return;
     }
-    this._writeBackGeneration += 1;
-    const generation = this._writeBackGeneration;
-    this._writeBackInFlight = true;
-    this._writeBackStartedAt = Date.now();
+    const generation = this._writeBackOp.begin();
+    this._armWriteBackDeadline(generation);
     this._writeBack(generation);
   }
 
   /**
    * Write the full in-memory data set, including tombstones, to the persistence store.
-   * The caller must set _writeBackInFlight and capture _writeBackGeneration before
-   * calling this method.
+   * The caller must begin the attempt on _writeBackOp and pass its generation.
    */
   private _writeBack(generation: number): void {
     if (this._closed) {
-      this._writeBackInFlight = false;
+      this._writeBackOp.settle(generation);
       return;
     }
     if (this._activeStore !== this._memoryStore) {
       // No basis has been received, so there is no full data set to write. The next
       // basis fully populates the persistence store. _markAvailable() below already
-      // clears _writeBackInFlight.
+      // invalidates this attempt.
       this._markAvailable();
       return;
     }
@@ -587,10 +646,10 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     const onSettled = (err?: Error) => {
       // Ignore a late callback from an abandoned (timed-out) write-back.
       // It must not flip state out from under a newer one.
-      if (generation !== this._writeBackGeneration || !this._writeBackInFlight) {
+      if (!this._writeBackOp.settle(generation)) {
         return;
       }
-      this._writeBackInFlight = false;
+      this._cancelWriteBackDeadline();
       if (this._closed) {
         return;
       }
