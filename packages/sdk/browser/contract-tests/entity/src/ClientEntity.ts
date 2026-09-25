@@ -7,6 +7,7 @@ import {
   ModeDefinition,
   SynchronizerEntry,
 } from '@launchdarkly/js-client-sdk';
+import { fetchBrowserEventSource } from '@launchdarkly/js-client-sdk/fetch-eventsource';
 import {
   CommandParams,
   CommandType,
@@ -108,6 +109,16 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     logger: makeLogger(`${tag}.sdk`),
     useReport: options.clientSide.useReport ?? undefined,
   };
+
+  // The native browser EventSource cannot send POST or REPORT requests. Use the
+  // fetch-based EventSource so that usePost and useReport apply to the streaming
+  // connection.
+  if (options.clientSide.usePost || options.clientSide.useReport) {
+    cf.eventSource = fetchBrowserEventSource;
+  }
+  if (options.clientSide.usePost) {
+    cf.usePost = true;
+  }
 
   if (options.serviceEndpoints) {
     cf.streamUri = options.serviceEndpoints.streaming;
