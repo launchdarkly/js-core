@@ -9,6 +9,7 @@ import {
 import ld, {
   createMigration,
   DataSourceOptions,
+  FileOverrideSourceOptions,
   LDClient,
   LDConcurrentExecution,
   LDContext,
@@ -340,6 +341,30 @@ export async function makeSdkConfig(
         cf.useLdd = true;
       }
     }
+  }
+
+  if (options.overrides) {
+    // The override source is an option of the FDv2 data system configuration.
+    if (!cf.dataSystem) {
+      throw new Error('flag overrides require the data system to be configured');
+    }
+    // The harness sends null for an optional parameter it did not set.
+    const { duplicateKeysHandling, changeDetection, pollIntervalMs } = options.overrides;
+    const overrides: FileOverrideSourceOptions = {
+      type: 'file',
+      paths: options.overrides.filePaths,
+    };
+    if (duplicateKeysHandling !== undefined && duplicateKeysHandling !== null) {
+      overrides.duplicateKeysHandling =
+        duplicateKeysHandling as FileOverrideSourceOptions['duplicateKeysHandling'];
+    }
+    if (changeDetection !== undefined && changeDetection !== null) {
+      overrides.changeDetection = changeDetection as FileOverrideSourceOptions['changeDetection'];
+    }
+    if (pollIntervalMs !== undefined && pollIntervalMs !== null) {
+      overrides.pollInterval = pollIntervalMs / 1000;
+    }
+    cf.dataSystem.overrides = overrides;
   }
 
   return { config: cf, closeStore };
