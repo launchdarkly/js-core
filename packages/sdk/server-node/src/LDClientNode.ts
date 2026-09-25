@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { format } from 'util';
+import { parse as parseYaml } from 'yaml';
 
 import {
   BasicLogger,
@@ -89,6 +90,8 @@ class LDClientNode extends LDClientImpl implements LDClient {
         getImplementationHooks: (environmentMetadata: LDPluginEnvironmentMetadata) =>
           internal.safeGetHooks(logger, environmentMetadata, plugins),
         instanceId,
+        // The Node platform reads YAML files without configuration from the application.
+        yamlParser: (data: string) => parseYaml(data),
       },
     );
 
