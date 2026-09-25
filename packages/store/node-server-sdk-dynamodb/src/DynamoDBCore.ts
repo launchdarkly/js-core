@@ -56,6 +56,13 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * happened to execute later than the upsert(); we are relying on the fact that normally the
  * process that did the init() will also receive the new data shortly and do its own upsert.
  *
+ * Concurrent init() calls from two processes that share a table and prefix are not atomic
+ * either. One process can delete the initialized token and start a slow batch write while
+ * another process finishes its own write and puts the token back, so initialized() can
+ * report true while the slower write is still mutating data. This is the same trade-off as
+ * above: both processes receive the same data from LaunchDarkly, so the store converges
+ * once the slower init completes.
+ *
  * DynamoDB has a maximum item size of 400KB. Since each feature flag or user segment is
  * stored as a single item, this mechanism will not work for extremely large flags or segments.
  * @internal
