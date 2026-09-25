@@ -12,6 +12,7 @@ import { LDDataSourceUpdates } from '../api/subsystems';
 import { Flag } from '../evaluation/data/Flag';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
+import { FileDataDocument, parseDocument } from './filedata';
 import FileLoader from './FileLoader';
 
 export type FileDataSourceErrorHandler = (err: LDFileDataSourceError) => void;
@@ -108,18 +109,7 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
 
     // We let the parsers throw, and the caller can handle the rejection.
     fileData.forEach((fd) => {
-      let parsed: any;
-      if (fd.path.endsWith('.yml') || fd.path.endsWith('.yaml')) {
-        if (this._yamlParser) {
-          parsed = this._yamlParser(fd.data);
-        } else {
-          throw new Error(`Attempted to parse yaml file (${fd.path}) without parser.`);
-        }
-      } else {
-        parsed = JSON.parse(fd.data);
-      }
-
-      this._processParsedData(parsed, oldData);
+      this._processParsedData(parseDocument(fd.path, fd.data, this._yamlParser), oldData);
     });
 
     this._featureStore.init(this._allData, () => {
@@ -130,28 +120,31 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
     });
   }
 
-  private _processParsedData(parsed: any, oldData: LDFeatureStoreDataStorage) {
-    Object.keys(parsed.flags || {}).forEach((key) => {
-      processFlag(parsed.flags[key]);
-      this._addItem(VersionedDataKinds.Features, parsed.flags[key]);
+  private _processParsedData(parsed: FileDataDocument, oldData: LDFeatureStoreDataStorage) {
+    const flags = parsed.flags ?? {};
+    const flagValues = parsed.flagValues ?? {};
+    const segments = parsed.segments ?? {};
+    Object.keys(flags).forEach((key) => {
+      processFlag(flags[key]);
+      this._addItem(VersionedDataKinds.Features, flags[key]);
     });
-    Object.keys(parsed.flagValues || {}).forEach((key) => {
+    Object.keys(flagValues).forEach((key) => {
       const previousInstance = oldData[VersionedDataKinds.Features.namespace]?.[key];
       let { version } = previousInstance ?? { version: 1 };
       // If the data is different, then we want to increment the version.
       if (
         previousInstance &&
-        JSON.stringify(parsed.flagValues[key]) !== JSON.stringify(previousInstance?.variations?.[0])
+        JSON.stringify(flagValues[key]) !== JSON.stringify(previousInstance?.variations?.[0])
       ) {
         version += 1;
       }
-      const flag = makeFlagWithValue(key, parsed.flagValues[key], version);
+      const flag = makeFlagWithValue(key, flagValues[key], version);
       processFlag(flag);
       this._addItem(VersionedDataKinds.Features, flag);
     });
-    Object.keys(parsed.segments || {}).forEach((key) => {
-      processSegment(parsed.segments[key]);
-      this._addItem(VersionedDataKinds.Segments, parsed.segments[key]);
+    Object.keys(segments).forEach((key) => {
+      processSegment(segments[key]);
+      this._addItem(VersionedDataKinds.Segments, segments[key]);
     });
   }
 }
