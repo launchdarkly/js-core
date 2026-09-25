@@ -10,6 +10,7 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from './InMemoryFeatureStore';
+import { toError } from './storeErrors';
 import SupervisedOperation from './SupervisedOperation';
 
 // How often to check the persistence store for recovery while it is unavailable.
@@ -43,21 +44,8 @@ function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   );
 }
 
-function toError(reason: unknown): Error {
-  if (reason instanceof Error) {
-    return reason;
-  }
-  try {
-    return new Error(String(reason));
-  } catch {
-    // The reason cannot be converted to a string, for example a null-prototype object
-    // or a value whose toString() throws. Fall back to a fixed message rather than
-    // let this conversion itself become a second, unhandled failure.
-    return new Error(
-      'Persistent store operation failed with a reason that could not be described.',
-    );
-  }
-}
+const STORE_FAILURE_FALLBACK_MESSAGE =
+  'Persistent store operation failed with a reason that could not be described.';
 
 // Wraps a callback so only its first call has an effect and NOOP the later calls.
 function once(fn: (err?: Error) => void): (err?: Error) => void {
@@ -87,10 +75,12 @@ function invokeStoreCall(
   try {
     const result = call();
     if (isPromiseLike(result)) {
-      result.then(undefined, (reason: unknown) => onFailure(toError(reason), 'rejection'));
+      result.then(undefined, (reason: unknown) =>
+        onFailure(toError(reason, STORE_FAILURE_FALLBACK_MESSAGE), 'rejection'),
+      );
     }
   } catch (reason) {
-    onFailure(toError(reason), 'sync-throw');
+    onFailure(toError(reason, STORE_FAILURE_FALLBACK_MESSAGE), 'sync-throw');
   }
 }
 
@@ -607,9 +597,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return;
     }
     if (this._activeStore !== this._memoryStore) {
-      // No basis has been received, so there is no full data set to write. The next
-      // basis fully populates the persistence store. _markAvailable() below already
-      // invalidates this attempt.
+      // No basis has been received, so there is no full data set to write: memory
+      // holds only the deltas so far, and writing them through init() would replace
+      // the persistence store's full data with a partial set. A mirrored delta that
+      // failed before the basis stays absent from persistence until the first
+      // basis, which fully populates the store and which FDv2 sends before any
+      // delta. _markAvailable() below already invalidates this attempt.
       this._markAvailable();
       return;
     }

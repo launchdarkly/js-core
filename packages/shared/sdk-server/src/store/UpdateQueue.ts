@@ -1,3 +1,5 @@
+import { toError } from './storeErrors';
+
 type CallbackFunction = (err?: Error) => void;
 // The update receives its completion callback and an isAbandoned check. When the
 // queue times the update out, or the queue closes, isAbandoned starts returning
@@ -11,18 +13,8 @@ type UpdateFunction = (cb: CallbackFunction, isAbandoned: () => boolean) => void
 // later update forever.
 const DEFAULT_HANG_TIMEOUT_MS = 30000;
 
-function toError(reason: unknown): Error {
-  if (reason instanceof Error) {
-    return reason;
-  }
-  try {
-    return new Error(String(reason));
-  } catch {
-    return new Error(
-      'The queued store operation failed with a reason that could not be described.',
-    );
-  }
-}
+const QUEUE_FAILURE_FALLBACK_MESSAGE =
+  'The queued store operation failed with a reason that could not be described.';
 
 export default class UpdateQueue {
   private _queue: [UpdateFunction, CallbackFunction][] = [];
@@ -116,7 +108,7 @@ export default class UpdateQueue {
     try {
       fn(complete, () => abandoned);
     } catch (reason) {
-      complete(toError(reason));
+      complete(toError(reason, QUEUE_FAILURE_FALLBACK_MESSAGE));
     }
   }
 }
