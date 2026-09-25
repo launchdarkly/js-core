@@ -76,6 +76,7 @@ function makeSourceFactoryContext(overrides?: Partial<SourceFactoryContext>): So
     baseHeaders: { authorization: 'sdk-key' },
     queryParams: [],
     plainContextString: '{"kind":"user","key":"test-user"}',
+    usePost: false,
     logger: {
       debug: jest.fn(),
       info: jest.fn(),
@@ -152,6 +153,39 @@ it('creates a StreamingInitializer for a streaming initializer entry', () => {
   expect(mockCreateStreamingInitializer).toHaveBeenCalledWith(
     mockCreateStreamingBase.mock.results[0].value,
   );
+});
+
+it('uses the post path and passes method/body overrides when usePost is true', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext({ usePost: true });
+  const entry: InitializerEntry = { type: 'streaming' };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  factory!.create(() => undefined);
+
+  expect(ctx.streaming.paths.pathPost).toHaveBeenCalledWith(ctx.encoding, ctx.plainContextString);
+  expect(ctx.streaming.paths.pathGet).not.toHaveBeenCalled();
+  expect(mockCreateStreamingBase).toHaveBeenCalledWith(
+    expect.objectContaining({
+      method: 'POST',
+      body: ctx.plainContextString,
+    }),
+  );
+});
+
+it('uses the get path and no method/body override when usePost is false', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext({ usePost: false });
+  const entry: InitializerEntry = { type: 'streaming' };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  factory!.create(() => undefined);
+
+  expect(ctx.streaming.paths.pathGet).toHaveBeenCalledWith(ctx.encoding, ctx.plainContextString);
+  expect(ctx.streaming.paths.pathPost).not.toHaveBeenCalled();
+  const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];
+  expect(streamingBaseArgs.method).toBeUndefined();
+  expect(streamingBaseArgs.body).toBeUndefined();
 });
 
 it('creates a CacheInitializer for a cache initializer entry', () => {
@@ -269,6 +303,7 @@ it('creates a new requestor when polling entry has endpoint overrides', () => {
     ctx.encoding,
     ctx.baseHeaders,
     ctx.queryParams,
+    false,
   );
 
   // Should use the new requestor, not the context one
