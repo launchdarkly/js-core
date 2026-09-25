@@ -275,7 +275,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     let initialized = false;
     try {
       const token = this._initializedToken();
-      const data = await this._state.get(this._tableName, token);
+      // A consistent read. An eventually consistent read could return a stale,
+      // pre-delete token while a reinitialization is still writing data.
+      const data = await this._state.get(this._tableName, token, true);
       initialized = !!(data?.key?.S === token.key.S);
     } catch (err) {
       this._logger?.error(`Error reading inited: ${err}`);
