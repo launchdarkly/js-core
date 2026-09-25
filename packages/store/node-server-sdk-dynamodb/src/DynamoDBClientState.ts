@@ -111,21 +111,34 @@ export default class DynamoDBClientState {
       batches.push(requests.slice(i, i + WRITE_BATCH_SIZE));
     }
 
-    // Execute all the batches and wait for them to complete.
+    // Execute all the batches and wait for every one to settle. Failing on the
+    // first rejection alone would let sibling requests keep running after the
+    // caller has already handled the error, and such a stray write could land
+    // after a newer queued operation.
     const results = await Promise.all(
       batches.map((batch) =>
-        this._client.send(
-          new BatchWriteItemCommand({
-            RequestItems: { [table]: batch },
-          }),
-        ),
+        this._client
+          .send(
+            new BatchWriteItemCommand({
+              RequestItems: { [table]: batch },
+            }),
+          )
+          .then(
+            (output) => ({ output, reason: undefined }),
+            (reason: unknown) => ({ output: undefined, reason }),
+          ),
       ),
     );
+
+    const failed = results.find((result) => result.output === undefined);
+    if (failed) {
+      throw failed.reason;
+    }
 
     // Collect the items that DynamoDB did not process.
     const unprocessed: WriteRequest[] = [];
     results.forEach((result) => {
-      const items = result.UnprocessedItems?.[table];
+      const items = result.output?.UnprocessedItems?.[table];
       if (items) {
         unprocessed.push(...items);
       }
@@ -136,11 +149,13 @@ export default class DynamoDBClientState {
   async get(
     table: string,
     key: Record<string, AttributeValue>,
+    consistentRead: boolean = false,
   ): Promise<Record<string, AttributeValue> | undefined> {
     const res = await this._client.send(
       new GetItemCommand({
         TableName: table,
         Key: key,
+        ConsistentRead: consistentRead,
       }),
     );
     return res.Item;

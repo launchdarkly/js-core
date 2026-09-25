@@ -116,3 +116,35 @@ it('waits with exponential backoff before each retry', async () => {
 
   await assertion;
 });
+
+it('waits for every batch to settle before throwing a failed batch error', async () => {
+  const requests = Array.from({ length: 26 }, (_, i) => makeWriteRequest(`flag${i}`));
+  let completeSecondBatch: (() => void) | undefined;
+  const send = jest
+    .fn()
+    .mockRejectedValueOnce(new Error('batch one failed'))
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          completeSecondBatch = () => resolve({});
+        }),
+    );
+  const state = makeState(send);
+
+  let settledError: Error | undefined;
+  const pendingWrite = state.batchWrite(TABLE_NAME, requests).catch((err) => {
+    settledError = err;
+  });
+
+  // The first batch has rejected, but the call must not settle while the second
+  // batch is still in flight.
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  expect(settledError).toBeUndefined();
+
+  completeSecondBatch?.();
+  await pendingWrite;
+  expect(settledError).toEqual(new Error('batch one failed'));
+  expect(send).toHaveBeenCalledTimes(2);
+});
