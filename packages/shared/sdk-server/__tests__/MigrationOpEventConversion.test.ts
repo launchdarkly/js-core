@@ -84,3 +84,27 @@ it('uses context if both context and contextKeys are provided', () => {
   expect(outEvent?.context?.kind).toEqual('user');
   expect(outEvent?.contextKeys).toBeUndefined();
 });
+
+it('keeps the override affected indicator on the evaluation reason', () => {
+  const outEvent = migrationOpEventToInputEvent({
+    ...baseEvent,
+    context: { key: 'user-key' },
+    evaluation: {
+      ...baseEvent.evaluation,
+      reason: { kind: 'FALLTHROUGH', overrideAffected: true },
+    },
+  });
+  expect(outEvent?.evaluation.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
+});
+
+it('drops an override affected indicator that is not a boolean', () => {
+  const outEvent = migrationOpEventToInputEvent({
+    ...baseEvent,
+    context: { key: 'user-key' },
+    evaluation: {
+      ...baseEvent.evaluation,
+      reason: { kind: 'FALLTHROUGH', overrideAffected: 'yes' as unknown as boolean },
+    },
+  });
+  expect(outEvent?.evaluation.reason).toEqual({ kind: 'FALLTHROUGH' });
+});

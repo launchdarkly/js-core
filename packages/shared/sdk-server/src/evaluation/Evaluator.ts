@@ -7,6 +7,7 @@ import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { Clause } from './data/Clause';
 import { Flag } from './data/Flag';
 import { FlagRule } from './data/FlagRule';
+import { isOverrideEntry } from './data/overrideMarker';
 import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
@@ -70,6 +71,22 @@ interface EvalState {
   bigSegmentsStatus?: BigSegmentStoreStatusString;
 
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
+
+  /**
+   * True when the evaluation of the current flag has read a definition that carries the override
+   * marker. The value belongs to the flag whose evaluation is in progress. It starts from that
+   * flag's own marker. A segment read sets it. A prerequisite evaluation starts its own value and
+   * merges it back into the parent's value when it completes, so the marking propagates upward
+   * only.
+   */
+  overrideAffected: boolean;
+}
+
+/**
+ * Returns a copy of the reason with the override indicator set.
+ */
+function markOverrideAffected(reason: LDEvaluationReason): LDEvaluationReason {
+  return { ...reason, overrideAffected: true };
 }
 
 interface Match {
@@ -124,7 +141,9 @@ export default class Evaluator {
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
   ) {
-    const state: EvalState = {};
+    // Reading the flag's own definition is the first read of the evaluation, so the marking
+    // starts from the flag's marker.
+    const state: EvalState = { overrideAffected: isOverrideEntry(flag) };
     this._evaluateInternal(
       flag,
       context,
@@ -136,6 +155,12 @@ export default class Evaluator {
             ...res.detail.reason,
             bigSegmentsStatus: state.bigSegmentsStatus,
           };
+        }
+        // Error results are marked too. A malformed override definition yields an error reason,
+        // and an override still affected that result.
+        if (state.overrideAffected) {
+          res.detail.reason = markOverrideAffected(res.detail.reason);
+          res.overrideAffected = true;
         }
         if (state.prerequisites) {
           res.prerequisites = state.prerequisites;
@@ -257,12 +282,23 @@ export default class Evaluator {
             return;
           }
 
+          // The prerequisite is an evaluation in its own right. Its marker starts from its own
+          // definition and merges into this flag's marker when it completes. Its record reflects
+          // only the definitions that its own evaluation read.
+          const parentOverrideAffected = state.overrideAffected;
+          state.overrideAffected = isOverrideEntry(prereqFlag);
           this._evaluateInternal(
             prereqFlag,
             context,
             state,
             updatedVisitedFlags,
             (res) => {
+              const prereqOverrideAffected = state.overrideAffected;
+              state.overrideAffected = parentOverrideAffected || prereqOverrideAffected;
+              if (prereqOverrideAffected) {
+                res.detail.reason = markOverrideAffected(res.detail.reason);
+                res.overrideAffected = true;
+              }
               state.events ??= [];
               if (topLevel) {
                 state.prerequisites ??= [];
@@ -340,6 +376,12 @@ export default class Evaluator {
         (value, _index, iterCb) => {
           this._queries.getSegment(value, (segment) => {
             if (segment) {
+              // The segment definition is read at this point, so an override segment marks the
+              // evaluation here. A match is not required: a negated clause turns a non-match into
+              // a match, so the definition shapes the result either way.
+              if (isOverrideEntry(segment)) {
+                state.overrideAffected = true;
+              }
               if (segmentsVisited.includes(segment.key)) {
                 errorResult = EvalResult.forError(
                   ErrorKinds.MalformedFlag,
