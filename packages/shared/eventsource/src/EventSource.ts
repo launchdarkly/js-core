@@ -45,6 +45,12 @@ export const OPEN = 1;
 /** Ready state: `close()` has closed the connection; it will not reconnect. */
 export const CLOSED = 2;
 
+// A server-directed retry: value larger than this is treated as this value; anything
+// larger would be indistinguishable from the connection never resuming. It also keeps
+// the reconnect delay far below the runtime timer limit, which some runtimes replace
+// with a near-zero delay.
+const MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS = 60 * 60 * 1000; // 1 hour
+
 /**
  * Wrap a callback to ensure it can only be called once.
  */
@@ -110,8 +116,8 @@ export interface EventSource {
 
   /**
    * Mirrors the most recent server `retry:` field, in milliseconds; starts at 1000 before any
-   * `retry:` field has arrived. The retry strategy owns the actual reconnect timing; writing to
-   * this slot has no effect on it.
+   * `retry:` field has arrived. A server-directed value is capped at one hour. The retry
+   * strategy owns the actual reconnect timing; writing to this slot has no effect on it.
    */
   reconnectInterval: number;
 
@@ -459,7 +465,10 @@ export function createEventSource(
         // The value must be all ASCII digits; any other form is ignored. `parseInt` alone
         // would accept forms such as `5.5`, `1e3`, or `+5`.
         if (/^\d+$/.test(value)) {
-          const retry = parseInt(value, 10);
+          let retry = parseInt(value, 10);
+          if (retry > MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS) {
+            retry = MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS;
+          }
           self.reconnectInterval = retry;
           retryDelayStrategy.setBaseDelay(retry);
         }
