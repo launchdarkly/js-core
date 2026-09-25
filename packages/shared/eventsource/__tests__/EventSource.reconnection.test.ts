@@ -1,0 +1,352 @@
+import {
+  AsyncQueue,
+  sleepAsync,
+  TestHttpHandlers,
+  TestHttpRequest,
+  withCloseable,
+} from 'launchdarkly-js-test-helpers';
+
+import { createEventSource, EventSource } from '../src/EventSource';
+import { EventSourceInitDict } from '../src/types';
+import {
+  deliberatelyUnusedPort,
+  expectInRange,
+  expectNothingReceived,
+  initiallyDownServerPort,
+  shouldReceiveMessages,
+  startErrorOrEndQueue,
+  startErrorQueue,
+  startMessageQueue,
+  withEventSource,
+  withServer,
+  withServerOnPort,
+  writeEvents,
+} from './helpers';
+
+const briefDelay = 1;
+const delayOpts: Partial<EventSourceInitDict> = { initialRetryDelayMillis: briefDelay };
+
+async function shouldReconnectAndGetMessage(
+  port: number,
+  es: EventSource,
+): Promise<TestHttpRequest> {
+  let request: TestHttpRequest | undefined;
+  await withServerOnPort(port, async (server) => {
+    server.byDefault(writeEvents(['data: got it\n\n']));
+    await shouldReceiveMessages(es, [{ data: 'got it' }]);
+    request = await server.nextRequest();
+  });
+  return request as TestHttpRequest;
+}
+
+async function shouldNotReconnect(port: number, es: EventSource): Promise<void> {
+  await withServerOnPort(port, async (server) => {
+    server.byDefault(writeEvents(['data: got it\n\n']));
+    const messages = startMessageQueue(es);
+    await expectNothingReceived(messages);
+  });
+}
+
+it('reconnects when the server is down', async () => {
+  await withCloseable(
+    createEventSource(`http://localhost:${initiallyDownServerPort}`, delayOpts),
+    async (es) => {
+      const errors = startErrorQueue(es);
+      await errors.take();
+      await shouldReconnectAndGetMessage(initiallyDownServerPort, es);
+    },
+  );
+});
+
+it('reconnects when the server goes down after connecting', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      await server.closeAndWait();
+      await shouldReconnectAndGetMessage(server.port, es);
+    });
+  });
+});
+
+it('parses a message after a reconnect that splits a CRLF pair', async () => {
+  await withServer(async (server) => {
+    // The last byte of the first connection is a carriage return without its line feed. That
+    // arms the parser's skip-next-line-feed flag when the connection drops.
+    server.byDefault(writeEvents(['data: first\r\n\r']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'first' }]);
+      await server.closeAndWait();
+      await withServerOnPort(server.port, async (nextServer) => {
+        // The next connection starts with a line feed. The parser must treat it as this
+        // connection's own empty line and deliver the message intact.
+        nextServer.byDefault(writeEvents(['\ndata: second\n\n']));
+        await shouldReceiveMessages(es, [{ data: 'second' }]);
+      });
+    });
+  });
+});
+
+it('reconnects when the server responds with a 500', async () => {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(500));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      const errors = startErrorQueue(es);
+      await errors.take();
+      await server.closeAndWait();
+      await shouldReconnectAndGetMessage(server.port, es);
+    });
+  });
+});
+
+it('stops reconnecting when the event source is closed', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      const dropped = startErrorOrEndQueue(es);
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      await server.closeAndWait();
+      await dropped.take();
+
+      // The remote connection dropped. We close es, so we do not want es to reconnect.
+      es.close();
+
+      await shouldNotReconnect(server.port, es);
+    });
+  });
+});
+
+it('does not reconnect when the server responds with a non-200, non-500 status', async () => {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(204));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      const errors = startErrorQueue(es);
+      await errors.take();
+      await server.closeAndWait();
+      await shouldNotReconnect(server.port, es);
+    });
+  });
+});
+
+it('reconnects for a non-200, non-500 status if errorFilter says so', async () => {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(204));
+    const opts = { ...delayOpts, errorFilter: (err: { status?: number }) => err.status === 204 };
+    await withEventSource(server.url, opts, async (es) => {
+      const errors = startErrorQueue(es);
+      await errors.take();
+      await server.closeAndWait();
+      await shouldReconnectAndGetMessage(server.port, es);
+    });
+  });
+});
+
+it('sends the Last-Event-ID header when the server previously sent an event id', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 10\ndata: Hello\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      const messages = startMessageQueue(es);
+      await messages.take();
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toEqual('10');
+    });
+  });
+});
+
+it('replaces an initial Last-Event-ID header with the id from the stream on reconnect', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 10\ndata: Hello\n\n']));
+    const opts = { ...delayOpts, headers: { 'Last-Event-ID': '5' } };
+    await withEventSource(server.url, opts, async (es) => {
+      const messages = startMessageQueue(es);
+      await messages.take();
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toEqual('10');
+    });
+  });
+});
+
+it('replaces an initial Last-Event-ID header given with a lowercase key', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 10\ndata: Hello\n\n']));
+    const opts = { ...delayOpts, headers: { 'last-event-id': '5' } };
+    await withEventSource(server.url, opts, async (es) => {
+      const messages = startMessageQueue(es);
+      await messages.take();
+      // The lowercase key still seeds the initial resume point.
+      const firstReq = await server.nextRequest();
+      expect(firstReq.headers['last-event-id']).toEqual('5');
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      // One value, not a joined pair such as '5, 10'.
+      expect(req.headers['last-event-id']).toEqual('10');
+    });
+  });
+});
+
+it('sends no Last-Event-ID header after the server resets the id with an empty id field', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id:\ndata: Hello\n\n']));
+    const opts = { ...delayOpts, headers: { 'Last-Event-ID': '5' } };
+    await withEventSource(server.url, opts, async (es) => {
+      const messages = startMessageQueue(es);
+      await messages.take();
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      // An empty id field resets the id to the empty string, and the caller's seed must not
+      // come back in its place.
+      expect(req.headers['last-event-id']).toBeUndefined();
+    });
+  });
+});
+
+it('commits an id from a block that has no data, for use on reconnect', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 1\ndata: Hello\n\n', 'id: 2\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'Hello' }]);
+      // An id-only block dispatches nothing this test could wait for; the pause lets the parser
+      // consume it before the connection drops.
+      await sleepAsync(100);
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toEqual('2');
+    });
+  });
+});
+
+it('does not send the Last-Event-ID header when the server never sent an event id', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    await withEventSource(server.url, delayOpts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      await server.closeAndWait();
+      const req = await shouldReconnectAndGetMessage(server.port, es);
+      expect(req.headers['last-event-id']).toBeUndefined();
+    });
+  });
+});
+
+async function verifyDelays(
+  options: Partial<EventSourceInitDict>,
+  count: number,
+  assertion: (delays: number[]) => void,
+): Promise<void> {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(500));
+    await withEventSource(server.url, options, async (es) => {
+      const delays = new AsyncQueue<number>();
+      es.onretrying = (event) => delays.add(event.delayMillis);
+      const allDelays: number[] = [];
+      while (allDelays.length < count) {
+        // eslint-disable-next-line no-await-in-loop
+        allDelays.push(await delays.take());
+      }
+      assertion(allDelays);
+    });
+  });
+}
+
+it('uses a constant retry delay by default', async () => {
+  const delay = 5;
+  await verifyDelays({ initialRetryDelayMillis: delay }, 3, (delays) => {
+    expect(delays).toEqual([delay, delay, delay]);
+  });
+});
+
+it('can use backoff with a maximum', async () => {
+  const delay = 5;
+  const max = 31;
+  await verifyDelays({ initialRetryDelayMillis: delay, maxBackoffMillis: max }, 4, (delays) => {
+    expect(delays).toEqual([delay, delay * 2, delay * 4, max]);
+  });
+});
+
+it('can use backoff with jitter', async () => {
+  const delay = 5;
+  const max = 31;
+  await verifyDelays(
+    { initialRetryDelayMillis: delay, maxBackoffMillis: max, jitterRatio: 0.5 },
+    3,
+    (delays) => {
+      expect(delays.length).toEqual(3);
+      expectInRange(delays[0], delay / 2, delay);
+      expectInRange(delays[1], delay, delay * 2);
+      expectInRange(delays[2], delay * 2, delay * 4);
+    },
+  );
+});
+
+it('uses a server-sent retry: field as the next retry delay', async () => {
+  const configuredDelay = 5;
+  const serverRetryDelay = 40;
+  await withServer(async (server) => {
+    // The `data:` line, in the same event block as `retry:`, gives this test something to wait
+    // for: once the message it produces arrives, the retry: line before it has already been
+    // parsed too, so closing the server after that wait cannot race the parser.
+    server.byDefault(writeEvents([`retry: ${serverRetryDelay}\ndata: hello\n\n`]));
+    await withEventSource(server.url, { initialRetryDelayMillis: configuredDelay }, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      const delays = new AsyncQueue<number>();
+      es.onretrying = (event) => delays.add(event.delayMillis);
+      await server.closeAndWait();
+      expect(await delays.take()).toEqual(serverRetryDelay);
+      expect(es.reconnectInterval).toEqual(serverRetryDelay);
+    });
+  });
+});
+
+it('ignores a retry: field whose value is not all ASCII digits', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['retry: 5.5\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      expect(es.reconnectInterval).toEqual(1000);
+    });
+  });
+});
+
+it('caps a server-sent retry: value at one hour', async () => {
+  await withServer(async (server) => {
+    // Two hours. A value this large must not reach the reconnect timer as-is: some
+    // runtimes replace an out-of-range timer delay with a near-zero one, which would
+    // turn the server's pause into a fast reconnect loop.
+    server.byDefault(writeEvents(['retry: 7200000\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      expect(es.reconnectInterval).toEqual(3600000);
+      const delays = new AsyncQueue<number>();
+      es.onretrying = (event) => delays.add(event.delayMillis);
+      await server.closeAndWait();
+      // The capped value, not the server's, drives the scheduled reconnect.
+      expect(await delays.take()).toEqual(3600000);
+    });
+  });
+});
+
+it('does not arm a reconnect timer when a retrying listener calls close', async () => {
+  jest.useFakeTimers();
+  try {
+    const es = createEventSource(`http://localhost:${deliberatelyUnusedPort}`, {
+      fetch: async () => {
+        throw new Error('connection refused');
+      },
+      initialRetryDelayMillis: 30000,
+    });
+    es.onerror = () => {};
+    const retried = new Promise<void>((resolve) => {
+      es.onretrying = () => {
+        es.close();
+        resolve();
+      };
+    });
+    await retried;
+    // The close inside the listener must stop the timer from arming at all; a timer that stays
+    // armed would hold the event loop open for the full delay.
+    expect(jest.getTimerCount()).toEqual(0);
+  } finally {
+    jest.useRealTimers();
+  }
+});
