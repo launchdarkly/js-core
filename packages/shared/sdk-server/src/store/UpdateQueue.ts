@@ -1,5 +1,9 @@
 type CallbackFunction = (err?: Error) => void;
-type UpdateFunction = (cb: CallbackFunction) => void;
+// The update receives its completion callback and an isAbandoned check. When the
+// queue times the update out, isAbandoned starts returning true. The update's late
+// completion handler must consult it before applying side effects: the queue has
+// already moved on, so a newer operation's results may otherwise be overwritten.
+type UpdateFunction = (cb: CallbackFunction, isAbandoned: () => boolean) => void;
 
 // Deadline for a queued update to answer. Past this, the queue abandons it and
 // runs the next update, so a store call that never calls back cannot block every
@@ -27,6 +31,7 @@ export default class UpdateQueue {
       // through the deadline timer. A late callback from an abandoned update is
       // ignored, so it cannot shift an update it does not own.
       let settled = false;
+      let abandoned = false;
       let timer: ReturnType<typeof setTimeout> | undefined;
       const complete = (err?: Error) => {
         if (settled) {
@@ -48,10 +53,11 @@ export default class UpdateQueue {
         cb?.(err);
       };
       timer = setTimeout(() => {
+        abandoned = true;
         complete(new Error('The queued store operation did not complete in time.'));
       }, this._hangTimeoutMs);
 
-      fn(complete);
+      fn(complete, () => abandoned);
     }
   }
 }

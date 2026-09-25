@@ -575,6 +575,45 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
+  it('releases a hung write-back at its deadline for a store without an availability check', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A recovery signal starts a write-back, which hangs.
+      persistence.failUpserts = false;
+      persistence.deferInit = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(persistence.pendingInitCallbacks.length).toEqual(1);
+
+      // No further writes arrive. The deadline releases the hung write-back, the
+      // backoff passes, and the retry succeeds.
+      persistence.deferInit = false;
+      const initCallsBefore = persistence.initCalls.length;
+      await jest.advanceTimersByTimeAsync(30000);
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+
+      // The abandoned write-back's late settle is ignored.
+      persistence.pendingInitCallbacks[0]();
+      expect(logger.info).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rate-limits the next write-back after a basis write recovers the store', async () => {
     jest.useFakeTimers();
     try {
