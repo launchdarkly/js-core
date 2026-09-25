@@ -5,6 +5,7 @@ import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { VersionedData } from '../api/interfaces';
 import { Flag } from '../evaluation/data/Flag';
+import { hasOverrideMarker, withoutOverrideMarker } from '../evaluation/data/overrideMarker';
 import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
@@ -103,9 +104,13 @@ export function replacer(this: any, key: string, value: any): any {
   if (value === null || value === undefined) {
     return value;
   }
-  if (value.generated_includedSet || value.generated_excludedSet) {
+  // The override marker is not part of the data model, so it never appears in the output. The
+  // copy without it is the input to the rest, which copies again only when it has sets to
+  // turn back into arrays.
+  const input = hasOverrideMarker(value) ? withoutOverrideMarker(value) : value;
+  if (input.generated_includedSet || input.generated_excludedSet) {
     // A segment with large target lists. The copy gets the lists back as arrays.
-    const copy = { ...value };
+    const copy = { ...input };
     if (copy.generated_includedSet) {
       copy.included = [...copy.generated_includedSet];
       delete copy.generated_includedSet;
@@ -116,13 +121,13 @@ export function replacer(this: any, key: string, value: any): any {
     }
     return copy;
   }
-  if (value.generated_valuesSet) {
+  if (input.generated_valuesSet) {
     // A segment target with a large value list. The copy gets the list back as an array.
-    const copy = { ...value, values: [...value.generated_valuesSet] };
+    const copy = { ...input, values: [...input.generated_valuesSet] };
     delete copy.generated_valuesSet;
     return copy;
   }
-  return value;
+  return input;
 }
 
 export interface DeleteData extends Omit<VersionedData, 'key'> {
