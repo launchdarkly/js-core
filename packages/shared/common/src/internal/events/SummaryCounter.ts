@@ -11,6 +11,7 @@ export default class SummaryCounter {
     defValue: any,
     public version?: number,
     public variation?: number,
+    public overrideAffected?: boolean,
   ) {
     this.default = defValue;
   }
