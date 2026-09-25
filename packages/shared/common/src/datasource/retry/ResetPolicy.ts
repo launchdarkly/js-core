@@ -1,3 +1,11 @@
+function defaultClock(): () => number {
+  const perf = (globalThis as any)?.performance;
+  if (perf && typeof perf.now === 'function') {
+    return () => perf.now();
+  }
+  return Date.now;
+}
+
 /**
  * Decides when a component has operated well enough, for long enough, that its
  * retry state should reset.
@@ -5,11 +13,8 @@
 export interface ResetPolicy {
   /**
    * Records that the component is operating normally.
-   *
-   * @param nowMs The current time, from the clock of the RetryState that owns
-   * this policy.
    */
-  noteHealthy(nowMs: number): void;
+  noteHealthy(): void;
 
   /**
    * Records a failure, which ends any healthy stretch in progress.
@@ -18,11 +23,8 @@ export interface ResetPolicy {
 
   /**
    * Reports whether the reset condition is met.
-   *
-   * @param nowMs The current time, from the clock of the RetryState that owns
-   * this policy.
    */
-  isSatisfied(nowMs: number): boolean;
+  isSatisfied(): boolean;
 }
 
 /**
@@ -32,12 +34,24 @@ export interface ResetPolicy {
  */
 export class AfterHealthyFor implements ResetPolicy {
   private _healthySinceMs?: number;
+  private readonly _clock: () => number;
 
-  constructor(private readonly _healthyForMs: number) {}
+  /**
+   * @param _healthyForMs How long the component must operate without failing,
+   * in milliseconds.
+   * @param clock The time source used to measure the healthy stretch; defaults
+   * to a monotonic clock. Primarily for testing.
+   */
+  constructor(
+    private readonly _healthyForMs: number,
+    clock?: () => number,
+  ) {
+    this._clock = clock ?? defaultClock();
+  }
 
-  noteHealthy(nowMs: number): void {
+  noteHealthy(): void {
     if (this._healthySinceMs === undefined) {
-      this._healthySinceMs = nowMs;
+      this._healthySinceMs = this._clock();
     }
   }
 
@@ -45,8 +59,10 @@ export class AfterHealthyFor implements ResetPolicy {
     this._healthySinceMs = undefined;
   }
 
-  isSatisfied(nowMs: number): boolean {
-    return this._healthySinceMs !== undefined && nowMs - this._healthySinceMs >= this._healthyForMs;
+  isSatisfied(): boolean {
+    return (
+      this._healthySinceMs !== undefined && this._clock() - this._healthySinceMs >= this._healthyForMs
+    );
   }
 }
 
@@ -58,7 +74,7 @@ export class AfterConsecutiveSuccesses implements ResetPolicy {
 
   constructor(private readonly _count: number) {}
 
-  noteHealthy(_nowMs: number): void {
+  noteHealthy(): void {
     this._successes += 1;
   }
 
@@ -66,7 +82,7 @@ export class AfterConsecutiveSuccesses implements ResetPolicy {
     this._successes = 0;
   }
 
-  isSatisfied(_nowMs: number): boolean {
+  isSatisfied(): boolean {
     return this._successes >= this._count;
   }
 }

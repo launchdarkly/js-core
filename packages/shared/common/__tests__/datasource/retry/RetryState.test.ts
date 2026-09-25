@@ -27,9 +27,8 @@ function streamingState(overrides: Partial<RetryStateConfig> = {}): RetryState {
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 5 * MINUTE,
     extendedCeilingMs: HOUR,
-    resetPolicy: new AfterHealthyFor(MINUTE),
+    resetPolicy: new AfterHealthyFor(MINUTE, clock),
     operatingCadenceMs: 0,
-    clock,
     random: noJitter,
     ...overrides,
   });
@@ -43,7 +42,6 @@ function pollingState(intervalMs: number, overrides: Partial<RetryStateConfig> =
     extendedCeilingMs: Math.max(HOUR, intervalMs),
     resetPolicy: new AfterConsecutiveSuccesses(2),
     operatingCadenceMs: intervalMs,
-    clock,
     random: noJitter,
     ...overrides,
   });

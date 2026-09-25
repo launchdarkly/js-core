@@ -21,14 +21,6 @@ const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
 // the delay computation. Any real ceiling is reached long before this.
 const MAX_BACKOFF_EXPONENT = 30;
 
-function defaultClock(): () => number {
-  const perf = (globalThis as any)?.performance;
-  if (perf && typeof perf.now === 'function') {
-    return () => perf.now();
-  }
-  return Date.now;
-}
-
 function positiveFiniteOrDefault(
   value: number,
   defaultValueMs: number,
@@ -67,13 +59,6 @@ export interface RetryStateConfig {
    */
   operatingCadenceMs?: number;
 
-  /**
-   * The time source used for all time-sensitive decisions. Defaults to a
-   * monotonic clock. All state in an instance lives on this clock's timeline;
-   * timestamps from other sources must not be mixed in.
-   */
-  clock?: () => number;
-
   /** The random source used for jitter. */
   random?: () => number;
 }
@@ -111,7 +96,6 @@ export class RetryState {
   private readonly _extendedCeilingMs: number;
   private readonly _operatingCadenceMs: number;
   private readonly _resetPolicy: ResetPolicy;
-  private readonly _clock: () => number;
   private readonly _random: () => number;
 
   constructor(config: RetryStateConfig) {
@@ -121,7 +105,6 @@ export class RetryState {
     this._extendedCeilingMs = Math.max(config.extendedCeilingMs, config.extendedInitialDelayMs);
     this._operatingCadenceMs = config.operatingCadenceMs ?? 0;
     this._resetPolicy = config.resetPolicy;
-    this._clock = config.clock ?? defaultClock();
     this._random = config.random ?? Math.random;
     this._minDelayMs = this._normalInitialDelayMs;
     this._maxDelayMs = this._normalCeilingMs;
@@ -144,10 +127,9 @@ export class RetryState {
    * always reflects the failure just recorded.
    */
   recordFailure(kind: FailureKind): void {
-    const nowMs = this._clock();
     // A reset that fell due during healthy operation is applied before the
     // new failure is counted, so the failure computes from a fresh sequence.
-    this._resetIfDue(nowMs);
+    this._resetIfDue();
     this._resetPolicy.noteFailure();
 
     if (kind === 'unexpected' && !this._extended) {
@@ -174,9 +156,8 @@ export class RetryState {
    * enough to satisfy the reset policy.
    */
   recordSuccess(): void {
-    const nowMs = this._clock();
-    this._resetPolicy.noteHealthy(nowMs);
-    this._resetIfDue(nowMs);
+    this._resetPolicy.noteHealthy();
+    this._resetIfDue();
     // A backoff wait applies to a retry, not to every operation, so after a
     // success the next wait is the ordinary interval even while the retry
     // state is raised.
@@ -200,8 +181,8 @@ export class RetryState {
     this._attempts = 0;
   }
 
-  private _resetIfDue(nowMs: number): void {
-    if (!this._resetPolicy.isSatisfied(nowMs)) {
+  private _resetIfDue(): void {
+    if (!this._resetPolicy.isSatisfied()) {
       return;
     }
     this._attempts = 0;
