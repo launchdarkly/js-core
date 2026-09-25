@@ -1,9 +1,6 @@
-streaming/requests/method and headers/REPORT/http
-streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
-streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
-streaming/requests/context properties/single kind minimal/REPORT
-streaming/requests/context properties/single kind with all attributes/REPORT
-streaming/requests/context properties/multi-kind/REPORT
+# The tags tests do not set useReport or usePost, so the SDK uses the native browser
+# EventSource for streaming. The native EventSource cannot send request headers, so the
+# tags header never reaches the stream endpoint.
 tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
 tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}

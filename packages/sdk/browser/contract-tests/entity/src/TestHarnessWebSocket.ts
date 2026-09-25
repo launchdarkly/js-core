@@ -47,6 +47,7 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
+            'client-use-post',
           ];
 
           break;
