@@ -15,6 +15,7 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import TtlCache from '../cache/TtlCache';
+import { monotonicNow } from './monotonicTime';
 import { persistentStoreKinds } from './persistentStoreKinds';
 import sortDataSet from './sortDataSet';
 import UpdateQueue from './UpdateQueue';
@@ -96,8 +97,9 @@ const ERROR_LOG_INTERVAL_MS = 10000;
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private _isInitialized = false;
 
-  // Epoch ms of the last store-error log at error level.
-  private _lastErrorLogMs = 0;
+  // Monotonic ms of the last store-error log at error level. Starts at -Infinity
+  // so the first error of a process always logs at error level.
+  private _lastErrorLogMs = -Infinity;
 
   /**
    * Cache for storing individual items.
@@ -328,7 +330,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    */
   private _logStoreError(err: Error): void {
     const message = `Persistent store returned error: ${err.message}`;
-    const now = Date.now();
+    const now = monotonicNow();
     if (now - this._lastErrorLogMs >= ERROR_LOG_INTERVAL_MS) {
       this._lastErrorLogMs = now;
       this._logger?.error(message);

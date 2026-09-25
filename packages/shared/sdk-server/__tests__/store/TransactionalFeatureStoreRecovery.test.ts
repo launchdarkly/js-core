@@ -628,6 +628,45 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
+  it('recovers on schedule even when the wall clock steps backward', async () => {
+    jest.useFakeTimers();
+    try {
+      persistence.failUpserts = true;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagB: { version: 1 } } },
+        undefined,
+        's2',
+      );
+
+      // A recovery signal starts a write-back that fails, arming the backoff.
+      persistence.failUpserts = false;
+      persistence.failInits = true;
+      const initCallsBefore = persistence.initCalls.length;
+      await recoveryFacade.applyChanges(
+        false,
+        { features: { flagC: { version: 1 } } },
+        undefined,
+        's3',
+      );
+      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+
+      // The wall clock steps back an hour. Deadlines and embargoes are
+      // monotonic, so the retry still runs at the backoff deadline.
+      const dateNow = jest.spyOn(Date, 'now').mockReturnValue(Date.now() - 3600000);
+      try {
+        persistence.failInits = false;
+        await jest.advanceTimersByTimeAsync(1000);
+        expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+        expect(logger.info).toHaveBeenCalledTimes(1);
+      } finally {
+        dateNow.mockRestore();
+      }
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('arms the backoff exactly once when a failed write-back answers twice', async () => {
     jest.useFakeTimers();
     try {
