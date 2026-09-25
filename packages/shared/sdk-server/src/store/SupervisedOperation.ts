@@ -1,3 +1,5 @@
+import { monotonicNow } from './monotonicTime';
+
 /**
  * Tracks one kind of in-flight asynchronous operation.
  *
@@ -19,7 +21,7 @@ export default class SupervisedOperation {
   begin(): number {
     this._generation += 1;
     this._inFlight = true;
-    this._startedAt = Date.now();
+    this._startedAt = monotonicNow();
     return this._generation;
   }
 
@@ -51,7 +53,7 @@ export default class SupervisedOperation {
    * whether it was released.
    */
   releaseIfHung(timeoutMs: number): boolean {
-    if (Date.now() - this._startedAt < timeoutMs) {
+    if (monotonicNow() - this._startedAt < timeoutMs) {
       return false;
     }
     this.invalidate();
