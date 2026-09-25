@@ -9,6 +9,10 @@ export interface FlagCounter {
   variation?: number;
   version?: number;
   unknown?: boolean;
+  /**
+   * Present, and true, only for a counter that aggregates override-affected evaluations.
+   */
+  overrideAffected?: boolean;
 }
 
 /**

@@ -318,3 +318,38 @@ describe('given an event summarizer', () => {
     expect(secondSummary.endDate).toBe(0);
   });
 });
+
+it('keeps override-affected evaluations in a separate counter that carries the marker', () => {
+  const summarizer = new EventSummarizer();
+  const context = Context.fromLDContext({ key: 'key' });
+  const base = {
+    kind: 'feature',
+    creationDate: 1000,
+    key: 'key1',
+    version: 11,
+    context,
+    variation: 1,
+    value: 100,
+    default: 111,
+  };
+
+  summarizer.summarizeEvent(base as any);
+  summarizer.summarizeEvent({ ...base, overrideAffected: true } as any);
+  summarizer.summarizeEvent({ ...base, overrideAffected: true } as any);
+
+  const data = summarizer.getSummary();
+  const { counters } = data.features.key1;
+  expect(counters).toHaveLength(2);
+
+  const plain = counters.find((counter) => !counter.overrideAffected);
+  const marked = counters.find((counter) => counter.overrideAffected);
+  expect(plain).toEqual({ value: 100, count: 1, variation: 1, version: 11 });
+  expect(plain).not.toHaveProperty('overrideAffected');
+  expect(marked).toEqual({
+    value: 100,
+    count: 2,
+    variation: 1,
+    version: 11,
+    overrideAffected: true,
+  });
+});
