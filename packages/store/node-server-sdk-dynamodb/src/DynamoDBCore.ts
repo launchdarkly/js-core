@@ -56,6 +56,19 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * happened to execute later than the upsert(); we are relying on the fact that normally the
  * process that did the init() will also receive the new data shortly and do its own upsert.
  *
+ * Concurrent init() calls from two processes that share a table and prefix are not atomic
+ * either. One process can delete the initialized token and start a slow batch write while
+ * another process finishes its own write and puts the token back, so initialized() can
+ * report true while the slower write is still mutating data. This is the same trade-off as
+ * above: both processes receive the same data from LaunchDarkly, so the store converges
+ * once the slower init completes.
+ *
+ * The initialized token is read with a strongly consistent read, but flag and segment
+ * reads stay eventually consistent to keep read cost down. A reader in another process
+ * can therefore see the token before it sees the writes the token advertises, and can
+ * briefly read a stale item. The lag is bounded by DynamoDB's replication delay and
+ * heals through cache expiry and later updates from LaunchDarkly.
+ *
  * DynamoDB has a maximum item size of 400KB. Since each feature flag or user segment is
  * stored as a single item, this mechanism will not work for extremely large flags or segments.
  * @internal
@@ -124,14 +137,14 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
   async init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void,
+    callback: (err?: Error) => void,
   ) {
     let items: Record<string, AttributeValue>[];
     try {
       items = await this._readExistingItems(allData);
     } catch (error) {
       this._logger?.error(`Error reading existing items from DynamoDB: ${error}`);
-      callback();
+      callback(error as Error);
       return;
     }
 
@@ -171,13 +184,24 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       });
     });
 
-    // Always write the initialized token when we initialize.
-    ops.push({ PutRequest: { Item: this._initializedToken() } });
-
     try {
+      // Remove the initialized token before any data changes. The batch
+      // write is not atomic, so a partial failure can leave a mix of old
+      // and new items. If the token stayed in place, other readers would
+      // see that mixed data as a complete dataset. A delete for a key
+      // that does not exist is a successful no-op, so this is safe on the
+      // first initialization.
+      await this._state.delete(this._tableName, this._initializedToken());
       await this._state.batchWrite(this._tableName, ops);
+      // Write the initialized token on its own, after the data batch
+      // succeeds. A batch write is not atomic, so writing the token as
+      // part of the batch could leave it durably set while data items
+      // are still unprocessed.
+      await this._state.put({ TableName: this._tableName, Item: this._initializedToken() });
     } catch (error) {
       this._logger?.error(`Error writing to DynamoDB: ${error}`);
+      callback(error as Error);
+      return;
     }
     callback();
   }
@@ -257,7 +281,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     let initialized = false;
     try {
       const token = this._initializedToken();
-      const data = await this._state.get(this._tableName, token);
+      // A consistent read. An eventually consistent read could return a stale,
+      // pre-delete token while a reinitialization is still writing data.
+      const data = await this._state.get(this._tableName, token, true);
       initialized = !!(data?.key?.S === token.key.S);
     } catch (err) {
       this._logger?.error(`Error reading inited: ${err}`);
@@ -265,6 +291,26 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     }
     // Callback outside the try. In case it raised an exception.
     callback(initialized);
+  }
+
+  async isStoreAvailable(callback: (isAvailable: boolean) => void) {
+    let isAvailable = false;
+    try {
+      // A cheap read. The store is available when the request succeeds. The result
+      // value does not matter.
+      await this._state.get(this._tableName, this._initializedToken());
+      isAvailable = true;
+    } catch {
+      isAvailable = false;
+    }
+    // Callback outside the try for the read above, so a failed read is never
+    // mistaken for a callback error. It gets its own try/catch so a throw from the
+    // caller's callback cannot reject this method's returned promise.
+    try {
+      callback(isAvailable);
+    } catch {
+      // The caller's callback is responsible for handling its own errors.
+    }
   }
 
   close(): void {

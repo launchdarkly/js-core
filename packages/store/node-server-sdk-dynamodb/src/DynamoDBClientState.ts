@@ -2,6 +2,7 @@ import {
   AttributeValue,
   BatchWriteItemCommand,
   ConditionalCheckFailedException,
+  DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
   paginateQuery,
@@ -20,6 +21,18 @@ const DEFAULT_PREFIX = '';
 
 // BatchWrite can only accept 25 items at a time, so split up the writes into batches of 25.
 const WRITE_BATCH_SIZE = 25;
+
+// DynamoDB can return unprocessed items when it throttles a batch write.
+// Retry the unprocessed items a limited number of times with exponential
+// backoff. Report a failure if items remain unprocessed after the retries.
+const MAX_UNPROCESSED_RETRIES = 3;
+const UNPROCESSED_RETRY_BASE_DELAY_MS = 100;
+
+function sleep(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });
+}
 
 /**
  * Class for managing the state of a dynamodb client.
@@ -79,26 +92,50 @@ export default class DynamoDBClientState {
       batches.push(params.slice(i, i + WRITE_BATCH_SIZE));
     }
 
-    // Execute all the batches and wait for them to complete.
-    await Promise.all(
-      batches.map((batch) =>
-        this._client.send(
+    // Write the batches strictly in order, and finish retrying a batch's
+    // unprocessed items before advancing. The caller orders the items so that
+    // prerequisites come before their dependents, and a deferred item written
+    // after a later batch would break that order for concurrent readers. This
+    // also means no request is in flight after a failure is reported.
+    for (const batch of batches) {
+      let pending = batch;
+      // The first attempt writes the whole batch. Each retry writes only the
+      // items that DynamoDB returned as unprocessed.
+      for (
+        let attempt = 0;
+        attempt <= MAX_UNPROCESSED_RETRIES && pending.length > 0;
+        attempt += 1
+      ) {
+        if (attempt > 0) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
+        }
+        // eslint-disable-next-line no-await-in-loop
+        const result = await this._client.send(
           new BatchWriteItemCommand({
-            RequestItems: { [table]: batch },
+            RequestItems: { [table]: pending },
           }),
-        ),
-      ),
-    );
+        );
+        pending = result.UnprocessedItems?.[table] ?? [];
+      }
+      if (pending.length > 0) {
+        throw new Error(
+          `DynamoDB batch write returned ${pending.length} unprocessed item(s) after ${MAX_UNPROCESSED_RETRIES} retries`,
+        );
+      }
+    }
   }
 
   async get(
     table: string,
     key: Record<string, AttributeValue>,
+    consistentRead: boolean = false,
   ): Promise<Record<string, AttributeValue> | undefined> {
     const res = await this._client.send(
       new GetItemCommand({
         TableName: table,
         Key: key,
+        ConsistentRead: consistentRead,
       }),
     );
     return res.Item;
@@ -114,6 +151,15 @@ export default class DynamoDBClientState {
         throw err;
       }
     }
+  }
+
+  async delete(table: string, key: Record<string, AttributeValue>): Promise<void> {
+    await this._client.send(
+      new DeleteItemCommand({
+        TableName: table,
+        Key: key,
+      }),
+    );
   }
 
   close() {

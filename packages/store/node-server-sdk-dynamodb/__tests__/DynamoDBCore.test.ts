@@ -170,6 +170,199 @@ describe('given an empty store', () => {
       },
     ]);
   });
+
+  it('does not write the initialized token when the batch write fails', async () => {
+    const mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const errorCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, mockLogger);
+    const errorFacade = new AsyncCoreFacade(errorCore);
+
+    const putSpy = jest.spyOn(state, 'put');
+    const error = new Error('write failed');
+    jest.spyOn(state, 'batchWrite').mockRejectedValueOnce(error);
+
+    await errorFacade.init([]);
+
+    // The token write must not happen when the data batch fails.
+    expect(putSpy).not.toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(`Error writing to DynamoDB: ${error}`);
+
+    errorCore.close();
+  });
+
+  it('writes the initialized token only after the data batch succeeds', async () => {
+    const flags = [
+      { key: 'first', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
+    ];
+
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const successCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const successFacade = new AsyncCoreFacade(successCore);
+
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+
+    await successFacade.init([{ key: dataKind.features, item: flags }]);
+
+    // The data batch must not include the token.
+    const [, ops] = batchWriteSpy.mock.calls[0];
+    expect(
+      ops.some(
+        (op) =>
+          op.PutRequest?.Item?.namespace.S === '$inited' &&
+          op.PutRequest?.Item?.key.S === '$inited',
+      ),
+    ).toBe(false);
+
+    // The token is written on its own, after the data batch succeeds.
+    expect(putSpy).toHaveBeenCalledWith({
+      TableName: DEFAULT_TABLE_NAME,
+      Item: { namespace: { S: '$inited' }, key: { S: '$inited' } },
+    });
+    expect(batchWriteSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      putSpy.mock.invocationCallOrder[0],
+    );
+
+    successCore.close();
+  });
+
+  it('writes the initialized token even when there is no data to batch', async () => {
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const emptyCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const emptyFacade = new AsyncCoreFacade(emptyCore);
+
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+
+    await emptyFacade.init([]);
+
+    expect(batchWriteSpy).toHaveBeenCalledWith(DEFAULT_TABLE_NAME, []);
+    expect(putSpy).toHaveBeenCalledWith({
+      TableName: DEFAULT_TABLE_NAME,
+      Item: { namespace: { S: '$inited' }, key: { S: '$inited' } },
+    });
+
+    emptyCore.close();
+  });
+
+  it('removes the initialized token before writing data when reinitializing', async () => {
+    const flags = [
+      { key: 'first', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
+    ];
+
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const reinitCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const reinitFacade = new AsyncCoreFacade(reinitCore);
+
+    // The first initialization writes the token.
+    await reinitFacade.init([{ key: dataKind.features, item: flags }]);
+
+    const deleteSpy = jest.spyOn(state, 'delete');
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+
+    await reinitFacade.init([{ key: dataKind.features, item: flags }]);
+
+    // The order is: remove the token, write the data batch, write the token.
+    expect(deleteSpy).toHaveBeenCalledWith(DEFAULT_TABLE_NAME, {
+      namespace: { S: '$inited' },
+      key: { S: '$inited' },
+    });
+    expect(deleteSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      batchWriteSpy.mock.invocationCallOrder[0],
+    );
+    expect(batchWriteSpy.mock.invocationCallOrder[0]).toBeLessThan(
+      putSpy.mock.invocationCallOrder[0],
+    );
+
+    // A healthy reinitialization ends with the store initialized.
+    const initialized = await reinitFacade.initialized();
+    expect(initialized).toBe(true);
+
+    reinitCore.close();
+  });
+
+  it('reports not initialized after a failed reinitialization', async () => {
+    const flags = [
+      { key: 'first', item: { version: 1, serializedItem: `{"version":1}`, deleted: false } },
+    ];
+
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const reinitCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const reinitFacade = new AsyncCoreFacade(reinitCore);
+
+    // The first initialization succeeds and writes the token.
+    await reinitFacade.init([{ key: dataKind.features, item: flags }]);
+    const before = await reinitFacade.initialized();
+    expect(before).toBe(true);
+
+    // The token delete calls through to the store. Only the data batch fails.
+    const error = new Error('reinit batch failed');
+    jest.spyOn(state, 'batchWrite').mockRejectedValueOnce(error);
+
+    await reinitFacade.init([{ key: dataKind.features, item: flags }]);
+
+    // The failed replacement must not present the store as initialized.
+    const after = await reinitFacade.initialized();
+    expect(after).toBe(false);
+
+    reinitCore.close();
+  });
+
+  it('reports an error and writes no data when the token delete fails', async () => {
+    const mockLogger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const errorCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, mockLogger);
+
+    const batchWriteSpy = jest.spyOn(state, 'batchWrite');
+    const putSpy = jest.spyOn(state, 'put');
+    const error = new Error('delete failed');
+    jest.spyOn(state, 'delete').mockRejectedValueOnce(error);
+
+    const reportedError = await new Promise<Error | undefined>((resolve) => {
+      errorCore.init([], resolve);
+    });
+
+    expect(reportedError).toBe(error);
+    expect(batchWriteSpy).not.toHaveBeenCalled();
+    expect(putSpy).not.toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(`Error writing to DynamoDB: ${error}`);
+
+    errorCore.close();
+  });
+
+  it('initializes when there is no existing initialized token', async () => {
+    const state = new DynamoDBClientState(DEFAULT_CLIENT_OPTIONS);
+    const firstInitCore = new DynamoDBCore(DEFAULT_TABLE_NAME, state, undefined);
+    const firstInitFacade = new AsyncCoreFacade(firstInitCore);
+
+    // Make sure the table has no token, so the init-time delete targets a
+    // missing key. DynamoDB treats that delete as a successful no-op.
+    await state.delete(DEFAULT_TABLE_NAME, {
+      namespace: { S: '$inited' },
+      key: { S: '$inited' },
+    });
+
+    const deleteSpy = jest.spyOn(state, 'delete');
+
+    await firstInitFacade.init([]);
+
+    expect(deleteSpy).toHaveBeenCalledTimes(1);
+    const initialized = await firstInitFacade.initialized();
+    expect(initialized).toBe(true);
+
+    firstInitCore.close();
+  });
 });
 
 describe('given a store with basic data', () => {
