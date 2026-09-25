@@ -37,21 +37,36 @@ jobs:
         run: yarn workspace @launchdarkly/node-server-sdk-contract-tests install --no-immutable
       - name: Build shared contract test utils (server)
         run: yarn workspace @launchdarkly/js-contract-test-utils build:server
+      - name: Install and start Redis
+        run: |
+          sudo apt-get update
+          sudo apt-get install redis-server
+          sudo service redis-server start
+      - name: Start local DynamoDB
+        run: sudo docker run -d -p 8000:8000 amazon/dynamodb-local
+      - name: Build the redis store used by the test service
+        run: yarn workspace @launchdarkly/node-server-sdk-redis build
+      - name: Build the DynamoDB store used by the test service
+        run: yarn workspace @launchdarkly/node-server-sdk-dynamodb build
       - name: Build the test service
         run: yarn workspace @launchdarkly/node-server-sdk-contract-tests build
       - name: Launch the test service in the background
+        # The service moves to port 8001 because the test harness expects
+        # local DynamoDB on port 8000.
+        env:
+          PORT: '8001'
         run: yarn workspace @launchdarkly/node-server-sdk-contract-tests start 2>&1 &
       - name: Run contract tests (v2)
         uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
-          test_service_port: 8000
+          test_service_port: 8001
           token: ${{ secrets.GITHUB_TOKEN }}
           stop_service: 'false'
           extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions.txt'
       - name: Run contract tests (v3)
         uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
-          test_service_port: 8000
+          test_service_port: 8001
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v3
           extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions-fdv2.txt'
