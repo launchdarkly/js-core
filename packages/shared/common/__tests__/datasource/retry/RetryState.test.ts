@@ -212,13 +212,15 @@ it('jitters the wait into the upper half of the target delay', () => {
   expect(new Set(delays).size).toBeGreaterThan(1);
 });
 
-it('keeps the wait above half the target under the largest jitter draw', () => {
-  const state = streamingState({ random: () => 0.9999999 });
+it('keeps the wait at or above half the target under the largest jitter draw', () => {
+  // The largest double below 1 against a power-of-two target is the worst
+  // case: the subtraction ties and rounds to exactly half the target, so the
+  // wait interval is closed at T/2.
+  const state = streamingState({ normalInitialDelayMs: 1024, random: () => 1 - 2 ** -53 });
   state.recordFailure('normal');
   state.recordFailure('normal');
-  // Target is 2000; the largest draw removes just under half of it.
-  expect(state.nextDelay).toBeGreaterThan(1000);
-  expect(state.nextDelay).toBeLessThan(1001);
+  // Target is 2048; the wait lands on exactly half of it, never below.
+  expect(state.nextDelay).toEqual(1024);
 });
 
 it('replaces an earlier server-directed retry time with a later one', () => {
@@ -278,6 +280,24 @@ it('keeps a server-directed retry time across a reset', () => {
   expect(state.nextDelay).toEqual(2500);
 });
 
+it('computes from a server-directed base rather than the extended initial delay', () => {
+  const state = streamingState();
+  state.applyServerDirectedRetry(1000);
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toEqual(1000);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(2000);
+});
+
+it('applies a server-directed retry time received while already extended', () => {
+  const state = streamingState();
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toEqual(5 * MINUTE);
+  state.applyServerDirectedRetry(1000);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(1000);
+});
+
 it.each([Number.NaN, -1, Number.POSITIVE_INFINITY])(
   'ignores the invalid server-directed retry time %p',
   (value) => {
@@ -332,9 +352,12 @@ it.each([0, -5, Number.NaN, Number.POSITIVE_INFINITY])(
   (value) => {
     const warn = jest.fn();
     const logger = { error: jest.fn(), warn, info: jest.fn(), debug: jest.fn() };
-    forStreaming(value, logger);
+    const state = forStreaming(value, logger);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toMatch(/initialReconnectDelayMs/);
+    state.recordFailure('normal');
+    expect(state.nextDelay).toBeGreaterThan(500);
+    expect(state.nextDelay).toBeLessThanOrEqual(1000);
   },
 );
 
@@ -349,16 +372,16 @@ it.each([0, -5, Number.NaN, Number.POSITIVE_INFINITY])(
   },
 );
 
-it('raises the normal ceiling to a configured delay that exceeds it', () => {
+it('clamps waits at the normal ceiling when the configured delay exceeds it', () => {
   // A 10 minute configured delay is above the 30 second normal ceiling; the
-  // configured value wins rather than being cut down to the ceiling.
+  // ceiling wins rather than being raised to the configured value.
   const state = forStreaming(10 * MINUTE);
   state.recordFailure('normal');
-  expect(state.nextDelay).toBeGreaterThan(5 * MINUTE);
-  expect(state.nextDelay).toBeLessThanOrEqual(10 * MINUTE);
+  expect(state.nextDelay).toBeGreaterThan(15 * 1000);
+  expect(state.nextDelay).toBeLessThanOrEqual(30 * 1000);
   state.recordFailure('normal');
-  expect(state.nextDelay).toBeGreaterThan(5 * MINUTE);
-  expect(state.nextDelay).toBeLessThanOrEqual(10 * MINUTE);
+  expect(state.nextDelay).toBeGreaterThan(15 * 1000);
+  expect(state.nextDelay).toBeLessThanOrEqual(30 * 1000);
 });
 
 it('raises the extended bounds to a configured delay that exceeds them', () => {
@@ -375,6 +398,36 @@ it('leaves a configured delay below the normal ceiling untouched', () => {
   state.recordFailure('normal');
   expect(state.nextDelay).toBeGreaterThan(500);
   expect(state.nextDelay).toBeLessThanOrEqual(1000);
+});
+
+it('defaults the operating cadence to zero for direct construction', () => {
+  const state = new RetryState({
+    normalInitialDelayMs: 1000,
+    normalCeilingMs: 30 * 1000,
+    extendedInitialDelayMs: 5 * MINUTE,
+    extendedCeilingMs: HOUR,
+    resetPolicy: new AfterHealthyFor(MINUTE, clock),
+    random: noJitter,
+  });
+  expect(state.nextDelay).toEqual(0);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(1000);
+});
+
+it('floors the extended ceiling at the extended initial delay on the transition', () => {
+  const state = new RetryState({
+    normalInitialDelayMs: 1000,
+    normalCeilingMs: 30 * 1000,
+    extendedInitialDelayMs: 10 * MINUTE,
+    extendedCeilingMs: 5 * MINUTE,
+    resetPolicy: new AfterHealthyFor(MINUTE, clock),
+    operatingCadenceMs: 0,
+    random: noJitter,
+  });
+  state.recordFailure('unexpected');
+  expect(state.nextDelay).toEqual(10 * MINUTE);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(10 * MINUTE);
 });
 
 it('collapses the extended regime when the poll interval exceeds its bounds', () => {

@@ -66,3 +66,26 @@ it('starts the success count over on a failure', () => {
   policy.noteHealthy();
   expect(policy.isSatisfied()).toEqual(true);
 });
+
+it('measures the healthy stretch with the default clock', () => {
+  const policy = new AfterHealthyFor(60 * MINUTE);
+  expect(policy.isSatisfied()).toEqual(false);
+  policy.noteHealthy();
+  expect(policy.isSatisfied()).toEqual(false);
+});
+
+it('falls back to the wall clock when no monotonic source exists', () => {
+  const savedPerformance = (globalThis as any).performance;
+  const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(0);
+  delete (globalThis as any).performance;
+  try {
+    const policy = new AfterHealthyFor(MINUTE);
+    policy.noteHealthy();
+    expect(policy.isSatisfied()).toEqual(false);
+    nowSpy.mockReturnValue(MINUTE);
+    expect(policy.isSatisfied()).toEqual(true);
+  } finally {
+    nowSpy.mockRestore();
+    (globalThis as any).performance = savedPerformance;
+  }
+});

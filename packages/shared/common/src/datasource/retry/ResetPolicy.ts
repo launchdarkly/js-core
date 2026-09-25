@@ -34,18 +34,17 @@ export interface ResetPolicy {
  */
 export class AfterHealthyFor implements ResetPolicy {
   private _healthySinceMs?: number;
+  private readonly _healthyForMs: number;
   private readonly _clock: () => number;
 
   /**
-   * @param _healthyForMs How long the component must operate without failing,
-   * in milliseconds.
+   * @param healthyForMs How long the component must operate without failing,
+   * in milliseconds; must be a positive, finite number.
    * @param clock The time source used to measure the healthy stretch; defaults
    * to a monotonic clock. Primarily for testing.
    */
-  constructor(
-    private readonly _healthyForMs: number,
-    clock?: () => number,
-  ) {
+  constructor(healthyForMs: number, clock?: () => number) {
+    this._healthyForMs = healthyForMs;
     this._clock = clock ?? defaultClock();
   }
 
@@ -73,6 +72,10 @@ export class AfterHealthyFor implements ResetPolicy {
 export class AfterConsecutiveSuccesses implements ResetPolicy {
   private _successes = 0;
 
+  /**
+   * @param _count How many operations in a row must succeed; must be a
+   * positive integer.
+   */
   constructor(private readonly _count: number) {}
 
   noteHealthy(): void {

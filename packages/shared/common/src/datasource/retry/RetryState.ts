@@ -32,6 +32,15 @@ function positiveFiniteOrDefault(
   return defaultValueMs;
 }
 
+/**
+ * Configuration for a {@link RetryState}.
+ *
+ * Values are trusted, not validated: each delay bound must be a positive,
+ * finite number of milliseconds, and the operating cadence a non-negative,
+ * finite one. The factories ({@link forStreaming}, {@link forPolling}) are the
+ * validated entry points for anything user-configurable; a caller constructing
+ * directly is expected to supply known-good values.
+ */
 export interface RetryStateConfig {
   /** The delay before the first retry in the normal regime, in milliseconds. */
   normalInitialDelayMs: number;
@@ -42,7 +51,10 @@ export interface RetryStateConfig {
   /** The delay before the first retry in the extended regime, in milliseconds. */
   extendedInitialDelayMs: number;
 
-  /** The longest extended-regime delay, in milliseconds. */
+  /**
+   * The longest extended-regime delay, in milliseconds; never less than the
+   * extended initial delay.
+   */
   extendedCeilingMs: number;
 
   /** Decides when the retry state resets. */
@@ -69,7 +81,9 @@ export interface RetryStateConfig {
  * ceiling, less a random jitter of up to half of it, and never less than the
  * operating cadence. An unexpected failure moves the state to the extended
  * regime, which raises both bounds; a normal failure that follows cannot lower
- * them. The bounds stay raised until the reset policy is satisfied.
+ * them. The bounds stay raised until the reset policy is satisfied. A
+ * server-directed retry time, once applied, replaces the regime's initial
+ * delay as the base of the computation; the ceiling continues to apply.
  *
  * Recording a success sets the next wait back to the operating cadence, even
  * while the retry state is raised, because a backoff wait applies to a retry
@@ -96,9 +110,9 @@ export class RetryState {
 
   constructor(config: RetryStateConfig) {
     this._normalInitialDelayMs = config.normalInitialDelayMs;
-    this._normalCeilingMs = Math.max(config.normalCeilingMs, config.normalInitialDelayMs);
+    this._normalCeilingMs = config.normalCeilingMs;
     this._extendedInitialDelayMs = config.extendedInitialDelayMs;
-    this._extendedCeilingMs = Math.max(config.extendedCeilingMs, config.extendedInitialDelayMs);
+    this._extendedCeilingMs = config.extendedCeilingMs;
     this._operatingCadenceMs = config.operatingCadenceMs ?? 0;
     this._resetPolicy = config.resetPolicy;
     this._random = config.random ?? Math.random;
@@ -120,7 +134,8 @@ export class RetryState {
    * Records a failed attempt and decides the wait before the next one.
    *
    * The state advances before the wait is computed, so {@link nextDelay}
-   * always reflects the failure just recorded.
+   * always reflects the failure just recorded. Callers should read it in the
+   * same turn, before any other outcome is recorded.
    */
   recordFailure(kind: FailureKind): void {
     // A reset that fell due during healthy operation is applied before the
@@ -134,7 +149,7 @@ export class RetryState {
       // keeps counting up rather than re-pinning the initial delay.
       this._extended = true;
       this._minDelayMs = this._extendedInitialDelayMs;
-      this._maxDelayMs = this._extendedCeilingMs;
+      this._maxDelayMs = Math.max(this._extendedCeilingMs, this._extendedInitialDelayMs);
       this._attempts = 1;
     } else {
       this._attempts += 1;
@@ -170,10 +185,12 @@ export class RetryState {
    * Applies a server-directed retry time.
    *
    * The value replaces the base of the delay computation and restarts the
-   * doubling sequence. The regime and its ceiling are unaffected, and the
-   * value stays in effect until another one arrives, including across a
-   * reset. Non-finite or negative values are ignored; callers are expected to
-   * have validated and capped the value at its point of entry.
+   * doubling sequence, taking precedence over the current regime's initial
+   * delay — including the extended regime's. The computed delay is still
+   * bounded by the regime's ceiling. The value stays in effect until another
+   * one arrives, including across a reset. Non-finite or negative values are
+   * ignored; callers are expected to have validated and capped the value at
+   * its point of entry.
    */
   applyServerDirectedRetry(delayMs: number): void {
     if (typeof delayMs !== 'number' || !Number.isFinite(delayMs) || delayMs < 0) {
@@ -201,8 +218,9 @@ export class RetryState {
  * reset once a connection has been healthy for 60 seconds.
  *
  * The initial delay is validated here; the documented default of 1 second
- * stands in for anything that is not a positive, finite number. The extended
- * regime never starts below the configured delay.
+ * stands in for anything that is not a positive, finite number. A configured
+ * delay above the normal ceiling is clamped to it, while the extended regime
+ * never starts below the configured delay.
  */
 export function forStreaming(initialReconnectDelayMs: number, logger?: LDLogger): RetryState {
   const validated = positiveFiniteOrDefault(
@@ -243,7 +261,7 @@ export function forPolling(pollIntervalMs: number, logger?: LDLogger): RetryStat
     normalInitialDelayMs: validated,
     normalCeilingMs: validated,
     extendedInitialDelayMs: Math.max(EXTENDED_INITIAL_DELAY_MS, validated),
-    extendedCeilingMs: Math.max(EXTENDED_CEILING_MS, validated),
+    extendedCeilingMs: EXTENDED_CEILING_MS,
     resetPolicy: new AfterConsecutiveSuccesses(POLLING_RESET_SUCCESSES),
     operatingCadenceMs: validated,
   });
