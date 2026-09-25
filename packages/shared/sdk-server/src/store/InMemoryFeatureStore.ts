@@ -43,6 +43,21 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     callback?.(result);
   }
 
+  /**
+   * Get a snapshot of all data in the store, for every kind, including tombstones for
+   * deleted items. The snapshot does not change when the store changes later.
+   *
+   * This method is for SDK internal use. It supports rewriting the full data set into a
+   * persistent store.
+   */
+  getAllRaw(): LDFeatureStoreDataStorage {
+    const snapshot: LDFeatureStoreDataStorage = {};
+    Object.entries(this._allData).forEach(([namespace, items]) => {
+      snapshot[namespace] = { ...items };
+    });
+    return snapshot;
+  }
+
   init(
     allData: LDFeatureStoreDataStorage,
     callback: () => void,
