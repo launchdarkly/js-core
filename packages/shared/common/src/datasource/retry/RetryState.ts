@@ -17,10 +17,6 @@ const DEFAULT_STREAMING_INITIAL_DELAY_MS = 1000;
 const POLLING_RESET_SUCCESSES = 2;
 const DEFAULT_POLL_INTERVAL_MS = 30 * 1000;
 
-// An upper bound on the backoff exponent so that a long outage cannot overflow
-// the delay computation. Any real ceiling is reached long before this.
-const MAX_BACKOFF_EXPONENT = 30;
-
 function positiveFiniteOrDefault(
   value: number,
   defaultValueMs: number,
@@ -145,8 +141,14 @@ export class RetryState {
     }
 
     const base = this._serverDirectedBaseMs ?? this._minDelayMs;
-    const exponent = Math.min(Math.max(this._attempts - 1, 0), MAX_BACKOFF_EXPONENT);
-    const target = Math.min(base * 2 ** exponent, this._maxDelayMs);
+    // Compare against the ceiling scaled down rather than the base scaled up, so
+    // the computed value can never overflow the ceiling. A base of zero doubles
+    // to zero forever, so it short-circuits.
+    let target = 0;
+    if (base > 0) {
+      const exponent = this._attempts - 1;
+      target = base >= this._maxDelayMs / 2 ** exponent ? this._maxDelayMs : base * 2 ** exponent;
+    }
     const jitter = (this._random() * target) / 2;
     this._nextDelayMs = Math.max(target - jitter, this._operatingCadenceMs);
   }

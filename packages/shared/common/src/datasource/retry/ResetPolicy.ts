@@ -3,7 +3,7 @@ function defaultClock(): () => number {
   if (perf && typeof perf.now === 'function') {
     return () => perf.now();
   }
-  return Date.now;
+  return () => Date.now();
 }
 
 /**
@@ -61,7 +61,8 @@ export class AfterHealthyFor implements ResetPolicy {
 
   isSatisfied(): boolean {
     return (
-      this._healthySinceMs !== undefined && this._clock() - this._healthySinceMs >= this._healthyForMs
+      this._healthySinceMs !== undefined &&
+      this._clock() - this._healthySinceMs >= this._healthyForMs
     );
   }
 }

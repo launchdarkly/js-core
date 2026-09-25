@@ -262,6 +262,23 @@ it('remains at the ceiling without overflowing after very many failures', () => 
   expect(Number.isFinite(state.nextDelay)).toEqual(true);
 });
 
+it('stays finite when a server-directed retry time of zero is followed by very many failures', () => {
+  const state = streamingState();
+  state.applyServerDirectedRetry(0);
+  for (let i = 0; i < 1100; i += 1) {
+    state.recordFailure('normal');
+  }
+  expect(state.nextDelay).toEqual(0);
+  expect(Number.isFinite(state.nextDelay)).toEqual(true);
+});
+
+it('floors a zero server-directed retry time at the operating cadence', () => {
+  const state = pollingState(30 * 1000);
+  state.applyServerDirectedRetry(0);
+  state.recordFailure('normal');
+  expect(state.nextDelay).toEqual(30 * 1000);
+});
+
 it('binds streaming defaults through the factory', () => {
   const state = forStreaming(1000);
   expect(state.nextDelay).toEqual(0);
