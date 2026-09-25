@@ -12,6 +12,7 @@ import { FileSystemDataSourceConfiguration } from '../api';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
+import { parseDocument } from './filedata';
 import { makeFlagWithValue } from './FileDataSource';
 import FileLoader from './FileLoader';
 
@@ -129,16 +130,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _processFileData(results: { path: string; data: string }[]) {
     const combined: any = results.reduce(
       (acc, curr) => {
-        let parsed: any;
-        if (curr.path.endsWith('.yml') || curr.path.endsWith('.yaml')) {
-          if (this._yamlParser) {
-            parsed = this._yamlParser(curr.data);
-          } else {
-            throw new Error(`Attempted to parse yaml file (${curr.path}) without parser.`);
-          }
-        } else {
-          parsed = JSON.parse(curr.data);
-        }
+        const parsed = parseDocument(curr.path, curr.data, this._yamlParser);
 
         // flagValues has no previous-state to diff against, so each entry always
         // gets version 1. Convert to full Flag objects here so they merge with

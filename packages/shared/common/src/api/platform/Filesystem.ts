@@ -6,6 +6,22 @@ export interface WatchHandle {
 }
 
 /**
+ * Metadata of a file that a component can compare between two observations to detect a
+ * change.
+ */
+export interface FileStats {
+  /**
+   * The time, in ms since POSIX epoch, that the file was last modified.
+   */
+  timestamp: number;
+
+  /**
+   * The size of the file in bytes.
+   */
+  size: number;
+}
+
+/**
  * Interface for doing filesystem operations on the platform.
  */
 export interface Filesystem {
@@ -26,6 +42,17 @@ export interface Filesystem {
    * rejected if the operation fails.
    */
   readFile(path: string): Promise<string>;
+
+  /**
+   * Get the metadata of a file. Components use it to detect that a file changed, appeared, or
+   * disappeared.
+   *
+   * @param path The path of the file.
+   *
+   * @returns A promise which will resolve to the file metadata, or to undefined when the file
+   * does not exist. The promise is rejected when the operation fails for another reason.
+   */
+  getFileStats?(path: string): Promise<FileStats | undefined>;
 
   /**
    * Watch for changes to the specified path.

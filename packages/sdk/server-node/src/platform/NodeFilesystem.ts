@@ -14,6 +14,18 @@ export default class NodeFilesystem implements platform.Filesystem {
     return fsPromises.readFile(path, 'utf8');
   }
 
+  async getFileStats(path: string): Promise<platform.FileStats | undefined> {
+    try {
+      const stat = await fsPromises.stat(path);
+      return { timestamp: stat.mtimeMs, size: stat.size };
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+        return undefined;
+      }
+      throw err;
+    }
+  }
+
   watch(
     path: string,
     callback: (eventType: string, filename: string) => void,
