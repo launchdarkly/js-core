@@ -101,7 +101,11 @@ export default class DynamoDBClientState {
       let pending = batch;
       // The first attempt writes the whole batch. Each retry writes only the
       // items that DynamoDB returned as unprocessed.
-      for (let attempt = 0; attempt <= MAX_UNPROCESSED_RETRIES && pending.length > 0; attempt += 1) {
+      for (
+        let attempt = 0;
+        attempt <= MAX_UNPROCESSED_RETRIES && pending.length > 0;
+        attempt += 1
+      ) {
         if (attempt > 0) {
           // eslint-disable-next-line no-await-in-loop
           await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
