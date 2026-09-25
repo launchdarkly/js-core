@@ -308,6 +308,24 @@ it('ignores a retry: field whose value is not all ASCII digits', async () => {
   });
 });
 
+it('caps a server-sent retry: value at one hour', async () => {
+  await withServer(async (server) => {
+    // Two hours. A value this large must not reach the reconnect timer as-is: some
+    // runtimes replace an out-of-range timer delay with a near-zero one, which would
+    // turn the server's pause into a fast reconnect loop.
+    server.byDefault(writeEvents(['retry: 7200000\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      expect(es.reconnectInterval).toEqual(3600000);
+      const delays = new AsyncQueue<number>();
+      es.onretrying = (event) => delays.add(event.delayMillis);
+      await server.closeAndWait();
+      // The capped value, not the server's, drives the scheduled reconnect.
+      expect(await delays.take()).toEqual(3600000);
+    });
+  });
+});
+
 it('does not arm a reconnect timer when a retrying listener calls close', async () => {
   jest.useFakeTimers();
   try {
