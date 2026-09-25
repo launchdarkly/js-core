@@ -90,3 +90,67 @@ it('ignores the late callback of an abandoned update', async () => {
     jest.useRealTimers();
   }
 });
+
+it('contains a synchronous throw from an update behind a busy head', async () => {
+  jest.useFakeTimers();
+  try {
+    const queue = new UpdateQueue();
+    let releaseFirst: ((err?: Error) => void) | undefined;
+    const throwingCallback = jest.fn();
+    const thirdCallback = jest.fn();
+
+    queue.enqueue((cb) => {
+      releaseFirst = cb;
+    }, jest.fn());
+    queue.enqueue(() => {
+      throw new Error('sync boom');
+    }, throwingCallback);
+    queue.enqueue((cb) => cb(), thirdCallback);
+
+    // The throwing update runs from the chain timer once the head completes. The
+    // throw must be contained, fail only its own update, and let the next run.
+    releaseFirst?.();
+    await jest.advanceTimersByTimeAsync(1);
+
+    expect(throwingCallback).toHaveBeenCalledWith(new Error('sync boom'));
+    expect(thirdCallback).toHaveBeenCalledTimes(1);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('fails waiting updates without running them when the queue closes', async () => {
+  jest.useFakeTimers();
+  try {
+    const queue = new UpdateQueue();
+    const hungCallback = jest.fn();
+    const waitingFn = jest.fn();
+    const waitingCallback = jest.fn();
+
+    queue.enqueue(() => {}, hungCallback);
+    queue.enqueue(waitingFn, waitingCallback);
+
+    queue.close();
+    expect(hungCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+    expect(waitingCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+    expect(waitingFn).not.toHaveBeenCalled();
+
+    // The hang deadline was cleared, so nothing more fires.
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(hungCallback).toHaveBeenCalledTimes(1);
+    expect(waitingCallback).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toEqual(0);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('fails an update enqueued after close without running it', () => {
+  const queue = new UpdateQueue();
+  queue.close();
+  const fn = jest.fn();
+  const cb = jest.fn();
+  queue.enqueue(fn, cb);
+  expect(fn).not.toHaveBeenCalled();
+  expect(cb).toHaveBeenCalledWith(new Error('The store is closed.'));
+});

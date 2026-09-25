@@ -89,8 +89,15 @@ function deserialize(
  * that would otherwise be repeated in every data store implementation. This makes it easier to
  * create new database integrations by implementing only the database-specific logic.
  */
+// Minimum time between store-error logs at error level. A store that fails every
+// write while flapping logs the rest at debug, so it cannot flood the log.
+const ERROR_LOG_INTERVAL_MS = 10000;
+
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private _isInitialized = false;
+
+  // Epoch ms of the last store-error log at error level.
+  private _lastErrorLogMs = 0;
 
   /**
    * Cache for storing individual items.
@@ -153,9 +160,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
           // A failed init must not present the rejected data as current. Clear the
           // caches and the initialized state, so reads and initialization checks
           // fall through to the persistence layer's actual state.
-          this._logger?.error(
-            `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
-          );
+          this._logStoreError(err);
           this._isInitialized = false;
           this._itemCache?.clear();
           this._allItemsCache?.clear();
@@ -280,9 +285,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             return;
           }
           if (err) {
-            this._logger?.error(
-              `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
-            );
+            this._logStoreError(err);
           }
           if (!err && updatedDescriptor) {
             if (updatedDescriptor.serializedItem) {
@@ -307,7 +310,25 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     this.upsert(kind, { key, version, deleted: true }, callback);
   }
 
+  /**
+   * Logs a store write error, at error level at most once per interval and at
+   * debug level otherwise, so a store that fails every write cannot flood the log.
+   */
+  private _logStoreError(err: Error): void {
+    const message = `Persistent store returned error: ${err instanceof Error ? err.message : err}`;
+    const now = Date.now();
+    if (now - this._lastErrorLogMs >= ERROR_LOG_INTERVAL_MS) {
+      this._lastErrorLogMs = now;
+      this._logger?.error(message);
+    } else {
+      this._logger?.debug(message);
+    }
+  }
+
   close(): void {
+    // Stop the queue first, so no queued operation reaches the core after it
+    // closes and no hang-deadline timer outlives the wrapper.
+    this._queue.close();
     this._itemCache?.close();
     this._allItemsCache?.close();
     this._core.close();

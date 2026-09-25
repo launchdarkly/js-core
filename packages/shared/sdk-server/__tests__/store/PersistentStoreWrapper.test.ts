@@ -801,3 +801,68 @@ it('ignores the late completion of an upsert the queue abandoned', async () => {
     jest.useRealTimers();
   }
 });
+
+it('does not run queued operations against the core after close', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    const coreInitCalls = jest.fn();
+    core.init = (_allData, _callback) => {
+      // Hangs: never answers, holding the queue head.
+      coreInitCalls();
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const firstCallback = jest.fn();
+    const secondCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 1 } } }, firstCallback);
+    wrapper.init({ features: { key1: { version: 2 } } }, secondCallback);
+    expect(coreInitCalls).toHaveBeenCalledTimes(1);
+
+    wrapper.close();
+    expect(firstCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+    expect(secondCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+
+    // The queued second init never reaches the closed core, and no deadline
+    // timer runs on.
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(coreInitCalls).toHaveBeenCalledTimes(1);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('throttles store-error logs to one error level entry per interval', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    core.upsert = (_kind, _key, _descriptor, callback) => {
+      callback(new Error('write failed'), undefined);
+    };
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    // @ts-ignore Partial logger for testing.
+    const wrapper = new PersistentDataStoreWrapper(core, 0, logger);
+
+    const upsertOnce = () =>
+      new Promise<void>((resolve) => {
+        wrapper.upsert(VersionedDataKinds.Features, { key: 'flagA', version: 1 }, () => resolve());
+      });
+
+    await upsertOnce();
+    await upsertOnce();
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalledTimes(1);
+
+    // A new interval allows the next error level entry.
+    await jest.advanceTimersByTimeAsync(10000);
+    await upsertOnce();
+    expect(logger.error).toHaveBeenCalledTimes(2);
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
