@@ -243,6 +243,54 @@ describe('given an event processor', () => {
     ]);
   });
 
+  it('produces no feature or debug event for an override-affected evaluation and marks its counter', async () => {
+    Date.now = jest.fn(() => 1000);
+    // Both flags request individual feature events and debug events. Only the override-affected
+    // evaluation is kept out of the individual event stream.
+    const base = {
+      kind: 'feature' as const,
+      creationDate: 1000,
+      context: Context.fromLDContext(user),
+      version: 11,
+      variation: 1,
+      value: 'value',
+      trackEvents: true,
+      debugEventsUntilDate: 2000,
+      default: 'default',
+      samplingRatio: 1,
+      withReasons: true,
+    };
+    eventProcessor.sendEvent({ ...base, key: 'flagkey', overrideAffected: true });
+    eventProcessor.sendEvent({ ...base, key: 'plain' });
+
+    await eventProcessor.flush();
+
+    expect(mockSendEventData).toBeCalledWith(LDEventType.AnalyticsEvents, [
+      testIndexEvent,
+      makeFeatureEvent(1000, 11, false, 'plain'),
+      makeFeatureEvent(1000, 11, true, 'plain'),
+      {
+        endDate: 1000,
+        features: {
+          flagkey: {
+            contextKinds: ['user'],
+            counters: [
+              { count: 1, value: 'value', variation: 1, version: 11, overrideAffected: true },
+            ],
+            default: 'default',
+          },
+          plain: {
+            contextKinds: ['user'],
+            counters: [{ count: 1, value: 'value', variation: 1, version: 11 }],
+            default: 'default',
+          },
+        },
+        kind: 'summary',
+        startDate: 1000,
+      },
+    ]);
+  });
+
   it('uses sampling ratio for feature events', async () => {
     Date.now = jest.fn(() => 1000);
     eventProcessor.sendEvent({

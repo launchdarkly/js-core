@@ -1478,8 +1478,17 @@ export default class LDClientImpl implements LDClient {
     evalRes.events?.forEach((event) => {
       this._eventProcessor.sendEvent({ ...event });
     });
+    // The marking is handed to the event processor as a scalar. Event generation does not read
+    // the reason.
     this._eventProcessor.sendEvent(
-      eventFactory.evalEventServer(flag, evalContext, evalRes.detail, defaultValue, undefined),
+      eventFactory.evalEventServer(
+        flag,
+        evalContext,
+        evalRes.detail,
+        defaultValue,
+        undefined,
+        evalRes.overrideAffected,
+      ),
     );
   }
 
