@@ -741,3 +741,185 @@ it('does not expose isStoreAvailable when the core does not implement it', () =>
   expect(wrapper.isStoreAvailable).toBeUndefined();
   wrapper.close();
 });
+
+it('ignores the late completion of an init the queue abandoned', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    let lateInit: (() => void) | undefined;
+    core.init = (_allData, callback) => {
+      lateInit = () => callback();
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const initCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 1 } } }, initCallback);
+
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(initCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The abandoned init finally answers. Its result must not populate the caches
+    // or the initialized state.
+    lateInit?.();
+    const isInitialized = await new Promise((resolve) => {
+      wrapper.initialized(resolve);
+    });
+    expect(isInitialized).toBe(false);
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('ignores the late completion of an upsert the queue abandoned', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    let lateUpsert: (() => void) | undefined;
+    core.upsert = (_kind, _key, descriptor, callback) => {
+      lateUpsert = () => callback(undefined, descriptor);
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const upsertCallback = jest.fn();
+    wrapper.upsert(VersionedDataKinds.Features, { key: 'flagA', version: 1 }, upsertCallback);
+
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(upsertCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The abandoned upsert finally answers. Its result must not enter the item
+    // cache.
+    lateUpsert?.();
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'flagA', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('does not run queued operations against the core after close', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    const coreInitCalls = jest.fn();
+    core.init = (_allData, _callback) => {
+      // Hangs: never answers, holding the queue head.
+      coreInitCalls();
+    };
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    const firstCallback = jest.fn();
+    const secondCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 1 } } }, firstCallback);
+    wrapper.init({ features: { key1: { version: 2 } } }, secondCallback);
+    expect(coreInitCalls).toHaveBeenCalledTimes(1);
+
+    wrapper.close();
+    expect(firstCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+    expect(secondCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
+
+    // The queued second init never reaches the closed core, and no deadline
+    // timer runs on.
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(coreInitCalls).toHaveBeenCalledTimes(1);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('throttles store-error logs to one error level entry per interval', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    core.upsert = (_kind, _key, _descriptor, callback) => {
+      callback(new Error('write failed'), undefined);
+    };
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    // @ts-ignore Partial logger for testing.
+    const wrapper = new PersistentDataStoreWrapper(core, 0, logger);
+
+    const upsertOnce = () =>
+      new Promise<void>((resolve) => {
+        wrapper.upsert(VersionedDataKinds.Features, { key: 'flagA', version: 1 }, () => resolve());
+      });
+
+    await upsertOnce();
+    await upsertOnce();
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalledTimes(1);
+
+    // A new interval allows the next error level entry.
+    await jest.advanceTimersByTimeAsync(10000);
+    await upsertOnce();
+    expect(logger.error).toHaveBeenCalledTimes(2);
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('clears the caches and the initialized state when an init times out', async () => {
+  jest.useFakeTimers();
+  try {
+    const core = new MockPersistentStore();
+    const wrapper = new PersistentDataStoreWrapper(core, 60);
+    // A successful init populates the caches.
+    await new Promise<void>((resolve) => {
+      wrapper.init({ features: { key1: { version: 1 } } }, () => resolve());
+    });
+
+    // The next init hangs and times out.
+    core.init = () => {};
+    const initCallback = jest.fn();
+    wrapper.init({ features: { key1: { version: 2 } } }, initCallback);
+    await jest.advanceTimersByTimeAsync(30000);
+    expect(initCallback).toHaveBeenCalledWith(expect.any(Error));
+
+    // The previous data must no longer be served from the caches. With the core
+    // emptied, a cached item would be the only way to still see key1.
+    core.allData = [];
+    const item = await new Promise((resolve) => {
+      wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+    });
+    expect(item).toBeNull();
+    wrapper.close();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('ignores a duplicate answer from an already-completed init', async () => {
+  const core = new MockPersistentStore();
+  const initCallbacks: (() => void)[] = [];
+  core.init = (allData, callback) => {
+    core.allData = allData;
+    initCallbacks.push(() => callback());
+    callback();
+  };
+  const wrapper = new PersistentDataStoreWrapper(core, 60);
+
+  await new Promise<void>((resolve) => {
+    wrapper.init({ features: { key1: { version: 1 } } }, () => resolve());
+  });
+  await new Promise<void>((resolve) => {
+    wrapper.init({ features: { key1: { version: 2 } } }, () => resolve());
+  });
+
+  // The first init answers a second time. Its data must not repopulate the
+  // caches over the newer init's data.
+  initCallbacks[0]();
+  const item = await new Promise<any>((resolve) => {
+    wrapper.get(VersionedDataKinds.Features, 'key1', resolve);
+  });
+  expect(item).toEqual(expect.objectContaining({ version: 2 }));
+  wrapper.close();
+});
