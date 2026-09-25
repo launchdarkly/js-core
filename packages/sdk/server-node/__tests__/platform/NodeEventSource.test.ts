@@ -1,0 +1,188 @@
+import * as http from 'http';
+import {
+  AsyncQueue,
+  TestHttpHandlers,
+  TestHttpServer,
+  TestHttpServers,
+} from 'launchdarkly-js-test-helpers';
+
+import { createNodeFetch } from '../../src/platform/NodeEventSource';
+import NodeRequests from '../../src/platform/NodeRequests';
+
+describe('given a running HTTP server', () => {
+  let server: TestHttpServer;
+
+  beforeEach(async () => {
+    server = await TestHttpServers.start();
+  });
+
+  afterEach(async () => {
+    await server.closeAndWait();
+  });
+
+  it('forwards the request and exposes the status, headers, and body chunks', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('first');
+    server.byDefault(
+      TestHttpHandlers.chunkedStream(200, { 'content-type': 'text/event-stream' }, chunks),
+    );
+
+    const nodeFetch = createNodeFetch();
+    const res = await nodeFetch(`${server.url}/stream`, {
+      method: 'REPORT',
+      headers: { authorization: 'sdk-key' },
+      body: '{"kind":"user"}',
+    });
+
+    expect(res.status).toEqual(200);
+    const headers: Record<string, string> = {};
+    res.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+    expect(headers['content-type']).toEqual('text/event-stream');
+
+    const reader = res.body?.getReader();
+    const first = await reader?.read();
+    expect(first?.done).toBe(false);
+    expect(Buffer.from(first?.value ?? []).toString()).toEqual('first');
+
+    const received = await server.nextRequest();
+    expect(received.method.toUpperCase()).toEqual('REPORT');
+    expect(received.headers.authorization).toEqual('sdk-key');
+    expect(received.body).toEqual('{"kind":"user"}');
+  });
+
+  it('does not follow redirects', async () => {
+    server.byDefault(TestHttpHandlers.respond(301, { location: `${server.url}/other` }));
+
+    const nodeFetch = createNodeFetch();
+    const res = await nodeFetch(server.url, { method: 'GET', headers: {} });
+
+    expect(res.status).toEqual(301);
+    expect(server.requestCount()).toEqual(1);
+  });
+
+  it('stops the stream when the signal aborts', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('first');
+    server.byDefault(TestHttpHandlers.chunkedStream(200, {}, chunks));
+
+    const controller = new AbortController();
+    const nodeFetch = createNodeFetch();
+    const res = await nodeFetch(server.url, {
+      method: 'GET',
+      headers: {},
+      signal: controller.signal,
+    });
+    const reader = res.body?.getReader();
+    await reader?.read();
+    const pending = reader?.read();
+    controller.abort();
+    await expect(pending).rejects.toThrow();
+  });
+
+  it('uses the supplied agent', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+    const agent = new http.Agent({ keepAlive: false });
+    // addRequest exists at runtime but is not part of the public http.Agent type.
+    // @ts-ignore
+    const addRequestSpy = jest.spyOn(agent, 'addRequest');
+
+    const nodeFetch = createNodeFetch(agent);
+    await nodeFetch(server.url, { method: 'GET', headers: {} });
+
+    expect(addRequestSpy).toHaveBeenCalled();
+  });
+
+  it('streams SSE events through createEventSource', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('data: hello\n\n');
+    server.byDefault(
+      TestHttpHandlers.chunkedStream(200, { 'content-type': 'text/event-stream' }, chunks),
+    );
+
+    const requests = new NodeRequests();
+    const es = requests.createEventSource(`${server.url}/stream`, {
+      headers: {},
+      initialRetryDelayMillis: 100,
+      readTimeoutMillis: 5000,
+      retryResetIntervalMillis: 30_000,
+      errorFilter: () => false,
+    });
+    try {
+      const messages = new AsyncQueue<{ data?: string }>();
+      es.addEventListener('message', (event) => messages.add(event ?? {}));
+      const message = await messages.take();
+      expect(message.data).toEqual('hello');
+    } finally {
+      es.close();
+    }
+  });
+});
+
+describe('given a running HTTPS server with a self-signed certificate', () => {
+  let server: TestHttpServer;
+
+  beforeEach(async () => {
+    server = await TestHttpServers.startSecure();
+    server.byDefault(TestHttpHandlers.respond(200));
+  });
+
+  afterEach(async () => {
+    await server.closeAndWait();
+  });
+
+  it('connects when the CA is supplied in the TLS options', async () => {
+    const nodeFetch = createNodeFetch(undefined, { ca: server.certificate });
+    const res = await nodeFetch(server.url, { method: 'GET', headers: {} });
+    expect(res.status).toEqual(200);
+  });
+
+  it('rejects the connection when no CA is supplied', async () => {
+    const nodeFetch = createNodeFetch();
+    await expect(nodeFetch(server.url, { method: 'GET', headers: {} })).rejects.toThrow();
+  });
+
+  it('fails the stream against an untrusted certificate by default', async () => {
+    const requests = new NodeRequests();
+    const es = requests.createEventSource(`${server.url}/stream`, {
+      headers: {},
+      initialRetryDelayMillis: 100,
+      readTimeoutMillis: 5000,
+      retryResetIntervalMillis: 30_000,
+      errorFilter: () => false,
+    });
+    try {
+      const errors = new AsyncQueue<unknown>();
+      es.addEventListener('error', (event) => errors.add(event));
+      expect(await errors.take()).toBeDefined();
+    } finally {
+      es.close();
+    }
+  });
+
+  it('streams over TLS when the CA is supplied through tlsParams', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('data: secure\n\n');
+    server.byDefault(
+      TestHttpHandlers.chunkedStream(200, { 'content-type': 'text/event-stream' }, chunks),
+    );
+
+    const requests = new NodeRequests({ ca: server.certificate });
+    const es = requests.createEventSource(`${server.url}/stream`, {
+      headers: {},
+      initialRetryDelayMillis: 100,
+      readTimeoutMillis: 5000,
+      retryResetIntervalMillis: 30_000,
+      errorFilter: () => false,
+    });
+    try {
+      const messages = new AsyncQueue<{ data?: string }>();
+      es.addEventListener('message', (event) => messages.add(event ?? {}));
+      const message = await messages.take();
+      expect(message.data).toEqual('secure');
+    } finally {
+      es.close();
+    }
+  });
+});

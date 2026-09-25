@@ -1,9 +1,6 @@
 import * as http from 'http';
 import * as https from 'https';
 import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
@@ -16,6 +13,7 @@ import {
   platform,
 } from '@launchdarkly/js-server-sdk-common';
 
+import createNodeEventSourceFactory, { NodeEventSourceFactory } from './NodeEventSource';
 import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
@@ -124,6 +122,8 @@ export default class NodeRequests implements platform.Requests {
 
   private _tlsOptions: LDTLSOptions | undefined;
 
+  private _createEventSource: NodeEventSourceFactory;
+
   private _hasProxy: boolean = false;
 
   private _hasProxyAuth: boolean = false;
@@ -138,6 +138,10 @@ export default class NodeRequests implements platform.Requests {
     enableEventCompression?: boolean,
   ) {
     this._agent = resolveAgent(tlsOptions, proxyOptions, proxyAgent, logger);
+    // The agent owns connection setup when the caller supplies one, so the TLS parameters are
+    // only forwarded when this class built the agent itself (or no agent exists).
+    this._tlsOptions = proxyAgent ? undefined : tlsOptions;
+    this._createEventSource = createNodeEventSourceFactory(this._agent, this._tlsOptions);
     // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
     // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
     // certificate-only agent for mTLS). Reporting true is the better default here because
@@ -209,14 +213,7 @@ export default class NodeRequests implements platform.Requests {
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
-      ...eventSourceInitDict,
-      agent: this._agent,
-      tlsParams: this._tlsOptions,
-      maxBackoffMillis: 30 * 1000,
-      jitterRatio: 0.5,
-    };
-    return new LDEventSource(url, expandedOptions);
+    return this._createEventSource(url, eventSourceInitDict);
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {
