@@ -1,6 +1,6 @@
 import { LDClientContext } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../subsystems';
+import { LDFeatureStore, LDOverrideSource } from '../subsystems';
 
 /**
  * Configuration options for the Data System that the SDK uses to get and maintain flags and other
@@ -77,7 +77,36 @@ export interface LDDataSystemOptions {
    * will transition to a terminal Closed state when the directive is received.
    */
   fdv1Fallback?: FDv1FallbackConfiguration | null;
+
+  /**
+   * Configures an override source. Flag overrides are currently experimental and subject to
+   * change.
+   *
+   * The source supplies flag and segment definitions that take precedence over data received
+   * from LaunchDarkly on a per-key basis. Overrides let an operator force one or more flags to a
+   * known state on a running client, whether or not the client can reach LaunchDarkly. Flags not
+   * present in the override data are unaffected.
+   *
+   * The override source is not a data source. It has no effect on the client's initialization
+   * status or data source status. Configuring it changes nothing until the source supplies an
+   * override. At most one override source can be configured.
+   *
+   * Some implementations provide the source object itself, while others provide a factory
+   * function that creates the source based on the SDK configuration. This property accepts
+   * either.
+   */
+  overrides?: LDOverrideSourceOptions;
 }
+
+/**
+ * The ways an override source can be configured: the source itself, or a factory function that
+ * creates it from the client context.
+ *
+ * Flag overrides are currently experimental and subject to change.
+ */
+export type LDOverrideSourceOptions =
+  | LDOverrideSource
+  | ((clientContext: LDClientContext) => LDOverrideSource);
 
 /**
  * Configuration options for the FDv1 Fallback Synchronizer.
