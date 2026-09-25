@@ -10,6 +10,7 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from './InMemoryFeatureStore';
+import SupervisedOperation from './SupervisedOperation';
 
 // How often to check the persistence store for recovery while it is unavailable.
 const RECOVERY_POLL_INTERVAL_MS = 500;
@@ -28,6 +29,8 @@ const WRITE_BACK_SUCCESS_EMBARGO_MS = 1000;
 
 // Deadline for a write-back or availability probe to answer. Past this, treat it as
 // abandoned so a persistence client that never calls back cannot block recovery.
+// Matches the UpdateQueue deadline, so by the time a retry is issued, the wrapper's
+// queue has released the hung call it would otherwise wait behind.
 const HUNG_TIMEOUT_MS = 30000;
 
 // True when a value looks like a Promise.
@@ -92,67 +95,6 @@ function invokeStoreCall(
 }
 
 /**
- * Tracks one kind of in-flight persistence store operation.
- *
- * At most one attempt is outstanding at a time. Every attempt gets a generation,
- * and an answer is honored only while its generation is current, so a stale or
- * duplicate answer from an earlier attempt can never be mistaken for the current
- * one. An attempt that never answers can be released once it is past a deadline.
- */
-class SupervisedOperation {
-  private _inFlight = false;
-  private _generation = 0;
-  private _startedAt = 0;
-
-  get inFlight(): boolean {
-    return this._inFlight;
-  }
-
-  /** Starts a new attempt and returns its generation. */
-  begin(): number {
-    this._generation += 1;
-    this._inFlight = true;
-    this._startedAt = Date.now();
-    return this._generation;
-  }
-
-  /**
-   * Records the answer of the given attempt. Returns false for a stale or
-   * duplicate answer, which the caller must ignore.
-   */
-  settle(generation: number): boolean {
-    if (!this.isCurrent(generation)) {
-      return false;
-    }
-    this._inFlight = false;
-    return true;
-  }
-
-  /** True while the given attempt is the outstanding one. */
-  isCurrent(generation: number): boolean {
-    return generation === this._generation && this._inFlight;
-  }
-
-  /** Invalidates the outstanding attempt, so a late answer is ignored. */
-  invalidate(): void {
-    this._generation += 1;
-    this._inFlight = false;
-  }
-
-  /**
-   * Invalidates the outstanding attempt once it is past its deadline. Returns
-   * whether it was released.
-   */
-  releaseIfHung(timeoutMs: number): boolean {
-    if (Date.now() - this._startedAt < timeoutMs) {
-      return false;
-    }
-    this.invalidate();
-    return true;
-  }
-}
-
-/**
  * Wraps a non-transactional {@link LDFeatureStore} and makes it transactional through
  * an in-memory store acting as a cache.
  *
@@ -160,8 +102,8 @@ class SupervisedOperation {
  * the store unavailable. When the store recovers, this writes the full in-memory data
  * set back to it.
  *
- * Persistence stores that do not serialize writes internally may see overlapping
- * full-store writes after an abandoned write-back.
+ * Persistence stores that do not serialize writes internally may see overlapping or
+ * out-of-order full-store writes, most likely after an abandoned write-back.
  */
 export default class TransactionalFeatureStore implements LDTransactionalFeatureStore {
   private _memoryStore: InMemoryFeatureStore;
@@ -175,8 +117,8 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   private _probe = new SupervisedOperation();
 
   // The full-data-set write-back. In-flight across both the probe-triggered and
-  // write-signal-triggered recovery paths, so at most one write-back runs at a
-  // time.
+  // write-signal-triggered recovery paths, so at most one write-back is tracked at
+  // a time. An abandoned attempt may still execute inside the persistence store.
   private _writeBackOp = new SupervisedOperation();
 
   // Epoch ms before which a new write-back attempt is not issued. Persists across
@@ -192,9 +134,14 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
 
   // True once the current outage has logged a write-back failure at error level. A
   // hung write-back that gets released by its deadline advances the backoff but
-  // never logs, so this flag tracks the log separately and keeps the outage's
+  // logs through _hungWarnedThisOutage instead, so this flag keeps the outage's
   // first genuine failure at error level.
   private _failureLoggedThisOutage = false;
+
+  // True once the current outage has logged a hung-write-back abandonment at warn
+  // level. Later abandonments in the same outage log at debug, so a store that
+  // never answers cannot flood the log.
+  private _hungWarnedThisOutage = false;
 
   private _closed = false;
 
@@ -277,15 +224,25 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       data,
       () => {
         // TODO: SDK-1047 conditional propgation to persistence based on parameter
+        if (this._closed) {
+          // The stores are closed, so nothing is mirrored to persistence. The
+          // change's own callback must still fire.
+          callback();
+          return;
+        }
         if (basis) {
           // basis causes memory store to become the active store
           this._activeStore = this._memoryStore;
 
           // A persistence failure must not fail the change. The memory store already
-          // holds the data, so the change's own callback must still fire.
+          // holds the data, so the change's own callback must still fire, even when
+          // a throwing logger escapes the availability handling.
           const settleOnce = once((err?: Error) => {
-            this._handleWriteResult(err, true);
-            callback();
+            try {
+              this._handleWriteResult(err, true);
+            } finally {
+              callback();
+            }
           });
           invokeStoreCall(() => this._basePersistenceStore.init(data, settleOnce), settleOnce);
         } else {
@@ -305,8 +262,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
                       // Same once-only containment as the basis write above, applied
                       // per mirrored item.
                       const settleOnce = once((err?: Error) => {
-                        this._handleWriteResult(err, false);
-                        resolve();
+                        try {
+                          this._handleWriteResult(err, false);
+                        } finally {
+                          resolve();
+                        }
                       });
                       invokeStoreCall(
                         () =>
@@ -403,9 +363,15 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     this._probe.invalidate();
     this._writeBackOp.invalidate();
     this._failureLoggedThisOutage = false;
+    this._hungWarnedThisOutage = false;
     this._logger?.warn(
       'Persistent store is unavailable. Updates will be kept in memory until it recovers.',
     );
+    if (typeof this._basePersistenceStore.isStoreAvailable !== 'function') {
+      this._logger?.warn(
+        'The persistent store has no availability check. Recovery relies on later successful writes and timed retries.',
+      );
+    }
     this._startRecoveryPolling();
   }
 
@@ -418,6 +384,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     // this outage's failures do not carry into the next one.
     this._backoff.success();
     this._failureLoggedThisOutage = false;
+    this._hungWarnedThisOutage = false;
     this._writeFailedDuringWriteBack = false;
     // Invalidate outstanding probe and write-back callbacks from this outage, so a
     // stale answer cannot flip state out from under the next outage.
@@ -516,16 +483,17 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
-   * Schedules, for a store without an availability check, the next write-back
-   * attempt at the embargo deadline.
+   * Schedules the next write-back attempt at the embargo deadline.
    *
-   * Such a store has no poller. Without this timer, a recovery signal that arrived
-   * during the embargo, or a failed write-back with no follow-up write, would leave
-   * no later trigger, and the persistence store would stay stale until the next
-   * mirrored write. At most one timer runs. Recovery and close cancel it.
+   * Without this timer, a recovery signal that arrived during the embargo, or a
+   * failed write-back with no follow-up write, could leave no later trigger: a
+   * store without an availability check has no poller, and a poller's probe can
+   * disagree with the write path. At most one timer runs. Recovery and close
+   * cancel it. A duplicate trigger with the poll tick is harmless: whichever
+   * fires second finds the attempt already in flight or the store recovered.
    */
   private _scheduleEmbargoRetry(): void {
-    if (this._pollHandle || this._embargoRetryHandle || this._closed) {
+    if (this._embargoRetryHandle || this._closed) {
       return;
     }
     this._embargoRetryHandle = setTimeout(
@@ -584,7 +552,13 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
       return false;
     }
     this._armFailureEmbargo();
-    this._logger?.debug('A write-back to the persistent store did not complete in time. Retrying.');
+    const message = 'A write-back to the persistent store did not complete in time. Retrying.';
+    if (!this._hungWarnedThisOutage) {
+      this._hungWarnedThisOutage = true;
+      this._logger?.warn(message);
+    } else {
+      this._logger?.debug(message);
+    }
     return true;
   }
 
@@ -613,9 +587,8 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     }
     if (Date.now() < this._writeBackEmbargoUntil) {
       // Backing off after a write-back failure. A write-signal or probe answer that
-      // arrives inside the embargo must not flood the persistence store with retries.
-      // A store with a poller retries on a later poll tick. A store without one
-      // must keep the signal, or it would have no later trigger.
+      // arrives inside the embargo must not flood the persistence store with
+      // retries. The retry timer keeps the signal until the embargo passes.
       this._scheduleEmbargoRetry();
       return;
     }
@@ -677,8 +650,8 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   }
 
   /**
-   * Backs off the next write-back attempt after a failed or abandoned one, and, for
-   * a store without a poller, schedules that attempt at the backoff deadline.
+   * Backs off the next write-back attempt after a failed or abandoned one, and
+   * schedules that attempt at the backoff deadline.
    */
   private _armFailureEmbargo(): void {
     this._writeBackEmbargoUntil = Date.now() + this._backoff.fail();
