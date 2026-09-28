@@ -163,10 +163,9 @@ describe.each([301, 307])('given a %s redirect response', (status) => {
   });
 
   it('reconnects to the original url rather than the redirect target', async () => {
-    // fetch() follows redirects itself, so the redirect target is never observable here and every
-    // attempt starts from the configured url. That matches the original Node implementation for a 307 (which restores the
-    // original url before reconnecting); it differs for a 301, where the original Node implementation pins the new url and
-    // this implementation re-follows the redirect on each attempt instead.
+    // fetch() follows redirects itself, so the redirect target is never observable here: every
+    // reconnect attempt starts from the configured url and re-follows the redirect, for a 301
+    // and a 307 alike.
     await withServer(async (server) => {
       server.forMethodAndPath(
         'get',
