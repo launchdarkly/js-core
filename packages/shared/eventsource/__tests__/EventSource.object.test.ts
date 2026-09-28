@@ -92,18 +92,20 @@ it('has a close method that returns undefined', async () => {
   });
 });
 
-it('has a close method', () => {
-  const es = createEventSource(unusedUrl);
-  es.onerror = () => {};
-  expect(typeof es.close).toEqual('function');
-  es.close();
-});
-
 it('exposes the original request url', () => {
   const es = createEventSource(unusedUrl);
   es.onerror = () => {};
   es.close();
   expect(es.url).toEqual(unusedUrl);
+});
+
+it('returns the assigned function from the on* slots', () => {
+  const es = createEventSource(unusedUrl);
+  es.onerror = () => {};
+  const handler = () => {};
+  es.onretrying = handler;
+  expect(es.onretrying).toBe(handler);
+  es.close();
 });
 
 it('does not expose configured headers as an enumerable property', () => {
