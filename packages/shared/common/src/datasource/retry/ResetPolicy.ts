@@ -28,65 +28,59 @@ export interface ResetPolicy {
 }
 
 /**
- * Resets once the component has operated without failing for the given
- * duration. Repeated healthy reports do not move the starting point; only a
- * failure clears it.
+ * Creates a policy that resets once the component has operated without failing
+ * for the given duration. Repeated healthy reports do not move the starting
+ * point; only a failure clears it.
+ *
+ * @param healthyForMs How long the component must operate without failing,
+ * in milliseconds; must be a positive, finite number.
+ * @param clock The time source used to measure the healthy stretch; defaults
+ * to a monotonic clock. Primarily for testing.
  */
-export class AfterHealthyFor implements ResetPolicy {
-  private _healthySinceMs?: number;
-  private readonly _healthyForMs: number;
-  private readonly _clock: () => number;
+export function createAfterHealthyFor(
+  healthyForMs: number,
+  clock: () => number = defaultClock(),
+): ResetPolicy {
+  let healthySinceMs: number | undefined;
 
-  /**
-   * @param healthyForMs How long the component must operate without failing,
-   * in milliseconds; must be a positive, finite number.
-   * @param clock The time source used to measure the healthy stretch; defaults
-   * to a monotonic clock. Primarily for testing.
-   */
-  constructor(healthyForMs: number, clock?: () => number) {
-    this._healthyForMs = healthyForMs;
-    this._clock = clock ?? defaultClock();
-  }
+  return {
+    noteHealthy(): void {
+      if (healthySinceMs === undefined) {
+        healthySinceMs = clock();
+      }
+    },
 
-  noteHealthy(): void {
-    if (this._healthySinceMs === undefined) {
-      this._healthySinceMs = this._clock();
-    }
-  }
+    noteFailure(): void {
+      healthySinceMs = undefined;
+    },
 
-  noteFailure(): void {
-    this._healthySinceMs = undefined;
-  }
-
-  isSatisfied(): boolean {
-    return (
-      this._healthySinceMs !== undefined &&
-      this._clock() - this._healthySinceMs >= this._healthyForMs
-    );
-  }
+    isSatisfied(): boolean {
+      return healthySinceMs !== undefined && clock() - healthySinceMs >= healthyForMs;
+    },
+  };
 }
 
 /**
- * Resets once the given number of operations in a row have succeeded.
+ * Creates a policy that resets once the given number of operations in a row
+ * have succeeded.
+ *
+ * @param count How many operations in a row must succeed; must be a positive
+ * integer.
  */
-export class AfterConsecutiveSuccesses implements ResetPolicy {
-  private _successes = 0;
+export function createAfterConsecutiveSuccesses(count: number): ResetPolicy {
+  let successes = 0;
 
-  /**
-   * @param _count How many operations in a row must succeed; must be a
-   * positive integer.
-   */
-  constructor(private readonly _count: number) {}
+  return {
+    noteHealthy(): void {
+      successes += 1;
+    },
 
-  noteHealthy(): void {
-    this._successes += 1;
-  }
+    noteFailure(): void {
+      successes = 0;
+    },
 
-  noteFailure(): void {
-    this._successes = 0;
-  }
-
-  isSatisfied(): boolean {
-    return this._successes >= this._count;
-  }
+    isSatisfied(): boolean {
+      return successes >= count;
+    },
+  };
 }

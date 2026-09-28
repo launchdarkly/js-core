@@ -2,10 +2,10 @@ import AttributeReference from './AttributeReference';
 import Context from './Context';
 import ContextFilter from './ContextFilter';
 import {
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
   Backoff,
   CompositeDataSource,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
   createRetryState,
   DataSourceErrorKind,
   DefaultBackoff,
@@ -43,8 +43,8 @@ export {
   StreamingErrorHandler,
   LDFileDataSourceError,
   LDFlagDeliveryFallbackError,
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
   createRetryState,
   forPolling,
   forStreaming,

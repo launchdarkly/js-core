@@ -1,6 +1,6 @@
 import { LDLogger } from '../../api/logging/LDLogger';
 import { FailureKind } from '../../errors';
-import { AfterConsecutiveSuccesses, AfterHealthyFor, ResetPolicy } from './ResetPolicy';
+import { createAfterConsecutiveSuccesses, createAfterHealthyFor, ResetPolicy } from './ResetPolicy';
 
 // The delay bounds of the extended regime, in milliseconds. A component enters
 // the extended regime after an unexpected failure and leaves it when its reset
@@ -238,7 +238,7 @@ export function forStreaming(initialReconnectDelayMs: number, logger?: LDLogger)
     normalCeilingMs: STREAMING_NORMAL_CEILING_MS,
     extendedInitialDelayMs: Math.max(EXTENDED_INITIAL_DELAY_MS, validated),
     extendedCeilingMs: EXTENDED_CEILING_MS,
-    resetPolicy: new AfterHealthyFor(STREAMING_RESET_INTERVAL_MS),
+    resetPolicy: createAfterHealthyFor(STREAMING_RESET_INTERVAL_MS),
     operatingCadenceMs: 0,
   });
 }
@@ -266,7 +266,7 @@ export function forPolling(pollIntervalMs: number, logger?: LDLogger): RetryStat
     normalCeilingMs: validated,
     extendedInitialDelayMs: Math.max(EXTENDED_INITIAL_DELAY_MS, validated),
     extendedCeilingMs: EXTENDED_CEILING_MS,
-    resetPolicy: new AfterConsecutiveSuccesses(POLLING_RESET_SUCCESSES),
+    resetPolicy: createAfterConsecutiveSuccesses(POLLING_RESET_SUCCESSES),
     operatingCadenceMs: validated,
   });
 }

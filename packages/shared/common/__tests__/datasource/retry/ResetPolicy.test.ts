@@ -1,6 +1,6 @@
 import {
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
 } from '../../../src/datasource/retry/ResetPolicy';
 
 const MINUTE = 60 * 1000;
@@ -13,13 +13,13 @@ beforeEach(() => {
 });
 
 it('is not satisfied before any healthy report', () => {
-  const policy = new AfterHealthyFor(MINUTE, clock);
+  const policy = createAfterHealthyFor(MINUTE, clock);
   now = 10 * MINUTE;
   expect(policy.isSatisfied()).toEqual(false);
 });
 
 it('is satisfied once the healthy stretch reaches the threshold, and not a moment sooner', () => {
-  const policy = new AfterHealthyFor(MINUTE, clock);
+  const policy = createAfterHealthyFor(MINUTE, clock);
   policy.noteHealthy();
   now = MINUTE - 1;
   expect(policy.isSatisfied()).toEqual(false);
@@ -28,7 +28,7 @@ it('is satisfied once the healthy stretch reaches the threshold, and not a momen
 });
 
 it('does not move the start of the stretch on repeated healthy reports', () => {
-  const policy = new AfterHealthyFor(MINUTE, clock);
+  const policy = createAfterHealthyFor(MINUTE, clock);
   policy.noteHealthy();
   for (let i = 1; i < 60; i += 1) {
     now = i * 1000;
@@ -40,7 +40,7 @@ it('does not move the start of the stretch on repeated healthy reports', () => {
 });
 
 it('clears the healthy stretch on a failure', () => {
-  const policy = new AfterHealthyFor(MINUTE, clock);
+  const policy = createAfterHealthyFor(MINUTE, clock);
   policy.noteHealthy();
   now = 30 * 1000;
   policy.noteFailure();
@@ -49,7 +49,7 @@ it('clears the healthy stretch on a failure', () => {
 });
 
 it('is satisfied by consecutive successes and not by fewer', () => {
-  const policy = new AfterConsecutiveSuccesses(2);
+  const policy = createAfterConsecutiveSuccesses(2);
   expect(policy.isSatisfied()).toEqual(false);
   policy.noteHealthy();
   expect(policy.isSatisfied()).toEqual(false);
@@ -58,7 +58,7 @@ it('is satisfied by consecutive successes and not by fewer', () => {
 });
 
 it('starts the success count over on a failure', () => {
-  const policy = new AfterConsecutiveSuccesses(2);
+  const policy = createAfterConsecutiveSuccesses(2);
   policy.noteHealthy();
   policy.noteFailure();
   policy.noteHealthy();
@@ -68,7 +68,7 @@ it('starts the success count over on a failure', () => {
 });
 
 it('measures the healthy stretch with the default clock', () => {
-  const policy = new AfterHealthyFor(60 * MINUTE);
+  const policy = createAfterHealthyFor(60 * MINUTE);
   expect(policy.isSatisfied()).toEqual(false);
   policy.noteHealthy();
   expect(policy.isSatisfied()).toEqual(false);
@@ -79,7 +79,7 @@ it('falls back to the wall clock when no monotonic source exists', () => {
   const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(0);
   delete (globalThis as any).performance;
   try {
-    const policy = new AfterHealthyFor(MINUTE);
+    const policy = createAfterHealthyFor(MINUTE);
     policy.noteHealthy();
     expect(policy.isSatisfied()).toEqual(false);
     nowSpy.mockReturnValue(MINUTE);

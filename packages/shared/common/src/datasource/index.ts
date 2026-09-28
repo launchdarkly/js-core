@@ -9,8 +9,8 @@ import {
   StreamingErrorHandler,
 } from './errors';
 import {
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
   createRetryState,
   forPolling,
   forStreaming,
@@ -20,10 +20,10 @@ import {
 } from './retry';
 
 export {
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
   Backoff,
   CompositeDataSource,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
   createRetryState,
   DefaultBackoff,
   DataSourceErrorKind,

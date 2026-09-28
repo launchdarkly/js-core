@@ -1,6 +1,6 @@
 import {
-  AfterConsecutiveSuccesses,
-  AfterHealthyFor,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
 } from '../../../src/datasource/retry/ResetPolicy';
 import {
   createRetryState,
@@ -28,7 +28,7 @@ function streamingState(overrides: Partial<RetryStateConfig> = {}): RetryState {
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 5 * MINUTE,
     extendedCeilingMs: HOUR,
-    resetPolicy: new AfterHealthyFor(MINUTE, clock),
+    resetPolicy: createAfterHealthyFor(MINUTE, clock),
     operatingCadenceMs: 0,
     random: noJitter,
     ...overrides,
@@ -41,7 +41,7 @@ function pollingState(intervalMs: number, overrides: Partial<RetryStateConfig> =
     normalCeilingMs: intervalMs,
     extendedInitialDelayMs: Math.max(5 * MINUTE, intervalMs),
     extendedCeilingMs: Math.max(HOUR, intervalMs),
-    resetPolicy: new AfterConsecutiveSuccesses(2),
+    resetPolicy: createAfterConsecutiveSuccesses(2),
     operatingCadenceMs: intervalMs,
     random: noJitter,
     ...overrides,
@@ -407,7 +407,7 @@ it('defaults the operating cadence to zero for direct construction', () => {
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 5 * MINUTE,
     extendedCeilingMs: HOUR,
-    resetPolicy: new AfterHealthyFor(MINUTE, clock),
+    resetPolicy: createAfterHealthyFor(MINUTE, clock),
     random: noJitter,
   });
   expect(state.nextDelay).toEqual(0);
@@ -421,7 +421,7 @@ it('floors the extended ceiling at the extended initial delay on the transition'
     normalCeilingMs: 30 * 1000,
     extendedInitialDelayMs: 10 * MINUTE,
     extendedCeilingMs: 5 * MINUTE,
-    resetPolicy: new AfterHealthyFor(MINUTE, clock),
+    resetPolicy: createAfterHealthyFor(MINUTE, clock),
     operatingCadenceMs: 0,
     random: noJitter,
   });
