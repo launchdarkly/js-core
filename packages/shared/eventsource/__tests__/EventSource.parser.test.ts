@@ -50,6 +50,53 @@ it('ignores byte-order mark', async () => {
   });
 });
 
+it('ignores a byte-order mark split one byte then two across chunks', async () => {
+  await withServer(async (server) => {
+    server.byDefault((req, res) => {
+      const msg = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('data: foo\n\n')]);
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      // The first read delivers a single byte of the mark; the rest arrives later.
+      res.write(msg.subarray(0, 1), 'binary', () => {
+        res.write(msg.subarray(1));
+      });
+    });
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'foo' }]);
+    });
+  });
+});
+
+it('ignores a byte-order mark split two bytes then one across chunks', async () => {
+  await withServer(async (server) => {
+    server.byDefault((req, res) => {
+      const msg = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('data: foo\n\n')]);
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      res.write(msg.subarray(0, 2), 'binary', () => {
+        res.write(msg.subarray(2));
+      });
+    });
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'foo' }]);
+    });
+  });
+});
+
+it('parses a stream without a byte-order mark whose first chunk is a single byte', async () => {
+  await withServer(async (server) => {
+    server.byDefault((req, res) => {
+      const msg = Buffer.from('data: foo\n\n');
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      // A one-byte first chunk that is not part of a mark must parse as ordinary data.
+      res.write(msg.subarray(0, 1), 'binary', () => {
+        res.write(msg.subarray(1));
+      });
+    });
+    await withEventSource(server.url, undefined, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'foo' }]);
+    });
+  });
+});
+
 it('parses one one-line message in two chunks', async () => {
   await withServer(async (server) => {
     server.byDefault(writeEvents(['data: Hel', 'lo\n\n']));

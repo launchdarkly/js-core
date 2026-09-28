@@ -10,6 +10,15 @@ export function hasBom(buf: Uint8Array): boolean {
   return bom.every((charCode, index) => buf[index] === charCode);
 }
 
+/**
+ * True when the first `length` buffered bytes all match the byte order mark at their positions.
+ * With fewer than three such bytes the mark is still possible, so the caller must wait for more
+ * data before it decides whether to strip one.
+ */
+export function isBomPrefix(buf: Uint8Array, length: number): boolean {
+  return bom.slice(0, length).every((charCode, index) => buf[index] === charCode);
+}
+
 /*
  * Helpers for the fetch transport.
  */
