@@ -23,10 +23,9 @@ app.get('/', (req: Request, res: Response) => {
       'read-timeout',
       'last-event-id',
       'server-directed-shutdown-request',
-      // The 'bom' capability is not declared. The implementation removes a byte-order mark only
-      // when the mark arrives whole in the first chunk of the stream. The original js-eventsource
-      // package has the same limit. The split-BOM tests in the harness would fail against both.
-      // The test service of the original did not declare 'bom' either.
+      // The parser strips one leading byte-order mark even when the mark arrives split across
+      // reads, so the harness's split-BOM tests apply.
+      'bom',
     ],
   });
 });
