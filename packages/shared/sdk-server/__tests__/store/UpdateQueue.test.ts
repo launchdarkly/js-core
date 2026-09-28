@@ -22,70 +22,90 @@ it('forwards no error when the update function succeeds', (done) => {
   );
 });
 
-it('abandons an update that does not answer within the deadline and runs the next one', async () => {
+it('waits for a slow update instead of running the next one, and warns', async () => {
   jest.useFakeTimers();
   try {
-    const queue = new UpdateQueue();
-    const hungCallback = jest.fn();
-    let secondRan = false;
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const queue = new UpdateQueue(logger);
+    let slowCallback: ((err?: Error) => void) | undefined;
+    const firstCallback = jest.fn();
+    const secondCallback = jest.fn();
 
-    // The first update never calls back.
-    queue.enqueue(() => {}, hungCallback);
-    queue.enqueue(
-      (cb) => {
-        secondRan = true;
-        cb();
-      },
-      () => {},
-    );
+    queue.enqueue((cb) => {
+      slowCallback = cb;
+    }, firstCallback);
+    queue.enqueue((cb) => cb(), secondCallback);
 
-    await jest.advanceTimersByTimeAsync(29999);
-    expect(secondRan).toBe(false);
-    expect(hungCallback).not.toHaveBeenCalled();
+    // Well past the warning deadline, the slow update still holds the queue.
+    // The warning fires exactly once.
+    await jest.advanceTimersByTimeAsync(120000);
+    expect(secondCallback).not.toHaveBeenCalled();
+    expect(firstCallback).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn.mock.calls[0][0]).toMatch(/did not complete within 30 seconds/);
 
+    // The slow update finally answers. It completes normally, and the next update
+    // runs through a zero-delay chain timer.
+    slowCallback?.();
     await jest.advanceTimersByTimeAsync(1);
-    // The next update runs through a zero-delay chain timer.
-    await jest.advanceTimersByTimeAsync(1);
-    expect(secondRan).toBe(true);
-    expect(hungCallback).toHaveBeenCalledTimes(1);
-    expect(hungCallback.mock.calls[0][0]).toEqual(
-      new Error('The queued store operation did not complete in time.'),
-    );
+    expect(firstCallback).toHaveBeenCalledTimes(1);
+    expect(firstCallback).toHaveBeenCalledWith(undefined);
+    expect(secondCallback).toHaveBeenCalledTimes(1);
   } finally {
     jest.useRealTimers();
   }
 });
 
-it('ignores the late callback of an abandoned update', async () => {
+it('does not warn about an update that completes before the deadline', async () => {
+  jest.useFakeTimers();
+  try {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const queue = new UpdateQueue(logger);
+    queue.enqueue(
+      (cb) => cb(),
+      () => {},
+    );
+
+    await jest.advanceTimersByTimeAsync(120000);
+    expect(logger.warn).not.toHaveBeenCalled();
+    expect(jest.getTimerCount()).toEqual(0);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('ignores a second answer from an update that already completed', async () => {
   jest.useFakeTimers();
   try {
     const queue = new UpdateQueue();
-    let lateCallback: ((err?: Error) => void) | undefined;
+    let doubleCallback: ((err?: Error) => void) | undefined;
     const firstCallback = jest.fn();
     const secondCallback = jest.fn();
-    const thirdCallback = jest.fn();
 
     queue.enqueue((cb) => {
-      lateCallback = cb;
+      doubleCallback = cb;
+      cb();
     }, firstCallback);
-    // The second update stays queued behind the hung one, then behind its own work.
     queue.enqueue((cb) => cb(), secondCallback);
-
-    // The deadline abandons the first update and runs the second through a
-    // zero-delay chain timer.
-    await jest.advanceTimersByTimeAsync(30000);
     await jest.advanceTimersByTimeAsync(1);
-    expect(secondCallback).toHaveBeenCalledTimes(1);
 
-    // The abandoned update finally answers. It must not shift an update it does
-    // not own.
-    lateCallback?.();
-    queue.enqueue((cb) => cb(), thirdCallback);
+    // The first update answers a second time. It must not shift an update it
+    // does not own.
+    doubleCallback?.();
     await jest.advanceTimersByTimeAsync(1);
 
     expect(firstCallback).toHaveBeenCalledTimes(1);
     expect(secondCallback).toHaveBeenCalledTimes(1);
-    expect(thirdCallback).toHaveBeenCalledTimes(1);
   } finally {
     jest.useRealTimers();
   }
@@ -135,7 +155,7 @@ it('fails waiting updates without running them when the queue closes', async () 
     expect(waitingCallback).toHaveBeenCalledWith(new Error('The store is closed.'));
     expect(waitingFn).not.toHaveBeenCalled();
 
-    // The hang deadline was cleared, so nothing more fires.
+    // The warning timer was cleared, so nothing more fires.
     await jest.advanceTimersByTimeAsync(60000);
     expect(hungCallback).toHaveBeenCalledTimes(1);
     expect(waitingCallback).toHaveBeenCalledTimes(1);

@@ -114,7 +114,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   /**
    * Used to preserve order of operations of async requests.
    */
-  private _queue: UpdateQueue = new UpdateQueue();
+  private _queue: UpdateQueue;
 
   /**
    * Check if the underlying storage can be accessed.
@@ -129,6 +129,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     ttl: number,
     private readonly _logger?: LDLogger,
   ) {
+    this._queue = new UpdateQueue(_logger);
     if (ttl) {
       this._itemCache = new TtlCache({
         ttl,
@@ -153,9 +154,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
       (cb, isAbandoned) => {
         const afterStoreInit = (err?: Error) => {
           if (isAbandoned()) {
-            // The queue timed this init out and moved on, so a newer operation may
-            // already have run. This late result must not touch the caches or the
-            // initialized state.
+            // The store closed, or this init already answered once. This late
+            // result must not touch the caches or the initialized state.
             cb(err);
             return;
           }
@@ -203,8 +203,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
       },
       (err) => {
         if (err) {
-          // Covers the queue-timeout path, which never reaches afterStoreInit. A
-          // failed init must not keep presenting the previous data as current.
+          // Covers the close path, which fails the init without reaching
+          // afterStoreInit. A failed init must not keep presenting the previous
+          // data as current.
           this._isInitialized = false;
           this._itemCache?.clear();
           this._allItemsCache?.clear();
@@ -293,8 +294,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         persistKind.serialize(data),
         (err, updatedDescriptor) => {
           if (isAbandoned()) {
-            // The queue timed this upsert out and moved on. This late result must
-            // not overwrite a newer operation's cache entries.
+            // The store closed, or this upsert already answered once. This late
+            // result must not overwrite a newer operation's cache entries.
             cb(err);
             return;
           }

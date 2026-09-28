@@ -1,17 +1,19 @@
+import { LDLogger } from '@launchdarkly/js-sdk-common';
+
 import { toError } from './storeErrors';
 
 type CallbackFunction = (err?: Error) => void;
 // The update receives its completion callback and an isAbandoned check. When the
-// queue times the update out, or the queue closes, isAbandoned starts returning
-// true. The update's late completion handler must consult it before applying side
-// effects: the queue has already moved on, so a newer operation's results may
-// otherwise be overwritten.
+// queue closes, or the update has already answered once, isAbandoned starts
+// returning true. The update's late completion handler must consult it before
+// applying side effects: the result no longer owns the current state.
 type UpdateFunction = (cb: CallbackFunction, isAbandoned: () => boolean) => void;
 
-// Deadline for a queued update to answer. Past this, the queue abandons it and
-// runs the next update, so a store call that never calls back cannot block every
-// later update forever.
-const DEFAULT_HANG_TIMEOUT_MS = 30000;
+// A queued update past this deadline logs a warning. The queue never abandons
+// the update: later updates wait for it, so the store receives every write in
+// order. An abandoned update could otherwise complete at the store after a
+// newer one and leave the store holding older data.
+const DEFAULT_SLOW_UPDATE_WARNING_MS = 30000;
 
 const QUEUE_FAILURE_FALLBACK_MESSAGE =
   'The queued store operation failed with a reason that could not be described.';
@@ -19,6 +21,7 @@ const QUEUE_FAILURE_FALLBACK_MESSAGE =
 export default class UpdateQueue {
   private _queue: [UpdateFunction, CallbackFunction][] = [];
 
+  // Warns once per update when the update runs past its deadline.
   private _timer?: ReturnType<typeof setTimeout>;
 
   private _closed = false;
@@ -27,7 +30,10 @@ export default class UpdateQueue {
   // ignored.
   private _abandonCurrent?: () => void;
 
-  constructor(private readonly _hangTimeoutMs: number = DEFAULT_HANG_TIMEOUT_MS) {}
+  constructor(
+    private readonly _logger?: LDLogger,
+    private readonly _slowUpdateWarningMs: number = DEFAULT_SLOW_UPDATE_WARNING_MS,
+  ) {}
 
   enqueue(updateFn: UpdateFunction, cb: CallbackFunction) {
     if (this._closed) {
@@ -43,7 +49,7 @@ export default class UpdateQueue {
   }
 
   /**
-   * Stops the queue: the executing update is abandoned, its deadline timer is
+   * Stops the queue: the executing update is abandoned, its warning timer is
    * cleared, and every waiting update is failed without invoking its store call.
    */
   close(): void {
@@ -67,14 +73,12 @@ export default class UpdateQueue {
       return;
     }
     const [fn, cb] = this._queue[0];
-    // Settles this update exactly once: through the update's own callback, the
-    // deadline timer, or close. A late callback from an abandoned update is
-    // ignored, so it cannot shift an update it does not own.
+    // Settles this update exactly once: through the update's own callback, or
+    // close. A late callback after close, or a second callback after a normal
+    // completion, is ignored, so it cannot shift an update it does not own.
     let settled = false;
-    let abandoned = false;
     this._abandonCurrent = () => {
       settled = true;
-      abandoned = true;
     };
     const complete = (err?: Error) => {
       if (settled) {
@@ -97,18 +101,23 @@ export default class UpdateQueue {
       // Call the original callback.
       cb?.(err);
     };
+    // The timer only warns. The update stays the head of the queue until it
+    // answers, so later updates cannot overtake it at the store.
     this._timer = setTimeout(() => {
       this._timer = undefined;
-      abandoned = true;
-      complete(new Error('The queued store operation did not complete in time.'));
-    }, this._hangTimeoutMs);
+      this._logger?.warn(
+        `A store operation did not complete within ${
+          this._slowUpdateWarningMs / 1000
+        } seconds. Later store operations wait for it, so the store receives writes in order.`,
+      );
+    }, this._slowUpdateWarningMs);
 
     // A synchronous throw from the update must fail this update only, not escape
-    // into the timer chain that started it. isAbandoned also reports true once the
+    // into the timer chain that started it. isAbandoned reports true once the
     // update has settled, so a store that answers a second time after a normal
-    // completion is fenced the same way as a timed-out one.
+    // completion is fenced the same way as one that answers after close.
     try {
-      fn(complete, () => settled || abandoned);
+      fn(complete, () => settled);
     } catch (reason) {
       complete(toError(reason, QUEUE_FAILURE_FALLBACK_MESSAGE));
     }
