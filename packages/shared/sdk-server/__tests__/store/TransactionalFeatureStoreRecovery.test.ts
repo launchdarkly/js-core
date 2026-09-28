@@ -585,7 +585,7 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
-  it('holds the retry for a hung write-back until the hung call answers', async () => {
+  it('accepts the late success of a slow write-back instead of retrying it', async () => {
     jest.useFakeTimers();
     try {
       persistence.failUpserts = true;
@@ -596,7 +596,7 @@ describe('given a transactional store over a persistence store that can fail wri
         's2',
       );
 
-      // A recovery signal starts a write-back, which hangs.
+      // A recovery signal starts a write-back, which is slow to answer.
       persistence.failUpserts = false;
       persistence.deferInit = true;
       await recoveryFacade.applyChanges(
@@ -607,23 +607,28 @@ describe('given a transactional store over a persistence store that can fail wri
       );
       expect(persistence.pendingInitCallbacks.length).toEqual(1);
 
-      // The deadline releases the hung write-back, and the first abandonment of an
-      // outage logs at warn level. No retry runs while the hung call has not
-      // answered: it would only stack another full snapshot behind it.
+      // A slow write-back logs one warning. It is never abandoned, so no retry
+      // runs while its call has not answered: a retry would only stack another
+      // full snapshot behind it.
       persistence.deferInit = false;
       const initCallsBefore = persistence.initCalls.length;
       await jest.advanceTimersByTimeAsync(60000);
       expect(logger.warn).toHaveBeenCalledWith(
-        'A write-back to the persistent store did not complete in time. A new attempt will start when it answers.',
+        'A write-back to the persistent store is taking a long time. Recovery continues when it answers.',
       );
       expect(persistence.initCalls.length).toEqual(initCallsBefore);
       expect(logger.info).not.toHaveBeenCalled();
 
-      // The hung call finally answers. Its own result must not flip state, and the
-      // deferred retry runs with current data and recovers the store.
+      // The slow call finally succeeds. Its snapshot is still the newest data, so
+      // the success recovers the store directly. No retry write-back runs.
       persistence.pendingInitCallbacks[0]();
-      expect(persistence.initCalls.length).toEqual(initCallsBefore + 1);
+      expect(persistence.initCalls.length).toEqual(initCallsBefore);
       expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.info).toHaveBeenCalledWith('Persistent store is available again.');
+
+      // The store stays recovered: no further write-backs run afterwards.
+      await jest.advanceTimersByTimeAsync(120000);
+      expect(persistence.initCalls.length).toEqual(initCallsBefore);
     } finally {
       jest.useRealTimers();
     }
@@ -1419,48 +1424,46 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(logger.info).toHaveBeenCalledTimes(2);
   });
 
-  it('releases a hung write-back at its deadline and retries once the hung call answers', async () => {
+  it('recovers through the late success of a slow write-back while probes report available', async () => {
     persistence.deferInit = true;
     probeResult = true;
     await jest.advanceTimersByTimeAsync(500);
     expect(persistence.pendingInitCallbacks.length).toEqual(1);
-    const staleCallback = persistence.pendingInitCallbacks[0];
+    const slowCallback = persistence.pendingInitCallbacks[0];
 
     persistence.deferInit = false;
     persistence.failInits = false;
     persistence.failUpserts = false;
-    // Past the 30 second deadline the attempt is released, but the probe ticks
-    // must not issue a new write-back while the hung call has not answered: it
-    // would only stack another full snapshot behind it.
+    // The probe ticks must not issue a new write-back while the slow call has not
+    // answered: it would only stack another full snapshot behind it. This holds
+    // for any duration, so a store whose init takes longer than the warning
+    // threshold cannot loop on full-store writes.
     const initCallsBefore = persistence.initCalls.length;
     await jest.advanceTimersByTimeAsync(60000);
     expect(persistence.initCalls.length).toEqual(initCallsBefore);
     expect(logger.info).not.toHaveBeenCalled();
 
-    // The hung call finally answers. Its own result must not flip state, and the
-    // deferred retry runs and recovers the store.
-    staleCallback();
-    expect(persistence.initCalls.length).toEqual(initCallsBefore + 1);
+    // The slow call finally succeeds and recovers the store directly.
+    slowCallback();
+    expect(persistence.initCalls.length).toEqual(initCallsBefore);
     expect(logger.info).toHaveBeenCalledTimes(1);
   });
 
-  it('logs at error level for the first genuine write-back failure even when the outage started with a hung write-back', async () => {
+  it('logs at error level for the first write-back failure even when the outage started with a slow write-back', async () => {
     persistence.deferInit = true;
     probeResult = true;
     await jest.advanceTimersByTimeAsync(500);
     expect(persistence.pendingInitCallbacks.length).toEqual(1);
 
-    // The deadline releases the hung write-back, which logs at warn level and arms
-    // a failure embargo. No fresh attempt runs while the hung call has not
-    // answered.
+    // The slow write-back logs at warn level only. No fresh attempt runs while
+    // its call has not answered.
     persistence.deferInit = false;
     await jest.advanceTimersByTimeAsync(31500);
     expect(logger.error).not.toHaveBeenCalled();
 
-    // The hung call answers, and the fresh attempt runs and genuinely fails. This
-    // must still be the outage's first ERROR-level log: the hung release must not
-    // have consumed it.
-    persistence.pendingInitCallbacks[0]();
+    // The slow call answers with a failure. This must be the outage's first
+    // ERROR-level log: the slow warning must not have consumed it.
+    persistence.pendingInitCallbacks[0](new Error('init failed'));
     await jest.advanceTimersByTimeAsync(5000);
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.info).not.toHaveBeenCalled();
@@ -1719,13 +1722,16 @@ describe('given a transactional store whose persistence store has an availabilit
 
     await jest.advanceTimersByTimeAsync(100000);
 
-    // The hung attempt is released for state purposes at its 30 second deadline,
-    // but no new attempt starts while its store call has not answered: each one
-    // would stack another full-store snapshot behind the unanswered call.
+    // The attempt is never abandoned, and no new attempt starts while its store
+    // call has not answered: each one would stack another full-store snapshot
+    // behind the unanswered call. Only the slow-write-back warning is logged.
     expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'A write-back to the persistent store is taking a long time. Recovery continues when it answers.',
+    );
   });
 
-  it('ignores a duplicate answer from a released write-back', async () => {
+  it('ignores a duplicate answer from an already-settled write-back', async () => {
     probeResult = true;
     persistence.deferInit = true;
     const initCallsBefore = persistence.initCalls.length;
@@ -1734,21 +1740,34 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(persistence.pendingInitCallbacks.length).toEqual(1);
     const doubleAnswer = persistence.pendingInitCallbacks[0];
 
-    // The hung attempt is released, then answers. The answer frees the next
-    // attempt, which also hangs.
+    // The slow write-back succeeds and recovers the store.
+    persistence.failUpserts = false;
+    persistence.failInits = false;
     await jest.advanceTimersByTimeAsync(60000);
     doubleAnswer();
-    await jest.advanceTimersByTimeAsync(35000);
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
+    expect(logger.info).toHaveBeenCalledTimes(1);
+
+    // A second outage starts, and its own write-back also answers slowly.
+    persistence.failUpserts = true;
+    await pollingFacade.applyChanges(
+      false,
+      { features: { flagX: { version: 1 } } },
+      undefined,
+      's-outage2',
+    );
+    persistence.failUpserts = false;
+    await jest.advanceTimersByTimeAsync(1500);
     expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
     expect(persistence.pendingInitCallbacks.length).toEqual(2);
 
-    // The released attempt answers a second time. The duplicate must not mark
-    // the second attempt's store call as answered: after the second attempt is
-    // released as hung, no third write-back may start while its own call has
-    // not answered.
+    // The first write-back answers a second time. The duplicate must not mark
+    // the second attempt's store call as answered or recover the store: no
+    // third write-back may start while the second call has not answered.
     doubleAnswer();
     await jest.advanceTimersByTimeAsync(120000);
     expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+    expect(logger.info).toHaveBeenCalledTimes(1);
   });
 
   it('clears an accumulated failure embargo when a basis write recovers the store directly', async () => {
@@ -2134,17 +2153,18 @@ describe('given a transactional store composed over the real persistent store wr
     });
     await jest.advanceTimersByTimeAsync(0);
 
-    // Past the hung-release deadline, the supervisor gives up on the attempt and
-    // issues a retry write-back. Neither the delete nor the retry reaches the
-    // core: they wait in line behind the hung write-back.
+    // The slow write-back is never abandoned. Neither the delete nor a new
+    // write-back reaches the core: they wait in line behind it. The wrapper's
+    // queue warns about the slow head operation.
     await jest.advanceTimersByTimeAsync(35000);
     expect(core.ops).toHaveLength(3);
     expect(deleteCallbackCalls).toEqual(0);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/did not complete within/));
 
-    // The hung write-back finally answers. The queue drains in order: the old
-    // snapshot lands first, then the delete, then the retry write-back with the
-    // tombstone. The store ends at the newest data.
+    // The slow write-back finally answers. Its success recovers the store: its
+    // snapshot predates the delete, but the delete's own mirrored upsert is
+    // queued behind it and lands after, so the store ends at the newest data
+    // without a retry write-back.
     core.deferInit = false;
     const pendingInit = core.pendingInitCallbacks.slice();
     core.pendingInitCallbacks = [];
@@ -2153,9 +2173,7 @@ describe('given a transactional store composed over the real persistent store wr
 
     expect(deleteCallbackCalls).toEqual(1);
     const opTypes = core.ops.map((op) => op.type);
-    expect(opTypes.slice(0, 3)).toEqual(['init', 'upsert', 'init']);
-    expect(opTypes.slice(3)).toContain('init');
-    expect(opTypes.indexOf('upsert', 3)).toBeLessThan(opTypes.lastIndexOf('init'));
+    expect(opTypes).toEqual(['init', 'upsert', 'init', 'upsert']);
     expect(logger.info).toHaveBeenCalledWith('Persistent store is available again.');
 
     const featuresEntry = core.allData.find(
