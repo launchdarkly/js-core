@@ -29,10 +29,11 @@ const WRITE_BACK_BACKOFF_RESET_MS = 30000;
 // write-back per second instead of one per successful mirrored write.
 const WRITE_BACK_SUCCESS_EMBARGO_MS = 1000;
 
-// Deadline for a write-back or availability probe to answer. Past this, treat it as
-// abandoned so a persistence client that never calls back cannot block recovery.
-// Matches the UpdateQueue deadline, so by the time a retry is issued, the wrapper's
-// queue has released the hung call it would otherwise wait behind.
+// Deadline for a write-back or availability probe to answer. Past this, the
+// attempt no longer counts as in flight: its late answer must not flip state,
+// and the failure backoff is armed. The store call itself is never cancelled,
+// and no new write-back starts until that call answers, so full-store writes
+// cannot overlap or accumulate behind a hung call.
 const HUNG_TIMEOUT_MS = 30000;
 
 // True when a value looks like a Promise.
@@ -93,8 +94,8 @@ function invokeStoreCall(
  * the store unavailable. When the store recovers, this writes the full in-memory data
  * set back to it.
  *
- * Persistence stores that do not serialize writes internally may see overlapping or
- * out-of-order full-store writes, most likely after an abandoned write-back.
+ * At most one full-store write is in flight at a time: a new write-back starts
+ * only after the previous write-back's store call has answered.
  */
 export default class TransactionalFeatureStore implements LDTransactionalFeatureStore {
   private _memoryStore: InMemoryFeatureStore;
@@ -122,6 +123,11 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // write-back's snapshot predates the failed item, so its success alone must not
   // mark the store recovered.
   private _writeFailedDuringWriteBack = false;
+
+  // True while a write-back's store call has not answered, including after its
+  // attempt was released as hung. A new attempt would only stack another full
+  // snapshot behind the unanswered call, so recovery waits for the answer.
+  private _writeBackCallOutstanding = false;
 
   // True once the current outage has logged a write-back failure at error level. A
   // hung write-back that gets released by its deadline advances the backoff but
@@ -536,17 +542,19 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   /**
    * Abandons the outstanding write-back once it is past its deadline.
    *
-   * Bumps the generation so a late callback is ignored, and clears the in-flight
-   * flag so a fresh attempt can proceed. Also arms the failure embargo, so a
-   * persistence store that never answers backs off on the same schedule as a real
-   * failure instead of retrying every poll tick. Returns whether it was released.
+   * Bumps the generation so a late callback must not flip state, and clears the
+   * in-flight flag. Also arms the failure embargo. The next attempt starts only
+   * after the released store call answers, so a persistence store that never
+   * answers holds recovery instead of accumulating full-store writes. Returns
+   * whether it was released.
    */
   private _releaseWriteBackIfHung(): boolean {
     if (!this._writeBackOp.releaseIfHung(HUNG_TIMEOUT_MS)) {
       return false;
     }
     this._armFailureEmbargo();
-    const message = 'A write-back to the persistent store did not complete in time. Retrying.';
+    const message =
+      'A write-back to the persistent store did not complete in time. A new attempt will start when it answers.';
     if (!this._hungWarnedThisOutage) {
       this._hungWarnedThisOutage = true;
       this._logger?.warn(message);
@@ -574,6 +582,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
 
   private _attemptRecovery(): void {
     if (this._writeBackOp.inFlight && !this._releaseWriteBackIfHung()) {
+      return;
+    }
+    if (this._writeBackCallOutstanding) {
+      // A released attempt's store call has not answered. The store runs one
+      // call at a time, so a new attempt would only stack another full snapshot
+      // behind it. The late answer itself triggers the next attempt.
       return;
     }
     if (this._persistenceAvailable) {
@@ -613,9 +627,14 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     // after it. Track those failures against this attempt from a clean slate.
     this._writeFailedDuringWriteBack = false;
     const onSettled = (err?: Error) => {
-      // Ignore a late callback from an abandoned (timed-out) write-back.
-      // It must not flip state out from under a newer one.
+      this._writeBackCallOutstanding = false;
       if (!this._writeBackOp.settle(generation)) {
+        // A released (timed-out) attempt finally answered. Its result must not
+        // flip state out from under a newer one, but its completion is what the
+        // next attempt waits for.
+        if (!this._closed) {
+          this._attemptRecovery();
+        }
         return;
       }
       this._cancelWriteBackDeadline();
@@ -639,6 +658,7 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     // A rejected promise, or a synchronous throw from init() or getAllRaw(), is
     // handled the same way as a failed write-back. This way it cannot escape the
     // poll timer or the write path.
+    this._writeBackCallOutstanding = true;
     invokeStoreCall(
       () => this._basePersistenceStore.init(this._memoryStore.getAllRaw(), onSettled),
       onSettled,
