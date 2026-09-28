@@ -74,6 +74,11 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * @internal
  */
 export default class DynamoDBCore implements interfaces.PersistentDataStore {
+  // True once a token delete was denied for a missing dynamodb:DeleteItem
+  // permission. Later initializations skip the delete instead of failing one
+  // request and logging on every attempt.
+  private _tokenDeleteDenied = false;
+
   constructor(
     private readonly _tableName: string,
     private readonly _state: DynamoDBClientState,
@@ -191,7 +196,26 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       // see that mixed data as a complete dataset. A delete for a key
       // that does not exist is a successful no-op, so this is safe on the
       // first initialization.
-      await this._state.delete(this._tableName, this._initializedToken());
+      if (!this._tokenDeleteDenied) {
+        try {
+          await this._state.delete(this._tableName, this._initializedToken());
+        } catch (error) {
+          if ((error as Error)?.name !== 'AccessDeniedException') {
+            throw error;
+          }
+          // The credentials do not allow dynamodb:DeleteItem. Initialize
+          // without removing the token first, which matches the behavior of
+          // versions before the token delete existed. The permission cannot
+          // appear without new credentials, so do not ask again.
+          this._tokenDeleteDenied = true;
+          this._logger?.warn(
+            'The DynamoDB credentials do not allow dynamodb:DeleteItem. The store initializes ' +
+              'without removing the initialized token first, so readers can treat a partially ' +
+              'written dataset as complete while an initialization runs or after one fails. ' +
+              'Grant dynamodb:DeleteItem to restore this protection.',
+          );
+        }
+      }
       await this._state.batchWrite(this._tableName, ops);
       // Write the initialized token on its own, after the data batch
       // succeeds. A batch write is not atomic, so writing the token as

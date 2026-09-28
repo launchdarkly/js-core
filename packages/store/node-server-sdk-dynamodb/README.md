@@ -79,6 +79,10 @@ const client = LaunchDarkly.init('YOUR SDK KEY', config);
 const store = DynamoDBFeatureStore('YOUR TABLE NAME', { prefix: 'env1' });
 ```
 
+## Required permissions
+
+The store reads and writes items with `dynamodb:Query`, `dynamodb:GetItem`, `dynamodb:PutItem`, and `dynamodb:BatchWriteItem`. It also uses `dynamodb:DeleteItem` to remove its initialized token before it rewrites the full dataset, so a partially written dataset is not treated as complete by other readers. If the credentials do not allow `dynamodb:DeleteItem`, the store logs a warning and initializes without that protection.
+
 ## Caching behavior
 
 To reduce traffic to DynamoDB, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from DynamoDB for every flag evaluation), configure the store as follows:
