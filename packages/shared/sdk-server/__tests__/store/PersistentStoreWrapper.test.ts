@@ -478,6 +478,47 @@ describe.each(['caching', 'non-caching'])(
       }
     });
 
+    it('keeps the queue running when an upsert reports an error that cannot be described', async () => {
+      const logger = new TestLogger();
+      const loggingWrapper = new PersistentDataStoreWrapper(
+        mockPersistentStore,
+        isCaching ? 60 : 0,
+        logger,
+      );
+
+      try {
+        // A null-prototype object cannot be converted to a string. The store
+        // answers asynchronously, so a throw from the log call would escape the
+        // queue and leave its head unsettled.
+        const upsertSpy = jest
+          .spyOn(mockPersistentStore, 'upsert')
+          .mockImplementation((_kind, _key, _data, cb) => {
+            setTimeout(() => cb(Object.create(null) as Error, undefined), 0);
+          });
+
+        const facade = new AsyncStoreFacade(loggingWrapper);
+        await facade.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+
+        logger.expectMessages([
+          {
+            level: LogLevel.Error,
+            matches: /Persistent store returned error: unknown/,
+          },
+        ]);
+
+        // The queue advances: a later upsert still reaches the store.
+        let secondUpsertReached = false;
+        upsertSpy.mockImplementation((_kind, _key, _data, cb) => {
+          secondUpsertReached = true;
+          cb(undefined, undefined);
+        });
+        await facade.upsert(VersionedDataKinds.Features, { key: 'key2', version: 1 });
+        expect(secondUpsertReached).toBe(true);
+      } finally {
+        loggingWrapper.close();
+      }
+    });
+
     it('does not log an error when an upsert succeeds', async () => {
       const logger = new TestLogger();
       const loggingWrapper = new PersistentDataStoreWrapper(
