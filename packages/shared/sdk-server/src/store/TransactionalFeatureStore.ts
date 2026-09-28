@@ -657,11 +657,14 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     };
     // A rejected promise, or a synchronous throw from init() or getAllRaw(), is
     // handled the same way as a failed write-back. This way it cannot escape the
-    // poll timer or the write path.
+    // poll timer or the write path. The once guard keeps a store that answers
+    // through two channels from clearing an outstanding flag that a later
+    // attempt owns by then.
+    const settleOnce = once(onSettled);
     this._writeBackCallOutstanding = true;
     invokeStoreCall(
-      () => this._basePersistenceStore.init(this._memoryStore.getAllRaw(), onSettled),
-      onSettled,
+      () => this._basePersistenceStore.init(this._memoryStore.getAllRaw(), settleOnce),
+      settleOnce,
     );
   }
 

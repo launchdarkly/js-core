@@ -1725,6 +1725,32 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
   });
 
+  it('ignores a duplicate answer from a released write-back', async () => {
+    probeResult = true;
+    persistence.deferInit = true;
+    const initCallsBefore = persistence.initCalls.length;
+
+    await jest.advanceTimersByTimeAsync(500);
+    expect(persistence.pendingInitCallbacks.length).toEqual(1);
+    const doubleAnswer = persistence.pendingInitCallbacks[0];
+
+    // The hung attempt is released, then answers. The answer frees the next
+    // attempt, which also hangs.
+    await jest.advanceTimersByTimeAsync(60000);
+    doubleAnswer();
+    await jest.advanceTimersByTimeAsync(35000);
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+    expect(persistence.pendingInitCallbacks.length).toEqual(2);
+
+    // The released attempt answers a second time. The duplicate must not mark
+    // the second attempt's store call as answered: after the second attempt is
+    // released as hung, no third write-back may start while its own call has
+    // not answered.
+    doubleAnswer();
+    await jest.advanceTimersByTimeAsync(120000);
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(2);
+  });
+
   it('clears an accumulated failure embargo when a basis write recovers the store directly', async () => {
     // The check always passes, but the write-back init always fails, building the
     // backoff embargo up over the outage until it is pinned near its 30 second cap.
