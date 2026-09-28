@@ -585,7 +585,7 @@ describe('given a transactional store over a persistence store that can fail wri
     }
   });
 
-  it('releases a hung write-back at its deadline for a store without an availability check', async () => {
+  it('holds the retry for a hung write-back until the hung call answers', async () => {
     jest.useFakeTimers();
     try {
       persistence.failUpserts = true;
@@ -607,21 +607,22 @@ describe('given a transactional store over a persistence store that can fail wri
       );
       expect(persistence.pendingInitCallbacks.length).toEqual(1);
 
-      // No further writes arrive. The deadline releases the hung write-back, the
-      // backoff passes, and the retry succeeds.
+      // The deadline releases the hung write-back, and the first abandonment of an
+      // outage logs at warn level. No retry runs while the hung call has not
+      // answered: it would only stack another full snapshot behind it.
       persistence.deferInit = false;
       const initCallsBefore = persistence.initCalls.length;
-      await jest.advanceTimersByTimeAsync(30000);
-      // The first abandonment of an outage logs at warn level.
+      await jest.advanceTimersByTimeAsync(60000);
       expect(logger.warn).toHaveBeenCalledWith(
-        'A write-back to the persistent store did not complete in time. Retrying.',
+        'A write-back to the persistent store did not complete in time. A new attempt will start when it answers.',
       );
-      await jest.advanceTimersByTimeAsync(1000);
-      expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
-      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(persistence.initCalls.length).toEqual(initCallsBefore);
+      expect(logger.info).not.toHaveBeenCalled();
 
-      // The abandoned write-back's late settle is ignored.
+      // The hung call finally answers. Its own result must not flip state, and the
+      // deferred retry runs with current data and recovers the store.
       persistence.pendingInitCallbacks[0]();
+      expect(persistence.initCalls.length).toEqual(initCallsBefore + 1);
       expect(logger.info).toHaveBeenCalledTimes(1);
     } finally {
       jest.useRealTimers();
@@ -1418,7 +1419,7 @@ describe('given a transactional store whose persistence store has an availabilit
     expect(logger.info).toHaveBeenCalledTimes(2);
   });
 
-  it('releases a hung write-back after its deadline and retries', async () => {
+  it('releases a hung write-back at its deadline and retries once the hung call answers', async () => {
     persistence.deferInit = true;
     probeResult = true;
     await jest.advanceTimersByTimeAsync(500);
@@ -1428,20 +1429,19 @@ describe('given a transactional store whose persistence store has an availabilit
     persistence.deferInit = false;
     persistence.failInits = false;
     persistence.failUpserts = false;
-    // Advance past the 30 second hung write-back deadline. The probe keeps
-    // answering true every tick, but the poller must not retry until the
-    // outstanding write-back is treated as abandoned. Releasing it also arms a
-    // 1 second failure embargo, so the retry lands just after the deadline, not
-    // exactly on it.
-    await jest.advanceTimersByTimeAsync(31500);
-    expect(logger.info).toHaveBeenCalledTimes(1);
+    // Past the 30 second deadline the attempt is released, but the probe ticks
+    // must not issue a new write-back while the hung call has not answered: it
+    // would only stack another full snapshot behind it.
+    const initCallsBefore = persistence.initCalls.length;
+    await jest.advanceTimersByTimeAsync(60000);
+    expect(persistence.initCalls.length).toEqual(initCallsBefore);
+    expect(logger.info).not.toHaveBeenCalled();
 
-    const initCallsAfterRecovery = persistence.initCalls.length;
-    const logInfoCallsAfterRecovery = (logger.info as jest.Mock).mock.calls.length;
-    // The original, now-abandoned write-back finally calls back. It must be ignored.
+    // The hung call finally answers. Its own result must not flip state, and the
+    // deferred retry runs and recovers the store.
     staleCallback();
-    expect(persistence.initCalls.length).toEqual(initCallsAfterRecovery);
-    expect((logger.info as jest.Mock).mock.calls.length).toEqual(logInfoCallsAfterRecovery);
+    expect(persistence.initCalls.length).toEqual(initCallsBefore + 1);
+    expect(logger.info).toHaveBeenCalledTimes(1);
   });
 
   it('logs at error level for the first genuine write-back failure even when the outage started with a hung write-back', async () => {
@@ -1450,18 +1450,23 @@ describe('given a transactional store whose persistence store has an availabilit
     await jest.advanceTimersByTimeAsync(500);
     expect(persistence.pendingInitCallbacks.length).toEqual(1);
 
-    // Advance past the 30 second hung write-back deadline (releasing it, which logs
-    // only at debug level and arms a failure embargo) and past that embargo, so a
-    // fresh, non-hung write-back attempt runs and genuinely fails. This must still
-    // be the outage's first ERROR-level log: the hung release must not have
-    // consumed it.
+    // The deadline releases the hung write-back, which logs at warn level and arms
+    // a failure embargo. No fresh attempt runs while the hung call has not
+    // answered.
     persistence.deferInit = false;
     await jest.advanceTimersByTimeAsync(31500);
+    expect(logger.error).not.toHaveBeenCalled();
+
+    // The hung call answers, and the fresh attempt runs and genuinely fails. This
+    // must still be the outage's first ERROR-level log: the hung release must not
+    // have consumed it.
+    persistence.pendingInitCallbacks[0]();
+    await jest.advanceTimersByTimeAsync(5000);
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.info).not.toHaveBeenCalled();
 
-    // A later write-back failure in the same outage logs at debug level only.
-    await jest.advanceTimersByTimeAsync(2000);
+    // Later write-back failures in the same outage log at debug level only.
+    await jest.advanceTimersByTimeAsync(60000);
     expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
@@ -1706,7 +1711,7 @@ describe('given a transactional store whose persistence store has an availabilit
     expect((logger.info as jest.Mock).mock.calls.length).toEqual(infoCallsAfterRecovery);
   });
 
-  it('bounds retries against a write-back that never answers to the deadline-plus-embargo schedule', async () => {
+  it('issues no further write-backs while one never answers', async () => {
     // The check always passes, but the write-back init never calls back.
     probeResult = true;
     persistence.deferInit = true;
@@ -1714,11 +1719,10 @@ describe('given a transactional store whose persistence store has an availabilit
 
     await jest.advanceTimersByTimeAsync(100000);
 
-    // Each cycle is the 30 second hung deadline plus the exponential embargo the
-    // release arms, not a fixed 500ms retry (which would produce 200 attempts over
-    // this window). Value confirmed against the actual schedule produced by the
-    // implementation.
-    expect(persistence.initCalls.length - initCallsBefore).toEqual(4);
+    // The hung attempt is released for state purposes at its 30 second deadline,
+    // but no new attempt starts while its store call has not answered: each one
+    // would stack another full-store snapshot behind the unanswered call.
+    expect(persistence.initCalls.length - initCallsBefore).toEqual(1);
   });
 
   it('clears an accumulated failure embargo when a basis write recovers the store directly', async () => {
