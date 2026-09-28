@@ -2067,4 +2067,71 @@ describe('given a transactional store composed over the real persistent store wr
     const flagASlot = featuresEntry?.item.find((kvp) => kvp.key === 'flagA');
     expect(flagASlot?.item.deleted).toBeFalsy();
   });
+
+  it('does not let writes issued during a hung write-back land at the store before it', async () => {
+    const facade = new AsyncTransactionalStoreFacade(store);
+    await facade.applyChanges(
+      true,
+      {
+        features: {
+          flagA: { key: 'flagA', version: 1 },
+          flagB: { key: 'flagB', version: 1 },
+        },
+        segments: {},
+      },
+      undefined,
+      'basis',
+    );
+
+    // A failed mirrored write starts an outage.
+    core.failUpserts = true;
+    await facade.applyChanges(false, { features: { flagC: { version: 1 } } }, undefined, 's2');
+
+    // The store recovers, and the recovery write-back hangs at the core.
+    core.deferInit = true;
+    core.failUpserts = false;
+    probeAvailable = true;
+    await jest.advanceTimersByTimeAsync(500);
+    expect(core.ops.filter((op) => op.type === 'init')).toHaveLength(2);
+    const hungWriteBack = core.ops[core.ops.length - 1];
+    expect(hungWriteBack.type === 'init' && hungWriteBack.allData).toBeTruthy();
+
+    // Delete flagB while the write-back hangs. The hung write-back's snapshot was
+    // taken before the delete, so it still holds flagB alive.
+    let deleteCallbackCalls = 0;
+    store.delete(VersionedDataKinds.Features, 'flagB', 2, () => {
+      deleteCallbackCalls += 1;
+    });
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Past the hung-release deadline, the supervisor gives up on the attempt and
+    // issues a retry write-back. Neither the delete nor the retry reaches the
+    // core: they wait in line behind the hung write-back.
+    await jest.advanceTimersByTimeAsync(35000);
+    expect(core.ops).toHaveLength(3);
+    expect(deleteCallbackCalls).toEqual(0);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/did not complete within/));
+
+    // The hung write-back finally answers. The queue drains in order: the old
+    // snapshot lands first, then the delete, then the retry write-back with the
+    // tombstone. The store ends at the newest data.
+    core.deferInit = false;
+    const pendingInit = core.pendingInitCallbacks.slice();
+    core.pendingInitCallbacks = [];
+    pendingInit.forEach((settle) => settle());
+    await jest.advanceTimersByTimeAsync(5000);
+
+    expect(deleteCallbackCalls).toEqual(1);
+    const opTypes = core.ops.map((op) => op.type);
+    expect(opTypes.slice(0, 3)).toEqual(['init', 'upsert', 'init']);
+    expect(opTypes.slice(3)).toContain('init');
+    expect(opTypes.indexOf('upsert', 3)).toBeLessThan(opTypes.lastIndexOf('init'));
+    expect(logger.info).toHaveBeenCalledWith('Persistent store is available again.');
+
+    const featuresEntry = core.allData.find(
+      (kvp) => kvp.key.namespace === VersionedDataKinds.Features.namespace,
+    );
+    const flagBSlot = featuresEntry?.item.find((kvp) => kvp.key === 'flagB');
+    expect(flagBSlot?.item.deleted).toBe(true);
+  });
 });
