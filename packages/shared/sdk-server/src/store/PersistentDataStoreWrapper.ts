@@ -330,7 +330,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    * debug level otherwise, so a store that fails every write cannot flood the log.
    */
   private _logStoreError(err: Error): void {
-    const message = `Persistent store returned error: ${err.message}`;
+    const message = `Persistent store returned error: ${err instanceof Error ? err.message : err}`;
     const now = monotonicNow();
     if (now - this._lastErrorLogMs >= ERROR_LOG_INTERVAL_MS) {
       this._lastErrorLogMs = now;
