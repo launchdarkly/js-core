@@ -29,11 +29,11 @@
     "format:check": "oxfmt --check ."
   },
   "peerDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.53.0",
+    "@aws-sdk/client-dynamodb": "^3.521.0",
     "@launchdarkly/node-server-sdk": ">=9.11.3"
   },
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "3.348.0",
+    "@aws-sdk/client-dynamodb": "3.521.0",
     "@launchdarkly/node-server-sdk": "9.13.8",
     "@types/jest": "^29.4.0",
     "jest": "^29.5.0",

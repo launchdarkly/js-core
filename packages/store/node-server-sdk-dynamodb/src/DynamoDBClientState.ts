@@ -28,6 +28,15 @@ const WRITE_BATCH_SIZE = 25;
 const MAX_UNPROCESSED_RETRIES = 3;
 const UNPROCESSED_RETRY_BASE_DELAY_MS = 100;
 
+// The AWS SDK does not set a request timeout by default, so a request on a dead
+// connection can wait on TCP for many minutes. The SDK serializes its store
+// writes, and one hung request delays every later write. This bound makes a
+// hung request fail instead. It only applies to the client this package
+// constructs itself: a user-supplied client or clientOptions keeps its own
+// configuration. Passing configuration in place of a handler instance requires
+// @aws-sdk/client-dynamodb 3.521.0; the peer dependency floor matches.
+const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, delayMs);
@@ -60,7 +69,9 @@ export default class DynamoDBClientState {
       this._client = new DynamoDBClient(options.clientOptions);
       this._owned = true;
     } else {
-      this._client = new DynamoDBClient({});
+      this._client = new DynamoDBClient({
+        requestHandler: { requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS },
+      });
       this._owned = true;
     }
   }
