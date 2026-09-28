@@ -22,6 +22,7 @@ import {
   colon,
   hasBom,
   INVALID_HEADER_VALUE_CHAR,
+  isBomPrefix,
   lineFeed,
   MAX_OVER_ALLOCATION,
   space,
@@ -626,7 +627,7 @@ export function createEventSource(
 
       // text/event-stream parser adapted from webkit
       // @see https://github.com/WebKit/webkit/blob/main/Source/WebCore/page/EventSource.cpp
-      let isFirst = true;
+      let bomPending = true;
       let buf: Uint8Array | undefined;
       let startingPos = 0;
       let sizeUsed = 0;
@@ -634,10 +635,6 @@ export function createEventSource(
       const onData = (chunk: Uint8Array): void => {
         if (!buf) {
           buf = chunk;
-          if (isFirst && hasBom(buf)) {
-            buf = buf.subarray(bom.length);
-            sizeUsed -= bom.length;
-          }
         } else {
           // allocate new buffer
           const [resize, newCapacity] = CalculateCapacity(
@@ -655,7 +652,25 @@ export function createEventSource(
         }
 
         sizeUsed += chunk.length;
-        isFirst = false;
+
+        // The specification ignores one byte order mark at the start of the stream. The mark can
+        // arrive split across reads, so the decision waits until three bytes are buffered. A
+        // shorter buffer that still matches the mark contains no line terminator, so there is
+        // nothing to parse yet either.
+        if (bomPending) {
+          if (sizeUsed >= bom.length) {
+            if (hasBom(buf)) {
+              buf = buf.subarray(bom.length);
+              sizeUsed -= bom.length;
+            }
+            bomPending = false;
+          } else if (isBomPrefix(buf, sizeUsed)) {
+            return;
+          } else {
+            bomPending = false;
+          }
+        }
+
         let pos = 0;
         const length = sizeUsed;
 
