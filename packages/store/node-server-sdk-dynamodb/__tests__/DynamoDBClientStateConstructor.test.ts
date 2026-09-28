@@ -18,7 +18,7 @@ it('applies a request timeout to the client it constructs by default', () => {
   const state = new DynamoDBClientState();
 
   expect(DynamoDBClient).toHaveBeenCalledWith({
-    requestHandler: { requestTimeout: 30000 },
+    requestHandler: { requestTimeout: 30000, throwOnRequestTimeout: true },
   });
   state.close();
 });

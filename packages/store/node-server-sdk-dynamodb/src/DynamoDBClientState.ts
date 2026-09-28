@@ -70,7 +70,9 @@ export default class DynamoDBClientState {
       this._owned = true;
     } else {
       this._client = new DynamoDBClient({
-        requestHandler: { requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS },
+        // Without throwOnRequestTimeout, newer handler versions only log a
+        // warning when the deadline passes and the request keeps waiting.
+        requestHandler: { requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS, throwOnRequestTimeout: true },
       });
       this._owned = true;
     }
