@@ -29,8 +29,8 @@ transportBox.appendChild(document.createTextNode(''));
 
 const main = async () => {
   // The native browser EventSource API has no way to send a custom HTTP method or a request
-  // body, so it cannot do POST-based streaming -- setting `usePost: true` alone throws if the
-  // configured EventSource cannot send a custom method. Passing `fetchBrowserEventSource` as the
+  // body, so it cannot do POST-based streaming -- with `usePost: true` alone the SDK warns and
+  // the stream falls back to GET. Passing `fetchBrowserEventSource` as the
   // `eventSource` option opts into a fetch()-based transport that CAN send POST with a body,
   // which is what actually lets `usePost` take effect. Open your browser's devtools Network tab
   // and look for a POST request to the streaming endpoint to see this in action.
