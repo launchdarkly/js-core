@@ -23,6 +23,13 @@ export default interface LDRedisOptions {
   /**
    * Set this property if you already have a Redis client instance that you wish to reuse. In this
    * case, `redisOpts` will be ignored.
+   *
+   * @remarks
+   * The feature store updates items with WATCH/MULTI transactions, and a Redis watch applies
+   * to the whole connection. Do not share the provided client with another feature store or
+   * with application code that runs its own transactions. A transaction from another user of
+   * the connection can invalidate the store's optimistic writes, and the store's watches can
+   * abort the other user's transactions.
    */
   client?: Redis;
 

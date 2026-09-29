@@ -79,6 +79,10 @@ export default class RedisClientState {
       this._connected = true;
     });
 
+    client.on('close', () => {
+      this._connected = false;
+    });
+
     client.on('end', () => {
       this._connected = false;
     });

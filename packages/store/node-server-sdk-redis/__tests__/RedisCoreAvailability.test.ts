@@ -2,6 +2,7 @@ import { PersistentDataStoreWrapper } from '@launchdarkly/node-server-sdk';
 
 import RedisCore from '../src/RedisCore';
 import RedisFeatureStore from '../src/RedisFeatureStore';
+import { makeState } from './testUtils';
 
 jest.mock('@launchdarkly/node-server-sdk', () => {
   const actual = jest.requireActual('@launchdarkly/node-server-sdk');
@@ -14,15 +15,6 @@ jest.mock('@launchdarkly/node-server-sdk', () => {
 beforeEach(() => {
   jest.clearAllMocks();
 });
-
-function makeState(overrides: object) {
-  return {
-    prefixedKey: (key: string) => key,
-    isConnected: () => true,
-    isInitialConnection: () => false,
-    ...overrides,
-  };
-}
 
 it('reports an init error through the callback when the transaction fails', (done) => {
   const state = makeState({
@@ -50,7 +42,8 @@ it('calls back without an error when init succeeds', (done) => {
         del: jest.fn(),
         hmset: jest.fn(),
         set: jest.fn(),
-        exec: (cb: (err: Error | null) => void) => cb(null),
+        // Success is a reply array. A nil reply means the transaction was aborted.
+        exec: (cb: (err: Error | null, replies: unknown) => void) => cb(null, [[null, 'OK']]),
       }),
     }),
   });
@@ -58,6 +51,67 @@ it('calls back without an error when init succeeds', (done) => {
   const core = new RedisCore(state);
   core.init([], (err) => {
     expect(err).toBeUndefined();
+    done();
+  });
+});
+
+it('reports an init error when the transaction is aborted with a nil reply', (done) => {
+  const state = makeState({
+    getClient: () => ({
+      multi: () => ({
+        del: jest.fn(),
+        hmset: jest.fn(),
+        set: jest.fn(),
+        // An EXEC aborted by a watch on the shared connection returns nil with no error.
+        // Reporting success here would end a store outage without writing anything.
+        exec: (cb: (err: Error | null, replies: unknown) => void) => cb(null, null),
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.init([], (err) => {
+    expect(err).toBeDefined();
+    done();
+  });
+});
+
+it('reports an init error when a committed transaction contains a per-command error', (done) => {
+  const commandError = new Error('OOM command not allowed when used memory > maxmemory');
+  const state = makeState({
+    getClient: () => ({
+      multi: () => ({
+        del: jest.fn(),
+        hmset: jest.fn(),
+        set: jest.fn(),
+        exec: (cb: (err: Error | null, replies: unknown) => void) =>
+          cb(null, [
+            [null, 1],
+            [commandError, null],
+          ]),
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.init([], (err) => {
+    expect(err).toBe(commandError);
+    done();
+  });
+});
+
+it('fails init fast without a transaction when the connection is down', (done) => {
+  const state = makeState({
+    isConnected: () => false,
+    isInitialConnection: () => false,
+    getClient: () => {
+      throw new Error('should not create a client while disconnected');
+    },
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.init([], (err) => {
+    expect(err).toBeDefined();
     done();
   });
 });
@@ -108,8 +162,9 @@ it('calls back false from isStoreAvailable when the connection is down', (done) 
 });
 
 it('forwards isStoreAvailable through the feature store facade', (done) => {
+  const wrapperProbe = jest.fn((callback: (isAvailable: boolean) => void) => callback(true));
   (PersistentDataStoreWrapper as unknown as jest.Mock).mockImplementation(() => ({
-    isStoreAvailable: (callback: (isAvailable: boolean) => void) => callback(true),
+    isStoreAvailable: wrapperProbe,
   }));
   // Provide a fake client so no real Redis connection is made.
   const fakeClient = { on: jest.fn() };
@@ -119,6 +174,8 @@ it('forwards isStoreAvailable through the feature store facade', (done) => {
   );
   store.isStoreAvailable((isAvailable) => {
     expect(isAvailable).toBe(true);
+    // The answer must come from the wrapper, not from a facade fallback.
+    expect(wrapperProbe).toHaveBeenCalledTimes(1);
     done();
   });
 });
