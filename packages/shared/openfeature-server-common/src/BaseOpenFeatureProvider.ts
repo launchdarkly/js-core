@@ -46,9 +46,9 @@ export interface BaseProviderConfig {
   providerName: string;
   /**
    * The maximum number of seconds initialization waits for the LaunchDarkly client to become
-   * ready. Defaults to 10. Zero does not wait, and null waits indefinitely.
+   * ready. Defaults to 10. Zero does not wait, and 'forever' waits indefinitely.
    */
-  initTimeoutSeconds?: number | null;
+  initTimeoutSeconds?: number | 'forever';
 }
 
 /**
@@ -73,7 +73,7 @@ export abstract class BaseOpenFeatureProvider<
 
   private _logger: LDLogger;
 
-  private _initTimeoutSeconds: number | null;
+  private _initTimeoutSeconds: number | 'forever';
 
   protected constructor(config: BaseProviderConfig) {
     this.metadata = { name: config.providerName };
@@ -116,7 +116,7 @@ export abstract class BaseOpenFeatureProvider<
       }
       throw new Error('Unknown problem encountered during initialization');
     }
-    if (this._initTimeoutSeconds === null) {
+    if (this._initTimeoutSeconds === 'forever') {
       await this._client.waitForInitialization();
       return;
     }

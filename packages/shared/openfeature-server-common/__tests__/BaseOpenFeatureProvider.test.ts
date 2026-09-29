@@ -56,10 +56,10 @@ it('initialize defaults the timeout to 10 seconds', async () => {
   expect(client.waitForInitialization).toHaveBeenCalledWith({ timeout: 10 });
 });
 
-it('initialize waits indefinitely when the timeout is null', async () => {
+it("initialize waits indefinitely when the timeout is 'forever'", async () => {
   const client = new MockLDClient();
   const provider = new TestProvider(
-    { logger: new TestLogger(), providerName: 'p', initTimeoutSeconds: null },
+    { logger: new TestLogger(), providerName: 'p', initTimeoutSeconds: 'forever' },
     client,
   );
   await provider.initialize();
