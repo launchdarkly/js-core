@@ -519,6 +519,53 @@ describe.each(['caching', 'non-caching'])(
       }
     });
 
+    it('keeps the queue running when an upsert reports an error whose message getter throws', async () => {
+      const logger = new TestLogger();
+      const loggingWrapper = new PersistentDataStoreWrapper(
+        mockPersistentStore,
+        isCaching ? 60 : 0,
+        logger,
+      );
+
+      try {
+        // An Error subclass passes the instanceof check, but its message getter
+        // throws. The store answers asynchronously, so a throw from the log call
+        // would escape the queue and leave its head unsettled.
+        class ThrowingMessageError extends Error {
+          // eslint-disable-next-line class-methods-use-this
+          override get message(): string {
+            throw new Error('message getter throws');
+          }
+        }
+        const upsertSpy = jest
+          .spyOn(mockPersistentStore, 'upsert')
+          .mockImplementation((_kind, _key, _data, cb) => {
+            setTimeout(() => cb(new ThrowingMessageError(), undefined), 0);
+          });
+
+        const facade = new AsyncStoreFacade(loggingWrapper);
+        await facade.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+
+        logger.expectMessages([
+          {
+            level: LogLevel.Error,
+            matches: /Persistent store returned error: unknown/,
+          },
+        ]);
+
+        // The queue advances: a later upsert still reaches the store.
+        let secondUpsertReached = false;
+        upsertSpy.mockImplementation((_kind, _key, _data, cb) => {
+          secondUpsertReached = true;
+          cb(undefined, undefined);
+        });
+        await facade.upsert(VersionedDataKinds.Features, { key: 'key2', version: 1 });
+        expect(secondUpsertReached).toBe(true);
+      } finally {
+        loggingWrapper.close();
+      }
+    });
+
     it('does not log an error when an upsert succeeds', async () => {
       const logger = new TestLogger();
       const loggingWrapper = new PersistentDataStoreWrapper(
