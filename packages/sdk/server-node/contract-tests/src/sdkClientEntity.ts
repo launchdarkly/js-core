@@ -142,6 +142,11 @@ async function makePersistentStore(
               secretAccessKey: 'dummy',
               sessionToken: 'dummy',
             },
+            // The harness simulates short outages with a TCP proxy. The AWS
+            // client retries transient failures internally, so a retry can
+            // succeed after the proxy recovers and hide the outage from the
+            // SDK's write-failure trigger.
+            maxAttempts: 1,
           },
           prefix: params.store.prefix,
           cacheTTL,
