@@ -202,9 +202,9 @@ export default class ConfigurationImpl implements Configuration {
     this.useReport = pristineOptions.useReport ?? false;
     this.usePost = pristineOptions.usePost ?? false;
 
-    // CSFDV2 Requirement 2.1.4: useReport is an FDv1-era option. Under FDv2 (dataSystem
-    // configured), it has no effect -- usePost is the FDv2 equivalent -- so ignore it and warn
-    // rather than silently changing FDv2 behavior based on an option that doesn't apply there.
+    // useReport is a FDv1 option and it has no effect in FDv2 (which has
+    // usePost as the equivilent). In the case where this option is used
+    // in a FDv2 datasytem, we will do nothing and warn.
     if (this.dataSystem && this.useReport) {
       this.logger?.warn(
         'The "useReport" configuration option has no effect when the "dataSystem" option is ' +
