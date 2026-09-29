@@ -6,9 +6,9 @@ A minimal vanilla-TypeScript app that demonstrates the Browser SDK's injectable
 ## What it demonstrates
 
 The Browser SDK defaults to the native browser `EventSource` API for its streaming
-connection. That API has no way to send a custom HTTP method or a request body, so setting
-`usePost: true` alone throws, because the FDv2 data source requires an EventSource that
-can send a custom method.
+connection. That API has no way to send a custom HTTP method or a request body, so with
+`usePost: true` alone the SDK logs a warning and the streaming connection falls back to
+GET; only polling requests use POST.
 
 This example passes `fetchBrowserEventSource` (from
 `@launchdarkly/js-client-sdk/fetch-eventsource`) as the `eventSource` option, in
