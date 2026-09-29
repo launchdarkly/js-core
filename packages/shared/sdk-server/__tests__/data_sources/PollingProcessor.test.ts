@@ -191,6 +191,37 @@ describe('given a polling processor with a short poll duration', () => {
     }, 300);
   });
 
+  it('cancels the scheduled poll when stopped before it fires', () => {
+    jest.useFakeTimers();
+    try {
+      requestor.requestAllData = jest.fn((cb) => cb({ status: 500 }, undefined));
+      processor.start();
+      expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+
+      // The failed poll armed the next-poll timer; stopping must cancel it (spec 1.10.1).
+      processor.stop();
+      jest.advanceTimersByTime(5 * 60 * 1000);
+
+      expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('treats a status-less transport error as a normal, retryable failure', (done) => {
+    requestor.requestAllData = jest.fn((cb) => cb({ message: 'socket hang up' } as any, undefined));
+
+    processor.start();
+
+    expect(errorHandler).not.toBeCalled();
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(testLogger.getCount(LogLevel.Error)).toBe(0);
+      expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
+      (done as jest.DoneCallback)();
+    }, 300);
+  });
+
   it.each([401, 403])(
     'retries with extended backoff rather than stopping after error %p',
     (status) => {

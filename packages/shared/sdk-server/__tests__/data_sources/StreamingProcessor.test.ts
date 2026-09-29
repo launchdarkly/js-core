@@ -264,6 +264,44 @@ describe('given a stream processor with mock event source', () => {
     expect(createSpy.mock.calls.length).toEqual(callsBefore + 1);
   });
 
+  it('cancels a scheduled reconnect when stopped before it fires', () => {
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    const callsBefore = createSpy.mock.calls.length;
+
+    // Malformed data arms a reconnect timer; stopping must cancel it (spec 1.10.1).
+    simulatePutEvent();
+    expect(mockEventSource.close).toHaveBeenCalled();
+
+    streamingProcessor.stop();
+    jest.advanceTimersByTime(5 * 60 * 1000);
+
+    expect(createSpy.mock.calls.length).toEqual(callsBefore);
+  });
+
+  it('classifies a status-less transport error as a normal, retryable failure', () => {
+    // No HTTP status → classifyTransportFailure() → normal: warn, keep retrying,
+    // and do not surface it through the error handler.
+    const willRetry = mockEventSource.options.errorFilter({ message: 'socket hang up' });
+
+    expect(willRetry).toBeTruthy();
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/will retry/));
+    expect(logger.error).not.toHaveBeenCalled();
+  });
+
+  it('counts a self-initiated restart after malformed data as a single failure', () => {
+    const recordFailure = jest.spyOn((streamingProcessor as any)['_retryState'], 'recordFailure');
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
+
+    simulatePutEvent();
+
+    // 1.6.2 classifies the malformed payload as one normal failure; the SDK's
+    // own close() during the restart must not be counted as a second (1.7.2).
+    expect(recordFailure).toHaveBeenCalledTimes(1);
+    expect(recordFailure).toHaveBeenCalledWith('normal');
+  });
+
   it('logs and restarts if event.data prop is missing', () => {
     simulatePutEvent({ flags: {} });
 
