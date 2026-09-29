@@ -1,44 +1,37 @@
 import {
   ClientContext,
-  DataSourceErrorKind,
+  classifyHttpStatus,
+  classifyTransportFailure,
   EventName,
   EventSource,
+  EventSourceRetryDelayStrategy,
+  FailureKind,
+  forStreaming,
   getStreamingUri,
   httpErrorMessage,
   HttpErrorResponse,
   internal,
   LDHeaders,
   LDLogger,
-  LDStreamingError,
   ProcessStreamResponse,
   Requests,
-  shouldRetry,
+  RetryState,
   StreamingErrorHandler,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
-
-const reportJsonError = (
-  type: string,
-  data: string,
-  logger?: LDLogger,
-  errorHandler?: StreamingErrorHandler,
-) => {
-  logger?.error(`Stream received invalid data in "${type}" message`);
-  logger?.debug(`Invalid JSON follows: ${data}`);
-  errorHandler?.(
-    new LDStreamingError(DataSourceErrorKind.InvalidData, 'Malformed JSON data in event stream'),
-  );
-};
 
 export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   private readonly _headers: { [key: string]: string | string[] };
   private readonly _streamUri: string;
   private readonly _logger?: LDLogger;
+  private readonly _retryState: RetryState;
 
   private _eventSource?: EventSource;
   private _requests: Requests;
   private _connectionAttemptStartTime?: number;
   private _initHeaders?: { [key: string]: string };
+  private _reconnectTimeout?: ReturnType<typeof setTimeout>;
+  private _stopped = false;
 
   constructor(
     clientContext: ClientContext,
@@ -62,6 +55,7 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
       streamUriPath,
       parameters,
     );
+    this._retryState = forStreaming(1000 * this._streamInitialReconnectDelay);
   }
 
   private _logConnectionStarted() {
@@ -81,40 +75,73 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   }
 
   /**
-   * This is a wrapper around the passed errorHandler which adds additional
-   * diagnostics and logging logic.
+   * Records a connection failure, logs it, and lets the connection retry. The
+   * retry state decides the wait; a server-directed `retry:` value, if any,
+   * has already been applied to it through the injected strategy. Every
+   * failure is retryable now, so this always returns true.
    *
-   * @param err The error to be logged and handled.
-   * @return boolean whether to retry the connection.
+   * @param err The error to be recorded and logged.
+   * @return always true.
    *
    * @private
    */
-  private _retryAndHandleError(err: HttpErrorResponse) {
-    if (!shouldRetry(err)) {
-      this._logConnectionResult(false);
-      this._errorHandler?.(
-        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
-      );
-      this._logger?.error(httpErrorMessage(err, 'streaming request'));
-      return false;
+  private _retryAndHandleError(err: HttpErrorResponse): boolean {
+    const kind: FailureKind =
+      err.status !== undefined ? classifyHttpStatus(err.status) : classifyTransportFailure();
+    this._retryState.recordFailure(kind);
+    this._logConnectionResult(false);
+
+    const message = httpErrorMessage(err, 'streaming request', 'will retry');
+    // No failure is terminal now, so this is surfaced as a log only — the same
+    // outward treatment the SDK has always given a recoverable/interrupted
+    // failure. The error-event channel stays reserved for a terminal condition.
+    if (kind === 'unexpected') {
+      this._logger?.error(message);
+    } else {
+      this._logger?.warn(message);
     }
 
-    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
-    this._logConnectionResult(false);
     this._logConnectionStarted();
     return true;
+  }
+
+  private _restartForInvalidData() {
+    // A second invalid payload can arrive in the same parse pass — the event
+    // source emits every complete event in a chunk synchronously, even after
+    // close(). The first call tears the stream down, so any re-entry finds no
+    // live source and must return without scheduling again; otherwise it would
+    // orphan the first timer, leak the first EventSource, and duplicate the
+    // stream once both reconnects fired.
+    if (this._stopped || !this._eventSource) {
+      return;
+    }
+
+    this._retryState.recordFailure('normal');
+
+    this._eventSource.close();
+    this._eventSource = undefined;
+    this._reconnectTimeout = setTimeout(() => {
+      if (!this._stopped) {
+        this.start();
+      }
+    }, this._retryState.nextDelay);
   }
 
   start() {
     this._logConnectionStarted();
 
+    const retryDelayStrategy: EventSourceRetryDelayStrategy = {
+      nextRetryDelay: () => this._retryState.nextDelay,
+      setGoodSince: () => this._retryState.recordSuccess(),
+      setBaseDelay: (baseDelayMs: number) => this._retryState.applyServerDirectedRetry(baseDelayMs),
+    };
+
     // TLS is handled by the platform implementation.
     const eventSource = this._requests.createEventSource(this._streamUri, {
       headers: this._headers,
       errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
-      initialRetryDelayMillis: 1000 * this._streamInitialReconnectDelay,
       readTimeoutMillis: 5 * 60 * 1000,
-      retryResetIntervalMillis: 60 * 1000,
+      retryDelayStrategy,
     });
     this._eventSource = eventSource;
 
@@ -142,26 +169,36 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
         if (event?.data) {
           this._logConnectionResult(true);
           const { data } = event;
-          const dataJson = deserializeData(data);
+          let dataJson;
+          try {
+            dataJson = deserializeData(data);
+          } catch {
+            // Structurally invalid data can throw during deserialization; treat
+            // it the same as the unparseable payload handled below.
+            dataJson = undefined;
+          }
 
           if (!dataJson) {
-            reportJsonError(eventName, data, this._logger, this._errorHandler);
+            this._logger?.error(`Stream received invalid data in "${eventName}" message`);
+            this._logger?.debug(`Invalid JSON follows: ${data}`);
+            this._restartForInvalidData();
             return;
           }
           processJson(dataJson, this._initHeaders);
         } else {
-          this._errorHandler?.(
-            new LDStreamingError(
-              DataSourceErrorKind.Unknown,
-              'Unexpected payload from event stream',
-            ),
-          );
+          this._logger?.error('Unexpected payload from event stream');
+          this._restartForInvalidData();
         }
       });
     });
   }
 
   stop() {
+    if (this._reconnectTimeout) {
+      clearTimeout(this._reconnectTimeout);
+      this._reconnectTimeout = undefined;
+    }
+    this._stopped = true;
     this._eventSource?.close();
     this._eventSource = undefined;
   }

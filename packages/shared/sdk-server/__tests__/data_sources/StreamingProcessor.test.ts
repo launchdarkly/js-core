@@ -1,11 +1,9 @@
 import {
-  DataSourceErrorKind,
   defaultHeaders,
   EventName,
   Info,
   internal,
   LDLogger,
-  LDStreamingError,
   ProcessStreamResponse,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -143,14 +141,17 @@ describe('given a stream processor with mock event source', () => {
       {
         errorFilter: expect.any(Function),
         headers: defaultHeaders(sdkKey, info, undefined),
-        initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
-        retryResetIntervalMillis: 60000,
+        retryDelayStrategy: {
+          nextRetryDelay: expect.any(Function),
+          setGoodSince: expect.any(Function),
+          setBaseDelay: expect.any(Function),
+        },
       },
     );
   });
 
-  it('sets streamInitialReconnectDelay correctly', () => {
+  it('applies streamInitialReconnectDelay to the retry backoff', () => {
     streamingProcessor = new StreamingProcessor(
       {
         basicConfiguration: getBasicConfiguration(logger),
@@ -170,16 +171,12 @@ describe('given a stream processor with mock event source', () => {
     );
     streamingProcessor.start();
 
-    expect(basicPlatform.requests.createEventSource).toHaveBeenLastCalledWith(
-      `${serviceEndpoints.streaming}/all`,
-      {
-        errorFilter: expect.any(Function),
-        headers: defaultHeaders(sdkKey, info, undefined),
-        initialRetryDelayMillis: 22000,
-        readTimeoutMillis: 300000,
-        retryResetIntervalMillis: 60000,
-      },
-    );
+    // The configured 22s initial delay is no longer an init-dict field; it
+    // lives in the injected strategy. A first normal failure computes from it.
+    mockEventSource.options.errorFilter({ status: 500, message: 'err' });
+    const delay = mockEventSource.options.retryDelayStrategy.nextRetryDelay(0);
+    expect(delay).toBeGreaterThan(11000);
+    expect(delay).toBeLessThanOrEqual(22000);
   });
 
   it('adds listeners', () => {
@@ -216,21 +213,71 @@ describe('given a stream processor with mock event source', () => {
     expect(mockListener.processJson).toHaveBeenNthCalledWith(1, expect.any(Object), headers);
   });
 
-  it('passes error to callback if json data is malformed', async () => {
+  it('records a failure and reconnects when json data is malformed', () => {
     (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    const callsBefore = createSpy.mock.calls.length;
     simulatePutEvent();
 
     expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/invalid data in "put"/));
     expect(logger.debug).toHaveBeenCalledWith(expect.stringMatching(/invalid json/i));
-    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
+    // Recoverable now: surfaced as a log, not an 'error' event.
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    // The connection is fine but the data is not, so the stream is torn down
+    // and re-established after the backoff wait.
+    expect(mockEventSource.close).toHaveBeenCalled();
+    jest.advanceTimersByTime(1000);
+    expect(createSpy.mock.calls.length).toEqual(callsBefore + 1);
   });
 
-  it('calls error handler if event.data prop is missing', async () => {
+  it('does not double-reconnect when two invalid payloads arrive in one parse pass', () => {
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(false);
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    const callsBefore = createSpy.mock.calls.length;
+
+    // Two malformed events delivered synchronously, before any reconnect timer
+    // fires. The second must be a no-op — the first already tore the stream
+    // down — so only one source is closed and only one reconnect is scheduled.
+    simulatePutEvent();
+    simulatePutEvent();
+
+    expect(mockEventSource.close).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(1000);
+    expect(createSpy.mock.calls.length).toEqual(callsBefore + 1);
+  });
+
+  it('treats a deserialization that throws as invalid data and reconnects', () => {
+    (mockListener.deserializeData as jest.Mock).mockImplementation(() => {
+      throw new Error('structurally invalid');
+    });
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    const callsBefore = createSpy.mock.calls.length;
+
+    // A throw during deserialization must not escape the listener; it is
+    // handled like any other invalid payload.
+    expect(() => simulatePutEvent()).not.toThrow();
+
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/invalid data in "put"/));
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    expect(mockEventSource.close).toHaveBeenCalled();
+    jest.advanceTimersByTime(1000);
+    expect(createSpy.mock.calls.length).toEqual(callsBefore + 1);
+  });
+
+  it('logs and restarts if event.data prop is missing', () => {
     simulatePutEvent({ flags: {} });
 
     expect(mockListener.deserializeData).not.toHaveBeenCalled();
     expect(mockListener.processJson).not.toHaveBeenCalled();
-    expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/unexpected payload/i);
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith(expect.stringMatching(/unexpected payload/i));
+  });
+
+  it('logs the reconnect delay via onretrying, unchanged from prior behavior', () => {
+    mockEventSource.onretrying({ delayMillis: 5000 });
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringMatching(/Will retry stream connection in 5000 milliseconds/),
+    );
   });
 
   it('closes and stops', async () => {
@@ -275,18 +322,18 @@ describe('given a stream processor with mock event source', () => {
     });
   });
 
-  describe.each([401, 403])('given irrecoverable http errors', (status) => {
-    it(`stops retrying after error: ${status}`, () => {
+  describe.each([401, 403])('given unexpected http errors', (status) => {
+    it(`retries at error level rather than stopping after error: ${status}`, () => {
       const startTime = Date.now();
-      const testError = { status, message: 'stopping. irrecoverable.' };
+      const testError = { status, message: 'unexpected but still retried.' };
       const willRetry = simulateError(testError);
 
-      expect(willRetry).toBeFalsy();
-      expect(mockErrorHandler).toHaveBeenCalledWith(
-        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
-      );
+      // RETRY conformance abolishes permanent stops: 401/403 now retry, and
+      // like any recoverable failure they surface as a log, not an 'error' event.
+      expect(willRetry).toBeTruthy();
+      expect(mockErrorHandler).not.toHaveBeenCalled();
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringMatching(new RegExp(`${status}.*permanently`)),
+        expect.stringMatching(new RegExp(`${status}.*will retry`)),
       );
 
       const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
@@ -296,5 +343,30 @@ describe('given a stream processor with mock event source', () => {
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
     });
+
+    it(`enters the extended regime after error: ${status}`, () => {
+      simulateError({ status, message: 'unexpected' });
+      const delay = mockEventSource.options.retryDelayStrategy.nextRetryDelay(0);
+      // Extended initial delay is 5 minutes, less up to half for jitter.
+      expect(delay).toBeGreaterThan(2.5 * 60 * 1000);
+      expect(delay).toBeLessThanOrEqual(5 * 60 * 1000);
+    });
+  });
+
+  it('resets the reconnect delay to the operating cadence after a healthy event', () => {
+    const strategy = mockEventSource.options.retryDelayStrategy;
+    simulateError({ status: 500, message: 'transient' });
+    expect(strategy.nextRetryDelay(0)).toBeGreaterThan(0);
+    strategy.setGoodSince(0);
+    expect(strategy.nextRetryDelay(0)).toEqual(0);
+  });
+
+  it('applies a server-directed retry time as the backoff base', () => {
+    const strategy = mockEventSource.options.retryDelayStrategy;
+    strategy.setBaseDelay(2500);
+    simulateError({ status: 500, message: 'transient' });
+    const delay = strategy.nextRetryDelay(0);
+    expect(delay).toBeGreaterThan(1250);
+    expect(delay).toBeLessThanOrEqual(2500);
   });
 });
