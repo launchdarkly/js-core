@@ -49,6 +49,7 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'secure-mode-hash',
             'flag-change-listeners',
+            'fdv1-fallback',
           ];
 
           break;
