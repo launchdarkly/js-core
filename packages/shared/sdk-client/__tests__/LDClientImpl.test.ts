@@ -533,7 +533,7 @@ describe('usePost validation', () => {
   });
 });
 
-describe('useReport under dataSystem (CSFDV2 Requirement 2.1.4)', () => {
+describe('useReport under dataSystem', () => {
   it('ignores useReport and logs a warning when dataSystem is also configured', async () => {
     const platform = createBasicPlatform();
     platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
