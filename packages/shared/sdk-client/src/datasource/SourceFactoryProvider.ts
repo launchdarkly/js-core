@@ -42,7 +42,7 @@ export interface SourceFactoryContext {
   /** JSON-serialized evaluation context. */
   plainContextString: string;
   /**
-   * Whether streaming should request via POST instead of GET.
+   * Whether requests should use POST instead of GET.
    */
   usePost: boolean;
   /** Logger. */
@@ -167,7 +167,9 @@ function buildStreamingBase(
 ) {
   const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
   const requestor = resolvePollingRequestor(ctx, entry.endpoints);
-  const streamUriPath = ctx.usePost
+  // usePost applies to the stream only when the EventSource can send a custom HTTP method.
+  const streamPost = ctx.usePost && ctx.requests.getEventSourceCapabilities().customMethod;
+  const streamUriPath = streamPost
     ? ctx.streaming.paths.pathPost(ctx.encoding, ctx.plainContextString)
     : ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
   return createStreamingBase({
@@ -181,7 +183,7 @@ function buildStreamingBase(
       (entry.initialReconnectDelay ?? ctx.streaming.initialReconnectDelaySeconds) * 1000,
     logger: ctx.logger,
     pingHandler: createPingHandler(requestor, sg, ctx.logger),
-    ...(ctx.usePost ? { method: 'POST' as const, body: ctx.plainContextString } : {}),
+    ...(streamPost ? { method: 'POST' as const, body: ctx.plainContextString } : {}),
   });
 }
 
