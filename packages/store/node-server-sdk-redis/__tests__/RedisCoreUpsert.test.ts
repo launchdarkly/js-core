@@ -1,18 +1,9 @@
 import { interfaces } from '@launchdarkly/node-server-sdk';
 
 import RedisCore from '../src/RedisCore';
-import { expectNoUnhandledRejection } from './testUtils';
+import { flushRejections, makeState } from './testUtils';
 
 const featuresKind = { namespace: 'features', deserialize: (data: string) => JSON.parse(data) };
-
-function makeState(overrides: object) {
-  return {
-    prefixedKey: (key: string) => key,
-    isConnected: () => true,
-    isInitialConnection: () => false,
-    ...overrides,
-  };
-}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -23,9 +14,9 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   const state = makeState({
     getClient: () => ({
       watch: () => Promise.reject(watchError),
+      unwatch: jest.fn().mockResolvedValue('OK'),
       hget: jest.fn(),
       multi: () => ({
-        discard: jest.fn(),
         hset: jest.fn(),
         exec: jest.fn(),
       }),
@@ -34,7 +25,7 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   // @ts-ignore Partial state mock for testing.
   const core = new RedisCore(state);
 
-  const result = await expectNoUnhandledRejection(
+  const result = await flushRejections(
     () =>
       new Promise<{
         err?: Error;
@@ -61,15 +52,15 @@ it('does not read or run the transaction when watch rejects', async () => {
     },
   );
   const exec = jest.fn((cb: (err: Error | null, replies: unknown) => void) => {
-    cb(null, ['OK']);
+    cb(null, [[null, 1]]);
   });
   const state = makeState({
     getClient: () => ({
       watch: () => Promise.reject(watchError),
+      unwatch: jest.fn().mockResolvedValue('OK'),
       hget,
       multi: () => ({
         hset: jest.fn(),
-        discard: jest.fn(),
         exec,
       }),
     }),
@@ -79,7 +70,7 @@ it('does not read or run the transaction when watch rejects', async () => {
 
   const callback = jest.fn();
   // The helper's event-loop turn lets the watch rejection propagate through the chain.
-  await expectNoUnhandledRejection(async () => {
+  await flushRejections(async () => {
     core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, callback);
   });
 
@@ -91,18 +82,20 @@ it('does not read or run the transaction when watch rejects', async () => {
 
 it('stores the serializedItem verbatim for a deleted descriptor', (done) => {
   const hset = jest.fn();
-  const serializedItem = JSON.stringify({ key: 'flagA', version: 3, deleted: true });
+  // The property order differs from the placeholder the code can build itself, so this
+  // value only matches when the write is verbatim.
+  const serializedItem = '{"version":3,"deleted":true,"key":"flagA"}';
   const state = makeState({
     getClient: () => ({
       watch: jest.fn().mockResolvedValue('OK'),
+      unwatch: jest.fn().mockResolvedValue('OK'),
       hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
         cb(null, null);
       },
       multi: () => ({
         hset,
-        discard: jest.fn(),
         exec: (cb: (err: Error | null, replies: unknown) => void) => {
-          cb(null, ['OK']);
+          cb(null, [[null, 1]]);
         },
       }),
     }),
@@ -112,6 +105,180 @@ it('stores the serializedItem verbatim for a deleted descriptor', (done) => {
 
   core.upsert(featuresKind, 'flagA', { version: 3, deleted: true, serializedItem }, () => {
     expect(hset).toHaveBeenCalledWith('features', 'flagA', serializedItem);
+    done();
+  });
+});
+
+it('sends UNWATCH and does not run the transaction when the stored version is newer', (done) => {
+  const unwatch = jest.fn().mockResolvedValue('OK');
+  const exec = jest.fn();
+  const state = makeState({
+    getClient: () => ({
+      watch: jest.fn().mockResolvedValue('OK'),
+      unwatch,
+      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+        cb(null, JSON.stringify({ key: 'flagA', version: 5 }));
+      },
+      multi: () => ({
+        hset: jest.fn(),
+        exec,
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  core.upsert(featuresKind, 'flagA', { version: 3, serializedItem: '{}' }, (err, updated) => {
+    expect(err).toBeUndefined();
+    expect(updated?.version).toEqual(5);
+    // A client-side discard would leave the watch armed on the shared connection, and
+    // the next transaction on it could be silently aborted.
+    expect(unwatch).toHaveBeenCalledTimes(1);
+    expect(exec).not.toHaveBeenCalled();
+    done();
+  });
+});
+
+it('reports a read error and sends UNWATCH without writing', (done) => {
+  const readError = new Error('read failed');
+  const unwatch = jest.fn().mockResolvedValue('OK');
+  const hset = jest.fn();
+  const exec = jest.fn();
+  const state = makeState({
+    getClient: () => ({
+      watch: jest.fn().mockResolvedValue('OK'),
+      unwatch,
+      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+        cb(readError, null);
+      },
+      multi: () => ({
+        hset,
+        exec,
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  // A read failure must not be treated as a missing item. That would skip the version
+  // check and let an older item overwrite a newer one.
+  core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, (err, updated) => {
+    expect(err).toBe(readError);
+    expect(updated).toBeUndefined();
+    expect(unwatch).toHaveBeenCalledTimes(1);
+    expect(hset).not.toHaveBeenCalled();
+    expect(exec).not.toHaveBeenCalled();
+    done();
+  });
+});
+
+it('overwrites a malformed stored item instead of throwing', (done) => {
+  const hset = jest.fn();
+  const state = makeState({
+    getClient: () => ({
+      watch: jest.fn().mockResolvedValue('OK'),
+      unwatch: jest.fn().mockResolvedValue('OK'),
+      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+        // Not valid JSON, so deserialize throws.
+        cb(null, 'garbage');
+      },
+      multi: () => ({
+        hset,
+        exec: (cb: (err: Error | null, replies: unknown) => void) => {
+          cb(null, [[null, 1]]);
+        },
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  // A throw inside the redis client callback would crash the process.
+  core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, (err) => {
+    expect(err).toBeUndefined();
+    expect(hset).toHaveBeenCalledWith('features', 'flagA', '{}');
+    done();
+  });
+});
+
+it('reports an error when a committed transaction contains a per-command error', (done) => {
+  const commandError = new Error(
+    'WRONGTYPE Operation against a key holding the wrong kind of value',
+  );
+  const state = makeState({
+    getClient: () => ({
+      watch: jest.fn().mockResolvedValue('OK'),
+      unwatch: jest.fn().mockResolvedValue('OK'),
+      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+        cb(null, null);
+      },
+      multi: () => ({
+        hset: jest.fn(),
+        exec: (cb: (err: Error | null, replies: unknown) => void) => {
+          cb(null, [[commandError, null]]);
+        },
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, (err) => {
+    expect(err).toBe(commandError);
+    done();
+  });
+});
+
+it('retries when the transaction is aborted by a concurrent modification', (done) => {
+  const exec = jest
+    .fn()
+    // A nil reply means the watched key changed and the EXEC was aborted.
+    .mockImplementationOnce((cb: (err: Error | null, replies: unknown) => void) => {
+      cb(null, null);
+    })
+    .mockImplementationOnce((cb: (err: Error | null, replies: unknown) => void) => {
+      cb(null, [[null, 1]]);
+    });
+  const state = makeState({
+    getClient: () => ({
+      watch: jest.fn().mockResolvedValue('OK'),
+      unwatch: jest.fn().mockResolvedValue('OK'),
+      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
+        cb(null, null);
+      },
+      multi: () => ({
+        hset: jest.fn(),
+        exec,
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  const callback = jest.fn(() => {
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledWith(undefined, { version: 2, serializedItem: '{}' });
+    expect(exec).toHaveBeenCalledTimes(2);
+    done();
+  });
+  core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, callback);
+});
+
+it('fails fast without watching when the connection is down', (done) => {
+  const watch = jest.fn();
+  const state = makeState({
+    isConnected: () => false,
+    isInitialConnection: () => false,
+    getClient: () => ({
+      watch,
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, (err) => {
+    expect(err).toBeDefined();
+    expect(watch).not.toHaveBeenCalled();
     done();
   });
 });

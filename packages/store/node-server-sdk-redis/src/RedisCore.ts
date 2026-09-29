@@ -3,6 +3,18 @@ import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
 import RedisClientState from './RedisClientState';
 
 /**
+ * A committed transaction can still contain per-command errors, for example WRONGTYPE.
+ * Find the first one so it can be reported instead of a false success.
+ */
+function firstReplyError(replies: unknown): Error | undefined {
+  if (!Array.isArray(replies)) {
+    return undefined;
+  }
+  const failed = replies.find((reply) => Array.isArray(reply) && reply[0]);
+  return failed?.[0];
+}
+
+/**
  * Internal implementation of the Redis data store.
  *
  * Feature flags, segments, and any other kind of entity the LaunchDarkly client may wish
@@ -37,6 +49,14 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: (err?: Error) => void,
   ): void {
+    // During the initial connection ioredis queues the command and may still connect.
+    // Fail fast only once a prior connection has dropped.
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      this._logger?.warn('Attempted to initialize the store while Redis connection is down');
+      callback(new Error('Redis connection is down'));
+      return;
+    }
+
     const multi = this._state.getClient().multi();
     allData.forEach((keyedItems) => {
       const kind = keyedItems.key;
@@ -62,11 +82,21 @@ export default class RedisCore implements interfaces.PersistentDataStore {
 
     multi.set(this._initedKey, '');
 
-    multi.exec((err) => {
-      if (err) {
-        this._logger?.error(`Error initializing Redis store ${err}`);
+    multi.exec((err, replies) => {
+      let error = err ?? undefined;
+      if (!error && (replies === null || replies === undefined)) {
+        // A nil reply means the transaction was aborted. That happens when a watch set
+        // earlier on this shared connection was triggered. Nothing was written, so this
+        // must be an error. The recovery engine trusts this result.
+        error = new Error('Redis init transaction was aborted');
       }
-      callback(err ?? undefined);
+      if (!error) {
+        error = firstReplyError(replies);
+      }
+      if (error) {
+        this._logger?.error(`Error initializing Redis store: ${error}`);
+      }
+      callback(error);
     });
   }
 
@@ -138,6 +168,14 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ): void {
+    // During the initial connection ioredis queues the command and may still connect.
+    // Fail fast only once a prior connection has dropped.
+    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+      this._logger?.warn(`Attempted to update key '${key}' while Redis connection is down`);
+      callback(new Error('Redis connection is down'), undefined);
+      return;
+    }
+
     // The callback must only ever fire once. A second fire would shift the persistent
     // store wrapper's update queue twice and silently drop the next queued operation.
     // The catch handler below can observe an error after the transaction already settled.
@@ -150,62 +188,95 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       callback(err, updatedDescriptor);
     };
 
-    // The persistent store wrapper manages interactions with a queue, so we can use watch like
-    // this without concerns for overlapping transactions.
+    const client = this._state.getClient();
+    const namespaceKey = this._state.prefixedKey(kind.namespace);
+
+    // A Redis watch belongs to the connection, not to a transaction object. The persistent
+    // store wrapper serializes the updates from this store, but the watch must be released
+    // with UNWATCH whenever this attempt stops without an EXEC. A discard on an ioredis
+    // multi only clears a client-side queue and never reaches the server.
+    const abandonWatch = () => {
+      client.unwatch().catch((unwatchErr) => {
+        // The connection dropped. That also cleared the watch on the server.
+        this._logger?.debug(`Error sending UNWATCH to Redis: ${unwatchErr}`);
+      });
+    };
+
     // The read and the transaction start only after the watch succeeds. If the watch fails,
     // this attempt is abandoned before it queues any command. Otherwise its exec could run
     // later on the shared connection and clear the watch of the next queued update.
-    this._state
-      .getClient()
-      .watch(this._state.prefixedKey(kind.namespace))
+    client
+      .watch(namespaceKey)
       .then(() => {
-        const multi = this._state.getClient().multi();
-
-        this.get(kind, key, (old) => {
-          if (old?.serializedItem) {
+        // Read directly instead of through get(). A read error must fail this attempt.
+        // Treating it as a missing item would skip the version check and let an older
+        // item overwrite a newer one.
+        client.hget(namespaceKey, key, (readErr, oldItem) => {
+          if (readErr) {
+            this._logger?.error(
+              `Error fetching key '${key}' from Redis in '${kind.namespace}': ${readErr}`,
+            );
+            abandonWatch();
+            settleOnce(readErr, undefined);
+            return;
+          }
+          if (oldItem) {
             // Here, unfortunately, we have to deserialize the old item just to find
             // out its version number. See notes on this class.
             // Do not look at the meta-data, as we do not read/write it independently
             // with a redis store.
-            const deserializedOld = kind.deserialize(old.serializedItem);
-            if ((deserializedOld?.version || 0) >= descriptor.version) {
-              multi.discard();
-
+            let deserializedOld: interfaces.ItemDescriptor | undefined;
+            try {
+              deserializedOld = kind.deserialize(oldItem);
+            } catch (deserializeErr) {
+              // A malformed stored item must not throw into the redis client callback,
+              // which would crash the process. Treat it like an unparseable item and
+              // let the write below replace it.
+              this._logger?.warn(
+                `Malformed item for key '${key}' in '${kind.namespace}' will be overwritten: ${deserializeErr}`,
+              );
+            }
+            if (deserializedOld && (deserializedOld.version || 0) >= descriptor.version) {
+              abandonWatch();
               settleOnce(undefined, {
-                version: deserializedOld!.version,
-                deleted: !deserializedOld?.item, // If there is no item, then it is deleted.
-                serializedItem: old.serializedItem,
+                version: deserializedOld.version,
+                deleted: !deserializedOld.item, // If there is no item, then it is deleted.
+                serializedItem: oldItem,
               });
               return;
             }
           }
+
+          const multi = client.multi();
           if (descriptor.serializedItem) {
-            multi.hset(this._state.prefixedKey(kind.namespace), key, descriptor.serializedItem);
+            multi.hset(namespaceKey, key, descriptor.serializedItem);
           } else if (descriptor.deleted) {
             // The SDK contract guarantees a serializedItem is always provided for writes,
             // including deletes, so this only runs if that contract is violated. It keeps
-            // today's placeholder shape, but adds the key so the tombstone stays identifiable.
+            // the previous placeholder shape, but adds the key so the tombstone stays
+            // identifiable.
             multi.hset(
-              this._state.prefixedKey(kind.namespace),
+              namespaceKey,
               key,
               JSON.stringify({ key, version: descriptor.version, deleted: true }),
             );
           } else {
             // This call violates the contract.
-            multi.discard();
+            abandonWatch();
             this._logger?.error('Attempt to write a non-deleted item without data to Redis.');
             settleOnce(undefined, undefined);
             return;
           }
           multi.exec((err, replies) => {
             if (!err && (replies === null || replies === undefined)) {
-              // This means the EXEC failed because someone modified the watched key
+              // A nil reply means the watched key changed and the EXEC was aborted.
               this._logger?.debug('Concurrent modification detected, retrying');
               // This is a fresh attempt with its own watch/settle guard, not a
               // completion of this one, so it gets the original callback, not settleOnce.
               this.upsert(kind, key, descriptor, callback);
             } else {
-              settleOnce(err || undefined, descriptor);
+              // A committed transaction can still contain per-command errors.
+              settleOnce(err ?? firstReplyError(replies), descriptor);
             }
           });
         });
@@ -213,7 +284,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       .catch((err: unknown) => {
         // Without this handler a rejected watch (for example during a store outage)
         // becomes an unhandled promise rejection and can crash the process.
-        this._logger?.error(`Error watching '${kind.namespace}' in Redis ${err}`);
+        this._logger?.error(`Error watching '${kind.namespace}' in Redis: ${err}`);
         settleOnce(err as Error, undefined);
       });
   }
