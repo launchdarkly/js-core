@@ -222,9 +222,9 @@ export interface LDOptions {
    * option is also configured.
    *
    * For streaming specifically, this also requires an EventSource implementation that supports a
-   * custom HTTP method (the `customMethod` capability) -- the platform's default EventSource
-   * generally does not. The SDK throws synchronously at construction time if `usePost` is set for
-   * streaming without a compatible EventSource.
+   * custom HTTP method (the `customMethod` capability). If the capability
+   * does not exist the the SDK throws synchronously at construction time
+   * if `usePost` is set for streaming without a compatible EventSource.
    *
    * This is not stable, and not subject to any backwards compatibility guarantees or semantic
    * versioning. It is in early access. If you want access to this feature please join the EAP.

@@ -128,11 +128,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
 
     this._config = new ConfigurationImpl(options, internalOptions);
 
-    // A dataSystem-configured client has no fallback for a transport that can't send POST --
-    // unlike the legacy streaming path's useReport, which falls back to a ping-based GET instead
-    // of failing. This is a config-level check, not a mode-level one: it fires even if the
-    // resolved connection mode never opens a stream, since mode switching can start streaming
-    // later.
+    // A dataSystem-configured client has no fallback for a transport that can't send POST
     if (
       !!this._config.dataSystem &&
       this._config.usePost &&

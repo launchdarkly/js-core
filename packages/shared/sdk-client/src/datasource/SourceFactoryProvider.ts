@@ -42,11 +42,7 @@ export interface SourceFactoryContext {
   /** JSON-serialized evaluation context. */
   plainContextString: string;
   /**
-   * Whether streaming should request via POST instead of GET (CSFDV2 Requirement 2.1.3).
-   * `buildStreamingBase` below acts on this flag unconditionally -- it does not check whether
-   * the platform's EventSource actually supports a custom HTTP method (the `customMethod`
-   * capability). The caller is responsible for ensuring `usePost` is only set when that
-   * capability is present.
+   * Whether streaming should request via POST instead of GET.
    */
   usePost: boolean;
   /** Logger. */
