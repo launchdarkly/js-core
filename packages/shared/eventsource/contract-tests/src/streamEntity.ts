@@ -39,7 +39,9 @@ function logError(tag: string | undefined, message: string): void {
 }
 
 export function newStreamEntity(options: StreamOptions): StreamEntity {
-  const listeningForType: Record<string, boolean> = {};
+  // A Set, not a plain object: the harness controls the type names, and a name from the
+  // Object prototype (such as "toString") must register like any other type.
+  const listeningForType = new Set<string>();
   const { tag } = options;
   let closed = false;
   let callbackCounter = 0;
@@ -153,8 +155,8 @@ export function newStreamEntity(options: StreamOptions): StreamEntity {
           }
           // The default "message" type is registered once above; registering it again here
           // would deliver every message twice.
-          if (eventType !== 'message' && !listeningForType[eventType]) {
-            listeningForType[eventType] = true;
+          if (eventType !== 'message' && !listeningForType.has(eventType)) {
+            listeningForType.add(eventType);
             sse.addEventListener(eventType, onMessage);
           }
           return true;

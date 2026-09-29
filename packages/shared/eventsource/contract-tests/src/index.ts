@@ -8,7 +8,9 @@ const app = express();
 const port = 8000;
 
 let streamCounter = 0;
-const streams: Record<string, StreamEntity> = {};
+// A Map, not a plain object: a stream id from the URL such as "constructor" must miss
+// cleanly instead of finding an Object prototype member.
+const streams = new Map<string, StreamEntity>();
 
 app.use(bodyParser.json());
 
@@ -54,7 +56,7 @@ app.post('/', (req: Request, res: Response) => {
   const streamId = streamCounter.toString();
   const streamResourceUrl = `/streams/${streamId}`;
 
-  streams[streamId] = newStreamEntity(options);
+  streams.set(streamId, newStreamEntity(options));
 
   res.status(201);
   res.set('Location', streamResourceUrl);
@@ -62,7 +64,7 @@ app.post('/', (req: Request, res: Response) => {
 });
 
 app.post('/streams/:id', (req: Request, res: Response) => {
-  const stream = streams[req.params.id];
+  const stream = streams.get(req.params.id);
   if (!stream) {
     res.status(404);
   } else if (!stream.doCommand(req.body)) {
@@ -74,14 +76,14 @@ app.post('/streams/:id', (req: Request, res: Response) => {
 });
 
 app.delete('/streams/:id', (req: Request, res: Response) => {
-  const stream = streams[req.params.id];
+  const stream = streams.get(req.params.id);
   if (!stream) {
     res.status(404);
     res.send();
     return;
   }
   stream.close();
-  delete streams[req.params.id];
+  streams.delete(req.params.id);
   res.status(204);
   res.send();
 });
