@@ -470,24 +470,34 @@ describe('sdk-client object', () => {
 });
 
 describe('usePost validation', () => {
-  it('throws when dataSystem is configured with usePost but the EventSource lacks customMethod', () => {
+  it('warns and continues when dataSystem is configured with usePost but the EventSource lacks customMethod', async () => {
     const platform = createBasicPlatform();
     platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
       readTimeout: true,
       headers: true,
       customMethod: false,
     }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-    expect(
-      () =>
-        new LDClientImpl(
-          testSdkKey,
-          AutoEnvAttributes.Enabled,
-          platform,
-          { usePost: true, dataSystem: {} },
-          makeTestDataManagerFactory(testSdkKey, platform),
-        ),
-    ).toThrow(/usePost/);
+    let client: LDClientImpl | undefined;
+    // Construction succeeds: usePost still applies to polling, only streaming degrades to GET.
+    expect(() => {
+      client = new LDClientImpl(
+        testSdkKey,
+        AutoEnvAttributes.Enabled,
+        platform,
+        { usePost: true, dataSystem: {}, sendEvents: false, logger },
+        makeTestDataManagerFactory(testSdkKey, platform),
+      );
+    }).not.toThrow();
+    // The degrade is loud: the warning names the GET fallback for streaming.
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/usePost.*GET/s));
+    await client?.close();
   });
 
   it('does not throw when dataSystem is configured with usePost and the EventSource supports customMethod', async () => {

@@ -66,7 +66,13 @@ function makePaths(): DataSourcePaths {
 function makeSourceFactoryContext(overrides?: Partial<SourceFactoryContext>): SourceFactoryContext {
   return {
     requestor: { poll: jest.fn() } as unknown as FDv2Requestor,
-    requests: {} as Requests,
+    requests: {
+      getEventSourceCapabilities: jest.fn(() => ({
+        customMethod: true,
+        readTimeout: true,
+        headers: true,
+      })),
+    } as unknown as Requests,
     encoding: {} as Encoding,
     serviceEndpoints: new ServiceEndpoints(
       'https://stream.example.com',
@@ -171,6 +177,31 @@ it('uses the post path and passes method/body overrides when usePost is true', (
       body: ctx.plainContextString,
     }),
   );
+});
+
+it('uses the get path for the stream when usePost is true but the EventSource lacks customMethod', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext({
+    usePost: true,
+    requests: {
+      getEventSourceCapabilities: jest.fn(() => ({
+        customMethod: false,
+        readTimeout: false,
+        headers: false,
+      })),
+    } as unknown as Requests,
+  });
+  const entry: InitializerEntry = { type: 'streaming' };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  factory!.create(() => undefined);
+
+  // The stream degrades to GET; the polling requestor keeps POST via the fetch transport.
+  expect(ctx.streaming.paths.pathGet).toHaveBeenCalledWith(ctx.encoding, ctx.plainContextString);
+  expect(ctx.streaming.paths.pathPost).not.toHaveBeenCalled();
+  const streamingBaseArgs = mockCreateStreamingBase.mock.calls[0][0];
+  expect(streamingBaseArgs.method).toBeUndefined();
+  expect(streamingBaseArgs.body).toBeUndefined();
 });
 
 it('uses the get path and no method/body override when usePost is false', () => {
