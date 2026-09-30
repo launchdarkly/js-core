@@ -8,6 +8,11 @@ import { LDLogger } from '@launchdarkly/node-server-sdk';
 export default interface LDDynamoDBOptions {
   /**
    * Options to be passed to the DynamoDB client constructor, as defined by the AWS SDK.
+   *
+   * @remarks
+   * When these options do not include a `requestHandler`, the store adds its default handler
+   * configuration: a connection timeout and a request timeout. Without them, one hung request
+   * would block every later store write. Supply your own `requestHandler` to override them.
    */
   clientOptions?: DynamoDBClientConfig;
 
@@ -15,6 +20,12 @@ export default interface LDDynamoDBOptions {
    * Specifies an existing, already-configured DynamoDB client instance that the feature store
    * should use rather than creating one of its own. If you specify an existing client, then the
    * clientOptions property is ignored.
+   *
+   * @remarks
+   * The store bounds each request with a deadline on its total elapsed time, and that also
+   * applies to a supplied client. The deadline uses Node timers, which follow the monotonic
+   * clock, so system clock changes do not affect it. A request budget configured for more
+   * than 100 seconds is cut off at the deadline.
    */
   dynamoDBClient?: DynamoDBClient;
 

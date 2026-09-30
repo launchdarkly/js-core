@@ -117,6 +117,13 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     kind: interfaces.PersistentStoreDataKind,
     item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ): Record<string, AttributeValue> {
+    // A version that is not a safe integer either fails to marshal here or is
+    // rejected by DynamoDB later, and a server-side rejection fails the whole
+    // batch after the token delete. Fail here so the callers' guards handle it.
+    // A file data source can produce such versions (missing, Infinity, NaN).
+    if (!Number.isSafeInteger(item.item.version)) {
+      throw new Error(`Item '${item.key}' has a version that is not a safe integer`);
+    }
     const dbItem: Record<string, AttributeValue> = {
       namespace: stringValue(this._state.prefixedKey(kind.namespace)),
       key: stringValue(item.key),
@@ -176,9 +183,11 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
           // An item that cannot be marshalled, for example one with no version
           // from a file data source, must not throw here. The throw would skip
           // the callback and block the store queue. Skip the item, like an
-          // oversized item.
+          // oversized item. Any stored copy of the item is removed, so readers
+          // of the table will not find it.
           this._logger?.warn(
-            `Cannot marshal item '${item.key}' in '${collection.key.namespace}', skipping: ${marshalError}`,
+            `Cannot marshal item '${item.key}' in '${collection.key.namespace}', skipping. ` +
+              `Any stored copy will be removed. ${marshalError}`,
           );
           return;
         }
@@ -296,18 +305,25 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ) {
+    // A descriptor that cannot be marshalled must reach the callback as an
+    // error. A throw before the callback is wired would leave the store queue
+    // waiting forever. The size check stays outside the send try so that its
+    // callback cannot be invoked a second time through the catch.
+    let params;
     try {
-      // The marshal step runs inside the try. A descriptor that cannot be
-      // marshalled would otherwise throw before the callback is wired, and
-      // the store queue would wait on it forever.
-      const params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
-      if (!this._checkSizeLimit(params.Item)) {
-        // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
-        // useless retry behavior. We just won't do the update.
-        callback();
-        return;
-      }
+      params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
+    } catch (marshalError) {
+      callback(marshalError as Error, undefined);
+      return;
+    }
+    if (!this._checkSizeLimit(params.Item)) {
+      // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
+      // useless retry behavior. We just won't do the update.
+      callback();
+      return;
+    }
 
+    try {
       await this._state.put(params);
       this.get(kind, key, (readDescriptor) => {
         callback(undefined, readDescriptor);
