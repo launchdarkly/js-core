@@ -34,6 +34,10 @@ it('skips an item that cannot be marshalled and still completes init', (done) =>
       item: [
         // @ts-ignore Missing version, as a file data source can produce.
         { key: 'flagBad', item: { deleted: false, serializedItem: '{}' } },
+        // DynamoDB rejects these server-side, which would fail the whole batch,
+        // so the marshal guard must catch them client-side.
+        { key: 'flagInf', item: { version: Infinity, deleted: false, serializedItem: '{}' } },
+        { key: 'flagNaN', item: { version: NaN, deleted: false, serializedItem: '{}' } },
         { key: 'flagA', item: { version: 1, deleted: false, serializedItem: '{"version":1}' } },
       ],
     },
@@ -52,6 +56,8 @@ it('skips an item that cannot be marshalled and still completes init', (done) =>
   core.init(badData, (err) => {
     expect(err).toBeUndefined();
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('flagBad'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('flagInf'));
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('flagNaN'));
     const written = state.batchWrite.mock.calls[0][1];
     expect(written).toHaveLength(1);
     expect(written[0].PutRequest.Item.key.S).toEqual('flagA');
@@ -73,6 +79,26 @@ it('reports an upsert error through the callback when the descriptor cannot be m
     expect(state.put).not.toHaveBeenCalled();
     done();
   });
+});
+
+it('reports an upsert error through the callback for a version DynamoDB would reject', (done) => {
+  const state = {
+    prefixedKey: (key: string) => key,
+    put: jest.fn(),
+    get: jest.fn(),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state);
+  core.upsert(
+    featuresKind,
+    'flagA',
+    { version: Infinity, deleted: false, serializedItem: '{}' },
+    (err) => {
+      expect(err?.message).toContain('flagA');
+      expect(state.put).not.toHaveBeenCalled();
+      done();
+    },
+  );
 });
 
 it('reports an init error through the callback when the batch write fails', (done) => {

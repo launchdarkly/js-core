@@ -35,10 +35,12 @@ const UNPROCESSED_RETRY_BASE_DELAY_MS = 100;
 // - connectionTimeout covers the TCP connect phase, which the older handler's
 //   requestTimeout does not cover.
 // - requestTimeout makes an unresponsive peer fail after the connection is up.
-// - A per-call abort signal is a wall-clock backstop for the shapes the handler
-//   timers miss, such as a reply that trickles bytes or a stall after the
-//   response headers on newer handlers. Its deadline leaves room for the AWS
-//   SDK's default three attempts, so it fires only when the timers did not.
+// - A per-call abort signal bounds the total elapsed time of a call. It covers
+//   the shapes the handler timers miss, such as a reply that trickles bytes or
+//   a stall after the response headers on newer handlers. Node timers follow
+//   the monotonic clock, so a system clock change does not move the deadline. It also caps the total time across the
+//   AWS SDK's retry attempts, so a fully used retry budget can end slightly
+//   early rather than hang.
 // The handler defaults also apply when the user passes clientOptions without a
 // requestHandler. A user-supplied requestHandler or dynamoDBClient keeps its
 // own handler configuration, but every call still gets the abort backstop.
@@ -91,8 +93,10 @@ export default class DynamoDBClientState {
       // configurations pass only credentials, a region, or an endpoint, and
       // without the defaults one hung request would block the store queue.
       this._client = new DynamoDBClient({
-        requestHandler: defaultRequestHandler(),
         ...options.clientOptions,
+        // The ?? also catches a requestHandler key that is explicitly
+        // undefined, which a plain spread would let erase the defaults.
+        requestHandler: options.clientOptions.requestHandler ?? defaultRequestHandler(),
       });
       this._owned = true;
     } else {
@@ -104,11 +108,42 @@ export default class DynamoDBClientState {
   }
 
   /**
-   * Per-call options for every send. The abort signal is the wall-clock
-   * backstop described on the timeout constants above.
+   * Run one client call with the total-elapsed-time backstop described on the
+   * timeout constants above.
+   *
+   * The controller and timer are explicit, and the timer is cleared as soon as
+   * the call settles. An AbortSignal.timeout signal would be simpler, but old
+   * request handlers never remove their abort listener, and a timeout signal
+   * with a listener is held in memory until its timer fires. That retained
+   * every completed request for the full deadline. AbortSignal.timeout also
+   * does not exist on the oldest supported Node versions.
    */
-  private _callOptions() {
-    return { abortSignal: AbortSignal.timeout(CALL_DEADLINE_MS) };
+  private async _withDeadline<T>(
+    call: (options: { abortSignal?: AbortSignal }) => Promise<T>,
+  ): Promise<T> {
+    if (typeof AbortController === 'undefined') {
+      // A runtime this old has no abort support. It loses only the backstop;
+      // the request handler timeouts still apply.
+      return call({});
+    }
+    const controller = new AbortController();
+    let deadlinePassed = false;
+    const timer = setTimeout(() => {
+      deadlinePassed = true;
+      controller.abort();
+    }, CALL_DEADLINE_MS);
+    timer.unref();
+    try {
+      return await call({ abortSignal: controller.signal });
+    } catch (err) {
+      if (deadlinePassed && (err as Error)?.name === 'AbortError') {
+        // The handler reports only "Request aborted". Say why.
+        throw new Error(`The DynamoDB request did not complete within ${CALL_DEADLINE_MS}ms`);
+      }
+      throw err;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /**
@@ -128,9 +163,11 @@ export default class DynamoDBClientState {
     do {
       // Pages of one query are inherently sequential.
       // eslint-disable-next-line no-await-in-loop
-      const page = await this._client.send(
-        new QueryCommand({ ...params, ExclusiveStartKey: lastEvaluatedKey }),
-        this._callOptions(),
+      const page = await this._withDeadline((callOptions) =>
+        this._client.send(
+          new QueryCommand({ ...params, ExclusiveStartKey: lastEvaluatedKey }),
+          callOptions,
+        ),
       );
       if (page.Items) {
         records.push(...page.Items);
@@ -166,11 +203,13 @@ export default class DynamoDBClientState {
           await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
         }
         // eslint-disable-next-line no-await-in-loop
-        const result = await this._client.send(
-          new BatchWriteItemCommand({
-            RequestItems: { [table]: pending },
-          }),
-          this._callOptions(),
+        const result = await this._withDeadline((callOptions) =>
+          this._client.send(
+            new BatchWriteItemCommand({
+              RequestItems: { [table]: pending },
+            }),
+            callOptions,
+          ),
         );
         pending = result.UnprocessedItems?.[table] ?? [];
       }
@@ -187,20 +226,24 @@ export default class DynamoDBClientState {
     key: Record<string, AttributeValue>,
     consistentRead: boolean = false,
   ): Promise<Record<string, AttributeValue> | undefined> {
-    const res = await this._client.send(
-      new GetItemCommand({
-        TableName: table,
-        Key: key,
-        ConsistentRead: consistentRead,
-      }),
-      this._callOptions(),
+    const res = await this._withDeadline((callOptions) =>
+      this._client.send(
+        new GetItemCommand({
+          TableName: table,
+          Key: key,
+          ConsistentRead: consistentRead,
+        }),
+        callOptions,
+      ),
     );
     return res.Item;
   }
 
   async put(params: PutItemCommandInput): Promise<void> {
     try {
-      await this._client.send(new PutItemCommand(params), this._callOptions());
+      await this._withDeadline((callOptions) =>
+        this._client.send(new PutItemCommand(params), callOptions),
+      );
     } catch (err) {
       // If we couldn't upsert because of the version, then that is fine.
       // Otherwise we return failure.
@@ -211,12 +254,14 @@ export default class DynamoDBClientState {
   }
 
   async delete(table: string, key: Record<string, AttributeValue>): Promise<void> {
-    await this._client.send(
-      new DeleteItemCommand({
-        TableName: table,
-        Key: key,
-      }),
-      this._callOptions(),
+    await this._withDeadline((callOptions) =>
+      this._client.send(
+        new DeleteItemCommand({
+          TableName: table,
+          Key: key,
+        }),
+        callOptions,
+      ),
     );
   }
 
