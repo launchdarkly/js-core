@@ -218,8 +218,9 @@ it('preserves the method and body across a 307 redirect', async () => {
   });
 });
 
-describe.each([401, 403])('given a %s response', (status) => {
-  it('emits an error event with the status and headers', async () => {
+it.each([401, 403])(
+  'emits an error event with the status and headers for a %s response',
+  async (status) => {
     await withServer(async (server) => {
       server.byDefault(TestHttpHandlers.respond(status));
       await withEventSource(server.url, undefined, async (es) => {
@@ -229,8 +230,8 @@ describe.each([401, 403])('given a %s response', (status) => {
         expect(err.headers).not.toBeUndefined();
       });
     });
-  });
-});
+  },
+);
 
 it('fails when a 200 response declares a content type other than text/event-stream', async () => {
   await withServer(async (server) => {
