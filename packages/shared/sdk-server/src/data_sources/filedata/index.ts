@@ -13,6 +13,7 @@ import {
   MissingFileHandling,
 } from './FileDataPolicy';
 import FileDirectoryWatcher, { directoryOf } from './FileDirectoryWatcher';
+import FilePoller from './FilePoller';
 import FileReloader, {
   DEFAULT_DEBOUNCE_DELAY_MS,
   DEFAULT_RETRY_DELAY_MS,
@@ -33,6 +34,7 @@ export {
   FileDataDocument,
   FileDataPolicy,
   FileDirectoryWatcher,
+  FilePoller,
   FileReloader,
   FileReloaderConfig,
   FileSummary,
