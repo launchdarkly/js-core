@@ -205,6 +205,22 @@ it('dispatches closed only once when an error listener calls close() on a non-re
   });
 });
 
+it('is already closed inside onerror for a non-retryable failure, and dispatches closed exactly once', async () => {
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(401));
+    const es = createEventSource(server.url, { initialRetryDelayMillis: 1 });
+    const readyStatesSeenInOnerror: number[] = [];
+    es.onerror = () => readyStatesSeenInOnerror.push(es.readyState);
+    const closedEvents: string[] = [];
+    es.addEventListener('closed', () => closedEvents.push('closed'));
+
+    await sleepAsync(100);
+
+    expect(readyStatesSeenInOnerror).toEqual([CLOSED]);
+    expect(closedEvents).toEqual(['closed']);
+  });
+});
+
 it('closes cleanly and aborts the request when the error filter throws mid-stream', async () => {
   const encoder = new TextEncoder();
   let reads = 0;
