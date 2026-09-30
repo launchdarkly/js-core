@@ -4,7 +4,7 @@
 import { sleepAsync, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
 
 import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
-import { FetchFn, FetchResponse, MessageEvent } from '../src/types';
+import { FetchLike, FetchLikeResponse, MessageEvent } from '../src/types';
 import { withServer, withSlotRethrowSwallowed, writeEvents } from './helpers';
 
 afterEach(() => {
@@ -125,7 +125,7 @@ it('aborts the request when the error filter declines a retry mid-stream', async
       throw new Error('mid-stream drop');
     },
   };
-  const response: FetchResponse = {
+  const response: FetchLikeResponse = {
     status: 200,
     statusText: 'OK',
     headers: {
@@ -136,7 +136,7 @@ it('aborts the request when the error filter declines a retry mid-stream', async
     body: { getReader: () => reader },
   };
   let aborted = false;
-  const injected: FetchFn = (_url, init) => {
+  const injected: FetchLike = (_url, init) => {
     init.signal?.addEventListener('abort', () => {
       aborted = true;
     });
@@ -161,7 +161,7 @@ it('aborts the request when the error filter declines a retry mid-stream', async
 
 it('keeps the stream closed when the error filter calls close() and returns true', async () => {
   let fetchCalls = 0;
-  const injected: FetchFn = () => {
+  const injected: FetchLike = () => {
     fetchCalls += 1;
     return Promise.reject(new Error('connection refused'));
   };
@@ -217,7 +217,7 @@ it('closes cleanly and aborts the request when the error filter throws mid-strea
       throw new Error('mid-stream drop');
     },
   };
-  const response: FetchResponse = {
+  const response: FetchLikeResponse = {
     status: 200,
     statusText: 'OK',
     headers: {
@@ -228,7 +228,7 @@ it('closes cleanly and aborts the request when the error filter throws mid-strea
     body: { getReader: () => reader },
   };
   let aborted = false;
-  const injected: FetchFn = (_url, init) => {
+  const injected: FetchLike = (_url, init) => {
     init.signal?.addEventListener('abort', () => {
       aborted = true;
     });

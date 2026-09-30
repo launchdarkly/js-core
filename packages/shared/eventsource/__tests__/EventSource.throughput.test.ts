@@ -1,12 +1,12 @@
 import { createEventSource } from '../src/EventSource';
-import { FetchResponse, MessageEvent } from '../src/types';
+import { FetchLikeResponse, MessageEvent } from '../src/types';
 
 /**
  * A canned response whose body hands out one prepared chunk and then stays pending forever,
  * like an idle SSE connection. One large chunk is the worst case for the line scan: a fetch
  * transport can deliver thousands of coalesced events in a single read.
  */
-function singleChunkResponse(chunk: Uint8Array): FetchResponse {
+function singleChunkResponse(chunk: Uint8Array): FetchLikeResponse {
   let delivered = false;
   return {
     status: 200,
