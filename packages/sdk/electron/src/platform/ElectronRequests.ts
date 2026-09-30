@@ -3,7 +3,7 @@ import * as https from 'https';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { createEventSource, FetchFn } from '@launchdarkly/eventsource';
+import { createEventSource, FetchLike } from '@launchdarkly/eventsource';
 import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
 import createElectronFetch from './ElectronFetch';
@@ -12,7 +12,7 @@ import ElectronResponse from './ElectronResponse';
 const gzip = promisify(zlib.gzip);
 
 export default class ElectronRequests implements platform.Requests {
-  private _eventSourceFetch: FetchFn;
+  private _eventSourceFetch: FetchLike;
 
   private _enableBodyCompression: boolean = false;
 
