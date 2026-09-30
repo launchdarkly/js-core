@@ -25,11 +25,6 @@ import {
   shutdown,
   terminalError,
 } from './FDv2SourceResult';
-import {
-  FallbackDirective,
-  readFallbackDirective,
-  readGoodbyeFallbackDirective,
-} from './fallbackDirective';
 
 /**
  * Handler invoked when a legacy `"ping"` event is received on the stream.
@@ -150,7 +145,7 @@ export function createStreamingBase(config: {
    * the pending pair is cleared. Safe to call with neither; it just returns the
    * current committed state unchanged.
    */
-  function resolveFallback(incoming?: FallbackDirective): FallbackDirective {
+  function resolveFallback(incoming?: internal.FallbackDirective): internal.FallbackDirective {
     if (incoming?.fdv1Fallback) {
       fdv1Fallback = true;
       fdv1FallbackTtlMs = incoming.fdv1FallbackTtlMs;
@@ -176,8 +171,8 @@ export function createStreamingBase(config: {
    * so it still enqueues directly.
    */
   function putWithFallback(
-    build: (fallback: FallbackDirective) => FDv2SourceResult,
-    incoming?: FallbackDirective,
+    build: (fallback: internal.FallbackDirective) => FDv2SourceResult,
+    incoming?: internal.FallbackDirective,
   ): void {
     resultQueue.put(build(resolveFallback(incoming)));
   }
@@ -193,11 +188,12 @@ export function createStreamingBase(config: {
         // An in-band fallback signal in the goodbye data (its own TTL) takes
         // precedence over a directive deferred at onopen; putWithFallback()
         // passes it through to resolveFallback() as the incoming override.
-        const goodbyeDirective = readGoodbyeFallbackDirective(rawData);
+        const goodbyeDirective = internal.readGoodbyeFallbackDirective(rawData);
         putWithFallback(
-          (fallback) => (fallback.fdv1Fallback
-            ? terminalError(errorInfoFromUnknown(action.reason), fallback)
-            : goodbye(action.reason, fallback)),
+          (fallback) =>
+            fallback.fdv1Fallback
+              ? terminalError(errorInfoFromUnknown(action.reason), fallback)
+              : goodbye(action.reason, fallback),
           goodbyeDirective,
         );
         break;
@@ -211,7 +207,9 @@ export function createStreamingBase(config: {
         // Only actionable errors are queued; informational ones (UNKNOWN_EVENT)
         // are logged by the protocol handler.
         if (action.kind === 'MISSING_PAYLOAD' || action.kind === 'PROTOCOL_ERROR') {
-          putWithFallback((fallback) => interrupted(errorInfoFromInvalidData(action.message), fallback));
+          putWithFallback((fallback) =>
+            interrupted(errorInfoFromInvalidData(action.message), fallback),
+          );
         }
         break;
 
@@ -224,7 +222,7 @@ export function createStreamingBase(config: {
   function handleError(err: HttpErrorResponse): boolean {
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
-    const directive = readFallbackDirective({
+    const directive = internal.readFallbackDirective({
       get: (name: string) => errHeaders[name.toLowerCase()] ?? null,
     });
     if (directive.fdv1Fallback) {
@@ -242,7 +240,9 @@ export function createStreamingBase(config: {
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      putWithFallback((fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback));
+      putWithFallback((fallback) =>
+        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
+      );
       return false;
     }
 
@@ -334,7 +334,10 @@ export function createStreamingBase(config: {
 
         config.logger?.error(`Error handling ping: ${err?.message ?? err}`);
         putWithFallback((fallback) =>
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'), fallback),
+          interrupted(
+            errorInfoFromNetworkError(err?.message ?? 'Error during ping poll'),
+            fallback,
+          ),
         );
       }
     });
@@ -359,15 +362,24 @@ export function createStreamingBase(config: {
       });
       eventSource = es;
 
-      attachFDv2Listeners(es);
-      attachPingListener(es);
-
+      // Assign every on* slot before attachFDv2Listeners/attachPingListener register listeners
+      // below. An EventSource implementation may implement on* assignment by replacing the
+      // registered listeners of that type; this order keeps the protocol listeners intact
+      // either way. onclose fires only for a deliberate close().
       es.onclose = () => {
         config.logger?.info('Closed LaunchDarkly stream connection');
       };
 
       es.onerror = (err?: HttpErrorResponse) => {
         if (stopped) {
+          return;
+        }
+
+        // Server-sent FDv2 error frames and connection failures share the 'error' type, and
+        // both reach this slot. The protocol listener owns the frames; reporting one here too
+        // would replace the real reason with a fabricated network error. Only a protocol frame
+        // carries string `data`; typeof keeps a non-object payload from throwing.
+        if (typeof (err as { data?: unknown } | undefined)?.data === 'string') {
           return;
         }
 
@@ -406,7 +418,7 @@ export function createStreamingBase(config: {
         // in flight is delivered first.
         const openHeaders = e?.headers;
         if (openHeaders) {
-          const directive = readFallbackDirective({
+          const directive = internal.readFallbackDirective({
             get: (name: string) => openHeaders[name.toLowerCase()] ?? null,
           });
           pendingFallback = directive.fdv1Fallback;
@@ -417,6 +429,9 @@ export function createStreamingBase(config: {
       es.onretrying = (e) => {
         config.logger?.info(`Will retry stream connection in ${e.delayMillis} milliseconds`);
       };
+
+      attachFDv2Listeners(es);
+      attachPingListener(es);
     },
 
     close(): void {

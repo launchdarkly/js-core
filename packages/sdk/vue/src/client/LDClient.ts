@@ -1,9 +1,10 @@
+import type { Ref } from 'vue';
+
 import type {
   LDClient,
   LDContextStrict,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk';
-import type { Ref } from 'vue';
 
 /**
  * Represents the current initialization state of the LaunchDarkly client.

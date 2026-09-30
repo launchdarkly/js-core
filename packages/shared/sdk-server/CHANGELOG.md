@@ -8,6 +8,59 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.21.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.5...js-server-sdk-common-v2.21.6) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.26.1 to 2.27.0
+
+## [2.21.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.4...js-server-sdk-common-v2.21.5) (2026-09-22)
+
+
+### Bug Fixes
+
+* Preserve FDv2 protocol error listeners and stop misreporting server error frames ([#2028](https://github.com/launchdarkly/js-core/issues/2028)) ([3d80bef](https://github.com/launchdarkly/js-core/commit/3d80bef9f56872ed1c625ba1518aed2ebe30c1fd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.26.0 to 2.26.1
+
+## [2.21.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.3...js-server-sdk-common-v2.21.4) (2026-09-16)
+
+
+### Bug Fixes
+
+* **sdk-server-common:** use subpath import for `semver` module ([#1885](https://github.com/launchdarkly/js-core/issues/1885)) ([2de6c8c](https://github.com/launchdarkly/js-core/commit/2de6c8cc39e6b7a4e4092af0731b2de124d56b94))
+
+## [2.21.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.2...js-server-sdk-common-v2.21.3) (2026-09-15)
+
+
+### Bug Fixes
+
+* Log the cached-data evaluation warning only once per client ([#2015](https://github.com/launchdarkly/js-core/issues/2015)) ([0bb2164](https://github.com/launchdarkly/js-core/commit/0bb2164fb9e60817af3a5b11e714d14bc7681cdc))
+
+## [2.21.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.1...js-server-sdk-common-v2.21.2) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.25.2 to 2.26.0
+
+## [2.21.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.0...js-server-sdk-common-v2.21.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* **persistent-store:** add error logs for upsert ([#1985](https://github.com/launchdarkly/js-core/issues/1985)) ([5ff1cf2](https://github.com/launchdarkly/js-core/commit/5ff1cf240f6c197c38cc1caceabadf12b3c89ea5))
+
 ## [2.21.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.20.1...js-server-sdk-common-v2.21.0) (2026-09-08)
 
 

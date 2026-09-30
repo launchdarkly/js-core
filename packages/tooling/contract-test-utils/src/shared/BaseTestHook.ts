@@ -1,5 +1,4 @@
 import { HookData, HookErrors } from '../types/CommandParams.js';
-
 import { HookPostQueue } from './HookPostQueue.js';
 
 export abstract class BaseTestHook {

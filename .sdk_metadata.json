@@ -292,6 +292,35 @@
         "secureMode": { "introduced": "1.0" },
         "track": { "introduced": "1.2" }
       }
+    },
+    "vue": {
+      "name": "Vue SDK",
+      "type": "client-side",
+      "path": "packages/sdk/vue",
+      "languages": ["JavaScript", "TypeScript"],
+      "releases": {
+        "tag-prefix": "vue-client-sdk-"
+      },
+      "wrapperNames": ["vue-client-sdk"],
+      "features": {
+        "allFlags": { "introduced": "1.0" },
+        "appMetadata": { "introduced": "1.0" },
+        "bigSegments": { "introduced": "1.0" },
+        "bootstrapping": { "introduced": "1.0" },
+        "contexts": { "introduced": "2.0" },
+        "experimentation": { "introduced": "1.0" },
+        "fdv2": { "introduced": "3.0" },
+        "flagChanges": { "introduced": "1.0" },
+        "hooks": { "introduced": "2.4" },
+        "inlineContextCustomEvents": { "introduced": "2.4" },
+        "perContextSummaryEvents": { "introduced": "2.4" },
+        "pluginSupport": { "introduced": "2.4" },
+        "privateAttrs": { "introduced": "1.0" },
+        "relayProxyProxy": { "introduced": "1.0" },
+        "secureMode": { "introduced": "1.0" },
+        "track": { "introduced": "1.0" },
+        "variationDetail": { "introduced": "1.0" }
+      }
     }
   }
 }

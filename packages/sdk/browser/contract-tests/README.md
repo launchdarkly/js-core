@@ -44,6 +44,7 @@ The browser contract tests consist of three components:
 This starts the adapter and the entity (Vite dev server) and opens the entity in your **default browser**.
 
 The services will be available at:
+
 - Adapter REST API: http://localhost:8000
 - Adapter WebSocket: ws://localhost:8001
 - Browser App: http://localhost:5173

@@ -24,6 +24,8 @@ app.get('/', (req: Request, res: Response) => {
     capabilities: [
       'server-side-polling',
       'server-side',
+      'retry-conformance-fdv1-streaming',
+      'retry-conformance-fdv1-polling',
       'all-flags-client-side-only',
       'all-flags-details-only-for-tracked-flags',
       'all-flags-with-reasons',

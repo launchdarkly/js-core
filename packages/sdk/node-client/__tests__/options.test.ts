@@ -77,7 +77,9 @@ it('accepts a valid Storage implementation', () => {
 
 it('accepts a class-based Storage implementation with prototype methods', () => {
   class MyStorage {
-    async get(_key: string): Promise<string | null> { return null; }
+    async get(_key: string): Promise<string | null> {
+      return null;
+    }
     async set(_key: string, _value: string): Promise<void> {}
     async clear(_key: string): Promise<void> {}
   }
@@ -182,7 +184,10 @@ it('does not warn when initialConnectionMode is set without dataSystem', () => {
 });
 
 it('does not warn when dataSystem is null', () => {
-  const out = validateOptions({ dataSystem: null as any, initialConnectionMode: 'offline' }, logger);
+  const out = validateOptions(
+    { dataSystem: null as any, initialConnectionMode: 'offline' },
+    logger,
+  );
 
   // null dataSystem never activates FDv2 (Configuration's validator skips nullish values),
   // so initialConnectionMode is honored and warning here would be wrong.
@@ -235,9 +240,9 @@ it('warns and falls back to false when useMobileKey is not a boolean', () => {
 });
 
 it('throws when both useMobileKey and hash are configured', () => {
-  expect(() =>
-    validateOptions({ useMobileKey: true, hash: 'abc123' }, logger),
-  ).toThrow(/secure mode .* hash .* mobile key|useMobileKey.*hash|hash.*useMobileKey/i);
+  expect(() => validateOptions({ useMobileKey: true, hash: 'abc123' }, logger)).toThrow(
+    /secure mode .* hash .* mobile key|useMobileKey.*hash|hash.*useMobileKey/i,
+  );
 });
 
 it('does not throw when only hash is configured (client-side ID mode)', () => {

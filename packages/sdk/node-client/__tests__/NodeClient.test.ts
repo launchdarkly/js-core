@@ -5,10 +5,10 @@ import * as path from 'path';
 import type { Response } from '@launchdarkly/js-client-sdk-common';
 
 import { createClient } from '../src';
-import { resetNodeStorage } from '../src/platform/NodeStorage';
 import NodeCrypto from '../src/platform/NodeCrypto';
 import NodeEncoding from '../src/platform/NodeEncoding';
 import NodeInfo from '../src/platform/NodeInfo';
+import { resetNodeStorage } from '../src/platform/NodeStorage';
 import { createMockLogger } from './testHelpers';
 
 function mockResponse(value: string, statusCode: number) {
@@ -93,13 +93,17 @@ afterEach(async () => {
 });
 
 it('createClient returns the documented LDClient surface', () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   expect(typeof client.start).toBe('function');
   expect(typeof client.identify).toBe('function');
@@ -129,25 +133,33 @@ it('createClient returns the documented LDClient surface', () => {
 });
 
 it('isOffline reflects initialConnectionMode', () => {
-  const offline = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const offline = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
   expect(offline.isOffline()).toBe(true);
   expect(offline.getConnectionMode()).toBe('offline');
 });
 
 it('setConnectionMode round-trips to offline', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   expect(client.getConnectionMode()).toBe('offline');
   expect(client.isOffline()).toBe(true);
@@ -157,13 +169,17 @@ it('setConnectionMode round-trips to offline', async () => {
 });
 
 it('start completes in offline mode without performing network identify', async () => {
-  const client = createClient('client-side-id', { kind: 'user', key: 'bob' }, {
-    initialConnectionMode: 'offline',
-    sendEvents: false,
-    diagnosticOptOut: true,
-    localStoragePath: tmpRoot,
-    logger,
-  });
+  const client = createClient(
+    'client-side-id',
+    { kind: 'user', key: 'bob' },
+    {
+      initialConnectionMode: 'offline',
+      sendEvents: false,
+      diagnosticOptOut: true,
+      localStoragePath: tmpRoot,
+      logger,
+    },
+  );
 
   const result = await client.start({ timeout: 5 });
   expect(result.status).toBe('complete');

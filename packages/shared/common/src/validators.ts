@@ -1,4 +1,3 @@
-
 // The classes here are static, but needs to be instantiated to
 // support the generic functionality. Which is why we do not care about using
 // `this`

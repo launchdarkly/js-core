@@ -133,6 +133,10 @@ export default function format(...args: any[]): string {
             out += `%${nextChar}`;
           }
           i += 2;
+        } else {
+          // A trailing '%' has nothing to escape, so keep it as-is.
+          out += '%';
+          i += 1;
         }
       } else {
         out += char;

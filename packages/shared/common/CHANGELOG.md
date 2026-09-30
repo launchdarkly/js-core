@@ -2,6 +2,32 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.27.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.1...js-sdk-common-v2.27.0) (2026-09-29)
+
+
+### Features
+
+* add a reusable retry state controller for RETRY-conformant backoff ([#2045](https://github.com/launchdarkly/js-core/issues/2045)) ([721b559](https://github.com/launchdarkly/js-core/commit/721b559ff15bb13e3344921de9539e2663d0f0c8))
+
+
+### Bug Fixes
+
+* Stop format() from hanging on a trailing percent sign ([#2056](https://github.com/launchdarkly/js-core/issues/2056)) ([c5114ec](https://github.com/launchdarkly/js-core/commit/c5114ecf5dc32826f260744b0e4aa5c4a7f633d6))
+
+## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.0...js-sdk-common-v2.26.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* Preserve FDv2 protocol error listeners and stop misreporting server error frames ([#2028](https://github.com/launchdarkly/js-core/issues/2028)) ([3d80bef](https://github.com/launchdarkly/js-core/commit/3d80bef9f56872ed1c625ba1518aed2ebe30c1fd))
+
+## [2.26.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.2...js-sdk-common-v2.26.0) (2026-09-11)
+
+
+### Features
+
+* Move FDv1 fallback directive parsing to the shared package ([#1981](https://github.com/launchdarkly/js-core/issues/1981)) ([e7a3b66](https://github.com/launchdarkly/js-core/commit/e7a3b6647caf3210c9cea40e7818f164537aa50f))
+
 ## [2.25.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.25.1...js-sdk-common-v2.25.2) (2026-07-21)
 
 

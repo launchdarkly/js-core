@@ -359,8 +359,10 @@ describe('given a client and store that are uninitialized', () => {
 describe('given a client that is un-initialized and store that is initialized', () => {
   let store: LDFeatureStore;
   let client: LDClientImpl;
+  let logger: TestLogger;
 
   beforeEach(async () => {
+    logger = new TestLogger();
     store = new InMemoryFeatureStore();
     const asyncStore = new AsyncStoreFacade(store);
     // Put something in the store, but don't initialize it.
@@ -380,6 +382,7 @@ describe('given a client that is un-initialized and store that is initialized', 
       'sdk-key-initialized-store',
       createBasicPlatform(),
       {
+        logger,
         sendEvents: false,
         featureStore: store,
         updateProcessor: () => ({
@@ -406,5 +409,26 @@ describe('given a client that is un-initialized and store that is initialized', 
       variationIndex: 0,
       reason: { kind: 'OFF' },
     });
+  });
+
+  it('logs the last known values warning once for repeated evaluations', async () => {
+    await client.variation('flagkey', defaultUser, 'default');
+    await client.variation('flagkey', defaultUser, 'default');
+    await client.variationDetail('flagkey', defaultUser, 'default');
+
+    expect(logger.getCount(LogLevel.Warn)).toEqual(1);
+    logger.expectMessages([
+      { level: LogLevel.Warn, matches: /using last known values from feature store/ },
+    ]);
+  });
+
+  it('logs the allFlagsState last known values warning once for repeated calls', async () => {
+    await client.allFlagsState(defaultUser);
+    await client.allFlagsState(defaultUser);
+
+    expect(logger.getCount(LogLevel.Warn)).toEqual(1);
+    logger.expectMessages([
+      { level: LogLevel.Warn, matches: /using last known values from data store/ },
+    ]);
   });
 });

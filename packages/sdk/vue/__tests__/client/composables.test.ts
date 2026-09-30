@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import type { LDVueClient } from '../../src/client/LDClient';
+
 import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, type Component } from 'vue';
 
@@ -10,6 +10,7 @@ import {
   useInitializationStatus,
   useLDClient,
 } from '../../src/client/composables';
+import type { LDVueClient } from '../../src/client/LDClient';
 import { createLDProviderWithClient } from '../../src/client/provider/LDProvider';
 import { makeMockClient } from './mockClient';
 
@@ -108,7 +109,10 @@ it('useInitializationStatus surfaces the error on failure', async () => {
     setup() {
       const status = useInitializationStatus();
       return () =>
-        h('div', status.value.status === 'failed' ? status.value.error.message : status.value.status);
+        h(
+          'div',
+          status.value.status === 'failed' ? status.value.error.message : status.value.status,
+        );
     },
   });
 

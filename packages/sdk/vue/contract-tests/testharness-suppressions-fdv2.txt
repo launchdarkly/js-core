@@ -2,6 +2,10 @@
 # the FDv2-feature branch against the Vue client-side SDK. Add a path per line.
 # Lines beginning with '#' are comments.
 
+# Browser's native EventSource cannot read response headers/status on the streaming
+# connection, so it can never observe the directive this test relies on.
+tags/FDv1 fallback directive requests
+
 # The tags tests below cover edge cases where applicationId/applicationVersion are null, empty, or
 # contain only valid characters that happen to fill a max-length field. The browser SDK strips these
 # values from the X-LaunchDarkly-Tags header rather than sending an empty/underscore-only tag, which

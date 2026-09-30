@@ -1,7 +1,6 @@
 import { DataSourceErrorKind, internal } from '@launchdarkly/js-sdk-common';
 
 import DataSourceStatusErrorInfo from '../DataSourceStatusErrorInfo';
-import { FallbackDirective } from './fallbackDirective';
 
 /**
  * Possible states for a status result from an FDv2 data source.
@@ -64,7 +63,7 @@ export type FDv2SourceResult = ChangeSetResult | StatusResult;
  */
 export function changeSet(
   payload: internal.Payload,
-  fallback: FallbackDirective,
+  fallback: internal.FallbackDirective,
   environmentId?: string,
   freshness?: number,
 ): FDv2SourceResult {
@@ -84,7 +83,7 @@ export function changeSet(
  */
 export function interrupted(
   errorInfo: DataSourceStatusErrorInfo,
-  fallback: FallbackDirective,
+  fallback: internal.FallbackDirective,
 ): FDv2SourceResult {
   return {
     type: 'status',
@@ -108,7 +107,7 @@ export function shutdown(): FDv2SourceResult {
  */
 export function terminalError(
   errorInfo: DataSourceStatusErrorInfo,
-  fallback: FallbackDirective,
+  fallback: internal.FallbackDirective,
 ): FDv2SourceResult {
   return {
     type: 'status',
@@ -130,7 +129,7 @@ export function terminalError(
  *   caller's default; `0` for indefinite). Same semantics as
  *   {@link StatusResult.fdv1FallbackTtlMs}.
  */
-export function goodbye(reason: string, fallback: FallbackDirective): FDv2SourceResult {
+export function goodbye(reason: string, fallback: internal.FallbackDirective): FDv2SourceResult {
   return {
     type: 'status',
     state: 'goodbye',

@@ -212,9 +212,7 @@ const fdv1FallbackValidations: Record<string, TypeValidator> = {
   pollInterval: TypeValidators.numberWithMin(30),
 };
 
-function validateFDv1FallbackOptions(
-  options: FDv1FallbackConfiguration,
-): {
+function validateFDv1FallbackOptions(options: FDv1FallbackConfiguration): {
   errors: string[];
   validatedOptions: FDv1FallbackConfiguration;
 } {

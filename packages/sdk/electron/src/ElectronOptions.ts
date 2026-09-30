@@ -2,77 +2,7 @@ import { ConnectionMode, LDOptions as LDOptionsBase } from '@launchdarkly/js-cli
 
 import type { LDPlugin } from './LDPlugin';
 
-/**
- * Options for configuring the HTTP proxy.
- *
- * @privateRemarks
- * This is a copy of the LDProxyOptions interface from the js-server-sdk-common package.
- * We may want to create the proxy options in the shared client package for mobile/desktop
- * platforms.
- */
-export interface LDProxyOptions {
-  /**
-   * Allows you to specify a host for an optional HTTP proxy.
-   */
-  host?: string;
-
-  /**
-   * Allows you to specify a port for an optional HTTP proxy.
-   *
-   * Both the host and port must be specified to enable proxy support.
-   */
-  port?: number;
-
-  /**
-   * When using an HTTP proxy, specifies whether it is accessed via `http` or `https`.
-   */
-  scheme?: string;
-
-  /**
-   * Allows you to specify basic authentication parameters for an optional HTTP proxy.
-   * Usually of the form `username:password`.
-   */
-  auth?: string;
-}
-
-/**
- * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
- * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
- *
- * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
- *
- * @privateRemarks
- * This is a copy of the LDTLSOptions interface from the js-server-sdk-common package.
- * We may want to create the TLS options in the shared client package for mobile/desktop
- * platforms.
- */
-export interface LDTLSOptions {
-  ca?: string | string[] | Buffer | Buffer[];
-  cert?: string | string[] | Buffer | Buffer[];
-  checkServerIdentity?: (servername: string, cert: any) => Error | undefined;
-  ciphers?: string;
-  pfx?: string | string[] | Buffer | Buffer[] | object[];
-  key?: string | string[] | Buffer | Buffer[] | object[];
-  passphrase?: string;
-  rejectUnauthorized?: boolean;
-  secureProtocol?: string;
-  servername?: string;
-}
-
 export interface ElectronOptions extends LDOptionsBase {
-  /**
-   * Allows you to specify configuration for an optional HTTP proxy.
-   */
-  proxyOptions?: LDProxyOptions;
-
-  /**
-   * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
-   * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
-   *
-   * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
-   */
-  tlsParams?: LDTLSOptions;
-
   /**
    * Set to true to opt in to compressing event payloads if the SDK supports it, since the
    * compression library may not be supported in the underlying SDK framework.  If the compression

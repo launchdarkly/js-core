@@ -164,7 +164,7 @@ describe('given a polling processor with a short poll duration', () => {
     processor.start();
 
     expect(initSuccessHandler).not.toBeCalled();
-    expect(errorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
+    expect(errorHandler).not.toBeCalled();
 
     setTimeout(() => {
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
@@ -173,26 +173,77 @@ describe('given a polling processor with a short poll duration', () => {
     }, 300);
   });
 
-  it.each<number | jest.DoneCallback>([401, 403])(
-    'does not continue after non-recoverable error',
-    (status, done) => {
-      requestor.requestAllData = jest.fn((cb) =>
-        cb(
-          {
-            status,
-          },
-          undefined,
-        ),
-      );
-      processor.start();
-      expect(initSuccessHandler).not.toBeCalled();
-      expect(errorHandler.mock.lastCall[0].message).toMatch(new RegExp(`${status}.*permanently`));
+  it('continues polling when deserialization throws on structurally invalid data', (done) => {
+    // Parses as JSON but throws during the revive step (here, a null flag
+    // entry). It must be handled like unparseable data, not escape and kill
+    // the poll loop.
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, '{"flags":{"x":null},"segments":{}}'));
 
-      setTimeout(() => {
-        expect(requestor.requestAllData.mock.calls.length).toBe(1);
+    processor.start();
+
+    expect(initSuccessHandler).not.toBeCalled();
+    expect(errorHandler).not.toBeCalled();
+
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(testLogger.getCount(LogLevel.Error)).toBeGreaterThan(2);
+      (done as jest.DoneCallback)();
+    }, 300);
+  });
+
+  it('cancels the scheduled poll when stopped before it fires', () => {
+    jest.useFakeTimers();
+    try {
+      requestor.requestAllData = jest.fn((cb) => cb({ status: 500 }, undefined));
+      processor.start();
+      expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+
+      // The failed poll armed the next-poll timer; stopping must cancel it.
+      processor.stop();
+      jest.advanceTimersByTime(5 * 60 * 1000);
+
+      expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('treats a status-less transport error as a normal, retryable failure', (done) => {
+    requestor.requestAllData = jest.fn((cb) => cb({ message: 'socket hang up' } as any, undefined));
+
+    processor.start();
+
+    expect(errorHandler).not.toBeCalled();
+    setTimeout(() => {
+      expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(testLogger.getCount(LogLevel.Error)).toBe(0);
+      expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
+      (done as jest.DoneCallback)();
+    }, 300);
+  });
+
+  it.each([401, 403])(
+    'retries with extended backoff rather than stopping after error %p',
+    (status) => {
+      jest.useFakeTimers();
+      try {
+        requestor.requestAllData = jest.fn((cb) => cb({ status }, undefined));
+        processor.start();
+
+        expect(initSuccessHandler).not.toBeCalled();
+        expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+        // Previously terminal; now an 'error'-level *log* that keeps retrying —
+        // like any recoverable failure, it is not surfaced as an 'error' event.
+        expect(errorHandler).not.toBeCalled();
         expect(testLogger.getCount(LogLevel.Error)).toBe(1);
-        (done as jest.DoneCallback)();
-      }, 300);
+
+        // Not a permanent stop: an unexpected failure schedules the next poll in
+        // the extended regime (~5 minutes), so polling resumes after that wait.
+        jest.advanceTimersByTime(5 * 60 * 1000);
+        expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
+      } finally {
+        jest.useRealTimers();
+      }
     },
   );
 });

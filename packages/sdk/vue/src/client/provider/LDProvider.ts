@@ -1,5 +1,6 @@
-import type { LDContext } from '@launchdarkly/js-client-sdk';
 import { defineComponent, onScopeDispose, provide, type InjectionKey } from 'vue';
+
+import type { LDContext } from '@launchdarkly/js-client-sdk';
 
 import type { LDVueClient, LDVueInstance } from '../LDClient';
 import type { LDVueProviderOptions } from '../LDOptions';

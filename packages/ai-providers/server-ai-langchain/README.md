@@ -44,7 +44,7 @@ const aiClient = initAi(ldClient);
 const defaultConfig = {
   enabled: true,
   model: { name: 'gpt-4' },
-  provider: { name: 'openai' }
+  provider: { name: 'openai' },
 };
 const model = await aiClient.createModel('my-chat-config', context, defaultConfig);
 
@@ -93,14 +93,12 @@ const allMessages = [...LangChainProvider.convertMessagesToLangChain(configMessa
 
 // Track the model call with LaunchDarkly tracking
 const tracker = aiConfig.createTracker();
-const response = await tracker.trackMetricsOf(
-  LangChainProvider.getAIMetricsFromResponse,
-  () => llm.invoke(allMessages)
+const response = await tracker.trackMetricsOf(LangChainProvider.getAIMetricsFromResponse, () =>
+  llm.invoke(allMessages),
 );
 
 console.log('AI Response:', response.content);
 ```
-
 
 ## Observability
 

@@ -9,8 +9,8 @@
 -->
 
 > [!CAUTION]
-> This SDK is experimental and should NOT be considered ready for production use. 
-> It may change or be removed without notice and is not subject to backwards 
+> This SDK is experimental and should NOT be considered ready for production use.
+> It may change or be removed without notice and is not subject to backwards
 > compatibility guarantees.
 
 <!--
@@ -35,7 +35,6 @@ Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/e
   - [docs.launchdarkly.com](https://docs.launchdarkly.com/ 'LaunchDarkly Documentation') for our documentation and SDK reference guides
   - [apidocs.launchdarkly.com](https://apidocs.launchdarkly.com/ 'LaunchDarkly API Documentation') for our API documentation
   - [blog.launchdarkly.com](https://blog.launchdarkly.com/ 'LaunchDarkly Blog Documentation') for the latest product updates
-
 
 <!--
 NOTE: this is just copied from shopify sdk for now

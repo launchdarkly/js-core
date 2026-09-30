@@ -227,10 +227,7 @@ export class AgentGraphDefinition {
 
     const outdeg = new Map<string, number>();
     reachable.forEach((k) => {
-      outdeg.set(
-        k,
-        this._nodes[k]!.getEdges().filter((e) => reachable.has(e.key)).length,
-      );
+      outdeg.set(k, this._nodes[k]!.getEdges().filter((e) => reachable.has(e.key)).length);
     });
 
     const visited = new Set<string>();
@@ -246,9 +243,7 @@ export class AgentGraphDefinition {
 
     const nonRootRemaining = () => [...reachable].some((k) => k !== rootKey && !visited.has(k));
     while (nonRootRemaining()) {
-      let next = order.find(
-        (k) => k !== rootKey && !visited.has(k) && outdeg.get(k)! === 0,
-      );
+      let next = order.find((k) => k !== rootKey && !visited.has(k) && outdeg.get(k)! === 0);
       if (next === undefined) {
         // Cycle break: lowest remaining out-degree, tie-broken by discovery order
         next = order

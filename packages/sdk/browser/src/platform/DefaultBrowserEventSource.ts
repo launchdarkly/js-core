@@ -35,8 +35,8 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     options: EventSourceInitDict,
   ) {
     this._backoff = new DefaultBackoff(
-      options.initialRetryDelayMillis,
-      options.retryResetIntervalMillis,
+      options.initialRetryDelayMillis ?? 1000,
+      options.retryResetIntervalMillis ?? 60 * 1000,
     );
     this._errorFilter = options.errorFilter;
     this._urlBuilder = options.urlBuilder;

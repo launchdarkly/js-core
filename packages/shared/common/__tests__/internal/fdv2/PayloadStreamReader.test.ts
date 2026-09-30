@@ -376,3 +376,50 @@ it('ignores additional payloads beyond the first payload in the server-intent me
   expect(receivedPayloads[0].updates.length).toEqual(1);
   expect(receivedPayloads[0].updates[0].object).toEqual({ objectFieldA: 'objectValueA' });
 });
+
+it('ignores an error event that has no data', () => {
+  const mockStream = new MockEventStream();
+  const errorMessages: string[] = [];
+  const receivedPayloads: Payload[] = [];
+  const readerUnderTest = new PayloadStreamReader(
+    mockStream,
+    {
+      mockKind: (it) => it, // obj processor that just returns the same obj
+    },
+    (_kind, message) => {
+      errorMessages.push(message);
+    },
+  );
+  readerUnderTest.addPayloadListener((it) => {
+    receivedPayloads.push(it);
+  });
+
+  // A connection-level failure dispatches under the 'error' type without data.
+  mockStream.simulateEvent('error', {});
+
+  expect(errorMessages).toHaveLength(0);
+  expect(receivedPayloads).toHaveLength(0);
+});
+
+it('reports missing data for an event type other than error', () => {
+  const mockStream = new MockEventStream();
+  const errorMessages: string[] = [];
+  const receivedPayloads: Payload[] = [];
+  const readerUnderTest = new PayloadStreamReader(
+    mockStream,
+    {
+      mockKind: (it) => it, // obj processor that just returns the same obj
+    },
+    (_kind, message) => {
+      errorMessages.push(message);
+    },
+  );
+  readerUnderTest.addPayloadListener((it) => {
+    receivedPayloads.push(it);
+  });
+
+  mockStream.simulateEvent('server-intent', {});
+
+  expect(errorMessages).toEqual(['Event from EventStream missing data.']);
+  expect(receivedPayloads).toHaveLength(0);
+});

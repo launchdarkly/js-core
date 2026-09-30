@@ -719,10 +719,7 @@ describe('trackStreamMetricsOf', () => {
       toolCalls: ['tool-a', 'tool-b'],
     });
 
-    tracker.trackStreamMetricsOf(
-      () => mockStream,
-      metricsExtractor,
-    );
+    tracker.trackStreamMetricsOf(() => mockStream, metricsExtractor);
 
     // Flush promises so the background tracking completes
     await Promise.resolve();

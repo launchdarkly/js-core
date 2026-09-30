@@ -161,9 +161,7 @@ it('throws if registerDebug is called twice', () => {
   const td = new TestData();
   td.registerDebug(createMockDebugOverride());
 
-  expect(() => td.registerDebug(createMockDebugOverride())).toThrow(
-    /already been registered/,
-  );
+  expect(() => td.registerDebug(createMockDebugOverride())).toThrow(/already been registered/);
 });
 
 it('setJson rejects undefined and other non-object values', () => {

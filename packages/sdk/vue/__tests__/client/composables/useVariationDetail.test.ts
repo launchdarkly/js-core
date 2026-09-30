@@ -1,10 +1,11 @@
 /**
  * @jest-environment jsdom
  */
-import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
-import type { LDVueClient } from '../../../src/client/LDClient';
+
 import { mount } from '@vue/test-utils';
 import { defineComponent, h, nextTick, ref, type Component } from 'vue';
+
+import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
 import {
   useBoolVariationDetail,
@@ -12,6 +13,7 @@ import {
   useNumberVariationDetail,
   useStringVariationDetail,
 } from '../../../src/client/composables';
+import type { LDVueClient } from '../../../src/client/LDClient';
 import { createLDProviderWithClient } from '../../../src/client/provider/LDProvider';
 import { makeMockClient } from '../mockClient';
 

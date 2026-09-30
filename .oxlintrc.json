@@ -2,7 +2,7 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["import", "typescript", "jest"],
   "categories": {
-    "correctness": "off"
+    "correctness": "warn"
   },
   "env": {
     "builtin": true
@@ -19,7 +19,7 @@
     "**/react/contract-tests/**",
     "**/react/examples/**",
     "**/jest/example/**",
-    "**/electron/example/**",
+    "**/electron/examples/**",
     "**/svelte/.svelte-kit/**",
     "**/svelte/example/**",
     "**/vue/examples/**",

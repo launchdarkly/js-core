@@ -20,14 +20,87 @@ export const baseHeaders = {
 export type MockEventSource = ReturnType<typeof createMockEventSource>;
 export type MockRequests = ReturnType<typeof createMockRequests>;
 
+type MockListener = (event?: { data?: string }) => void;
+
 export function createMockEventSource() {
+  // Live registry of the addEventListener registrations. The on* slots are independent of it:
+  // assigning a slot never adds to or removes from the registry.
+  const registry = new Map<string, MockListener[]>();
+
+  // `listener` is typed `any` here (not `MockListener`) so existing call sites that reach
+  // into `addEventListener.mock.calls` directly keep getting a loosely-typed tuple, matching
+  // this file's pre-existing convention of invoking mock listeners with whatever shape a given
+  // test needs.
+  const addEventListener = jest.fn((type: string, listener: any) => {
+    const current = registry.get(type) ?? [];
+    current.push(listener);
+    registry.set(type, current);
+  });
+
+  // Typed as `any` (matching this file's existing `jest.fn() as any` convention for these
+  // members) so tests can keep invoking them directly with whatever event shape they need.
+  let assignedOnClose: any;
+  let assignedOnError: any;
+  let assignedOnOpen: any;
+  let assignedOnRetrying: any;
+  let closed = false;
+
   return {
-    addEventListener: jest.fn(),
-    close: jest.fn(),
-    onclose: jest.fn() as any,
-    onerror: jest.fn() as any,
-    onopen: jest.fn() as any,
-    onretrying: jest.fn() as any,
+    addEventListener,
+    // close() invokes the onclose slot once, then dispatches 'closed' to the registered
+    // listeners, and does nothing on a later call.
+    close: jest.fn(() => {
+      if (closed) {
+        return;
+      }
+      closed = true;
+      try {
+        assignedOnClose?.();
+      } finally {
+        (registry.get('closed') ?? []).forEach((listener) => listener());
+      }
+    }),
+    listenersFor(type: string): MockListener[] {
+      return registry.get(type) ?? [];
+    },
+    // Returns the slot that a dispatch of `type` invokes. There is no entry for 'closed':
+    // onclose runs only from close(), never as part of a 'closed' dispatch.
+    slotFor(type: string): any {
+      switch (type) {
+        case 'open':
+          return assignedOnOpen;
+        case 'error':
+          return assignedOnError;
+        case 'retrying':
+          return assignedOnRetrying;
+        default:
+          return undefined;
+      }
+    },
+    get onclose(): any {
+      return assignedOnClose;
+    },
+    set onclose(listener: any) {
+      assignedOnClose = listener;
+    },
+    get onerror(): any {
+      return assignedOnError;
+    },
+    set onerror(listener: any) {
+      assignedOnError = listener;
+    },
+    get onopen(): any {
+      return assignedOnOpen;
+    },
+    set onopen(listener: any) {
+      assignedOnOpen = listener;
+    },
+    get onretrying(): any {
+      return assignedOnRetrying;
+    },
+    set onretrying(listener: any) {
+      assignedOnRetrying = listener;
+    },
   };
 }
 
@@ -53,16 +126,19 @@ export function createMockLogger(): LDLogger {
 }
 
 /**
- * Simulate an FDv2 event on a mock event source by finding and invoking
- * the registered listener for the given event name.
+ * Simulate an event on a mock event source: the matching on* slot is invoked first, then every
+ * listener registered for the given event name. Throws when nothing would receive the event,
+ * so a test fails loudly if a listener is lost.
  */
 export function simulateEvent(mockEventSource: MockEventSource, eventName: string, data: any) {
-  const { calls } = mockEventSource.addEventListener.mock;
-  const listener = calls.find((c: any[]) => c[0] === eventName)?.[1];
-  if (!listener) {
+  const slot = mockEventSource.slotFor(eventName);
+  const listeners = mockEventSource.listenersFor(eventName);
+  if (!slot && listeners.length === 0) {
     throw new Error(`No listener registered for event "${eventName}"`);
   }
-  listener({ data: JSON.stringify(data) });
+  const event = { data: JSON.stringify(data) };
+  slot?.(event);
+  listeners.forEach((listener) => listener(event));
 }
 
 /**

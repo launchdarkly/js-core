@@ -4,12 +4,20 @@ import ContextFilter from './ContextFilter';
 import {
   Backoff,
   CompositeDataSource,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
+  createRetryState,
   DataSourceErrorKind,
   DefaultBackoff,
+  forPolling,
+  forStreaming,
   LDFileDataSourceError,
   LDFlagDeliveryFallbackError,
   LDPollingError,
   LDStreamingError,
+  ResetPolicy,
+  RetryState,
+  RetryStateConfig,
   StreamingErrorHandler,
 } from './datasource';
 
@@ -35,4 +43,12 @@ export {
   StreamingErrorHandler,
   LDFileDataSourceError,
   LDFlagDeliveryFallbackError,
+  createAfterConsecutiveSuccesses,
+  createAfterHealthyFor,
+  createRetryState,
+  forPolling,
+  forStreaming,
+  ResetPolicy,
+  RetryState,
+  RetryStateConfig,
 };

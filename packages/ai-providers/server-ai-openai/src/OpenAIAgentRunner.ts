@@ -6,16 +6,16 @@ import type {
   RunnerResult,
 } from '@launchdarkly/server-sdk-ai';
 
-import {
-  getAIUsageFromAgentResult,
-  getToolCallsFromRunItems,
-} from './OpenAIHelper';
+import { getAIUsageFromAgentResult, getToolCallsFromRunItems } from './OpenAIHelper';
 
 /**
  * Tool registry mapping tool names to their callable implementations or
  * pre-built openai-agents tool instances (e.g. `webSearchTool()`).
  */
-export type ToolRegistry = Record<string, ((...args: any[]) => unknown | Promise<unknown>) | unknown>;
+export type ToolRegistry = Record<
+  string,
+  ((...args: any[]) => unknown | Promise<unknown>) | unknown
+>;
 
 const MAX_TURNS = 25;
 

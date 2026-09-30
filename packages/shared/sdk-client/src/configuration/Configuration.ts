@@ -11,8 +11,8 @@ import {
 
 import { Hook, type LDOptions } from '../api';
 import { LDContext } from '../api/LDContext';
-import { LDInspection } from '../api/LDInspection';
 import type { LDDebugOverride } from '../api/LDDebugOverride';
+import { LDInspection } from '../api/LDInspection';
 import type {
   InternalDataSystemOptions,
   PlatformDataSystemDefaults,

@@ -7,7 +7,7 @@ import {
   TypeValidators,
 } from '@launchdarkly/js-client-sdk-common';
 
-import type { ElectronOptions, LDProxyOptions, LDTLSOptions } from './ElectronOptions';
+import type { ElectronOptions } from './ElectronOptions';
 import type { LDPlugin } from './LDPlugin';
 
 class ConnectionModeValidator implements TypeValidator {
@@ -20,8 +20,6 @@ class ConnectionModeValidator implements TypeValidator {
 }
 
 export interface ValidatedOptions {
-  proxyOptions?: LDProxyOptions;
-  tlsParams?: LDTLSOptions;
   enableEventCompression?: boolean;
   initialConnectionMode: ConnectionMode;
   plugins: LDPlugin[];
@@ -31,8 +29,6 @@ export interface ValidatedOptions {
 }
 
 const optDefaults: ValidatedOptions = {
-  proxyOptions: undefined,
-  tlsParams: undefined,
   enableEventCompression: undefined,
   initialConnectionMode: 'streaming',
   plugins: [],
@@ -42,8 +38,6 @@ const optDefaults: ValidatedOptions = {
 };
 
 const validators: { [Property in keyof ElectronOptions]: TypeValidator | undefined } = {
-  proxyOptions: TypeValidators.Object,
-  tlsParams: TypeValidators.Object,
   enableEventCompression: TypeValidators.Boolean,
   initialConnectionMode: new ConnectionModeValidator(),
   plugins: TypeValidators.createTypeArray('LDPlugin[]', {}),

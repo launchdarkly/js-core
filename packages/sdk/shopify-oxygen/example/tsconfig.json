@@ -14,7 +14,7 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2022",
+    "target": "ES2022"
   },
   "exclude": ["tsup.config.ts"]
 }
