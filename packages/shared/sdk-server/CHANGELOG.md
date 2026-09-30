@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.22.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.6...js-server-sdk-common-v2.22.0) (2026-09-30)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.27.0 to 2.28.0
+
 ## [2.21.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.5...js-server-sdk-common-v2.21.6) (2026-09-29)
 
 

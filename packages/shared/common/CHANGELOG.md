@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.28.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.27.0...js-sdk-common-v2.28.0) (2026-09-30)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
 ## [2.27.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.1...js-sdk-common-v2.27.0) (2026-09-29)
 
 
