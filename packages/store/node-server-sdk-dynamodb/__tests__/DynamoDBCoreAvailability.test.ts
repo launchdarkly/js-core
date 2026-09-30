@@ -27,6 +27,54 @@ const allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind> = [
   },
 ];
 
+it('skips an item that cannot be marshalled and still completes init', (done) => {
+  const badData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind> = [
+    {
+      key: featuresKind,
+      item: [
+        // @ts-ignore Missing version, as a file data source can produce.
+        { key: 'flagBad', item: { deleted: false, serializedItem: '{}' } },
+        { key: 'flagA', item: { version: 1, deleted: false, serializedItem: '{"version":1}' } },
+      ],
+    },
+  ];
+  const logger = { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const state = {
+    prefixedKey: (key: string) => key,
+    query: jest.fn().mockResolvedValue([]),
+    delete: jest.fn().mockResolvedValue(undefined),
+    batchWrite: jest.fn().mockResolvedValue(undefined),
+    put: jest.fn().mockResolvedValue(undefined),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state, logger);
+  // A marshal throw would strand this callback and block the store queue.
+  core.init(badData, (err) => {
+    expect(err).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('flagBad'));
+    const written = state.batchWrite.mock.calls[0][1];
+    expect(written).toHaveLength(1);
+    expect(written[0].PutRequest.Item.key.S).toEqual('flagA');
+    done();
+  });
+});
+
+it('reports an upsert error through the callback when the descriptor cannot be marshalled', (done) => {
+  const state = {
+    prefixedKey: (key: string) => key,
+    put: jest.fn(),
+    get: jest.fn(),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state);
+  // @ts-ignore Missing version to force the marshal failure.
+  core.upsert(featuresKind, 'flagA', { deleted: false, serializedItem: '{}' }, (err) => {
+    expect(err).toBeDefined();
+    expect(state.put).not.toHaveBeenCalled();
+    done();
+  });
+});
+
 it('reports an init error through the callback when the batch write fails', (done) => {
   const state = {
     prefixedKey: (key: string) => key,
