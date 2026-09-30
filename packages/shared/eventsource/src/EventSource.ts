@@ -397,6 +397,12 @@ export function createEventSource(
     return headers;
   };
 
+  // The parser is created once and reset on each connection attempt. The read loop stops
+  // feeding it once a new attempt supersedes an old one. A generation mismatch inside a
+  // callback means a listener called close() while a chunk was mid-parse, and the rest of
+  // that chunk must not commit state or dispatch events.
+  let parserGeneration = 0;
+
   const receivedEvent = (event: MessageEvent): void => {
     // The reset interval measures how long the current connection has been delivering
     // data, so the "good since" time is anchored to the first event of each connection.
@@ -412,14 +418,12 @@ export function createEventSource(
         });
       }
     }
+    // A strategy can call close() from inside setGoodSince. No event dispatches after a close.
+    if (parserGeneration !== generation) {
+      return;
+    }
     emit(event);
   };
-
-  // The parser is created once and reset on each connection attempt. The read loop stops
-  // feeding it once a new attempt supersedes an old one. A generation mismatch inside a
-  // callback means a listener called close() while a chunk was mid-parse, and the rest of
-  // that chunk must not commit state or dispatch events.
-  let parserGeneration = 0;
 
   const parser = createParser({
     onId: (id) => {
@@ -753,14 +757,11 @@ export function createEventSource(
       emit(errorEvent);
       scheduleReconnect();
     } else {
-      emit(errorEvent);
-      // An error listener can also call close(). close() has already dispatched `closed` and
-      // released the request, so a second teardown here would dispatch `closed` twice.
-      if (readyState === CLOSED) {
-        return;
-      }
+      // W3C ordering: the state is already closed when the error listeners run, so a listener's
+      // own close() call finds readyState CLOSED and becomes a no-op.
       readyState = CLOSED;
-      // The stream ends here and a later close() is a no-op once the state is CLOSED, so this
+      emit(errorEvent);
+      // The stream ends here. A later close() is a no-op once the state is CLOSED, so this
       // is the last place that can release the connection and any pending read.
       destroyRequest();
       emit(makeEvent('closed'));

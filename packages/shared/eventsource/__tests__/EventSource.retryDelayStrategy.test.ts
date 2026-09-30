@@ -1,5 +1,6 @@
-import { AsyncQueue, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
+import { AsyncQueue, sleepAsync, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
 
+import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
 import { RetryDelayStrategy } from '../src/types';
 import {
   shouldReceiveMessages,
@@ -171,4 +172,24 @@ it('keeps the stream alive when setBaseDelay throws', async () => {
     });
   });
   expect(swallowed).toEqual([thrown]);
+});
+
+it('does not dispatch the triggering message when setGoodSince calls close()', async () => {
+  let es: EventSource;
+  const strategy: RetryDelayStrategy = {
+    nextRetryDelay: () => 1,
+    setGoodSince: () => {
+      es.close();
+    },
+    setBaseDelay: () => {},
+  };
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: x\n\n']));
+    es = createEventSource(server.url, { retryDelayStrategy: strategy });
+    es.onerror = () => {};
+    const messages = startMessageQueue(es);
+    await sleepAsync(100);
+    expect(messages.isEmpty()).toBe(true);
+    expect(es.readyState).toEqual(CLOSED);
+  });
 });
