@@ -140,3 +140,32 @@ export function expectInRange(value: number, min: number, max: number): void {
   expect(value).toBeGreaterThanOrEqual(min);
   expect(value).toBeLessThanOrEqual(max);
 }
+
+/**
+ * A throwing listener or on* slot rethrows asynchronously, on a later microtask (see `emit` in
+ * `createEventSource`), so it still reaches a real host as an uncaught error without touching
+ * this package's own control flow. Under a real `queueMicrotask`, that later throw would reach
+ * the test runner as an uncaught exception instead of failing the assertion that provoked it.
+ * This helper replaces `queueMicrotask` for the duration of `action`, running the scheduled
+ * callback right away and collecting what it throws -- the expected rethrow -- so the test can
+ * check the rest of `emit`'s control flow undisturbed, and also assert on which errors were
+ * rethrown.
+ */
+export async function withSlotRethrowSwallowed(action: () => Promise<void>): Promise<unknown[]> {
+  const original = global.queueMicrotask;
+  const swallowed: unknown[] = [];
+  global.queueMicrotask = (callback: () => void): void => {
+    try {
+      callback();
+    } catch (err) {
+      // Expected: this is the async rethrow that a throwing listener causes.
+      swallowed.push(err);
+    }
+  };
+  try {
+    await action();
+  } finally {
+    global.queueMicrotask = original;
+  }
+  return swallowed;
+}

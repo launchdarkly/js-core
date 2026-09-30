@@ -226,3 +226,53 @@ it('aborts the request when a 200 response has no body', async () => {
     es.close();
   }
 });
+
+it('recomputes the message origin when urlBuilder picks a new origin for a reconnect', async () => {
+  const encoder = new TextEncoder();
+  // Like idleStreamResponse, but the body ends after its chunks, so the stream terminates
+  // and the client schedules a reconnect.
+  const endingStreamResponse = (chunks: string[]): FetchResponse => {
+    const pending = [...chunks];
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(callback: (value: string, key: string) => void): void {
+          callback('text/event-stream', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => ({
+          read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+            const next = pending.shift();
+            if (next !== undefined) {
+              return { done: false, value: encoder.encode(next) };
+            }
+            return { done: true };
+          },
+        }),
+      },
+    };
+  };
+  let attempt = 0;
+  const injected: FetchFn = async (url) =>
+    url.startsWith('http://first.example.com')
+      ? endingStreamResponse(['data: one\n\n'])
+      : idleStreamResponse(['data: two\n\n']);
+  const es = createEventSource('http://original.example.com/stream', {
+    fetch: injected,
+    initialRetryDelayMillis: 1,
+    urlBuilder: () => {
+      attempt += 1;
+      return attempt === 1 ? 'http://first.example.com/stream' : 'http://second.example.com/stream';
+    },
+  });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).origin).toEqual('http://first.example.com');
+    expect((await messages.take()).origin).toEqual('http://second.example.com');
+  } finally {
+    es.close();
+  }
+});

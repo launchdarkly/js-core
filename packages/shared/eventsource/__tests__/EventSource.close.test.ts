@@ -5,7 +5,7 @@ import { sleepAsync, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
 
 import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
 import { FetchFn, FetchResponse, MessageEvent } from '../src/types';
-import { withServer, writeEvents } from './helpers';
+import { withServer, withSlotRethrowSwallowed, writeEvents } from './helpers';
 
 afterEach(() => {
   jest.restoreAllMocks();
@@ -203,4 +203,55 @@ it('dispatches closed only once when an error listener calls close() on a non-re
     expect(closedEvents).toEqual(['closed']);
     expect(es.readyState).toEqual(CLOSED);
   });
+});
+
+it('closes cleanly and aborts the request when the error filter throws mid-stream', async () => {
+  const encoder = new TextEncoder();
+  let reads = 0;
+  const reader = {
+    read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+      reads += 1;
+      if (reads === 1) {
+        return { done: false, value: encoder.encode('data: one\n\n') };
+      }
+      throw new Error('mid-stream drop');
+    },
+  };
+  const response: FetchResponse = {
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: { getReader: () => reader },
+  };
+  let aborted = false;
+  const injected: FetchFn = (_url, init) => {
+    init.signal?.addEventListener('abort', () => {
+      aborted = true;
+    });
+    return Promise.resolve(response);
+  };
+
+  const eventLog: string[] = [];
+  let es: EventSource | undefined;
+  const swallowed = await withSlotRethrowSwallowed(async () => {
+    es = createEventSource('http://example.test/stream', {
+      fetch: injected,
+      errorFilter: () => {
+        throw new Error('filter boom');
+      },
+    });
+    es.onerror = () => {};
+    es.addEventListener('closed', () => eventLog.push('closed'));
+    await sleepAsync(50);
+  });
+
+  // A throwing filter acts like one that returned false: one clean teardown, no leak.
+  expect(eventLog).toEqual(['closed']);
+  expect(aborted).toBe(true);
+  expect(es?.readyState).toEqual(CLOSED);
+  expect(swallowed.map((err) => (err as Error).message)).toEqual(['filter boom']);
 });

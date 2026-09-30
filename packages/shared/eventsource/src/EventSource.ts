@@ -243,7 +243,12 @@ export function createEventSource(
     );
     if (seedKey !== undefined) {
       const seedValue = config.headers[seedKey];
-      lastEventId = Array.isArray(seedValue) ? String(seedValue[0] ?? '') : String(seedValue);
+      const seed = Array.isArray(seedValue) ? seedValue[0] : seedValue;
+      // A missing value means no seed. A seed that fails the header-value test would make the
+      // Last-Event-ID header assignment throw on every attempt.
+      if (seed !== undefined && seed !== null && !INVALID_HEADER_VALUE_CHAR.test(seed)) {
+        lastEventId = String(seed);
+      }
     }
   }
 
@@ -842,9 +847,18 @@ export function createEventSource(
     const errorEvent = error
       ? makeEvent('error', { ...error, message: error?.message ?? '' })
       : makeEvent('end', { message: 'the request completed unexpectedly' });
-    const shouldRetry = (config.errorFilter || defaultErrorFilter)(
-      errorEvent as unknown as ErrorEvent,
-    );
+    let shouldRetry: boolean;
+    try {
+      shouldRetry = (config.errorFilter || defaultErrorFilter)(errorEvent as unknown as ErrorEvent);
+    } catch (err) {
+      // A throwing filter cannot decide, so the stream stops cleanly instead of leaking the
+      // connection or stranding the state. The exception still reaches the host asynchronously,
+      // like a throwing listener's.
+      queueMicrotask(() => {
+        throw err;
+      });
+      shouldRetry = false;
+    }
     // The filter can call close(). That close is final: the state must not move back to
     // CONNECTING, and no further event dispatches for this failure.
     if (readyState === CLOSED) {
