@@ -17,14 +17,44 @@ export interface EventSource {
   close(): void;
 }
 
+/**
+ * The strategy an {@link EventSource} uses to decide how long to wait before
+ * each reconnection attempt. It is injected so a data source can drive
+ * reconnection timing from its own retry state rather than the transport's
+ * built-in backoff. The `nowMs` arguments are the transport's wall clock; an
+ * implementation that keeps its own clock may ignore them.
+ */
+export interface EventSourceRetryDelayStrategy {
+  /** Returns the delay, in milliseconds, before the next reconnection. */
+  nextRetryDelay(nowMs: number): number;
+  /** Records that the connection is currently healthy. */
+  setGoodSince(nowMs: number): void;
+  /** Applies a server-directed base delay, in milliseconds. */
+  setBaseDelay(baseDelayMs: number): void;
+}
+
 export interface EventSourceInitDict {
   method?: string;
   headers: { [key: string]: string | string[] };
   body?: string;
   errorFilter: (err: HttpErrorResponse) => boolean;
-  initialRetryDelayMillis: number;
   readTimeoutMillis: number;
-  retryResetIntervalMillis: number;
+
+  /**
+   * The initial delay and reset window for the built-in (default) retry-delay
+   * strategy. These configure the default behavior; they are ignored when a
+   * custom {@link retryDelayStrategy} is provided, since that strategy then
+   * owns all reconnection timing.
+   */
+  initialRetryDelayMillis?: number;
+  retryResetIntervalMillis?: number;
+
+  /**
+   * A custom strategy that replaces the built-in (default) one. When provided,
+   * the EventSource defers all reconnection timing to it and the built-in
+   * options (`initialRetryDelayMillis`, `retryResetIntervalMillis`) are ignored.
+   */
+  retryDelayStrategy?: EventSourceRetryDelayStrategy;
   /**
    * Optional callback that returns a fresh URL on each reconnection attempt.
    * When provided, the EventSource implementation should call this instead of
