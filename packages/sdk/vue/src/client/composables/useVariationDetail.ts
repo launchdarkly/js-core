@@ -1,5 +1,6 @@
-import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 import type { InjectionKey, MaybeRefOrGetter, Ref } from 'vue';
+
+import type { LDEvaluationDetailTyped } from '@launchdarkly/js-client-sdk';
 
 import type { LDVueInstance } from '../LDClient';
 import { useVariationCore } from './useVariationCore';

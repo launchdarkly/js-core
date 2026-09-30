@@ -3,8 +3,6 @@ import { randomUUID } from 'node:crypto';
 
 import { LDContext, LDLogger } from '@launchdarkly/js-server-sdk-common';
 
-import { ManagedAgent } from './api/ManagedAgent';
-import { ManagedModel } from './api/ManagedModel';
 import {
   LDAIAgentConfig,
   LDAIAgentConfigDefault,
@@ -26,6 +24,8 @@ import { AgentGraphDefinition, LDAgentGraphFlagValue, LDGraphTracker } from './a
 import { Evaluator } from './api/judge/Evaluator';
 import { Judge, stripLegacyJudgeMessages } from './api/judge/Judge';
 import { LDAIClient } from './api/LDAIClient';
+import { ManagedAgent } from './api/ManagedAgent';
+import { ManagedModel } from './api/ManagedModel';
 import { RunnerFactory, SupportedAIProvider } from './api/providers';
 import { LDAIConfigTrackerImpl } from './LDAIConfigTrackerImpl';
 import { LDClientMin } from './LDClientMin';
@@ -55,8 +55,6 @@ const INIT_TRACK_CONTEXT: LDContext = {
 };
 
 const disabledAIConfig: LDAIConfigDefault = { enabled: false };
-
-
 
 export class LDAIClientImpl implements LDAIClient {
   private _logger?: LDLogger;
@@ -518,7 +516,12 @@ export class LDAIClientImpl implements LDAIClient {
       return undefined;
     }
 
-    const runner = await RunnerFactory.createAgent(config, undefined, this._logger, defaultAiProvider);
+    const runner = await RunnerFactory.createAgent(
+      config,
+      undefined,
+      this._logger,
+      defaultAiProvider,
+    );
     if (!runner) {
       return undefined;
     }

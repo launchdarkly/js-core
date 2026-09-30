@@ -95,9 +95,7 @@
     },
     "packages/sdk/shopify-oxygen": {
       "bump-minor-pre-major": true,
-      "extra-files": [
-        "src/platform/OxygenInfo.ts"
-      ]
+      "extra-files": ["src/platform/OxygenInfo.ts"]
     },
     "packages/shared/common": {},
     "packages/shared/sdk-client": {
@@ -134,6 +132,11 @@
           "type": "json",
           "path": "/packages/sdk/openfeature-cloudflare-server/package.json",
           "jsonpath": "$.devDependencies['@launchdarkly/cloudflare-server-sdk']"
+        },
+        {
+          "type": "json",
+          "path": "/packages/sdk/openfeature-cloudflare-server/examples/getting-started/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/cloudflare-server-sdk']"
         }
       ]
     },
@@ -371,9 +374,6 @@
         }
       ]
     },
-    "packages/sdk/combined-browser": {
-      "bump-minor-pre-major": true
-    },
     "packages/sdk/react": {
       "extra-files": [
         "src/client/LDReactClient.tsx",
@@ -434,14 +434,16 @@
       ]
     },
     "packages/sdk/openfeature-cloudflare-server": {
-      "bump-minor-pre-major": true,
-      "prerelease": true,
-      "prerelease-type": "beta"
+      "release-as": "1.0.0",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "examples/getting-started/package.json",
+          "jsonpath": "$.dependencies['@launchdarkly/openfeature-cloudflare-server']"
+        }
+      ]
     },
     "packages/sdk/vue": {
-      "bump-minor-pre-major": true,
-      "prerelease": true,
-      "prerelease-type": "beta",
       "extra-files": [
         "src/client/LDVueClient.ts",
         {

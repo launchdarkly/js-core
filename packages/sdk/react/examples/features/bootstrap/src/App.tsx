@@ -14,9 +14,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header" style={{ backgroundColor: headerBgColor }}>
-        <p data-testid="flag-value">
-          {`The ${FLAG_KEY} feature flag evaluates to ${flagValue}.`}
-        </p>
+        <p data-testid="flag-value">{`The ${FLAG_KEY} feature flag evaluates to ${flagValue}.`}</p>
         <p data-testid="status">SDK status: {status}</p>
       </header>
     </div>

@@ -64,10 +64,7 @@ it('skips plugins that do not implement registerDebug', () => {
     register: jest.fn(),
   };
 
-  safeRegisterDebugOverridePlugins(logger, debugOverride, [
-    pluginWithoutDebug,
-    pluginWithDebug,
-  ]);
+  safeRegisterDebugOverridePlugins(logger, debugOverride, [pluginWithoutDebug, pluginWithDebug]);
 
   expect(pluginWithDebug.registerDebug).toHaveBeenCalledWith(debugOverride);
   expect(logger.error).not.toHaveBeenCalled();
@@ -97,18 +94,14 @@ it('continues processing and logs error when registerDebug throws', () => {
 
   expect(throwingPlugin.registerDebug).toHaveBeenCalledWith(debugOverride);
   expect(workingPlugin.registerDebug).toHaveBeenCalledWith(debugOverride);
-  expect(logger.error).toHaveBeenCalledWith(
-    'Exception thrown registering plugin error-plugin.',
-  );
+  expect(logger.error).toHaveBeenCalledWith('Exception thrown registering plugin error-plugin.');
 });
 
 it('handles an empty plugins array without error', () => {
   const logger = createMockLogger();
   const debugOverride = createMockDebugOverride();
 
-  expect(() =>
-    safeRegisterDebugOverridePlugins(logger, debugOverride, []),
-  ).not.toThrow();
+  expect(() => safeRegisterDebugOverridePlugins(logger, debugOverride, [])).not.toThrow();
 
   expect(logger.error).not.toHaveBeenCalled();
 });

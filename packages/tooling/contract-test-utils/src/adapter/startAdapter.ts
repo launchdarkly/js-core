@@ -72,7 +72,9 @@ export function startAdapter(options?: AdapterOptions) {
         const waiter = waiters[reqId];
         clearTimeout(waiter.timer);
         delete waiters[reqId];
-        waiter.reject(new Error('WebSocket connection to entity closed before a response was received.'));
+        waiter.reject(
+          new Error('WebSocket connection to entity closed before a response was received.'),
+        );
       });
     });
 

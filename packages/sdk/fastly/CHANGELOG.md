@@ -1,5 +1,66 @@
 # Changelog
 
+## [0.2.29](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.28...fastly-server-sdk-v0.2.29) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.5 to 2.21.6
+
+## [0.2.28](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.27...fastly-server-sdk-v0.2.28) (2026-09-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.4 to 2.21.5
+
+## [0.2.27](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.26...fastly-server-sdk-v0.2.27) (2026-09-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.3 to 2.21.4
+
+## [0.2.26](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.25...fastly-server-sdk-v0.2.26) (2026-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.2 to 2.21.3
+
+## [0.2.25](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.24...fastly-server-sdk-v0.2.25) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.1 to 2.21.2
+
+## [0.2.24](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.23...fastly-server-sdk-v0.2.24) (2026-09-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.0 to 2.21.1
+
+## [0.2.23](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.22...fastly-server-sdk-v0.2.23) (2026-09-09)
+
+
+### Bug Fixes
+
+* Export BasicLogger, LDContext, and LDOptions from the Fastly SDK ([#1987](https://github.com/launchdarkly/js-core/issues/1987)) ([f5c3170](https://github.com/launchdarkly/js-core/commit/f5c3170469c8aee4d821f163116eb11492ce1999))
+
 ## [0.2.22](https://github.com/launchdarkly/js-core/compare/fastly-server-sdk-v0.2.21...fastly-server-sdk-v0.2.22) (2026-09-08)
 
 

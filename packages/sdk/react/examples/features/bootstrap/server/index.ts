@@ -1,8 +1,7 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 // eslint-disable-next-line import/no-extraneous-dependencies
 import express from 'express';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { init, LDContext } from '@launchdarkly/node-server-sdk';

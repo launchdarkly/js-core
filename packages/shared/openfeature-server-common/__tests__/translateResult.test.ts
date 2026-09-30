@@ -32,15 +32,15 @@ it.each([
   ['PREREQUISITE_FAILED', 'PREREQUISITE_FAILED'],
   ['ERROR', StandardResolutionReasons.ERROR],
 ])('populates the resolution reason', (reason, expectedReason) => {
-    expect(
-      translateResult<boolean>({
-        value: true,
-        variationIndex: 9,
-        reason: {
-          kind: reason,
-        },
-      }).reason,
-    ).toEqual(expectedReason);
+  expect(
+    translateResult<boolean>({
+      value: true,
+      variationIndex: 9,
+      reason: {
+        kind: reason,
+      },
+    }).reason,
+  ).toEqual(expectedReason);
 });
 
 it('does not populate the errorCode when there is not an error', () => {

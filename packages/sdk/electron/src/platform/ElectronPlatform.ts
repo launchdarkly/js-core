@@ -47,11 +47,6 @@ export default class ElectronPlatform implements platform.Platform {
         }
       },
     };
-    this.requests = new ElectronRequests(
-      options.tlsParams,
-      options.proxyOptions,
-      options.logger,
-      options.enableEventCompression,
-    );
+    this.requests = new ElectronRequests(options.enableEventCompression);
   }
 }

@@ -341,7 +341,13 @@ describe('sdk-client object', () => {
       await ldc.identify({ kind: 'user', key: 'bob' });
       expect(ldc.variation('flagA', false)).toBe(true);
       // Events (deepest-first per path): D (via B), B, D (via C), C, A. D appears twice.
-      expect(featureEventKeysAfterIdentify()).toEqual(['flagD', 'flagB', 'flagD', 'flagC', 'flagA']);
+      expect(featureEventKeysAfterIdentify()).toEqual([
+        'flagD',
+        'flagB',
+        'flagD',
+        'flagC',
+        'flagA',
+      ]);
     });
   });
 });

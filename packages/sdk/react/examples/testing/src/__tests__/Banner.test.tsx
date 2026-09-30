@@ -15,10 +15,14 @@
  *   you need to configure the client further before calling `client.start()`,
  *   or when you need to call `createLDReactProviderWithClient` yourself.
  */
+
 import '@testing-library/jest-dom';
 import { act, render, screen } from '@testing-library/react';
 
-import { createTestClient, createTestClientProvider } from '@launchdarkly/client-testing-plugin/react-sdk';
+import {
+  createTestClient,
+  createTestClientProvider,
+} from '@launchdarkly/client-testing-plugin/react-sdk';
 import { createLDReactProviderWithClient } from '@launchdarkly/react-sdk';
 
 import { Banner } from '../Banner';

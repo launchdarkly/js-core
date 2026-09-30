@@ -63,7 +63,10 @@ export class PayloadStreamReader {
           this._logger?.debug(`Data follows: ${event.data}`);
           this._errorHandler?.(DataSourceErrorKind.InvalidData, 'Malformed data in EventStream.');
         }
-      } else {
+      } else if (eventName !== 'error') {
+        // Missing data is a protocol violation for every type except 'error': a connection
+        // failure also dispatches under 'error', without data, and the transport owner handles
+        // it. Only a server-sent error frame carries data.
         this._errorHandler?.(DataSourceErrorKind.Unknown, 'Event from EventStream missing data.');
       }
     });

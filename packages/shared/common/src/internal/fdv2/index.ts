@@ -1,3 +1,5 @@
+import { readFallbackDirective, readGoodbyeFallbackDirective } from './fallbackDirective';
+import type { FallbackDirective } from './fallbackDirective';
 import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from './FDv1PayloadAdaptor';
 import { PayloadProcessor } from './payloadProcessor';
 import { PayloadStreamReader } from './payloadStreamReader';
@@ -15,9 +17,17 @@ import type {
   Update,
 } from './protocolHandler';
 
-export { createProtocolHandler, FDv1PayloadAdaptor, PayloadProcessor, PayloadStreamReader };
+export {
+  createProtocolHandler,
+  FDv1PayloadAdaptor,
+  PayloadProcessor,
+  PayloadStreamReader,
+  readFallbackDirective,
+  readGoodbyeFallbackDirective,
+};
 
 export type {
+  FallbackDirective,
   FDv2Event,
   FDv2EventsCollection,
   ObjProcessors,

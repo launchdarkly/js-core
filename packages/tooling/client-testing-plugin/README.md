@@ -6,7 +6,7 @@
 [![NPM][client-testing-plugin-dm-badge]][client-testing-plugin-npm-link]
 [![NPM][client-testing-plugin-dt-badge]][client-testing-plugin-npm-link]
 
->A testing plugin for LaunchDarkly client-side JavaScript SDKs. Use it to inject deterministic flag values into a real SDK client during unit tests, integration tests, and local development.
+> A testing plugin for LaunchDarkly client-side JavaScript SDKs. Use it to inject deterministic flag values into a real SDK client during unit tests, integration tests, and local development.
 
 ## Install
 
@@ -38,7 +38,7 @@ const { client, testData } = createTestClient(
 
 await client.start({ bootstrap: {} });
 
-client.boolVariation('new-ui', false);          // true
+client.boolVariation('new-ui', false); // true
 client.stringVariation('greeting', '(default)'); // 'Hello!'
 
 // Update flags at any time - the SDK fires change events. Setters chain.

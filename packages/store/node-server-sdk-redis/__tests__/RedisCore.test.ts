@@ -29,7 +29,7 @@ class AsyncCoreFacade {
   constructor(private readonly _core: RedisCore) {}
 
   init(allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>): Promise<void> {
-    return promisify((cb) => this._core.init(allData, cb));
+    return promisify<void>((cb) => this._core.init(allData, () => cb()));
   }
 
   get(

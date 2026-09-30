@@ -2,8 +2,8 @@ import * as fs from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
-import { createMockLogger } from '../testHelpers';
 import NodeStorage, { getNodeStorage, resetNodeStorage } from '../../src/platform/NodeStorage';
+import { createMockLogger } from '../testHelpers';
 
 let tmpRoot: string;
 
@@ -165,7 +165,9 @@ it('discards a symlink planted at the storage file path instead of reading throu
   expect(logger.error).not.toHaveBeenCalled();
 
   // The victim file itself is untouched, and the symlink has been replaced by a real file.
-  await expect(fs.readFile(victim, 'utf8')).resolves.toBe(JSON.stringify({ secret: 'do-not-load' }));
+  await expect(fs.readFile(victim, 'utf8')).resolves.toBe(
+    JSON.stringify({ secret: 'do-not-load' }),
+  );
   await storage.set('alpha', 'one');
   await expect(storage.get('alpha')).resolves.toBe('one');
   const onDisk = await fs.readFile(path.join(tmpRoot, 'ldcache.json'), 'utf8');
@@ -259,8 +261,5 @@ it('warns when getNodeStorage is called with a different localStoragePath', () =
   const logger = createMockLogger();
   getNodeStorage(path.join(tmpRoot, 'different'), logger);
 
-  expect(logger.warn).toHaveBeenCalledWith(
-    expect.stringContaining('different localStoragePath'),
-  );
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('different localStoragePath'));
 });
-

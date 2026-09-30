@@ -695,7 +695,13 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             // The requested flag's value and reason are unaffected.
             continue;
           }
-          this._variationInternal(prereqKey, undefined, this._eventFactoryDefault, undefined, ancestors);
+          this._variationInternal(
+            prereqKey,
+            undefined,
+            this._eventFactoryDefault,
+            undefined,
+            ancestors,
+          );
         }
       } finally {
         ancestors.delete(flagKey);

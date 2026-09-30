@@ -584,6 +584,12 @@ function constructFDv2(
 export default class LDClientImpl implements LDClient {
   private _initState: InitState = InitState.Initializing;
 
+  // The last-known-values warning is logged once per client.
+  private _lastKnownValuesWarningLogged = false;
+
+  // The allFlagsState last-known-values warning is logged once per client.
+  private _allFlagsStateLastKnownValuesWarningLogged = false;
+
   private _featureStore: LDFeatureStore | LDTransactionalFeatureStore;
 
   private _updateProcessor?: subsystem.LDStreamProcessor;
@@ -1187,10 +1193,13 @@ export default class LDClientImpl implements LDClient {
         this._featureStore.initialized((storeInitialized) => {
           let valid = true;
           if (storeInitialized) {
-            this._logger?.warn(
-              'Called allFlagsState before client initialization; using last known' +
-                ' values from data store',
-            );
+            if (!this._allFlagsStateLastKnownValuesWarningLogged) {
+              this._allFlagsStateLastKnownValuesWarningLogged = true;
+              this._logger?.warn(
+                'Called allFlagsState before client initialization; using last known' +
+                  ' values from data store. This message is logged once.',
+              );
+            }
           } else {
             this._logger?.warn(
               'Called allFlagsState before client initialization. Data store not available; ' +
@@ -1380,10 +1389,14 @@ export default class LDClientImpl implements LDClient {
     if (!this.initialized()) {
       this._featureStore.initialized((storeInitialized) => {
         if (storeInitialized) {
-          this._logger?.warn(
-            'Variation called before LaunchDarkly client initialization completed' +
-              " (did you wait for the 'ready' event?) - using last known values from feature store",
-          );
+          if (!this._lastKnownValuesWarningLogged) {
+            this._lastKnownValuesWarningLogged = true;
+            this._logger?.warn(
+              'Variation called before LaunchDarkly client initialization completed' +
+                " (did you wait for the 'ready' event?) - using last known values from feature store." +
+                ' This message is logged once.',
+            );
+          }
           this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }

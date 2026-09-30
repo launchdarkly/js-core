@@ -29,6 +29,10 @@ describe.each([
   ['%i', [Symbol('foo')], 'NaN'],
   ['%f', [Symbol('foo')], 'NaN'],
   ['%%', [], '%'],
+  ['%', [], '%'],
+  ['100%', [], '100%'],
+  ['100%', [1], '100% 1'],
+  ['%s %', ['a'], 'a %'],
   [
     '',
     [Symbol('foo'), circular, BigInt(7), { apple: 'pie' }, global, undefined, null],

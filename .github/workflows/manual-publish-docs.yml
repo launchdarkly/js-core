@@ -22,15 +22,18 @@ on:
           - packages/telemetry/node-server-sdk-otel
           - packages/sdk/browser
           - packages/sdk/server-ai
-          - packages/sdk/combined-browser
           - packages/sdk/shopify-oxygen
           - packages/sdk/electron
           - packages/sdk/react
+          - packages/sdk/openfeature-cloudflare-server
           - packages/sdk/openfeature-node-server
+          - packages/sdk/vue
 name: Publish Documentation
 jobs:
   build-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push docs to the gh-pages branch.
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./actions/setup-yarn

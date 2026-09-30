@@ -1,5 +1,59 @@
 # Changelog
 
+## [2.6.35](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.34...js-server-sdk-common-edge-v2.6.35) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.5 to 2.21.6
+
+## [2.6.34](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.33...js-server-sdk-common-edge-v2.6.34) (2026-09-22)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.4 to 2.21.5
+
+## [2.6.33](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.32...js-server-sdk-common-edge-v2.6.33) (2026-09-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.3 to 2.21.4
+
+## [2.6.32](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.31...js-server-sdk-common-edge-v2.6.32) (2026-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.2 to 2.21.3
+
+## [2.6.31](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.30...js-server-sdk-common-edge-v2.6.31) (2026-09-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.1 to 2.21.2
+
+## [2.6.30](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.29...js-server-sdk-common-edge-v2.6.30) (2026-09-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.0 to 2.21.1
+
 ## [2.6.29](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.28...js-server-sdk-common-edge-v2.6.29) (2026-09-08)
 
 

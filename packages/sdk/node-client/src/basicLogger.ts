@@ -1,10 +1,6 @@
 import { format } from 'util';
 
-import {
-  BasicLogger,
-  BasicLoggerOptions,
-  LDLogger,
-} from '@launchdarkly/js-client-sdk-common';
+import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 /**
  * Provides a basic {@link LDLogger} implementation.

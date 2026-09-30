@@ -1,10 +1,13 @@
 import {
-  DataSourceErrorKind,
+  classifyHttpStatus,
+  classifyTransportFailure,
+  FailureKind,
+  forPolling,
   httpErrorMessage,
   internal,
-  isHttpRecoverable,
   LDLogger,
   LDPollingError,
+  RetryState,
   subsystem,
   VoidFunction,
 } from '@launchdarkly/js-sdk-common';
@@ -23,6 +26,7 @@ const { initMetadataFromHeaders } = internal;
  */
 export default class PollingProcessor implements subsystem.LDStreamProcessor {
   private _stopped = false;
+  private readonly _retryState: RetryState;
 
   private _timeoutHandle: any;
 
@@ -32,78 +36,90 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly _featureStore: LDDataSourceUpdates,
     private readonly _logger?: LDLogger,
     private readonly _initSuccessHandler: VoidFunction = () => {},
+    // Reserved for a future terminal-failure channel; intentionally unused
+    // today
     private readonly _errorHandler?: PollingErrorHandler,
-  ) {}
+  ) {
+    this._retryState = forPolling(1000 * this._pollInterval);
+  }
+
+  private _scheduleNextPoll() {
+    const delay = this._retryState.nextDelay;
+    this._logger?.debug('Scheduling next poll in %d ms', delay);
+    this._timeoutHandle = setTimeout(() => {
+      this._poll();
+    }, delay);
+  }
 
   private _poll() {
     if (this._stopped) {
       return;
     }
 
-    const reportJsonError = (data: string) => {
-      this._logger?.error('Polling received invalid data');
-      this._logger?.debug(`Invalid JSON follows: ${data}`);
-      this._errorHandler?.(
-        new LDPollingError(
-          DataSourceErrorKind.InvalidData,
-          'Malformed JSON data in polling response',
-        ),
-      );
-    };
-
-    const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
     this._requestor.requestAllData((err, body, headers) => {
-      const elapsed = Date.now() - startTime;
-      const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
-
-      this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
-      if (err) {
-        const { status } = err;
-        if (status && !isHttpRecoverable(status)) {
-          const message = httpErrorMessage(err, 'polling request');
-          this._logger?.error(message);
-          this._errorHandler?.(
-            new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
-          );
-          // It is not recoverable, return and do not trigger another
-          // poll.
-          return;
-        }
-        this._logger?.warn(httpErrorMessage(err, 'polling request', 'will retry'));
-      } else if (body) {
-        const parsed = deserializePoll(body);
-        if (!parsed) {
-          // We could not parse this JSON. Report the problem and fallthrough to
-          // start another poll.
-          reportJsonError(body);
-        } else {
-          const initData = {
-            [VersionedDataKinds.Features.namespace]: parsed.flags,
-            [VersionedDataKinds.Segments.namespace]: parsed.segments,
-          };
-          this._featureStore.init(
-            initData,
-            () => {
-              this._initSuccessHandler();
-              // Triggering the next poll after the init has completed.
-              this._timeoutHandle = setTimeout(() => {
-                this._poll();
-              }, sleepFor);
-            },
-            initMetadataFromHeaders(headers),
-          );
-          // The poll will be triggered by  the feature store initialization
-          // completing.
-          return;
-        }
+      if (this._stopped) {
+        return;
       }
 
-      // Falling through, there was some type of error and we need to trigger
-      // a new poll.
-      this._timeoutHandle = setTimeout(() => {
-        this._poll();
-      }, sleepFor);
+      if (err) {
+        const { status } = err;
+        const kind: FailureKind =
+          status !== undefined ? classifyHttpStatus(status) : classifyTransportFailure();
+        this._retryState.recordFailure(kind);
+        const message = httpErrorMessage(err, 'polling request', 'will retry');
+        // No failure is terminal now, so this is surfaced as a log only — the
+        // same outward treatment the SDK has always given a recoverable poll
+        // failure. The error-event channel stays reserved for a terminal case.
+        if (kind === 'unexpected') {
+          this._logger?.error(message);
+        } else {
+          this._logger?.warn(message);
+        }
+        this._scheduleNextPoll();
+        return;
+      }
+
+      if (body) {
+        let parsed;
+        try {
+          parsed = deserializePoll(body);
+        } catch {
+          // Structurally invalid data can throw during deserialization; treat
+          // it the same as the unparseable payload handled below.
+          parsed = undefined;
+        }
+        if (!parsed) {
+          // Unusable data is a normal failure: record it, report it, and poll
+          // again after the resulting wait.
+          this._retryState.recordFailure('normal');
+          this._logger?.error('Polling received invalid data');
+          this._logger?.debug(`Invalid JSON follows: ${body}`);
+          this._scheduleNextPoll();
+          return;
+        }
+
+        const initData = {
+          [VersionedDataKinds.Features.namespace]: parsed.flags,
+          [VersionedDataKinds.Segments.namespace]: parsed.segments,
+        };
+        this._featureStore.init(
+          initData,
+          () => {
+            this._retryState.recordSuccess();
+            this._initSuccessHandler();
+            // Triggering the next poll after the init has completed.
+            this._scheduleNextPoll();
+          },
+          initMetadataFromHeaders(headers),
+        );
+        return;
+      }
+
+      // No error and no body (for example, a not-modified response): a
+      // successful poll that delivered nothing new.
+      this._retryState.recordSuccess();
+      this._scheduleNextPoll();
     });
   }
 

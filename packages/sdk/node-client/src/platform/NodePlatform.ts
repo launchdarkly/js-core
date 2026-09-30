@@ -20,9 +20,20 @@ export default class NodePlatform implements platform.Platform {
 
   constructor(
     logger: LDLogger,
-    options: Pick<ValidatedOptions, 'storage' | 'localStoragePath' | 'tlsParams' | 'enableEventCompression' | 'wrapperName' | 'wrapperVersion'>,
+    options: Pick<
+      ValidatedOptions,
+      | 'storage'
+      | 'localStoragePath'
+      | 'tlsParams'
+      | 'enableEventCompression'
+      | 'wrapperName'
+      | 'wrapperVersion'
+    >,
   ) {
-    this.info = new NodeInfo({ wrapperName: options.wrapperName, wrapperVersion: options.wrapperVersion });
+    this.info = new NodeInfo({
+      wrapperName: options.wrapperName,
+      wrapperVersion: options.wrapperVersion,
+    });
     this.storage = options.storage
       ? createSafeStorage(options.storage, logger)
       : getNodeStorage(options.localStoragePath, logger);

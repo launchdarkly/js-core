@@ -13,7 +13,6 @@ import {
   interrupted,
   terminalError,
 } from './FDv2SourceResult';
-import { FallbackDirective, readFallbackDirective } from './fallbackDirective';
 
 function getEnvironmentId(headers: { get(name: string): string | null }): string | undefined {
   return headers.get('x-ld-envid') ?? undefined;
@@ -29,7 +28,7 @@ function getEnvironmentId(headers: { get(name: string): string | null }): string
  */
 function processEvents(
   events: internal.FDv2Event[],
-  fallback: FallbackDirective,
+  fallback: internal.FallbackDirective,
   environmentId: string | undefined,
   logger?: LDLogger,
 ): FDv2SourceResult {
@@ -108,12 +107,12 @@ export async function poll(
   basis: string | undefined,
   logger?: LDLogger,
 ): Promise<FDv2SourceResult> {
-  let directive: FallbackDirective = { fdv1Fallback: false };
+  let directive: internal.FallbackDirective = { fdv1Fallback: false };
   let environmentId: string | undefined;
 
   try {
     const response = await requestor.poll(basis);
-    directive = readFallbackDirective(response.headers);
+    directive = internal.readFallbackDirective(response.headers);
     environmentId = getEnvironmentId(response.headers);
 
     // 304 Not Modified: no payload has changed since the last poll.

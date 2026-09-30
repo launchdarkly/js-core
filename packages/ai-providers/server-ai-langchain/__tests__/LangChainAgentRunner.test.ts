@@ -42,12 +42,7 @@ it('extracts tool calls and aggregates usage from multi-step agent messages', as
 
   const agent = makeAgent(
     jest.fn().mockResolvedValue({
-      messages: [
-        new HumanMessage('Look up 42'),
-        toolCallMsg,
-        toolResultMsg,
-        finalMsg,
-      ],
+      messages: [new HumanMessage('Look up 42'), toolCallMsg, toolResultMsg, finalMsg],
     }),
   );
 
