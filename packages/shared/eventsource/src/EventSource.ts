@@ -13,17 +13,21 @@ import {
   RawErrorPayload,
   RetryingEvent,
 } from './Event';
-import { bodylessMethods, defaultFetch, headersToObject } from './httpHelpers';
+import {
+  bodylessMethods,
+  defaultFetch,
+  headersToObject,
+  INVALID_HEADER_VALUE_CHAR,
+} from './httpHelpers';
 import { createDefaultEventRegistry } from './listenerRegistry';
 import { createParser } from './parser';
-import { INVALID_HEADER_VALUE_CHAR } from './parsing';
 import * as retryDelay from './retryDelay';
 import {
   EventListenerRegistry,
   EventSourceInitDict,
-  FetchFn,
-  FetchRequestOptions,
-  FetchResponse,
+  FetchLike,
+  FetchLikeOptions,
+  FetchLikeResponse,
 } from './types';
 
 /** Ready state: no connection is open, and none is being attempted. */
@@ -262,7 +266,7 @@ export function createEventSource(
   let streamOriginUrl = '';
 
   // The transport is injectable. `defaultFetch` documents the default behavior.
-  const doFetch: FetchFn = config.fetch ?? defaultFetch;
+  const doFetch: FetchLike = config.fetch ?? defaultFetch;
 
   let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -547,7 +551,7 @@ export function createEventSource(
       }
     }
 
-    const callback = (res: FetchResponse): void => {
+    const callback = (res: FetchLikeResponse): void => {
       if (thisGeneration !== generation) {
         return;
       }
@@ -656,7 +660,7 @@ export function createEventSource(
     abortController = controller;
 
     const method = config.method ?? 'GET';
-    const init: FetchRequestOptions = {
+    const init: FetchLikeOptions = {
       method,
       headers: makeHeaders(),
       signal: controller.signal,

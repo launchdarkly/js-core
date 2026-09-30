@@ -14,7 +14,7 @@ export type {
 } from './Event';
 
 import type { ErrorEvent } from './Event';
-import type { FetchFn } from './httpHelpers';
+import type { FetchLike } from './httpHelpers';
 import type { RetryDelayStrategy } from './retryDelay';
 
 /**
@@ -69,10 +69,10 @@ export type EventListenerRegistryFactory = () => EventListenerRegistry;
 
 export type {
   FetchBodyReader,
-  FetchFn,
+  FetchLike,
   FetchHeaders,
-  FetchRequestOptions,
-  FetchResponse,
+  FetchLikeOptions,
+  FetchLikeResponse,
   FetchResponseBody,
 } from './httpHelpers';
 
@@ -162,12 +162,12 @@ export interface EventSourceInitDict {
   /**
    * The transport used to open the stream. When absent, the client uses the global `fetch`.
    *
-   * The client only needs the structural subset declared by {@link FetchFn}, so a real `fetch`
+   * The client only needs the structural subset declared by {@link FetchLike}, so a real `fetch`
    * implementation satisfies this option without casts. A platform without a suitable global
    * `fetch`, or one that needs agents, proxies, or TLS configuration, supplies a function with
    * the same shape over its own transport.
    */
-  fetch?: FetchFn;
+  fetch?: FetchLike;
 
   /**
    * Creates the listener registry for this instance. The registry stores the listeners

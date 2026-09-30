@@ -7,10 +7,10 @@ import { createEventSource } from '../src/EventSource';
 import {
   ErrorEvent,
   EventSourceInitDict,
-  FetchFn,
+  FetchLike,
   FetchHeaders,
-  FetchRequestOptions,
-  FetchResponse,
+  FetchLikeOptions,
+  FetchLikeResponse,
   MessageEvent,
 } from '../src/types';
 import {
@@ -26,7 +26,7 @@ import {
  * A canned response whose body hands out the given chunks and then stays pending forever, like an
  * idle SSE connection. The shape matches what the Node SDK http/https adapters produce.
  */
-function idleStreamResponse(chunks: string[], headers?: FetchHeaders): FetchResponse {
+function idleStreamResponse(chunks: string[], headers?: FetchHeaders): FetchLikeResponse {
   const encoder = new TextEncoder();
   const pending = [...chunks];
   return {
@@ -51,10 +51,10 @@ function idleStreamResponse(chunks: string[], headers?: FetchHeaders): FetchResp
   };
 }
 
-it('accepts the global fetch as a FetchFn without casts', () => {
+it('accepts the global fetch as a FetchLike without casts', () => {
   // This is a compile-time assertion: the assignment fails to build if the structural fetch
   // types drift away from the real fetch API.
-  const compatible: FetchFn = fetch;
+  const compatible: FetchLike = fetch;
   expect(typeof compatible).toEqual('function');
 });
 
@@ -77,7 +77,7 @@ it('uses the global fetch when the fetch option is absent', async () => {
 });
 
 it('passes the url, method, headers, body, and signal to an injected fetch', () => {
-  const injected = jest.fn<Promise<FetchResponse>, [string, FetchRequestOptions]>(
+  const injected = jest.fn<Promise<FetchLikeResponse>, [string, FetchLikeOptions]>(
     () => new Promise<never>(() => {}),
   );
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
@@ -104,7 +104,7 @@ it('passes the url, method, headers, body, and signal to an injected fetch', () 
 });
 
 it('replaces a default header when the caller overrides it with a different case', () => {
-  const injected = jest.fn<Promise<FetchResponse>, [string, FetchRequestOptions]>(
+  const injected = jest.fn<Promise<FetchLikeResponse>, [string, FetchLikeOptions]>(
     () => new Promise<never>(() => {}),
   );
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
@@ -120,7 +120,7 @@ it('replaces a default header when the caller overrides it with a different case
 it('connects with a relative url and reports an empty origin', async () => {
   // With no document location to resolve against, a relative url cannot produce an origin, but
   // it must not throw either: the injected transport decides what to do with it.
-  const injected: FetchFn = async () => idleStreamResponse(['data: hello\n\n']);
+  const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n']);
   const es = createEventSource('/relative/stream', { fetch: injected });
   es.onerror = () => {};
   try {
@@ -134,7 +134,7 @@ it('connects with a relative url and reports an empty origin', async () => {
 });
 
 it('reports the origin of the final response url when the transport supplies one', async () => {
-  const injected: FetchFn = async () => ({
+  const injected: FetchLike = async () => ({
     ...idleStreamResponse(['data: hello\n\n']),
     url: 'https://redirected.example.com/other/stream',
   });
@@ -152,7 +152,7 @@ it('reports the origin of the final response url when the transport supplies one
 });
 
 it('parses events that stream through an injected fetch', async () => {
-  const injected: FetchFn = async () =>
+  const injected: FetchLike = async () =>
     idleStreamResponse(['event: put\ndata: {"flag":true}\n\n', 'data: plain\n\n']);
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const es = createEventSource(url, { fetch: injected });
@@ -172,7 +172,7 @@ it('parses events that stream through an injected fetch', async () => {
 });
 
 it('reports a non-200 response from an injected fetch as an error', async () => {
-  const injected: FetchFn = async () => ({
+  const injected: FetchLike = async () => ({
     status: 401,
     statusText: 'Unauthorized',
     headers: { forEach: () => {} },
@@ -191,7 +191,7 @@ it('reports a non-200 response from an injected fetch as an error', async () => 
 });
 
 it('accepts a response whose transport supplies no headers at all', async () => {
-  const injected: FetchFn = async () => idleStreamResponse(['data: hello\n\n'], { forEach() {} });
+  const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n'], { forEach() {} });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const es = createEventSource(url, { fetch: injected });
   es.onerror = () => {};
@@ -205,7 +205,7 @@ it('accepts a response whose transport supplies no headers at all', async () => 
 
 it('aborts the request when a 200 response has no body', async () => {
   let signal: AbortSignal | undefined;
-  const injected: FetchFn = async (_url, init) => {
+  const injected: FetchLike = async (_url, init) => {
     signal = init.signal;
     return {
       status: 200,
@@ -231,7 +231,7 @@ it('recomputes the message origin when urlBuilder picks a new origin for a recon
   const encoder = new TextEncoder();
   // Like idleStreamResponse, but the body ends after its chunks, so the stream terminates
   // and the client schedules a reconnect.
-  const endingStreamResponse = (chunks: string[]): FetchResponse => {
+  const endingStreamResponse = (chunks: string[]): FetchLikeResponse => {
     const pending = [...chunks];
     return {
       status: 200,
@@ -255,7 +255,7 @@ it('recomputes the message origin when urlBuilder picks a new origin for a recon
     };
   };
   let attempt = 0;
-  const injected: FetchFn = async (url) =>
+  const injected: FetchLike = async (url) =>
     url.startsWith('http://first.example.com')
       ? endingStreamResponse(['data: one\n\n'])
       : idleStreamResponse(['data: two\n\n']);

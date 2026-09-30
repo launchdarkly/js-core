@@ -151,7 +151,7 @@ attempts stays current across reconnects.
 
 The `fetch` option supplies the transport used to open the stream. When absent, the client uses
 the global `fetch`. The option only requires the structural subset of the fetch API that the
-client uses (see `FetchFn` in `src/types.ts`), so a real `fetch` implementation satisfies it
+client uses (see `FetchLike` in `src/types.ts`), so a real `fetch` implementation satisfies it
 without casts. This is how the Node-based SDKs connect this client to `node:http`/`node:https`
 with their agent, proxy, and TLS configuration: the client itself knows nothing about any of
 those.
