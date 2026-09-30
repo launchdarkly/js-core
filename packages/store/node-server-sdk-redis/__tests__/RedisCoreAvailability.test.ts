@@ -17,20 +17,21 @@ beforeEach(() => {
 });
 
 it('reports an init error through the callback when the transaction fails', (done) => {
+  const execError = new Error('connection refused');
   const state = makeState({
     getClient: () => ({
       multi: () => ({
         del: jest.fn(),
         hmset: jest.fn(),
         set: jest.fn(),
-        exec: (cb: (err: Error | null) => void) => cb(new Error('connection refused')),
+        exec: (cb: (err: Error | null) => void) => cb(execError),
       }),
     }),
   });
   // @ts-ignore Partial state mock for testing.
   const core = new RedisCore(state);
   core.init([], (err) => {
-    expect(err).toEqual(new Error('connection refused'));
+    expect(err).toBe(execError);
     done();
   });
 });
