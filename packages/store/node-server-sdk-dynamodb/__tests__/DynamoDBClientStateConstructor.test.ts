@@ -157,3 +157,19 @@ it('collects every page of a query', async () => {
   expect(send.mock.calls[1][0].input.ExclusiveStartKey).toEqual(item1);
   state.close();
 });
+
+it('starts a query from the ExclusiveStartKey the caller supplies', async () => {
+  const startKey = { key: { S: 'start' } };
+  const item = { key: { S: 'a' } };
+  const send = jest.fn().mockResolvedValueOnce({ Items: [item] });
+  // @ts-ignore Partial client mock for testing.
+  const client = { send, destroy: jest.fn() } as DynamoDBClient;
+  const state = new DynamoDBClientState({ dynamoDBClient: client });
+
+  const records = await state.query({ TableName: 'table', ExclusiveStartKey: startKey });
+
+  expect(records).toEqual([item]);
+  // A rewound first page would read the table from the top again.
+  expect(send.mock.calls[0][0].input.ExclusiveStartKey).toEqual(startKey);
+  state.close();
+});

@@ -159,7 +159,8 @@ export default class DynamoDBClientState {
     const records: Record<string, AttributeValue>[] = [];
     // Paginate manually instead of with paginateQuery. The paginator has no
     // way to pass per-call options, and every call needs the abort backstop.
-    let lastEvaluatedKey: Record<string, AttributeValue> | undefined;
+    // Start from the caller's start key so the first page is not rewound.
+    let lastEvaluatedKey = params.ExclusiveStartKey;
     do {
       // Pages of one query are inherently sequential.
       // eslint-disable-next-line no-await-in-loop
