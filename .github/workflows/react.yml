@@ -37,7 +37,7 @@ jobs:
           # Skip Electron binary download to avoid flaky race condition during concurrent installs.
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: |
-          yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-sdk-contract-tests' install
+          yarn workspaces focus @launchdarkly/react-sdk-contract-tests
           yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/react-sdk-contract-tests' run build
 
       - name: Install Playwright browsers
