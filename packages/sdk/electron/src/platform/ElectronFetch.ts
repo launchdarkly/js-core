@@ -1,9 +1,9 @@
 import * as http from 'http';
 import * as https from 'https';
 
-import type { FetchFn, FetchRequestOptions, FetchResponse } from '@launchdarkly/eventsource';
+import type { FetchLike, FetchLikeOptions, FetchLikeResponse } from '@launchdarkly/eventsource';
 
-function wrapResponse(res: http.IncomingMessage): FetchResponse {
+function wrapResponse(res: http.IncomingMessage): FetchLikeResponse {
   // The async iterator hands out one chunk per read. It resolves done when the server ends the
   // stream, and it rejects when the connection drops or the request is destroyed.
   const iterator = res[Symbol.asyncIterator]();
@@ -43,15 +43,15 @@ function wrapResponse(res: http.IncomingMessage): FetchResponse {
  * caller decides whether to retry the original URL. It applies no read or socket timeout; the
  * caller owns the read timeout and cancels through the request's `AbortSignal`.
  */
-export default function createElectronFetch(): FetchFn {
-  return async (url: string, init: FetchRequestOptions): Promise<FetchResponse> => {
+export default function createElectronFetch(): FetchLike {
+  return async (url: string, init: FetchLikeOptions): Promise<FetchLikeResponse> => {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
     const requestOptions: https.RequestOptions = {
       method: init.method,
       headers: init.headers,
     };
-    return new Promise<FetchResponse>((resolve, reject) => {
+    return new Promise<FetchLikeResponse>((resolve, reject) => {
       const req = impl.request(url, requestOptions, (res) => resolve(wrapResponse(res)));
       // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
       req.setNoDelay(true);
