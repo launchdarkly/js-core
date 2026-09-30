@@ -301,6 +301,9 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       .catch((err: unknown) => {
         // A failed watch or read reply is thrown above. Without this handler that
         // throw becomes an unhandled promise rejection and can crash the process.
+        // The throw can happen after the server armed the watch. Release it so a
+        // stale watch cannot abort the EXEC of the next queued update.
+        abandonWatch();
         this._logger?.error(`Error watching '${kind.namespace}' in Redis: ${err}`);
         settleOnce(err as Error, undefined);
       });

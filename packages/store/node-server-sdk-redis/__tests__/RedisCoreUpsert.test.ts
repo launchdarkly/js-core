@@ -214,6 +214,34 @@ it('reports a read error and sends UNWATCH without writing', async () => {
   expect(exec).not.toHaveBeenCalled();
 });
 
+it('sends UNWATCH when the pipeline reply is incomplete after a successful watch', async () => {
+  const unwatch = jest.fn().mockResolvedValue('OK');
+  const exec = jest.fn();
+  const state = makeState({
+    getClient: () => ({
+      // The watch succeeded but the read reply is missing, so the handler throws
+      // into the catch path with the watch armed on the server.
+      pipeline: fakeWatchPipeline(async () => [[null, 'OK']]),
+      unwatch,
+      multi: () => ({
+        hset: jest.fn(),
+        exec,
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  const result = await flushRejections(() =>
+    upsertResult(core, { version: 2, serializedItem: '{}' }),
+  );
+
+  expect(result.err?.message).toEqual('The Redis watch pipeline returned no reply');
+  // A stale watch on the shared connection could abort the next update's EXEC.
+  expect(unwatch).toHaveBeenCalledTimes(1);
+  expect(exec).not.toHaveBeenCalled();
+});
+
 it('overwrites a malformed stored item instead of throwing', async () => {
   const hset = jest.fn();
   const state = makeState({
