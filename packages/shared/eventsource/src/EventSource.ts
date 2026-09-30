@@ -4,7 +4,6 @@
  * `launchdarkly-eventsource` (js-eventsource) package.
  */
 
-import CalculateCapacity from './capacity';
 import {
   ErrorEvent,
   EventSourceEventMap,
@@ -16,18 +15,8 @@ import {
 } from './Event';
 import { bodylessMethods, defaultFetch, headersToObject } from './httpHelpers';
 import { createDefaultEventRegistry } from './listenerRegistry';
-import {
-  bom,
-  carriageReturn,
-  colon,
-  hasBom,
-  INVALID_HEADER_VALUE_CHAR,
-  isBomPrefix,
-  lineFeed,
-  MAX_OVER_ALLOCATION,
-  space,
-  utf8Decoder,
-} from './parsing';
+import { createParser } from './parser';
+import { INVALID_HEADER_VALUE_CHAR } from './parsing';
 import * as retryDelay from './retryDelay';
 import {
   EventListenerRegistry,
@@ -252,20 +241,20 @@ export function createEventSource(
     }
   }
 
-  let discardTrailingNewline = false;
-  let data = '';
-  let eventName: string | undefined;
-  let eventId: string | undefined;
   let goodSinceAnchored = false;
 
-  const retryDelayStrategy = retryDelay.RetryDelayStrategy(
-    config.initialRetryDelayMillis !== null && config.initialRetryDelayMillis !== undefined
-      ? config.initialRetryDelayMillis
-      : 1000,
-    config.retryResetIntervalMillis,
-    config.maxBackoffMillis ? retryDelay.defaultBackoff(config.maxBackoffMillis) : null,
-    config.jitterRatio ? retryDelay.defaultJitter(config.jitterRatio) : null,
-  );
+  // A caller-supplied strategy fully replaces the built-in one. The built-in tuning options
+  // have no effect when it is set.
+  const retryDelayStrategy =
+    config.retryDelayStrategy ??
+    retryDelay.RetryDelayStrategy(
+      config.initialRetryDelayMillis !== null && config.initialRetryDelayMillis !== undefined
+        ? config.initialRetryDelayMillis
+        : 1000,
+      config.retryResetIntervalMillis,
+      config.maxBackoffMillis ? retryDelay.defaultBackoff(config.maxBackoffMillis) : null,
+      config.jitterRatio ? retryDelay.defaultJitter(config.jitterRatio) : null,
+    );
 
   // The origin that message events report. Each connection computes it in the response
   // callback, because urlBuilder can pick a new URL between reconnects and the transport can
@@ -409,78 +398,76 @@ export function createEventSource(
     // data, so the "good since" time is anchored to the first event of each connection.
     if (!goodSinceAnchored) {
       goodSinceAnchored = true;
-      retryDelayStrategy.setGoodSince(new Date().getTime());
+      try {
+        // A throwing strategy must not disrupt event delivery. The exception still reaches
+        // the host asynchronously, like a throwing listener's.
+        retryDelayStrategy.setGoodSince(new Date().getTime());
+      } catch (err) {
+        queueMicrotask(() => {
+          throw err;
+        });
+      }
     }
     emit(event);
   };
 
-  const parseEventStreamLine = (
-    buf: Uint8Array,
-    pos: number,
-    fieldLength: number,
-    lineLength: number,
-  ): void => {
-    if (lineLength === 0) {
-      // A blank line commits a pending id, even when the block has no data and thus
-      // dispatches no event. A reconnect after an id-only block then resumes from that id.
-      if (eventId !== undefined) {
-        lastEventId = eventId;
-        eventId = undefined;
+  // The parser is created once and reset on each connection attempt. The read loop stops
+  // feeding it once a new attempt supersedes an old one. A generation mismatch inside a
+  // callback means a listener called close() while a chunk was mid-parse, and the rest of
+  // that chunk must not commit state or dispatch events.
+  let parserGeneration = 0;
+
+  const parser = createParser({
+    onId: (id) => {
+      if (parserGeneration !== generation) {
+        return;
       }
-      if (data.length > 0) {
-        const type = eventName || 'message';
-        const event = makeEvent(type, {
-          data: data.slice(0, -1), // remove trailing newline
+      // The parser reports the id at the blank line that ends a block, even when the block has
+      // no data. A committed id from an id-only block is the resume point for a reconnect.
+      // An id that fails this test would make the Last-Event-ID header assignment throw on
+      // reconnect. See INVALID_HEADER_VALUE_CHAR for the rule and its rationale.
+      if (!INVALID_HEADER_VALUE_CHAR.test(id)) {
+        lastEventId = id;
+      }
+    },
+    onRetry: (retry) => {
+      if (parserGeneration !== generation) {
+        return;
+      }
+      // The parser only reports a value that is all ASCII digits. The cap keeps a huge value
+      // from acting as a permanent stop.
+      const delay =
+        retry > MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS
+          ? MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS
+          : retry;
+      self.reconnectInterval = delay;
+      try {
+        // A throwing strategy must not disrupt the parser callback. The exception still
+        // reaches the host asynchronously, like a throwing listener's.
+        retryDelayStrategy.setBaseDelay(delay);
+      } catch (err) {
+        queueMicrotask(() => {
+          throw err;
+        });
+      }
+    },
+    onEvent: (event) => {
+      // A listener can call close() while its event dispatches. The close bumps the generation
+      // counter, so this check stops every later dispatch from the same chunk.
+      if (parserGeneration !== generation) {
+        return;
+      }
+      // The parser reports the id before this callback runs, so lastEventId is already
+      // committed when the event forms. The parsed data carries no trailing newline.
+      receivedEvent(
+        makeEvent(event.event || 'message', {
+          data: event.data,
           lastEventId,
           origin: streamOriginUrl,
-        });
-        data = '';
-        receivedEvent(event);
-      }
-      eventName = undefined;
-    } else {
-      const noValue = fieldLength < 0;
-      let step = 0;
-      const field = utf8Decoder.decode(
-        buf.subarray(pos, pos + (noValue ? lineLength : fieldLength)),
+        }),
       );
-
-      if (noValue) {
-        step = lineLength;
-      } else if (buf[pos + fieldLength + 1] !== space) {
-        step = fieldLength + 1;
-      } else {
-        step = fieldLength + 2;
-      }
-      const valueStart = pos + step;
-
-      const valueLength = lineLength - step;
-      const value = utf8Decoder.decode(buf.subarray(valueStart, valueStart + valueLength));
-
-      if (field === 'data') {
-        data += `${value}\n`;
-      } else if (field === 'event') {
-        eventName = value;
-      } else if (field === 'id') {
-        // An id that fails this test would make the Last-Event-ID header assignment throw on
-        // reconnect. See INVALID_HEADER_VALUE_CHAR for the rule and its rationale.
-        if (!INVALID_HEADER_VALUE_CHAR.test(value)) {
-          eventId = value;
-        }
-      } else if (field === 'retry') {
-        // The value must be all ASCII digits; any other form is ignored. `parseInt` alone
-        // would accept forms such as `5.5`, `1e3`, or `+5`.
-        if (/^\d+$/.test(value)) {
-          let retry = parseInt(value, 10);
-          if (retry > MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS) {
-            retry = MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS;
-          }
-          self.reconnectInterval = retry;
-          retryDelayStrategy.setBaseDelay(retry);
-        }
-      }
-    }
-  };
+    },
+  });
 
   const clearReadTimeout = (): void => {
     if (readTimeoutHandle !== undefined) {
@@ -617,140 +604,22 @@ export function createEventSource(
       // fallback for a minimal transport that does not.
       streamOriginUrl = resolveStreamOrigin(res.url || currentUrl);
 
-      data = '';
-      eventName = '';
-      eventId = undefined;
+      // The reset scopes all parser state to one connection. It drops any partial line that a
+      // previous connection left behind.
+      parser.reset();
+      parserGeneration = thisGeneration;
       goodSinceAnchored = false;
-      // A connection can drop between a carriage return and its line feed, which leaves the
-      // flag set. A stale flag only skips one inert leading empty line, but the reset keeps
-      // all parser state scoped to one connection.
-      discardTrailingNewline = false;
 
       readyState = OPEN;
       resetReadTimeout(failOnce);
       emit(makeEvent('open', { headers: responseHeaders }));
 
-      // text/event-stream parser adapted from webkit
-      // @see https://github.com/WebKit/webkit/blob/main/Source/WebCore/page/EventSource.cpp
-      let bomPending = true;
-      let buf: Uint8Array | undefined;
-      let startingPos = 0;
-      let sizeUsed = 0;
-
-      const onData = (chunk: Uint8Array): void => {
-        if (!buf) {
-          buf = chunk;
-        } else {
-          // allocate new buffer
-          const [resize, newCapacity] = CalculateCapacity(
-            buf.length,
-            chunk.length + sizeUsed,
-            MAX_OVER_ALLOCATION,
-          );
-          if (resize) {
-            const newBuffer = new Uint8Array(newCapacity);
-            newBuffer.set(buf.subarray(0, sizeUsed), 0);
-            buf = newBuffer;
-          }
-
-          buf.set(chunk, sizeUsed);
-        }
-
-        sizeUsed += chunk.length;
-
-        // The specification ignores one byte order mark at the start of the stream. The mark can
-        // arrive split across reads, so the decision waits until three bytes are buffered. A
-        // shorter buffer that still matches the mark contains no line terminator, so there is
-        // nothing to parse yet either.
-        if (bomPending) {
-          if (sizeUsed >= bom.length) {
-            if (hasBom(buf)) {
-              buf = buf.subarray(bom.length);
-              sizeUsed -= bom.length;
-            }
-            bomPending = false;
-          } else if (isBomPrefix(buf, sizeUsed)) {
-            return;
-          } else {
-            bomPending = false;
-          }
-        }
-
-        let pos = 0;
-        const length = sizeUsed;
-
-        while (pos < length) {
-          if (discardTrailingNewline) {
-            if (buf[pos] === lineFeed) {
-              pos += 1;
-            }
-            discardTrailingNewline = false;
-            if (pos >= length) {
-              startingPos = 0;
-              break;
-            }
-          }
-
-          // A line ends at the first carriage return or line feed. Line feed is the
-          // common terminator, so search it first. Then search the carriage return only
-          // inside the span the line feed search found. This bounds every search to one
-          // line and keeps the whole scan linear in the buffer size. `startingPos` marks
-          // how far a previous call scanned a still-unterminated line, so no byte is
-          // searched twice across calls.
-          const scanFrom = startingPos > pos ? startingPos : pos;
-          const region = buf.subarray(scanFrom, length);
-          const lfRelative = region.indexOf(lineFeed);
-          let terminatorPos;
-          if (lfRelative < 0) {
-            // No line feed in the buffered data. A lone carriage return is also a valid
-            // terminator, so search the same span for one before treating the bytes as a
-            // partial line.
-            const crRelative = region.indexOf(carriageReturn);
-            if (crRelative < 0) {
-              startingPos = length - pos;
-              break;
-            }
-            terminatorPos = scanFrom + crRelative;
-            discardTrailingNewline = true;
-          } else {
-            const crRelative = region.subarray(0, lfRelative).indexOf(carriageReturn);
-            if (crRelative >= 0) {
-              terminatorPos = scanFrom + crRelative;
-              discardTrailingNewline = true;
-            } else {
-              terminatorPos = scanFrom + lfRelative;
-            }
-          }
-          startingPos = 0;
-
-          const lineLength = terminatorPos - pos;
-          // The field name ends at the first colon in the line. The search covers the
-          // complete line, so a line split across chunks needs no carried-over colon
-          // position.
-          const fieldLength = buf.subarray(pos, terminatorPos).indexOf(colon);
-
-          parseEventStreamLine(buf, pos, fieldLength, lineLength);
-
-          // A listener can call close() while its event dispatches. The close bumps the
-          // generation counter, so this check stops the parse of the rest of the chunk and no
-          // event dispatches after the close.
-          if (thisGeneration !== generation) {
-            return;
-          }
-
-          pos = terminatorPos + 1;
-        }
-
-        if (pos === length) {
-          buf = undefined;
-          sizeUsed = 0;
-        } else if (pos > 0) {
-          buf = buf.subarray(pos);
-          sizeUsed -= pos;
-        }
-      };
-
       const reader = res.body.getReader();
+      // The decoder carries a multi-byte sequence that splits across reads. Each connection
+      // gets a fresh decoder, so a partial sequence from a dropped connection cannot leak into
+      // the next one. The decoder also removes the one encoded byte order mark that the SSE
+      // specification ignores at the start of the stream. The parser removes a decoded one.
+      const decoder = new TextDecoder();
       const readLoop = async (): Promise<void> => {
         try {
           for (;;) {
@@ -769,7 +638,7 @@ export function createEventSource(
             }
             resetReadTimeout(failOnce);
             if (value) {
-              onData(value);
+              parser.feed(decoder.decode(value, { stream: true }));
             }
           }
         } catch (err) {
@@ -818,7 +687,18 @@ export function createEventSource(
     if (readyState !== CONNECTING) {
       return;
     }
-    const delay = retryDelayStrategy.nextRetryDelay(new Date().getTime());
+    let delay: number;
+    try {
+      delay = retryDelayStrategy.nextRetryDelay(new Date().getTime());
+    } catch (err) {
+      // A throwing strategy cannot supply a delay. The reconnect continues with the last
+      // known reconnect interval, so caller code cannot strand the connection state.
+      // The exception still reaches the host asynchronously, like a throwing listener's.
+      queueMicrotask(() => {
+        throw err;
+      });
+      delay = self.reconnectInterval;
+    }
 
     emit(makeEvent('retrying', { delayMillis: delay }));
 

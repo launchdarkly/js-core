@@ -15,6 +15,7 @@ export type {
 
 import type { ErrorEvent } from './Event';
 import type { FetchFn } from './httpHelpers';
+import type { RetryDelayStrategy } from './retryDelay';
 
 /**
  * A listener as the registry stores it. The registry stores listeners for every event type,
@@ -75,6 +76,8 @@ export type {
   FetchResponseBody,
 } from './httpHelpers';
 
+export type { RetryDelayStrategy } from './retryDelay';
+
 /**
  * The options that `createEventSource` understands.
  *
@@ -115,6 +118,26 @@ export interface EventSourceInitDict {
    * If set, retry delays grow exponentially up to this limit.
    */
   maxBackoffMillis?: number;
+
+  /**
+   * Replaces the built-in retry delay behavior with a caller-supplied strategy.
+   *
+   * The client calls `nextRetryDelay(currentTimeMillis)` when it schedules a reconnect, and it
+   * waits for the returned number of milliseconds. The client calls
+   * `setGoodSince(goodSinceTimeMillis)` when the first event of a connection arrives. The client
+   * calls `setBaseDelay(delayMillis)` when the server sends a `retry:` field. The value reaches
+   * the strategy already validated as all ASCII digits and capped at one hour.
+   *
+   * When this option is set, it fully replaces the built-in strategy. The tuning options
+   * `initialRetryDelayMillis`, `maxBackoffMillis`, `jitterRatio`, and
+   * `retryResetIntervalMillis` have no effect. When this option is absent, the built-in
+   * strategy applies and those options work as documented.
+   *
+   * An exception a strategy method throws does not stop the stream or the reconnect. The
+   * client falls back to the last reconnect interval for the delay, and the exception
+   * rethrows later, on a separate microtask.
+   */
+  retryDelayStrategy?: RetryDelayStrategy;
 
   /**
    * When true, the request omits the default `Cache-Control: no-cache` and

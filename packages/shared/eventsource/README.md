@@ -20,6 +20,11 @@ This package is intended to be used by LaunchDarkly SDKs and not as a general Ev
 This package is derived from the [`eventsource`](https://www.npmjs.com/package/eventsource) npm
 package. See [LICENSE](LICENSE) for the original license terms.
 
+The stream parser at `src/parser` is a fork of the
+[`eventsource-parser`](https://www.npmjs.com/package/eventsource-parser) npm package, version
+4.1.1. It is maintained in this repository; see the third-party notices in [LICENSE](LICENSE) for
+its original MIT license terms.
+
 ## Options reference
 
 This section documents the behavior of `createEventSource`'s second argument for maintainers of this
@@ -78,6 +83,22 @@ exception surfaces later, asynchronously, as an uncaught error.
 - `retryResetIntervalMillis` -- how long the current connection must have been delivering
   events, measured from its first event, before the backoff counter resets to the initial
   delay. A connection that fails before it delivers an event does not count as healthy.
+
+### Custom retry delay strategy
+
+The `retryDelayStrategy` option replaces the built-in retry timing with a caller-supplied object.
+The object must implement three methods:
+
+- `nextRetryDelay(currentTimeMillis)` -- called when a reconnect is about to be scheduled;
+  returns the delay in milliseconds before the next attempt.
+- `setGoodSince(goodSinceTimeMillis)` -- called when the first event of a connection arrives, to
+  mark the connection as delivering data.
+- `setBaseDelay(delayMillis)` -- called when the server sends a `retry:` field; the value reaches
+  the strategy already validated as all ASCII digits and capped at one hour.
+
+When `retryDelayStrategy` is set it fully replaces the built-in behavior, so
+`initialRetryDelayMillis`, `maxBackoffMillis`, `jitterRatio`, and `retryResetIntervalMillis` have
+no effect. When the option is absent, the built-in options above apply.
 
 ### Error retry behavior
 
