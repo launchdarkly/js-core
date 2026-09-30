@@ -65,8 +65,14 @@ export interface Filesystem {
    * type `error` instead of raising, so that the owner of the watch can set it up again.
    *
    * @param path The path to watch.
+   * @param callback Receives the event type, the watched path, and, when the platform reports
+   * it, the name of the entry within the watched path that changed. The name is undefined when
+   * the platform does not report it.
    *
    * @returns An async iterator that watches for changes to `path`.
    */
-  watch(path: string, callback: (eventType: string, filename: string) => void): WatchHandle;
+  watch(
+    path: string,
+    callback: (eventType: string, filename: string, changedName?: string) => void,
+  ): WatchHandle;
 }

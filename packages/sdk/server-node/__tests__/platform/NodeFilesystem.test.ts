@@ -59,6 +59,21 @@ describe('given a temporary directory', () => {
     },
   );
 
+  it('reports the name of the changed entry when the platform provides it', () => {
+    const callback = jest.fn();
+    const handle = filesystem.watch(directory, callback);
+    try {
+      // The FSWatcher 'change' event carries the event type and the entry name.
+      (handle as fs.FSWatcher).emit('change', 'change', 'data.json');
+      expect(callback).toHaveBeenCalledWith('change', directory, 'data.json');
+      // Some platforms do not report which entry changed.
+      (handle as fs.FSWatcher).emit('change', 'rename', null);
+      expect(callback).toHaveBeenCalledWith('rename', directory, undefined);
+    } finally {
+      handle.close();
+    }
+  });
+
   it('reports a watch error through the callback', () => {
     const callback = jest.fn();
     const handle = filesystem.watch(directory, callback);
