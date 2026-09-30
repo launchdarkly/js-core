@@ -5,9 +5,9 @@ import {
   DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
-  paginateQuery,
   PutItemCommand,
   PutItemCommandInput,
+  QueryCommand,
   QueryCommandInput,
   WriteRequest,
 } from '@aws-sdk/client-dynamodb';
@@ -30,12 +30,33 @@ const UNPROCESSED_RETRY_BASE_DELAY_MS = 100;
 
 // The AWS SDK does not set a request timeout by default, so a request on a dead
 // connection can wait on TCP for many minutes. The SDK serializes its store
-// writes, and one hung request delays every later write. This bound makes a
-// hung request fail instead. It only applies to the client this package
-// constructs itself: a user-supplied client or clientOptions keeps its own
-// configuration. Passing configuration in place of a handler instance requires
+// writes, and one hung request delays every later write and blocks the
+// recovery write-back. Three layers bound every call:
+// - connectionTimeout covers the TCP connect phase, which the older handler's
+//   requestTimeout does not cover.
+// - requestTimeout makes an unresponsive peer fail after the connection is up.
+// - A per-call abort signal is a wall-clock backstop for the shapes the handler
+//   timers miss, such as a reply that trickles bytes or a stall after the
+//   response headers on newer handlers. Its deadline leaves room for the AWS
+//   SDK's default three attempts, so it fires only when the timers did not.
+// The handler defaults also apply when the user passes clientOptions without a
+// requestHandler. A user-supplied requestHandler or dynamoDBClient keeps its
+// own handler configuration, but every call still gets the abort backstop.
+// Passing configuration in place of a handler instance requires
 // @aws-sdk/client-dynamodb 3.521.0; the peer dependency floor matches.
+const CONNECTION_TIMEOUT_MS = 10000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 30000;
+const CALL_DEADLINE_MS = 100000;
+
+function defaultRequestHandler() {
+  return {
+    connectionTimeout: CONNECTION_TIMEOUT_MS,
+    requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS,
+    // Without throwOnRequestTimeout, newer handler versions only log a
+    // warning when the deadline passes and the request keeps waiting.
+    throwOnRequestTimeout: true,
+  };
+}
 
 function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
@@ -66,16 +87,28 @@ export default class DynamoDBClientState {
       this._client = options.dynamoDBClient;
       this._owned = false;
     } else if (options?.clientOptions) {
-      this._client = new DynamoDBClient(options.clientOptions);
+      // Keep the timeout defaults unless the user supplies a handler. Most
+      // configurations pass only credentials, a region, or an endpoint, and
+      // without the defaults one hung request would block the store queue.
+      this._client = new DynamoDBClient({
+        requestHandler: defaultRequestHandler(),
+        ...options.clientOptions,
+      });
       this._owned = true;
     } else {
       this._client = new DynamoDBClient({
-        // Without throwOnRequestTimeout, newer handler versions only log a
-        // warning when the deadline passes and the request keeps waiting.
-        requestHandler: { requestTimeout: DEFAULT_REQUEST_TIMEOUT_MS, throwOnRequestTimeout: true },
+        requestHandler: defaultRequestHandler(),
       });
       this._owned = true;
     }
+  }
+
+  /**
+   * Per-call options for every send. The abort signal is the wall-clock
+   * backstop described on the timeout constants above.
+   */
+  private _callOptions() {
+    return { abortSignal: AbortSignal.timeout(CALL_DEADLINE_MS) };
   }
 
   /**
@@ -89,12 +122,21 @@ export default class DynamoDBClientState {
 
   async query(params: QueryCommandInput): Promise<Record<string, AttributeValue>[]> {
     const records: Record<string, AttributeValue>[] = [];
-    // Using a generator here is a substantial ergonomic improvement.
-    for await (const page of paginateQuery({ client: this._client }, params)) {
+    // Paginate manually instead of with paginateQuery. The paginator has no
+    // way to pass per-call options, and every call needs the abort backstop.
+    let lastEvaluatedKey: Record<string, AttributeValue> | undefined;
+    do {
+      // Pages of one query are inherently sequential.
+      // eslint-disable-next-line no-await-in-loop
+      const page = await this._client.send(
+        new QueryCommand({ ...params, ExclusiveStartKey: lastEvaluatedKey }),
+        this._callOptions(),
+      );
       if (page.Items) {
         records.push(...page.Items);
       }
-    }
+      lastEvaluatedKey = page.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
     return records;
   }
 
@@ -128,6 +170,7 @@ export default class DynamoDBClientState {
           new BatchWriteItemCommand({
             RequestItems: { [table]: pending },
           }),
+          this._callOptions(),
         );
         pending = result.UnprocessedItems?.[table] ?? [];
       }
@@ -150,13 +193,14 @@ export default class DynamoDBClientState {
         Key: key,
         ConsistentRead: consistentRead,
       }),
+      this._callOptions(),
     );
     return res.Item;
   }
 
   async put(params: PutItemCommandInput): Promise<void> {
     try {
-      await this._client.send(new PutItemCommand(params));
+      await this._client.send(new PutItemCommand(params), this._callOptions());
     } catch (err) {
       // If we couldn't upsert because of the version, then that is fine.
       // Otherwise we return failure.
@@ -172,6 +216,7 @@ export default class DynamoDBClientState {
         TableName: table,
         Key: key,
       }),
+      this._callOptions(),
     );
   }
 

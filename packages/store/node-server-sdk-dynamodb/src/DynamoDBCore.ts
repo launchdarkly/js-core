@@ -60,8 +60,8 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * either. One process can delete the initialized token and start a slow batch write while
  * another process finishes its own write and puts the token back, so initialized() can
  * report true while the slower write is still mutating data. This is the same trade-off as
- * above: both processes receive the same data from LaunchDarkly, so the store converges
- * once the slower init completes.
+ * above: the store settles on the data of the init that completes last, which can be the
+ * older payload, and later version-checked upserts heal the difference.
  *
  * The initialized token is read with a strongly consistent read, but flag and segment
  * reads stay eventually consistent to keep read cost down. A reader in another process
@@ -169,7 +169,19 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
     allData.forEach((collection) => {
       collection.item.forEach((item) => {
-        const dbItem = this._marshalItem(collection.key, item);
+        let dbItem: Record<string, AttributeValue>;
+        try {
+          dbItem = this._marshalItem(collection.key, item);
+        } catch (marshalError) {
+          // An item that cannot be marshalled, for example one with no version
+          // from a file data source, must not throw here. The throw would skip
+          // the callback and block the store queue. Skip the item, like an
+          // oversized item.
+          this._logger?.warn(
+            `Cannot marshal item '${item.key}' in '${collection.key.namespace}', skipping: ${marshalError}`,
+          );
+          return;
+        }
         if (this._checkSizeLimit(dbItem)) {
           delete existingNamespaceKeys[
             `${this._state.prefixedKey(collection.key.namespace)}$${item.key}`
@@ -205,8 +217,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
           }
           // The credentials do not allow dynamodb:DeleteItem. Initialize
           // without removing the token first, which matches the behavior of
-          // versions before the token delete existed. The permission cannot
-          // appear without new credentials, so do not ask again.
+          // versions before the token delete existed. The store assumes the
+          // permissions stay static for the life of the process, so it does
+          // not retry; a policy change takes effect after a restart.
           this._tokenDeleteDenied = true;
           this._logger?.warn(
             'The DynamoDB credentials do not allow dynamodb:DeleteItem. The store initializes ' +
@@ -283,15 +296,18 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ) {
-    const params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
-    if (!this._checkSizeLimit(params.Item)) {
-      // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
-      // useless retry behavior. We just won't do the update.
-      callback();
-      return;
-    }
-
     try {
+      // The marshal step runs inside the try. A descriptor that cannot be
+      // marshalled would otherwise throw before the callback is wired, and
+      // the store queue would wait on it forever.
+      const params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
+      if (!this._checkSizeLimit(params.Item)) {
+        // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
+        // useless retry behavior. We just won't do the update.
+        callback();
+        return;
+      }
+
       await this._state.put(params);
       this.get(kind, key, (readDescriptor) => {
         callback(undefined, readDescriptor);

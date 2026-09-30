@@ -69,9 +69,10 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
       this._wrapper.isStoreAvailable(callback);
       return;
     }
-    // No availability check on the wrapped core. Report unavailable so recovery
-    // falls back to the next successful write instead of a probe that can never
-    // report true.
+    // This branch cannot run with the sdk-server this package ships with: the
+    // wrapper always forwards the core's check, and the core always has one.
+    // The constant false only satisfies the type when the wrapper lacks the
+    // method; the recovery engine would then rely on its timed retries.
     callback(false);
   }
 
