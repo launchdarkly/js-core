@@ -202,88 +202,105 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       });
     };
 
-    // The read and the transaction start only after the watch succeeds. If the watch fails,
-    // this attempt is abandoned before it queues any command. Otherwise its exec could run
+    // The transaction starts only after the watch succeeds. If the watch fails, this
+    // attempt is abandoned before it queues any command. Otherwise its exec could run
     // later on the shared connection and clear the watch of the next queued update.
+    //
+    // The WATCH and the read travel in one pipeline. ioredis writes pipeline commands
+    // only on a ready connection, and it resends them only as a unit. A bare watch()
+    // has the ioredis loading flag, so it can be written to a socket that is not ready
+    // yet and be discarded without a rejection. A bare read sent after the watch reply
+    // can be resent alone on a reconnected socket that has no watch, and the write
+    // after it would commit without the version-check protection.
     client
+      .pipeline()
       .watch(namespaceKey)
-      .then(() => {
-        // Read directly instead of through get(). A read error must fail this attempt.
-        // Treating it as a missing item would skip the version check and let an older
-        // item overwrite a newer one.
-        client.hget(namespaceKey, key, (readErr, oldItem) => {
-          if (readErr) {
-            this._logger?.error(
-              `Error fetching key '${key}' from Redis in '${kind.namespace}': ${readErr}`,
+      .hget(namespaceKey, key)
+      .exec()
+      .then((replies) => {
+        const watchReply = replies?.[0];
+        const readReply = replies?.[1];
+        if (!watchReply || !readReply) {
+          throw new Error('The Redis watch pipeline returned no reply');
+        }
+        if (watchReply[0]) {
+          throw watchReply[0];
+        }
+        // A read error must fail this attempt. Treating it as a missing item would
+        // skip the version check and let an older item overwrite a newer one.
+        const readErr = readReply[0];
+        if (readErr) {
+          this._logger?.error(
+            `Error fetching key '${key}' from Redis in '${kind.namespace}': ${readErr}`,
+          );
+          abandonWatch();
+          settleOnce(readErr as Error, undefined);
+          return;
+        }
+        const oldItem = readReply[1] as string | null;
+        if (oldItem) {
+          // Here, unfortunately, we have to deserialize the old item just to find
+          // out its version number. See notes on this class.
+          // Do not look at the meta-data, as we do not read/write it independently
+          // with a redis store.
+          let deserializedOld: interfaces.ItemDescriptor | undefined;
+          try {
+            deserializedOld = kind.deserialize(oldItem);
+          } catch (deserializeErr) {
+            // A malformed stored item must not throw here, where the throw would
+            // become the catch handler's error. Treat it like an unparseable item
+            // and let the write below replace it.
+            this._logger?.warn(
+              `Malformed item for key '${key}' in '${kind.namespace}' will be overwritten: ${deserializeErr}`,
             );
+          }
+          if (deserializedOld && (deserializedOld.version || 0) >= descriptor.version) {
             abandonWatch();
-            settleOnce(readErr, undefined);
+            settleOnce(undefined, {
+              version: deserializedOld.version,
+              deleted: !deserializedOld.item, // If there is no item, then it is deleted.
+              serializedItem: oldItem,
+            });
             return;
           }
-          if (oldItem) {
-            // Here, unfortunately, we have to deserialize the old item just to find
-            // out its version number. See notes on this class.
-            // Do not look at the meta-data, as we do not read/write it independently
-            // with a redis store.
-            let deserializedOld: interfaces.ItemDescriptor | undefined;
-            try {
-              deserializedOld = kind.deserialize(oldItem);
-            } catch (deserializeErr) {
-              // A malformed stored item must not throw into the redis client callback,
-              // which would crash the process. Treat it like an unparseable item and
-              // let the write below replace it.
-              this._logger?.warn(
-                `Malformed item for key '${key}' in '${kind.namespace}' will be overwritten: ${deserializeErr}`,
-              );
-            }
-            if (deserializedOld && (deserializedOld.version || 0) >= descriptor.version) {
-              abandonWatch();
-              settleOnce(undefined, {
-                version: deserializedOld.version,
-                deleted: !deserializedOld.item, // If there is no item, then it is deleted.
-                serializedItem: oldItem,
-              });
-              return;
-            }
-          }
+        }
 
-          const multi = client.multi();
-          if (descriptor.serializedItem) {
-            multi.hset(namespaceKey, key, descriptor.serializedItem);
-          } else if (descriptor.deleted) {
-            // The SDK contract guarantees a serializedItem is always provided for writes,
-            // including deletes, so this only runs if that contract is violated. It keeps
-            // the previous placeholder shape, but adds the key so the tombstone stays
-            // identifiable.
-            multi.hset(
-              namespaceKey,
-              key,
-              JSON.stringify({ key, version: descriptor.version, deleted: true }),
-            );
+        const multi = client.multi();
+        if (descriptor.serializedItem) {
+          multi.hset(namespaceKey, key, descriptor.serializedItem);
+        } else if (descriptor.deleted) {
+          // The SDK contract guarantees a serializedItem is always provided for writes,
+          // including deletes, so this only runs if that contract is violated. It keeps
+          // the previous placeholder shape, but adds the key so the tombstone stays
+          // identifiable.
+          multi.hset(
+            namespaceKey,
+            key,
+            JSON.stringify({ key, version: descriptor.version, deleted: true }),
+          );
+        } else {
+          // This call violates the contract.
+          abandonWatch();
+          this._logger?.error('Attempt to write a non-deleted item without data to Redis.');
+          settleOnce(undefined, undefined);
+          return;
+        }
+        multi.exec((err, execReplies) => {
+          if (!err && (execReplies === null || execReplies === undefined)) {
+            // A nil reply means the watched key changed and the EXEC was aborted.
+            this._logger?.debug('Concurrent modification detected, retrying');
+            // This is a fresh attempt with its own watch/settle guard, not a
+            // completion of this one, so it gets the original callback, not settleOnce.
+            this.upsert(kind, key, descriptor, callback);
           } else {
-            // This call violates the contract.
-            abandonWatch();
-            this._logger?.error('Attempt to write a non-deleted item without data to Redis.');
-            settleOnce(undefined, undefined);
-            return;
+            // A committed transaction can still contain per-command errors.
+            settleOnce(err ?? firstReplyError(execReplies), descriptor);
           }
-          multi.exec((err, replies) => {
-            if (!err && (replies === null || replies === undefined)) {
-              // A nil reply means the watched key changed and the EXEC was aborted.
-              this._logger?.debug('Concurrent modification detected, retrying');
-              // This is a fresh attempt with its own watch/settle guard, not a
-              // completion of this one, so it gets the original callback, not settleOnce.
-              this.upsert(kind, key, descriptor, callback);
-            } else {
-              // A committed transaction can still contain per-command errors.
-              settleOnce(err ?? firstReplyError(replies), descriptor);
-            }
-          });
         });
       })
       .catch((err: unknown) => {
-        // Without this handler a rejected watch (for example during a store outage)
-        // becomes an unhandled promise rejection and can crash the process.
+        // A failed watch or read reply is thrown above. Without this handler that
+        // throw becomes an unhandled promise rejection and can crash the process.
         this._logger?.error(`Error watching '${kind.namespace}' in Redis: ${err}`);
         settleOnce(err as Error, undefined);
       });

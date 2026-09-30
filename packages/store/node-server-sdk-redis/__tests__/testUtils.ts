@@ -11,6 +11,22 @@ export function makeState(overrides: object) {
 }
 
 /**
+ * Build a fake `client.pipeline()` factory. The chained WATCH and HGET settle with the
+ * given exec result, e.g. `async () => [[null, 'OK'], [null, storedItem]]` for success.
+ * Real ioredis reports a per-command error as a one-element `[err]` entry.
+ */
+export function fakeWatchPipeline(exec: () => Promise<unknown>) {
+  const pipeline = { exec } as {
+    watch: () => typeof pipeline;
+    hget: () => typeof pipeline;
+    exec: () => Promise<unknown>;
+  };
+  pipeline.watch = () => pipeline;
+  pipeline.hget = () => pipeline;
+  return () => pipeline;
+}
+
+/**
  * Run the body, then give the event loop one turn.
  *
  * Jest (jest-circus) installs its own unhandledRejection handler on the real process object

@@ -12,8 +12,9 @@ const REDIS_PORT = 6379;
 /**
  * A TCP proxy in front of the real Redis used by the rest of this suite. Stopping the
  * proxy looks like a Redis outage to the client. Starting it again on the same port
- * looks like a recovery. With `flaky` set, the proxy accepts each TCP connection and
- * drops it at once, before any Redis reply, like a proxy whose upstream is down.
+ * looks like a recovery. With `flaky` set, the proxy accepts each TCP connection,
+ * holds it briefly with no Redis reply, and then drops it, like a proxy whose
+ * upstream is down.
  */
 class TcpProxy {
   private _server?: Server;
@@ -28,7 +29,14 @@ class TcpProxy {
     return new Promise((resolve, reject) => {
       const server = createServer((clientSocket) => {
         if (this.flaky) {
-          clientSocket.destroy();
+          // Hold the accepted connection without a reply before dropping it. This keeps
+          // the client in its connecting state long enough that a write issued meanwhile
+          // must hit the fail-fast guard. An instant destroy makes that window shorter
+          // than one event-loop turn, and a regression would escape the test.
+          clientSocket.on('error', () => {});
+          clientSocket.on('close', () => this._sockets.delete(clientSocket));
+          this._sockets.add(clientSocket);
+          setTimeout(() => clientSocket.destroy(), 200).unref();
           return;
         }
         const upstream = new Socket();
@@ -174,6 +182,9 @@ it('reports errors during an outage and recovers when the connection returns', a
     });
   } finally {
     core.close();
+    // A quit sent while the proxy is down never completes and the client would
+    // reconnect forever, which keeps jest alive after a failed run.
+    state.getClient().disconnect();
     await proxy.stop();
     await clearPrefix(prefix);
   }
@@ -209,7 +220,15 @@ it('settles every write while the endpoint accepts connections and drops them', 
         setTimeout(resolve, 25);
       });
     }
-    const results = await Promise.all(pending);
+    // A lost callback would leave Promise.all pending past the test timeout, which
+    // skips the cleanup below and hangs jest. Fail fast with a clear message instead.
+    let settleTimer: NodeJS.Timeout | undefined;
+    const results = await Promise.race([
+      Promise.all(pending),
+      new Promise<never>((_, reject) => {
+        settleTimer = setTimeout(() => reject(new Error('a write did not settle within 5s')), 5000);
+      }),
+    ]).finally(() => clearTimeout(settleTimer));
     expect(results.length).toBeGreaterThan(10);
     results.forEach((result) => {
       expect(result.err?.message).toEqual('Redis connection is down');
@@ -221,6 +240,9 @@ it('settles every write while the endpoint accepts connections and drops them', 
     expect(recovered.err).toBeUndefined();
   } finally {
     core.close();
+    // A quit sent while the proxy is flaky or down never completes and the client
+    // would reconnect forever, which keeps jest alive after a failed run.
+    state.getClient().disconnect();
     await proxy.stop();
     await clearPrefix(prefix);
   }
@@ -257,6 +279,61 @@ it('does not leave a watch armed after a not-updated write', async () => {
     );
   } finally {
     core.close();
+    await foreignClient.quit();
+    await clearPrefix(prefix);
+  }
+}, 20000);
+
+it('settles a write issued during a flaky initial connection', async () => {
+  const prefix = `outage-startup-${Date.now()}`;
+  const proxy = new TcpProxy();
+  // Flaky before the first connect: every early connection reaches TCP connect and is
+  // dropped before any Redis reply. The initial-connection exemption admits writes in
+  // that window, so the transport must queue them instead of losing them.
+  proxy.flaky = true;
+  await proxy.start();
+
+  const state = new RedisClientState({
+    redisOpts: { host: '127.0.0.1', port: proxy.port, retryStrategy: () => 100 },
+    prefix,
+  });
+  const core = new RedisCore(state);
+  const foreignClient = new Redis();
+
+  try {
+    // Issue the write inside the first TCP-connect window. A bare watch written to
+    // that socket used to be discarded without a rejection, and the callback then
+    // never settled, which blocked the wrapper queue until process restart.
+    const pending = new Promise<{ err?: Error; updated?: interfaces.SerializedItemDescriptor }>(
+      (resolve) => {
+        state.getClient().once('connect', () => {
+          upsertAsync(core, 1).then(resolve);
+        });
+      },
+    );
+    setTimeout(() => {
+      proxy.flaky = false;
+    }, 300).unref();
+
+    let settleTimer: NodeJS.Timeout | undefined;
+    const result = await Promise.race([
+      pending,
+      new Promise<never>((_, reject) => {
+        settleTimer = setTimeout(
+          () => reject(new Error('the startup write did not settle within 5s')),
+          5000,
+        );
+      }),
+    ]).finally(() => clearTimeout(settleTimer));
+
+    expect(result.err).toBeUndefined();
+    expect(await foreignClient.hget(`${prefix}:features`, 'flagA')).toEqual(
+      JSON.stringify({ key: 'flagA', version: 1 }),
+    );
+  } finally {
+    core.close();
+    state.getClient().disconnect();
+    await proxy.stop();
     await foreignClient.quit();
     await clearPrefix(prefix);
   }
