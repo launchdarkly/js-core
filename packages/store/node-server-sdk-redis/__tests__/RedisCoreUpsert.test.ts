@@ -1,7 +1,7 @@
 import { interfaces } from '@launchdarkly/node-server-sdk';
 
 import RedisCore from '../src/RedisCore';
-import { flushRejections, makeState } from './testUtils';
+import { fakeWatchPipeline, flushRejections, makeState } from './testUtils';
 
 const featuresKind = { namespace: 'features', deserialize: (data: string) => JSON.parse(data) };
 
@@ -19,17 +19,23 @@ function upsertResult(
   });
 }
 
+function watchOkRead(storedItem: string | null) {
+  return fakeWatchPipeline(async () => [
+    [null, 'OK'],
+    [null, storedItem],
+  ]);
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it('reports an error through the callback when watch rejects, with no unhandled rejection', async () => {
+it('reports an error through the callback when the watch reply is an error, with no unhandled rejection', async () => {
   const watchError = new Error('connection is closed.');
   const state = makeState({
     getClient: () => ({
-      watch: () => Promise.reject(watchError),
+      pipeline: fakeWatchPipeline(async () => [[watchError], [null, null]]),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget: jest.fn(),
       multi: () => ({
         hset: jest.fn(),
         exec: jest.fn(),
@@ -47,24 +53,17 @@ it('reports an error through the callback when watch rejects, with no unhandled 
   expect(result.updated).toBeUndefined();
 });
 
-it('does not read or run the transaction when watch rejects', async () => {
+it('does not run the transaction when the watch fails', async () => {
   const watchError = new Error('connection is closed.');
-  // Both mocks respond immediately, so this attempt would commit if it were not
-  // abandoned. A commit after a failed watch could clear the watch of the next
-  // queued update on the shared connection.
-  const hget = jest.fn(
-    (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-      cb(null, null);
-    },
-  );
+  // The mock would commit if the attempt were not abandoned. A commit after a failed
+  // watch could clear the watch of the next queued update on the shared connection.
   const exec = jest.fn((cb: (err: Error | null, replies: unknown) => void) => {
     cb(null, [[null, 1]]);
   });
   const state = makeState({
     getClient: () => ({
-      watch: () => Promise.reject(watchError),
+      pipeline: fakeWatchPipeline(async () => [[watchError], [null, null]]),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget,
       multi: () => ({
         hset: jest.fn(),
         exec,
@@ -75,15 +74,37 @@ it('does not read or run the transaction when watch rejects', async () => {
   const core = new RedisCore(state);
 
   const callback = jest.fn();
-  // The helper's event-loop turn lets the watch rejection propagate through the chain.
+  // The helper's event-loop turn lets the watch failure propagate through the chain.
   await flushRejections(async () => {
     core.upsert(featuresKind, 'flagA', { version: 1, serializedItem: '{}' }, callback);
   });
 
   expect(callback).toHaveBeenCalledTimes(1);
   expect(callback).toHaveBeenCalledWith(watchError, undefined);
-  expect(hget).not.toHaveBeenCalled();
   expect(exec).not.toHaveBeenCalled();
+});
+
+it('reports an error through the callback when the watch pipeline rejects', async () => {
+  const pipelineError = new Error('Connection is closed.');
+  const state = makeState({
+    getClient: () => ({
+      pipeline: fakeWatchPipeline(() => Promise.reject(pipelineError)),
+      unwatch: jest.fn().mockResolvedValue('OK'),
+      multi: () => ({
+        hset: jest.fn(),
+        exec: jest.fn(),
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  const result = await flushRejections(() =>
+    upsertResult(core, { version: 1, serializedItem: '{}' }),
+  );
+
+  expect(result.err).toBe(pipelineError);
+  expect(result.updated).toBeUndefined();
 });
 
 it('stores the serializedItem verbatim for a deleted descriptor', async () => {
@@ -93,11 +114,8 @@ it('stores the serializedItem verbatim for a deleted descriptor', async () => {
   const serializedItem = '{"version":3,"deleted":true,"key":"flagA"}';
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: watchOkRead(null),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, null);
-      },
       multi: () => ({
         hset,
         exec: (cb: (err: Error | null, replies: unknown) => void) => {
@@ -120,11 +138,8 @@ it('sends UNWATCH and does not run the transaction when the stored version is ne
   const exec = jest.fn();
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: watchOkRead(JSON.stringify({ key: 'flagA', version: 5 })),
       unwatch,
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, JSON.stringify({ key: 'flagA', version: 5 }));
-      },
       multi: () => ({
         hset: jest.fn(),
         exec,
@@ -149,11 +164,8 @@ it('sends UNWATCH and reports no update when the descriptor has no data', async 
   const exec = jest.fn();
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: watchOkRead(null),
       unwatch,
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, null);
-      },
       multi: () => ({
         hset: jest.fn(),
         exec,
@@ -180,11 +192,8 @@ it('reports a read error and sends UNWATCH without writing', async () => {
   const exec = jest.fn();
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: fakeWatchPipeline(async () => [[null, 'OK'], [readError]]),
       unwatch,
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(readError, null);
-      },
       multi: () => ({
         hset,
         exec,
@@ -209,12 +218,9 @@ it('overwrites a malformed stored item instead of throwing', async () => {
   const hset = jest.fn();
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      // Not valid JSON, so deserialize throws.
+      pipeline: watchOkRead('garbage'),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        // Not valid JSON, so deserialize throws.
-        cb(null, 'garbage');
-      },
       multi: () => ({
         hset,
         exec: (cb: (err: Error | null, replies: unknown) => void) => {
@@ -226,7 +232,7 @@ it('overwrites a malformed stored item instead of throwing', async () => {
   // @ts-ignore Partial state mock for testing.
   const core = new RedisCore(state);
 
-  // A throw inside the redis client callback would crash the process.
+  // A deserialize throw must settle as an overwrite, never crash or hang.
   const result = await upsertResult(core, { version: 2, serializedItem: '{}' });
 
   expect(result.err).toBeUndefined();
@@ -239,11 +245,8 @@ it('reports an error when a committed transaction contains a per-command error',
   );
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: watchOkRead(null),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, null);
-      },
       multi: () => ({
         hset: jest.fn(),
         exec: (cb: (err: Error | null, replies: unknown) => void) => {
@@ -260,7 +263,7 @@ it('reports an error when a committed transaction contains a per-command error',
   expect(result.err).toBe(commandError);
 });
 
-it('retries when the transaction is aborted by a concurrent modification', async () => {
+it('retries exactly once when the transaction is aborted by a concurrent modification', async () => {
   const exec = jest
     .fn()
     // A nil reply means the watched key changed and the EXEC was aborted.
@@ -272,11 +275,8 @@ it('retries when the transaction is aborted by a concurrent modification', async
     });
   const state = makeState({
     getClient: () => ({
-      watch: jest.fn().mockResolvedValue('OK'),
+      pipeline: watchOkRead(null),
       unwatch: jest.fn().mockResolvedValue('OK'),
-      hget: (_ns: string, _key: string, cb: (err: Error | null, val: string | null) => void) => {
-        cb(null, null);
-      },
       multi: () => ({
         hset: jest.fn(),
         exec,
@@ -286,20 +286,29 @@ it('retries when the transaction is aborted by a concurrent modification', async
   // @ts-ignore Partial state mock for testing.
   const core = new RedisCore(state);
 
-  const result = await upsertResult(core, { version: 2, serializedItem: '{}' });
+  const callback = jest.fn();
+  await new Promise<void>((resolve) => {
+    callback.mockImplementationOnce(() => resolve());
+    core.upsert(featuresKind, 'flagA', { version: 2, serializedItem: '{}' }, callback);
+  });
+  // Give a duplicate settle from the aborted attempt the chance to fire before counting.
+  await new Promise((resolve) => {
+    setImmediate(resolve);
+  });
 
-  expect(result.err).toBeUndefined();
-  expect(result.updated).toEqual({ version: 2, serializedItem: '{}' });
+  // A second fire would shift the persistent store wrapper's queue twice and drop an update.
+  expect(callback).toHaveBeenCalledTimes(1);
+  expect(callback).toHaveBeenCalledWith(undefined, { version: 2, serializedItem: '{}' });
   expect(exec).toHaveBeenCalledTimes(2);
 });
 
 it('fails fast without watching when the connection is down', async () => {
-  const watch = jest.fn();
+  const pipeline = jest.fn();
   const state = makeState({
     isConnected: () => false,
     isInitialConnection: () => false,
     getClient: () => ({
-      watch,
+      pipeline,
     }),
   });
   // @ts-ignore Partial state mock for testing.
@@ -308,5 +317,5 @@ it('fails fast without watching when the connection is down', async () => {
   const result = await upsertResult(core, { version: 2, serializedItem: '{}' });
 
   expect(result.err?.message).toEqual('Redis connection is down');
-  expect(watch).not.toHaveBeenCalled();
+  expect(pipeline).not.toHaveBeenCalled();
 });
