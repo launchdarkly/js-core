@@ -3,9 +3,9 @@ import * as https from 'https';
 
 import {
   createEventSource,
-  type FetchFn,
-  type FetchRequestOptions,
-  type FetchResponse,
+  type FetchLike,
+  type FetchLikeOptions,
+  type FetchLikeResponse,
 } from '@launchdarkly/eventsource';
 import type { LDTLSOptions, platform } from '@launchdarkly/js-server-sdk-common';
 
@@ -40,7 +40,7 @@ function tlsRequestOptions(tlsOptions?: LDTLSOptions): Record<string, unknown> {
   return merged;
 }
 
-function wrapResponse(res: http.IncomingMessage): FetchResponse {
+function wrapResponse(res: http.IncomingMessage): FetchLikeResponse {
   // The async iterator hands out one chunk per read. It resolves done when the server ends the
   // stream, and it rejects when the connection drops or the request is destroyed.
   const iterator = res[Symbol.asyncIterator]();
@@ -83,9 +83,9 @@ function wrapResponse(res: http.IncomingMessage): FetchResponse {
 export function createNodeFetch(
   agent?: https.Agent | http.Agent,
   tlsOptions?: LDTLSOptions,
-): FetchFn {
+): FetchLike {
   const tlsParams = tlsRequestOptions(tlsOptions);
-  return async (url: string, init: FetchRequestOptions): Promise<FetchResponse> => {
+  return async (url: string, init: FetchLikeOptions): Promise<FetchLikeResponse> => {
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
     const requestOptions: https.RequestOptions & Record<string, unknown> = {
@@ -96,7 +96,7 @@ export function createNodeFetch(
     if (isSecure) {
       Object.assign(requestOptions, tlsParams);
     }
-    return new Promise<FetchResponse>((resolve, reject) => {
+    return new Promise<FetchLikeResponse>((resolve, reject) => {
       const req = impl.request(url, requestOptions, (res) => resolve(wrapResponse(res)));
       // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
       req.setNoDelay(true);
