@@ -3,6 +3,7 @@ import {
   sleepAsync,
   TestHttpHandlers,
   TestHttpRequest,
+  TestHttpServer,
   withCloseable,
 } from 'launchdarkly-js-test-helpers';
 
@@ -186,6 +187,36 @@ it('replaces an initial Last-Event-ID header given with a lowercase key', async 
   });
 });
 
+it('seeds Last-Event-ID from the first element of an array header value', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    // An array value cannot form one id; the first element is the seed.
+    const opts = { ...delayOpts, headers: { 'Last-Event-ID': ['first', 'second'] } };
+    await withEventSource(server.url, opts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      const req = await server.nextRequest();
+      expect(req.headers['last-event-id']).toEqual('first');
+    });
+  });
+});
+
+it('sends no Last-Event-ID header when the caller seed value is undefined', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    // A JS caller can pass undefined through a spread; it must not become the literal string
+    // "undefined" on the wire.
+    const opts = {
+      ...delayOpts,
+      headers: { 'Last-Event-ID': undefined } as unknown as { [key: string]: string },
+    };
+    await withEventSource(server.url, opts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'hello' }]);
+      const req = await server.nextRequest();
+      expect(req.headers['last-event-id']).toBeUndefined();
+    });
+  });
+});
+
 it('sends no Last-Event-ID header after the server resets the id with an empty id field', async () => {
   await withServer(async (server) => {
     server.byDefault(writeEvents(['id:\ndata: Hello\n\n']));
@@ -229,13 +260,14 @@ it('does not send the Last-Event-ID header when the server never sent an event i
   });
 });
 
-async function verifyDelays(
+async function verifyDelaysWithHandler(
   options: Partial<EventSourceInitDict>,
+  handler: Parameters<TestHttpServer['byDefault']>[0],
   count: number,
   assertion: (delays: number[]) => void,
 ): Promise<void> {
   await withServer(async (server) => {
-    server.byDefault(TestHttpHandlers.respond(500));
+    server.byDefault(handler);
     await withEventSource(server.url, options, async (es) => {
       const delays = new AsyncQueue<number>();
       es.onretrying = (event) => delays.add(event.delayMillis);
@@ -247,6 +279,14 @@ async function verifyDelays(
       assertion(allDelays);
     });
   });
+}
+
+async function verifyDelays(
+  options: Partial<EventSourceInitDict>,
+  count: number,
+  assertion: (delays: number[]) => void,
+): Promise<void> {
+  await verifyDelaysWithHandler(options, TestHttpHandlers.respond(500), count, assertion);
 }
 
 it('uses a constant retry delay by default', async () => {
@@ -275,6 +315,93 @@ it('can use backoff with jitter', async () => {
       expectInRange(delays[0], delay / 2, delay);
       expectInRange(delays[1], delay, delay * 2);
       expectInRange(delays[2], delay * 2, delay * 4);
+    },
+  );
+});
+
+it('resets backoff once a connection has been active for the reset interval, measured from its first event', async () => {
+  const delay = 5;
+  const resetInterval = 150;
+
+  // The first two connections fail immediately, so the backoff progresses. The third
+  // connection delivers events continuously for longer than the reset interval and then
+  // drops; the delay after it must restart at the initial value even though the last
+  // event arrived only moments before the connection dropped.
+  let connection = 0;
+  const handler: Parameters<TestHttpServer['byDefault']>[0] = (_req, res) => {
+    connection += 1;
+    if (connection === 3) {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      res.write('data: one\n\n');
+      let writes = 0;
+      const timer = setInterval(() => {
+        writes += 1;
+        if (writes > 6) {
+          clearInterval(timer);
+          res.destroy();
+        } else {
+          res.write('data: more\n\n');
+        }
+      }, 40);
+    } else {
+      res.writeHead(500);
+      res.end();
+    }
+  };
+
+  await verifyDelaysWithHandler(
+    {
+      initialRetryDelayMillis: delay,
+      maxBackoffMillis: 1000,
+      retryResetIntervalMillis: resetInterval,
+    },
+    handler,
+    3,
+    (delays) => {
+      expect(delays).toEqual([delay, delay * 2, delay]);
+    },
+  );
+});
+
+it('does not reset backoff for a connection that stays open past the reset interval without delivering events', async () => {
+  const delay = 5;
+  const resetInterval = 150;
+
+  // The third connection stays open past the reset interval but sends only comment
+  // heartbeats, never an event. An open connection that has delivered no data does not
+  // count as healthy, so the backoff keeps progressing.
+  let connection = 0;
+  const handler: Parameters<TestHttpServer['byDefault']>[0] = (_req, res) => {
+    connection += 1;
+    if (connection === 3) {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      res.write(':hi\n');
+      let writes = 0;
+      const timer = setInterval(() => {
+        writes += 1;
+        if (writes > 6) {
+          clearInterval(timer);
+          res.destroy();
+        } else {
+          res.write(':hi\n');
+        }
+      }, 40);
+    } else {
+      res.writeHead(500);
+      res.end();
+    }
+  };
+
+  await verifyDelaysWithHandler(
+    {
+      initialRetryDelayMillis: delay,
+      maxBackoffMillis: 1000,
+      retryResetIntervalMillis: resetInterval,
+    },
+    handler,
+    3,
+    (delays) => {
+      expect(delays).toEqual([delay, delay * 2, delay * 4]);
     },
   );
 });

@@ -8,6 +8,7 @@ import {
   waitForOpenEvent,
   withEventSource,
   withServer,
+  withSlotRethrowSwallowed,
   writeEvents,
 } from './helpers';
 
@@ -177,4 +178,29 @@ it('allows removal of event listeners', async () => {
       expect(messages1.isEmpty()).toBe(true);
     });
   });
+});
+
+it('delivers the rest of a chunk after a message listener throws', async () => {
+  // A throwing listener must not stop the parse of the current chunk or forge a transport
+  // error; its exception is rethrown on a later microtask instead.
+  const swallowed = await withSlotRethrowSwallowed(async () => {
+    await withServer(async (server) => {
+      server.byDefault(writeEvents(['data: a\n\ndata: b\n\n']));
+      await withEventSource(server.url, undefined, async (es) => {
+        const errors = startErrorQueue(es);
+        const messages = new AsyncQueue<MessageEvent>();
+        es.addEventListener('message', (m) => {
+          messages.add(m);
+          throw new Error('listener boom');
+        });
+        expect((await messages.take()).data).toEqual('a');
+        expect((await messages.take()).data).toEqual('b');
+        expect(errors.isEmpty()).toBe(true);
+      });
+    });
+  });
+  expect(swallowed.map((err) => (err as Error).message)).toEqual([
+    'listener boom',
+    'listener boom',
+  ]);
 });

@@ -86,10 +86,11 @@ retried only for 500, 502, 503, and 504. A 200 response that declares a Content-
 `text/event-stream` is also treated as an error; it carries `status: 200` and goes through the
 same filter (a response with no Content-Type header at all is accepted, so a minimal injected
 transport can omit response headers). Set `errorFilter` to override this -- it receives the
-error and returns `true` to retry or `false` to close the stream and raise `error`. There is no
-guard against a filter that throws, matching the original package: the stream does not recover.
-Depending on the code path, the exception can be swallowed silently or surface as an uncaught
-error, so a filter must not throw. Redirect handling is described in
+error and returns `true` to retry or `false` to close the stream and raise `error`. A filter
+that throws is treated as if it returned `false`: the stream closes cleanly and releases its
+connection, and the exception surfaces asynchronously as an uncaught error, like a throwing
+listener's. (The original package leaked the connection here; this is a deliberate divergence.)
+Redirect handling is described in
 [Redirects and bodies](#redirects-and-bodies) below.
 
 ### Headers, method, and body
