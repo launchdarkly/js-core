@@ -69,12 +69,13 @@ export default class RedisClientState {
     });
 
     client.on('connect', () => {
-      this._attempt = 0;
-
       if (!this._initialConnection) {
-        this?._logger?.warn('Reconnecting to Redis');
+        this._logger?.warn('Reconnecting to Redis');
       }
+    });
 
+    client.on('ready', () => {
+      this._attempt = 0;
       this._initialConnection = false;
       this._connected = true;
     });
