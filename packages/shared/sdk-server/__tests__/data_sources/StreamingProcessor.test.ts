@@ -269,7 +269,7 @@ describe('given a stream processor with mock event source', () => {
     const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
     const callsBefore = createSpy.mock.calls.length;
 
-    // Malformed data arms a reconnect timer; stopping must cancel it (spec 1.10.1).
+    // Malformed data arms a reconnect timer; stopping must cancel it.
     simulatePutEvent();
     expect(mockEventSource.close).toHaveBeenCalled();
 
@@ -296,8 +296,8 @@ describe('given a stream processor with mock event source', () => {
 
     simulatePutEvent();
 
-    // 1.6.2 classifies the malformed payload as one normal failure; the SDK's
-    // own close() during the restart must not be counted as a second (1.7.2).
+    // The malformed payload is one normal failure; the SDK's own close()
+    // during the restart must not be counted as a second.
     expect(recordFailure).toHaveBeenCalledTimes(1);
     expect(recordFailure).toHaveBeenCalledWith('normal');
   });

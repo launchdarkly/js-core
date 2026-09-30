@@ -36,6 +36,8 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     private readonly _featureStore: LDDataSourceUpdates,
     private readonly _logger?: LDLogger,
     private readonly _initSuccessHandler: VoidFunction = () => {},
+    // Reserved for a future terminal-failure channel; intentionally unused
+    // today
     private readonly _errorHandler?: PollingErrorHandler,
   ) {
     this._retryState = forPolling(1000 * this._pollInterval);

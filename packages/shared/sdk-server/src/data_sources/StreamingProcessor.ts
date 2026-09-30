@@ -40,6 +40,8 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     private readonly _listeners: Map<EventName, ProcessStreamResponse>,
     baseHeaders: LDHeaders,
     private readonly _diagnosticsManager?: internal.DiagnosticsManager,
+    // Reserved for a future terminal-failure channel; intentionally unused
+    // today
     private readonly _errorHandler?: StreamingErrorHandler,
     private readonly _streamInitialReconnectDelay = 1,
   ) {
@@ -75,17 +77,15 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
   }
 
   /**
-   * Records a connection failure, logs it, and lets the connection retry. The
-   * retry state decides the wait; a server-directed `retry:` value, if any,
-   * has already been applied to it through the injected strategy. Every
-   * failure is retryable now, so this always returns true.
+   * Records a connection failure and logs it. The retry state decides the
+   * wait; a server-directed `retry:` value, if any, has already been applied
+   * to it through the injected strategy.
    *
    * @param err The error to be recorded and logged.
-   * @return always true.
    *
    * @private
    */
-  private _retryAndHandleError(err: HttpErrorResponse): boolean {
+  private _retryAndHandleError(err: HttpErrorResponse): void {
     const kind: FailureKind =
       err.status !== undefined ? classifyHttpStatus(err.status) : classifyTransportFailure();
     this._retryState.recordFailure(kind);
@@ -102,7 +102,6 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     }
 
     this._logConnectionStarted();
-    return true;
   }
 
   private _restartForInvalidData() {
@@ -139,7 +138,10 @@ export default class StreamingProcessor implements subsystem.LDStreamProcessor {
     // TLS is handled by the platform implementation.
     const eventSource = this._requests.createEventSource(this._streamUri, {
       headers: this._headers,
-      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
+      errorFilter: (error: HttpErrorResponse) => {
+        this._retryAndHandleError(error);
+        return true;
+      },
       readTimeoutMillis: 5 * 60 * 1000,
       retryDelayStrategy,
     });

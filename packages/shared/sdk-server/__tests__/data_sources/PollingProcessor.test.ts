@@ -198,7 +198,7 @@ describe('given a polling processor with a short poll duration', () => {
       processor.start();
       expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
 
-      // The failed poll armed the next-poll timer; stopping must cancel it (spec 1.10.1).
+      // The failed poll armed the next-poll timer; stopping must cancel it.
       processor.stop();
       jest.advanceTimersByTime(5 * 60 * 1000);
 

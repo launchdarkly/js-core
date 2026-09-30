@@ -41,17 +41,18 @@ export interface EventSourceInitDict {
   readTimeoutMillis: number;
 
   /**
-   * The built-in backoff's initial delay and reset window. Unused when
-   * {@link retryDelayStrategy} is set, since the strategy then owns all
-   * reconnection timing.
+   * The initial delay and reset window for the built-in (default) retry-delay
+   * strategy. These configure the default behavior; they are ignored when a
+   * custom {@link retryDelayStrategy} is provided, since that strategy then
+   * owns all reconnection timing.
    */
   initialRetryDelayMillis?: number;
   retryResetIntervalMillis?: number;
 
   /**
-   * When set, the EventSource defers all reconnection timing to this strategy
-   * instead of its built-in backoff. `initialRetryDelayMillis` and
-   * `retryResetIntervalMillis` are then unused.
+   * A custom strategy that replaces the built-in (default) one. When provided,
+   * the EventSource defers all reconnection timing to it and the built-in
+   * options (`initialRetryDelayMillis`, `retryResetIntervalMillis`) are ignored.
    */
   retryDelayStrategy?: EventSourceRetryDelayStrategy;
   /**
