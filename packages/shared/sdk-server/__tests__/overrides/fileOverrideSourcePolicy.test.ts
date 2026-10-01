@@ -4,12 +4,11 @@ import { fileOverrideSourcePolicy, makeOverrideFlagWithValue } from '../../src/o
 // The policy is the one place where the file-based override source differs from the file data
 // sources in how documents become data.
 
-it('expands a flag value into a flag that is off and serves the value with version 1', () => {
+it('expands a flag value into a flag that is on and serves the value by fallthrough with version 1', () => {
   expect(makeOverrideFlagWithValue('flag', 'a')).toEqual({
     key: 'flag',
     version: 1,
-    on: false,
-    offVariation: 0,
+    on: true,
     fallthrough: { variation: 0 },
     variations: ['a'],
   });

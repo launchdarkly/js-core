@@ -70,8 +70,8 @@ export interface FileOverrideSourceConfig {
 
 /**
  * Expands a flag value into a full flag definition that returns the given value for every
- * context. The flag is off and serves its single variation as the off variation, so it
- * evaluates with the OFF reason.
+ * context. The flag is on, has the value as its only variation, and serves that variation as
+ * its fallthrough, so it evaluates with the FALLTHROUGH reason.
  *
  * @internal
  */
@@ -79,8 +79,7 @@ export function makeOverrideFlagWithValue(key: string, value: any): Flag {
   return {
     key,
     version: 1,
-    on: false,
-    offVariation: 0,
+    on: true,
     fallthrough: { variation: 0 },
     variations: [value],
   };
@@ -93,7 +92,8 @@ export function makeOverrideFlagWithValue(key: string, value: any): Flag {
  * - The parser is chosen by file extension, as for the file data sources, and the document
  *   is validated.
  * - A flag or segment entry is keyed by its map key, as the Go SDK's override source keys it.
- * - A `flagValues` entry becomes a flag that is off and serves the value, with version 1.
+ * - A `flagValues` entry becomes a flag that is on and serves the value by fallthrough, with
+ *   version 1.
  * - A key that appears more than once fails the load with the `fail` handling, or keeps the
  *   first configured file's entry with the `ignore` handling.
  * - A configured file that does not exist contributes no entries.
