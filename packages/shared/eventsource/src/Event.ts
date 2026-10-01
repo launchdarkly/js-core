@@ -31,7 +31,7 @@ export interface OpenEvent {
 /**
  * The payload of the `retrying` event.
  */
-export interface RetryingEvent {
+export interface RetryEvent {
   readonly type?: string;
   readonly delayMillis: number;
 }
