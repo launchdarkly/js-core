@@ -107,6 +107,14 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
    */
   private _queue: UpdateQueue = new UpdateQueue();
 
+  /**
+   * Check if the underlying storage can be accessed.
+   *
+   * This method is only present when the {@link PersistentDataStore} used by this
+   * wrapper implements it.
+   */
+  isStoreAvailable?: (callback: (isAvailable: boolean) => void) => void;
+
   constructor(
     private readonly _core: PersistentDataStore,
     ttl: number,
@@ -122,11 +130,31 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         checkInterval: defaultCheckInterval,
       });
     }
+
+    // Only expose the availability check when the core has one. Recovery logic uses
+    // the presence of this method to decide if it can poll.
+    const coreIsStoreAvailable = _core.isStoreAvailable?.bind(_core);
+    if (coreIsStoreAvailable) {
+      this.isStoreAvailable = coreIsStoreAvailable;
+    }
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+  init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
     this._queue.enqueue((cb) => {
-      const afterStoreInit = () => {
+      const afterStoreInit = (err?: Error) => {
+        if (err) {
+          // A failed init must not present the rejected data as current. Clear the
+          // caches and the initialized state, so reads and initialization checks
+          // fall through to the persistence layer's actual state.
+          this._logger?.error(
+            `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
+          );
+          this._isInitialized = false;
+          this._itemCache?.clear();
+          this._allItemsCache?.clear();
+          cb(err);
+          return;
+        }
         this._isInitialized = true;
         if (this._itemCache) {
           this._itemCache.clear();
@@ -135,7 +163,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
           Object.keys(allData).forEach((kindNamespace) => {
             const kind = persistentStoreKinds[kindNamespace];
             const items = allData[kindNamespace];
-            this._allItemsCache!.set(allForKindCacheKey(kind), items);
+            // The all-items cache backs all(), which never returns tombstones, so it
+            // must be populated with the same filtering the cache-miss path applies.
+            const filteredItems: LDFeatureStoreKindData = {};
             Object.keys(items).forEach((key) => {
               const itemForKey = items[key];
 
@@ -144,7 +174,11 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
                 item: itemForKey,
               };
               this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
+              if (!itemForKey.deleted) {
+                filteredItems[key] = itemForKey;
+              }
             });
+            this._allItemsCache!.set(allForKindCacheKey(kind), filteredItems);
           });
         }
         cb();
@@ -219,7 +253,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     });
   }
 
-  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
+  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: (err?: Error) => void): void {
     this._queue.enqueue((cb) => {
       // Clear the caches which contain all the values of a specific kind.
       if (this._allItemsCache) {
@@ -250,7 +284,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
               });
             }
           }
-          cb();
+          cb(err);
         },
       );
     }, callback);
