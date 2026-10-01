@@ -2,11 +2,12 @@ import type {
   EventListener as PlatformEventListener,
   EventSource as PlatformEventSource,
   EventSourceInitDict as PlatformEventSourceInitDict,
+  EventSourceRetryDelayStrategy as PlatformRetryDelayStrategy,
 } from '@launchdarkly/js-sdk-common';
 
 import { makeEvent, MessageEvent, RetryEvent } from '../src/Event';
 import { createEventSource } from '../src/EventSource';
-import { EventSourceInitDict } from '../src/types';
+import { EventSourceInitDict, RetryDelayStrategy } from '../src/types';
 import { deliberatelyUnusedPort } from './helpers';
 
 /**
@@ -33,6 +34,27 @@ type UnsupportedPlatformOptions = Exclude<
 >;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const unsupportedOptionsCheck: UnsupportedPlatformOptions extends never ? true : false = true;
+
+/**
+ * The retry strategy seam. An SDK adapts a `RetryState` into the platform's
+ * `EventSourceRetryDelayStrategy` and the platform adapter spreads it into this package's init
+ * dict, so the two three-method shapes must stay mutually assignable. A new method on either
+ * side makes one of the lines below fail to compile -- that is the intended signal.
+ */
+const platformStrategy: PlatformRetryDelayStrategy = {
+  nextRetryDelay: () => 0,
+  setGoodSince: () => {},
+  setBaseDelay: () => {},
+};
+const packageStrategy: RetryDelayStrategy = {
+  nextRetryDelay: () => 0,
+  setGoodSince: () => {},
+  setBaseDelay: () => {},
+};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const platformStrategyCheck: RetryDelayStrategy = platformStrategy;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const packageStrategyCheck: PlatformRetryDelayStrategy = packageStrategy;
 
 /**
  * `makeEvent`'s overloads: a literal event type resolves to its mapped payload type, a wrong
