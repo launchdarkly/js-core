@@ -1,33 +1,9 @@
-# Browser's native EventSource cannot read response headers/status on the streaming
-# connection, so it can never observe the directive this test relies on.
+# Under FDv2 (dataSystem configured) the SDK does not send the tags header on any
+# request, so every tags assertion that expects a non-empty header value fails. This
+# includes polling requests, which can send headers -- the gap is in the SDK's FDv2
+# path, not in the transport.
 tags/FDv1 fallback directive requests
-
-# Same root cause as above: DefaultBrowserEventSource reports headers: false
-# unconditionally on both open and error events, so none of the FDv1 fallback
-# directive scenarios below can be observed on browser, not just the error path.
-streaming/fdv2/FDv1 fallback directive/directive on streaming error engages FDv1 fallback
-streaming/fdv2/FDv1 fallback directive/directive on streaming success applies payload then engages FDv1
-streaming/fdv2/FDv1 fallback directive/directive without FDv1 fallback configured halts the data system
-streaming/fdv2/FDv1 fallback directive/directed fallback is terminal and does not revisit FDv2 sources
-
-streaming/requests/method and headers/REPORT/http
-streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
-streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
-streaming/requests/query parameters/evaluationReasons set to [none]/REPORT
-streaming/requests/query parameters/evaluationReasons set to false/REPORT
-streaming/requests/query parameters/evaluationReasons set to true/REPORT
-streaming/requests/context properties/single kind minimal/REPORT
-streaming/requests/context properties/single kind with all attributes/REPORT
-streaming/requests/context properties/multi-kind/REPORT
-polling/requests/method and headers/REPORT/http
-polling/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
-polling/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT
-polling/requests/query parameters/evaluationReasons set to [none]/REPORT
-polling/requests/query parameters/evaluationReasons set to false/REPORT
-polling/requests/query parameters/evaluationReasons set to true/REPORT
-polling/requests/context properties/single kind minimal/REPORT
-polling/requests/context properties/single kind with all attributes/REPORT
-polling/requests/context properties/multi-kind/REPORT
+tags/disallowed characters
 tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
 tags/stream requests/{"applicationId":"","applicationVersion":null}
@@ -54,4 +30,3 @@ tags/poll requests/{"applicationId":"___________________________________________
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
-tags/disallowed characters
