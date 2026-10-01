@@ -107,7 +107,7 @@ it('creates a goodbye status result with fdv1Fallback and a TTL', () => {
   });
 });
 
-it('creates a goodbye status result with TTL 0 (indefinite fallback)', () => {
+it('creates a goodbye status result carrying the TTL it was handed', () => {
   const result = goodbye('server-shutdown', { fdv1Fallback: true, fdv1FallbackTtlMs: 0 });
 
   expect(result).toEqual({
