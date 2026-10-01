@@ -5,6 +5,7 @@ import {
   DeleteItemCommand,
   DynamoDBClient,
   GetItemCommand,
+  ProvisionedThroughputExceededException,
   PutItemCommand,
   PutItemCommandInput,
   QueryCommand,
@@ -22,11 +23,31 @@ const DEFAULT_PREFIX = '';
 // BatchWrite can only accept 25 items at a time, so split up the writes into batches of 25.
 const WRITE_BATCH_SIZE = 25;
 
-// DynamoDB can return unprocessed items when it throttles a batch write.
-// Retry the unprocessed items a limited number of times with exponential
-// backoff. Report a failure if items remain unprocessed after the retries.
-const MAX_UNPROCESSED_RETRIES = 3;
+// DynamoDB can return unprocessed items when it throttles a batch write, or
+// reject the whole batch when the table is over its provisioned throughput.
+// Retry both shapes with jittered exponential backoff. The budget gives a
+// table with modest provisioned capacity time to drain one batch between
+// attempts. A short budget fails the write, and each later recovery attempt
+// rewrites the full data set, which consumes still more capacity. Report a
+// failure if items remain unprocessed after the retries.
+const MAX_UNPROCESSED_RETRIES = 10;
 const UNPROCESSED_RETRY_BASE_DELAY_MS = 100;
+const UNPROCESSED_RETRY_MAX_DELAY_MS = 5000;
+
+/**
+ * Compute the backoff before the given retry attempt.
+ *
+ * The delay doubles from the base and is capped. The random jitter keeps the
+ * second half of each delay, so retries from multiple SDK instances spread
+ * out instead of repeatedly hitting the table at the same time.
+ */
+function unprocessedRetryDelayMs(attempt: number): number {
+  const delayMs = Math.min(
+    UNPROCESSED_RETRY_MAX_DELAY_MS,
+    UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1),
+  );
+  return delayMs / 2 + Math.random() * (delayMs / 2);
+}
 
 // The AWS SDK does not set a request timeout by default, so a request on a dead
 // connection can wait on TCP for many minutes. The SDK serializes its store
@@ -201,18 +222,30 @@ export default class DynamoDBClientState {
       ) {
         if (attempt > 0) {
           // eslint-disable-next-line no-await-in-loop
-          await sleep(UNPROCESSED_RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
+          await sleep(unprocessedRetryDelayMs(attempt));
         }
-        // eslint-disable-next-line no-await-in-loop
-        const result = await this._withDeadline((callOptions) =>
-          this._client.send(
-            new BatchWriteItemCommand({
-              RequestItems: { [table]: pending },
-            }),
-            callOptions,
-          ),
-        );
-        pending = result.UnprocessedItems?.[table] ?? [];
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const result = await this._withDeadline((callOptions) =>
+            this._client.send(
+              new BatchWriteItemCommand({
+                RequestItems: { [table]: pending },
+              }),
+              callOptions,
+            ),
+          );
+          pending = result.UnprocessedItems?.[table] ?? [];
+        } catch (err) {
+          // A throughput rejection is the every-item-unprocessed shape of the
+          // same throttling, so it shares the retry budget. The last attempt
+          // reports the rejection itself. Other errors are not retried.
+          if (
+            !(err instanceof ProvisionedThroughputExceededException) ||
+            attempt === MAX_UNPROCESSED_RETRIES
+          ) {
+            throw err;
+          }
+        }
       }
       if (pending.length > 0) {
         throw new Error(

@@ -1,4 +1,8 @@
-import { DynamoDBClient, WriteRequest } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  ProvisionedThroughputExceededException,
+  WriteRequest,
+} from '@aws-sdk/client-dynamodb';
 
 import DynamoDBClientState from '../src/DynamoDBClientState';
 
@@ -23,6 +27,7 @@ function makeState(send: jest.Mock): DynamoDBClientState {
 
 afterEach(() => {
   jest.useRealTimers();
+  jest.restoreAllMocks();
 });
 
 it('does not retry when the response contains no unprocessed items', async () => {
@@ -71,16 +76,18 @@ it('throws when items remain unprocessed after the retries are exhausted', async
   // The assertion is awaited after the fake timers run.
   // eslint-disable-next-line jest/valid-expect
   const assertion = expect(pendingWrite).rejects.toThrow(
-    'DynamoDB batch write returned 1 unprocessed item(s) after 3 retries',
+    'DynamoDB batch write returned 1 unprocessed item(s) after 10 retries',
   );
   await jest.runAllTimersAsync();
   await assertion;
 
-  expect(send).toHaveBeenCalledTimes(4);
+  expect(send).toHaveBeenCalledTimes(11);
 });
 
-it('waits with exponential backoff before each retry', async () => {
+it('waits with capped exponential backoff before each retry', async () => {
   jest.useFakeTimers();
+  // The upper jitter bound makes every delay its full capped value.
+  jest.spyOn(Math, 'random').mockReturnValue(1);
   const requestA = makeWriteRequest('flagA');
   const send = jest.fn().mockResolvedValue({ UnprocessedItems: { [TABLE_NAME]: [requestA] } });
   const state = makeState(send);
@@ -89,32 +96,89 @@ it('waits with exponential backoff before each retry', async () => {
   // The assertion is awaited after the fake timers run.
   // eslint-disable-next-line jest/valid-expect
   const assertion = expect(pendingWrite).rejects.toThrow(
-    'DynamoDB batch write returned 1 unprocessed item(s) after 3 retries',
+    'DynamoDB batch write returned 1 unprocessed item(s) after 10 retries',
   );
 
   // The first attempt does not wait.
   await jest.advanceTimersByTimeAsync(0);
   expect(send).toHaveBeenCalledTimes(1);
 
-  // The first retry waits 100 milliseconds.
-  await jest.advanceTimersByTimeAsync(99);
+  // Each retry delay doubles from 100 milliseconds and caps at 5000 milliseconds.
+  const expectedDelays = [100, 200, 400, 800, 1600, 3200, 5000, 5000, 5000, 5000];
+  for (let i = 0; i < expectedDelays.length; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await jest.advanceTimersByTimeAsync(expectedDelays[i] - 1);
+    expect(send).toHaveBeenCalledTimes(i + 1);
+    // eslint-disable-next-line no-await-in-loop
+    await jest.advanceTimersByTimeAsync(1);
+    expect(send).toHaveBeenCalledTimes(i + 2);
+  }
+
+  await assertion;
+});
+
+it('shortens a retry delay by up to half with jitter', async () => {
+  jest.useFakeTimers();
+  // The lower jitter bound makes every delay half its capped value.
+  jest.spyOn(Math, 'random').mockReturnValue(0);
+  const requestA = makeWriteRequest('flagA');
+  const send = jest
+    .fn()
+    .mockResolvedValueOnce({ UnprocessedItems: { [TABLE_NAME]: [requestA] } })
+    .mockResolvedValue({});
+  const state = makeState(send);
+
+  const pendingWrite = state.batchWrite(TABLE_NAME, [requestA]);
+  await jest.advanceTimersByTimeAsync(0);
+  expect(send).toHaveBeenCalledTimes(1);
+
+  // The first retry waits 50 milliseconds, half of the 100 millisecond delay.
+  await jest.advanceTimersByTimeAsync(49);
   expect(send).toHaveBeenCalledTimes(1);
   await jest.advanceTimersByTimeAsync(1);
   expect(send).toHaveBeenCalledTimes(2);
 
-  // The second retry waits 200 milliseconds.
-  await jest.advanceTimersByTimeAsync(199);
+  await pendingWrite;
+});
+
+it('retries the whole batch after a provisioned throughput rejection', async () => {
+  jest.useFakeTimers();
+  const requestA = makeWriteRequest('flagA');
+  const send = jest
+    .fn()
+    .mockRejectedValueOnce(
+      new ProvisionedThroughputExceededException({ message: 'over capacity', $metadata: {} }),
+    )
+    .mockResolvedValue({});
+  const state = makeState(send);
+
+  const pendingWrite = state.batchWrite(TABLE_NAME, [requestA]);
+  await jest.runAllTimersAsync();
+  await pendingWrite;
+
+  // The rejection carries no unprocessed list, so the retry resends every item.
   expect(send).toHaveBeenCalledTimes(2);
-  await jest.advanceTimersByTimeAsync(1);
-  expect(send).toHaveBeenCalledTimes(3);
+  expect(send.mock.calls[1][0].input.RequestItems[TABLE_NAME]).toEqual([requestA]);
+});
 
-  // The third retry waits 400 milliseconds.
-  await jest.advanceTimersByTimeAsync(399);
-  expect(send).toHaveBeenCalledTimes(3);
-  await jest.advanceTimersByTimeAsync(1);
-  expect(send).toHaveBeenCalledTimes(4);
+it('reports the throughput rejection when the table stays throttled after the retries', async () => {
+  jest.useFakeTimers();
+  const requestA = makeWriteRequest('flagA');
+  const send = jest
+    .fn()
+    .mockRejectedValue(
+      new ProvisionedThroughputExceededException({ message: 'over capacity', $metadata: {} }),
+    );
+  const state = makeState(send);
 
+  const pendingWrite = state.batchWrite(TABLE_NAME, [requestA]);
+  // The assertion is awaited after the fake timers run.
+  // eslint-disable-next-line jest/valid-expect
+  const assertion = expect(pendingWrite).rejects.toThrow('over capacity');
+  await jest.runAllTimersAsync();
   await assertion;
+
+  expect(send).toHaveBeenCalledTimes(11);
 });
 
 it('stops issuing later batches after a failed batch', async () => {
