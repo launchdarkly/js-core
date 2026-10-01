@@ -17,6 +17,9 @@ export interface FileDataSourceOptions {
    * A file that is replaced by a rename, or deleted and created again, is detected. A load
    * that fails, for example because a file was read while it was written, is retried after a
    * short delay and the previously loaded data stays in effect until it succeeds.
+   * A change to another entry in a directory causes a reload only when the metadata of a
+   * configured file changed, read through any symbolic link, which is how a mounted ConfigMap
+   * or Secret is updated.
    */
   autoUpdate?: boolean;
 

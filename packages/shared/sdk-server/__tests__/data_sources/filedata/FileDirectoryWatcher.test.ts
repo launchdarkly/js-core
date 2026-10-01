@@ -64,6 +64,31 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(onChange).toHaveBeenCalledTimes(2);
   });
 
+  it('runs the callback for an event naming another entry when a configured file changed through it', async () => {
+    // A mounted ConfigMap is updated by swapping a symbolic link that the configured file
+    // points through. The event names the link, not the file, and the file's metadata changes.
+    filesystem.set('/a/one.json', '{}', 1, 2);
+    startWatcher(['/a/one.json']);
+    await jest.advanceTimersByTimeAsync(0);
+
+    filesystem.set('/a/one.json', '{}', 2, 2);
+    filesystem.emit('/a', 'rename', '..data');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // The same metadata again is not a change.
+    filesystem.emit('/a', 'rename', '..data_tmp');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('reads the metadata of every configured file in the directory, not only the first', () => {
+    startWatcher(['/a/one.json', '/a/two.json']);
+
+    filesystem.emit('/a', 'change', 'two.json');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   it('still checks the directory on an event for an entry that is not configured', async () => {
     filesystem.set('/a/one.json', '{}');
     startWatcher(['/a/one.json']);
@@ -178,7 +203,9 @@ describe('given a directory watcher over a mock filesystem', () => {
     filesystem.deferStats = true;
     filesystem.emit('/a', 'rename');
     filesystem.emit('/a', 'rename');
-    expect(filesystem.pendingStats).toHaveLength(1);
+    // The directory check is pending once. The files' metadata read is separate.
+    const directoryChecks = () => filesystem.pendingStats.filter((lookup) => lookup.path === '/a');
+    expect(directoryChecks()).toHaveLength(1);
 
     // The first check observes the directory before it is deleted, so the watch stays.
     filesystem.completePendingStats();
@@ -186,7 +213,7 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(filesystem.activeWatches('/a')).toEqual([watch]);
 
     // The second event is not lost: a check runs again and observes the deletion.
-    expect(filesystem.pendingStats).toHaveLength(1);
+    expect(directoryChecks()).toHaveLength(1);
     filesystem.removeDirectory('/a');
     filesystem.completePendingStats();
     await jest.advanceTimersByTimeAsync(0);

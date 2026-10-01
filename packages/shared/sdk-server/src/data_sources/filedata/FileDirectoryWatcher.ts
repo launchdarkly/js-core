@@ -68,10 +68,13 @@ class DirectoryWatch {
  * does not exist yet is detected when it appears, and that a file replaced by a rename does
  * not lose its watch.
  *
- * An event that names an entry which is not one of the configured files is ignored. When the
- * platform does not report which entry changed, every event in the directory runs the callback.
- * Feed it into a {@link FileReloader}, whose debouncing and skip-unchanged handling absorb the
- * excess.
+ * An event that names an entry which is not one of the configured files runs the callback only
+ * when the metadata of a configured file in that directory changed. The metadata is read through
+ * any symbolic link, so a link swap that replaces a configured file's target without naming the
+ * link, which is how a mounted ConfigMap is updated, is detected, while a busy sibling file costs
+ * no reload. When the platform does not report which entry changed, every event in the directory
+ * runs the callback. Feed it into a {@link FileReloader}, whose debouncing and skip-unchanged
+ * handling absorb the excess.
  *
  * A directory that cannot be watched is logged and attempted again after a delay. A watch on a
  * directory that is deleted goes dead on some platforms and floods events on others, so after
@@ -87,8 +90,18 @@ export default class FileDirectoryWatcher {
 
   private readonly _watches: Record<string, DirectoryWatch> = {};
 
-  // The configured file names in each directory. Events for other entries are ignored.
+  // The configured file names in each directory. An event for one of them always counts.
   private readonly _names: Record<string, Set<string>> = {};
+
+  // The configured files in each directory, and the last observed metadata of each, read through
+  // any symbolic link. An event for another entry counts when this metadata changed.
+  private readonly _files: Record<string, string[]> = {};
+
+  private readonly _signatures: Record<string, string> = {};
+
+  // The directories whose files' metadata is being read. The flag records that a check was
+  // requested during the read, so that it runs again afterwards.
+  private readonly _fileChecks: Record<string, { again: boolean; notify: boolean }> = {};
 
   // The directories whose existence is being checked. The flag records that an event arrived
   // during the check, so that the check runs again and observes the state after that event.
@@ -109,6 +122,8 @@ export default class FileDirectoryWatcher {
       const directory = directoryOf(path);
       this._names[directory] = this._names[directory] ?? new Set();
       this._names[directory].add(basenameOf(path));
+      this._files[directory] = this._files[directory] ?? [];
+      this._files[directory].push(path);
     });
   }
 
@@ -118,6 +133,8 @@ export default class FileDirectoryWatcher {
    */
   start(): void {
     this._setupWatches(false);
+    // Record the files' metadata, so that a later event for another entry can be compared to it.
+    this._directories.forEach((directory) => this._checkFiles(directory, false));
   }
 
   close(): void {
@@ -168,6 +185,7 @@ export default class FileDirectoryWatcher {
     if (isRetry) {
       // Changes could have happened while the watch was not in place.
       this._onChange();
+      this._directories.forEach((directory) => this._checkFiles(directory, false));
     }
   }
 
@@ -198,9 +216,68 @@ export default class FileDirectoryWatcher {
     }
     if (changedName === undefined || this._names[directory].has(changedName)) {
       this._onChange();
+      // Keep the metadata current, so that a later event for another entry is compared to the
+      // state after this change.
+      this._checkFiles(directory, false);
+    } else {
+      // Another entry changed. A configured file that is a symbolic link can have changed with
+      // it. Its metadata decides.
+      this._checkFiles(directory, true);
     }
     // The directory itself may be gone. Check on every event, whatever entry it names.
     this._checkDirectory(directory);
+  }
+
+  /**
+   * Reads the metadata of the configured files in a directory and remembers it. When `notify` is
+   * set and any file's metadata differs from the last observation, the change callback runs.
+   * Reads for one directory do not overlap. A read requested during a read runs afterwards, and
+   * notifies when either request asked for it.
+   */
+  private _checkFiles(directory: string, notify: boolean): void {
+    if (this._closed || !this._filesystem.getFileStats) {
+      return;
+    }
+    const pending = this._fileChecks[directory];
+    if (pending) {
+      pending.again = true;
+      pending.notify = pending.notify || notify;
+      return;
+    }
+    const check = { again: false, notify: false };
+    this._fileChecks[directory] = check;
+    const { getFileStats } = this._filesystem;
+    const files = this._files[directory];
+    Promise.all(
+      files.map(async (path) => {
+        try {
+          const stats = await getFileStats.call(this._filesystem, path);
+          return stats ? `${stats.timestamp}:${stats.size}` : 'absent';
+        } catch {
+          return 'error';
+        }
+      }),
+    ).then((signatures) => {
+      delete this._fileChecks[directory];
+      if (this._closed) {
+        return;
+      }
+      let changed = false;
+      files.forEach((path, index) => {
+        if (this._signatures[path] !== signatures[index]) {
+          if (this._signatures[path] !== undefined) {
+            changed = true;
+          }
+          this._signatures[path] = signatures[index];
+        }
+      });
+      if (notify && changed) {
+        this._onChange();
+      }
+      if (check.again) {
+        this._checkFiles(directory, check.notify);
+      }
+    });
   }
 
   /**
