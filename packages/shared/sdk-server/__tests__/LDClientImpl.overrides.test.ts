@@ -49,7 +49,7 @@ describe('given an uninitialized client with an override source', () => {
 
     expect(detail.value).toBe(true);
     expect(detail.variationIndex).toEqual(0);
-    expect(detail.reason).toEqual({ kind: 'OFF', overrideAffected: true });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
     expect(client.initialized()).toBe(false);
   });
 
@@ -90,7 +90,10 @@ describe('given an uninitialized client with an override source', () => {
 
     expect(state.valid).toBe(true);
     expect(state.allValues()).toEqual({ 'overridden-flag': true });
-    expect(state.getFlagReason('overridden-flag')).toEqual({ kind: 'OFF', overrideAffected: true });
+    expect(state.getFlagReason('overridden-flag')).toEqual({
+      kind: 'FALLTHROUGH',
+      overrideAffected: true,
+    });
 
     await client.allFlagsState(user);
     expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(1);
@@ -177,7 +180,7 @@ describe('given an initialized client with LaunchDarkly data and an override sou
     const detail = await client.variationDetail('flag-normal', user, 'default');
 
     expect(detail.value).toEqual('normal-value');
-    expect(detail.reason).toEqual({ kind: 'OFF' });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH' });
   });
 
   it('marks a flag whose prerequisite is overridden', async () => {
@@ -215,7 +218,7 @@ describe('given an initialized client with LaunchDarkly data and an override sou
     const detail = await client.variationDetail('overridden-flag', user, 'default');
 
     expect(detail.value).toEqual('ld-value');
-    expect(detail.reason).toEqual({ kind: 'OFF' });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH' });
   });
 });
 
@@ -306,7 +309,7 @@ describe('given an override source with an asynchronous initial load', () => {
 
     const detail = await pending;
     expect(detail.value).toBe(true);
-    expect(detail.reason).toEqual({ kind: 'OFF', overrideAffected: true });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
   });
 
   it('waits for the initial load before reporting the all flags state', async () => {
@@ -423,6 +426,6 @@ describe('given override source lifecycle and configuration', () => {
 
     const detail = await client.variationDetail('flag', user, 'default');
     expect(detail.value).toEqual('x');
-    expect(detail.reason).toEqual({ kind: 'OFF' });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH' });
   });
 });

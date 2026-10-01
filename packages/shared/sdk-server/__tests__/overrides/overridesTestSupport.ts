@@ -97,8 +97,7 @@ export function singleValueFlag(key: string, value: any, version: number = 1): a
   return {
     key,
     version,
-    on: false,
-    offVariation: 0,
+    on: true,
     fallthrough: { variation: 0 },
     variations: [value],
   };
