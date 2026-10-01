@@ -11,8 +11,8 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.13.8",
-    "@launchdarkly/react-sdk": "4.1.21",
+    "@launchdarkly/node-server-sdk": "9.14.0",
+    "@launchdarkly/react-sdk": "4.1.22",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19"
