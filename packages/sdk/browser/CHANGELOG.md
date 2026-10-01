@@ -3,9 +3,9 @@
 ## [4.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.10.4...js-client-sdk-v4.11.0) (2026-09-30)
 
 
-### Features
+### Bug Fixes
 
-* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+* default the built-in EventSource backoff bounds when they are omitted ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
 
 
 ### Dependencies
