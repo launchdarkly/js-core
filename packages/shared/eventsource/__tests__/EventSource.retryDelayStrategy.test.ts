@@ -1,5 +1,7 @@
 import { AsyncQueue, sleepAsync, TestHttpHandlers } from 'launchdarkly-js-test-helpers';
 
+import { createAfterHealthyFor, createRetryState } from '@launchdarkly/js-sdk-common';
+
 import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
 import { RetryDelayStrategy } from '../src/types';
 import {
@@ -191,5 +193,41 @@ it('does not dispatch the triggering message when setGoodSince calls close()', a
     await sleepAsync(100);
     expect(messages.isEmpty()).toBe(true);
     expect(es.readyState).toEqual(CLOSED);
+  });
+});
+
+it('drives reconnect delays from a js-sdk-common RetryState adapted the way an SDK does', async () => {
+  // The three-method adapter below is the exact shape the SDK data sources use to wire the
+  // common RetryState into this package. The data source records outcomes from its own error
+  // handling; the errorFilter stands in for that here.
+  const retryState = createRetryState({
+    normalInitialDelayMs: 5,
+    normalCeilingMs: 100,
+    extendedInitialDelayMs: 50,
+    extendedCeilingMs: 100,
+    resetPolicy: createAfterHealthyFor(60000),
+    random: () => 0,
+  });
+  const strategy: RetryDelayStrategy = {
+    nextRetryDelay: () => retryState.nextDelay,
+    setGoodSince: () => retryState.recordSuccess(),
+    setBaseDelay: (delayMillis) => retryState.applyServerDirectedRetry(delayMillis),
+  };
+  await withServer(async (server) => {
+    server.byDefault(TestHttpHandlers.respond(500));
+    const opts = {
+      retryDelayStrategy: strategy,
+      errorFilter: () => {
+        retryState.recordFailure('normal');
+        return true;
+      },
+    };
+    await withEventSource(server.url, opts, async (es) => {
+      const delays = new AsyncQueue<number>();
+      es.onretrying = (event) => delays.add(event.delayMillis);
+      // With zero jitter the delay doubles from the initial 5ms: 5, then 10.
+      expect(await delays.take()).toEqual(5);
+      expect(await delays.take()).toEqual(10);
+    });
   });
 });
