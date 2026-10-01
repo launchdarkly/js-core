@@ -10,7 +10,7 @@ export type {
   EventSourceEventMap,
   MessageEvent,
   OpenEvent,
-  RetryingEvent,
+  RetryEvent,
 } from './Event';
 
 import type { ErrorEvent } from './Event';

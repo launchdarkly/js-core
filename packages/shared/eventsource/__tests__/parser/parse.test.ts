@@ -130,6 +130,18 @@ it('forwards an all-digit retry value', () => {
   expect(retries).toEqual([2500]);
 });
 
+it('caps a retry value above one hour at one hour', () => {
+  const { parser, retries } = recordingParser();
+  parser.feed('retry: 3600001\n\n');
+  expect(retries).toEqual([3600000]);
+});
+
+it('caps an overlong retry value that parses to Infinity at one hour', () => {
+  const { parser, retries } = recordingParser();
+  parser.feed(`retry: ${'9'.repeat(400)}\n\n`);
+  expect(retries).toEqual([3600000]);
+});
+
 it('reports a retry value that is not all digits through onError and does not forward it', () => {
   const { parser, retries, errors } = recordingParser();
   parser.feed('retry: 12abc\n\n');

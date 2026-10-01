@@ -63,7 +63,7 @@ export interface EventSourceEventMap {
   error: ErrorEvent | MessageEvent;
   message: MessageEvent;
   open: OpenEvent;
-  retry: RetryEvent;
+  retrying: RetryEvent;
 }
 
 /**
