@@ -47,8 +47,11 @@ create new database integrations by implementing only the database-specific logi
 <a href="PersistentDataStoreWrapper.html#_core" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_core</span></a>
 <a href="PersistentDataStoreWrapper.html#_isInitialized" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_is<wbr/>Initialized</span></a>
 <a href="PersistentDataStoreWrapper.html#_itemCache" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_item<wbr/>Cache</span></a>
+<a href="PersistentDataStoreWrapper.html#_lastErrorLogMs" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_last<wbr/>Error<wbr/>Log<wbr/>Ms</span></a>
+<a href="PersistentDataStoreWrapper.html#_logStoreError" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_log<wbr/>Store<wbr/>Error</span></a>
 <a href="PersistentDataStoreWrapper.html#_logger" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_logger?</span></a>
 <a href="PersistentDataStoreWrapper.html#_queue" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_queue</span></a>
+<a href="PersistentDataStoreWrapper.html#isStoreAvailable" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Store<wbr/>Available?</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
@@ -79,7 +82,7 @@ create new database integrations by implementing only the database-specific logi
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">_logger</span>: <a href="../interfaces/platform-1.LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="PersistentDataStoreWrapper.html" class="tsd-signature-type tsd-kind-class">PersistentDataStoreWrapper</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3072</li></ul></aside></li></ul></section></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3080</li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_allItemsCache" class="tsd-anchor"></a>
@@ -89,7 +92,7 @@ create new database integrations by implementing only the database-specific logi
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3067</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3068</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_core" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_core</span><a href="#_core" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_core</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
@@ -107,7 +110,21 @@ create new database integrations by implementing only the database-specific logi
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3063</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3064</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_lastErrorLogMs" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_last<wbr/>Error<wbr/>Log<wbr/>Ms</span><a href="#_lastErrorLogMs" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_last<wbr/>Error<wbr/>Log<wbr/>Ms</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3060</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_logStoreError" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_log<wbr/>Store<wbr/>Error</span><a href="#_logStoreError" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_log<wbr/>Store<wbr/>Error</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Logs a store write error, at error level at most once per interval and at
+debug level otherwise, so a store that fails every write cannot flood the log.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3091</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_logger" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_logger</span><a href="#_logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_logger</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
@@ -120,7 +137,42 @@ create new database integrations by implementing only the database-specific logi
 </div>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3071</li></ul></aside></section></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3072</li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="isStoreAvailable" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>is<wbr/>Store<wbr/>Available</span><a href="#isStoreAvailable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">is<wbr/>Store<wbr/>Available</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></div>
+<div class="tsd-type-declaration">
+<h4>Type declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter-signature">
+<ul class="tsd-signatures">
+<li class="tsd-signature" id="isStoreAvailable.__type.__type-1"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">callback</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Check if the underlying storage can be accessed.</p>
+<p>This method is only present when the PersistentDataStore used by this
+wrapper implements it.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">callback</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">isAvailable</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
+<ul class="tsd-parameters">
+<li class="tsd-parameter-signature">
+<ul class="tsd-signatures">
+<li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">isAvailable</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><span class="tsd-kind-parameter">isAvailable</span>: <span class="tsd-signature-type">boolean</span></h5></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+<div class="tsd-comment tsd-typography"></div></li></ul></li></ul></div><aside class="tsd-sources">
+<p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#isStoreAvailable">isStoreAvailable</a></p>
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3079</li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member"><a id="all" class="tsd-anchor"></a>
@@ -161,7 +213,7 @@ create new database integrations by implementing only the database-specific logi
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#all">all</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3076</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3084</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="close" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>close</span><a href="#close" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -173,7 +225,7 @@ create new database integrations by implementing only the database-specific logi
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#close">close</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3079</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3092</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="delete" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>delete</span><a href="#delete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -216,7 +268,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#delete">delete</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3078</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3086</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="get" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get</span><a href="#get" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -258,7 +310,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#get">get</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3074</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3082</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getDescription" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Description</span><a href="#getDescription" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -270,7 +322,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#getDescription">getDescription</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3080</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3093</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="init" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>init</span><a href="#init" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -288,7 +340,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
   <code>interfaces.FullDataSet&lt;VersionedData&gt;</code>.</p>
 </div></li>
 <li>
-<h5><span class="tsd-kind-parameter">callback</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
+<h5><span class="tsd-kind-parameter">callback</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
 <div class="tsd-comment tsd-typography"><p>Will be called when the store has been initialized. If the store could not apply the
   data, then it may be called with an error. Implementations are not required to report
   errors.</p>
@@ -296,14 +348,19 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <ul class="tsd-parameters">
 <li class="tsd-parameter-signature">
 <ul class="tsd-signatures">
-<li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">err</span>: <span class="tsd-signature-type ">Error</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#init">init</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3073</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3081</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="initialized" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>initialized</span><a href="#initialized" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -336,7 +393,7 @@ database).</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#initialized">initialized</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3075</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3083</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="upsert" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>upsert</span><a href="#upsert" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -360,7 +417,7 @@ database).</p>
   The actual type of this parameter is <a href="../types/interfaces.VersionedData.html" class="tsd-kind-type-alias">interfaces.VersionedData</a>.</p>
 </div></li>
 <li>
-<h5><span class="tsd-kind-parameter">callback</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
+<h5><span class="tsd-kind-parameter">callback</span>: <span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span></h5>
 <div class="tsd-comment tsd-typography"><p>Will be called after the upsert operation is complete. If the store could not apply
   the update, then it may be called with an error. Implementations are not required to
   report errors.</p>
@@ -368,14 +425,19 @@ database).</p>
 <ul class="tsd-parameters">
 <li class="tsd-parameter-signature">
 <ul class="tsd-signatures">
-<li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+<li class="tsd-signature"><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">err</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">err</span>: <span class="tsd-signature-type ">Error</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDFeatureStore.html">LDFeatureStore</a>.<a href="../interfaces/LDFeatureStore.html#upsert">upsert</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3077</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3085</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -400,8 +462,11 @@ database).</p>
 <li><a href="#_core" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_core</span></a></li>
 <li><a href="#_isInitialized" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_is<wbr/>Initialized</span></a></li>
 <li><a href="#_itemCache" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_item<wbr/>Cache</span></a></li>
+<li><a href="#_lastErrorLogMs" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_last<wbr/>Error<wbr/>Log<wbr/>Ms</span></a></li>
+<li><a href="#_logStoreError" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_log<wbr/>Store<wbr/>Error</span></a></li>
 <li><a href="#_logger" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_logger</span></a></li>
 <li><a href="#_queue" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_queue</span></a></li>
+<li><a href="#isStoreAvailable" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>is<wbr/>Store<wbr/>Available</span></a></li>
 <li><a href="#all" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all</span></a></li>
 <li><a href="#close" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>close</span></a></li>
 <li><a href="#delete" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>delete</span></a></li>
