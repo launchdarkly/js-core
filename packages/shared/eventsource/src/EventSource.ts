@@ -11,7 +11,7 @@ import {
   MessageEvent,
   OpenEvent,
   RawErrorPayload,
-  RetryingEvent,
+  RetryEvent,
 } from './Event';
 import {
   bodylessMethods,
@@ -139,7 +139,7 @@ export interface EventSource {
    * An exception this slot throws does not stop the reconnect timer from arming. The exception
    * rethrows later, on a separate microtask.
    */
-  onretrying: ((event: RetryingEvent) => void) | undefined;
+  onretrying: ((event: RetryEvent) => void) | undefined;
 
   /**
    * Called once when `close()` closes the stream, before the listeners registered for the
@@ -323,7 +323,7 @@ export function createEventSource(
         break;
       case 'retrying':
         try {
-          self.onretrying?.(event as unknown as RetryingEvent);
+          self.onretrying?.(event as unknown as RetryEvent);
         } catch (err) {
           slotThrew = true;
           slotError = err;

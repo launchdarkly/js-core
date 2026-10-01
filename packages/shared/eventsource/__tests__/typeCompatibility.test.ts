@@ -4,7 +4,7 @@ import type {
   EventSourceInitDict as PlatformEventSourceInitDict,
 } from '@launchdarkly/js-sdk-common';
 
-import { makeEvent, MessageEvent, RetryingEvent } from '../src/Event';
+import { makeEvent, MessageEvent, RetryEvent } from '../src/Event';
 import { createEventSource } from '../src/EventSource';
 import { EventSourceInitDict } from '../src/types';
 import { deliberatelyUnusedPort } from './helpers';
@@ -40,8 +40,8 @@ const unsupportedOptionsCheck: UnsupportedPlatformOptions extends never ? true :
  * resolves to `MessageEvent`.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const retryingEventCheck: RetryingEvent = makeEvent('retrying', { delayMillis: 5 });
-// @ts-expect-error wrongKey is not a property of RetryingEvent
+const retryingEventCheck: RetryEvent = makeEvent('retrying', { delayMillis: 5 });
+// @ts-expect-error wrongKey is not a property of RetryEvent
 makeEvent('retrying', { wrongKey: 5 });
 const someString: string = 'custom-event';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
