@@ -79,7 +79,7 @@ describe('given a client with a file override source over a mock filesystem', ()
     const detail = await client!.boolVariationDetail('overridden-flag', user, false);
 
     expect(detail.value).toBe(true);
-    expect(detail.reason).toEqual({ kind: 'OFF', overrideAffected: true });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
     expect(client!.initialized()).toBe(false);
   });
 

@@ -76,10 +76,12 @@ describe('given a file override source over a mock filesystem', () => {
 
     expect(sink.snapshots).toHaveLength(1);
     expect(sink.flagKeys()).toEqual(['flag1', 'flag2']);
-    // The flag value entry was expanded into a full flag definition that is off.
+    // The flag value entry was expanded into a full flag definition that is on and serves the
+    // value by fallthrough.
     const flag1 = sink.last.flags.find((flag) => flag.key === 'flag1')!;
     expect(flag1.variations).toEqual([true]);
-    expect(flag1.on).toBe(false);
+    expect(flag1.on).toBe(true);
+    expect(flag1.fallthrough).toEqual({ variation: 0 });
     expect(sink.last.flags.find((flag) => flag.key === 'flag2')!.version).toEqual(3);
   });
 
