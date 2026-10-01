@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.10](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v2.0.9...openfeature-node-server-v2.0.10) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 2.0.4 to 2.0.5
+
 ## [2.0.9](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v2.0.8...openfeature-node-server-v2.0.9) (2026-10-01)
 
 
