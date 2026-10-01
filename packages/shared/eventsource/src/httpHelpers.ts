@@ -6,7 +6,7 @@
  *
  * @remark
  * Because they are a structural subset, any standard `fetch` implementation should be able to
- * satisfy `FetchFn` without casts. A platform that cannot use a global `fetch` (for example,
+ * satisfy `FetchLike` without casts. A platform that cannot use a global `fetch` (for example,
  * one that needs an agent or TLS configuration) supplies its own function with the same shape.
  **/
 
@@ -35,11 +35,17 @@ export interface FetchResponseBody {
 /**
  * The subset of a fetch `Response` that this package uses.
  */
-export interface FetchResponse {
+export interface FetchLikeResponse {
   readonly status: number;
   readonly statusText: string;
   readonly headers: FetchHeaders;
   readonly body?: FetchResponseBody | null;
+  /**
+   * The final response URL, after any redirects. A standard `fetch` response always carries it.
+   * The field is optional because a minimal injected transport can omit it; the client then
+   * derives the message origin from the request URL.
+   */
+  readonly url?: string;
 }
 
 /**
@@ -49,7 +55,7 @@ export interface FetchResponse {
  * raw socket API can ignore `credentials`, and it does not need to follow redirects; the client
  * treats a redirect status from such a transport as an ordinary non-200 failure.
  */
-export interface FetchRequestOptions {
+export interface FetchLikeOptions {
   method?: string;
   headers?: Record<string, string>;
   body?: string;
@@ -60,14 +66,14 @@ export interface FetchRequestOptions {
 /**
  * The fetch-shaped transport function. The global `fetch` satisfies this type.
  */
-export type FetchFn = (url: string, init: FetchRequestOptions) => Promise<FetchResponse>;
+export type FetchLike = (url: string, init: FetchLikeOptions) => Promise<FetchLikeResponse>;
 
 /**
  * The default transport. It reads the global at call time, so a test can replace
  * `globalThis.fetch` after this module loads. The wrapper also avoids an unbound reference to
  * the global function, which some platforms reject.
  */
-export const defaultFetch: FetchFn = (url, init) => globalThis.fetch(url, init);
+export const defaultFetch: FetchLike = (url, init) => globalThis.fetch(url, init);
 
 /** The methods for which a `fetch()` request cannot have a body. */
 export const bodylessMethods = ['GET', 'HEAD'];
@@ -79,3 +85,15 @@ export function headersToObject(headers: FetchHeaders): Record<string, string> {
   });
   return result;
 }
+
+/**
+ * The `Headers` class of `fetch()` rejects some values through its ByteString conversion: a C0
+ * control character other than tab, DEL, and each code point above U+00FF. A value outside the
+ * permitted set would make the Last-Event-ID header assignment throw on reconnect. That failure
+ * would block the connection permanently.
+ *
+ * @remark
+ * The original `launchdarkly-eventsource` implementation rejects only a NUL character; this stricter
+ * rule is what a `fetch()` transport requires.
+ */
+export const INVALID_HEADER_VALUE_CHAR = /[^\t\x20-\x7e\x80-\xff]/;

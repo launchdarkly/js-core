@@ -1,0 +1,206 @@
+import { AsyncQueue, sleepAsync } from 'launchdarkly-js-test-helpers';
+
+import { MessageEvent, OpenEvent } from '../src/types';
+import {
+  expectNothingReceived,
+  startErrorQueue,
+  startMessageQueue,
+  waitForOpenEvent,
+  withEventSource,
+  withServer,
+  withSlotRethrowSwallowed,
+  writeEvents,
+} from './helpers';
+
+it('calls onopen when the connection is established', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents([]));
+    await withEventSource(server.url, undefined, async (es) => {
+      const opened = new AsyncQueue<OpenEvent>();
+      es.onopen = (e) => opened.add(e);
+      const e = await opened.take();
+      expect(e.type).toEqual('open');
+    });
+  });
+});
+
+it('emits the open event with response headers', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents([], { 'X-LD-EnvId': '12345' }));
+    await withEventSource(server.url, undefined, async (es) => {
+      const e = await waitForOpenEvent(es);
+      expect(e.type).toEqual('open');
+      expect(e.headers?.['x-ld-envid']).toEqual('12345');
+    });
+  });
+});
+
+it('supplies the correct origin', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      const m = await messages.take();
+      expect(m.origin).toEqual(server.url);
+    });
+  });
+});
+
+it('does not double reconnect when the connection is closed by the server', async () => {
+  await withServer(async (server) => {
+    let numConnections = 0;
+    server.byDefault((req, res) => {
+      numConnections += 1;
+      // End the first connection - only one reconnect is expected.
+      if (numConnections === 1) {
+        res.end();
+      } else {
+        writeEvents([])(req, res);
+      }
+    });
+
+    await withEventSource(server.url, { initialRetryDelayMillis: 50 }, async () => {
+      await server.nextRequest();
+      await server.nextRequest();
+
+      await sleepAsync(300);
+      expect(server.requests.isEmpty()).toBe(true);
+    });
+  });
+});
+
+it('does not emit an error when the connection is closed by the client', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents([]));
+    await withEventSource(server.url, undefined, async (es) => {
+      const errors = startErrorQueue(es);
+      await waitForOpenEvent(es);
+      es.close();
+      await expectNothingReceived(errors);
+    });
+  });
+});
+
+it('populates lastEventId when the last event has an associated id', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 123\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      const m = await messages.take();
+      expect(m.lastEventId).toEqual('123');
+    });
+  });
+});
+
+it('carries lastEventId forward when a later event has no associated id', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['id: 123\ndata: Hello\n\n', 'data: World\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      expect((await messages.take()).lastEventId).toEqual('123');
+      expect((await messages.take()).lastEventId).toEqual('123');
+    });
+  });
+});
+
+it('ignores an event id that contains a null character', async () => {
+  const nul = String.fromCharCode(0);
+  await withServer(async (server) => {
+    server.byDefault(writeEvents([`id: 12${nul}3\ndata: hello\n\n`]));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      const m = await messages.take();
+      expect(m.lastEventId).toEqual('');
+    });
+  });
+});
+
+it('ignores an event id that a request header cannot carry', async () => {
+  await withServer(async (server) => {
+    // The id value is outside Latin-1, so the Last-Event-ID header could not carry it on a
+    // reconnect. The client drops such an id instead of storing it.
+    server.byDefault(writeEvents(['id: 事件\ndata: hello\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      expect((await messages.take()).lastEventId).toEqual('');
+    });
+  });
+});
+
+it('populates messages with enumerable properties so they can be inspected', async () => {
+  await withServer(async (server) => {
+    server.byDefault(writeEvents(['data: World\n\n']));
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages = startMessageQueue(es);
+      const m = await messages.take();
+      expect(Object.keys(m)).toEqual(expect.arrayContaining(['type', 'data']));
+      // Own, enumerable and non-writable, same as every platform's own event construction
+      // promises -- checked here against a real delivered event.
+      // `type` is the property that construction special-cases; `data` covers the rest.
+      expect(Object.getOwnPropertyDescriptor(m, 'type')).toEqual({
+        value: 'message',
+        writable: false,
+        enumerable: true,
+        configurable: false,
+      });
+      expect(Object.getOwnPropertyDescriptor(m, 'data')).toEqual({
+        value: 'World',
+        writable: false,
+        enumerable: true,
+        configurable: false,
+      });
+    });
+  });
+});
+
+it('allows removal of event listeners', async () => {
+  await withServer(async (server) => {
+    server.byDefault(
+      writeEvents(['event: greeting\ndata: Hello\n\n', 'event: greeting\ndata: World\n\n']),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      const messages1 = new AsyncQueue<MessageEvent>();
+      const messages2 = new AsyncQueue<MessageEvent>();
+      function add1(m: MessageEvent) {
+        messages1.add(m);
+      }
+      function add2(m: MessageEvent) {
+        messages2.add(m);
+      }
+      es.addEventListener('greeting', add1);
+      es.addEventListener('greeting', add2);
+      es.removeEventListener('greeting', add1);
+
+      // Both events reaching the surviving listener proves dispatch already passed the removed
+      // listener twice, so the queue below can be checked without settling time.
+      await messages2.take();
+      await messages2.take();
+      expect(messages1.isEmpty()).toBe(true);
+    });
+  });
+});
+
+it('delivers the rest of a chunk after a message listener throws', async () => {
+  // A throwing listener must not stop the parse of the current chunk or forge a transport
+  // error; its exception is rethrown on a later microtask instead.
+  const swallowed = await withSlotRethrowSwallowed(async () => {
+    await withServer(async (server) => {
+      server.byDefault(writeEvents(['data: a\n\ndata: b\n\n']));
+      await withEventSource(server.url, undefined, async (es) => {
+        const errors = startErrorQueue(es);
+        const messages = new AsyncQueue<MessageEvent>();
+        es.addEventListener('message', (m) => {
+          messages.add(m);
+          throw new Error('listener boom');
+        });
+        expect((await messages.take()).data).toEqual('a');
+        expect((await messages.take()).data).toEqual('b');
+        expect(errors.isEmpty()).toBe(true);
+      });
+    });
+  });
+  expect(swallowed.map((err) => (err as Error).message)).toEqual([
+    'listener boom',
+    'listener boom',
+  ]);
+});
