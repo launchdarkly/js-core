@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>TransactionalFeatureStore | @launchdarkly/akamai-server-edgekv-sdk - v1.4.41</title><meta name="description" content="Documentation for @launchdarkly/akamai-server-edgekv-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>TransactionalFeatureStore | @launchdarkly/akamai-server-edgekv-sdk - v1.4.42</title><meta name="description" content="Documentation for @launchdarkly/akamai-server-edgekv-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/search.js" id="tsd-search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -6,7 +6,7 @@
 <div id="tsd-toolbar-links"></div></div>
 <ul class="results">
 <li class="state loading">Preparing search index...</li>
-<li class="state failure">The search index is not available</li></ul><a href="../index.html" class="title">@launchdarkly/akamai-server-edgekv-sdk - v1.4.41</a></div>
+<li class="state failure">The search index is not available</li></ul><a href="../index.html" class="title">@launchdarkly/akamai-server-edgekv-sdk - v1.4.42</a></div>
 <div class="table-cell" id="tsd-widgets"><a href="#" class="tsd-widget tsd-toolbar-icon menu no-caption" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="7" width="14" height="2" fill="var(--color-text)"></rect><rect x="1" y="11" width="14" height="2" fill="var(--color-text)"></rect></svg></a></div></div></header>
 <div class="container container-main">
 <div class="col-content">
@@ -16,9 +16,14 @@
 <li><a href="TransactionalFeatureStore.html">TransactionalFeatureStore</a></li></ul>
 <h1>Class TransactionalFeatureStore</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>This decorator can take a non-transactional <a href="../interfaces/LDFeatureStore.html" class="tsd-kind-interface">LDFeatureStore</a> implementation
-and adapt it to be transactional through the use of an in-memory store acting as
-cache.</p>
+<div class="tsd-comment tsd-typography"><p>Wraps a non-transactional <a href="../interfaces/LDFeatureStore.html" class="tsd-kind-interface">LDFeatureStore</a> and makes it transactional through
+an in-memory store acting as a cache.</p>
+<p>It also monitors the mirrored writes to the persistence store. A failed write marks
+the store unavailable. When the store recovers, this writes the full in-memory data
+set back to it.</p>
+<p>At most one full-store write is in flight at a time: a new write-back starts
+only after the previous write-back&#39;s store call has answered. A write-back is
+never abandoned. Its answer, however late, decides the outcome.</p>
 </div>
 <div class="tsd-comment tsd-typography"></div></section>
 <section class="tsd-panel tsd-hierarchy">
@@ -30,7 +35,7 @@ cache.</p>
 <ul class="tsd-hierarchy">
 <li><a href="../interfaces/LDTransactionalFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDTransactionalFeatureStore</a></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3145</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3165</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -43,8 +48,36 @@ cache.</p>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Properties</h3>
 <div class="tsd-index-list"><a href="TransactionalFeatureStore.html#_activeStore" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-1024"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)"></path></g></svg><span>_active<wbr/>Store</span></a>
+<a href="TransactionalFeatureStore.html#_armFailureEmbargo" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_arm<wbr/>Failure<wbr/>Embargo</span></a>
+<a href="TransactionalFeatureStore.html#_armSlowWriteBackWarning" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_arm<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span></a>
+<a href="TransactionalFeatureStore.html#_attemptRecovery" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_attempt<wbr/>Recovery</span></a>
+<a href="TransactionalFeatureStore.html#_backoff" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_backoff</span></a>
+<a href="TransactionalFeatureStore.html#_basePersistenceStore" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_base<wbr/>Persistence<wbr/>Store</span></a>
+<a href="TransactionalFeatureStore.html#_cancelEmbargoRetry" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_cancel<wbr/>Embargo<wbr/>Retry</span></a>
+<a href="TransactionalFeatureStore.html#_cancelSlowWriteBackWarning" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_cancel<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span></a>
+<a href="TransactionalFeatureStore.html#_closed" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_closed</span></a>
+<a href="TransactionalFeatureStore.html#_embargoRetryHandle" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_embargo<wbr/>Retry<wbr/>Handle?</span></a>
+<a href="TransactionalFeatureStore.html#_failureLoggedThisOutage" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_failure<wbr/>Logged<wbr/>This<wbr/>Outage</span></a>
+<a href="TransactionalFeatureStore.html#_handleWriteBackFailure" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_handle<wbr/>Write<wbr/>Back<wbr/>Failure</span></a>
+<a href="TransactionalFeatureStore.html#_handleWriteResult" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_handle<wbr/>Write<wbr/>Result</span></a>
+<a href="TransactionalFeatureStore.html#_logger" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_logger?</span></a>
+<a href="TransactionalFeatureStore.html#_markAvailable" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_mark<wbr/>Available</span></a>
+<a href="TransactionalFeatureStore.html#_markUnavailable" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_mark<wbr/>Unavailable</span></a>
 <a href="TransactionalFeatureStore.html#_memoryStore" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_memory<wbr/>Store</span></a>
-<a href="TransactionalFeatureStore.html#_nonTransPersistenceStore" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_non<wbr/>Trans<wbr/>Persistence<wbr/>Store</span></a>
+<a href="TransactionalFeatureStore.html#_persistenceAvailable" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_persistence<wbr/>Available</span></a>
+<a href="TransactionalFeatureStore.html#_pollHandle" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_poll<wbr/>Handle?</span></a>
+<a href="TransactionalFeatureStore.html#_probe" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_probe</span></a>
+<a href="TransactionalFeatureStore.html#_releaseProbeIfHung" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_release<wbr/>Probe<wbr/>If<wbr/>Hung</span></a>
+<a href="TransactionalFeatureStore.html#_scheduleEmbargoRetry" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_schedule<wbr/>Embargo<wbr/>Retry</span></a>
+<a href="TransactionalFeatureStore.html#_slowWriteBackWarnedThisOutage" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_slow<wbr/>Write<wbr/>Back<wbr/>Warned<wbr/>This<wbr/>Outage</span></a>
+<a href="TransactionalFeatureStore.html#_slowWriteBackWarningHandle" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_slow<wbr/>Write<wbr/>Back<wbr/>Warning<wbr/>Handle?</span></a>
+<a href="TransactionalFeatureStore.html#_startRecoveryPolling" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_start<wbr/>Recovery<wbr/>Polling</span></a>
+<a href="TransactionalFeatureStore.html#_stopRecoveryPolling" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_stop<wbr/>Recovery<wbr/>Polling</span></a>
+<a href="TransactionalFeatureStore.html#_writeBack" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back</span></a>
+<a href="TransactionalFeatureStore.html#_writeBackCallOutstanding" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Call<wbr/>Outstanding</span></a>
+<a href="TransactionalFeatureStore.html#_writeBackEmbargoUntil" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Embargo<wbr/>Until</span></a>
+<a href="TransactionalFeatureStore.html#_writeBackOp" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Op</span></a>
+<a href="TransactionalFeatureStore.html#_writeFailedDuringWriteBack" class="tsd-index-link tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Failed<wbr/>During<wbr/>Write<wbr/>Back</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
@@ -65,33 +98,222 @@ cache.</p>
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_TransactionalFeatureStore"><span class="tsd-kind-constructor-signature">new <wbr/>Transactional<wbr/>Feature<wbr/>Store</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">_nonTransPersistenceStore</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="TransactionalFeatureStore.html" class="tsd-signature-type tsd-kind-class">TransactionalFeatureStore</a><a href="#constructor.new_TransactionalFeatureStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_TransactionalFeatureStore"><span class="tsd-kind-constructor-signature">new <wbr/>Transactional<wbr/>Feature<wbr/>Store</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">_basePersistenceStore</span>, <span class="tsd-kind-parameter">_logger</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">_backoff</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="TransactionalFeatureStore.html" class="tsd-signature-type tsd-kind-class">TransactionalFeatureStore</a><a href="#constructor.new_TransactionalFeatureStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><span class="tsd-kind-parameter">_nonTransPersistenceStore</span>: <a href="../interfaces/LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a></h5></li></ul></div>
+<h5><span class="tsd-kind-parameter">_basePersistenceStore</span>: <a href="../interfaces/LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a></h5></li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">_logger</span>: <a href="../interfaces/platform-1.LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">_backoff</span>: <span class="tsd-signature-type ">Pick</span><span class="tsd-signature-symbol">&lt;</span><a href="platform-1.DefaultBackoff.html" class="tsd-signature-type tsd-kind-class">DefaultBackoff</a><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">&quot;fail&quot;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">&quot;success&quot;</span><span class="tsd-signature-symbol">&gt;</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="TransactionalFeatureStore.html" class="tsd-signature-type tsd-kind-class">TransactionalFeatureStore</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3149</li></ul></aside></li></ul></section></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3183</li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_activeStore" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_active<wbr/>Store</span><a href="#_activeStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_active<wbr/>Store</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3148</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3170</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_armFailureEmbargo" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_arm<wbr/>Failure<wbr/>Embargo</span><a href="#_armFailureEmbargo" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_arm<wbr/>Failure<wbr/>Embargo</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Backs off the next write-back attempt after a failed one, and schedules that
+attempt at the backoff deadline.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3250</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_armSlowWriteBackWarning" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_arm<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span><a href="#_armSlowWriteBackWarning" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_arm<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Arms a one-shot timer that warns when the write-back&#39;s store call is slow to
+answer. The call is never abandoned: recovery waits for its answer, however
+long it takes. The timer only logs. It changes no state.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3231</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_attemptRecovery" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_attempt<wbr/>Recovery</span><a href="#_attemptRecovery" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_attempt<wbr/>Recovery</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3240</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_backoff" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_backoff</span><a href="#_backoff" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_backoff</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3168</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_basePersistenceStore" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_base<wbr/>Persistence<wbr/>Store</span><a href="#_basePersistenceStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_base<wbr/>Persistence<wbr/>Store</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3166</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_cancelEmbargoRetry" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_cancel<wbr/>Embargo<wbr/>Retry</span><a href="#_cancelEmbargoRetry" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_cancel<wbr/>Embargo<wbr/>Retry</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3225</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_cancelSlowWriteBackWarning" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_cancel<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span><a href="#_cancelSlowWriteBackWarning" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_cancel<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3232</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_closed" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_closed</span><a href="#_closed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_closed</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3179</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_embargoRetryHandle" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_embargo<wbr/>Retry<wbr/>Handle</span><a href="#_embargoRetryHandle" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_embargo<wbr/>Retry<wbr/>Handle</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3181</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_failureLoggedThisOutage" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_failure<wbr/>Logged<wbr/>This<wbr/>Outage</span><a href="#_failureLoggedThisOutage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_failure<wbr/>Logged<wbr/>This<wbr/>Outage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3177</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_handleWriteBackFailure" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_handle<wbr/>Write<wbr/>Back<wbr/>Failure</span><a href="#_handleWriteBackFailure" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_handle<wbr/>Write<wbr/>Back<wbr/>Failure</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Records a failed write-back attempt: backs off the next attempt and logs.</p>
+<p>Only the first failure of an outage logs at error level. Later failures in the
+same outage log at debug level, so an unhealthy store cannot flood the log
+every poll tick.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3258</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_handleWriteResult" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_handle<wbr/>Write<wbr/>Result</span><a href="#_handleWriteResult" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_handle<wbr/>Write<wbr/>Result</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Record the result of a mirrored write to the persistence store.</p>
+<p>The first failed write marks the store unavailable. A successful write while the
+store is unavailable starts recovery.</p>
+<p>A basis write already wrote the full data set, so it recovers directly. Any
+other write starts a write-back of the full in-memory data set instead.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3204</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_logger" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_logger</span><a href="#_logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_logger</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3167</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_markAvailable" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_mark<wbr/>Available</span><a href="#_markAvailable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_mark<wbr/>Available</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3206</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_markUnavailable" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_mark<wbr/>Unavailable</span><a href="#_markUnavailable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_mark<wbr/>Unavailable</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3205</li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-is-private"><a id="_memoryStore" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_memory<wbr/>Store</span><a href="#_memoryStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">_memory<wbr/>Store</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3147</li></ul></aside></section>
-<section class="tsd-panel tsd-member tsd-is-private"><a id="_nonTransPersistenceStore" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>_non<wbr/>Trans<wbr/>Persistence<wbr/>Store</span><a href="#_nonTransPersistenceStore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">_non<wbr/>Trans<wbr/>Persistence<wbr/>Store</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3169</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_persistenceAvailable" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_persistence<wbr/>Available</span><a href="#_persistenceAvailable" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_persistence<wbr/>Available</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3146</li></ul></aside></section></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3171</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_pollHandle" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_poll<wbr/>Handle</span><a href="#_pollHandle" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_poll<wbr/>Handle</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3180</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_probe" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_probe</span><a href="#_probe" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_probe</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3172</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_releaseProbeIfHung" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_release<wbr/>Probe<wbr/>If<wbr/>Hung</span><a href="#_releaseProbeIfHung" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_release<wbr/>Probe<wbr/>If<wbr/>Hung</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Abandons the outstanding availability probe once it is past its deadline.</p>
+<p>Bumps the generation so a late answer is ignored, and clears the in-flight flag
+so a fresh probe can be issued. Returns whether it was released.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3239</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_scheduleEmbargoRetry" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_schedule<wbr/>Embargo<wbr/>Retry</span><a href="#_scheduleEmbargoRetry" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_schedule<wbr/>Embargo<wbr/>Retry</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Schedules the next write-back attempt at the embargo deadline.</p>
+<p>Without this timer, a recovery signal that arrived during the embargo, or a
+failed write-back with no follow-up write, could leave no later trigger: a
+store without an availability check has no poller, and a poller&#39;s probe can
+disagree with the write path. At most one timer runs. Recovery and close
+cancel it. A duplicate trigger with the poll tick is harmless: whichever
+fires second finds the attempt already in flight or the store recovered.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3224</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_slowWriteBackWarnedThisOutage" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_slow<wbr/>Write<wbr/>Back<wbr/>Warned<wbr/>This<wbr/>Outage</span><a href="#_slowWriteBackWarnedThisOutage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_slow<wbr/>Write<wbr/>Back<wbr/>Warned<wbr/>This<wbr/>Outage</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3178</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_slowWriteBackWarningHandle" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <code class="tsd-tag ts-flagOptional">Optional</code> <span>_slow<wbr/>Write<wbr/>Back<wbr/>Warning<wbr/>Handle</span><a href="#_slowWriteBackWarningHandle" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_slow<wbr/>Write<wbr/>Back<wbr/>Warning<wbr/>Handle</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3182</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_startRecoveryPolling" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_start<wbr/>Recovery<wbr/>Polling</span><a href="#_startRecoveryPolling" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_start<wbr/>Recovery<wbr/>Polling</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Poll the persistence store availability check, when it has one, until the store
+recovers. Stores without an availability check recover through the next successful
+mirrored write instead. The check is read-only. A write is never used as a check.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3212</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_stopRecoveryPolling" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_stop<wbr/>Recovery<wbr/>Polling</span><a href="#_stopRecoveryPolling" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_stop<wbr/>Recovery<wbr/>Polling</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3213</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_writeBack" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_write<wbr/>Back</span><a href="#_writeBack" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_write<wbr/>Back</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+<div class="tsd-comment tsd-typography"><p>Write the full in-memory data set, including tombstones, to the persistence store.
+The caller must begin the attempt on _writeBackOp and pass its generation.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3245</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_writeBackCallOutstanding" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_write<wbr/>Back<wbr/>Call<wbr/>Outstanding</span><a href="#_writeBackCallOutstanding" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_write<wbr/>Back<wbr/>Call<wbr/>Outstanding</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3176</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_writeBackEmbargoUntil" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_write<wbr/>Back<wbr/>Embargo<wbr/>Until</span><a href="#_writeBackEmbargoUntil" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_write<wbr/>Back<wbr/>Embargo<wbr/>Until</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3174</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_writeBackOp" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_write<wbr/>Back<wbr/>Op</span><a href="#_writeBackOp" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_write<wbr/>Back<wbr/>Op</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3173</li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-is-private"><a id="_writeFailedDuringWriteBack" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagPrivate">Private</code> <span>_write<wbr/>Failed<wbr/>During<wbr/>Write<wbr/>Back</span><a href="#_writeFailedDuringWriteBack" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">_write<wbr/>Failed<wbr/>During<wbr/>Write<wbr/>Back</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3175</li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member"><a id="all" class="tsd-anchor"></a>
@@ -132,7 +354,7 @@ cache.</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#all">all</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3151</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3185</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="applyChanges" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>apply<wbr/>Changes</span><a href="#applyChanges" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -179,7 +401,7 @@ the value is an object that maps keys to entities. The actual type of this param
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#applyChanges">applyChanges</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3155</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3189</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="close" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>close</span><a href="#close" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -191,7 +413,7 @@ the value is an object that maps keys to entities. The actual type of this param
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#close">close</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3157</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3191</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="delete" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>delete</span><a href="#delete" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -234,7 +456,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#delete">delete</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3153</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3187</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="get" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get</span><a href="#get" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -276,7 +498,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#get">get</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3150</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3184</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getDescription" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Description</span><a href="#getDescription" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -288,7 +510,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#getDescription">getDescription</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3158</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3192</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getInitMetaData" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Init<wbr/>Meta<wbr/>Data</span><a href="#getInitMetaData" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -300,7 +522,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#getInitMetaData">getInitMetaData</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3159</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3193</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="getSelector" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>get<wbr/>Selector</span><a href="#getSelector" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -312,7 +534,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#getSelector">getSelector</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3160</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3194</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="init" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>init</span><a href="#init" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -345,7 +567,7 @@ it should be exactly the same as calling <code>upsert</code> with such an object
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#init">init</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3152</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3186</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="initialized" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>initialized</span><a href="#initialized" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -378,7 +600,7 @@ database).</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#initialized">initialized</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3156</li></ul></aside></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3190</li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member"><a id="upsert" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>upsert</span><a href="#upsert" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -417,7 +639,7 @@ database).</p>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <p>Implementation of <a href="../interfaces/LDTransactionalFeatureStore.html">LDTransactionalFeatureStore</a>.<a href="../interfaces/LDTransactionalFeatureStore.html#upsert">upsert</a></p>
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3154</li></ul></aside></li></ul></section></section></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:3188</li></ul></aside></li></ul></section></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -439,8 +661,36 @@ database).</p>
 <ul>
 <li><a href="#constructor" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-512"></use></svg><span>constructor</span></a></li>
 <li><a href="#_activeStore" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_active<wbr/>Store</span></a></li>
+<li><a href="#_armFailureEmbargo" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_arm<wbr/>Failure<wbr/>Embargo</span></a></li>
+<li><a href="#_armSlowWriteBackWarning" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_arm<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span></a></li>
+<li><a href="#_attemptRecovery" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_attempt<wbr/>Recovery</span></a></li>
+<li><a href="#_backoff" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_backoff</span></a></li>
+<li><a href="#_basePersistenceStore" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_base<wbr/>Persistence<wbr/>Store</span></a></li>
+<li><a href="#_cancelEmbargoRetry" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_cancel<wbr/>Embargo<wbr/>Retry</span></a></li>
+<li><a href="#_cancelSlowWriteBackWarning" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_cancel<wbr/>Slow<wbr/>Write<wbr/>Back<wbr/>Warning</span></a></li>
+<li><a href="#_closed" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_closed</span></a></li>
+<li><a href="#_embargoRetryHandle" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_embargo<wbr/>Retry<wbr/>Handle</span></a></li>
+<li><a href="#_failureLoggedThisOutage" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_failure<wbr/>Logged<wbr/>This<wbr/>Outage</span></a></li>
+<li><a href="#_handleWriteBackFailure" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_handle<wbr/>Write<wbr/>Back<wbr/>Failure</span></a></li>
+<li><a href="#_handleWriteResult" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_handle<wbr/>Write<wbr/>Result</span></a></li>
+<li><a href="#_logger" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_logger</span></a></li>
+<li><a href="#_markAvailable" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_mark<wbr/>Available</span></a></li>
+<li><a href="#_markUnavailable" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_mark<wbr/>Unavailable</span></a></li>
 <li><a href="#_memoryStore" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_memory<wbr/>Store</span></a></li>
-<li><a href="#_nonTransPersistenceStore" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_non<wbr/>Trans<wbr/>Persistence<wbr/>Store</span></a></li>
+<li><a href="#_persistenceAvailable" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_persistence<wbr/>Available</span></a></li>
+<li><a href="#_pollHandle" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_poll<wbr/>Handle</span></a></li>
+<li><a href="#_probe" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_probe</span></a></li>
+<li><a href="#_releaseProbeIfHung" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_release<wbr/>Probe<wbr/>If<wbr/>Hung</span></a></li>
+<li><a href="#_scheduleEmbargoRetry" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_schedule<wbr/>Embargo<wbr/>Retry</span></a></li>
+<li><a href="#_slowWriteBackWarnedThisOutage" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_slow<wbr/>Write<wbr/>Back<wbr/>Warned<wbr/>This<wbr/>Outage</span></a></li>
+<li><a href="#_slowWriteBackWarningHandle" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_slow<wbr/>Write<wbr/>Back<wbr/>Warning<wbr/>Handle</span></a></li>
+<li><a href="#_startRecoveryPolling" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_start<wbr/>Recovery<wbr/>Polling</span></a></li>
+<li><a href="#_stopRecoveryPolling" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_stop<wbr/>Recovery<wbr/>Polling</span></a></li>
+<li><a href="#_writeBack" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back</span></a></li>
+<li><a href="#_writeBackCallOutstanding" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Call<wbr/>Outstanding</span></a></li>
+<li><a href="#_writeBackEmbargoUntil" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Embargo<wbr/>Until</span></a></li>
+<li><a href="#_writeBackOp" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Back<wbr/>Op</span></a></li>
+<li><a href="#_writeFailedDuringWriteBack" class="tsd-is-private"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>_write<wbr/>Failed<wbr/>During<wbr/>Write<wbr/>Back</span></a></li>
 <li><a href="#all" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>all</span></a></li>
 <li><a href="#applyChanges" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>apply<wbr/>Changes</span></a></li>
 <li><a href="#close" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>close</span></a></li>
@@ -453,7 +703,7 @@ database).</p>
 <li><a href="#initialized" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>initialized</span></a></li>
 <li><a href="#upsert" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2048"></use></svg><span>upsert</span></a></li></ul></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@launchdarkly/akamai-<wbr/>server-<wbr/>edgekv-<wbr/>sdk -<wbr/> v1.4.41</span></a>
+<nav class="tsd-navigation"><a href="../index.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-namespace)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6"></rect><path d="M9.33 16V7.24H10.77L13.446 14.74C13.43 14.54 13.41 14.296 13.386 14.008C13.37 13.712 13.354 13.404 13.338 13.084C13.33 12.756 13.326 12.448 13.326 12.16V7.24H14.37V16H12.93L10.266 8.5C10.282 8.692 10.298 8.936 10.314 9.232C10.33 9.52 10.342 9.828 10.35 10.156C10.366 10.476 10.374 10.784 10.374 11.08V16H9.33Z" fill="var(--color-text)"></path></g></svg><span>@launchdarkly/akamai-<wbr/>server-<wbr/>edgekv-<wbr/>sdk -<wbr/> v1.4.42</span></a>
 <ul class="tsd-small-nested-navigation">
 <li><a href="../index.html#ApplicationTags"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><g id="icon-4194304"><rect fill="var(--color-icon-background)" stroke="#FF4D82" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12"></rect><path d="M10.354 17V8.24H13.066C13.586 8.24 14.042 8.348 14.434 8.564C14.826 8.772 15.13 9.064 15.346 9.44C15.562 9.816 15.67 10.256 15.67 10.76C15.67 11.352 15.514 11.86 15.202 12.284C14.898 12.708 14.482 13 13.954 13.16L15.79 17H14.518L12.838 13.28H11.434V17H10.354ZM11.434 12.308H13.066C13.514 12.308 13.874 12.168 14.146 11.888C14.418 11.6 14.554 11.224 14.554 10.76C14.554 10.288 14.418 9.912 14.146 9.632C13.874 9.352 13.514 9.212 13.066 9.212H11.434V12.308Z" fill="var(--color-text)"></path></g></svg><span>Application<wbr/>Tags</span></a></li>
 <li><a href="../index.html#AttributeReference"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Attribute<wbr/>Reference</span></a></li>
