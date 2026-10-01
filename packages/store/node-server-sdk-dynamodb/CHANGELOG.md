@@ -1,5 +1,27 @@
 # Changelog
 
+## [6.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.2.45...node-server-sdk-dynamodb-v6.3.0) (2026-10-01)
+
+
+### Features
+
+* Report DynamoDB store errors and implement the availability check ([21e6e7d](https://github.com/launchdarkly/js-core/commit/21e6e7d45cd0f137305cff60c4bf112da8362910))
+
+
+### Bug Fixes
+
+* Prevent a hung DynamoDB request from permanently blocking store writes ([21e6e7d](https://github.com/launchdarkly/js-core/commit/21e6e7d45cd0f137305cff60c4bf112da8362910))
+* Retry unprocessed DynamoDB batch writes and report failures instead of dropping items ([21e6e7d](https://github.com/launchdarkly/js-core/commit/21e6e7d45cd0f137305cff60c4bf112da8362910))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.0 to 9.14.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.1
+
 ## [6.2.45](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.2.44...node-server-sdk-dynamodb-v6.2.45) (2026-09-30)
 
 

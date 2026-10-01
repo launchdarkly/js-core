@@ -8,6 +8,14 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.23.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.22.0...js-server-sdk-common-v2.23.0) (2026-10-01)
+
+
+### Features
+
+* Add FDv2 persistent store write-back recovery ([#2011](https://github.com/launchdarkly/js-core/issues/2011)) ([9a785cc](https://github.com/launchdarkly/js-core/commit/9a785cc109b60f206803125871298f261db391dd))
+* Propagate store errors and the availability check through the persistence wrapper ([#2010](https://github.com/launchdarkly/js-core/issues/2010)) ([a752f93](https://github.com/launchdarkly/js-core/commit/a752f93c4233b98868fc8dd71a7c7282134860c2))
+
 ## [2.22.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.6...js-server-sdk-common-v2.22.0) (2026-09-30)
 
 
