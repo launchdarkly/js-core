@@ -73,7 +73,7 @@ jobs:
         run: node -e "console.log('AVD_NAME=' + require('./.detoxrc').devices.emulator.device.avdName)" >> $GITHUB_OUTPUT
 
       - name: Make space for the emulator.
-        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        uses: jlumbroso/free-disk-space@ceedf095f4ec1a097402bc6bd80831f2e1a6fde6
         with:
           android: false # We need android.
           large-packages: false # Need this for packages that emulator depends on (specifically libx11-xcb1)
