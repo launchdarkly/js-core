@@ -2,9 +2,9 @@
  * @remark
  * This implementation is derived from `parse.ts` of the `eventsource-parser` package,
  * version 4.1.1 (https://github.com/rexxars/eventsource-parser). See the LICENSE file at the
- * package root for the original license terms. The logic is unchanged. The file only reorders
- * function declarations and avoids parameter reassignment to satisfy this repository's lint
- * rules.
+ * package root for the original license terms. The logic is unchanged, except that a `retry:`
+ * value is capped at one hour. The file also reorders function declarations and avoids parameter
+ * reassignment to satisfy this repository's lint rules.
  */
 /**
  * EventSource/Server-Sent Events parser
@@ -18,6 +18,11 @@ const LF = 10;
 const CR = 13;
 const SPACE = 32;
 const MAX_FIELD_PREFIX_LENGTH = 6;
+
+// Upper bound on a server-directed `retry:` value. The cap keeps a server from pushing the
+// reconnection delay past one hour. It also keeps an overlong digit string, which parses to
+// Infinity, from reaching the callback.
+const MAX_RETRY_DELAY_MILLIS = 3_600_000;
 
 /**
  * Checks if `chunk` starts with the literal `data:` at index `i`.
@@ -158,9 +163,9 @@ export function createParser(config: ParserConfig): EventSourceParser {
       case 'retry':
         // If the field value consists of only ASCII digits, then interpret the field value as an
         // integer in base ten, and set the event stream's reconnection time to that integer.
-        // Otherwise, ignore the field.
+        // Otherwise, ignore the field. The value is capped at MAX_RETRY_DELAY_MILLIS.
         if (/^\d+$/.test(value)) {
-          onRetry?.(parseInt(value, 10));
+          onRetry?.(Math.min(parseInt(value, 10), MAX_RETRY_DELAY_MILLIS));
         } else {
           onError?.(
             new ParseError(`Invalid \`retry\` value: "${value}"`, {
