@@ -148,7 +148,9 @@ it('reports errors during an outage and recovers when the connection returns', a
     redisOpts: { host: '127.0.0.1', port, retryStrategy: () => 100 },
     prefix,
   });
-  const core = new RedisCore(state);
+  // A zero grace period makes writes fail fast on the first disconnect, so the test
+  // does not have to hold the outage for the full production grace period.
+  const core = new RedisCore(state, undefined, 0);
 
   try {
     const initError = await initAsync(core, flagData(1));
@@ -199,7 +201,9 @@ it('settles every write while the endpoint accepts connections and drops them', 
     redisOpts: { host: '127.0.0.1', port: proxy.port, retryStrategy: () => 100 },
     prefix,
   });
-  const core = new RedisCore(state);
+  // A zero grace period makes writes fail fast on the first disconnect, so the test
+  // does not have to hold the outage for the full production grace period.
+  const core = new RedisCore(state, undefined, 0);
 
   try {
     expect(await initAsync(core, flagData(1))).toBeUndefined();
@@ -242,6 +246,76 @@ it('settles every write while the endpoint accepts connections and drops them', 
     core.close();
     // A quit sent while the proxy is flaky or down never completes and the client
     // would reconnect forever, which keeps jest alive after a failed run.
+    state.getClient().disconnect();
+    await proxy.stop();
+    await clearPrefix(prefix);
+  }
+}, 20000);
+
+it('replays a write issued during a short connection drop', async () => {
+  const prefix = `outage-replay-${Date.now()}`;
+  const proxy = new TcpProxy();
+  const port = await proxy.start();
+
+  const state = new RedisClientState({
+    redisOpts: { host: '127.0.0.1', port, retryStrategy: () => 100 },
+    prefix,
+  });
+  // The production grace period. A write issued inside it must enter the ioredis
+  // offline queue and land on reconnect. An SDK that evaluates from the store would
+  // otherwise serve stale data until the next full data set.
+  const core = new RedisCore(state);
+  const foreignClient = new Redis();
+
+  try {
+    expect(await initAsync(core, flagData(1))).toBeUndefined();
+
+    await proxy.stop();
+    await waitFor(() => !state.isConnected(), 5000);
+
+    const pending = upsertAsync(core, 2);
+    await proxy.start(port);
+
+    const result = await pending;
+    expect(result.err).toBeUndefined();
+    expect(await foreignClient.hget(`${prefix}:features`, 'flagA')).toEqual(
+      JSON.stringify({ key: 'flagA', version: 2 }),
+    );
+  } finally {
+    core.close();
+    state.getClient().disconnect();
+    await proxy.stop();
+    await foreignClient.quit();
+    await clearPrefix(prefix);
+  }
+}, 20000);
+
+it('settles a write issued during the grace period when the outage continues', async () => {
+  const prefix = `outage-grace-${Date.now()}`;
+  const proxy = new TcpProxy();
+  const port = await proxy.start();
+
+  const state = new RedisClientState({
+    redisOpts: { host: '127.0.0.1', port, retryStrategy: () => 100 },
+    prefix,
+  });
+  const core = new RedisCore(state);
+
+  try {
+    expect(await initAsync(core, flagData(1))).toBeUndefined();
+
+    await proxy.stop();
+    await waitFor(() => !state.isConnected(), 5000);
+
+    // The write is admitted into the offline queue. ioredis flushes the queue with an
+    // error when the reconnect attempts reach maxRetriesPerRequest. A write that never
+    // settles would block the persistent store wrapper's queue, and the data system
+    // would never see the failure that starts outage recovery.
+    const result = await upsertAsync(core, 2);
+    expect(result.err).toBeDefined();
+    expect(result.err?.message).not.toEqual('Redis connection is down');
+  } finally {
+    core.close();
     state.getClient().disconnect();
     await proxy.stop();
     await clearPrefix(prefix);

@@ -6,6 +6,7 @@ export function makeState(overrides: object) {
     prefixedKey: (key: string) => key,
     isConnected: () => true,
     isInitialConnection: () => false,
+    disconnectedForMs: () => 0,
     ...overrides,
   };
 }

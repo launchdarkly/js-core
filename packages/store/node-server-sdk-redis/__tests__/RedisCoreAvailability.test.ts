@@ -101,10 +101,11 @@ it('reports an init error when a committed transaction contains a per-command er
   });
 });
 
-it('fails init fast without a transaction when the connection is down', (done) => {
+it('fails init fast without a transaction when the connection has been down longer than the grace period', (done) => {
   const state = makeState({
     isConnected: () => false,
     isInitialConnection: () => false,
+    disconnectedForMs: () => 60_000,
     getClient: () => {
       throw new Error('should not create a client while disconnected');
     },
@@ -113,6 +114,30 @@ it('fails init fast without a transaction when the connection is down', (done) =
   const core = new RedisCore(state);
   core.init([], (err) => {
     expect(err).toBeDefined();
+    done();
+  });
+});
+
+it('sends init to the client while the connection drop is within the grace period', (done) => {
+  // An init issued during a short drop must reach ioredis, which queues the transaction
+  // and sends it when the connection returns.
+  const state = makeState({
+    isConnected: () => false,
+    isInitialConnection: () => false,
+    disconnectedForMs: () => 1_000,
+    getClient: () => ({
+      multi: () => ({
+        del: jest.fn(),
+        hmset: jest.fn(),
+        set: jest.fn(),
+        exec: (cb: (err: Error | null, replies: unknown) => void) => cb(null, [[null, 'OK']]),
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.init([], (err) => {
+    expect(err).toBeUndefined();
     done();
   });
 });

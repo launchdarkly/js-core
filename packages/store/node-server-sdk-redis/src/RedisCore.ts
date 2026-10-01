@@ -3,6 +3,16 @@ import { interfaces, LDLogger } from '@launchdarkly/node-server-sdk';
 import RedisClientState from './RedisClientState';
 
 /**
+ * How long a connection must stay down before writes fail fast.
+ *
+ * A write issued during a shorter drop waits in the ioredis offline queue and is sent
+ * when the connection returns. With default client options ioredis holds a queued
+ * command for about this long before it rejects the command itself. Failing fast
+ * before that horizon would drop writes that a reconnect was still going to deliver.
+ */
+const WRITE_FAIL_FAST_GRACE_MS = 10_000;
+
+/**
  * A committed transaction can still contain per-command errors, for example WRONGTYPE.
  * Find the first one so it can be reported instead of a false success.
  */
@@ -41,17 +51,32 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   constructor(
     private readonly _state: RedisClientState,
     private readonly _logger?: LDLogger,
+    private readonly _writeFailFastGraceMs: number = WRITE_FAIL_FAST_GRACE_MS,
   ) {
     this._initedKey = this._state.prefixedKey('$inited');
+  }
+
+  /**
+   * A write must fail fast only when a reconnect can no longer deliver it.
+   *
+   * During the initial connection, and during the grace period after a drop, the write
+   * goes to the ioredis offline queue instead. The queue sends it on reconnect. When the
+   * outage continues, ioredis rejects the queued write on its own, so the callback still
+   * settles and a long outage is still reported as a write failure.
+   */
+  private _writeMustFailFast(): boolean {
+    return (
+      !this._state.isConnected() &&
+      !this._state.isInitialConnection() &&
+      this._state.disconnectedForMs() >= this._writeFailFastGraceMs
+    );
   }
 
   init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
     callback: (err?: Error) => void,
   ): void {
-    // During the initial connection ioredis queues the command and may still connect.
-    // Fail fast only once a prior connection has dropped.
-    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+    if (this._writeMustFailFast()) {
       this._logger?.warn('Attempted to initialize the store while Redis connection is down');
       callback(new Error('Redis connection is down'));
       return;
@@ -168,9 +193,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ): void {
-    // During the initial connection ioredis queues the command and may still connect.
-    // Fail fast only once a prior connection has dropped.
-    if (!this._state.isConnected() && !this._state.isInitialConnection()) {
+    if (this._writeMustFailFast()) {
       this._logger?.warn(`Attempted to update key '${key}' while Redis connection is down`);
       callback(new Error('Redis connection is down'), undefined);
       return;

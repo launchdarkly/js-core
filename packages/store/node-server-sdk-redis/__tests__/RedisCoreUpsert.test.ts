@@ -330,11 +330,12 @@ it('retries exactly once when the transaction is aborted by a concurrent modific
   expect(exec).toHaveBeenCalledTimes(2);
 });
 
-it('fails fast without watching when the connection is down', async () => {
+it('fails fast without watching when the connection has been down longer than the grace period', async () => {
   const pipeline = jest.fn();
   const state = makeState({
     isConnected: () => false,
     isInitialConnection: () => false,
+    disconnectedForMs: () => 60_000,
     getClient: () => ({
       pipeline,
     }),
@@ -346,4 +347,32 @@ it('fails fast without watching when the connection is down', async () => {
 
   expect(result.err?.message).toEqual('Redis connection is down');
   expect(pipeline).not.toHaveBeenCalled();
+});
+
+it('sends an upsert to the client while the connection drop is within the grace period', async () => {
+  // A write issued during a short drop must reach ioredis, which queues it and sends it
+  // when the connection returns. Failing fast here would drop the write, and an SDK that
+  // evaluates from the store would then serve stale data until the next full data set.
+  const exec = jest.fn((cb: (err: Error | null, replies: unknown) => void) => {
+    cb(null, [[null, 1]]);
+  });
+  const state = makeState({
+    isConnected: () => false,
+    isInitialConnection: () => false,
+    disconnectedForMs: () => 1_000,
+    getClient: () => ({
+      pipeline: watchOkRead(null),
+      multi: () => ({
+        hset: jest.fn(),
+        exec,
+      }),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+
+  const result = await upsertResult(core, { version: 2, serializedItem: '{}' });
+
+  expect(result.err).toBeUndefined();
+  expect(exec).toHaveBeenCalledTimes(1);
 });
