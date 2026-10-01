@@ -38,6 +38,8 @@ export default function createValidators(
 
     useReport: TypeValidators.Boolean,
 
+    usePost: TypeValidators.Boolean,
+
     privateAttributes: TypeValidators.StringArray,
 
     disableCache: TypeValidators.Boolean,
