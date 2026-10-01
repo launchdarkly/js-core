@@ -57,7 +57,7 @@ describe.each(
 )('%s', (_name, vector) => {
   it('evaluates as the vector expects', async () => {
     // The override layer is the same document shape the file-based source accepts. A flag value
-    // entry expands into a full flag that is off and serves the value.
+    // entry expands into a full flag that is on and serves the value by fallthrough.
     const source = new TestOverrideSource({
       flags: [
         ...Object.values(vector.overrides.flags ?? {}),
