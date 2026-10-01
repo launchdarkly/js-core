@@ -56,11 +56,29 @@ export function calculateSize(item: Record<string, AttributeValue>, logger?: LDL
  * happened to execute later than the upsert(); we are relying on the fact that normally the
  * process that did the init() will also receive the new data shortly and do its own upsert.
  *
+ * Concurrent init() calls from two processes that share a table and prefix are not atomic
+ * either. One process can delete the initialized token and start a slow batch write while
+ * another process finishes its own write and puts the token back, so initialized() can
+ * report true while the slower write is still mutating data. This is the same trade-off as
+ * above: the store settles on the data of the init that completes last, which can be the
+ * older payload, and later version-checked upserts heal the difference.
+ *
+ * The initialized token is read with a strongly consistent read, but flag and segment
+ * reads stay eventually consistent to keep read cost down. A reader in another process
+ * can therefore see the token before it sees the writes the token advertises, and can
+ * briefly read a stale item. The lag is bounded by DynamoDB's replication delay and
+ * heals through cache expiry and later updates from LaunchDarkly.
+ *
  * DynamoDB has a maximum item size of 400KB. Since each feature flag or user segment is
  * stored as a single item, this mechanism will not work for extremely large flags or segments.
  * @internal
  */
 export default class DynamoDBCore implements interfaces.PersistentDataStore {
+  // True once a token delete was denied for a missing dynamodb:DeleteItem
+  // permission. Later initializations skip the delete instead of failing one
+  // request and logging on every attempt.
+  private _tokenDeleteDenied = false;
+
   constructor(
     private readonly _tableName: string,
     private readonly _state: DynamoDBClientState,
@@ -99,6 +117,13 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     kind: interfaces.PersistentStoreDataKind,
     item: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>,
   ): Record<string, AttributeValue> {
+    // A version that is not a safe integer either fails to marshal here or is
+    // rejected by DynamoDB later, and a server-side rejection fails the whole
+    // batch after the token delete. Fail here so the callers' guards handle it.
+    // A file data source can produce such versions (missing, Infinity, NaN).
+    if (!Number.isSafeInteger(item.item.version)) {
+      throw new Error(`Item '${item.key}' has a version that is not a safe integer`);
+    }
     const dbItem: Record<string, AttributeValue> = {
       namespace: stringValue(this._state.prefixedKey(kind.namespace)),
       key: stringValue(item.key),
@@ -124,14 +149,14 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
   async init(
     allData: interfaces.KindKeyedStore<interfaces.PersistentStoreDataKind>,
-    callback: () => void,
+    callback: (err?: Error) => void,
   ) {
     let items: Record<string, AttributeValue>[];
     try {
       items = await this._readExistingItems(allData);
     } catch (error) {
       this._logger?.error(`Error reading existing items from DynamoDB: ${error}`);
-      callback();
+      callback(error as Error);
       return;
     }
 
@@ -151,7 +176,21 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
 
     allData.forEach((collection) => {
       collection.item.forEach((item) => {
-        const dbItem = this._marshalItem(collection.key, item);
+        let dbItem: Record<string, AttributeValue>;
+        try {
+          dbItem = this._marshalItem(collection.key, item);
+        } catch (marshalError) {
+          // An item that cannot be marshalled, for example one with no version
+          // from a file data source, must not throw here. The throw would skip
+          // the callback and block the store queue. Skip the item, like an
+          // oversized item. Any stored copy of the item is removed, so readers
+          // of the table will not find it.
+          this._logger?.warn(
+            `Cannot marshal item '${item.key}' in '${collection.key.namespace}', skipping. ` +
+              `Any stored copy will be removed. ${marshalError}`,
+          );
+          return;
+        }
         if (this._checkSizeLimit(dbItem)) {
           delete existingNamespaceKeys[
             `${this._state.prefixedKey(collection.key.namespace)}$${item.key}`
@@ -171,13 +210,44 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       });
     });
 
-    // Always write the initialized token when we initialize.
-    ops.push({ PutRequest: { Item: this._initializedToken() } });
-
     try {
+      // Remove the initialized token before any data changes. The batch
+      // write is not atomic, so a partial failure can leave a mix of old
+      // and new items. If the token stayed in place, other readers would
+      // see that mixed data as a complete dataset. A delete for a key
+      // that does not exist is a successful no-op, so this is safe on the
+      // first initialization.
+      if (!this._tokenDeleteDenied) {
+        try {
+          await this._state.delete(this._tableName, this._initializedToken());
+        } catch (error) {
+          if ((error as Error)?.name !== 'AccessDeniedException') {
+            throw error;
+          }
+          // The credentials do not allow dynamodb:DeleteItem. Initialize
+          // without removing the token first, which matches the behavior of
+          // versions before the token delete existed. The store assumes the
+          // permissions stay static for the life of the process, so it does
+          // not retry; a policy change takes effect after a restart.
+          this._tokenDeleteDenied = true;
+          this._logger?.warn(
+            'The DynamoDB credentials do not allow dynamodb:DeleteItem. The store initializes ' +
+              'without removing the initialized token first, so readers can treat a partially ' +
+              'written dataset as complete while an initialization runs or after one fails. ' +
+              'Grant dynamodb:DeleteItem to restore this protection.',
+          );
+        }
+      }
       await this._state.batchWrite(this._tableName, ops);
+      // Write the initialized token on its own, after the data batch
+      // succeeds. A batch write is not atomic, so writing the token as
+      // part of the batch could leave it durably set while data items
+      // are still unprocessed.
+      await this._state.put({ TableName: this._tableName, Item: this._initializedToken() });
     } catch (error) {
       this._logger?.error(`Error writing to DynamoDB: ${error}`);
+      callback(error as Error);
+      return;
     }
     callback();
   }
@@ -235,7 +305,17 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       updatedDescriptor?: interfaces.SerializedItemDescriptor | undefined,
     ) => void,
   ) {
-    const params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
+    // A descriptor that cannot be marshalled must reach the callback as an
+    // error. A throw before the callback is wired would leave the store queue
+    // waiting forever. The size check stays outside the send try so that its
+    // callback cannot be invoked a second time through the catch.
+    let params;
+    try {
+      params = this._makeVersionedPutRequest(kind, { key, item: descriptor });
+    } catch (marshalError) {
+      callback(marshalError as Error, undefined);
+      return;
+    }
     if (!this._checkSizeLimit(params.Item)) {
       // We deliberately don't report this back to the SDK as an error, because we don't want to trigger any
       // useless retry behavior. We just won't do the update.
@@ -257,7 +337,9 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     let initialized = false;
     try {
       const token = this._initializedToken();
-      const data = await this._state.get(this._tableName, token);
+      // A consistent read. An eventually consistent read could return a stale,
+      // pre-delete token while a reinitialization is still writing data.
+      const data = await this._state.get(this._tableName, token, true);
       initialized = !!(data?.key?.S === token.key.S);
     } catch (err) {
       this._logger?.error(`Error reading inited: ${err}`);
@@ -265,6 +347,26 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
     }
     // Callback outside the try. In case it raised an exception.
     callback(initialized);
+  }
+
+  async isStoreAvailable(callback: (isAvailable: boolean) => void) {
+    let isAvailable = false;
+    try {
+      // A cheap read. The store is available when the request succeeds. The result
+      // value does not matter.
+      await this._state.get(this._tableName, this._initializedToken());
+      isAvailable = true;
+    } catch {
+      isAvailable = false;
+    }
+    // Callback outside the try for the read above, so a failed read is never
+    // mistaken for a callback error. It gets its own try/catch so a throw from the
+    // caller's callback cannot reject this method's returned promise.
+    try {
+      callback(isAvailable);
+    } catch {
+      // The caller's callback is responsible for handling its own errors.
+    }
   }
 
   close(): void {

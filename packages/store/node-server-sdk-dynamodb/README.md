@@ -79,6 +79,14 @@ const client = LaunchDarkly.init('YOUR SDK KEY', config);
 const store = DynamoDBFeatureStore('YOUR TABLE NAME', { prefix: 'env1' });
 ```
 
+## Required permissions
+
+The store reads and writes items with `dynamodb:Query`, `dynamodb:GetItem`, `dynamodb:PutItem`, and `dynamodb:BatchWriteItem`. It also uses `dynamodb:DeleteItem` to remove its initialized token before it rewrites the full dataset, so a partially written dataset is not treated as complete by other readers. If the credentials do not allow `dynamodb:DeleteItem`, the store logs a warning and initializes without that protection.
+
+## Capacity planning
+
+A full data write happens at SDK initialization and during a recovery write-back after a store outage. It writes every flag and segment once, which consumes about one write capacity unit per kilobyte of item data. The store keys all items of one data kind under a single partition key, so these writes concentrate on few partitions. When DynamoDB throttles a batch, the store retries it with jittered exponential backoff for up to ten attempts (up to about 26 seconds of delays per batch). If the table's provisioned write capacity is too low to drain a batch within that budget, the write fails, and a later recovery attempt rewrites the full data set. Provision enough write capacity for a full rewrite, or use on-demand capacity mode.
+
 ## Caching behavior
 
 To reduce traffic to DynamoDB, there is an optional in-memory cache that retains the last known data for a configurable amount of time. This is on by default; to turn it off (and guarantee that the latest feature flag data will always be retrieved from DynamoDB for every flag evaluation), configure the store as follows:
