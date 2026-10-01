@@ -2,73 +2,9 @@ import { LDLogger } from '@launchdarkly/js-server-sdk-common';
 
 import { LDAIConfigTracker } from '../src/api/config/LDAIConfigTracker';
 import { LDAIJudgeConfig, LDMessage } from '../src/api/config/types';
-import { Judge, stripLegacyJudgeMessages } from '../src/api/judge/Judge';
+import { Judge } from '../src/api/judge/Judge';
 import { RunnerResult } from '../src/api/model/types';
 import { Runner } from '../src/api/providers/Runner';
-
-describe('stripLegacyJudgeMessages', () => {
-  it('strips assistant messages containing {{message_history}}', () => {
-    const messages: LDMessage[] = [
-      { role: 'system', content: 'You are a judge.' },
-      { role: 'assistant', content: 'Here is the history: {{message_history}}' },
-    ];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toHaveLength(1);
-    expect(result[0].role).toBe('system');
-  });
-
-  it('strips user messages containing {{response_to_evaluate}}', () => {
-    const messages: LDMessage[] = [
-      { role: 'system', content: 'You are a judge.' },
-      { role: 'user', content: 'Evaluate: {{response_to_evaluate}}' },
-    ];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toHaveLength(1);
-    expect(result[0].role).toBe('system');
-  });
-
-  it('strips all legacy template messages from a typical legacy config', () => {
-    const messages: LDMessage[] = [
-      { role: 'system', content: 'You are a judge.' },
-      { role: 'assistant', content: '{{message_history}}' },
-      { role: 'user', content: '{{response_to_evaluate}}' },
-    ];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toHaveLength(1);
-    expect(result[0].role).toBe('system');
-  });
-
-  it('does not strip system messages even when they contain template variables', () => {
-    const messages: LDMessage[] = [
-      {
-        role: 'system',
-        content: 'Judge using {{message_history}} and {{response_to_evaluate}}.',
-      },
-    ];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toHaveLength(1);
-    expect(result[0].role).toBe('system');
-  });
-
-  it('leaves non-system messages without template variables untouched', () => {
-    const messages: LDMessage[] = [
-      { role: 'system', content: 'You are a judge.' },
-      { role: 'user', content: 'This is a regular message.' },
-    ];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toHaveLength(2);
-  });
-
-  it('returns an empty array for an empty input', () => {
-    expect(stripLegacyJudgeMessages([])).toEqual([]);
-  });
-
-  it('passes a new-style system-only config through unchanged', () => {
-    const messages: LDMessage[] = [{ role: 'system', content: 'You are a judge.' }];
-    const result = stripLegacyJudgeMessages(messages);
-    expect(result).toEqual(messages);
-  });
-});
 
 describe('Judge', () => {
   let mockRunner: jest.Mocked<Runner>;
