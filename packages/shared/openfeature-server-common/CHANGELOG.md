@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.5](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.4...openfeature-js-server-common-v2.0.5) (2026-10-01)
+
+
+### Bug Fixes
+
+* Ignore non-string and empty keys in OpenFeature context conversion ([#1989](https://github.com/launchdarkly/js-core/issues/1989)) ([6bf9c62](https://github.com/launchdarkly/js-core/commit/6bf9c623ae74d7e0b58b7610bce1675df44a34fc))
+
 ## [2.0.4](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.3...openfeature-js-server-common-v2.0.4) (2026-09-30)
 
 
