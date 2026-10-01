@@ -20,6 +20,9 @@ export interface FileDataSourceOptions {
    * A change to another entry in a directory causes a reload only when the metadata of a
    * configured file changed, read through any symbolic link, which is how a mounted ConfigMap
    * or Secret is updated.
+   * Each configured file is also watched directly, so a path that is a symbolic link to a file
+   * in another directory is followed, and that watch is set up again after each change so it
+   * survives the file being replaced.
    */
   autoUpdate?: boolean;
 

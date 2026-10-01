@@ -37,11 +37,35 @@ describe('given a directory watcher over a mock filesystem', () => {
     return watcher;
   };
 
+  // The watcher also watches each configured file directly. These tests are about the directory
+  // watches, so the file watches are left out of the counts.
+  const directoryWatches = () =>
+    filesystem.activeWatches().filter((watch) => !watch.path.endsWith('.json'));
+
   it('watches the directory of each file once', () => {
     startWatcher(['/a/one.json', '/a/two.json', '/b/three.json']);
 
-    expect(filesystem.activeWatches().map((watch) => watch.path)).toEqual(['/a', '/b']);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a', '/b']);
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('watches each configured file directly and sets the watch up again after an event', () => {
+    // A direct watch follows a symbolic link to a file in another directory, which the directory
+    // watch cannot see. It ends when the file is replaced, so it is renewed after each event.
+    filesystem.set('/a/one.json', '{}');
+    startWatcher(['/a/one.json']);
+    const [before] = filesystem.activeWatches('/a/one.json');
+    expect(before).toBeDefined();
+
+    filesystem.emit('/a/one.json', 'change');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const [after] = filesystem.activeWatches('/a/one.json');
+    expect(before.closed).toBe(true);
+    expect(after).toBeDefined();
+    expect(after).not.toBe(before);
+
+    watcher.close();
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(0);
   });
 
   it('invokes the callback for a change in a watched directory', () => {
@@ -106,7 +130,7 @@ describe('given a directory watcher over a mock filesystem', () => {
     startWatcher(['/a/one.json', '/b/two.json']);
     watcher.close();
 
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     filesystem.watches.forEach((watch) => watch.callback('change', watch.path));
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -115,19 +139,19 @@ describe('given a directory watcher over a mock filesystem', () => {
     filesystem.failingDirectories.add('/b');
     startWatcher(['/a/one.json', '/b/two.json']);
 
-    expect(filesystem.activeWatches().map((watch) => watch.path)).toEqual(['/a']);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a']);
     logger.expectMessages([{ level: LogLevel.Error, matches: /Unable to watch directory "\/b"/ }]);
     expect(onChange).not.toHaveBeenCalled();
 
     // The retry fails again while the directory stays unavailable.
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches().map((watch) => watch.path)).toEqual(['/a']);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a']);
     expect(logger.getCount(LogLevel.Error)).toEqual(2);
 
     // When the retry succeeds, the callback runs once to pick up changes made in the meantime.
     filesystem.failingDirectories.delete('/b');
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches().map((watch) => watch.path)).toEqual(['/a', '/b']);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a', '/b']);
     expect(onChange).toHaveBeenCalledTimes(1);
 
     await jest.advanceTimersByTimeAsync(5000);
@@ -141,7 +165,7 @@ describe('given a directory watcher over a mock filesystem', () => {
 
     filesystem.failingDirectories.delete('/b');
     await jest.advanceTimersByTimeAsync(5000);
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     expect(onChange).not.toHaveBeenCalled();
   });
 
@@ -176,7 +200,7 @@ describe('given a directory watcher over a mock filesystem', () => {
     // The check finds the directory gone and closes the watch. Events the platform still
     // delivers for it no longer reach the callback.
     expect(watch.closed).toBe(true);
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     logger.expectMessages([
       { level: LogLevel.Warn, matches: /Directory "\/a" no longer exists/ },
       { level: LogLevel.Error, matches: /Unable to watch directory "\/a"/ },
@@ -187,10 +211,10 @@ describe('given a directory watcher over a mock filesystem', () => {
     // The watch is set up again once the directory exists, and the callback runs to pick up
     // changes made in the meantime.
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     filesystem.restoreDirectory('/a');
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches().map((active) => active.path)).toEqual(['/a']);
+    expect(directoryWatches().map((active) => active.path)).toEqual(['/a']);
     expect(onChange).toHaveBeenCalledTimes(4);
   });
 
@@ -218,7 +242,7 @@ describe('given a directory watcher over a mock filesystem', () => {
     filesystem.completePendingStats();
     await jest.advanceTimersByTimeAsync(0);
     expect(watch.closed).toBe(true);
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     expect(filesystem.pendingStats).toHaveLength(0);
   });
 
@@ -236,12 +260,12 @@ describe('given a directory watcher over a mock filesystem', () => {
     await jest.advanceTimersByTimeAsync(0);
 
     expect(watchA.closed).toBe(true);
-    expect(filesystem.activeWatches()).toEqual([watchB]);
+    expect(directoryWatches()).toEqual([watchB]);
     expect(onChange).not.toHaveBeenCalled();
 
     filesystem.restoreDirectory('/a');
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches().map((active) => active.path)).toEqual(['/b', '/a']);
+    expect(directoryWatches().map((active) => active.path)).toEqual(['/b', '/a']);
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
@@ -255,7 +279,7 @@ describe('given a directory watcher over a mock filesystem', () => {
     // The failed watch is closed and a new one is in place, so a change made in the meantime
     // is picked up.
     expect(watch.closed).toBe(true);
-    expect(filesystem.activeWatches().map((active) => active.path)).toEqual(['/a']);
+    expect(directoryWatches().map((active) => active.path)).toEqual(['/a']);
     expect(filesystem.activeWatches('/a')[0]).not.toBe(watch);
     expect(onChange).toHaveBeenCalledTimes(1);
     logger.expectMessages([
@@ -269,12 +293,12 @@ describe('given a directory watcher over a mock filesystem', () => {
 
     filesystem.removeDirectory('/a');
     filesystem.emit('/a', 'error');
-    expect(filesystem.activeWatches()).toHaveLength(0);
+    expect(directoryWatches()).toHaveLength(0);
     expect(onChange).not.toHaveBeenCalled();
 
     filesystem.restoreDirectory('/a');
     await jest.advanceTimersByTimeAsync(1000);
-    expect(filesystem.activeWatches().map((active) => active.path)).toEqual(['/a']);
+    expect(directoryWatches().map((active) => active.path)).toEqual(['/a']);
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 });

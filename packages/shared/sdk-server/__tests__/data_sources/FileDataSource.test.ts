@@ -327,12 +327,17 @@ describe('given a mock filesystem and memory feature store', () => {
     );
 
     expect(await asyncFeatureStore.initialized()).toBeTruthy();
-    // The directory that contains the files is watched. Both files are in the same directory.
-    expect(filesystem.watch).toHaveBeenCalledTimes(1);
+    // Each file is watched directly, as before, and the directory that contains them is watched
+    // too. Both files are in the same directory.
+    expect(filesystem.watch).toHaveBeenCalledTimes(3);
     expect(filesystem.watches['.'].length).toEqual(1);
+    expect(filesystem.watches['file1.json'].length).toEqual(1);
+    expect(filesystem.watches['file2.json'].length).toEqual(1);
     fds.close();
 
     expect(filesystem.watches['.'].length).toEqual(0);
+    expect(filesystem.watches['file1.json'].length).toEqual(0);
+    expect(filesystem.watches['file2.json'].length).toEqual(0);
   });
 
   it('reloads modified files when auto update is enabled', async () => {

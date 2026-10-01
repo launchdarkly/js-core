@@ -76,6 +76,11 @@ class DirectoryWatch {
  * runs the callback. Feed it into a {@link FileReloader}, whose debouncing and skip-unchanged
  * handling absorb the excess.
  *
+ * Each configured file is also watched directly. A watch on a file follows a symbolic link to its
+ * target, so a configured path that links to a file in another directory is detected when that
+ * file changes, as a watch on the path alone always did. A watch on a file ends when the file is
+ * replaced, so after each event the watch is set up again, on whatever the path names now.
+ *
  * A directory that cannot be watched is logged and attempted again after a delay. A watch on a
  * directory that is deleted goes dead on some platforms and floods events on others, so after
  * each event, after a watch error, and on request after a failed load, the watcher checks that
@@ -103,6 +108,11 @@ export default class FileDirectoryWatcher {
   // requested during the read, so that it runs again afterwards.
   private readonly _fileChecks: Record<string, { again: boolean; notify: boolean }> = {};
 
+  // The configured paths, and the direct watch on each that currently exists.
+  private readonly _paths: string[];
+
+  private readonly _fileWatches: Record<string, WatchHandle> = {};
+
   // The directories whose existence is being checked. The flag records that an event arrived
   // during the check, so that the check runs again and observes the state after that event.
   private readonly _checks: Record<string, { again: boolean }> = {};
@@ -117,6 +127,7 @@ export default class FileDirectoryWatcher {
     private readonly _onChange: () => void,
     private readonly _logger?: LDLogger,
   ) {
+    this._paths = Array.from(new Set(paths));
     this._directories = Array.from(new Set(paths.map(directoryOf)));
     paths.forEach((path) => {
       const directory = directoryOf(path);
@@ -133,6 +144,7 @@ export default class FileDirectoryWatcher {
    */
   start(): void {
     this._setupWatches(false);
+    this._armFileWatches();
     // Record the files' metadata, so that a later event for another entry can be compared to it.
     this._directories.forEach((directory) => this._checkFiles(directory, false));
   }
@@ -144,6 +156,7 @@ export default class FileDirectoryWatcher {
       this._retryTimer = undefined;
     }
     Object.keys(this._watches).forEach((directory) => this._dropWatch(directory));
+    Object.keys(this._fileWatches).forEach((path) => this._dropFileWatch(path));
   }
 
   /**
@@ -153,6 +166,58 @@ export default class FileDirectoryWatcher {
    */
   verify(): void {
     this._directories.forEach((directory) => this._checkDirectory(directory));
+    // A file that did not exist when its watch was last attempted may exist now.
+    this._armFileWatches();
+  }
+
+  /**
+   * Sets up a direct watch on each configured file that has none. A file that cannot be watched,
+   * usually because it does not exist yet, is attempted again at the next event or verify call.
+   */
+  private _armFileWatches(): void {
+    if (this._closed) {
+      return;
+    }
+    this._paths.forEach((path) => this._armFileWatch(path));
+  }
+
+  private _armFileWatch(path: string): void {
+    if (this._closed || this._fileWatches[path]) {
+      return;
+    }
+    try {
+      this._fileWatches[path] = this._filesystem.watch(path, (eventType) =>
+        this._handleFileEvent(path, eventType),
+      );
+    } catch {
+      // The directory watch reports the file when it appears, and the watch is attempted again.
+    }
+  }
+
+  private _dropFileWatch(path: string): void {
+    const handle = this._fileWatches[path];
+    if (!handle) {
+      return;
+    }
+    delete this._fileWatches[path];
+    handle.close();
+  }
+
+  /**
+   * An event from the direct watch on a configured file. The file or the target of its link
+   * changed, so the callback runs. The watch may now be on an inode that the path no longer
+   * names, so it is set up again.
+   */
+  private _handleFileEvent(path: string, eventType: string): void {
+    if (this._closed || !this._fileWatches[path]) {
+      return;
+    }
+    this._dropFileWatch(path);
+    this._armFileWatch(path);
+    if (eventType !== 'error') {
+      this._onChange();
+      this._checkFiles(directoryOf(path), false);
+    }
   }
 
   private _setupWatches(isRetry: boolean): void {
@@ -219,6 +284,8 @@ export default class FileDirectoryWatcher {
       // Keep the metadata current, so that a later event for another entry is compared to the
       // state after this change.
       this._checkFiles(directory, false);
+      // The file may have appeared, or been replaced under a watch that ended with it.
+      this._armFileWatches();
     } else {
       // Another entry changed. A configured file that is a symbolic link can have changed with
       // it. Its metadata decides.
