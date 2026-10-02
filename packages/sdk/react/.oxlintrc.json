@@ -1,6 +1,6 @@
 {
   "extends": ["../../../.oxlintrc.json"],
-  "plugins": ["react"],
+  "plugins": ["react", "react-perf"],
   "categories": {
     "correctness": "warn"
   },
@@ -23,6 +23,21 @@
     "react/void-dom-elements-no-children": "error",
     "react/no-unstable-nested-components": "error",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "error"
-  }
+    "react-hooks/exhaustive-deps": "error",
+    "react-perf/jsx-no-new-object-as-prop": "error",
+    "react-perf/jsx-no-new-array-as-prop": "error",
+    "react-perf/jsx-no-new-function-as-prop": "error",
+    "react-perf/jsx-no-jsx-as-prop": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "rules": {
+        "react-perf/jsx-no-new-object-as-prop": "off",
+        "react-perf/jsx-no-new-array-as-prop": "off",
+        "react-perf/jsx-no-new-function-as-prop": "off",
+        "react-perf/jsx-no-jsx-as-prop": "off"
+      }
+    }
+  ]
 }
