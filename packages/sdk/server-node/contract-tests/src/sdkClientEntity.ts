@@ -1,3 +1,5 @@
+import { Redis } from 'ioredis';
+
 import {
   CommandParams,
   CreateInstanceParams,
@@ -20,6 +22,8 @@ import ld, {
   PollingDataSourceConfiguration,
   StreamingDataSourceConfiguration,
 } from '@launchdarkly/node-server-sdk';
+import { DynamoDBFeatureStore } from '@launchdarkly/node-server-sdk-dynamodb';
+import { RedisFeatureStore } from '@launchdarkly/node-server-sdk-redis';
 
 import BigSegmentTestStore from './BigSegmentTestStore.js';
 import { Log, sdkLogger } from './log.js';
@@ -27,11 +31,145 @@ import { Log, sdkLogger } from './log.js';
 const badCommandError = new Error('unsupported command');
 export { badCommandError };
 
-export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOptions {
+// The shared ServerSDKConfigParams/SDKDataSystemParams types don't yet
+// declare the persistent-store fields the harness sends for the
+// persistent-store recovery suite. These mirror servicedef/sdk_config.go's
+// DataSystem.Store/StoreMode until that shared type is updated.
+interface SDKConfigPersistentStoreParams {
+  type: 'redis' | 'dynamodb' | 'consul';
+  prefix?: string;
+  dsn: string;
+}
+
+interface SDKConfigPersistentCacheParams {
+  mode: 'off' | 'ttl' | 'infinite';
+  ttl?: number;
+}
+
+interface SDKConfigPersistentDataStoreParams {
+  store: SDKConfigPersistentStoreParams;
+  cache: SDKConfigPersistentCacheParams;
+}
+
+interface SDKConfigDataSystemWithStore {
+  store?: {
+    persistentDataStore?: SDKConfigPersistentDataStoreParams;
+  };
+  storeMode?: 0 | 1;
+}
+
+// Harness major version 2 sends the persistence config at the top level of
+// the SDK config rather than inside dataSystem.
+interface SDKConfigWithTopLevelStore {
+  persistentDataStore?: SDKConfigPersistentDataStoreParams;
+}
+
+// A cache TTL, in seconds, used to approximate the harness's "infinite"
+// cache mode. The SDK's persistent store wrapper has no dedicated infinite
+// cache mode, so this is a TTL far longer than any contract test run.
+const infiniteCacheTTLSeconds = 24 * 60 * 60;
+
+// The harness creates this DynamoDB table itself before each test.
+const dynamoDBTableName = 'sdk-contract-tests';
+
+interface PersistentStoreHandle {
+  store: ReturnType<typeof RedisFeatureStore> | ReturnType<typeof DynamoDBFeatureStore>;
+  // Closes any connection the entity created for the store. The store does
+  // not close a client that was given to it from the outside.
+  close: () => void;
+}
+
+async function makePersistentStore(
+  params: SDKConfigPersistentDataStoreParams,
+): Promise<PersistentStoreHandle> {
+  let cacheTTL: number;
+  switch (params.cache.mode) {
+    case 'off':
+      cacheTTL = 0;
+      break;
+    case 'infinite':
+      cacheTTL = infiniteCacheTTLSeconds;
+      break;
+    case 'ttl':
+    default:
+      cacheTTL = params.cache.ttl ?? 0;
+      break;
+  }
+
+  switch (params.store.type) {
+    case 'redis': {
+      const dsn = new URL(params.store.dsn);
+      const client = new Redis({
+        host: dsn.hostname,
+        port: Number(dsn.port),
+        // The harness simulates outages with a TCP proxy, and buffered commands would
+        // otherwise hide write failures from the SDK.
+        enableOfflineQueue: false,
+        maxRetriesPerRequest: 1,
+      });
+      // With the offline queue disabled, a command sent before the connection
+      // is ready fails immediately. Wait for the connection so that the SDK's
+      // first writes do not race it.
+      await new Promise<void>((resolve) => {
+        client.once('ready', () => resolve());
+      });
+      return {
+        store: RedisFeatureStore({
+          client,
+          prefix: params.store.prefix,
+          cacheTTL,
+        }),
+        close: () => {
+          // quit rejects when the connection is down and leaves the client
+          // retrying forever, so always follow it with a hard disconnect.
+          client
+            .quit()
+            .catch(() => {})
+            .finally(() => client.disconnect());
+        },
+      };
+    }
+    case 'dynamodb':
+      return {
+        store: DynamoDBFeatureStore(dynamoDBTableName, {
+          // The harness sends the local DynamoDB endpoint as the DSN. The region
+          // and static credentials match what the harness's own client uses.
+          clientOptions: {
+            endpoint: params.store.dsn,
+            region: 'us-east-1',
+            credentials: {
+              accessKeyId: 'dummy',
+              secretAccessKey: 'dummy',
+              sessionToken: 'dummy',
+            },
+            // The harness simulates short outages with a TCP proxy. The AWS
+            // client retries transient failures internally, so a retry can
+            // succeed after the proxy recovers and hide the outage from the
+            // SDK's write-failure trigger.
+            maxAttempts: 1,
+          },
+          prefix: params.store.prefix,
+          cacheTTL,
+        }),
+        close: () => {},
+      };
+    default:
+      throw new Error(`Unsupported persistent data store type: ${params.store.type}`);
+  }
+}
+
+export async function makeSdkConfig(
+  options: ServerSDKConfigParams,
+  tag: string,
+): Promise<{ config: LDOptions; closeStore: () => void }> {
   const cf: LDOptions = {
     logger: sdkLogger(tag),
     diagnosticOptOut: true,
   };
+
+  // A config has at most one persistent store. This closes the connection the
+  // entity created for it, if any.
+  let closeStore: () => void = () => {};
 
   const maybeTime = (seconds?: number) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
@@ -151,6 +289,25 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
       dataSource: dataSourceOptions,
     };
 
+    // The persistent-store fields aren't in the shared SDKDataSystemParams type yet
+    // (see the local interfaces above), so they're read via this cast.
+    const persistentDataStore = (options.dataSystem as SDKConfigDataSystemWithStore).store
+      ?.persistentDataStore;
+    if (persistentDataStore) {
+      const handle = await makePersistentStore(persistentDataStore);
+      cf.dataSystem.persistentStore = handle.store;
+      closeStore = handle.close;
+      // A store with zero initializers and zero synchronizers is the harness's
+      // daemon-mode configuration: the SDK reads from the store and starts
+      // no data source of its own.
+      if (
+        dataSourceOptions.initializers.length === 0 &&
+        dataSourceOptions.synchronizers.length === 0
+      ) {
+        cf.dataSystem.useLdd = true;
+      }
+    }
+
     // FDv1Fallback configures the SDK's FDv1 Fallback Synchronizer -- engaged only in
     // response to a server-directed FDv1 Fallback Directive, separate from the FDv2
     // Primary/Fallback synchronizer chain configured above.
@@ -160,9 +317,24 @@ export function makeSdkConfig(options: ServerSDKConfigParams, tag: string): LDOp
         pollInterval: maybeTime(options.dataSystem.fdv1Fallback.pollIntervalMs),
       };
     }
+  } else {
+    // The v2 harness sends the persistence config at the top level of the SDK
+    // config. Map it to the FDv1 featureStore option.
+    const persistentDataStore = (options as SDKConfigWithTopLevelStore).persistentDataStore;
+    if (persistentDataStore) {
+      const handle = await makePersistentStore(persistentDataStore);
+      cf.featureStore = handle.store;
+      closeStore = handle.close;
+      // A store with no streaming and no polling source is the harness's
+      // daemon-mode configuration: the SDK reads from the store and starts
+      // no data source of its own.
+      if (!options.streaming && !options.polling) {
+        cf.useLdd = true;
+      }
+    }
   }
 
-  return cf;
+  return { config: cf, closeStore };
 }
 
 function getExecution(order: string) {
@@ -221,10 +393,11 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
     options.configuration.startWaitTimeMs !== undefined
       ? options.configuration.startWaitTimeMs
       : 5000;
-  const client: LDClient = ld.init(
-    options.configuration.credential || 'unknown-sdk-key',
-    makeSdkConfig(options.configuration as ServerSDKConfigParams, options.tag),
+  const { config, closeStore } = await makeSdkConfig(
+    options.configuration as ServerSDKConfigParams,
+    options.tag,
   );
+  const client: LDClient = ld.init(options.configuration.credential || 'unknown-sdk-key', config);
   try {
     await client.waitForInitialization({ timeout });
   } catch (_) {
@@ -232,6 +405,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
   }
   if (!client.initialized() && !options.configuration.initCanFail) {
     client.close();
+    closeStore();
     throw new Error('client initialization failed');
   }
 
@@ -242,6 +416,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
     });
     listeners.clear();
     client.close();
+    closeStore();
     log.info('Test ended');
   };
 
