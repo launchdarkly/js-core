@@ -106,9 +106,9 @@ describe('given a client context with filesystem support', () => {
     );
   });
 
-  it('warns and raises a polling interval below the minimum', () => {
+  it.each([0.1, -5])('warns and raises a polling interval of %s to the minimum', (pollInterval) => {
     const source = createOverrideSource(
-      { type: 'file', paths: ['/a.json'], pollInterval: 0.1 },
+      { type: 'file', paths: ['/a.json'], pollInterval },
       context,
     ) as FileOverrideSource;
 
@@ -117,6 +117,21 @@ describe('given a client context with filesystem support', () => {
       expect.stringContaining('dataSystem.overrides.pollInterval'),
     );
   });
+
+  it.each([NaN, Infinity, 3000000])(
+    'warns and uses the default for a polling interval of %s, which a timer cannot honor',
+    (pollInterval) => {
+      const source = createOverrideSource(
+        { type: 'file', paths: ['/a.json'], pollInterval },
+        context,
+      ) as FileOverrideSource;
+
+      expect(source.config.pollIntervalMs).toEqual(1000);
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('dataSystem.overrides.pollInterval'),
+      );
+    },
+  );
 
   it('warns and uses the default for a polling interval that is not a number', () => {
     const source = createOverrideSource(

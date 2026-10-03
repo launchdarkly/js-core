@@ -11,6 +11,7 @@ import FileOverrideSource, {
   DEFAULT_POLL_INTERVAL_SECONDS,
   FileChangeDetection,
   FileOverrideSourceConfig,
+  MAXIMUM_POLL_INTERVAL_SECONDS,
   MINIMUM_POLL_INTERVAL_SECONDS,
   OverrideDuplicateKeysHandling,
 } from './FileOverrideSource';
@@ -78,6 +79,18 @@ function validateFileOverrideSourceOptions(
           'dataSystem.overrides.pollInterval',
           'number',
           typeof options.pollInterval,
+        ),
+      );
+    } else if (
+      !Number.isFinite(options.pollInterval) ||
+      options.pollInterval > MAXIMUM_POLL_INTERVAL_SECONDS
+    ) {
+      // A timer does not honor such a delay, so the value is invalid rather than clamped.
+      logger?.warn(
+        OptionMessages.wrongOptionType(
+          'dataSystem.overrides.pollInterval',
+          `number of seconds up to ${MAXIMUM_POLL_INTERVAL_SECONDS}`,
+          String(options.pollInterval),
         ),
       );
     } else if (options.pollInterval < MINIMUM_POLL_INTERVAL_SECONDS) {

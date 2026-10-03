@@ -5,6 +5,7 @@ import FileOverrideSource, {
   FileOverrideSourceConfig,
   fileOverrideSourcePolicy,
   makeOverrideFlagWithValue,
+  MAXIMUM_POLL_INTERVAL_SECONDS,
   MINIMUM_POLL_INTERVAL_SECONDS,
   OverrideDuplicateKeysHandling,
 } from './FileOverrideSource';
@@ -24,6 +25,7 @@ export {
   LayerKindContents,
   OverrideLayer,
   makeOverrideFlagWithValue,
+  MAXIMUM_POLL_INTERVAL_SECONDS,
   MINIMUM_POLL_INTERVAL_SECONDS,
   OverrideDuplicateKeysHandling,
   OverrideSink,
