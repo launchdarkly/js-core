@@ -306,8 +306,16 @@ export default class Evaluator {
                 state.prerequisites.push(prereqFlag.key);
               }
               if (eventFactory) {
+                // The record carries the prerequisite's own marking, not the parent's.
                 state.events.push(
-                  eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
+                  eventFactory.evalEventServer(
+                    prereqFlag,
+                    context,
+                    res.detail,
+                    null,
+                    flag,
+                    res.overrideAffected,
+                  ),
                 );
               }
 
