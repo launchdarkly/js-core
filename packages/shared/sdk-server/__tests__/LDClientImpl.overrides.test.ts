@@ -2,6 +2,7 @@ import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDOverrideSink } from '../src/api/subsystems';
 import LDClientImpl from '../src/LDClientImpl';
+import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import {
   fdv2FullPayload,
   makeCallbacks,
@@ -97,6 +98,19 @@ describe('given an uninitialized client with an override source', () => {
 
     await client.allFlagsState(user);
     expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(1);
+  });
+
+  it('reports an invalid empty all flags state when the override layer holds only segments', async () => {
+    source.setOverrides([], [{ key: 'segment1', version: 1 }]);
+
+    const state = await client.allFlagsState(user);
+
+    // A layer without flags gives the state nothing to report, so the state is the one reported
+    // when no data is available.
+    expect(state.valid).toBe(false);
+    expect(state.allValues()).toEqual({});
+    expect(warningsMatching(logger, /Data store not available/)).toEqual(1);
+    expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(0);
   });
 
   it('reports an invalid empty all flags state when the override layer is empty', async () => {
@@ -346,6 +360,28 @@ describe('given override source lifecycle and configuration', () => {
 
     client.close();
     expect(source.closed).toBe(true);
+  });
+
+  it('logs and continues the shutdown when the source fails to close', () => {
+    const logger = makeLogger();
+    const throwing = {
+      start: () => {},
+      close: () => {
+        throw new Error('close failed');
+      },
+    };
+    const store = new InMemoryFeatureStore();
+    const storeClose = jest.spyOn(store, 'close');
+    const created = makeFDv2Client(makeFDv2Platform(), {
+      logger,
+      dataSystem: { overrides: throwing, persistentStore: store },
+    });
+    client = created;
+
+    // The failure is logged, and the components that close after the source still close.
+    expect(() => created.close()).not.toThrow();
+    expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('close failed'));
+    expect(storeClose).toHaveBeenCalledTimes(1);
   });
 
   it('does not start the source in offline mode', async () => {
