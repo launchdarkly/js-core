@@ -50,6 +50,16 @@ export const DEFAULT_POLL_INTERVAL_SECONDS = 1;
 export const MINIMUM_POLL_INTERVAL_SECONDS = 1;
 
 /**
+ * The longest allowed polling interval, in seconds. The platform's timers do not honor a delay
+ * above 2147483647 milliseconds and run it after a short delay instead, which would make the
+ * poller loop over the filesystem. A configured interval above the maximum, or one that is not a
+ * finite number, is invalid and replaced by the default.
+ *
+ * @internal
+ */
+export const MAXIMUM_POLL_INTERVAL_SECONDS = 2147483;
+
+/**
  * The validated configuration of a file-based override source.
  *
  * @internal
