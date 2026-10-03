@@ -154,7 +154,8 @@ export interface FileOverrideSourceOptions {
 
   /**
    * The interval between examinations of the files in polling mode, in seconds. The default is
-   * 1. An interval below 1 is raised to 1. Watching mode ignores it.
+   * 1. An interval below 1 is raised to 1. A value that is not a finite number, or that exceeds
+   * 2147483 seconds, is invalid and the default is used. Watching mode ignores it.
    */
   pollInterval?: number;
 
