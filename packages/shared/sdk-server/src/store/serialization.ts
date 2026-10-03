@@ -5,7 +5,11 @@ import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { VersionedData } from '../api/interfaces';
 import { Flag } from '../evaluation/data/Flag';
-import { hasOverrideMarker, withoutOverrideMarker } from '../evaluation/data/overrideMarker';
+import {
+  hasOverrideMarker,
+  stripOverrideMarker,
+  withoutOverrideMarker,
+} from '../evaluation/data/overrideMarker';
 import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
@@ -156,6 +160,9 @@ function processRollout(rollout?: Rollout) {
  */
 export function processFlag(flag: Flag) {
   nullReplacer(flag, ['variations']);
+  // Only the override store marks a definition, after this preparation. A definition that
+  // arrives with the marker is not an override.
+  stripOverrideMarker(flag);
 
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
@@ -181,6 +188,7 @@ export function processFlag(flag: Flag) {
  */
 export function processSegment(segment: Segment) {
   nullReplacer(segment);
+  stripOverrideMarker(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.generated_includedSet = new Set(segment.included);
     delete segment.included;

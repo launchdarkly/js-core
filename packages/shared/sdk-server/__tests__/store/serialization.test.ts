@@ -654,3 +654,17 @@ it('the replacer omits the override marker at any depth', () => {
     flags: { flag: { key: 'flag', version: 1 } },
   });
 });
+
+it('deserialization removes the override marker from a flag and a segment', () => {
+  // Only the override store marks a definition, after it is prepared. A definition that arrives
+  // with the reserved key is not an override, so the key does not survive deserialization.
+  // eslint-disable-next-line no-underscore-dangle
+  const flag = { ...flagWithNoReferences, _sdk_override: true };
+  // eslint-disable-next-line no-underscore-dangle
+  const segment = { ...segmentWithBucketBy, _sdk_override: true };
+
+  const parsed = deserializeAll(makeSerializedAllData(flag, segment));
+
+  expect(parsed?.data.flags.flagName).not.toHaveProperty('_sdk_override');
+  expect(parsed?.data.segments.segmentName).not.toHaveProperty('_sdk_override');
+});
