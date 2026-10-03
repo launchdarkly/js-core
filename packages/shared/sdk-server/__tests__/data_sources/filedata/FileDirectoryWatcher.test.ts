@@ -302,3 +302,80 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 });
+
+// A platform watch on a file that does not exist fails. The shared mock accepts a watch on any
+// path, so this variant refuses a watch on a file path that has no file, as the platforms do.
+class StrictMockFilesystem extends MockFilesystem {
+  override watch(
+    path: string,
+    callback: (eventType: string, filename: string, changedName?: string) => void,
+  ) {
+    if (path.endsWith('.json') && !this.files[path]) {
+      const err = new Error(`ENOENT: no such file or directory, watch '${path}'`) as Error & {
+        code: string;
+      };
+      err.code = 'ENOENT';
+      throw err;
+    }
+    return super.watch(path, callback);
+  }
+}
+
+describe('given a directory watcher over a filesystem that refuses a watch on an absent file', () => {
+  let filesystem: StrictMockFilesystem;
+  let onChange: jest.Mock;
+  let watcher: FileDirectoryWatcher;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    filesystem = new StrictMockFilesystem();
+    onChange = jest.fn();
+  });
+
+  afterEach(() => {
+    watcher?.close();
+    jest.useRealTimers();
+  });
+
+  const startWatcher = (paths: string[]) => {
+    watcher = new FileDirectoryWatcher(filesystem, paths, onChange, new TestLogger());
+    watcher.start();
+    return watcher;
+  };
+
+  it('sets the direct file watch up again when a deleted directory is restored with its file', async () => {
+    filesystem.set('/a/one.json', '{}');
+    startWatcher(['/a/one.json']);
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(1);
+
+    // The deletion reaches the direct watch, which ends with the file, and the directory watch,
+    // whose check finds the directory gone and closes it.
+    filesystem.removeDirectory('/a');
+    filesystem.emit('/a/one.json', 'rename');
+    filesystem.emit('/a', 'rename', 'one.json');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(filesystem.activeWatches('/a')).toHaveLength(0);
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(0);
+
+    // The directory comes back with the file in place. The retry restores the directory watch,
+    // and the direct watch on the file comes back with it.
+    filesystem.set('/a/one.json', '{}');
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(filesystem.activeWatches('/a')).toHaveLength(1);
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(1);
+  });
+
+  it('sets the direct file watch up when a directory missing at start appears with its file', async () => {
+    filesystem.removeDirectory('/a');
+    startWatcher(['/a/one.json']);
+    expect(filesystem.activeWatches('/a')).toHaveLength(0);
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(0);
+
+    // The directory appears with the file in place. The retry sets up the directory watch and
+    // the direct watch on the file together.
+    filesystem.set('/a/one.json', '{}');
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(filesystem.activeWatches('/a')).toHaveLength(1);
+    expect(filesystem.activeWatches('/a/one.json')).toHaveLength(1);
+  });
+});

@@ -251,6 +251,9 @@ export default class FileDirectoryWatcher {
       // Changes could have happened while the watch was not in place.
       this._onChange();
       this._directories.forEach((directory) => this._checkFiles(directory, false));
+      // The direct watch on a file in the directory ended with it, or never existed when the
+      // directory was missing at start. It is set up again with the directory watch.
+      this._armFileWatches();
     }
   }
 
