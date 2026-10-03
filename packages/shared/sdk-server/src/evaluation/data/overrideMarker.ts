@@ -50,3 +50,14 @@ export function withoutOverrideMarker<T extends OverrideMarkable>(item: T): T {
   delete copy._sdk_override;
   return copy;
 }
+
+/**
+ * Removes the override marker from an entity in place. The key is reserved for the override
+ * store, so a definition that arrives with it from any other source has it removed as the
+ * definition is prepared.
+ *
+ * @internal
+ */
+export function stripOverrideMarker(item: OverrideMarkable): void {
+  delete item._sdk_override;
+}
