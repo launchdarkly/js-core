@@ -5,6 +5,11 @@ import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { VersionedData } from '../api/interfaces';
 import { Flag } from '../evaluation/data/Flag';
+import {
+  hasOverrideMarker,
+  stripOverrideMarker,
+  withoutOverrideMarker,
+} from '../evaluation/data/overrideMarker';
 import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
@@ -98,31 +103,33 @@ export function replacer(this: any, key: string, value: any): any {
   if (value === null || value === undefined) {
     return value;
   }
-  if (value.generated_includedSet) {
-    value.included = [...value.generated_includedSet];
-    delete value.generated_includedSet;
+  // The override marker is not part of the data model, so it never appears in the output.
+  const output = hasOverrideMarker(value) ? withoutOverrideMarker(value) : value;
+  if (output.generated_includedSet) {
+    output.included = [...output.generated_includedSet];
+    delete output.generated_includedSet;
   }
-  if (value.generated_excludedSet) {
-    value.excluded = [...value.generated_excludedSet];
-    delete value.generated_excludedSet;
+  if (output.generated_excludedSet) {
+    output.excluded = [...output.generated_excludedSet];
+    delete output.generated_excludedSet;
   }
-  if (value.includedContexts) {
-    value.includedContexts.forEach((target: any) => {
+  if (output.includedContexts) {
+    output.includedContexts.forEach((target: any) => {
       if (target.generated_valuesSet) {
         target.values = [...target.generated_valuesSet];
       }
       delete target.generated_valuesSet;
     });
   }
-  if (value.excludedContexts) {
-    value.excludedContexts.forEach((target: any) => {
+  if (output.excludedContexts) {
+    output.excludedContexts.forEach((target: any) => {
       if (target.generated_valuesSet) {
         target.values = [...target.generated_valuesSet];
       }
       delete target.generated_valuesSet;
     });
   }
-  return value;
+  return output;
 }
 
 export interface DeleteData extends Omit<VersionedData, 'key'> {
@@ -153,6 +160,9 @@ function processRollout(rollout?: Rollout) {
  */
 export function processFlag(flag: Flag) {
   nullReplacer(flag, ['variations']);
+  // Only the override store marks a definition, after this preparation. A definition that
+  // arrives with the marker is not an override.
+  stripOverrideMarker(flag);
 
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
@@ -178,6 +188,7 @@ export function processFlag(flag: Flag) {
  */
 export function processSegment(segment: Segment) {
   nullReplacer(segment);
+  stripOverrideMarker(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.generated_includedSet = new Set(segment.included);
     delete segment.included;

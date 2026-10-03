@@ -192,6 +192,10 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
     outReason.bigSegmentsStatus = inReason.bigSegmentsStatus;
   }
 
+  if (TypeValidators.Boolean.is(inReason.overrideAffected)) {
+    outReason.overrideAffected = inReason.overrideAffected;
+  }
+
   if (evaluation.variation !== undefined && TypeValidators.Number.is(evaluation.variation)) {
     validated.variation = evaluation.variation;
   }
