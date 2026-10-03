@@ -288,6 +288,7 @@ function constructFDv2(
   instanceId: string | undefined,
   userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' | undefined,
   startEventProcessor: boolean,
+  defaultYamlParser: ((data: string) => any) | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -351,7 +352,7 @@ function constructFDv2(
     overrides = {
       layer,
       sink: new OverrideSink(layer, featureStore, onUpdate, hasEventListeners, logger),
-      source: createOverrideSource(dataSystem.overrides, clientContext),
+      source: createOverrideSource(dataSystem.overrides, clientContext, defaultYamlParser),
     };
   }
 
@@ -788,6 +789,7 @@ export default class LDClientImpl implements LDClient {
         internalOptions?.instanceId,
         internalOptions?.userAgentHeaderName,
         startEventProcessor,
+        internalOptions?.yamlParser,
       ));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
