@@ -12,8 +12,48 @@ import { FileSystemDataSourceConfiguration } from '../api';
 import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
+import {
+  FileDataPolicy,
+  FileReloader,
+  KeyedItem,
+  LoadFailure,
+  parseDocumentByExtension,
+  ReloadResult,
+  YamlParser,
+} from './filedata';
 import { makeFlagWithValue } from './FileDataSource';
-import FileLoader from './FileLoader';
+
+/**
+ * How the FDv2 file data initializer translates its documents into data. This is the one place
+ * where its rules differ from the other file-based sources.
+ *
+ * - The parser is chosen by file extension only.
+ * - A `flagValues` entry becomes a flag that is on and serves the value by fallthrough, with
+ *   version 1. The initializer runs once and has no previous load to compare against.
+ * - A flag or segment entry is keyed by its map key, as the initializer has always merged it.
+ * - The last definition of a key wins, across files and between the `flags` and `flagValues`
+ *   members of one file.
+ * - A configured file that does not exist fails the load.
+ *
+ * @internal
+ */
+export function fileDataInitializerPolicy(yamlParser?: YamlParser): FileDataPolicy {
+  return {
+    parseDocument: parseDocumentByExtension(yamlParser),
+    makeFlagWithValue: (key, value) => makeFlagWithValue(key, value, 1),
+    resolveDuplicateKey: () => 'keepLast',
+    missingFile: 'fail',
+    entryKey: (mapKey) => mapKey,
+  };
+}
+
+function byKey<T>(items: KeyedItem<T>[]): { [key: string]: T } {
+  const result: { [key: string]: T } = {};
+  items.forEach(({ key, item }) => {
+    result[key] = item;
+  });
+  return result;
+}
 
 /**
  * Loads flag/segment data from one or more files. Each file may contain `flags`
@@ -36,7 +76,7 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
   private _logger: LDLogger | undefined;
   private _filesystem: Filesystem;
   private _yamlParser?: (data: string) => any;
-  private _fileLoader?: FileLoader;
+  private _reloader?: FileReloader;
 
   constructor(options: FileSystemDataSourceConfiguration, platform: Platform, logger?: LDLogger) {
     this._validateInputs(options, platform);
@@ -86,92 +126,57 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
 
     const adaptor = internal.FDv1PayloadAdaptor(payloadProcessor);
 
-    this._fileLoader = new FileLoader(
-      this._filesystem,
-      this._paths,
-      false, // autoupdate is always false for initializer
-      (results: { path: string; data: string }[]) => {
-        try {
-          const parsedData = this._processFileData(results);
+    const apply = (result: ReloadResult) => {
+      payloadProcessor.addPayloadListener((payload) => {
+        // NOTE: file data initializer will never have a valid basis, so we always pass false
+        dataCallback(false, { initMetadata, payload });
+      });
 
-          payloadProcessor.addPayloadListener((payload) => {
-            // NOTE: file data initializer will never have a valid basis, so we always pass false
-            dataCallback(false, { initMetadata, payload });
-          });
+      statusCallback(subsystemCommon.DataSourceState.Valid);
 
-          statusCallback(subsystemCommon.DataSourceState.Valid);
+      adaptor.processFullTransfer({
+        segments: byKey(result.segments),
+        flags: byKey(result.flags),
+      });
 
-          adaptor.processFullTransfer(parsedData);
+      statusCallback(subsystemCommon.DataSourceState.Closed);
+    };
 
-          statusCallback(subsystemCommon.DataSourceState.Closed);
-        } catch (err) {
-          this._logger?.error('File contained invalid data', err);
-          statusCallback(
-            subsystemCommon.DataSourceState.Closed,
-            new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in file response'),
-          );
-        }
-      },
-    );
-
-    this._fileLoader.loadAndWatch().catch((err) => {
-      this._logger?.error('Error loading files', err);
+    const onFailure = (failure: LoadFailure) => {
+      if (failure.kind === 'read') {
+        this._logger?.error('Error loading files', failure.error);
+        statusCallback(
+          subsystemCommon.DataSourceState.Closed,
+          new LDPollingError(
+            DataSourceErrorKind.NetworkError,
+            `Failed to load files: ${failure.error.message}`,
+          ),
+        );
+        return;
+      }
+      this._logger?.error('File contained invalid data', failure.error);
       statusCallback(
         subsystemCommon.DataSourceState.Closed,
-        new LDPollingError(
-          DataSourceErrorKind.NetworkError,
-          `Failed to load files: ${err instanceof Error ? err.message : String(err)}`,
-        ),
+        new LDPollingError(DataSourceErrorKind.InvalidData, 'Malformed data in file response'),
       );
+    };
+
+    // The initializer loads once. It does not watch, debounce, or retry.
+    this._reloader = new FileReloader({
+      paths: this._paths,
+      policy: fileDataInitializerPolicy(this._yamlParser),
+      filesystem: this._filesystem,
+      logger: this._logger,
+      apply,
+      onFailure,
+      debounceDelayMs: 0,
+      retryDelayMs: 0,
+      skipUnchanged: false,
     });
-  }
-
-  private _processFileData(results: { path: string; data: string }[]) {
-    const combined: any = results.reduce(
-      (acc, curr) => {
-        let parsed: any;
-        if (curr.path.endsWith('.yml') || curr.path.endsWith('.yaml')) {
-          if (this._yamlParser) {
-            parsed = this._yamlParser(curr.data);
-          } else {
-            throw new Error(`Attempted to parse yaml file (${curr.path}) without parser.`);
-          }
-        } else {
-          parsed = JSON.parse(curr.data);
-        }
-
-        // flagValues has no previous-state to diff against, so each entry always
-        // gets version 1. Convert to full Flag objects here so they merge with
-        // flags below on equal footing
-        const flagsFromValues: { [key: string]: Flag } = {};
-        Object.entries(parsed.flagValues ?? {}).forEach(([key, value]) => {
-          flagsFromValues[key] = makeFlagWithValue(key, value, 1);
-        });
-
-        return {
-          segments: {
-            ...acc.segments,
-            ...(parsed.segments ?? {}),
-          },
-          flags: {
-            ...acc.flags,
-            ...(parsed.flags ?? {}),
-            ...flagsFromValues,
-          },
-        };
-      },
-      {
-        segments: {},
-        flags: {},
-      },
-    );
-
-    return combined;
+    this._reloader.reloadNow();
   }
 
   stop() {
-    if (this._fileLoader) {
-      this._fileLoader.close();
-    }
+    this._reloader?.close();
   }
 }
