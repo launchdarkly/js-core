@@ -313,9 +313,15 @@ function validateDataSystemOptions(options: Options): {
     }
   }
 
-  // The override source is either a source object or a factory function. Anything else is a
-  // misconfiguration. Drop it so the client runs without overrides, and warn.
-  if (options.overrides !== undefined && !TypeValidators.ObjectOrFactory.is(options.overrides)) {
+  // The override source is either a source object or a factory function. A null value means no
+  // override source, the same as leaving the option out. Anything else is a misconfiguration.
+  // Drop it so the client runs without overrides, and warn.
+  if (options.overrides === null) {
+    validatedOptions.overrides = undefined;
+  } else if (
+    options.overrides !== undefined &&
+    !TypeValidators.ObjectOrFactory.is(options.overrides)
+  ) {
     validatedOptions.overrides = undefined;
     allErrors.push(
       OptionMessages.wrongOptionType(
