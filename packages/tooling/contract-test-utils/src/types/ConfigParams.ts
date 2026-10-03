@@ -54,6 +54,33 @@ export interface SDKConfigDataSynchronizer {
 export interface ServerSDKConfigParams extends SDKConfigParams {
   bigSegments?: SDKConfigBigSegmentsParams;
   dataSystem?: SDKDataSystemParams;
+  overrides?: SDKConfigOverridesParams;
+}
+
+/**
+ * Configures the SDK's file-based flag overrides. The test harness writes override documents to
+ * files on a filesystem shared with the test service.
+ */
+export interface SDKConfigOverridesParams {
+  /**
+   * Absolute paths of the override files, in precedence order.
+   */
+  filePaths: string[];
+  /**
+   * What to do when the same key appears in more than one file: `fail` (the default) or
+   * `ignore`.
+   */
+  duplicateKeysHandling?: string;
+  /**
+   * How the SDK detects file changes: `polling` or `watching`. The SDK default applies when
+   * omitted.
+   */
+  changeDetection?: string;
+  /**
+   * The interval between file examinations in polling mode, in milliseconds. The SDK may raise
+   * it to its minimum.
+   */
+  pollIntervalMs?: number;
 }
 
 export interface SDKConfigTLSParams {

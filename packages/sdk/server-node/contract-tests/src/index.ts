@@ -10,7 +10,7 @@ import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClien
 const app = express();
 let server: Server | null = null;
 
-const port = 8000;
+const port = Number(process.env.PORT ?? 8000);
 
 const clients = new ClientPool<SdkClientEntity>();
 
@@ -47,6 +47,7 @@ app.get('/', (req: Request, res: Response) => {
       'flag-change-listeners',
       'fdv1-fallback',
       'instance-id',
+      'flag-overrides',
     ],
   });
 });
