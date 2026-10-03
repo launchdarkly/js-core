@@ -5,6 +5,7 @@ import {
   LDOptions,
   LDTransactionalFeatureStore,
 } from '../../src';
+import { LDOverrideSourceOptions } from '../../src/api/options/LDDataSystemOptions';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import TestLogger, { LogLevel } from '../Logger';
@@ -432,6 +433,31 @@ describe('when setting different options', () => {
       {
         level: LogLevel.Warn,
         matches: /Config option "dataSource" should be of type DataSourceOptions/,
+      },
+    ]);
+  });
+
+  it('treats a null override source option as no override source', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { overrides: null as unknown as LDOverrideSourceOptions },
+      }),
+    );
+    expect(config.dataSystem!.overrides).toBeUndefined();
+    expect(logger(config).getCount()).toEqual(0);
+  });
+
+  it('drops an override source option of the wrong type and warns', () => {
+    const config = new Configuration(
+      withLogger({
+        dataSystem: { overrides: 'bogus type' as unknown as LDOverrideSourceOptions },
+      }),
+    );
+    expect(config.dataSystem!.overrides).toBeUndefined();
+    logger(config).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches: /Config option "dataSystem.overrides" should be of type LDOverrideSourceOptions/,
       },
     ]);
   });
