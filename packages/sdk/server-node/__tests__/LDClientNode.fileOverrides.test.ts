@@ -68,7 +68,7 @@ describe('given a temporary directory of override files', () => {
     const detail = await client.variationDetail('yaml-flag', user, 'default');
 
     expect(detail.value).toEqual('override-value');
-    expect(detail.reason).toEqual({ kind: 'OFF', overrideAffected: true });
+    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
     expect(client.initialized()).toBe(false);
   });
 
