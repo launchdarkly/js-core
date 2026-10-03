@@ -1290,24 +1290,27 @@ export default class LDClientImpl implements LDClient {
             doEval(true);
             return;
           }
-          if (this._overrideLayer && !this._overrideLayer.isEmpty()) {
-            // No LaunchDarkly data is available. The state holds only the flags that the
-            // override layer holds.
-            if (!this._allFlagsStateOverridesOnlyWarningLogged) {
-              this._allFlagsStateOverridesOnlyWarningLogged = true;
-              this._logger?.warn(
-                'Called allFlagsState before client initialization; returning only flags from' +
-                  ' the override layer. This message is logged once.',
-              );
+          // No LaunchDarkly data is available. The read returns only the flags that the override
+          // layer holds, and the result decides the state: a layer without flags gives the state
+          // nothing to report.
+          this._readStore.all(VersionedDataKinds.Features, (allFlags) => {
+            if (this._overrideLayer && Object.keys(allFlags).length > 0) {
+              if (!this._allFlagsStateOverridesOnlyWarningLogged) {
+                this._allFlagsStateOverridesOnlyWarningLogged = true;
+                this._logger?.warn(
+                  'Called allFlagsState before client initialization; returning only flags from' +
+                    ' the override layer. This message is logged once.',
+                );
+              }
+              evaluateAll(true, allFlags);
+              return;
             }
-            doEval(true);
-            return;
-          }
-          this._logger?.warn(
-            'Called allFlagsState before client initialization. Data store not available; ' +
-              'returning empty state',
-          );
-          doEval(false);
+            this._logger?.warn(
+              'Called allFlagsState before client initialization. Data store not available; ' +
+                'returning empty state',
+            );
+            evaluateAll(false, allFlags);
+          });
         });
       });
     });
@@ -1330,7 +1333,12 @@ export default class LDClientImpl implements LDClient {
   }
 
   close(): void {
-    this._overrideSource?.close();
+    try {
+      this._overrideSource?.close();
+    } catch (err) {
+      // A source that fails to close does not stop the rest of the shutdown.
+      this._logger?.error(`Unable to close the override source: ${err}`);
+    }
     this._eventProcessor.close();
     this._updateProcessor?.close();
     this._dataSource?.stop();
