@@ -139,6 +139,19 @@ it('dispatches logs correctly with multiple destinations', () => {
   expect(error).toHaveBeenCalledWith('error: [LaunchDarkly] toError');
 });
 
+it.each(['debug', 'info', 'warn', 'error'] as const)(
+  'keeps non-string arguments in %s logs with a custom destination',
+  (level) => {
+    const destination = jest.fn();
+    const logger = new BasicLogger({ level: 'debug', destination });
+
+    logger[level](42, { apple: 'pie' }, false);
+
+    expect(destination).toHaveBeenCalledTimes(1);
+    expect(destination).toHaveBeenCalledWith(`${level}: [LaunchDarkly] 42 {"apple":"pie"} false`);
+  },
+);
+
 it('handles destinations which throw', () => {
   const debug = jest.fn(() => {
     throw new Error('bad');
