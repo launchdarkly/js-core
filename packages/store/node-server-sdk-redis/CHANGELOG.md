@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.3.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.3.0...node-server-sdk-redis-v4.3.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* settle Redis getAll when HGETALL fails ([#2078](https://github.com/launchdarkly/js-core/issues/2078)) ([bcfce79](https://github.com/launchdarkly/js-core/commit/bcfce7938ee4504c0c49c83ec98384288eef53ee))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.1 to 9.14.2
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.2
+
 ## [4.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.44...node-server-sdk-redis-v4.3.0) (2026-10-01)
 
 

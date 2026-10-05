@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.28.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.0...js-sdk-common-v2.28.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* Keep non-string first arguments in log messages ([#2077](https://github.com/launchdarkly/js-core/issues/2077)) ([990df31](https://github.com/launchdarkly/js-core/commit/990df3140b5a1c45ced09aef793dc249e3b49776))
+
 ## [2.28.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.27.0...js-sdk-common-v2.28.0) (2026-09-30)
 
 
