@@ -169,6 +169,7 @@ export default class RedisCore implements interfaces.PersistentDataStore {
     this._state.getClient().hgetall(this._state.prefixedKey(kind.namespace), (err, values) => {
       if (err) {
         this._logger?.error(`Error fetching '${kind.namespace}' from Redis ${err}`);
+        callback(undefined);
       } else if (values) {
         const results: interfaces.KeyedItem<string, interfaces.SerializedItemDescriptor>[] = [];
         Object.keys(values).forEach((key) => {
