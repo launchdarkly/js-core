@@ -6,6 +6,7 @@ import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import EvalResult from '../../src/evaluation/EvalResult';
 import Evaluator from '../../src/evaluation/Evaluator';
+import makeBigSegmentRef from '../../src/evaluation/makeBigSegmentRef';
 import { Queries } from '../../src/evaluation/Queries';
 import EventFactory from '../../src/events/EventFactory';
 import { deserializePoll, FlagsAndSegments } from '../../src/store/serialization';
@@ -57,7 +58,10 @@ function segmentIncluding(key: string, ...userKeys: string[]): any {
 }
 
 class TestQueries implements Queries {
-  constructor(private readonly _data: FlagsAndSegments) {}
+  constructor(
+    private readonly _data: FlagsAndSegments,
+    private readonly _bigSegmentsMembership?: BigSegmentStoreMembership,
+  ) {}
 
   getFlag(key: string, cb: (flag: Flag | undefined) => void): void {
     cb(this._data.flags[key]);
@@ -70,18 +74,23 @@ class TestQueries implements Queries {
   getBigSegmentsMembership(
     _userKey: string,
   ): Promise<[BigSegmentStoreMembership | null, string] | undefined> {
-    throw new Error('Method not implemented.');
+    if (!this._bigSegmentsMembership) {
+      throw new Error('No big segment membership is configured for this test.');
+    }
+    return Promise.resolve([this._bigSegmentsMembership, 'HEALTHY']);
   }
 }
 
 /**
  * Processes the given data the way the SDK does for data from LaunchDarkly, then marks the named
- * entries as override entries. Returns the processed data and an evaluator over it.
+ * entries as override entries. Returns the processed data and an evaluator over it. When a big
+ * segment membership is given, the big segment store reports it for every context.
  */
 function setup(
   flags: Record<string, any>,
   segments: Record<string, any> = {},
   overrides: { flags?: string[]; segments?: string[] } = {},
+  bigSegmentsMembership?: BigSegmentStoreMembership,
 ) {
   const data = deserializePoll(JSON.stringify({ flags, segments }))!;
   overrides.flags?.forEach((key) => {
@@ -90,7 +99,10 @@ function setup(
   overrides.segments?.forEach((key) => {
     data.segments[key]._sdk_override = true;
   });
-  const evaluator = new Evaluator(createBasicPlatform(), new TestQueries(data));
+  const evaluator = new Evaluator(
+    createBasicPlatform(),
+    new TestQueries(data, bigSegmentsMembership),
+  );
   return { data, evaluator };
 }
 
@@ -375,6 +387,26 @@ describe('given an override segment', () => {
     expect(result.detail.reason.kind).toEqual('FALLTHROUGH');
     expectOverrideAffected(true, result);
     expectRecordOverrideAffected(true, prereqRecord(result, 'prereq'));
+  });
+});
+
+describe('given an override big segment', () => {
+  it('marks an evaluation whose membership comes from the big segment store', async () => {
+    const bigSegment = { key: 'big-segment', version: 1, unbounded: true, generation: 2 };
+    const { data, evaluator } = setup(
+      { feature: segmentMatchFlag('feature', ['big-segment']) },
+      { 'big-segment': bigSegment },
+      { segments: ['big-segment'] },
+      { [makeBigSegmentRef(bigSegment)]: true },
+    );
+    const result = await evaluator.evaluate(data.flags.feature, context);
+
+    // The store membership decides the match, so the targets and rules of the segment are not
+    // read. The definition itself is read, and that marks the evaluation.
+    expect(result.detail.reason.kind).toEqual('RULE_MATCH');
+    expect(result.detail.value).toBe(true);
+    expect(result.detail.reason.bigSegmentsStatus).toEqual('HEALTHY');
+    expectOverrideAffected(true, result);
   });
 });
 
