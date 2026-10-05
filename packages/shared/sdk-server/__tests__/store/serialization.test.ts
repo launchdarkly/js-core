@@ -469,11 +469,9 @@ it.each([
   const stringVersion = makeSerializedAllData(flag, segment);
   // Parsed will have attribute refs.
   const parsed = deserializeAll(stringVersion);
-  // Should be removed in the string version.
+  // The string version has the refs removed, and otherwise matches the source JSON.
   const reSerialized = JSON.stringify(parsed, replacer);
-  // Deserialize without our deserializer.
-  const plainParsed = JSON.parse(reSerialized);
-  expect(plainParsed).toStrictEqual(makeAllData(flag, segment));
+  expect(reSerialized).toEqual(stringVersion);
 });
 
 it('deserializes delete data', () => {
@@ -558,21 +556,27 @@ it('serialization converts sets back to arrays for included/excluded', () => {
   const res = deserializePatch(jsonString);
   const segment = res?.data as Segment;
 
-  const serializedSegment = serializeSegment(segment);
-  // Just json parse. We don't want it to automatically re-populate the sets.
-  const jsonDeserialized = JSON.parse(serializedSegment);
-
-  expect(jsonDeserialized.included).toEqual(included);
-  expect(jsonDeserialized.excluded).toEqual(excluded);
-  expect(jsonDeserialized.generated_includedSet).toBeUndefined();
-  expect(jsonDeserialized.generated_excludedSet).toBeUndefined();
+  // The arrays replace the sets, and they follow the fields that were not converted.
+  expect(serializeSegment(segment)).toEqual(
+    JSON.stringify({
+      key: 'test-segment-1',
+      includedContexts: [],
+      excludedContexts: [],
+      salt: 'saltyA',
+      rules: [],
+      version: 0,
+      deleted: false,
+      included,
+      excluded,
+    }),
+  );
 });
 
 it('serialization converts sets back to arrays for includedContexts/excludedContexts', () => {
   const included = [...Array(500).keys()].map((i) => (i + 1).toString());
   const excluded = [...Array(500).keys()].map((i) => (i + 10).toString());
 
-  const jsonString = makeSerializedPatchData(undefined, {
+  const segmentData = {
     key: 'test-segment-1',
     included: [],
     excluded: [],
@@ -582,19 +586,60 @@ it('serialization converts sets back to arrays for includedContexts/excludedCont
     rules: [],
     version: 0,
     deleted: false,
-  });
+  };
+  const jsonString = makeSerializedPatchData(undefined, segmentData);
 
   const res = deserializePatch(jsonString);
   const segment = res?.data as Segment;
 
-  const serializedSegment = serializeSegment(segment);
-  // Just json parse. We don't want it to automatically re-populate the sets.
-  const jsonDeserialized = JSON.parse(serializedSegment);
+  // The arrays replace the sets in their original position, so the output matches the source JSON.
+  expect(serializeSegment(segment)).toEqual(JSON.stringify(segmentData));
+});
 
-  expect(jsonDeserialized.includedContexts[0].values).toEqual(included);
-  expect(jsonDeserialized.excludedContexts[0].values).toEqual(excluded);
-  expect(jsonDeserialized.includedContexts[0].generated_valuesSet).toBeUndefined();
-  expect(jsonDeserialized.excludedContexts[0].generated_valuesSet).toBeUndefined();
+it('serialization does not modify the processed segment', () => {
+  const jsonString = makeSerializedPatchData(undefined, {
+    key: 'test-segment-1',
+    included: [...Array(500).keys()].map((i) => (i + 1).toString()),
+    excluded: [...Array(500).keys()].map((i) => (i + 10).toString()),
+    includedContexts: [
+      { contextKind: 'org', values: [...Array(500).keys()].map((i) => (i + 20).toString()) },
+    ],
+    excludedContexts: [
+      { contextKind: 'user', values: [...Array(500).keys()].map((i) => (i + 30).toString()) },
+    ],
+    salt: 'saltyA',
+    rules: [
+      {
+        id: 'rule-id',
+        clauses: [{ attribute: 'kind', op: 'in', values: ['user'], negate: false }],
+        bucketBy: 'potato',
+      },
+    ],
+    version: 0,
+    deleted: false,
+  });
+  const segment = deserializePatch(jsonString)?.data as Segment;
+  const unserialized = deserializePatch(jsonString)?.data as Segment;
+
+  // Serializing the segment leaves it equal to the same segment that was never serialized.
+  serializeSegment(segment);
+  expect(segment).toStrictEqual(unserialized);
+  expect(segment.generated_includedSet).toBeInstanceOf(Set);
+  expect(segment.generated_excludedSet).toBeInstanceOf(Set);
+  expect(segment.includedContexts![0].generated_valuesSet).toBeInstanceOf(Set);
+  expect(segment.excludedContexts![0].generated_valuesSet).toBeInstanceOf(Set);
+});
+
+it('serialization does not modify the processed flag', () => {
+  const jsonString = makeSerializedAllData(flagWithBucketByInRolloutInRule);
+  const flag = deserializeAll(jsonString)!.data.flags.flagName;
+  const unserialized = deserializeAll(jsonString)!.data.flags.flagName;
+
+  // Serializing the flag leaves it equal to the same flag that was never serialized.
+  serializeFlag(flag);
+  expect(flag).toStrictEqual(unserialized);
+  expect(flag.rules![0].clauses![0].attributeReference).toBeInstanceOf(AttributeReference);
+  expect(flag.rules![0].rollout!.bucketByAttributeReference).toBeInstanceOf(AttributeReference);
 });
 
 it('serializes null values without issue', () => {
