@@ -10,10 +10,15 @@
 
 /**
  * An entity that can carry the override marker.
- *
- * @internal
  */
 export interface OverrideMarkable {
+  /**
+   * True when this definition was supplied by an override source rather than by LaunchDarkly.
+   *
+   * This field is not part of the data model and is never serialized. Only the SDK's override
+   * store sets it, on the entries it holds. Evaluation reads it to mark the evaluations that read
+   * the definition. Other readers can treat a marked definition the same as any other.
+   */
   _sdk_override?: boolean;
 }
 
