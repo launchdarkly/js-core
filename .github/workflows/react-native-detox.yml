@@ -19,6 +19,8 @@ on:
       - '.github/**'
 jobs:
   detox-android:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-22.04
     permissions:
       id-token: write
