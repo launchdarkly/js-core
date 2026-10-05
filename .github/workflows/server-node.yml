@@ -57,6 +57,8 @@ jobs:
           extra_params: '--skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions-fdv2.txt'
 
   run-custom-socks-proxy-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
