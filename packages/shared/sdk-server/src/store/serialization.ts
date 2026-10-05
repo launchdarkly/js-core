@@ -108,13 +108,9 @@ export function replacer(this: any, key: string, value: any): any {
   if (value === null || value === undefined) {
     return value;
   }
-  // The override marker is not part of the data model, so it never appears in the output. The
-  // copy without it is the input to the rest, which copies again only when it has sets to
-  // turn back into arrays.
-  const input = hasOverrideMarker(value) ? withoutOverrideMarker(value) : value;
-  if (input.generated_includedSet || input.generated_excludedSet) {
+  if (value.generated_includedSet || value.generated_excludedSet) {
     // A segment with large target lists. The copy gets the lists back as arrays.
-    const copy = { ...input };
+    const copy = { ...value };
     if (copy.generated_includedSet) {
       copy.included = [...copy.generated_includedSet];
       delete copy.generated_includedSet;
@@ -125,13 +121,13 @@ export function replacer(this: any, key: string, value: any): any {
     }
     return copy;
   }
-  if (input.generated_valuesSet) {
+  if (value.generated_valuesSet) {
     // A segment target with a large value list. The copy gets the list back as an array.
-    const copy = { ...input, values: [...input.generated_valuesSet] };
+    const copy = { ...value, values: [...value.generated_valuesSet] };
     delete copy.generated_valuesSet;
     return copy;
   }
-  return input;
+  return value;
 }
 
 export interface DeleteData extends Omit<VersionedData, 'key'> {
@@ -354,7 +350,10 @@ export function deserializeDelete(data: string): DeleteData | undefined {
  * @internal
  */
 export function serializeFlag(flag: Flag): string {
-  return JSON.stringify(flag, replacer);
+  // The override marker is not part of the data model, so a marked flag is serialized from a
+  // copy without the marker. Only the root of the flag carries the marker. A property of the
+  // same name inside a variation value is data and stays.
+  return JSON.stringify(hasOverrideMarker(flag) ? withoutOverrideMarker(flag) : flag, replacer);
 }
 
 /**
@@ -380,7 +379,13 @@ export function deserializeFlag(data: string): Flag | undefined {
  * @internal
  */
 export function serializeSegment(segment: Segment): string {
-  return JSON.stringify(segment, replacer);
+  // The override marker is not part of the data model, so a marked segment is serialized from a
+  // copy without the marker. Only the root of the segment carries the marker. A property of the
+  // same name inside a clause value is data and stays.
+  return JSON.stringify(
+    hasOverrideMarker(segment) ? withoutOverrideMarker(segment) : segment,
+    replacer,
+  );
 }
 
 /**
