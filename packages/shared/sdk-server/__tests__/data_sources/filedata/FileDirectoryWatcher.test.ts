@@ -68,6 +68,21 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(filesystem.activeWatches('/a/one.json')).toHaveLength(0);
   });
 
+  it('reloads and sets the watch up again when a direct file watch reports an error', () => {
+    // The file can have changed while its watch was failing, and when the path is a link to a
+    // file in another directory, the directory watch does not see that change.
+    filesystem.set('/a/one.json', '{}');
+    startWatcher(['/a/one.json']);
+    const [before] = filesystem.activeWatches('/a/one.json');
+
+    filesystem.emit('/a/one.json', 'error');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const [after] = filesystem.activeWatches('/a/one.json');
+    expect(before.closed).toBe(true);
+    expect(after).toBeDefined();
+    expect(after).not.toBe(before);
+  });
+
   it('invokes the callback for a change in a watched directory', () => {
     startWatcher(['/a/one.json']);
 

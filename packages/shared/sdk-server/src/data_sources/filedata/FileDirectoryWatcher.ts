@@ -186,9 +186,7 @@ export default class FileDirectoryWatcher {
       return;
     }
     try {
-      this._fileWatches[path] = this._filesystem.watch(path, (eventType) =>
-        this._handleFileEvent(path, eventType),
-      );
+      this._fileWatches[path] = this._filesystem.watch(path, () => this._handleFileEvent(path));
     } catch {
       // The directory watch reports the file when it appears, and the watch is attempted again.
     }
@@ -206,18 +204,18 @@ export default class FileDirectoryWatcher {
   /**
    * An event from the direct watch on a configured file. The file or the target of its link
    * changed, so the callback runs. The watch may now be on an inode that the path no longer
-   * names, so it is set up again.
+   * names, so it is set up again. An error from the watch is treated the same way: the watch
+   * cannot be trusted anymore, and the file can have changed while it was failing, which the
+   * directory watch does not see when the path is a link to a file elsewhere.
    */
-  private _handleFileEvent(path: string, eventType: string): void {
+  private _handleFileEvent(path: string): void {
     if (this._closed || !this._fileWatches[path]) {
       return;
     }
     this._dropFileWatch(path);
     this._armFileWatch(path);
-    if (eventType !== 'error') {
-      this._onChange();
-      this._checkFiles(directoryOf(path), false);
-    }
+    this._onChange();
+    this._checkFiles(directoryOf(path), false);
   }
 
   private _setupWatches(isRetry: boolean): void {
