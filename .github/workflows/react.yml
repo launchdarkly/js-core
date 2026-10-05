@@ -92,6 +92,8 @@ jobs:
           [ -f /tmp/adapter.pid ] && kill $(cat /tmp/adapter.pid) || true
 
   run-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -107,6 +109,8 @@ jobs:
           before_test: 'yarn workspace @launchdarkly/react-sdk-example-hello-react playwright install --with-deps chromium'
 
   run-react-server-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -122,6 +126,8 @@ jobs:
           before_test: 'yarn workspace @launchdarkly/react-sdk-example-react-server playwright install --with-deps chromium'
 
   run-bootstrap-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write
