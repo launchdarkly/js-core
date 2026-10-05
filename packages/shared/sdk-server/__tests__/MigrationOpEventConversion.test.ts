@@ -108,3 +108,15 @@ it('drops an override affected indicator that is not a boolean', () => {
   });
   expect(outEvent?.evaluation.reason).toEqual({ kind: 'FALLTHROUGH' });
 });
+
+it('omits an override affected indicator that is false', () => {
+  const outEvent = migrationOpEventToInputEvent({
+    ...baseEvent,
+    context: { key: 'user-key' },
+    evaluation: {
+      ...baseEvent.evaluation,
+      reason: { kind: 'FALLTHROUGH', overrideAffected: false },
+    },
+  });
+  expect(outEvent?.evaluation.reason).toEqual({ kind: 'FALLTHROUGH' });
+});

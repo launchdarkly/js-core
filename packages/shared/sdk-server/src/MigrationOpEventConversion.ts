@@ -192,8 +192,9 @@ function validateEvaluation(evaluation: LDMigrationEvaluation): LDMigrationEvalu
     outReason.bigSegmentsStatus = inReason.bigSegmentsStatus;
   }
 
-  if (TypeValidators.Boolean.is(inReason.overrideAffected)) {
-    outReason.overrideAffected = inReason.overrideAffected;
+  // The indicator is present on the event only when it is true.
+  if (TypeValidators.Boolean.is(inReason.overrideAffected) && inReason.overrideAffected) {
+    outReason.overrideAffected = true;
   }
 
   if (evaluation.variation !== undefined && TypeValidators.Number.is(evaluation.variation)) {
