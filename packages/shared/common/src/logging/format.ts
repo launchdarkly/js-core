@@ -113,8 +113,9 @@ const escapes: Record<string, (val: any) => string> = {
  * @returns Formatted string.
  */
 export default function format(...args: any[]): string {
-  const formatString = args.shift();
+  const formatString = args[0];
   if (TypeValidators.String.is(formatString)) {
+    args.shift();
     let out = '';
     let i = 0;
     while (i < formatString.length) {
