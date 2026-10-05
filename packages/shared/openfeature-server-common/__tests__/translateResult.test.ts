@@ -118,6 +118,26 @@ it('omits inExperiment from the flag metadata for non-experiment evaluations', (
   ).toEqual({ variationIndex: 9 });
 });
 
+it('includes overrideAffected in the flag metadata for override affected evaluations', () => {
+  expect(
+    translateResult<boolean>({
+      value: true,
+      variationIndex: 9,
+      reason: { kind: 'FALLTHROUGH', overrideAffected: true },
+    }).flagMetadata,
+  ).toEqual({ variationIndex: 9, overrideAffected: true });
+});
+
+it('omits overrideAffected from the flag metadata for evaluations that are not override affected', () => {
+  expect(
+    translateResult<boolean>({
+      value: true,
+      variationIndex: 9,
+      reason: { kind: 'FALLTHROUGH', overrideAffected: false },
+    }).flagMetadata,
+  ).toEqual({ variationIndex: 9 });
+});
+
 it('includes the rule in the flag metadata for rule matches', () => {
   expect(
     translateResult<boolean>({
