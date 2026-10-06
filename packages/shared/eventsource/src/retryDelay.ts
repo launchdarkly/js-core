@@ -41,8 +41,10 @@ export function RetryDelayStrategy(
   let goodSince: number | null | undefined;
   return {
     nextRetryDelay(currentTimeMillis: number): number {
+      // A monotonic clock can legally read 0, so the good-since check must not use truthiness.
       if (
-        goodSince &&
+        goodSince !== null &&
+        goodSince !== undefined &&
         resetIntervalMillis &&
         currentTimeMillis - goodSince >= resetIntervalMillis
       ) {

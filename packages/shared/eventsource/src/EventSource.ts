@@ -32,7 +32,7 @@ import {
   FetchLikeResponse,
 } from './types';
 
-/** Ready state: no connection is open, and none is being attempted. */
+/** Ready state: a connection attempt is in progress, or a reconnect wait is in progress. */
 export const CONNECTING = 0;
 
 /** Ready state: the connection is open and events can be delivered. */
@@ -179,7 +179,7 @@ export interface EventSource {
 
   /**
    * Closes the connection, if one is made, and sets the readyState attribute to 2 (closed).
-   * Invokes `onclose` and dispatches the `closed` event. This function is idepotent.
+   * Invokes `onclose` and dispatches the `closed` event. This function is idempotent.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/API/EventSource/close
    */
@@ -338,9 +338,8 @@ export function createEventSource(
         break;
     }
 
-    // We do this to avoid throwing the error synchronously which could disrupt the running
-    // handler. Instead, we queue the throw to run sychronously after the last handler runs.
-    // This is also consistent with NodeJS EventEmitter.
+    // The throw is queued so it cannot disrupt the running handler or the stream's own control
+    // flow. It surfaces later, on a separate microtask, as an uncaught error in the host.
     if (slotThrew) {
       queueMicrotask(() => {
         throw slotError;
@@ -494,23 +493,36 @@ export function createEventSource(
     // callback that is still in flight for the attempt under teardown.
     generation += 1;
     clearReadTimeout();
-    // Each teardown path goes through here: close(), the read timeout, and a superseded attempt.
-    // Thus the current fetch and its response-body reader are always released, and do not
-    // accumulate across reconnects.
+    // Every teardown path that can leave a live connection runs through here. Thus the current
+    // fetch and its response-body reader are always released, and they do not accumulate across
+    // reconnects.
     abortController?.abort();
     abortController = undefined;
-    // The abort is advisory for an injected transport: one that ignores the signal would keep the
-    // read loop and its connection alive. The cancel releases both for every transport. A failing
-    // cancel has nothing left to release, and its rejection only restates the abort.
+    // The abort is advisory for an injected transport. A transport that ignores the signal
+    // would keep the read loop and its connection alive, so the cancel releases both for every
+    // transport. A failing cancel has nothing left to release, and its rejection only restates
+    // the abort.
     try {
       const cancelResult = activeReader?.cancel?.();
       if (cancelResult) {
         Promise.resolve(cancelResult).catch(() => {});
       }
     } catch {
-      // Intentionally empty: see above.
+      // A throwing cancel has nothing left to release.
     }
     activeReader = undefined;
+  };
+
+  /** Releases a response body that the client rejects without reading. */
+  const releaseBody = (res: FetchLikeResponse): void => {
+    try {
+      const cancelResult = res.body?.cancel?.();
+      if (cancelResult) {
+        Promise.resolve(cancelResult).catch(() => {});
+      }
+    } catch {
+      // A throwing cancel has nothing left to release.
+    }
   };
 
   // The read timeout measures the gap between chunks, independent of the transport. The timer
@@ -594,10 +606,11 @@ export function createEventSource(
           headers: responseHeaders,
           message: res.statusText,
         });
-        // This path never reads the body. The abort in destroyRequest() releases the body and
-        // its connection. The Fetch standard specifies this: the abort algorithm from a `fetch()`
-        // call also errors the response body stream, not only the request.
+        // This path never reads the body. For a standard fetch the abort in destroyRequest()
+        // errors the body stream per the Fetch standard; the explicit release covers a
+        // transport that ignores the abort signal.
         destroyRequest();
+        releaseBody(res);
         return;
       }
 
@@ -606,10 +619,14 @@ export function createEventSource(
       // parse. The media type must match exactly; parameters after it, such as a charset, are
       // allowed. A response with no Content-Type header at all is accepted, because a minimal
       // injected transport can omit response headers.
+      // A standard Headers object comma-joins a duplicated Content-Type header, so a joined
+      // value is acceptable when every part declares the event-stream media type.
       const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
-        contentType.split(';', 1)[0].trim().toLowerCase() !== 'text/event-stream'
+        !contentType
+          .split(',')
+          .every((part) => part.split(';', 1)[0].trim().toLowerCase() === 'text/event-stream')
       ) {
         // The 200 status stays out of the report on purpose. Error filters classify HTTP error
         // statuses, and a 200 would read as a permanent failure. A wrong declared type is a
@@ -620,6 +637,7 @@ export function createEventSource(
           message: `unexpected Content-Type '${contentType}', expected 'text/event-stream'`,
         });
         destroyRequest();
+        releaseBody(res);
         return;
       }
 
@@ -642,6 +660,13 @@ export function createEventSource(
       readyState = OPEN;
       resetReadTimeout(failOnce);
       emit(makeEvent('open', { headers: responseHeaders }));
+
+      // An open listener can call close(), and close() bumps the generation. A reader created
+      // after that would belong to a closed stream, and nothing would ever cancel it.
+      if (thisGeneration !== generation) {
+        releaseBody(res);
+        return;
+      }
 
       const reader = res.body.getReader();
       activeReader = reader;
@@ -667,8 +692,10 @@ export function createEventSource(
               failOnce();
               return;
             }
-            resetReadTimeout(failOnce);
-            if (value) {
+            // Only a chunk that carries bytes is proof of liveness. An empty chunk from a
+            // hostile or buggy transport must not keep a dead connection alive.
+            if (value && value.length > 0) {
+              resetReadTimeout(failOnce);
               parser.feed(decoder.decode(value, { stream: true }));
             }
             readsSinceYield += 1;

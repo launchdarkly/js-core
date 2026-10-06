@@ -284,6 +284,24 @@ it('rejects a content type whose media type only begins with text/event-stream',
   });
 });
 
+it('accepts a comma-joined duplicate event-stream content type', async () => {
+  // A standard Headers object comma-joins a header a proxy duplicated. The joined value is
+  // still an event stream when every part declares the event-stream media type.
+  await withServer(async (server) => {
+    server.byDefault((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream, text/event-stream; charset=utf-8' });
+      res.write('data: hello\n\n');
+    });
+    const opts = { errorFilter: () => false };
+    await withEventSource(server.url, opts, async (es) => {
+      const events = new AsyncQueue<string>();
+      es.addEventListener('message', () => events.add('message'));
+      es.addEventListener('closed', () => events.add('closed'));
+      expect(await events.take()).toEqual('message');
+    });
+  });
+});
+
 it('accepts an event-stream content type that carries parameters', async () => {
   await withServer(async (server) => {
     const chunks = new AsyncQueue<string>();

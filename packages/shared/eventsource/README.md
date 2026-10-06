@@ -93,6 +93,10 @@ The object must implement three methods:
   returns the delay in milliseconds before the next attempt.
 - `setGoodSince(goodSinceTimeMillis)` -- called when the first event of a connection arrives, to
   mark the connection as delivering data.
+
+The timestamps the client passes come from one monotonic clock. They are not epoch times, and a
+strategy must only compare them with each other, never with `Date.now()`.
+
 - `setBaseDelay(delayMillis)` -- called when the server sends a `retry:` field; the value reaches
   the strategy already validated as all ASCII digits and capped at one hour.
 
@@ -104,13 +108,13 @@ no effect. When the option is absent, the built-in options above apply.
 
 By default, connection failures and I/O errors are always retried; HTTP error responses are
 retried only for 500, 502, 503, and 504. A 200 response that declares a Content-Type other than
-`text/event-stream` is also treated as an error; it carries `status: 200` and goes through the
-same filter (a response with no Content-Type header at all is accepted, so a minimal injected
-transport can omit response headers). Set `errorFilter` to override this -- it receives the
-error and returns `true` to retry or `false` to close the stream and raise `error`. A filter
-that throws is treated as if it returned `false`: the stream closes cleanly and releases its
-connection, and the exception surfaces asynchronously as an uncaught error, like a throwing
-listener's. (The original package leaked the connection here; this is a deliberate divergence.)
+`text/event-stream` is also treated as an error; the report carries no status, so the default
+filter retries it like a transient transport condition (a response with no Content-Type header
+at all is accepted, so a minimal injected transport can omit response headers). Set
+`errorFilter` to override this -- it receives the error and returns `true` to retry or `false`
+to close the stream and raise `error`. A filter that throws is treated as if it returned
+`false`. The stream then closes cleanly and releases its connection, and the exception surfaces
+asynchronously as an uncaught error, like a throwing listener's. (The original package leaked the connection here; this is a deliberate divergence.)
 Redirect handling is described in
 [Redirects and bodies](#redirects-and-bodies) below.
 
@@ -153,7 +157,7 @@ The `fetch` option supplies the transport used to open the stream. When absent, 
 the global `fetch`. The option only requires the structural subset of the fetch API that the
 client uses (see `FetchLike` in `src/types.ts`), so a real `fetch` implementation satisfies it
 without casts. This is how the Node-based SDKs connect this client to `node:http`/`node:https`
-with their agent, proxy, and TLS configuration: the client itself knows nothing about any of
+with their agent, proxy, and TLS configuration. The client itself knows nothing about any of
 those.
 
 ## Contributing

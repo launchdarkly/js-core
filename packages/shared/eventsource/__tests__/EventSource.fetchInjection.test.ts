@@ -290,9 +290,11 @@ it('cancels the body reader on close for a transport that ignores the abort sign
 it('yields to timers while a transport resolves reads synchronously', async () => {
   const encoder = new TextEncoder();
   let reads = 0;
+  let doneReached = false;
+  let timerBeforeDone = false;
   // Every read resolves at once with an SSE comment line, so the read loop never waits on I/O.
-  // Without a periodic yield to the macrotask queue, the timer below would never fire and this
-  // test would time out.
+  // The reads are bounded so a regression of the yield fails the ordering assertion below
+  // instead of starving jest's own timers and wedging the run.
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
@@ -305,26 +307,189 @@ it('yields to timers while a transport resolves reads synchronously', async () =
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
           reads += 1;
+          if (reads > 5000) {
+            doneReached = true;
+            return { done: true };
+          }
           return { done: false, value: encoder.encode(': tick\n') };
         },
       }),
     },
   });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
   es.onerror = () => {};
   try {
     await new Promise<void>((resolve) => {
-      setTimeout(resolve, 20);
+      setTimeout(() => {
+        timerBeforeDone = !doneReached;
+        resolve();
+      }, 0);
     });
-    expect(reads).toBeGreaterThan(0);
+    // With the periodic yield, this timer runs at the first yield, long before the 5000
+    // synchronous reads finish. Without it, every read completes on the microtask queue first.
+    expect(timerBeforeDone).toBe(true);
   } finally {
     es.close();
   }
 }, 10000);
 
+it('treats a stream of empty chunks as dead when the read timeout elapses', async () => {
+  // Empty chunks are not proof of liveness. Each read resolves after a short real delay, so the
+  // loop does not spin, and only the read-timeout timer can report the dead connection.
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+          await new Promise<void>((resolve) => {
+            setTimeout(resolve, 1);
+          });
+          return { done: false, value: new Uint8Array(0) };
+        },
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, {
+    fetch: injected,
+    readTimeoutMillis: 30,
+    initialRetryDelayMillis: 60000,
+  });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const raced = await Promise.race<ErrorEvent | undefined | 'no-timeout'>([
+      errors.take(),
+      new Promise<'no-timeout'>((resolve) => {
+        setTimeout(() => resolve('no-timeout'), 1000);
+      }),
+    ]);
+    expect(raced).not.toEqual('no-timeout');
+    expect((raced as ErrorEvent)?.message).toContain('Read timeout');
+  } finally {
+    es.close();
+  }
+}, 10000);
+
+it('does not create a reader when onopen closes the stream', async () => {
+  const getReader = jest.fn();
+  const bodyCancel = jest.fn();
+  // The transport ignores the abort signal, so only an explicit release frees the body.
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: { getReader, cancel: bodyCancel },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  const closed = new AsyncQueue<unknown>();
+  es.addEventListener('closed', (e) => closed.add(e));
+  es.onopen = () => es.close();
+  try {
+    await closed.take();
+    expect(getReader).not.toHaveBeenCalled();
+    expect(bodyCancel).toHaveBeenCalledTimes(1);
+  } finally {
+    es.close();
+  }
+});
+
+it('releases the unread body of a rejected response', async () => {
+  const bodyCancel = jest.fn();
+  const scenarios: FetchLikeResponse[] = [
+    {
+      status: 503,
+      statusText: 'Service Unavailable',
+      headers: { forEach: () => {} },
+      body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
+    },
+    {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(callback: (value: string, key: string) => void): void {
+          callback('text/html', 'content-type');
+        },
+      },
+      body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
+    },
+  ];
+  let attempt = 0;
+  const injected: FetchLike = async () => {
+    const res = scenarios[attempt];
+    attempt += 1;
+    return res;
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 1 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    // One rejected non-200 response, then one rejected wrong-content-type response. Both paths
+    // reject the response without reading it and must release the body.
+    await errors.take();
+    await errors.take();
+    expect(bodyCancel).toHaveBeenCalledTimes(2);
+  } finally {
+    es.close();
+  }
+});
+
+it('close() tolerates a reader cancel that throws synchronously', async () => {
+  const encoder = new TextEncoder();
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => {
+        let delivered = false;
+        return {
+          read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+            if (!delivered) {
+              delivered = true;
+              return { done: false, value: encoder.encode('data: one\n\n') };
+            }
+            return new Promise<never>(() => {});
+          },
+          cancel: () => {
+            throw new Error('cancel boom');
+          },
+        };
+      },
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  const closed = new AsyncQueue<unknown>();
+  es.addEventListener('closed', (e) => closed.add(e));
+  const messages = startMessageQueue(es);
+  await messages.take();
+  expect(() => es.close()).not.toThrow();
+  await closed.take();
+});
+
 it('aborts the failed request when a retried read error schedules a reconnect', async () => {
   const encoder = new TextEncoder();
+  const cancel = jest.fn();
   let signal: AbortSignal | undefined;
   const injected: FetchLike = async (_url, init) => {
     signal = init.signal;
@@ -346,6 +511,7 @@ it('aborts the failed request when a retried read error schedules a reconnect', 
             }
             throw new Error('connection reset');
           },
+          cancel,
         }),
       },
     };
@@ -357,9 +523,10 @@ it('aborts the failed request when a retried read error schedules a reconnect', 
   try {
     const err = await errors.take();
     expect(err?.message).toEqual('connection reset');
-    // The reconnect is a minute away. The failure itself must abort the broken request, so the
-    // connection does not stay held for the whole wait.
+    // The reconnect is a minute away. The failure itself must abort the broken request and
+    // cancel the reader, so the connection does not stay held for the whole wait.
     expect(signal?.aborted).toBe(true);
+    expect(cancel).toHaveBeenCalledTimes(1);
   } finally {
     es.close();
   }

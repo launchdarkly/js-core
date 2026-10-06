@@ -36,6 +36,13 @@ export interface FetchBodyReader {
  */
 export interface FetchResponseBody {
   getReader(): FetchBodyReader;
+  /**
+   * Releases the body without reading it. A standard fetch body always has it; it is optional
+   * so a minimal injected transport can omit it. The client calls it for a response it rejects
+   * without reading, because the abort signal alone cannot release a transport that ignores
+   * the signal.
+   */
+  cancel?(): Promise<unknown> | void;
 }
 
 /**

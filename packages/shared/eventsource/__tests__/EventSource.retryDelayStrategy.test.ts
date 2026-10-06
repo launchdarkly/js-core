@@ -180,6 +180,33 @@ it('replaces an invalid caller-written reconnectInterval when the strategy throw
   expect(swallowed.length).toBeGreaterThanOrEqual(1);
 });
 
+it('caps and floors the fallback delay when the strategy throws', async () => {
+  const thrown = new Error('nextRetryDelay boom');
+  const strategy: RetryDelayStrategy = {
+    nextRetryDelay: () => {
+      throw thrown;
+    },
+    setGoodSince: () => {},
+    setBaseDelay: () => {},
+  };
+  const swallowed = await withSlotRethrowSwallowed(async () => {
+    await withServer(async (server) => {
+      server.byDefault(TestHttpHandlers.respond(500));
+      await withEventSource(server.url, { retryDelayStrategy: strategy }, async (es) => {
+        const delays = new AsyncQueue<number>();
+        es.onretrying = (event) => delays.add(event.delayMillis);
+        // A negative write falls back to the default initial delay.
+        es.reconnectInterval = -5;
+        expect(await delays.take()).toEqual(1000);
+        // An oversized write is capped at one hour, like a server-directed value.
+        es.reconnectInterval = 7200000;
+        expect(await delays.take()).toEqual(3600000);
+      });
+    });
+  });
+  expect(swallowed.length).toBeGreaterThanOrEqual(2);
+}, 10000);
+
 it('keeps the stream alive when setBaseDelay throws', async () => {
   const thrown = new Error('setBaseDelay boom');
   const strategy: RetryDelayStrategy = {
