@@ -219,6 +219,27 @@ describe.each(['caching', 'non-caching'])(
       expect(spy).toBeCalledTimes(0);
     });
 
+    itif(isCaching)('keeps the generated sets of a segment cached from init', async () => {
+      await asyncWrapper.init({
+        segments: {
+          segment1: {
+            key: 'segment1',
+            version: 1,
+            generated_includedSet: new Set(['user-1', 'user-2']),
+          },
+        },
+      });
+
+      // The cached item is the object given to init, so the set is still present.
+      const value = await asyncWrapper.get(VersionedDataKinds.Segments, 'segment1');
+      expect(value?.generated_includedSet).toBeInstanceOf(Set);
+      expect(value).toEqual({
+        key: 'segment1',
+        version: 1,
+        generated_includedSet: new Set(['user-1', 'user-2']),
+      });
+    });
+
     itif(isCaching)('getting all uses the value cached from init', async () => {
       await asyncWrapper.init({
         features: {

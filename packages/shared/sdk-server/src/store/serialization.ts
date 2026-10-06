@@ -78,6 +78,11 @@ export function nullReplacer(target: any, excludeKeys?: string[]): void {
 /**
  * For use when serializing flags/segments. This will ensure local types
  * are converted to the appropriate JSON representation.
+ *
+ * The values visited are the objects the SDK evaluates with, so this function
+ * does not modify them. When a value has generated fields, it returns a shallow
+ * copy with those fields converted to their JSON representation.
+ *
  * @param this The scope containing the key/value.
  * @param key The key of the item being visited.
  * @param value The value of the item being visited.
@@ -98,29 +103,24 @@ export function replacer(this: any, key: string, value: any): any {
   if (value === null || value === undefined) {
     return value;
   }
-  if (value.generated_includedSet) {
-    value.included = [...value.generated_includedSet];
-    delete value.generated_includedSet;
+  if (value.generated_includedSet || value.generated_excludedSet) {
+    // A segment with large target lists. The copy gets the lists back as arrays.
+    const copy = { ...value };
+    if (copy.generated_includedSet) {
+      copy.included = [...copy.generated_includedSet];
+      delete copy.generated_includedSet;
+    }
+    if (copy.generated_excludedSet) {
+      copy.excluded = [...copy.generated_excludedSet];
+      delete copy.generated_excludedSet;
+    }
+    return copy;
   }
-  if (value.generated_excludedSet) {
-    value.excluded = [...value.generated_excludedSet];
-    delete value.generated_excludedSet;
-  }
-  if (value.includedContexts) {
-    value.includedContexts.forEach((target: any) => {
-      if (target.generated_valuesSet) {
-        target.values = [...target.generated_valuesSet];
-      }
-      delete target.generated_valuesSet;
-    });
-  }
-  if (value.excludedContexts) {
-    value.excludedContexts.forEach((target: any) => {
-      if (target.generated_valuesSet) {
-        target.values = [...target.generated_valuesSet];
-      }
-      delete target.generated_valuesSet;
-    });
+  if (value.generated_valuesSet) {
+    // A segment target with a large value list. The copy gets the list back as an array.
+    const copy = { ...value, values: [...value.generated_valuesSet] };
+    delete copy.generated_valuesSet;
+    return copy;
   }
   return value;
 }
@@ -336,6 +336,8 @@ export function deserializeDelete(data: string): DeleteData | undefined {
 /**
  * Serialize a single flag. Used for persistent data stores.
  *
+ * The flag is not modified.
+ *
  * @internal
  */
 export function serializeFlag(flag: Flag): string {
@@ -359,6 +361,8 @@ export function deserializeFlag(data: string): Flag | undefined {
 
 /**
  * Serialize a single segment. Used for persistent data stores.
+ *
+ * The segment is not modified.
  *
  * @internal
  */
