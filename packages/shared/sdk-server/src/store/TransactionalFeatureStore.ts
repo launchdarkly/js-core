@@ -1,4 +1,4 @@
-import { DefaultBackoff, internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { DefaultBackoff, internal, LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import { DataKind } from '../api/interfaces';
 import {
@@ -10,7 +10,6 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 import InMemoryFeatureStore from './InMemoryFeatureStore';
-import { monotonicNow } from './monotonicTime';
 import { toError } from './storeErrors';
 import SupervisedOperation from './SupervisedOperation';
 

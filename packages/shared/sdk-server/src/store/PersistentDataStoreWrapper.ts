@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import {
   DataKind,
@@ -15,7 +15,6 @@ import {
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
 import TtlCache from '../cache/TtlCache';
-import { monotonicNow } from './monotonicTime';
 import { persistentStoreKinds } from './persistentStoreKinds';
 import sortDataSet from './sortDataSet';
 import { toError } from './storeErrors';

@@ -1,4 +1,4 @@
-import { monotonicNow } from './monotonicTime';
+import { monotonicNow } from '@launchdarkly/js-sdk-common';
 
 /**
  * Tracks one kind of in-flight asynchronous operation.

@@ -1,4 +1,4 @@
-import { LDContext } from '@launchdarkly/js-sdk-common';
+import { LDContext, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import { LDClient, LDMigrationStage, LDMigrationTracker } from './api';
 import {
@@ -410,19 +410,9 @@ class Migration<
     if (!this._latencyTracking) {
       return method();
     }
-    let start;
-    let end;
-    let result: TResult;
-    // TODO: Need to validate performance existence check with edge SDKs.
-    if (typeof performance !== 'undefined') {
-      start = performance.now();
-      result = await method();
-      end = performance.now();
-    } else {
-      start = Date.now();
-      result = await method();
-      end = Date.now();
-    }
+    const start = monotonicNow();
+    const result = await method();
+    const end = monotonicNow();
 
     // Performance timer is in ms, but may have a microsecond resolution
     // fractional component.
