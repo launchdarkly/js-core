@@ -1,10 +1,4 @@
-function defaultClock(): () => number {
-  const perf = (globalThis as any)?.performance;
-  if (perf && typeof perf.now === 'function') {
-    return () => perf.now();
-  }
-  return () => Date.now();
-}
+import { monotonicNow } from '../../utils';
 
 /**
  * Decides when a component has operated well enough, for long enough, that its
@@ -39,7 +33,7 @@ export interface ResetPolicy {
  */
 export function createAfterHealthyFor(
   healthyForMs: number,
-  clock: () => number = defaultClock(),
+  clock: () => number = monotonicNow,
 ): ResetPolicy {
   let healthySinceMs: number | undefined;
 

@@ -6,9 +6,13 @@
  * against it would then never pass. Values from this function are not epoch
  * times and must only be compared with each other.
  *
- * TODO: this will eventually consolidate to the common package.
+ * Runtimes without a performance global fall back to the wall clock.
  */
 // eslint-disable-next-line import/prefer-default-export
 export function monotonicNow(): number {
-  return typeof performance !== 'undefined' ? performance.now() : Date.now();
+  const perf = (globalThis as any)?.performance;
+  if (perf && typeof perf.now === 'function') {
+    return perf.now();
+  }
+  return Date.now();
 }
