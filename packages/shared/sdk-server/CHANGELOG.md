@@ -8,6 +8,20 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.24.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.23.1...js-server-sdk-common-v2.24.0) (2026-10-06)
+
+
+### Features
+
+* **common:** add a shared `monotonicNow()` method ([#2083](https://github.com/launchdarkly/js-core/issues/2083)) ([83edf68](https://github.com/launchdarkly/js-core/commit/83edf68b96fdbde40a91b81cad62b7ec9637c5eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.28.1 to 2.29.0
+
 ## [2.23.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.23.0...js-server-sdk-common-v2.23.1) (2026-10-05)
 
 

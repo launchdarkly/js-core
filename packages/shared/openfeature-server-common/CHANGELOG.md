@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.6](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.5...openfeature-js-server-common-v2.0.6) (2026-10-06)
+
+
+### Bug Fixes
+
+* Validate privateAttributes in OpenFeature context conversion ([#1990](https://github.com/launchdarkly/js-core/issues/1990)) ([a65af44](https://github.com/launchdarkly/js-core/commit/a65af447a734a0c8366f845b81b33a7ee47b4845))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.28.1 to 2.29.0
+
 ## [2.0.5](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.4...openfeature-js-server-common-v2.0.5) (2026-10-05)
 
 

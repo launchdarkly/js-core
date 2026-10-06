@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.29.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.1...js-sdk-common-v2.29.0) (2026-10-06)
+
+
+### Features
+
+* **common:** add a shared `monotonicNow()` method ([#2083](https://github.com/launchdarkly/js-core/issues/2083)) ([83edf68](https://github.com/launchdarkly/js-core/commit/83edf68b96fdbde40a91b81cad62b7ec9637c5eb))
+
 ## [2.28.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.0...js-sdk-common-v2.28.1) (2026-10-05)
 
 
