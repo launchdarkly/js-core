@@ -22,9 +22,11 @@ import {
 import { createDefaultEventRegistry } from './listenerRegistry';
 import { createParser } from './parser';
 import * as retryDelay from './retryDelay';
+import { monotonicNow } from './timer';
 import {
   EventListenerRegistry,
   EventSourceInitDict,
+  FetchBodyReader,
   FetchLike,
   FetchLikeOptions,
   FetchLikeResponse,
@@ -111,7 +113,8 @@ export interface EventSource {
   /**
    * Mirrors the most recent server `retry:` field, in milliseconds; starts at 1000 before any
    * `retry:` field has arrived. A server-directed value is capped at one hour. The retry
-   * strategy owns the actual reconnect timing; writing to this slot has no effect on it.
+   * strategy owns the actual reconnect timing; this slot only supplies the fallback delay for a
+   * reconnect whose strategy call throws, validated and capped at one hour at that point.
    */
   reconnectInterval: number;
 
@@ -225,6 +228,10 @@ export function createEventSource(
   }
 
   let currentUrl = url;
+  // The origin that message events report. Each connection computes it in the response
+  // callback, because urlBuilder can pick a new URL between reconnects and the transport can
+  // follow redirects.
+  let streamOriginUrl = '';
   let readyState: number = CONNECTING;
 
   let lastEventId = '';
@@ -260,11 +267,6 @@ export function createEventSource(
       config.jitterRatio ? retryDelay.defaultJitter(config.jitterRatio) : null,
     );
 
-  // The origin that message events report. Each connection computes it in the response
-  // callback, because urlBuilder can pick a new URL between reconnects and the transport can
-  // follow redirects.
-  let streamOriginUrl = '';
-
   // The transport is injectable. `defaultFetch` documents the default behavior.
   const doFetch: FetchLike = config.fetch ?? defaultFetch;
 
@@ -272,6 +274,9 @@ export function createEventSource(
 
   /** Aborts the current request. Each connection attempt replaces this controller. */
   let abortController: AbortController | undefined;
+
+  /** The reader of the current response body, kept so teardown can release it. */
+  let activeReader: FetchBodyReader | undefined;
 
   let readTimeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
@@ -411,7 +416,7 @@ export function createEventSource(
       try {
         // A throwing strategy must not disrupt event delivery. The exception still reaches
         // the host asynchronously, like a throwing listener's.
-        retryDelayStrategy.setGoodSince(new Date().getTime());
+        retryDelayStrategy.setGoodSince(monotonicNow());
       } catch (err) {
         queueMicrotask(() => {
           throw err;
@@ -494,6 +499,18 @@ export function createEventSource(
     // accumulate across reconnects.
     abortController?.abort();
     abortController = undefined;
+    // The abort is advisory for an injected transport: one that ignores the signal would keep the
+    // read loop and its connection alive. The cancel releases both for every transport. A failing
+    // cancel has nothing left to release, and its rejection only restates the abort.
+    try {
+      const cancelResult = activeReader?.cancel?.();
+      if (cancelResult) {
+        Promise.resolve(cancelResult).catch(() => {});
+      }
+    } catch {
+      // Intentionally empty: see above.
+    }
+    activeReader = undefined;
   };
 
   // The read timeout measures the gap between chunks, independent of the transport. The timer
@@ -553,6 +570,11 @@ export function createEventSource(
         failOnce({ message: (err as Error)?.message ?? 'urlBuilder failed' });
         return;
       }
+      // The builder can call close(), and close() bumps the generation counter. A request must
+      // not start for a stream that is already closed.
+      if (thisGeneration !== generation) {
+        return;
+      }
     }
 
     const callback = (res: FetchLikeResponse): void => {
@@ -584,17 +606,16 @@ export function createEventSource(
       // parse. The media type must match exactly; parameters after it, such as a charset, are
       // allowed. A response with no Content-Type header at all is accepted, because a minimal
       // injected transport can omit response headers.
-      const contentTypeKey = Object.keys(responseHeaders).find(
-        (key) => key.toLowerCase() === 'content-type',
-      );
-      const contentType =
-        contentTypeKey === undefined ? undefined : responseHeaders[contentTypeKey];
+      const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
         contentType.split(';', 1)[0].trim().toLowerCase() !== 'text/event-stream'
       ) {
+        // The 200 status stays out of the report on purpose. Error filters classify HTTP error
+        // statuses, and a 200 would read as a permanent failure. A wrong declared type is a
+        // transient transport condition (an intercepting proxy, a captive portal), so the
+        // report stays retryable, like a transport failure.
         failOnce({
-          status: res.status,
           headers: responseHeaders,
           message: `unexpected Content-Type '${contentType}', expected 'text/event-stream'`,
         });
@@ -623,11 +644,13 @@ export function createEventSource(
       emit(makeEvent('open', { headers: responseHeaders }));
 
       const reader = res.body.getReader();
+      activeReader = reader;
       // The decoder carries a multi-byte sequence that splits across reads. Each connection
       // gets a fresh decoder, so a partial sequence from a dropped connection cannot leak into
       // the next one. The decoder also removes the one encoded byte order mark that the SSE
       // specification ignores at the start of the stream. The parser removes a decoded one.
       const decoder = new TextDecoder();
+      let readsSinceYield = 0;
       const readLoop = async (): Promise<void> => {
         try {
           for (;;) {
@@ -648,12 +671,34 @@ export function createEventSource(
             if (value) {
               parser.feed(decoder.decode(value, { stream: true }));
             }
+            readsSinceYield += 1;
+            if (readsSinceYield >= 1024) {
+              readsSinceYield = 0;
+              // A transport whose reads resolve synchronously would keep this loop on the
+              // microtask queue forever, and no timer (the read timeout, a reconnect, a caller's
+              // scheduled close()) could ever run. The periodic pause yields to the macrotask
+              // queue.
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise<void>((resolve) => {
+                setTimeout(resolve, 0);
+              });
+              if (thisGeneration !== generation) {
+                return;
+              }
+            }
           }
         } catch (err) {
           if (thisGeneration !== generation) {
             return;
           }
-          failOnce({ message: (err as Error)?.message ?? 'stream read failed' });
+          try {
+            failOnce({ message: (err as Error)?.message ?? 'stream read failed' });
+          } finally {
+            // A retried read failure only arms a reconnect timer, and nothing else would release
+            // the broken connection until that timer fires. The abort frees the connection and
+            // the reader now, as the read-timeout path does.
+            destroyRequest();
+          }
         }
       };
       // No await: readLoop reports its own outcome through failOnce and never rejects.
@@ -697,7 +742,7 @@ export function createEventSource(
     }
     let delay: number;
     try {
-      delay = retryDelayStrategy.nextRetryDelay(new Date().getTime());
+      delay = retryDelayStrategy.nextRetryDelay(monotonicNow());
     } catch (err) {
       // A throwing strategy cannot supply a delay. The reconnect continues with the last
       // known reconnect interval, so caller code cannot strand the connection state.
@@ -705,7 +750,15 @@ export function createEventSource(
       queueMicrotask(() => {
         throw err;
       });
-      delay = self.reconnectInterval;
+      // The slot is caller-writable, so the value is validated here. A value that is not a
+      // non-negative finite number becomes the default initial delay, and the one-hour cap
+      // applies as it does to a server-directed value.
+      const fallback = self.reconnectInterval;
+      if (Number.isFinite(fallback) && fallback >= 0) {
+        delay = Math.min(fallback, MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS);
+      } else {
+        delay = 1000;
+      }
     }
 
     emit(makeEvent('retrying', { delayMillis: delay }));

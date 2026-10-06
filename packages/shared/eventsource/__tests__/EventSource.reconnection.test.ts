@@ -132,7 +132,13 @@ it('does not reconnect when the server responds with a non-200, non-500 status',
 it('reconnects for a non-200, non-500 status if errorFilter says so', async () => {
   await withServer(async (server) => {
     server.byDefault(TestHttpHandlers.respond(204));
-    const opts = { ...delayOpts, errorFilter: (err: { status?: number }) => err.status === 204 };
+    // The filter also accepts a status-less error: a reused keep-alive socket can surface the
+    // server teardown between the attempts as an I/O error, and a filter that rejects it would
+    // close the stream permanently and hang the reconnect wait below.
+    const opts = {
+      ...delayOpts,
+      errorFilter: (err: { status?: number }) => err.status === undefined || err.status === 204,
+    };
     await withEventSource(server.url, opts, async (es) => {
       const errors = startErrorQueue(es);
       await errors.take();

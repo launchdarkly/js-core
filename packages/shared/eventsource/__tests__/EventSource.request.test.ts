@@ -241,8 +241,31 @@ it('fails when a 200 response declares a content type other than text/event-stre
     await withEventSource(server.url, undefined, async (es) => {
       const errors = startErrorQueue(es);
       const err = await errors.take();
-      expect(err.status).toEqual(200);
+      // No status: a status would make error filters treat the condition as a permanent HTTP
+      // failure, and a wrong declared type must stay retryable.
+      expect(err.status).toBeUndefined();
       expect(err.message).toContain('text/event-stream');
+    });
+  });
+});
+
+it('retries after a 200 response with a wrong content type instead of closing', async () => {
+  await withServer(async (server) => {
+    let attempt = 0;
+    server.byDefault((_req, res) => {
+      attempt += 1;
+      if (attempt === 1) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end('<html></html>');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+        res.write('data: recovered\n\n');
+      }
+    });
+    const opts = { initialRetryDelayMillis: 1 };
+    await withEventSource(server.url, opts, async (es) => {
+      await shouldReceiveMessages(es, [{ data: 'recovered' }]);
+      expect(attempt).toBeGreaterThanOrEqual(2);
     });
   });
 });
@@ -255,7 +278,7 @@ it('rejects a content type whose media type only begins with text/event-stream',
     await withEventSource(server.url, undefined, async (es) => {
       const errors = startErrorQueue(es);
       const err = await errors.take();
-      expect(err.status).toEqual(200);
+      expect(err.status).toBeUndefined();
       expect(err.message).toContain('text/event-stream');
     });
   });

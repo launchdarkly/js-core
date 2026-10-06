@@ -1,6 +1,6 @@
-import { sleepAsync, withCloseable } from 'launchdarkly-js-test-helpers';
+import { AsyncQueue, sleepAsync, withCloseable } from 'launchdarkly-js-test-helpers';
 
-import { CLOSED, createEventSource } from '../src/EventSource';
+import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
 import { shouldReceiveMessages, withEventSource, withServer, writeEvents } from './helpers';
 
 it('uses the url from urlBuilder for the first connection', async () => {
@@ -53,6 +53,42 @@ it('reports the url built for the current attempt', async () => {
     );
   });
 });
+
+it('does not start a request when urlBuilder closes the stream during a reconnect', async () => {
+  let es: EventSource;
+  let calls = 0;
+  await withServer(async (server) => {
+    let requests = 0;
+    server.byDefault((_req, res) => {
+      requests += 1;
+      res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+      res.end();
+    });
+    const closed = new AsyncQueue<unknown>();
+    es = createEventSource(server.url, {
+      initialRetryDelayMillis: 1,
+      urlBuilder: () => {
+        calls += 1;
+        if (calls === 2) {
+          es.close();
+        }
+        return server.url;
+      },
+    });
+    es.onerror = () => {};
+    es.addEventListener('closed', (e) => closed.add(e));
+    try {
+      await closed.take();
+      // A request that the close failed to stop would land on the server within this window.
+      await sleepAsync(100);
+      expect(calls).toEqual(2);
+      expect(requests).toEqual(1);
+      expect(es.readyState).toEqual(CLOSED);
+    } finally {
+      es.close();
+    }
+  });
+}, 10000);
 
 it('reports a failure instead of wedging when urlBuilder throws', async () => {
   await withServer(async (server) => {

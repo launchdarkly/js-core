@@ -155,6 +155,31 @@ it('keeps reconnecting when nextRetryDelay throws', async () => {
   swallowed.forEach((err) => expect(err).toBe(thrown));
 });
 
+it('replaces an invalid caller-written reconnectInterval when the strategy throws', async () => {
+  const thrown = new Error('nextRetryDelay boom');
+  const strategy: RetryDelayStrategy = {
+    nextRetryDelay: () => {
+      throw thrown;
+    },
+    setGoodSince: () => {},
+    setBaseDelay: () => {},
+  };
+  const swallowed = await withSlotRethrowSwallowed(async () => {
+    await withServer(async (server) => {
+      server.byDefault(TestHttpHandlers.respond(500));
+      await withEventSource(server.url, { retryDelayStrategy: strategy }, async (es) => {
+        // The slot is caller-writable, so a junk write must not reach setTimeout as the
+        // fallback delay.
+        es.reconnectInterval = 'not-a-number' as unknown as number;
+        const delays = new AsyncQueue<number>();
+        es.onretrying = (event) => delays.add(event.delayMillis);
+        expect(await delays.take()).toEqual(1000);
+      });
+    });
+  });
+  expect(swallowed.length).toBeGreaterThanOrEqual(1);
+});
+
 it('keeps the stream alive when setBaseDelay throws', async () => {
   const thrown = new Error('setBaseDelay boom');
   const strategy: RetryDelayStrategy = {
@@ -195,6 +220,39 @@ it('does not dispatch the triggering message when setGoodSince calls close()', a
     expect(es.readyState).toEqual(CLOSED);
   });
 });
+
+it('passes the strategy timestamps from the monotonic clock, not the wall clock', async () => {
+  // A large fixed delay keeps the reconnect from firing during the test, so the strategy
+  // records exactly one retry reading. A wall-clock reading would be an epoch value; the
+  // mocked monotonic readings below prove performance.now() is the source.
+  const strategy = stubStrategy(60000);
+  let fakeNow = 10000;
+  const nowSpy = jest.spyOn(globalThis.performance, 'now').mockImplementation(() => fakeNow);
+  try {
+    await withServer(async (server) => {
+      // One event anchors the good-since time, then the server drops the connection, which asks
+      // the strategy for a retry delay.
+      server.byDefault((_req, res) => {
+        res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+        res.write('data: a\n\n');
+        setTimeout(() => res.destroy(), 20);
+      });
+      await withEventSource(server.url, { retryDelayStrategy: strategy }, async (es) => {
+        const messages = startMessageQueue(es);
+        await messages.take();
+        fakeNow = 10500;
+        for (let i = 0; i < 500 && strategy.nextRetryDelayCalls.length === 0; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await sleepAsync(10);
+        }
+        expect(strategy.goodSinceCalls).toEqual([10000]);
+        expect(strategy.nextRetryDelayCalls).toEqual([10500]);
+      });
+    });
+  } finally {
+    nowSpy.mockRestore();
+  }
+}, 10000);
 
 it('drives reconnect delays from a js-sdk-common RetryState adapted the way an SDK does', async () => {
   // The three-method adapter below is the exact shape the SDK data sources use to wire the

@@ -23,6 +23,12 @@ export interface FetchHeaders {
  */
 export interface FetchBodyReader {
   read(): Promise<{ done: boolean; value?: Uint8Array }>;
+  /**
+   * Releases the reader and its connection. A standard reader always has it; it is optional so a
+   * minimal injected transport can omit it. The client calls it on teardown, because the abort
+   * signal alone cannot release a transport that ignores the signal.
+   */
+  cancel?(): Promise<unknown> | void;
 }
 
 /**
@@ -81,7 +87,9 @@ export const bodylessMethods = ['GET', 'HEAD'];
 export function headersToObject(headers: FetchHeaders): Record<string, string> {
   const result: Record<string, string> = {};
   headers.forEach((value, key) => {
-    result[key] = value;
+    // A standard Headers object reports lowercase names. The fold gives a transport that reports
+    // wire-cased names the same shape, so a consumer can look a header up by its lowercase name.
+    result[key.toLowerCase()] = value;
   });
   return result;
 }
