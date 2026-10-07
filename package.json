@@ -11,6 +11,7 @@
     "packages/shared/akamai-edgeworker-sdk",
     "packages/shared/openfeature-server-common",
     "packages/shared/eventsource",
+    "packages/shared/eventsource/contract-tests",
     "packages/sdk/server-node",
     "packages/sdk/server-node/contract-tests",
     "packages/sdk/server-node/examples/features/custom-socks-proxy",
