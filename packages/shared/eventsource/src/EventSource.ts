@@ -614,6 +614,10 @@ export function createEventSource(
 
     const callback = (res: FetchLikeResponse): void => {
       if (thisGeneration !== generation) {
+        // The abort is advisory for an injected transport, so a response that resolves after
+        // close() or after a newer attempt gets its body released here, as the later stale
+        // checks do.
+        releaseBody(res);
         return;
       }
 

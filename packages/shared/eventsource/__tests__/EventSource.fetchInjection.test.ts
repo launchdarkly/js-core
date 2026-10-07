@@ -449,6 +449,31 @@ it('releases the unread body of a rejected response', async () => {
   }
 });
 
+it('releases the body of a response that resolves after close', async () => {
+  const bodyCancel = jest.fn();
+  let resolveFetch: (res: FetchLikeResponse) => void;
+  // The transport ignores the abort signal and never rejects. Only the explicit release can
+  // free the body of a response that arrives for a closed stream.
+  const injected: FetchLike = () =>
+    new Promise<FetchLikeResponse>((resolve) => {
+      resolveFetch = resolve;
+    });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.close();
+  resolveFetch!({
+    status: 200,
+    statusText: 'OK',
+    headers: { forEach: () => {} },
+    body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
+  });
+  // The response reaches the stale callback on the microtask queue. The timer hop runs after it.
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  expect(bodyCancel).toHaveBeenCalledTimes(1);
+});
+
 it('delivers chunks a transport supplies as ArrayBuffer', async () => {
   // The read contract declares Uint8Array, but TextDecoder also accepts a raw ArrayBuffer, and
   // a lenient transport can supply one. Such a chunk must count as data, not as emptiness.
