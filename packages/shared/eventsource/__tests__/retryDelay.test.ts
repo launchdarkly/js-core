@@ -25,6 +25,15 @@ it('can use backoff without jitter', () => {
   expect(r.nextRetryDelay(t0 + 3000)).toEqual(max);
 });
 
+it('resets the retry count when the good-since reading is zero', () => {
+  // A monotonic clock can legally read 0 at its origin, and the reset must still work.
+  const r = RetryDelayStrategy(1000, 100, defaultBackoff(30000));
+  expect(r.nextRetryDelay(0)).toEqual(1000);
+  expect(r.nextRetryDelay(10)).toEqual(2000);
+  r.setGoodSince(0);
+  expect(r.nextRetryDelay(200)).toEqual(1000);
+});
+
 it('can use jitter without backoff', () => {
   const d0 = 1000;
   const r = RetryDelayStrategy(d0, 0, null, defaultJitter(0.5));

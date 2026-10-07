@@ -14,7 +14,8 @@ export type {
 } from './Event';
 
 import type { ErrorEvent } from './Event';
-import type { FetchFn } from './httpHelpers';
+import type { FetchLike } from './httpHelpers';
+import type { RetryDelayStrategy } from './retryDelay';
 
 /**
  * A listener as the registry stores it. The registry stores listeners for every event type,
@@ -68,12 +69,14 @@ export type EventListenerRegistryFactory = () => EventListenerRegistry;
 
 export type {
   FetchBodyReader,
-  FetchFn,
+  FetchLike,
   FetchHeaders,
-  FetchRequestOptions,
-  FetchResponse,
+  FetchLikeOptions,
+  FetchLikeResponse,
   FetchResponseBody,
 } from './httpHelpers';
+
+export type { RetryDelayStrategy } from './retryDelay';
 
 /**
  * The options that `createEventSource` understands.
@@ -117,14 +120,34 @@ export interface EventSourceInitDict {
   maxBackoffMillis?: number;
 
   /**
+   * Replaces the built-in retry delay behavior with a caller-supplied strategy.
+   *
+   * The client calls `nextRetryDelay(currentTimeMillis)` when it schedules a reconnect, and it
+   * waits for the returned number of milliseconds. The client calls
+   * `setGoodSince(goodSinceTimeMillis)` when the first event of a connection arrives. The client
+   * calls `setBaseDelay(delayMillis)` when the server sends a `retry:` field. The value reaches
+   * the strategy already validated as all ASCII digits and capped at one hour.
+   *
+   * When this option is set, it fully replaces the built-in strategy. The tuning options
+   * `initialRetryDelayMillis`, `maxBackoffMillis`, `jitterRatio`, and
+   * `retryResetIntervalMillis` have no effect. When this option is absent, the built-in
+   * strategy applies and those options work as documented.
+   *
+   * An exception a strategy method throws does not stop the stream or the reconnect. The
+   * client falls back to the last reconnect interval for the delay, and the exception
+   * rethrows later, on a separate microtask.
+   */
+  retryDelayStrategy?: RetryDelayStrategy;
+
+  /**
    * When true, the request omits the default `Cache-Control: no-cache` and
    * `Accept: text/event-stream` headers.
    */
   skipDefaultHeaders?: boolean;
 
   /**
-   * When true, the client sends credentials (cookies, HTTP authentication) with the request, also
-   * cross-origin. This flag maps to `credentials: 'include'` in `fetch()`. A transport without a
+   * When true, the client sends credentials (cookies, HTTP authentication) with the request, including
+   * a cross-origin request. This flag maps to `credentials: 'include'` in `fetch()`. A transport without a
    * credentials concept ignores it.
    */
   withCredentials?: boolean;
@@ -139,12 +162,12 @@ export interface EventSourceInitDict {
   /**
    * The transport used to open the stream. When absent, the client uses the global `fetch`.
    *
-   * The client only needs the structural subset declared by {@link FetchFn}, so a real `fetch`
+   * The client only needs the structural subset declared by {@link FetchLike}, so a real `fetch`
    * implementation satisfies this option without casts. A platform without a suitable global
    * `fetch`, or one that needs agents, proxies, or TLS configuration, supplies a function with
    * the same shape over its own transport.
    */
-  fetch?: FetchFn;
+  fetch?: FetchLike;
 
   /**
    * Creates the listener registry for this instance. The registry stores the listeners

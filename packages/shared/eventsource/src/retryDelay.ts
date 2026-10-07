@@ -20,15 +20,15 @@ export interface RetryDelayStrategy {
 // Encapsulation of configurable backoff/jitter behavior.
 //
 // - The system can either be in a "good" state or a "bad" state. The initial state is "bad"; the
-// caller is responsible for indicating when it transitions to "good". When we ask for a new retry
-// delay, that implies the state is now transitioning to "bad".
+// caller is responsible for indicating when it transitions to "good". A request for a new retry
+// delay implies the state is now transitioning to "bad".
 //
-// - There is a configurable base delay, which can be changed at any time (if the SSE server sends
-// us a "retry:" directive).
+// - There is a configurable base delay, which can change at any time (when the SSE server sends
+// a `retry:` field).
 //
 // - There are optional strategies for applying backoff and jitter to the delay.
 //
-// The factory keeps the PascalCase name of the original function.
+// The factory shares its PascalCase name with the interface it returns.
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export function RetryDelayStrategy(
   baseDelayMillis: number,
@@ -41,8 +41,10 @@ export function RetryDelayStrategy(
   let goodSince: number | null | undefined;
   return {
     nextRetryDelay(currentTimeMillis: number): number {
+      // A monotonic clock can legally read 0, so the good-since check must not use truthiness.
       if (
-        goodSince &&
+        goodSince !== null &&
+        goodSince !== undefined &&
         resetIntervalMillis &&
         currentTimeMillis - goodSince >= resetIntervalMillis
       ) {
