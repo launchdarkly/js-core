@@ -608,15 +608,27 @@ export function createEventSource(
         return;
       }
 
-      const responseHeaders = headersToObject(res.headers);
+      // A hostile headers object must not break the failure report. Without the fallback, a
+      // non-200 status would be lost with the throw, and the error filter could not classify
+      // the failure.
+      let responseHeaders: Record<string, string>;
+      let headersUnreadable = false;
+      try {
+        responseHeaders = headersToObject(res.headers);
+      } catch {
+        responseHeaders = {};
+        headersUnreadable = true;
+      }
 
       // A real fetch() has followed each redirect before this point, and an injected transport
       // that does not follow redirects surfaces the redirect status itself. Thus each status
       // other than 200 is a failure. This includes a 301 or 307 without a Location header, which
       // fetch() cannot follow.
-      if (res.status !== 200) {
-        // A hostile response object must not break the failure report. The status would be
-        // lost, and the error filter could not classify the failure.
+      // The status is read once. A getter that changes its answer between reads would skew the
+      // classification, and a throw on a later read would skip the release below.
+      const { status } = res;
+      if (status !== 200) {
+        // The guarded read keeps the failure report intact when the statusText getter throws.
         let statusText: string;
         try {
           const raw: unknown = res.statusText;
@@ -625,13 +637,23 @@ export function createEventSource(
           statusText = '';
         }
         failOnce({
-          status: res.status,
+          status,
           headers: responseHeaders,
           message: statusText,
         });
         // This path never reads the body. For a standard fetch the abort in destroyRequest()
         // errors the body stream per the Fetch standard; the explicit release covers a
         // transport that ignores the abort signal.
+        destroyRequest();
+        releaseBody(res);
+        return;
+      }
+
+      if (headersUnreadable) {
+        // On a success status the headers decide whether the body is a stream at all. A 200
+        // whose headers cannot be read must fail and retry, not open as a headerless stream
+        // with its partially collected headers discarded.
+        failOnce({ message: 'stream response headers could not be read' });
         destroyRequest();
         releaseBody(res);
         return;
@@ -677,6 +699,13 @@ export function createEventSource(
       // The final response URL wins when the transport reports one; the request URL is the
       // fallback for a minimal transport that does not.
       streamOriginUrl = resolveStreamOrigin(res.url || currentUrl);
+
+      // A transport accessor above can call close(), and close() bumps the generation. A closed
+      // stream must not move back to OPEN or emit open after its closed event.
+      if (thisGeneration !== generation) {
+        releaseBody(res);
+        return;
+      }
 
       // The reset scopes all parser state to one connection. It drops any partial line that a
       // previous connection left behind.
@@ -730,33 +759,28 @@ export function createEventSource(
               failOnce();
               return;
             }
-            // Only a chunk that carries bytes is proof of liveness. An empty chunk from a
-            // hostile or buggy transport must not keep a dead connection alive. byteLength
-            // covers Uint8Array, DataView, and raw ArrayBuffer chunks alike.
             if (value) {
-              // The declared chunk type is Uint8Array, but a lenient transport can supply other
-              // shapes at runtime, so the checks run on the untyped value. The brand check also
-              // accepts a SharedArrayBuffer, and a raw buffer from another realm (vm, iframe,
-              // Electron context) that instanceof would wrongly reject.
-              const chunk: unknown = value;
-              const brand = Object.prototype.toString.call(chunk);
-              const isBinaryChunk =
-                ArrayBuffer.isView(chunk) ||
-                chunk instanceof ArrayBuffer ||
-                brand === '[object ArrayBuffer]' ||
-                brand === '[object SharedArrayBuffer]';
-              // A forged brand can pass the check above, so the byte count is validated on its
-              // own. A transport that supplies anything else is broken, and it must fail loudly
-              // into the read-error path, not stall the stream silently.
-              const byteLength = isBinaryChunk
-                ? (chunk as { byteLength?: unknown }).byteLength
-                : undefined;
-              if (!isBinaryChunk || typeof byteLength !== 'number') {
+              // decode() is the BufferSource validator. It accepts every binary shape, including
+              // a buffer from another realm (vm, iframe, Electron context) and a
+              // SharedArrayBuffer, and it rejects anything else, so a transport that supplies a
+              // non-binary chunk fails loudly and never stalls the stream silently.
+              let text: string;
+              try {
+                text = decoder.decode(value, { stream: true });
+              } catch {
+                // The engine's message can quote the chunk contents on some runtimes, and
+                // stream data must not leak into error events and logs.
                 throw new TypeError('the transport supplied a chunk that is not a BufferSource');
               }
-              if (byteLength > 0) {
+              // Only a chunk that carries bytes is proof of liveness. An empty chunk from a
+              // hostile or buggy transport must not keep a dead connection alive. The byte count,
+              // not the decoded length, is what measures liveness, because a partial multi-byte
+              // sequence decodes to an empty string while it still carries real data.
+              if (value.byteLength > 0) {
                 resetReadTimeout(failOnce);
-                parser.feed(decoder.decode(value, { stream: true }));
+              }
+              if (text) {
+                parser.feed(text);
               }
             }
             readsSinceYield += 1;
@@ -818,6 +842,12 @@ export function createEventSource(
       doFetch(currentUrl, init)
         .then(callback)
         .catch((err) => {
+          // A slow transport can reject this attempt's promise after a newer attempt has
+          // already started. The release below acts on the live attempt's state, so a stale
+          // rejection must not reach it.
+          if (thisGeneration !== generation) {
+            return;
+          }
           failOnce({ message: safeErrorMessage(err, 'stream request failed') });
           // A throw that escapes the response callback (a hostile response getter) leaves the
           // request held until the reconnect. The release is harmless for an ordinary network
