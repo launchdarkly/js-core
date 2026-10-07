@@ -17,8 +17,10 @@ This package contains a W3C-compliant EventSource (server-sent events) client bu
 
 This package is intended to be used by LaunchDarkly SDKs and not as a general EventSource implementation.
 
-This package is derived from the [`eventsource`](https://www.npmjs.com/package/eventsource) npm
-package. See [LICENSE](LICENSE) for the original license terms.
+This package is derived from LaunchDarkly's
+[`launchdarkly-eventsource`](https://www.npmjs.com/package/launchdarkly-eventsource) package,
+which is a fork of the [`eventsource`](https://www.npmjs.com/package/eventsource) npm package.
+See [LICENSE](LICENSE) for the original license terms.
 
 The stream parser at `src/parser` is a fork of the
 [`eventsource-parser`](https://www.npmjs.com/package/eventsource-parser) npm package, version
@@ -27,10 +29,9 @@ its original MIT license terms.
 
 ## Options reference
 
-This section documents the behavior of `createEventSource`'s second argument for maintainers of this
-package and its consumers. The authoritative definitions, including any behavior not covered here,
-are the TSDoc comments on `EventSourceInitDict` in
-`src/types.ts`.
+This section documents the behavior of `createEventSource`'s second argument for maintainers of
+this package and its consumers. The authoritative definitions, including any behavior not covered
+here, are the TSDoc comments on `EventSourceInitDict` in `src/types.ts`.
 
 ### Events
 
@@ -39,15 +40,14 @@ Listeners attach in two ways:
 - The `onopen`, `onerror`, `onretrying`, and `onclose` members are plain writable slots, one
   listener each. Assigning a slot never affects listeners registered through `addEventListener`.
   For one dispatched event, the matching slot runs first, then the `addEventListener` listeners.
-  `onclose` is an exception: it is invoked only by the public `close()` method, never as part of
-  event dispatch.
+  `onclose` is an exception. Only the public `close()` method invokes it, never event dispatch.
 - `addEventListener(type, listener)` and `removeEventListener(type, listener)` register and
   remove any number of listeners per event type, including the SSE event types a server names
   through the `event:` field.
 
-Listeners are typed by event type: for the event types this implementation itself dispatches, the
-payload type comes from the exported `EventSourceEventMap`; a server-named SSE event carries a
-`MessageEvent`.
+Listeners are typed by event type. For the event types this implementation itself dispatches,
+the payload type comes from the exported `EventSourceEventMap`. A server-named SSE event carries
+a `MessageEvent`.
 
 Beyond the standard `open`/`message`/`error` events, this implementation dispatches:
 
@@ -58,9 +58,8 @@ Beyond the standard `open`/`message`/`error` events, this implementation dispatc
 - `end`: the server ended the stream cleanly, with a complete response body. Not reported as an
   `error`, but still passed to `errorFilter` for retry purposes. A mid-stream connection drop --
   a reset, or a socket that closes without completing the response -- surfaces from the fetch
-  transport as a read failure, so it dispatches `error` and invokes `onerror`. The original Node
-  transport reported the incomplete-close case as `end`; a caller that treats `end` and `error`
-  differently sees `error` more often here.
+  transport as a read failure, so it dispatches `error` and invokes `onerror`. A caller that
+  treats `end` and `error` differently must expect `error` for an incomplete close.
 - `retrying`: after an error, indicates a reconnect is scheduled. The event's `delayMillis`
   property gives the delay.
 
@@ -93,12 +92,11 @@ The object must implement three methods:
   returns the delay in milliseconds before the next attempt.
 - `setGoodSince(goodSinceTimeMillis)` -- called when the first event of a connection arrives, to
   mark the connection as delivering data.
+- `setBaseDelay(delayMillis)` -- called when the server sends a `retry:` field; the value reaches
+  the strategy already validated as all ASCII digits and capped at one hour.
 
 The timestamps the client passes come from one monotonic clock. They are not epoch times, and a
 strategy must only compare them with each other, never with `Date.now()`.
-
-- `setBaseDelay(delayMillis)` -- called when the server sends a `retry:` field; the value reaches
-  the strategy already validated as all ASCII digits and capped at one hour.
 
 When `retryDelayStrategy` is set it fully replaces the built-in behavior, so
 `initialRetryDelayMillis`, `maxBackoffMillis`, `jitterRatio`, and `retryResetIntervalMillis` have
@@ -108,15 +106,14 @@ no effect. When the option is absent, the built-in options above apply.
 
 By default, connection failures and I/O errors are always retried; HTTP error responses are
 retried only for 500, 502, 503, and 504. A 200 response that declares a Content-Type other than
-`text/event-stream` is also treated as an error; the report carries no status, so the default
-filter retries it like a transient transport condition (a response with no Content-Type header
-at all is accepted, so a minimal injected transport can omit response headers). Set
-`errorFilter` to override this -- it receives the error and returns `true` to retry or `false`
-to close the stream and raise `error`. A filter that throws is treated as if it returned
-`false`. The stream then closes cleanly and releases its connection, and the exception surfaces
-asynchronously as an uncaught error, like a throwing listener's. (The original package leaked the connection here; this is a deliberate divergence.)
-Redirect handling is described in
-[Redirects and bodies](#redirects-and-bodies) below.
+`text/event-stream`, or whose headers cannot be read, is also treated as an error. Its report
+carries no status, so the default filter retries it like a transient transport condition. A
+response with no Content-Type header is accepted, so a minimal injected transport can report no
+headers. Set `errorFilter` to override this -- it receives the error and returns `true` to retry
+or `false` to close the stream and raise `error`. A filter that throws is treated as if it
+returned `false`. The stream then closes cleanly and releases its connection, and the exception
+surfaces asynchronously as an uncaught error, like a throwing listener's. Each status other than
+200, including a redirect status that the transport did not follow, is an HTTP error response.
 
 ### Headers, method, and body
 
@@ -137,8 +134,9 @@ once per instance. The `createEventRegistry` option supplies the factory; when a
 instance uses the internal `Map`-backed registry, whose factory is also exported as
 `createDefaultEventRegistry`. A substitute must satisfy the exported `EventListenerRegistry`
 interface -- for example, an SDK can supply one backed by Node's `EventEmitter`. The registry
-never sees the `on*` slots; they are plain members of the instance. The registry is trusted code:
-it observes every event the instance dispatches and controls what its listeners actually receive.
+never sees the `on*` slots; they are plain members of the instance. The registry is trusted
+code. It observes every event the instance dispatches and controls what its listeners actually
+receive.
 
 ### Credentials
 
@@ -155,7 +153,7 @@ attempts stays current across reconnects.
 
 The `fetch` option supplies the transport used to open the stream. When absent, the client uses
 the global `fetch`. The option only requires the structural subset of the fetch API that the
-client uses (see `FetchLike` in `src/types.ts`), so a real `fetch` implementation satisfies it
+client uses (see `FetchLike` in `src/httpHelpers.ts`), so a real `fetch` implementation satisfies it
 without casts. This is how the Node-based SDKs connect this client to `node:http`/`node:https`
 with their agent, proxy, and TLS configuration. The client itself knows nothing about any of
 those.

@@ -42,15 +42,12 @@ export const OPEN = 1;
 /** Ready state: `close()` has closed the connection; it will not reconnect. */
 export const CLOSED = 2;
 
-// A server-directed retry: value larger than this is treated as this value; anything
-// larger would be indistinguishable from the connection never resuming. It also keeps
-// the reconnect delay far below the runtime timer limit, which some runtimes replace
-// with a near-zero delay.
-const MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS = 60 * 60 * 1000; // 1 hour
+// A server-directed `retry:` value larger than this is treated as this value. A larger value
+// would be indistinguishable from the connection never resuming. The cap also keeps the
+// reconnect delay far below the runtime timer limit, which some runtimes replace with a
+// near-zero delay.
+const MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS = 60 * 60 * 1000;
 
-/**
- * Wrap a callback to ensure it can only be called once.
- */
 function once<T extends (...args: any[]) => void>(cb: T): (...args: Parameters<T>) => void {
   let called = false;
   return (...params: Parameters<T>) => {
@@ -79,7 +76,8 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
     const s = error.status;
     return s === 500 || s === 502 || s === 503 || s === 504;
   }
-  return true; // always return I/O errors
+  // A report with no status (an I/O error, a timeout, an ended stream) always retries.
+  return true;
 }
 
 /**
@@ -160,9 +158,9 @@ export interface EventSource {
 
   /**
    * Called once when `close()` closes the stream, before the listeners registered for the
-   * `closed` event. Only the public `close()` method invokes it: an internal non-retryable
-   * termination dispatches the `error` and `closed` events without it (the `errorFilter` caller
-   * already received that error), and a server-sent SSE frame named `closed` reaches only the
+   * `closed` event. Only the public `close()` method invokes it. An internal non-retryable
+   * termination dispatches the `error` and `closed` events without it, because the `errorFilter`
+   * caller already received that error. A server-sent SSE frame named `closed` reaches only the
    * `addEventListener('closed')` listeners. Thus neither can look like a user-initiated close.
    */
   onclose: (() => void) | undefined;
@@ -309,16 +307,16 @@ export function createEventSource(
   } satisfies Pick<EventSource, OwnSlots> as EventSource;
 
   /**
-   * Dispatches one event: the matching on* slot first, then the listeners registered for the
-   * event's type.
+   * Dispatches one event. The matching `on*` slot runs first, then the listeners registered
+   * for the event's type.
    *
    * A server-sent SSE frame whose `event:` name is `open`, `error`, or `retrying` also reaches
    * the matching slot, with the frame's `MessageEvent` payload, exactly as it reaches the
    * registered listeners of that type.
    *
    * @remark
-   * Excluding `close` is intentional as only `close()` invokes `onclose`, so neither a data
-   * frame nor an internal termination can look like a user-initiated close.
+   * The `closed` type has no slot case on purpose. Only `close()` invokes `onclose`, so neither
+   * a data frame nor an internal termination can look like a user-initiated close.
    */
   const emit = (event: EventSourceEventMap[keyof EventSourceEventMap]): void => {
     let slotThrew = false;
@@ -373,7 +371,8 @@ export function createEventSource(
     }
   };
 
-  // Builds common headers
+  // Each attempt builds its headers again, because the live Last-Event-ID changes between
+  // attempts.
   const makeHeaders = (): Record<string, string> => {
     const headers: Record<string, string> = {};
     if (!config.skipDefaultHeaders) {
@@ -406,9 +405,9 @@ export function createEventSource(
         headers[key] = Array.isArray(value) ? value.join(', ') : String(value);
       });
     }
-    // A caller-supplied Last-Event-ID header only seeds the initial resume point, read in the
-    // constructor; each received event id replaces it. An empty id: field from the server
-    // clears the id, and then no header is sent.
+    // A caller-supplied Last-Event-ID header only seeds the initial resume point, which
+    // createEventSource reads once. Each received event id replaces it. An empty `id:` field
+    // from the server clears the id, and then no header is sent.
     if (lastEventId) {
       headers['Last-Event-ID'] = lastEventId;
     }
@@ -460,8 +459,9 @@ export function createEventSource(
       if (parserGeneration !== generation) {
         return;
       }
-      // The parser only reports a value that is all ASCII digits. The cap keeps a huge value
-      // from acting as a permanent stop.
+      // The parser only reports a value that is all ASCII digits. The parser already caps the
+      // value; this cap repeats it, so the client does not depend on a change made in the
+      // parser fork.
       const delay =
         retry > MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS
           ? MAX_SERVER_DIRECTED_RETRY_DELAY_MILLIS
@@ -540,8 +540,8 @@ export function createEventSource(
   };
 
   // The read timeout measures the gap between chunks, independent of the transport. The timer
-  // arms when the request starts, and it arms again on each chunk. When the timer fires, no data
-  // arrived for the full interval, and the connection is treated as dead.
+  // arms when the request starts, and it arms again on each chunk that carries bytes. When the
+  // timer fires, no data arrived for the full interval, and the connection is treated as dead.
   const resetReadTimeout = (failOnce: (error?: RawErrorPayload) => void): void => {
     clearReadTimeout();
     const timeout = config.readTimeoutMillis;
@@ -620,13 +620,14 @@ export function createEventSource(
         headersUnreadable = true;
       }
 
+      // The status is read once. A getter that changes its answer between reads would skew the
+      // classification, and a throw on a later read would skip the release below.
+      const { status } = res;
+
       // A real fetch() has followed each redirect before this point, and an injected transport
       // that does not follow redirects surfaces the redirect status itself. Thus each status
       // other than 200 is a failure. This includes a 301 or 307 without a Location header, which
       // fetch() cannot follow.
-      // The status is read once. A getter that changes its answer between reads would skew the
-      // classification, and a throw on a later read would skip the release below.
-      const { status } = res;
       if (status !== 200) {
         // The guarded read keeps the failure report intact when the statusText getter throws.
         let statusText: string;
@@ -641,7 +642,7 @@ export function createEventSource(
           headers: responseHeaders,
           message: statusText,
         });
-        // This path never reads the body. For a standard fetch the abort in destroyRequest()
+        // This path never reads the body. For a standard fetch, the abort in destroyRequest()
         // errors the body stream per the Fetch standard; the explicit release covers a
         // transport that ignores the abort signal.
         destroyRequest();
@@ -659,17 +660,19 @@ export function createEventSource(
         return;
       }
 
-      // A 200 response must carry an event-stream content type; any other declared type (an
+      // A 200 response must carry an event-stream content type. Any other declared type (an
       // HTML error page, a JSON body from a misconfigured proxy) is a failure, not a stream to
-      // parse. The media type must match exactly; parameters after it, such as a charset, are
-      // allowed. A response with no Content-Type header at all is accepted, because a minimal
-      // injected transport can omit response headers.
-      // A standard Headers object comma-joins a duplicated Content-Type header, so a joined
-      // value is acceptable when every part declares the event-stream media type. The Fetch
-      // algorithm keeps only the last parsable part, so this every-part rule is stricter, and
-      // empty or unparsable parts also fail. The rejection stays retryable. JS trim() also
-      // strips NBSP, \f and \v, which the HTTP whitespace rules keep; the extra acceptance
-      // is harmless.
+      // parse. A response with no Content-Type header is accepted, because a minimal injected
+      // transport can report no headers.
+      //
+      // The media type must match exactly. Parameters after it, such as a charset, are allowed.
+      // A standard Headers object comma-joins a duplicated Content-Type header, so each part of
+      // a joined value must declare the event-stream media type. This is stricter than the
+      // Fetch algorithm, which keeps only the last parsable part, and an empty or unparsable
+      // part also fails.
+      //
+      // trim() also strips NBSP, form feed, and vertical tab, which are not HTTP whitespace.
+      // The extra leniency is harmless.
       const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
@@ -736,6 +739,21 @@ export function createEventSource(
         releaseBody(res);
         return;
       }
+      // The body getter and getReader() are the last caller code before the read loop, and
+      // either one can call close(). A reader created for a closed stream must be released
+      // here, because close() already ran and will not run again.
+      if (thisGeneration !== generation) {
+        try {
+          const cancelResult = reader.cancel?.();
+          if (cancelResult) {
+            Promise.resolve(cancelResult).catch(() => {});
+          }
+        } catch {
+          // A throwing cancel has nothing left to release.
+        }
+        releaseBody(res);
+        return;
+      }
       activeReader = reader;
       // The decoder carries a multi-byte sequence that splits across reads. Each connection
       // gets a fresh decoder, so a partial sequence from a dropped connection cannot leak into
@@ -746,8 +764,8 @@ export function createEventSource(
       const readLoop = async (): Promise<void> => {
         try {
           for (;;) {
-            // The reads are sequential: the code cannot request the next chunk until this chunk
-            // arrives.
+            // The reads are sequential. The loop cannot request the next chunk until this
+            // chunk arrives.
             // eslint-disable-next-line no-await-in-loop
             const { done, value } = await reader.read();
             if (thisGeneration !== generation) {
@@ -813,7 +831,8 @@ export function createEventSource(
           }
         }
       };
-      // No await: readLoop reports its own outcome through failOnce and never rejects.
+      // The call is not awaited. readLoop reports its own outcome through failOnce and never
+      // rejects.
       readLoop();
     };
 
@@ -924,7 +943,7 @@ export function createEventSource(
       });
       shouldRetry = false;
     }
-    // The filter can call close(). That close is final: the state must not move back to
+    // The filter can call close(), and that close is final. The state must not move back to
     // CONNECTING, and no further event dispatches for this failure.
     if (readyState === CLOSED) {
       return;
@@ -934,8 +953,8 @@ export function createEventSource(
       emit(errorEvent);
       scheduleReconnect();
     } else {
-      // W3C ordering: the state is already closed when the error listeners run, so a listener's
-      // own close() call finds readyState CLOSED and becomes a no-op.
+      // This follows the W3C ordering. The state is already CLOSED when the error listeners
+      // run, so a listener's own close() call is a no-op.
       readyState = CLOSED;
       emit(errorEvent);
       // The stream ends here. A later close() is a no-op once the state is CLOSED, so this
@@ -945,7 +964,8 @@ export function createEventSource(
     }
   };
 
-  // Ensure the API surface is what we expect.
+  // The accessors and methods stay non-enumerable. The mapped type makes the compiler reject
+  // a missing or extra member.
   const hiddenMembers: {
     [K in Exclude<keyof EventSource, OwnSlots>]: TypedPropertyDescriptor<EventSource[K]> & {
       enumerable: false;

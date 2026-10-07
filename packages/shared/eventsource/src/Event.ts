@@ -70,11 +70,11 @@ export interface EventSourceEventMap {
  * W3C Event factory, and W3C MessageEvent factory for a server-named SSE frame.
  *
  * For a literal event type from {@link EventSourceEventMap}, the return type matches that map.
- * For a non-literal string type, the return type is {@link MessageEvent}: a server-chosen SSE
+ * For a non-literal string type, the return type is {@link MessageEvent}. A server-chosen SSE
  * `event:` name always carries a `MessageEvent` payload.
  *
- * @see http://www.w3.org/TR/DOM-Level-3-Events/#interface-Event
- * @see http://www.w3.org/TR/webmessaging/#event-definitions
+ * @see https://dom.spec.whatwg.org/#interface-event
+ * @see https://html.spec.whatwg.org/multipage/comms.html#the-messageevent-interface
  */
 export function makeEvent<K extends keyof EventSourceEventMap>(
   type: K,

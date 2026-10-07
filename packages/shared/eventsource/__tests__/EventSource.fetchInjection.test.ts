@@ -4,7 +4,7 @@
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
 import * as vm from 'node:vm';
 
-import { createEventSource } from '../src/EventSource';
+import { CLOSED, createEventSource, EventSource } from '../src/EventSource';
 import {
   ErrorEvent,
   EventSourceInitDict,
@@ -790,8 +790,48 @@ it('fails a 200 response whose headers cannot be read', async () => {
   }
 });
 
+it('cancels the reader when getReader itself closes the stream', async () => {
+  // The body getter and getReader() are the last caller code before the read loop. A close()
+  // from inside either one must not leave an uncancelled reader on the closed stream.
+  let es: EventSource | undefined;
+  const readerCancel = jest.fn();
+  const read = jest.fn(() => new Promise<never>(() => {}));
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => {
+        es?.close();
+        return { read, cancel: readerCancel };
+      },
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const closed = new AsyncQueue<unknown>();
+  const source = createEventSource(url, { fetch: injected });
+  es = source;
+  source.onerror = () => {};
+  source.addEventListener('closed', (e) => closed.add(e));
+  try {
+    await closed.take();
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 20);
+    });
+    expect(readerCancel).toHaveBeenCalledTimes(1);
+    expect(read).not.toHaveBeenCalled();
+    expect(source.readyState).toEqual(CLOSED);
+  } finally {
+    source.close();
+  }
+});
+
 it('stays closed when a transport accessor calls close during the response callback', async () => {
-  let es: ReturnType<typeof createEventSource> | undefined;
+  let es: EventSource | undefined;
   const getReader = jest.fn();
   const injected: FetchLike = async () => ({
     status: 200,
@@ -817,7 +857,7 @@ it('stays closed when a transport accessor calls close during the response callb
       setTimeout(resolve, 50);
     });
     expect(events.isEmpty()).toBe(true);
-    expect(source.readyState).toEqual(2);
+    expect(source.readyState).toEqual(CLOSED);
     expect(getReader).not.toHaveBeenCalled();
   } finally {
     source.close();

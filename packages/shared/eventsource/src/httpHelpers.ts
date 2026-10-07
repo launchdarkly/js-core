@@ -8,7 +8,7 @@
  * Because they are a structural subset, any standard `fetch` implementation should be able to
  * satisfy `FetchLike` without casts. A platform that cannot use a global `fetch` (for example,
  * one that needs an agent or TLS configuration) supplies its own function with the same shape.
- **/
+ */
 
 /**
  * The response headers. `forEach` is the only member this package reads.
@@ -133,7 +133,7 @@ export function splitHeaderListValue(value: string): string[] {
  * would block the connection permanently.
  *
  * @remark
- * The original `launchdarkly-eventsource` implementation rejects only a NUL character; this stricter
- * rule is what a `fetch()` transport requires.
+ * The SSE specification rejects only a NUL character in an id. The stricter rule here is what
+ * a `fetch()` transport requires.
  */
 export const INVALID_HEADER_VALUE_CHAR = /[^\t\x20-\x7e\x80-\xff]/;

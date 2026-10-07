@@ -146,8 +146,8 @@ export interface EventSourceInitDict {
   skipDefaultHeaders?: boolean;
 
   /**
-   * When true, the client sends credentials (cookies, HTTP authentication) with the request, also
-   * cross-origin. This flag maps to `credentials: 'include'` in `fetch()`. A transport without a
+   * When true, the client sends credentials (cookies, HTTP authentication) with the request, including
+   * a cross-origin request. This flag maps to `credentials: 'include'` in `fetch()`. A transport without a
    * credentials concept ignores it.
    */
   withCredentials?: boolean;
