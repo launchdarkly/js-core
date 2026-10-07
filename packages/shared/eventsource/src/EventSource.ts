@@ -615,10 +615,19 @@ export function createEventSource(
       // other than 200 is a failure. This includes a 301 or 307 without a Location header, which
       // fetch() cannot follow.
       if (res.status !== 200) {
+        // A hostile response object must not break the failure report. The status would be
+        // lost, and the error filter could not classify the failure.
+        let statusText: string;
+        try {
+          const raw: unknown = res.statusText;
+          statusText = typeof raw === 'string' ? raw : '';
+        } catch {
+          statusText = '';
+        }
         failOnce({
           status: res.status,
           headers: responseHeaders,
-          message: res.statusText,
+          message: statusText,
         });
         // This path never reads the body. For a standard fetch the abort in destroyRequest()
         // errors the body stream per the Fetch standard; the explicit release covers a
@@ -726,21 +735,26 @@ export function createEventSource(
             // covers Uint8Array, DataView, and raw ArrayBuffer chunks alike.
             if (value) {
               // The declared chunk type is Uint8Array, but a lenient transport can supply other
-              // shapes at runtime, so the checks run on the untyped value. The brand check covers
-              // a raw ArrayBuffer or SharedArrayBuffer from another realm (vm, iframe, Electron
-              // context), which instanceof would wrongly reject.
+              // shapes at runtime, so the checks run on the untyped value. The brand check also
+              // accepts a SharedArrayBuffer, and a raw buffer from another realm (vm, iframe,
+              // Electron context) that instanceof would wrongly reject.
               const chunk: unknown = value;
               const brand = Object.prototype.toString.call(chunk);
               const isBinaryChunk =
                 ArrayBuffer.isView(chunk) ||
+                chunk instanceof ArrayBuffer ||
                 brand === '[object ArrayBuffer]' ||
                 brand === '[object SharedArrayBuffer]';
-              if (!isBinaryChunk) {
-                // A transport that supplies a chunk of any other shape is broken, and it must
-                // fail loudly into the read-error path, not stall the stream silently.
+              // A forged brand can pass the check above, so the byte count is validated on its
+              // own. A transport that supplies anything else is broken, and it must fail loudly
+              // into the read-error path, not stall the stream silently.
+              const byteLength = isBinaryChunk
+                ? (chunk as { byteLength?: unknown }).byteLength
+                : undefined;
+              if (!isBinaryChunk || typeof byteLength !== 'number') {
                 throw new TypeError('the transport supplied a chunk that is not a BufferSource');
               }
-              if ((chunk as ArrayBufferView).byteLength > 0) {
+              if (byteLength > 0) {
                 resetReadTimeout(failOnce);
                 parser.feed(decoder.decode(value, { stream: true }));
               }
@@ -803,7 +817,13 @@ export function createEventSource(
     try {
       doFetch(currentUrl, init)
         .then(callback)
-        .catch((err) => failOnce({ message: safeErrorMessage(err, 'stream request failed') }));
+        .catch((err) => {
+          failOnce({ message: safeErrorMessage(err, 'stream request failed') });
+          // A throw that escapes the response callback (a hostile response getter) leaves the
+          // request held until the reconnect. The release is harmless for an ordinary network
+          // rejection, where no connection exists.
+          destroyRequest();
+        });
     } catch (err) {
       // fetch() can throw an argument error synchronously, not as a rejected promise.
       failOnce({ message: safeErrorMessage(err, 'stream request failed') });

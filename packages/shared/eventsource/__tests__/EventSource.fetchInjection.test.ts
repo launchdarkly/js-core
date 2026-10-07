@@ -2,6 +2,7 @@
 // file is only used by tests.
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { AsyncQueue } from 'launchdarkly-js-test-helpers';
+import * as vm from 'node:vm';
 
 import { createEventSource } from '../src/EventSource';
 import {
@@ -497,8 +498,6 @@ it('delivers chunks a transport supplies as ArrayBuffer', async () => {
 it('delivers chunks from an ArrayBuffer created in another realm', async () => {
   // instanceof checks fail across realms (vm, iframe, Electron contexts); the brand check must
   // still recognize the chunk as binary.
-  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
-  const vm = require('node:vm');
   const bytes = new TextEncoder().encode('data: xr\n\n');
   const foreign = vm.runInNewContext(`new ArrayBuffer(${bytes.length})`);
   new Uint8Array(foreign).set(bytes);
@@ -587,6 +586,187 @@ it('reports the fallback message when a fetch rejection hides its own message', 
   });
   const injected: FetchLike = async () => {
     throw hostile;
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toEqual('stream request failed');
+  } finally {
+    es.close();
+  }
+});
+
+it('delivers chunks a transport supplies as SharedArrayBuffer', async () => {
+  const bytes = new TextEncoder().encode('data: sab\n\n');
+  const sab = new SharedArrayBuffer(bytes.length);
+  new Uint8Array(sab).set(bytes);
+  let delivered = false;
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+          if (!delivered) {
+            delivered = true;
+            return { done: false, value: sab as unknown as Uint8Array };
+          }
+          return new Promise<never>(() => {});
+        },
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const events = new AsyncQueue<string>();
+  es.addEventListener('message', (m) => events.add(`message:${m.data}`));
+  es.onerror = () => events.add('error');
+  try {
+    expect(await events.take()).toEqual('message:sab');
+  } finally {
+    es.close();
+  }
+});
+
+it('delivers an ArrayBuffer chunk that carries its own string tag', async () => {
+  // A buffer with an own Symbol.toStringTag defeats the brand string, so instanceof is the
+  // check that must still recognize it.
+  const bytes = new TextEncoder().encode('data: tag\n\n');
+  const tagged = new ArrayBuffer(bytes.length);
+  new Uint8Array(tagged).set(bytes);
+  Object.defineProperty(tagged, Symbol.toStringTag, { value: 'Nope' });
+  let delivered = false;
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+          if (!delivered) {
+            delivered = true;
+            return { done: false, value: tagged as unknown as Uint8Array };
+          }
+          return new Promise<never>(() => {});
+        },
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const events = new AsyncQueue<string>();
+  es.addEventListener('message', (m) => events.add(`message:${m.data}`));
+  es.onerror = () => events.add('error');
+  try {
+    expect(await events.take()).toEqual('message:tag');
+  } finally {
+    es.close();
+  }
+});
+
+it('reports an error for a chunk that forges the buffer brand', async () => {
+  // A forged Symbol.toStringTag passes the brand string, but the missing byteLength must still
+  // fail loudly instead of skipping the chunk like an empty one.
+  const forged = { [Symbol.toStringTag]: 'ArrayBuffer' };
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => ({
+          done: false,
+          value: forged as unknown as Uint8Array,
+        }),
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('BufferSource');
+  } finally {
+    es.close();
+  }
+});
+
+it('keeps the status when a response statusText getter throws', async () => {
+  const hostile = {
+    status: 503,
+    headers: { forEach: () => {} },
+    body: null,
+  };
+  Object.defineProperty(hostile, 'statusText', {
+    get() {
+      throw new Error('statusText boom');
+    },
+  });
+  const injected: FetchLike = async () => hostile as unknown as FetchLikeResponse;
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    // The status must survive the hostile getter, so the error filter can classify the failure.
+    expect(err?.status).toEqual(503);
+  } finally {
+    es.close();
+  }
+});
+
+it('releases the request when a hostile response getter escapes the callback', async () => {
+  let signal: AbortSignal | undefined;
+  const injected: FetchLike = async (_url, init) => {
+    signal = init.signal;
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(): void {
+          throw new Error('headers boom');
+        },
+      },
+      body: null,
+    };
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toEqual('headers boom');
+    // The reconnect is a minute away. The escape path must release the request now.
+    expect(signal?.aborted).toBe(true);
+  } finally {
+    es.close();
+  }
+});
+
+it('replaces a non-string error message with the fallback', async () => {
+  const injected: FetchLike = async () => {
+    // eslint-disable-next-line no-throw-literal
+    throw { message: 42 };
   };
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const errors = new AsyncQueue<ErrorEvent | undefined>();
