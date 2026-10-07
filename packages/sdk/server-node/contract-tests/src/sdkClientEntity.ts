@@ -109,9 +109,17 @@ async function makePersistentStore(
       });
       // With the offline queue disabled, a command sent before the connection
       // is ready fails immediately. Wait for the connection so that the SDK's
-      // first writes do not race it.
-      await new Promise<void>((resolve) => {
-        client.once('ready', () => resolve());
+      // first writes do not race it. Bound the wait so an unreachable store
+      // fails the create instead of hanging it with a reconnecting client.
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          client.disconnect();
+          reject(new Error(`Timed out connecting to redis at ${params.store.dsn}`));
+        }, 10000);
+        client.once('ready', () => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
       return {
         store: RedisFeatureStore({
