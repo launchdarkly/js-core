@@ -293,8 +293,10 @@ export function createEventSource(
   let readTimeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
   /**
-   * Each connection attempt increases this counter. A read loop, or a `fetch()` promise, from an
-   * old attempt compares its own generation against this counter and stops.
+   * Each connection attempt increases this counter, and each transition to CLOSED increases it
+   * through destroyRequest(). A read loop, a `fetch()` promise, or a failure path from an old
+   * attempt compares its own generation against this counter and stops. A mismatch means the
+   * attempt is superseded or the stream is closed; both are reasons to stop.
    */
   let generation = 0;
 
@@ -502,10 +504,15 @@ export function createEventSource(
     }
   };
 
-  const destroyRequest = (): void => {
-    // The counter increases here, not only in connect(). Thus close() also invalidates each
-    // callback that is still in flight for the attempt under teardown.
+  // Returns the generation that this teardown produced. The abort below can run caller code (an
+  // abort listener on the signal), and that code can call close(), which increases the counter
+  // again. The return value lets failOnce() detect that close.
+  const destroyRequest = (): number => {
+    // The counter increases here, not only in connect(). Every transition to CLOSED runs through
+    // here, so close() invalidates each callback that is still in flight for the attempt under
+    // teardown, and a generation comparison also detects a closed stream.
     generation += 1;
+    const teardownGeneration = generation;
     clearReadTimeout();
     // Every teardown path that can leave a live connection runs through here. Thus the current
     // fetch and its response-body reader are always released, and they do not accumulate across
@@ -525,6 +532,7 @@ export function createEventSource(
       // A throwing cancel has nothing left to release.
     }
     activeReader = undefined;
+    return teardownGeneration;
   };
 
   /** Releases a response body that the client rejects without reading. */
@@ -549,16 +557,11 @@ export function createEventSource(
       return;
     }
     readTimeoutHandle = setTimeout(() => {
-      try {
-        failOnce({
-          message: `Read timeout, received no data in ${timeout}ms, assuming connection is dead`,
-        });
-      } finally {
-        // A timeout does not cancel the request. The abort releases the connection and the
-        // reader, so they do not leak across reconnects. The finally block keeps that release
-        // in place even when an errorFilter exception escapes failOnce.
-        destroyRequest();
-      }
+      // A timeout does not cancel the request. The teardown inside failOnce releases the
+      // connection and the reader, so they do not leak across reconnects.
+      failOnce({
+        message: `Read timeout, received no data in ${timeout}ms, assuming connection is dead`,
+      });
     }, timeout);
   };
 
@@ -575,16 +578,22 @@ export function createEventSource(
 
     // Each request should be able to fail at most once. The wrapper also stops a stale report
     // from an old attempt, and it is defined before urlBuilder runs, so a throw from urlBuilder
-    // is reported as a usual connection failure.
+    // is reported as a usual connection failure. The wrapper owns the teardown: every failure
+    // releases the connection here, before the failure dispatch, so no call site needs its own
+    // destroyRequest() call.
     const failOnce = once((error?: RawErrorPayload) => {
       if (thisGeneration !== generation) {
         return;
       }
-      clearReadTimeout();
+      // The teardown increases the generation, so the token below is the post-teardown value.
+      // The token stays valid until close() or the next connect() increases the counter again.
+      // An abort listener can call close() during the teardown; the returned token then differs
+      // from the counter, and failed() stops.
+      const failureGeneration = destroyRequest();
       // failed() schedules a reconnect that calls connect() again, so these three functions form
       // a cycle; some edge in it has to be a forward reference.
       // eslint-disable-next-line no-use-before-define
-      failed(error);
+      failed(failureGeneration, error);
     });
 
     // Each attempt can require a new URL, for example when a query parameter changes between
@@ -642,10 +651,9 @@ export function createEventSource(
           headers: responseHeaders,
           message: statusText,
         });
-        // This path never reads the body. For a standard fetch, the abort in destroyRequest()
-        // errors the body stream per the Fetch standard; the explicit release covers a
+        // This path never reads the body. For a standard fetch, the abort inside failOnce's
+        // teardown errors the body stream per the Fetch standard; the explicit release covers a
         // transport that ignores the abort signal.
-        destroyRequest();
         releaseBody(res);
         return;
       }
@@ -655,7 +663,6 @@ export function createEventSource(
         // whose headers cannot be read must fail and retry, not open as a headerless stream
         // with its partially collected headers discarded.
         failOnce({ message: 'stream response headers could not be read' });
-        destroyRequest();
         releaseBody(res);
         return;
       }
@@ -688,14 +695,12 @@ export function createEventSource(
           headers: responseHeaders,
           message: `unexpected Content-Type '${contentType}', expected 'text/event-stream'`,
         });
-        destroyRequest();
         releaseBody(res);
         return;
       }
 
       if (!res.body) {
         failOnce({ message: 'stream response has no body' });
-        destroyRequest();
         return;
       }
 
@@ -735,7 +740,6 @@ export function createEventSource(
         // cause. An injected transport can throw for any reason, and that failure must release
         // the request like every other rejection of the response.
         failOnce({ message: safeErrorMessage(err, 'getReader failed') });
-        destroyRequest();
         releaseBody(res);
         return;
       }
@@ -821,14 +825,10 @@ export function createEventSource(
           if (thisGeneration !== generation) {
             return;
           }
-          try {
-            failOnce({ message: safeErrorMessage(err, 'stream read failed') });
-          } finally {
-            // A retried read failure only arms a reconnect timer, and nothing else would release
-            // the broken connection until that timer fires. The abort frees the connection and
-            // the reader now, as the read-timeout path does.
-            destroyRequest();
-          }
+          // A retried read failure only arms a reconnect timer, and nothing else would release
+          // the broken connection until that timer fires. The teardown inside failOnce frees the
+          // connection and the reader now, as the read-timeout path does.
+          failOnce({ message: safeErrorMessage(err, 'stream read failed') });
         }
       };
       // The call is not awaited. readLoop reports its own outcome through failOnce and never
@@ -867,11 +867,10 @@ export function createEventSource(
           if (thisGeneration !== generation) {
             return;
           }
+          // A throw that escapes the response callback (a hostile response getter) would leave
+          // the request held until the reconnect. The teardown inside failOnce releases it. The
+          // release is harmless for an ordinary network rejection, where no connection exists.
           failOnce({ message: safeErrorMessage(err, 'stream request failed') });
-          // A throw that escapes the response callback (a hostile response getter) leaves the
-          // request held until the reconnect. The release is harmless for an ordinary network
-          // rejection, where no connection exists.
-          destroyRequest();
         });
     } catch (err) {
       // fetch() can throw an argument error synchronously, not as a rejected promise.
@@ -879,8 +878,11 @@ export function createEventSource(
     }
   };
 
-  const scheduleReconnect = (): void => {
-    if (readyState !== CONNECTING) {
+  // The failure generation threads in from failed(). A close() during the error dispatch in
+  // failed() increases the counter before this function runs, and a snapshot taken here would
+  // miss it.
+  const scheduleReconnect = (failureGeneration: number): void => {
+    if (failureGeneration !== generation) {
       return;
     }
     let delay: number;
@@ -906,24 +908,28 @@ export function createEventSource(
 
     emit(makeEvent('retrying', { delayMillis: delay }));
 
-    // A retrying listener can call close(). close() moves the state to CLOSED and clears the
+    // A retrying listener can call close(). close() increases the generation and clears the
     // timer, so a new timer must not arm after it.
-    if (readyState !== CONNECTING) {
+    if (failureGeneration !== generation) {
       return;
     }
 
     clearTimeout(reconnectTimer);
 
     reconnectTimer = setTimeout(() => {
-      if (readyState !== CONNECTING) {
+      // Only close() can increase the generation while the timer is armed, and close() also
+      // clears the timer. The check stays as a second line of defense.
+      if (failureGeneration !== generation) {
         return;
       }
       connect();
     }, delay);
   };
 
-  const failed = (error?: RawErrorPayload): void => {
-    if (readyState === CLOSED) {
+  // The failure generation is the token that failOnce's teardown produced. A counter that moved
+  // past it means the stream closed during the teardown, and the failure dispatch must not run.
+  const failed = (failureGeneration: number, error?: RawErrorPayload): void => {
+    if (failureGeneration !== generation) {
       return;
     }
     // The event's message is always a string; a transport failure without a status message
@@ -943,22 +949,23 @@ export function createEventSource(
       });
       shouldRetry = false;
     }
-    // The filter can call close(), and that close is final. The state must not move back to
-    // CONNECTING, and no further event dispatches for this failure.
-    if (readyState === CLOSED) {
+    // The filter can call close(), and that close is final. close() increases the generation,
+    // so the state must not move back to CONNECTING, and no further event dispatches for this
+    // failure.
+    if (failureGeneration !== generation) {
       return;
     }
     if (shouldRetry) {
       readyState = CONNECTING;
       emit(errorEvent);
-      scheduleReconnect();
+      scheduleReconnect(failureGeneration);
     } else {
       // This follows the W3C ordering. The state is already CLOSED when the error listeners
       // run, so a listener's own close() call is a no-op.
       readyState = CLOSED;
       emit(errorEvent);
-      // The stream ends here. A later close() is a no-op once the state is CLOSED, so this
-      // is the last place that can release the connection and any pending read.
+      // The teardown in failOnce already released the connection. This call keeps the rule
+      // that every transition to CLOSED increases the generation.
       destroyRequest();
       emit(makeEvent('closed'));
     }

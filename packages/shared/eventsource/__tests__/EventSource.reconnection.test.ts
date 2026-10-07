@@ -459,6 +459,36 @@ it('caps a server-sent retry: value at one hour', async () => {
   });
 });
 
+it('does not schedule a retry when an error listener calls close on a retryable failure', async () => {
+  jest.useFakeTimers();
+  try {
+    const es = createEventSource(`http://localhost:${deliberatelyUnusedPort}`, {
+      fetch: async () => {
+        throw new Error('connection refused');
+      },
+      initialRetryDelayMillis: 30000,
+    });
+    let retryingCount = 0;
+    es.onretrying = () => {
+      retryingCount += 1;
+    };
+    const closed = new Promise<void>((resolve) => {
+      es.addEventListener('closed', () => resolve());
+      es.onerror = () => {
+        es.close();
+      };
+    });
+    await closed;
+    // The close inside the error listener must stop the retry entirely: no retrying event
+    // dispatches after the closed event, and no timer arms that would hold the event loop
+    // open for the full delay.
+    expect(retryingCount).toEqual(0);
+    expect(jest.getTimerCount()).toEqual(0);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
 it('does not arm a reconnect timer when a retrying listener calls close', async () => {
   jest.useFakeTimers();
   try {
