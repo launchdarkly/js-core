@@ -102,6 +102,28 @@ export function headersToObject(headers: FetchHeaders): Record<string, string> {
 }
 
 /**
+ * Splits a joined header value on the commas that sit outside double quotes. A quoted parameter
+ * value can legally contain a comma, and a split inside it would break the parameter apart.
+ * Empty parts are kept; the caller decides what an empty part means.
+ */
+export function splitHeaderListValue(value: string): string[] {
+  const parts: string[] = [];
+  let start = 0;
+  let quoted = false;
+  for (let i = 0; i < value.length; i += 1) {
+    const ch = value[i];
+    if (ch === '"') {
+      quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      parts.push(value.slice(start, i));
+      start = i + 1;
+    }
+  }
+  parts.push(value.slice(start));
+  return parts;
+}
+
+/**
  * The `Headers` class of `fetch()` rejects some values through its ByteString conversion: a C0
  * control character other than tab, DEL, and each code point above U+00FF. A value outside the
  * permitted set would make the Last-Event-ID header assignment throw on reconnect. That failure

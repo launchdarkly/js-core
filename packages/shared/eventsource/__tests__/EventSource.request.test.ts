@@ -302,6 +302,38 @@ it('accepts a comma-joined duplicate event-stream content type', async () => {
   });
 });
 
+it('accepts an event-stream content type whose quoted parameter contains a comma', async () => {
+  // A quoted parameter value can legally contain a comma. The list split must not break the
+  // parameter apart and reject the single valid media type.
+  await withServer(async (server) => {
+    server.byDefault((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream; x="a,b"' });
+      res.write('data: hello\n\n');
+    });
+    const opts = { errorFilter: () => false };
+    await withEventSource(server.url, opts, async (es) => {
+      const events = new AsyncQueue<string>();
+      es.addEventListener('message', () => events.add('message'));
+      es.addEventListener('closed', () => events.add('closed'));
+      expect(await events.take()).toEqual('message');
+    });
+  });
+});
+
+it('rejects a joined content type when any part is not an event stream', async () => {
+  await withServer(async (server) => {
+    server.byDefault(
+      TestHttpHandlers.respond(200, { 'Content-Type': 'text/event-stream, text/html' }, 'nope'),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      const events = new AsyncQueue<string>();
+      es.addEventListener('open', () => events.add('open'));
+      es.onerror = () => events.add('error');
+      expect(await events.take()).toEqual('error');
+    });
+  });
+});
+
 it('accepts an event-stream content type that carries parameters', async () => {
   await withServer(async (server) => {
     const chunks = new AsyncQueue<string>();

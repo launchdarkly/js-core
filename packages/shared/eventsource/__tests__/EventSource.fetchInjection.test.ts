@@ -448,6 +448,89 @@ it('releases the unread body of a rejected response', async () => {
   }
 });
 
+it('delivers chunks a transport supplies as ArrayBuffer', async () => {
+  // The read contract declares Uint8Array, but TextDecoder also accepts a raw ArrayBuffer, and
+  // a lenient transport can supply one. Such a chunk must count as data, not as emptiness.
+  const encoder = new TextEncoder();
+  let delivered = false;
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+          if (!delivered) {
+            delivered = true;
+            return {
+              done: false,
+              value: encoder.encode('data: ab\n\n').buffer as unknown as Uint8Array,
+            };
+          }
+          return new Promise<never>(() => {});
+        },
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    const result = await Promise.race<MessageEvent | 'none'>([
+      messages.take(),
+      new Promise<'none'>((resolve) => {
+        setTimeout(() => resolve('none'), 1000);
+      }),
+    ]);
+    expect(result).not.toEqual('none');
+    expect((result as MessageEvent).data).toEqual('ab');
+  } finally {
+    es.close();
+  }
+});
+
+it('releases the request when getReader throws', async () => {
+  const bodyCancel = jest.fn();
+  let signal: AbortSignal | undefined;
+  const injected: FetchLike = async (_url, init) => {
+    signal = init.signal;
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(callback: (value: string, key: string) => void): void {
+          callback('text/event-stream', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => {
+          throw new Error('stream locked');
+        },
+        cancel: bodyCancel,
+      },
+    };
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toEqual('stream locked');
+    // The reconnect is a minute away. The failure must release the request now, like every
+    // other rejection of the response.
+    expect(signal?.aborted).toBe(true);
+    expect(bodyCancel).toHaveBeenCalledTimes(1);
+  } finally {
+    es.close();
+  }
+});
+
 it('close() tolerates a reader cancel that throws synchronously', async () => {
   const encoder = new TextEncoder();
   const injected: FetchLike = async () => ({

@@ -18,6 +18,7 @@ import {
   defaultFetch,
   headersToObject,
   INVALID_HEADER_VALUE_CHAR,
+  splitHeaderListValue,
 } from './httpHelpers';
 import { createDefaultEventRegistry } from './listenerRegistry';
 import { createParser } from './parser';
@@ -620,13 +621,15 @@ export function createEventSource(
       // allowed. A response with no Content-Type header at all is accepted, because a minimal
       // injected transport can omit response headers.
       // A standard Headers object comma-joins a duplicated Content-Type header, so a joined
-      // value is acceptable when every part declares the event-stream media type.
+      // value is acceptable when every part declares the event-stream media type. An empty or
+      // unparsable part fails the test, which is stricter than the Fetch algorithm; the
+      // rejection stays retryable.
       const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
-        !contentType
-          .split(',')
-          .every((part) => part.split(';', 1)[0].trim().toLowerCase() === 'text/event-stream')
+        !splitHeaderListValue(contentType).every(
+          (part) => part.split(';', 1)[0].trim().toLowerCase() === 'text/event-stream',
+        )
       ) {
         // The 200 status stays out of the report on purpose. Error filters classify HTTP error
         // statuses, and a 200 would read as a permanent failure. A wrong declared type is a
@@ -668,7 +671,18 @@ export function createEventSource(
         return;
       }
 
-      const reader = res.body.getReader();
+      let reader: FetchBodyReader;
+      try {
+        reader = res.body.getReader();
+      } catch (err) {
+        // A standard body throws here only when it is locked or disturbed, which this client
+        // cannot cause. An injected transport can throw for any reason, and that failure must
+        // release the request like every other rejection of the response.
+        failOnce({ message: (err as Error)?.message ?? 'getReader failed' });
+        destroyRequest();
+        releaseBody(res);
+        return;
+      }
       activeReader = reader;
       // The decoder carries a multi-byte sequence that splits across reads. Each connection
       // gets a fresh decoder, so a partial sequence from a dropped connection cannot leak into
@@ -693,8 +707,9 @@ export function createEventSource(
               return;
             }
             // Only a chunk that carries bytes is proof of liveness. An empty chunk from a
-            // hostile or buggy transport must not keep a dead connection alive.
-            if (value && value.length > 0) {
+            // hostile or buggy transport must not keep a dead connection alive. byteLength,
+            // not length, so a transport that supplies ArrayBuffer chunks still counts.
+            if (value && value.byteLength > 0) {
               resetReadTimeout(failOnce);
               parser.feed(decoder.decode(value, { stream: true }));
             }
