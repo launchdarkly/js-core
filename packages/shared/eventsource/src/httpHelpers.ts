@@ -112,7 +112,10 @@ export function splitHeaderListValue(value: string): string[] {
   let quoted = false;
   for (let i = 0; i < value.length; i += 1) {
     const ch = value[i];
-    if (ch === '"') {
+    if (quoted && ch === '\\') {
+      // A quoted-pair escapes the next character, including a quote or a comma.
+      i += 1;
+    } else if (ch === '"') {
       quoted = !quoted;
     } else if (ch === ',' && !quoted) {
       parts.push(value.slice(start, i));

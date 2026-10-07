@@ -494,6 +494,81 @@ it('delivers chunks a transport supplies as ArrayBuffer', async () => {
   }
 });
 
+it('reports an error instead of stalling when a transport supplies a non-buffer chunk', async () => {
+  // The read contract declares Uint8Array. A broken transport that yields a string must fail
+  // loudly and retry, not leave the stream open and silent forever.
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => ({
+          done: false,
+          value: 'data: hi\n\n' as unknown as Uint8Array,
+        }),
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('BufferSource');
+  } finally {
+    es.close();
+  }
+});
+
+it('releases the request when getReader throws an error whose message getter throws', async () => {
+  const bodyCancel = jest.fn();
+  let signal: AbortSignal | undefined;
+  const injected: FetchLike = async (_url, init) => {
+    signal = init.signal;
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(callback: (value: string, key: string) => void): void {
+          callback('text/event-stream', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => {
+          const hostile = {};
+          Object.defineProperty(hostile, 'message', {
+            get() {
+              throw new Error('getter boom');
+            },
+          });
+          throw hostile;
+        },
+        cancel: bodyCancel,
+      },
+    };
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    // The hostile message getter threw, so the fallback text reports the failure.
+    expect(err?.message).toEqual('getReader failed');
+    // The release must happen even though reading the error's message threw.
+    expect(signal?.aborted).toBe(true);
+    expect(bodyCancel).toHaveBeenCalledTimes(1);
+  } finally {
+    es.close();
+  }
+});
+
 it('releases the request when getReader throws', async () => {
   const bodyCancel = jest.fn();
   let signal: AbortSignal | undefined;

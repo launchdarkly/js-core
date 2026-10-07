@@ -621,9 +621,9 @@ export function createEventSource(
       // allowed. A response with no Content-Type header at all is accepted, because a minimal
       // injected transport can omit response headers.
       // A standard Headers object comma-joins a duplicated Content-Type header, so a joined
-      // value is acceptable when every part declares the event-stream media type. An empty or
-      // unparsable part fails the test, which is stricter than the Fetch algorithm; the
-      // rejection stays retryable.
+      // value is acceptable when every part declares the event-stream media type. The Fetch
+      // algorithm keeps only the last parsable part, so this every-part rule is stricter, and
+      // empty or unparsable parts also fail. The rejection stays retryable.
       const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
@@ -675,10 +675,17 @@ export function createEventSource(
       try {
         reader = res.body.getReader();
       } catch (err) {
-        // A standard body throws here only when it is locked or disturbed, which this client
-        // cannot cause. An injected transport can throw for any reason, and that failure must
-        // release the request like every other rejection of the response.
-        failOnce({ message: (err as Error)?.message ?? 'getReader failed' });
+        // A standard body throws here only when the stream is locked, which this client cannot
+        // cause. An injected transport can throw for any reason, and that failure must release
+        // the request like every other rejection of the response.
+        let message: string;
+        try {
+          message = (err as Error)?.message ?? 'getReader failed';
+        } catch {
+          // Reading the hostile error's own message threw; the fallback text stands in.
+          message = 'getReader failed';
+        }
+        failOnce({ message });
         destroyRequest();
         releaseBody(res);
         return;
@@ -707,11 +714,21 @@ export function createEventSource(
               return;
             }
             // Only a chunk that carries bytes is proof of liveness. An empty chunk from a
-            // hostile or buggy transport must not keep a dead connection alive. byteLength,
-            // not length, so a transport that supplies ArrayBuffer chunks still counts.
-            if (value && value.byteLength > 0) {
-              resetReadTimeout(failOnce);
-              parser.feed(decoder.decode(value, { stream: true }));
+            // hostile or buggy transport must not keep a dead connection alive. byteLength
+            // covers Uint8Array, DataView, and raw ArrayBuffer chunks alike.
+            if (value) {
+              // The declared chunk type is Uint8Array, but a lenient transport can supply other
+              // shapes at runtime, so the checks run on the untyped value.
+              const chunk: unknown = value;
+              if (!(ArrayBuffer.isView(chunk) || chunk instanceof ArrayBuffer)) {
+                // A transport that supplies a chunk of any other shape is broken, and it must
+                // fail loudly into the read-error path, not stall the stream silently.
+                throw new TypeError('the transport supplied a chunk that is not a BufferSource');
+              }
+              if (chunk.byteLength > 0) {
+                resetReadTimeout(failOnce);
+                parser.feed(decoder.decode(value, { stream: true }));
+              }
             }
             readsSinceYield += 1;
             if (readsSinceYield >= 1024) {

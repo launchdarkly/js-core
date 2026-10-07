@@ -320,6 +320,42 @@ it('accepts an event-stream content type whose quoted parameter contains a comma
   });
 });
 
+it('rejects a joined content type that hides a non-event-stream part behind a quoted-pair', async () => {
+  // The first element's parameter ends with an escaped quote. The escape must not swallow the
+  // list comma, or the trailing text/html part would ride along inside an accepted value.
+  await withServer(async (server) => {
+    server.byDefault(
+      TestHttpHandlers.respond(
+        200,
+        { 'Content-Type': 'text/event-stream;x="a\\"b", text/html' },
+        'nope',
+      ),
+    );
+    await withEventSource(server.url, undefined, async (es) => {
+      const events = new AsyncQueue<string>();
+      es.addEventListener('open', () => events.add('open'));
+      es.onerror = () => events.add('error');
+      expect(await events.take()).toEqual('error');
+    });
+  });
+});
+
+it('accepts an event-stream content type whose quoted parameter ends with an escaped quote', async () => {
+  await withServer(async (server) => {
+    server.byDefault((_req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream;x="a\\",b"' });
+      res.write('data: hello\n\n');
+    });
+    const opts = { errorFilter: () => false };
+    await withEventSource(server.url, opts, async (es) => {
+      const events = new AsyncQueue<string>();
+      es.addEventListener('message', () => events.add('message'));
+      es.addEventListener('closed', () => events.add('closed'));
+      expect(await events.take()).toEqual('message');
+    });
+  });
+});
+
 it('rejects a joined content type when any part is not an event stream', async () => {
   await withServer(async (server) => {
     server.byDefault(
