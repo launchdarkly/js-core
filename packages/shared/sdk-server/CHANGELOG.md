@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.24.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.24.0...js-server-sdk-common-v2.24.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* Serialize flags and segments without modifying the stored objects ([#2080](https://github.com/launchdarkly/js-core/issues/2080)) ([28d0738](https://github.com/launchdarkly/js-core/commit/28d0738bddb7baeece0a7ded4962e71875801670))
+
 ## [2.24.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.23.1...js-server-sdk-common-v2.24.0) (2026-10-06)
 
 
