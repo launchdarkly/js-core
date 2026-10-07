@@ -28,15 +28,14 @@ statusBox.appendChild(document.createTextNode('Initializing...'));
 transportBox.appendChild(document.createTextNode(''));
 
 const main = async () => {
-  // The native browser EventSource API has no way to send a custom HTTP method or a request
-  // body, so it cannot do POST-based streaming -- with `usePost: true` alone the SDK warns and
-  // the stream falls back to GET. Passing `fetchBrowserEventSource` as the
-  // `eventSource` option opts into a fetch()-based transport that CAN send POST with a body,
-  // which is what actually lets `usePost` take effect. Open your browser's devtools Network tab
-  // and look for a POST request to the streaming endpoint to see this in action.
+  // The native browser EventSource API cannot send a custom HTTP method or a request body.
+  // With `usePost: true` alone the SDK warns and the stream falls back to GET. Passing
+  // `fetchBrowserEventSource` as the `eventSource` option opts into a fetch()-based transport
+  // that can send POST with a body, which lets `usePost` take effect. Open your browser's
+  // devtools Network tab and look for a POST request to the streaming endpoint.
   //
-  // `eventSource` is plumbed in at the platform Requests level, below both data systems, but
-  // `usePost` only applies to the FDv2 (`dataSystem`) data source -- FDv1 uses `useReport` instead.
+  // The `eventSource` option applies to both data systems, but `usePost` only applies to the
+  // FDv2 (`dataSystem`) data source -- FDv1 uses `useReport` instead.
   const ldclient = createClient(clientSideID, context, {
     usePost: true,
     eventSource: fetchBrowserEventSource,
@@ -66,9 +65,9 @@ const main = async () => {
 
   const { status } = await ldclient.waitForInitialization();
 
-  // Both calls are required to actually open a stream: setStreaming forces the foreground mode
-  // to 'streaming' instead of the browser default ('one-shot', a single fetch with no ongoing
-  // connection), and setConnectionMode overrides the resolved mode outright.
+  // Both calls are required to open a stream. setStreaming forces the foreground mode to
+  // 'streaming' instead of the browser default of 'one-shot' (a single fetch with no ongoing
+  // connection). setConnectionMode overrides the resolved mode outright.
   ldclient.setStreaming(true);
   ldclient.setConnectionMode('streaming');
 
