@@ -19,9 +19,9 @@ export default defineConfig({
   entry: ENTRY_FILE,
   platform: 'browser',
   outDir: 'dist',
-  // The fetch-eventsource subpath needs its own entry here -- noExternal matches by exact
-  // specifier, not by package prefix, so listing only the package root would leave this
-  // subpath's `import` unbundled in the output, which a plain `<script>` tag cannot resolve.
+  // The fetch-eventsource subpath needs its own entry here. noExternal matches the exact
+  // specifier, not the package prefix. With only the package root listed, this subpath's
+  // `import` stays unbundled in the output, and a plain `<script>` tag cannot resolve it.
   noExternal: ['@launchdarkly/js-client-sdk', '@launchdarkly/js-client-sdk/fetch-eventsource'],
   hooks(hooks) {
     hooks.hook('build:done', () => {

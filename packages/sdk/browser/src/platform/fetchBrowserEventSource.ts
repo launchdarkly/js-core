@@ -35,8 +35,8 @@ const fetchBrowserEventSource: LDEventSourceFactory = {
   createEventSource: (url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource =>
     createEventSource(url, {
       ...eventSourceInitDict,
-      // Retry shaping the platform init dict does not carry, matching what the Node SDKs pass to
-      // the same package.
+      // The platform init dict carries no retry shaping, so set the backoff ceiling and jitter
+      // here.
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
     }),
