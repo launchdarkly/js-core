@@ -61,6 +61,19 @@ function once<T extends (...args: any[]) => void>(cb: T): (...args: Parameters<T
   };
 }
 
+/**
+ * Reads an error's message for a failure report. A hostile error can throw from its own message
+ * getter, or carry a non-string value, and a failure report must never throw while it forms.
+ */
+function safeErrorMessage(err: unknown, fallback: string): string {
+  try {
+    const message = (err as Error)?.message;
+    return typeof message === 'string' ? message : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function defaultErrorFilter(error: ErrorEvent): boolean {
   if (error.status) {
     const s = error.status;
@@ -580,7 +593,7 @@ export function createEventSource(
       try {
         currentUrl = config.urlBuilder();
       } catch (err) {
-        failOnce({ message: (err as Error)?.message ?? 'urlBuilder failed' });
+        failOnce({ message: safeErrorMessage(err, 'urlBuilder failed') });
         return;
       }
       // The builder can call close(), and close() bumps the generation counter. A request must
@@ -623,7 +636,9 @@ export function createEventSource(
       // A standard Headers object comma-joins a duplicated Content-Type header, so a joined
       // value is acceptable when every part declares the event-stream media type. The Fetch
       // algorithm keeps only the last parsable part, so this every-part rule is stricter, and
-      // empty or unparsable parts also fail. The rejection stays retryable.
+      // empty or unparsable parts also fail. The rejection stays retryable. JS trim() also
+      // strips NBSP, \f and \v, which the HTTP whitespace rules keep; the extra acceptance
+      // is harmless.
       const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
@@ -678,14 +693,7 @@ export function createEventSource(
         // A standard body throws here only when the stream is locked, which this client cannot
         // cause. An injected transport can throw for any reason, and that failure must release
         // the request like every other rejection of the response.
-        let message: string;
-        try {
-          message = (err as Error)?.message ?? 'getReader failed';
-        } catch {
-          // Reading the hostile error's own message threw; the fallback text stands in.
-          message = 'getReader failed';
-        }
-        failOnce({ message });
+        failOnce({ message: safeErrorMessage(err, 'getReader failed') });
         destroyRequest();
         releaseBody(res);
         return;
@@ -718,14 +726,21 @@ export function createEventSource(
             // covers Uint8Array, DataView, and raw ArrayBuffer chunks alike.
             if (value) {
               // The declared chunk type is Uint8Array, but a lenient transport can supply other
-              // shapes at runtime, so the checks run on the untyped value.
+              // shapes at runtime, so the checks run on the untyped value. The brand check covers
+              // a raw ArrayBuffer or SharedArrayBuffer from another realm (vm, iframe, Electron
+              // context), which instanceof would wrongly reject.
               const chunk: unknown = value;
-              if (!(ArrayBuffer.isView(chunk) || chunk instanceof ArrayBuffer)) {
+              const brand = Object.prototype.toString.call(chunk);
+              const isBinaryChunk =
+                ArrayBuffer.isView(chunk) ||
+                brand === '[object ArrayBuffer]' ||
+                brand === '[object SharedArrayBuffer]';
+              if (!isBinaryChunk) {
                 // A transport that supplies a chunk of any other shape is broken, and it must
                 // fail loudly into the read-error path, not stall the stream silently.
                 throw new TypeError('the transport supplied a chunk that is not a BufferSource');
               }
-              if (chunk.byteLength > 0) {
+              if ((chunk as ArrayBufferView).byteLength > 0) {
                 resetReadTimeout(failOnce);
                 parser.feed(decoder.decode(value, { stream: true }));
               }
@@ -751,7 +766,7 @@ export function createEventSource(
             return;
           }
           try {
-            failOnce({ message: (err as Error)?.message ?? 'stream read failed' });
+            failOnce({ message: safeErrorMessage(err, 'stream read failed') });
           } finally {
             // A retried read failure only arms a reconnect timer, and nothing else would release
             // the broken connection until that timer fires. The abort frees the connection and
@@ -788,10 +803,10 @@ export function createEventSource(
     try {
       doFetch(currentUrl, init)
         .then(callback)
-        .catch((err) => failOnce({ message: (err as Error)?.message ?? 'stream request failed' }));
+        .catch((err) => failOnce({ message: safeErrorMessage(err, 'stream request failed') }));
     } catch (err) {
       // fetch() can throw an argument error synchronously, not as a rejected promise.
-      failOnce({ message: (err as Error)?.message ?? 'stream request failed' });
+      failOnce({ message: safeErrorMessage(err, 'stream request failed') });
     }
   };
 

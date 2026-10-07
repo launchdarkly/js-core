@@ -321,8 +321,8 @@ it('accepts an event-stream content type whose quoted parameter contains a comma
 });
 
 it('rejects a joined content type that hides a non-event-stream part behind a quoted-pair', async () => {
-  // The first element's parameter ends with an escaped quote. The escape must not swallow the
-  // list comma, or the trailing text/html part would ride along inside an accepted value.
+  // Without quoted-pair handling, the escaped quote flips the quote state. The list comma then
+  // looks quoted, and the text/html part hides inside one accepted value.
   await withServer(async (server) => {
     server.byDefault(
       TestHttpHandlers.respond(
@@ -340,7 +340,7 @@ it('rejects a joined content type that hides a non-event-stream part behind a qu
   });
 });
 
-it('accepts an event-stream content type whose quoted parameter ends with an escaped quote', async () => {
+it('accepts an event-stream content type whose quoted parameter contains an escaped quote followed by a comma', async () => {
   await withServer(async (server) => {
     server.byDefault((_req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/event-stream;x="a\\",b"' });

@@ -19,10 +19,14 @@ it('treats a quoted-pair quote as part of the quoted value', () => {
   ]);
 });
 
-it('keeps a quoted-pair comma inside one element', () => {
+it('keeps a comma that follows an escaped quote inside one element', () => {
   expect(splitHeaderListValue('text/event-stream;x="a\\",b"')).toEqual([
     'text/event-stream;x="a\\",b"',
   ]);
+});
+
+it('keeps a trailing backslash inside quotes as part of the last element', () => {
+  expect(splitHeaderListValue('x="a\\')).toEqual(['x="a\\']);
 });
 
 it('runs an unterminated quoted string to the end of the value', () => {

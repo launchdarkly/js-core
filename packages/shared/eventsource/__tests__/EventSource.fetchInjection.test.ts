@@ -494,6 +494,112 @@ it('delivers chunks a transport supplies as ArrayBuffer', async () => {
   }
 });
 
+it('delivers chunks from an ArrayBuffer created in another realm', async () => {
+  // instanceof checks fail across realms (vm, iframe, Electron contexts); the brand check must
+  // still recognize the chunk as binary.
+  // eslint-disable-next-line global-require, @typescript-eslint/no-var-requires
+  const vm = require('node:vm');
+  const bytes = new TextEncoder().encode('data: xr\n\n');
+  const foreign = vm.runInNewContext(`new ArrayBuffer(${bytes.length})`);
+  new Uint8Array(foreign).set(bytes);
+  let delivered = false;
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    },
+    body: {
+      getReader: () => ({
+        read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+          if (!delivered) {
+            delivered = true;
+            return { done: false, value: foreign as unknown as Uint8Array };
+          }
+          return new Promise<never>(() => {});
+        },
+      }),
+    },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const events = new AsyncQueue<string>();
+  es.addEventListener('message', (m) => events.add(`message:${m.data}`));
+  es.onerror = () => events.add('error');
+  try {
+    expect(await events.take()).toEqual('message:xr');
+  } finally {
+    es.close();
+  }
+});
+
+it('reports the fallback message when a read rejection hides its own message', async () => {
+  const cancel = jest.fn();
+  let signal: AbortSignal | undefined;
+  const hostile = {};
+  Object.defineProperty(hostile, 'message', {
+    get() {
+      throw new Error('getter boom');
+    },
+  });
+  const injected: FetchLike = async (_url, init) => {
+    signal = init.signal;
+    return {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        forEach(callback: (value: string, key: string) => void): void {
+          callback('text/event-stream', 'content-type');
+        },
+      },
+      body: {
+        getReader: () => ({
+          read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
+            throw hostile;
+          },
+          cancel,
+        }),
+      },
+    };
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toEqual('stream read failed');
+    expect(signal?.aborted).toBe(true);
+    expect(cancel).toHaveBeenCalledTimes(1);
+  } finally {
+    es.close();
+  }
+});
+
+it('reports the fallback message when a fetch rejection hides its own message', async () => {
+  const hostile = {};
+  Object.defineProperty(hostile, 'message', {
+    get() {
+      throw new Error('getter boom');
+    },
+  });
+  const injected: FetchLike = async () => {
+    throw hostile;
+  };
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toEqual('stream request failed');
+  } finally {
+    es.close();
+  }
+});
+
 it('reports an error instead of stalling when a transport supplies a non-buffer chunk', async () => {
   // The read contract declares Uint8Array. A broken transport that yields a string must fail
   // loudly and retry, not leave the stream open and silent forever.
