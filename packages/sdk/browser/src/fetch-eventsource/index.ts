@@ -10,5 +10,5 @@
  *
  * @packageDocumentation
  */
-export { default as fetchBrowserEventSource } from './platform/fetchBrowserEventSource';
+export { default as fetchBrowserEventSource } from './fetchBrowserEventSource';
 export type { LDEventSourceFactory } from '@launchdarkly/js-client-sdk-common';

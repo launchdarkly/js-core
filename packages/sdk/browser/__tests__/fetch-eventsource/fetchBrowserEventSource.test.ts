@@ -1,7 +1,7 @@
 import { createEventSource as mockedCreateEventSource } from '@launchdarkly/eventsource';
 import { EventSourceInitDict } from '@launchdarkly/js-client-sdk-common';
 
-import fetchBrowserEventSource from '../../src/platform/fetchBrowserEventSource';
+import fetchBrowserEventSource from '../../src/fetch-eventsource/fetchBrowserEventSource';
 
 // The fetch-based EventSource needs a streaming fetch, which jsdom does not provide. Only the
 // adapter is under test here; the implementation itself is covered by the eventsource package's
