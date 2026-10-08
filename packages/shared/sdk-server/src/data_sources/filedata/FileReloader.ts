@@ -1,4 +1,4 @@
-import { Filesystem, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Filesystem, LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../evaluation/data/Flag';
 import { FileDataDocument, isFileNotFoundError } from './document';
@@ -178,7 +178,8 @@ export default class FileReloader {
       this._enqueue('change');
       return;
     }
-    const now = Date.now();
+    // A monotonic clock, so that a wall-clock adjustment cannot lengthen or cut short the bound.
+    const now = monotonicNow();
     if (this._debounceTimer) {
       clearTimeout(this._debounceTimer);
       this._debounceTimer = undefined;
