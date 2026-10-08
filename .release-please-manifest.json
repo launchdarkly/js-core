@@ -1,7 +1,7 @@
 {
-  "packages/ai-providers/server-ai-langchain": "0.8.23",
-  "packages/ai-providers/server-ai-openai": "0.7.23",
-  "packages/ai-providers/server-ai-vercel": "0.7.23",
+  "packages/ai-providers/server-ai-langchain": "0.8.24",
+  "packages/ai-providers/server-ai-openai": "0.7.24",
+  "packages/ai-providers/server-ai-vercel": "0.7.24",
   "packages/sdk/akamai-base": "3.0.43",
   "packages/sdk/akamai-edgekv": "1.4.45",
   "packages/sdk/browser": "4.11.2",
