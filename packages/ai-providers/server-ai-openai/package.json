@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/server-sdk-ai-openai",
-  "version": "0.7.23",
+  "version": "0.7.24",
   "description": "LaunchDarkly AI SDK OpenAI Provider for Server-Side JavaScript",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/ai-providers/server-ai-openai",
   "repository": {
