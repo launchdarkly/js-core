@@ -97,7 +97,19 @@
       "bump-minor-pre-major": true,
       "extra-files": ["src/platform/OxygenInfo.ts"]
     },
-    "packages/shared/common": {},
+    "packages/shared/common": {
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "/packages/shared/eventsource/package.json",
+          "jsonpath": "$.devDependencies['@launchdarkly/js-sdk-common']"
+        }
+      ]
+    },
+    "packages/shared/eventsource": {
+      "bump-minor-pre-major": true,
+      "prerelease": true
+    },
     "packages/shared/sdk-client": {
       "extra-files": [
         {
