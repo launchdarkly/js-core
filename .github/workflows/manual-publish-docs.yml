@@ -28,6 +28,7 @@ on:
           - packages/sdk/openfeature-cloudflare-server
           - packages/sdk/openfeature-node-server
           - packages/sdk/vue
+          - packages/shared/eventsource
 name: Publish Documentation
 jobs:
   build-publish:
