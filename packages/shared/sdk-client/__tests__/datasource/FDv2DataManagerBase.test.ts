@@ -690,6 +690,30 @@ it('adds withReasons query param when config.withReasons is true', async () => {
   manager.close();
 });
 
+it('passes usePost to the requestor and the source factory context', async () => {
+  const sourceFactoryProvider = makeSourceFactoryProvider();
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      config: makeConfig({ usePost: true }),
+      sourceFactoryProvider,
+    }),
+  );
+
+  await identifyManager(manager);
+
+  expect(mockMakeFDv2Requestor).toHaveBeenCalledTimes(1);
+  expect(mockMakeFDv2Requestor.mock.calls[0][7]).toBe(true);
+
+  const factoryContexts = [
+    ...(sourceFactoryProvider.createInitializerFactory as jest.Mock).mock.calls,
+    ...(sourceFactoryProvider.createSynchronizerSlot as jest.Mock).mock.calls,
+  ].map((call) => call[1]);
+  expect(factoryContexts.length).toBeGreaterThan(0);
+  factoryContexts.forEach((ctx) => expect(ctx.usePost).toBe(true));
+
+  manager.close();
+});
+
 it('closes data source and debounce manager on close', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig());
   await identifyManager(manager);

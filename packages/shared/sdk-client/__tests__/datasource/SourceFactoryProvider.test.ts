@@ -346,6 +346,29 @@ it('creates a new requestor when polling entry has endpoint overrides', () => {
   );
 });
 
+it('passes usePost to the requestor created for a polling entry with endpoint overrides', () => {
+  const provider = createDefaultSourceFactoryProvider();
+  const ctx = makeSourceFactoryContext({ usePost: true });
+  const entry: InitializerEntry = {
+    type: 'polling',
+    endpoints: { pollingBaseUri: 'https://custom-poll.example.com' },
+  };
+
+  const factory = provider.createInitializerFactory(entry, ctx);
+  factory!.create(() => undefined);
+
+  expect(mockMakeFDv2Requestor).toHaveBeenCalledWith(
+    ctx.plainContextString,
+    expect.anything(),
+    ctx.polling.paths,
+    ctx.requests,
+    ctx.encoding,
+    ctx.baseHeaders,
+    ctx.queryParams,
+    true,
+  );
+});
+
 it('uses per-entry pollInterval override for polling synchronizer', () => {
   const provider = createDefaultSourceFactoryProvider();
   const ctx = makeSourceFactoryContext({ polling: { paths: makePaths(), intervalSeconds: 30 } });
