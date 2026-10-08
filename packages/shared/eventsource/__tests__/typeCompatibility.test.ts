@@ -3,11 +3,22 @@ import type {
   EventSource as PlatformEventSource,
   EventSourceInitDict as PlatformEventSourceInitDict,
   EventSourceRetryDelayStrategy as PlatformRetryDelayStrategy,
+  Headers as PlatformHeaders,
+  Options as PlatformOptions,
+  Requests as PlatformRequests,
+  Response as PlatformResponse,
 } from '@launchdarkly/js-sdk-common';
 
 import { makeEvent, MessageEvent, RetryEvent } from '../src/Event';
 import { createEventSource } from '../src/EventSource';
-import { EventSourceInitDict, RetryDelayStrategy } from '../src/types';
+import {
+  EventSourceInitDict,
+  FetchHeaders,
+  FetchLike,
+  FetchLikeOptions,
+  FetchLikeResponse,
+  RetryDelayStrategy,
+} from '../src/types';
 import { deliberatelyUnusedPort } from './helpers';
 
 /**
@@ -34,6 +45,42 @@ type UnsupportedPlatformOptions = Exclude<
 >;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const unsupportedOptionsCheck: UnsupportedPlatformOptions extends never ? true : false = true;
+
+/**
+ * The transport seam. A platform `Requests.fetch` doubles as this package's injected `FetchLike`
+ * through structural typing, with no dependency between the packages in either direction. The
+ * checks below are the enforcement point for that contract. The first check is the contract
+ * itself. A platform fetch function is assignable to `FetchLike`.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const platformFetchSatisfiesFetchLike: (f: PlatformRequests['fetch']) => FetchLike = (f) => f;
+
+/**
+ * Every request member this package produces must be a declared platform option, so a platform
+ * implementation knows to handle it. `credentials` is the deliberate exception. A platform
+ * transport over a raw socket API has no equivalent and ignores it.
+ */
+type UnsupportedFetchOptionMembers = Exclude<keyof FetchLikeOptions, keyof PlatformOptions>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const fetchOptionMembersCheck: UnsupportedFetchOptionMembers extends 'credentials' ? true : false =
+  true;
+
+/**
+ * Every response member this package reads must be declarable on the platform response, so a
+ * platform implementation knows what to expose. `url` is the deliberate exception. The client
+ * falls back to the request url for the message origin.
+ */
+type UnsupportedFetchResponseMembers = Exclude<keyof FetchLikeResponse, keyof PlatformResponse>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const fetchResponseMembersCheck: UnsupportedFetchResponseMembers extends 'url' ? true : false =
+  true;
+
+/**
+ * Every header member this package reads must be declarable on the platform headers.
+ */
+type UnsupportedFetchHeaderMembers = Exclude<keyof FetchHeaders, keyof PlatformHeaders>;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const fetchHeaderMembersCheck: UnsupportedFetchHeaderMembers extends never ? true : false = true;
 
 /**
  * The retry strategy seam. An SDK adapts a `RetryState` into the platform's

@@ -51,6 +51,44 @@ export interface Headers {
    * @param name The name of the header to check.
    */
   has(name: string): boolean;
+
+  /**
+   * Executes the callback once for each header, with the value first. Optional so existing
+   * implementations remain valid. A streaming implementation must provide it. The streaming
+   * client reads headers only through this method, and content-type validation stops working
+   * without it.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Headers/forEach
+   */
+  forEach?(callback: (value: string, key: string) => void): void;
+}
+
+/**
+ * A reader over a response body stream.
+ */
+export interface BodyReader {
+  /**
+   * Resolves with the next chunk, or with `done: true` when the server ends the stream.
+   * Rejects when the connection drops.
+   */
+  read(): Promise<{ done: boolean; value?: Uint8Array }>;
+
+  /**
+   * Releases the reader and its connection.
+   */
+  cancel?(): Promise<unknown> | void;
+}
+
+/**
+ * A response body stream.
+ */
+export interface ResponseBody {
+  getReader(): BodyReader;
+
+  /**
+   * Releases the body without reading it.
+   */
+  cancel?(): Promise<unknown> | void;
 }
 
 /**
@@ -61,6 +99,22 @@ export interface Response {
   status: number;
 
   /**
+   * The HTTP status message of the response. Optional so existing implementations remain
+   * valid.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Response/statusText
+   */
+  statusText?: string;
+
+  /**
+   * The response body stream. An implementation provides it for a request made with
+   * {@link Options.streaming}. It can also provide it for other requests.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/Response/body
+   */
+  body?: ResponseBody | null;
+
+  /**
    * Read the response and provide it as a string.
    */
   text(): Promise<string>;
@@ -69,6 +123,17 @@ export interface Response {
    * Read the response and provide it as decoded json.
    */
   json(): Promise<any>;
+}
+
+/**
+ * The subset of an AbortSignal that a platform implementation consumes. The standard
+ * AbortSignal satisfies it, and the declaration keeps this package's types free of
+ * platform globals.
+ */
+export interface AbortSignalLike {
+  readonly aborted: boolean;
+  addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void;
+  removeEventListener(type: 'abort', listener: () => void): void;
 }
 
 export interface Options {
@@ -86,6 +151,26 @@ export interface Options {
    * https://developer.mozilla.org/en-US/docs/Web/API/RequestInit#keepalive
    */
   keepalive?: boolean;
+
+  /**
+   * An abort signal for the request. When the signal aborts, the implementation stops the
+   * request and rejects any pending read. Platform support for this field is best effort.
+   *
+   * https://developer.mozilla.org/en-US/docs/Web/API/RequestInit#signal
+   */
+  signal?: AbortSignalLike;
+
+  /**
+   * True for a streaming request. The implementation delivers response chunks with low
+   * latency. It does not request compressed content, does not buffer the response body,
+   * and applies no request timeout. The response exposes its body through
+   * {@link Response.body}. An SDK must use a fetch as a streaming transport only when the
+   * implementation honors this field. A streaming implementation must provide at least one
+   * release path. It honors {@link Options.signal}, or it provides the body cancel. It
+   * preferably provides both. When `streaming` is true, the implementation ignores
+   * {@link Options.timeout}.
+   */
+  streaming?: boolean;
 }
 
 export interface EventSourceCapabilities {

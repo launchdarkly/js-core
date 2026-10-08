@@ -191,7 +191,7 @@ it('reports a non-200 response from an injected fetch as an error', async () => 
   }
 });
 
-it('accepts a response whose transport supplies no headers at all', async () => {
+it('accepts a response whose headers iterate no entries', async () => {
   const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n'], { forEach() {} });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const es = createEventSource(url, { fetch: injected });
@@ -199,6 +199,40 @@ it('accepts a response whose transport supplies no headers at all', async () => 
   try {
     const messages = startMessageQueue(es);
     expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('opens the stream when the response headers expose no forEach', async () => {
+  // A transport without header iteration reports no headers. A 200 with no headers is accepted,
+  // so the stream must open rather than fail as unreadable.
+  const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n'], {});
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('reports an empty message for a non-200 response without a statusText', async () => {
+  const injected: FetchLike = async () => ({
+    status: 503,
+    headers: {},
+    body: null,
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.status).toEqual(503);
+    expect(err?.message).toEqual('');
   } finally {
     es.close();
   }

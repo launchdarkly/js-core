@@ -11,10 +11,12 @@
  */
 
 /**
- * The response headers. `forEach` is the only member this package reads.
+ * The response headers. `forEach` is the only member this package reads. It is optional so a
+ * transport whose response headers expose no iteration can still satisfy the type. The client
+ * then treats the response as carrying no headers.
  */
 export interface FetchHeaders {
-  forEach(callback: (value: string, key: string) => void): void;
+  forEach?(callback: (value: string, key: string) => void): void;
 }
 
 /**
@@ -50,7 +52,11 @@ export interface FetchResponseBody {
  */
 export interface FetchLikeResponse {
   readonly status: number;
-  readonly statusText: string;
+  /**
+   * The HTTP status message. It is optional so a minimal injected transport can omit it. The
+   * client then reports an empty message for a failed response.
+   */
+  readonly statusText?: string;
   readonly headers: FetchHeaders;
   readonly body?: FetchResponseBody | null;
   /**
@@ -93,6 +99,11 @@ export const bodylessMethods = ['GET', 'HEAD'];
 
 export function headersToObject(headers: FetchHeaders): Record<string, string> {
   const result: Record<string, string> = {};
+  if (!headers.forEach) {
+    // A transport without header iteration reports no headers. The client treats that the same
+    // as an empty header set.
+    return result;
+  }
   headers.forEach((value, key) => {
     // A standard Headers object reports lowercase names. The fold gives a transport that reports
     // wire-cased names the same shape, so a consumer can look a header up by its lowercase name.
