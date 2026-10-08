@@ -23,6 +23,10 @@ export interface FileDataSourceOptions {
    * Each configured file is also watched directly, so a path that is a symbolic link to a file
    * in another directory is followed, and that watch is set up again after each change so it
    * survives the file being replaced.
+   * A directory that cannot be watched, because it does not exist yet or because of its
+   * permissions, is logged at error level and watched once it can be, with an attempt every
+   * second. Its files are still read on every load; a file that cannot be read fails the load,
+   * which is reported through the error handler and retried.
    */
   autoUpdate?: boolean;
 
