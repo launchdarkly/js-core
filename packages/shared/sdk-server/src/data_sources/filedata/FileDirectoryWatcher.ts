@@ -202,6 +202,17 @@ export default class FileDirectoryWatcher {
   }
 
   /**
+   * Sets the direct watch on a configured file up again. A direct watch follows the path to the
+   * inode it names when the watch is set up. After the path was replaced or its link retargeted,
+   * the watch is on an inode that the path no longer names, and edits to the new target are
+   * invisible to it and to the directory watch alike.
+   */
+  private _renewFileWatch(path: string): void {
+    this._dropFileWatch(path);
+    this._armFileWatch(path);
+  }
+
+  /**
    * An event from the direct watch on a configured file. The file or the target of its link
    * changed, so the callback runs. The watch may now be on an inode that the path no longer
    * names, so it is set up again. An error from the watch is treated the same way: the watch
@@ -212,8 +223,7 @@ export default class FileDirectoryWatcher {
     if (this._closed || !this._fileWatches[path]) {
       return;
     }
-    this._dropFileWatch(path);
-    this._armFileWatch(path);
+    this._renewFileWatch(path);
     this._onChange();
     this._checkFiles(directoryOf(path), false);
   }
@@ -288,7 +298,11 @@ export default class FileDirectoryWatcher {
       // Keep the metadata current, so that a later event for another entry is compared to the
       // state after this change.
       this._checkFiles(directory, false);
-      // The file may have appeared, or been replaced under a watch that ended with it.
+      // The file may have appeared, been replaced, or had its link retargeted, so its direct
+      // watch is set up again; the others are set up if they are missing.
+      this._files[directory]
+        .filter((path) => changedName === undefined || basenameOf(path) === changedName)
+        .forEach((path) => this._renewFileWatch(path));
       this._armFileWatches();
     } else {
       // Another entry changed. A configured file that is a symbolic link can have changed with
@@ -301,9 +315,12 @@ export default class FileDirectoryWatcher {
 
   /**
    * Reads the metadata of the configured files in a directory and remembers it. When `notify` is
-   * set and any file's metadata differs from the last observation, the change callback runs.
-   * Reads for one directory do not overlap. A read requested during a read runs afterwards, and
-   * notifies when either request asked for it.
+   * set and any file's metadata differs from the last observation, the change callback runs, and
+   * the direct watch on each changed file is set up again, because its link can point elsewhere
+   * now. Reads for one directory do not overlap. A read requested during a read runs afterwards.
+   * A request to notify that arrives during a read applies to that read's result as well, since
+   * the read may already have observed the change the request is about; when the read is the
+   * first observation, which has nothing to compare to, such a request counts as a change.
    */
   private _checkFiles(directory: string, notify: boolean): void {
     if (this._closed || !this._filesystem.getFileStats) {
@@ -334,15 +351,19 @@ export default class FileDirectoryWatcher {
         return;
       }
       let changed = false;
+      let firstObservation = false;
       files.forEach((path, index) => {
         if (this._signatures[path] !== signatures[index]) {
           if (this._signatures[path] !== undefined) {
             changed = true;
+            this._renewFileWatch(path);
+          } else {
+            firstObservation = true;
           }
           this._signatures[path] = signatures[index];
         }
       });
-      if (notify && changed) {
+      if ((notify || check.notify) && (changed || (check.notify && firstObservation))) {
         this._onChange();
       }
       if (check.again) {

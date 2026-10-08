@@ -121,6 +121,78 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
+  it('renews the direct watch when a directory event names the configured file', () => {
+    // A link that is retargeted in place produces an event in its directory that names it. The
+    // direct watch is still on the old target, so it is set up again on the new one.
+    filesystem.set('/a/one.json', '{}');
+    startWatcher(['/a/one.json']);
+    const [before] = filesystem.activeWatches('/a/one.json');
+
+    filesystem.emit('/a', 'rename', 'one.json');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const [after] = filesystem.activeWatches('/a/one.json');
+    expect(before.closed).toBe(true);
+    expect(after).toBeDefined();
+    expect(after).not.toBe(before);
+  });
+
+  it('renews the direct watch when a configured file changed through another entry', async () => {
+    filesystem.set('/a/one.json', '{}', 1, 2);
+    startWatcher(['/a/one.json']);
+    await jest.advanceTimersByTimeAsync(0);
+    const [before] = filesystem.activeWatches('/a/one.json');
+
+    filesystem.set('/a/one.json', '{}', 2, 2);
+    filesystem.emit('/a', 'rename', '..data');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const [after] = filesystem.activeWatches('/a/one.json');
+    expect(before.closed).toBe(true);
+    expect(after).toBeDefined();
+    expect(after).not.toBe(before);
+  });
+
+  it('notifies for a change that a check in flight observed when the request arrived', async () => {
+    // An event naming the file starts a metadata read that does not notify, because the event
+    // did. A link swap during that read produces an event for another entry, whose request to
+    // notify must not be lost when the read in flight already recorded the new metadata.
+    filesystem.set('/a/one.json', '{}', 1, 2);
+    startWatcher(['/a/one.json']);
+    await jest.advanceTimersByTimeAsync(0);
+
+    filesystem.deferStats = true;
+    filesystem.emit('/a', 'change', 'one.json');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    filesystem.set('/a/one.json', '{}', 2, 2);
+    filesystem.emit('/a', 'rename', '..data');
+    filesystem.completePendingStats();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(2);
+
+    // The read that was requested during the first one finds nothing new.
+    filesystem.completePendingStats();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('treats an event for another entry during the first metadata read as a change', async () => {
+    // The first read has nothing to compare to, so a link swap that happens while it is in
+    // flight cannot be told from the baseline. The event for the swap must still reload.
+    filesystem.set('/a/one.json', '{}', 1, 2);
+    filesystem.deferStats = true;
+    startWatcher(['/a/one.json']);
+
+    filesystem.set('/a/one.json', '{}', 2, 2);
+    filesystem.emit('/a', 'rename', '..data');
+    filesystem.completePendingStats();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    filesystem.completePendingStats();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
   it('reads the metadata of every configured file in the directory, not only the first', () => {
     startWatcher(['/a/one.json', '/a/two.json']);
 
