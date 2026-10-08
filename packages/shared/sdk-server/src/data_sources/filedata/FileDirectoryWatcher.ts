@@ -222,6 +222,7 @@ export default class FileDirectoryWatcher {
     if (this._closed) {
       return;
     }
+    const added: string[] = [];
     let failed = false;
     this._directories.forEach((directory) => {
       if (this._watches[directory]) {
@@ -234,6 +235,7 @@ export default class FileDirectoryWatcher {
           (watch, eventType, changedName) =>
             this._handleEvent(watch, directory, eventType, changedName),
         );
+        added.push(directory);
       } catch (err) {
         failed = true;
         this._logger?.error(
@@ -243,12 +245,13 @@ export default class FileDirectoryWatcher {
     });
     if (failed) {
       this._scheduleSetup();
-      return;
     }
-    if (isRetry) {
-      // Changes could have happened while the watch was not in place.
+    if (isRetry && added.length > 0) {
+      // Changes could have happened in a directory while its watch was not in place. The
+      // catch-up runs for every directory watched in this pass, whether or not another
+      // directory still cannot be watched: that one gets its own catch-up when it can be.
       this._onChange();
-      this._directories.forEach((directory) => this._checkFiles(directory, false));
+      added.forEach((directory) => this._checkFiles(directory, false));
       // The direct watch on a file in the directory ended with it, or never existed when the
       // directory was missing at start. It is set up again with the directory watch.
       this._armFileWatches();

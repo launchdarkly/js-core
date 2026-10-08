@@ -150,6 +150,49 @@ describe('given a directory watcher over a mock filesystem', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('signals a directory that appears while another directory stays unwatchable', async () => {
+    // The catch-up after a watch gap must not wait for every directory: a configured path in a
+    // directory that never exists is a valid steady state, and a file written into the
+    // recovered directory before its watch was in place would otherwise never be loaded.
+    filesystem.failingDirectories.add('/a');
+    filesystem.failingDirectories.add('/b');
+    startWatcher(['/a/one.json', '/b/two.json']);
+    expect(directoryWatches()).toHaveLength(0);
+
+    filesystem.failingDirectories.delete('/a');
+    filesystem.set('/a/one.json', '{"flagValues":{"from-gap":true}}');
+    await jest.advanceTimersByTimeAsync(1000);
+
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a']);
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // The retry continues for the directory that is still missing, and signals once for it too.
+    filesystem.failingDirectories.delete('/b');
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a', '/b']);
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('signals a directory that is deleted and recreated while another directory stays unwatchable', async () => {
+    filesystem.failingDirectories.add('/b');
+    startWatcher(['/a/one.json', '/b/two.json']);
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a']);
+
+    // The directory goes, which an event reports, and comes back with a new file before the
+    // retry sets its watch up again.
+    filesystem.removeDirectory('/a');
+    filesystem.emit('/a', 'rename', 'one.json');
+    await jest.advanceTimersByTimeAsync(0);
+    expect(directoryWatches()).toHaveLength(0);
+    const callsAfterLoss = onChange.mock.calls.length;
+    filesystem.restoreDirectory('/a');
+    filesystem.set('/a/one.json', '{"flagValues":{"from-gap":true}}');
+    await jest.advanceTimersByTimeAsync(1000);
+
+    expect(directoryWatches().map((watch) => watch.path)).toEqual(['/a']);
+    expect(onChange).toHaveBeenCalledTimes(callsAfterLoss + 1);
+  });
+
   it('logs a directory that cannot be watched and retries until it can', async () => {
     filesystem.failingDirectories.add('/b');
     startWatcher(['/a/one.json', '/b/two.json']);
