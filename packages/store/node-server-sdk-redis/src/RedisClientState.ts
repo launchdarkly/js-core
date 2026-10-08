@@ -7,6 +7,17 @@ import LDRedisOptions from './LDRedisOptions';
 const DEFAULT_PREFIX = 'launchdarkly';
 
 /**
+ * A clock that a system time step cannot move. Older runtimes without performance
+ * fall back to the wall clock.
+ */
+function monotonicNow(): number {
+  if (typeof performance !== 'undefined') {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+/**
  * Class for managing the state of a redis connection.
  *
  * Used for the redis persistent store as well as the redis big segment store.
@@ -15,6 +26,8 @@ const DEFAULT_PREFIX = 'launchdarkly';
  */
 export default class RedisClientState {
   private _connected: boolean = false;
+
+  private _disconnectedSince?: number;
 
   private _attempt: number = 0;
 
@@ -69,18 +82,28 @@ export default class RedisClientState {
     });
 
     client.on('connect', () => {
-      this._attempt = 0;
-
       if (!this._initialConnection) {
-        this?._logger?.warn('Reconnecting to Redis');
+        this._logger?.warn('Reconnecting to Redis');
       }
+    });
 
+    client.on('ready', () => {
+      this._attempt = 0;
       this._initialConnection = false;
       this._connected = true;
+      this._disconnectedSince = undefined;
+    });
+
+    // The close event fires again on every failed reconnect attempt, so the
+    // disconnect time is anchored at the first close only.
+    client.on('close', () => {
+      this._connected = false;
+      this._disconnectedSince ??= monotonicNow();
     });
 
     client.on('end', () => {
       this._connected = false;
+      this._disconnectedSince ??= monotonicNow();
     });
   }
 
@@ -91,6 +114,18 @@ export default class RedisClientState {
    */
   isConnected(): boolean {
     return this._connected;
+  }
+
+  /**
+   * Get how long the connection has been down.
+   *
+   * @returns The time in milliseconds since the connection dropped, or 0 when connected.
+   */
+  disconnectedForMs(): number {
+    if (this._disconnectedSince === undefined) {
+      return 0;
+    }
+    return monotonicNow() - this._disconnectedSince;
   }
 
   /**

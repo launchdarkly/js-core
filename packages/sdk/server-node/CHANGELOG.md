@@ -2,6 +2,65 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.14.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.14.3...node-server-sdk-v9.14.4) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.24.0 to 2.24.1
+
+## [9.14.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.14.2...node-server-sdk-v9.14.3) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.1 to 2.24.0
+
+## [9.14.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.14.1...node-server-sdk-v9.14.2) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.0 to 2.23.1
+
+## [9.14.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.14.0...node-server-sdk-v9.14.1) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.22.0 to 2.23.0
+
+## [9.14.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.13.8...node-server-sdk-v9.14.0) (2026-09-30)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.6 to 2.22.0
+
+## [9.13.8](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.13.7...node-server-sdk-v9.13.8) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.5 to 2.21.6
+
 ## [9.13.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.13.6...node-server-sdk-v9.13.7) (2026-09-22)
 
 

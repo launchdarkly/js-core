@@ -10,7 +10,9 @@ import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClien
 const app = express();
 let server: Server | null = null;
 
-const port = 8000;
+// The port is configurable so the service can move out of the way of a local
+// DynamoDB instance, which the harness expects on port 8000.
+const port = Number(process.env.PORT ?? 8000);
 
 const clients = new ClientPool<SdkClientEntity>();
 
@@ -24,6 +26,8 @@ app.get('/', (req: Request, res: Response) => {
     capabilities: [
       'server-side-polling',
       'server-side',
+      'retry-conformance-fdv1-streaming',
+      'retry-conformance-fdv1-polling',
       'all-flags-client-side-only',
       'all-flags-details-only-for-tracked-flags',
       'all-flags-with-reasons',
@@ -47,6 +51,10 @@ app.get('/', (req: Request, res: Response) => {
       'flag-change-listeners',
       'fdv1-fallback',
       'instance-id',
+      'persistent-data-store-redis',
+      'persistent-data-store-dynamodb',
+      // TODO: enable this capability once it is added to contract tests.
+      // 'persistent-data-store-recovery',
     ],
   });
 });

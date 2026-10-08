@@ -34,6 +34,8 @@ jobs:
           yarn workspace @launchdarkly/vue-client-sdk-example-data-saving-mode run tsc
 
   run-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       id-token: write

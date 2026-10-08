@@ -44,7 +44,7 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
     this._wrapper.all(kind, callback);
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
+  init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
     this._wrapper.init(allData, callback);
   }
 
@@ -52,12 +52,28 @@ export default class DynamoDBFeatureStore implements LDFeatureStore {
     this._wrapper.delete(kind, key, version, callback);
   }
 
-  upsert(kind: interfaces.DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
+  upsert(
+    kind: interfaces.DataKind,
+    data: LDKeyedFeatureStoreItem,
+    callback: (err?: Error) => void,
+  ): void {
     this._wrapper.upsert(kind, data, callback);
   }
 
   initialized(callback: (isInitialized: boolean) => void): void {
     this._wrapper.initialized(callback);
+  }
+
+  isStoreAvailable(callback: (isAvailable: boolean) => void): void {
+    if (this._wrapper.isStoreAvailable) {
+      this._wrapper.isStoreAvailable(callback);
+      return;
+    }
+    // This branch cannot run with the sdk-server this package ships with: the
+    // wrapper always forwards the core's check, and the core always has one.
+    // The constant false only satisfies the type when the wrapper lacks the
+    // method; the recovery engine would then rely on its timed retries.
+    callback(false);
   }
 
   close(): void {

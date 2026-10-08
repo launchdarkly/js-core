@@ -20,6 +20,60 @@ All notable changes to the LaunchDarkly SDK for Vercel Edge Config will be docum
   * dependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [1.3.67](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.66...vercel-server-sdk-v1.3.67) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.39 to 2.6.40
+
+## [1.3.66](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.65...vercel-server-sdk-v1.3.66) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.38 to 2.6.39
+
+## [1.3.65](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.64...vercel-server-sdk-v1.3.65) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.37 to 2.6.38
+
+## [1.3.64](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.63...vercel-server-sdk-v1.3.64) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.36 to 2.6.37
+
+## [1.3.63](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.62...vercel-server-sdk-v1.3.63) (2026-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.35 to 2.6.36
+
+## [1.3.62](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.61...vercel-server-sdk-v1.3.62) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.34 to 2.6.35
+
 ## [1.3.61](https://github.com/launchdarkly/js-core/compare/vercel-server-sdk-v1.3.60...vercel-server-sdk-v1.3.61) (2026-09-22)
 
 

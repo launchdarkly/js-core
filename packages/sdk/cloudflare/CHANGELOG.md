@@ -21,6 +21,60 @@ All notable changes to the LaunchDarkly SDK for Cloudflare Workers will be docum
   * devDependencies
     * @launchdarkly/js-server-sdk-common-edge bumped from 2.2.1 to 2.2.2
 
+## [2.7.44](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.43...cloudflare-server-sdk-v2.7.44) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.39 to 2.6.40
+
+## [2.7.43](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.42...cloudflare-server-sdk-v2.7.43) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.38 to 2.6.39
+
+## [2.7.42](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.41...cloudflare-server-sdk-v2.7.42) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.37 to 2.6.38
+
+## [2.7.41](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.40...cloudflare-server-sdk-v2.7.41) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.36 to 2.6.37
+
+## [2.7.40](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.39...cloudflare-server-sdk-v2.7.40) (2026-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.35 to 2.6.36
+
+## [2.7.39](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.38...cloudflare-server-sdk-v2.7.39) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common-edge bumped from 2.6.34 to 2.6.35
+
 ## [2.7.38](https://github.com/launchdarkly/js-core/compare/cloudflare-server-sdk-v2.7.37...cloudflare-server-sdk-v2.7.38) (2026-09-22)
 
 

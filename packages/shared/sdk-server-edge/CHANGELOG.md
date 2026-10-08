@@ -1,5 +1,59 @@
 # Changelog
 
+## [2.6.40](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.39...js-server-sdk-common-edge-v2.6.40) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.24.0 to 2.24.1
+
+## [2.6.39](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.38...js-server-sdk-common-edge-v2.6.39) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.1 to 2.24.0
+
+## [2.6.38](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.37...js-server-sdk-common-edge-v2.6.38) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.0 to 2.23.1
+
+## [2.6.37](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.36...js-server-sdk-common-edge-v2.6.37) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.22.0 to 2.23.0
+
+## [2.6.36](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.35...js-server-sdk-common-edge-v2.6.36) (2026-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.6 to 2.22.0
+
+## [2.6.35](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.34...js-server-sdk-common-edge-v2.6.35) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.5 to 2.21.6
+
 ## [2.6.34](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.33...js-server-sdk-common-edge-v2.6.34) (2026-09-22)
 
 

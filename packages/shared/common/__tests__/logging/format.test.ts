@@ -29,6 +29,10 @@ describe.each([
   ['%i', [Symbol('foo')], 'NaN'],
   ['%f', [Symbol('foo')], 'NaN'],
   ['%%', [], '%'],
+  ['%', [], '%'],
+  ['100%', [], '100%'],
+  ['100%', [1], '100% 1'],
+  ['%s %', ['a'], 'a %'],
   [
     '',
     [Symbol('foo'), circular, BigInt(7), { apple: 'pie' }, global, undefined, null],
@@ -38,4 +42,24 @@ describe.each([
   it('produces the expected string', () => {
     expect(format(formatStr, ...args)).toMatch(result);
   });
+});
+
+it.each<[any[], string]>([
+  [[42], '42'],
+  [[0, false, null, undefined], '0 false null undefined'],
+  [[true], 'true'],
+  [[false], 'false'],
+  [[null], 'null'],
+  [[undefined], 'undefined'],
+  [[{ apple: 'pie' }, 7], '{"apple":"pie"} 7'],
+  [[BigInt(1)], '1n'],
+  [[circular], '[Circular]'],
+  [[[1, 2], 3], '[1,2] 3'],
+  [[42, '%s', 'value'], '42 %s value'],
+])('keeps all arguments when the first is not a string: %p', (args, expected) => {
+  expect(format(...args)).toBe(expected);
+});
+
+it('formats no arguments as an empty string', () => {
+  expect(format()).toBe('');
 });

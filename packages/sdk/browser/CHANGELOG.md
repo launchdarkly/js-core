@@ -1,5 +1,46 @@
 # Changelog
 
+## [4.11.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.11.1...js-client-sdk-v4.11.2) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.4 to 1.32.5
+
+## [4.11.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.11.0...js-client-sdk-v4.11.1) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.3 to 1.32.4
+
+## [4.11.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.10.4...js-client-sdk-v4.11.0) (2026-09-30)
+
+
+### Bug Fixes
+
+* default the built-in EventSource backoff bounds when they are omitted ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.2 to 1.32.3
+
+## [4.10.4](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.10.3...js-client-sdk-v4.10.4) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.1 to 1.32.2
+
 ## [4.10.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.10.2...js-client-sdk-v4.10.3) (2026-09-22)
 
 

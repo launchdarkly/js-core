@@ -1,5 +1,88 @@
 # Changelog
 
+## [4.3.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.3.2...node-server-sdk-redis-v4.3.3) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.3 to 9.14.4
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.4
+
+## [4.3.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.3.1...node-server-sdk-redis-v4.3.2) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.2 to 9.14.3
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.3
+
+## [4.3.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.3.0...node-server-sdk-redis-v4.3.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* settle Redis getAll when HGETALL fails ([#2078](https://github.com/launchdarkly/js-core/issues/2078)) ([bcfce79](https://github.com/launchdarkly/js-core/commit/bcfce7938ee4504c0c49c83ec98384288eef53ee))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.1 to 9.14.2
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.2
+
+## [4.3.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.44...node-server-sdk-redis-v4.3.0) (2026-10-01)
+
+
+### Features
+
+* Report Redis store errors and implement the availability check ([a9d8d8b](https://github.com/launchdarkly/js-core/commit/a9d8d8be11f95c3e9f107cd8c66dcec3529b8f06))
+
+
+### Bug Fixes
+
+* Prevent a Redis outage from crashing the process through an unhandled watch rejection ([a9d8d8b](https://github.com/launchdarkly/js-core/commit/a9d8d8be11f95c3e9f107cd8c66dcec3529b8f06))
+* Prevent an interrupted write-back from being reported as successful ([a9d8d8b](https://github.com/launchdarkly/js-core/commit/a9d8d8be11f95c3e9f107cd8c66dcec3529b8f06))
+* Report write failures promptly during an extended Redis outage ([a9d8d8b](https://github.com/launchdarkly/js-core/commit/a9d8d8be11f95c3e9f107cd8c66dcec3529b8f06))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.0 to 9.14.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.1
+
+## [4.2.44](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.43...node-server-sdk-redis-v4.2.44) (2026-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.13.8 to 9.14.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.14.0
+
+## [4.2.43](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.42...node-server-sdk-redis-v4.2.43) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.13.7 to 9.13.8
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.11.3 to >=9.13.8
+
 ## [4.2.42](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.2.41...node-server-sdk-redis-v4.2.42) (2026-09-22)
 
 

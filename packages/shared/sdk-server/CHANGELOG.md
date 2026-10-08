@@ -8,6 +8,67 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.24.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.24.0...js-server-sdk-common-v2.24.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* Serialize flags and segments without modifying the stored objects ([#2080](https://github.com/launchdarkly/js-core/issues/2080)) ([28d0738](https://github.com/launchdarkly/js-core/commit/28d0738bddb7baeece0a7ded4962e71875801670))
+
+## [2.24.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.23.1...js-server-sdk-common-v2.24.0) (2026-10-06)
+
+
+### Features
+
+* **common:** add a shared `monotonicNow()` method ([#2083](https://github.com/launchdarkly/js-core/issues/2083)) ([83edf68](https://github.com/launchdarkly/js-core/commit/83edf68b96fdbde40a91b81cad62b7ec9637c5eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.28.1 to 2.29.0
+
+## [2.23.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.23.0...js-server-sdk-common-v2.23.1) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.28.0 to 2.28.1
+
+## [2.23.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.22.0...js-server-sdk-common-v2.23.0) (2026-10-01)
+
+
+### Features
+
+* Add FDv2 persistent store write-back recovery ([#2011](https://github.com/launchdarkly/js-core/issues/2011)) ([9a785cc](https://github.com/launchdarkly/js-core/commit/9a785cc109b60f206803125871298f261db391dd))
+* Propagate store errors and the availability check through the persistence wrapper ([#2010](https://github.com/launchdarkly/js-core/issues/2010)) ([a752f93](https://github.com/launchdarkly/js-core/commit/a752f93c4233b98868fc8dd71a7c7282134860c2))
+
+## [2.22.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.6...js-server-sdk-common-v2.22.0) (2026-09-30)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.27.0 to 2.28.0
+
+## [2.21.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.5...js-server-sdk-common-v2.21.6) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.26.1 to 2.27.0
+
 ## [2.21.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.21.4...js-server-sdk-common-v2.21.5) (2026-09-22)
 
 

@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import {
   DataKind,
@@ -17,6 +17,7 @@ import {
 import TtlCache from '../cache/TtlCache';
 import { persistentStoreKinds } from './persistentStoreKinds';
 import sortDataSet from './sortDataSet';
+import { toError } from './storeErrors';
 import UpdateQueue from './UpdateQueue';
 
 function cacheKey(kind: DataKind, key: string) {
@@ -83,6 +84,10 @@ function deserialize(
   };
 }
 
+// Minimum time between store-error logs at error level. A store that fails every
+// write while flapping logs the rest at debug, so it cannot flood the log.
+const ERROR_LOG_INTERVAL_MS = 10000;
+
 /**
  * Internal implementation of {@link LDFeatureStore} that delegates the basic functionality to an
  * instance of {@link PersistentDataStore}. It provides optional caching behavior and other logic
@@ -91,6 +96,10 @@ function deserialize(
  */
 export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private _isInitialized = false;
+
+  // Monotonic ms of the last store-error log at error level. Starts at -Infinity
+  // so the first error of a process always logs at error level.
+  private _lastErrorLogMs = -Infinity;
 
   /**
    * Cache for storing individual items.
@@ -105,13 +114,22 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   /**
    * Used to preserve order of operations of async requests.
    */
-  private _queue: UpdateQueue = new UpdateQueue();
+  private _queue: UpdateQueue;
+
+  /**
+   * Check if the underlying storage can be accessed.
+   *
+   * This method is only present when the {@link PersistentDataStore} used by this
+   * wrapper implements it.
+   */
+  isStoreAvailable?: (callback: (isAvailable: boolean) => void) => void;
 
   constructor(
     private readonly _core: PersistentDataStore,
     ttl: number,
     private readonly _logger?: LDLogger,
   ) {
+    this._queue = new UpdateQueue(_logger);
     if (ttl) {
       this._itemCache = new TtlCache({
         ttl,
@@ -122,36 +140,79 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         checkInterval: defaultCheckInterval,
       });
     }
+
+    // Only expose the availability check when the core has one. Recovery logic uses
+    // the presence of this method to decide if it can poll.
+    const coreIsStoreAvailable = _core.isStoreAvailable?.bind(_core);
+    if (coreIsStoreAvailable) {
+      this.isStoreAvailable = coreIsStoreAvailable;
+    }
   }
 
-  init(allData: LDFeatureStoreDataStorage, callback: () => void): void {
-    this._queue.enqueue((cb) => {
-      const afterStoreInit = () => {
-        this._isInitialized = true;
-        if (this._itemCache) {
-          this._itemCache.clear();
-          this._allItemsCache!.clear();
+  init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
+    this._queue.enqueue(
+      (cb, isAbandoned) => {
+        const afterStoreInit = (err?: Error) => {
+          if (isAbandoned()) {
+            // The store closed, or this init already answered once. This late
+            // result must not touch the caches or the initialized state.
+            cb(err);
+            return;
+          }
+          if (err) {
+            // A failed init must not present the rejected data as current. Clear the
+            // caches and the initialized state, so reads and initialization checks
+            // fall through to the persistence layer's actual state.
+            this._logStoreError(err);
+            this._isInitialized = false;
+            this._itemCache?.clear();
+            this._allItemsCache?.clear();
+            cb(err);
+            return;
+          }
+          this._isInitialized = true;
+          if (this._itemCache) {
+            this._itemCache.clear();
+            this._allItemsCache!.clear();
 
-          Object.keys(allData).forEach((kindNamespace) => {
-            const kind = persistentStoreKinds[kindNamespace];
-            const items = allData[kindNamespace];
-            this._allItemsCache!.set(allForKindCacheKey(kind), items);
-            Object.keys(items).forEach((key) => {
-              const itemForKey = items[key];
+            Object.keys(allData).forEach((kindNamespace) => {
+              const kind = persistentStoreKinds[kindNamespace];
+              const items = allData[kindNamespace];
+              // The all-items cache backs all(), which never returns tombstones, so it
+              // must be populated with the same filtering the cache-miss path applies.
+              const filteredItems: LDFeatureStoreKindData = {};
+              Object.keys(items).forEach((key) => {
+                const itemForKey = items[key];
 
-              const itemDescriptor: ItemDescriptor = {
-                version: itemForKey.version,
-                item: itemForKey,
-              };
-              this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
+                const itemDescriptor: ItemDescriptor = {
+                  version: itemForKey.version,
+                  item: itemForKey,
+                };
+                this._itemCache!.set(cacheKey(kind, key), itemDescriptor);
+                if (!itemForKey.deleted) {
+                  filteredItems[key] = itemForKey;
+                }
+              });
+              this._allItemsCache!.set(allForKindCacheKey(kind), filteredItems);
             });
-          });
-        }
-        cb();
-      };
+          }
+          cb();
+        };
 
-      this._core.init(sortDataSet(allData), afterStoreInit);
-    }, callback);
+        this._core.init(sortDataSet(allData), afterStoreInit);
+      },
+      (err) => {
+        if (err) {
+          // Covers the close path, which fails the init without reaching
+          // afterStoreInit. A failed init must not keep presenting the previous
+          // data as current.
+          this._isInitialized = false;
+          this._itemCache?.clear();
+          this._allItemsCache?.clear();
+        }
+        callback(err);
+      },
+    );
   }
 
   get(kind: DataKind, key: string, callback: (res: LDFeatureStoreItem | null) => void): void {
@@ -219,8 +280,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     });
   }
 
-  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this._queue.enqueue((cb) => {
+  upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: (err?: Error) => void): void {
+    this._queue.enqueue((cb, isAbandoned) => {
       // Clear the caches which contain all the values of a specific kind.
       if (this._allItemsCache) {
         this._allItemsCache.clear();
@@ -232,10 +293,14 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         data.key,
         persistKind.serialize(data),
         (err, updatedDescriptor) => {
+          if (isAbandoned()) {
+            // The store closed, or this upsert already answered once. This late
+            // result must not overwrite a newer operation's cache entries.
+            cb(err);
+            return;
+          }
           if (err) {
-            this._logger?.error(
-              `Persistent store returned error: ${err instanceof Error ? err.message : err}`,
-            );
+            this._logStoreError(err);
           }
           if (!err && updatedDescriptor) {
             if (updatedDescriptor.serializedItem) {
@@ -250,7 +315,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
               });
             }
           }
-          cb();
+          cb(err);
         },
       );
     }, callback);
@@ -260,7 +325,29 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     this.upsert(kind, { key, version, deleted: true }, callback);
   }
 
+  /**
+   * Logs a store write error, at error level at most once per interval and at
+   * debug level otherwise, so a store that fails every write cannot flood the log.
+   */
+  private _logStoreError(err: Error): void {
+    // A store implementation can pass a non-Error reason at runtime. toError keeps
+    // this log call from throwing inside a store callback, which would leave the
+    // update queue unsettled.
+    const reason = toError(err, 'unknown');
+    const message = `Persistent store returned error: ${reason.message}`;
+    const now = monotonicNow();
+    if (now - this._lastErrorLogMs >= ERROR_LOG_INTERVAL_MS) {
+      this._lastErrorLogMs = now;
+      this._logger?.error(message);
+    } else {
+      this._logger?.debug(message);
+    }
+  }
+
   close(): void {
+    // Stop the queue first, so no queued operation reaches the core after it
+    // closes and no hang-deadline timer outlives the wrapper.
+    this._queue.close();
     this._itemCache?.close();
     this._allItemsCache?.close();
     this._core.close();

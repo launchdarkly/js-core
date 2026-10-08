@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.1.32](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.31...shopify-oxygen-sdk-v0.1.32) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.24.0 to 2.24.1
+
+## [0.1.31](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.30...shopify-oxygen-sdk-v0.1.31) (2026-10-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.1 to 2.24.0
+
+## [0.1.30](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.29...shopify-oxygen-sdk-v0.1.30) (2026-10-05)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.23.0 to 2.23.1
+
+## [0.1.29](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.28...shopify-oxygen-sdk-v0.1.29) (2026-10-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.22.0 to 2.23.0
+
+## [0.1.28](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.27...shopify-oxygen-sdk-v0.1.28) (2026-09-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.6 to 2.22.0
+
+## [0.1.27](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.26...shopify-oxygen-sdk-v0.1.27) (2026-09-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.21.5 to 2.21.6
+
 ## [0.1.26](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.25...shopify-oxygen-sdk-v0.1.26) (2026-09-22)
 
 

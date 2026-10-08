@@ -1,0 +1,54 @@
+name: sdk/server-node nightly
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+      - id: shared
+        name: Shared CI Steps
+        uses: ./actions/ci
+        with:
+          workspace_name: '@launchdarkly/node-server-sdk'
+          workspace_path: packages/sdk/server-node
+      - name: Install contract test service dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: yarn workspace @launchdarkly/node-server-sdk-contract-tests install --no-immutable
+      - name: Build shared contract test utils (server)
+        run: yarn workspace @launchdarkly/js-contract-test-utils build:server
+      - name: Start persistent stores
+        uses: launchdarkly/gh-actions/actions/persistent-stores@persistent-stores-v0
+        with:
+          redis: true
+          dynamodb: true
+      - name: Build the redis store used by the test service
+        run: yarn workspace @launchdarkly/node-server-sdk-redis build
+      - name: Build the DynamoDB store used by the test service
+        run: yarn workspace @launchdarkly/node-server-sdk-dynamodb build
+      - name: Build the test service
+        run: yarn workspace @launchdarkly/node-server-sdk-contract-tests build
+      - name: Launch the test service in the background
+        # The service moves to port 8001 because the test harness expects
+        # local DynamoDB on port 8000.
+        env:
+          PORT: '8001'
+        run: yarn workspace @launchdarkly/node-server-sdk-contract-tests start 2>&1 &
+      # The retry-conformance suite is long-running (real backoff waits), so it
+      # runs here nightly rather than on every PR.
+      - name: Run contract tests (long-running)
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        with:
+          test_service_port: 8001
+          token: ${{ secrets.GITHUB_TOKEN }}
+          stop_service: 'false'
+          extra_params: '--enable-long-running-tests --skip-from=./packages/sdk/server-node/contract-tests/testharness-suppressions.txt'

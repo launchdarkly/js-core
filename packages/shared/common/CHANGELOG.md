@@ -2,6 +2,39 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.29.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.1...js-sdk-common-v2.29.0) (2026-10-06)
+
+
+### Features
+
+* **common:** add a shared `monotonicNow()` method ([#2083](https://github.com/launchdarkly/js-core/issues/2083)) ([83edf68](https://github.com/launchdarkly/js-core/commit/83edf68b96fdbde40a91b81cad62b7ec9637c5eb))
+
+## [2.28.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.0...js-sdk-common-v2.28.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* Keep non-string first arguments in log messages ([#2077](https://github.com/launchdarkly/js-core/issues/2077)) ([990df31](https://github.com/launchdarkly/js-core/commit/990df3140b5a1c45ced09aef793dc249e3b49776))
+
+## [2.28.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.27.0...js-sdk-common-v2.28.0) (2026-09-30)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2059](https://github.com/launchdarkly/js-core/issues/2059)) ([a80e7ee](https://github.com/launchdarkly/js-core/commit/a80e7ee89736f69eb0d3b7080c03759dbb8de6a5))
+
+## [2.27.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.1...js-sdk-common-v2.27.0) (2026-09-29)
+
+
+### Features
+
+* add a reusable retry state controller for RETRY-conformant backoff ([#2045](https://github.com/launchdarkly/js-core/issues/2045)) ([721b559](https://github.com/launchdarkly/js-core/commit/721b559ff15bb13e3344921de9539e2663d0f0c8))
+
+
+### Bug Fixes
+
+* Stop format() from hanging on a trailing percent sign ([#2056](https://github.com/launchdarkly/js-core/issues/2056)) ([c5114ec](https://github.com/launchdarkly/js-core/commit/c5114ecf5dc32826f260744b0e4aa5c4a7f633d6))
+
 ## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.26.0...js-sdk-common-v2.26.1) (2026-09-22)
 
 

@@ -13,6 +13,15 @@ const LDContextBuiltIns: Record<string, string> = {
 };
 
 /**
+ * Get the value as a string, or undefined if it is not a non-empty string.
+ * @param value The value to check.
+ * @returns The value as a string, or undefined.
+ */
+function nonEmptyString(value: EvaluationContextValue | undefined): string | undefined {
+  return typeof value === 'string' && value !== '' ? value : undefined;
+}
+
+/**
  * Convert attributes, potentially recursively, into appropriate types.
  * @param logger Logger to use if issues are encountered.
  * @param key The key for the attribute.
@@ -61,10 +70,17 @@ function translateContextCommon(
   inCommon: Record<string, EvaluationContextValue>,
   inTargetingKey: string | undefined,
 ): LDContextCommon {
-  const keyAttr = inCommon.key as string;
-  const finalKey = inTargetingKey ?? keyAttr;
+  const keyAttr = inCommon.key;
+  // An empty key is treated the same as an absent one.
+  const targetingKey = nonEmptyString(inTargetingKey);
+  const keyFromAttr = nonEmptyString(keyAttr);
+  const finalKey = targetingKey ?? keyFromAttr;
 
-  if (keyAttr != null && inTargetingKey != null) {
+  if (keyAttr != null && typeof keyAttr !== 'string') {
+    logger.warn("A non-string 'key' attribute was provided.");
+  }
+
+  if (keyFromAttr != null && targetingKey != null) {
     logger.warn(
       "The EvaluationContext contained both a 'targetingKey' and a 'key' attribute. The" +
         " 'key' attribute will be discarded.",
@@ -78,16 +94,26 @@ function translateContextCommon(
     );
   }
 
-  const convertedContext: LDContextCommon = { key: finalKey };
+  const convertedContext: LDContextCommon = { key: finalKey as string };
   Object.entries(inCommon).forEach(([key, value]) => {
     if (key === 'targetingKey' || key === 'key' || key === 'kind') {
       return;
     }
     if (key === 'privateAttributes') {
-      // eslint-disable-next-line no-underscore-dangle
-      convertedContext._meta = {
-        privateAttributes: value as string[],
-      };
+      if (!Array.isArray(value)) {
+        logger.error("The attribute 'privateAttributes' must be an array");
+        return;
+      }
+
+      const privateAttributes = value.filter((item): item is string => typeof item === 'string');
+      if (privateAttributes.length !== value.length) {
+        logger.error("'privateAttributes' must be an array of only string values");
+      }
+
+      if (privateAttributes.length) {
+        // eslint-disable-next-line no-underscore-dangle
+        convertedContext._meta = { privateAttributes };
+      }
     } else if (key in LDContextBuiltIns) {
       if (typeof value === LDContextBuiltIns[key]) {
         (convertedContext as any)[key] = value;
