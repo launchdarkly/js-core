@@ -39,6 +39,17 @@ it('creates EventSource with correct URI and options', () => {
   );
 });
 
+it('does not send a content-type header or method for the default GET request', () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  const initDict = mockRequests.createEventSource.mock.calls[0][1];
+  expect(initDict.method).toBeUndefined();
+  expect(initDict.headers).not.toHaveProperty('content-type');
+});
+
 it('sends a POST request with the context body and a content-type header when configured', () => {
   const mockEventSource = createMockEventSource();
   const mockRequests = createMockRequests(mockEventSource);

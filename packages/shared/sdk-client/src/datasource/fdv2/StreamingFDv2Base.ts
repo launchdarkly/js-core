@@ -356,8 +356,8 @@ export function createStreamingBase(config: {
 
       logConnectionAttempt();
 
-      if (config.method) {
-        // POST includes a body, so content type is required.
+      if (config.body !== undefined) {
+        // A request with a body needs a content type.
         headers['content-type'] = 'application/json';
       }
 

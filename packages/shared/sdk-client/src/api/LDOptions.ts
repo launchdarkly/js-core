@@ -332,7 +332,7 @@ export interface LDOptions {
    *
    * @remarks
    * Unlike setting {@link LDOptions.maxCachedContexts} to `0`,
-   * this does **not** remove previously cached data: existing entries are left
+   * this does **not** remove previously cached data. Existing entries are left
    * intact. This takes precedence over `maxCachedContexts`.
    *
    * @defaultValue false

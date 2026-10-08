@@ -200,11 +200,8 @@ export default class ConfigurationImpl implements Configuration {
       pristineOptions.payloadFilterKey,
     );
     this.useReport = pristineOptions.useReport ?? false;
-    this.usePost = pristineOptions.usePost ?? false;
-
-    // useReport is a FDv1 option and it has no effect in FDv2 (which has
-    // usePost as the equivilent). In the case where this option is used
-    // in a FDv2 datasytem, we will do nothing and warn.
+    // useReport is an FDv1 option with no effect in FDv2, where usePost is the
+    // equivalent. Ignore it under dataSystem and warn.
     if (this.dataSystem && this.useReport) {
       this.logger?.warn(
         'The "useReport" configuration option has no effect when the "dataSystem" option is ' +

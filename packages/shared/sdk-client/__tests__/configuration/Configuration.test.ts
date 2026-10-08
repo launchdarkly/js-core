@@ -212,6 +212,29 @@ describe('dataSystem validation', () => {
     expect(config.dataSystem!.automaticModeSwitching).toBe(false);
   });
 
+  it('forces useReport to false and warns when dataSystem is also set', () => {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { useReport: true, dataSystem: {}, logger },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+        dataSystemDefaults: {
+          foregroundConnectionMode: 'one-shot',
+          automaticModeSwitching: false,
+        },
+      },
+    );
+    expect(config.useReport).toBe(false);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('useReport'));
+  });
+
   it('validates dataSystem with user overrides applied over platform defaults', () => {
     const config = new ConfigurationImpl(
       // @ts-ignore dataSystem is @internal

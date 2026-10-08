@@ -484,62 +484,70 @@ describe('usePost validation', () => {
       error: jest.fn(),
     };
 
-    let client: LDClientImpl | undefined;
-    // Construction succeeds: usePost still applies to polling, only streaming degrades to GET.
-    expect(() => {
-      client = new LDClientImpl(
-        testSdkKey,
-        AutoEnvAttributes.Enabled,
-        platform,
-        { usePost: true, dataSystem: {}, sendEvents: false, logger },
-        makeTestDataManagerFactory(testSdkKey, platform),
-      );
-    }).not.toThrow();
-    // The degrade is loud: the warning names the GET fallback for streaming.
+    // Construction succeeds. usePost still applies to polling, and only streaming
+    // degrades to GET.
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, dataSystem: {}, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+    // The warning names the GET fallback for streaming.
     expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/usePost.*GET/s));
-    await client?.close();
+    await client.close();
   });
 
-  it('does not throw when dataSystem is configured with usePost and the EventSource supports customMethod', async () => {
+  it('does not warn when dataSystem is configured with usePost and the EventSource supports customMethod', async () => {
     const platform = createBasicPlatform();
     platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
       readTimeout: true,
       headers: true,
       customMethod: true,
     }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-    let client: LDClientImpl | undefined;
-    expect(() => {
-      client = new LDClientImpl(
-        testSdkKey,
-        AutoEnvAttributes.Enabled,
-        platform,
-        { usePost: true, dataSystem: {}, sendEvents: false },
-        makeTestDataManagerFactory(testSdkKey, platform),
-      );
-    }).not.toThrow();
-    await client?.close();
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, dataSystem: {}, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('usePost'));
+    await client.close();
   });
 
-  it('does not throw when usePost is set without dataSystem, even if the EventSource lacks customMethod (usePost only applies to FDv2)', async () => {
+  it('does not warn when usePost is set without dataSystem, even if the EventSource lacks customMethod (usePost only applies to FDv2)', async () => {
     const platform = createBasicPlatform();
     platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
       readTimeout: true,
       headers: true,
       customMethod: false,
     }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
 
-    let client: LDClientImpl | undefined;
-    expect(() => {
-      client = new LDClientImpl(
-        testSdkKey,
-        AutoEnvAttributes.Enabled,
-        platform,
-        { usePost: true, sendEvents: false },
-        makeTestDataManagerFactory(testSdkKey, platform),
-      );
-    }).not.toThrow();
-    await client?.close();
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('usePost'));
+    await client.close();
   });
 });
 
