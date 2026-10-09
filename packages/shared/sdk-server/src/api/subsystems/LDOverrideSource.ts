@@ -48,9 +48,11 @@ export interface LDOverrideSource {
    * calling the sink.
    *
    * The SDK calls this method once, when the client is created. When the initial load is
-   * asynchronous, return a promise that settles when the load completes. The SDK waits for it
-   * before it evaluates flags, so an override that is present at startup takes effect from the
-   * first evaluation.
+   * asynchronous, return a promise that settles when the load completes. The load is part of
+   * starting the client: the promise that `waitForInitialization` returns resolves after it, so
+   * an override that is present at startup takes effect by the time initialization is awaited.
+   * Evaluation never waits for the load; an evaluation made before it completes reads the layer
+   * as it is at that moment.
    *
    * @param sink The sink that receives the snapshots.
    */

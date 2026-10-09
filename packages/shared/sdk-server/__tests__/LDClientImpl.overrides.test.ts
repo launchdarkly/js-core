@@ -1,8 +1,10 @@
 import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
 
+import { LDMigrationStage } from '../src/api/data/LDMigrationStage';
 import { LDOverrideSink } from '../src/api/subsystems';
 import LDClientImpl from '../src/LDClientImpl';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
+import { TestHook } from './hooks/TestHook';
 import {
   fdv2FullPayload,
   makeCallbacks,
@@ -80,6 +82,35 @@ describe('given an uninitialized client with an override source', () => {
     expect(detail.value).toBe(false);
     expect(detail.variationIndex).toBeNull();
     expect(detail.reason).toEqual({
+      kind: 'ERROR',
+      errorKind: 'WRONG_TYPE',
+      overrideAffected: true,
+    });
+  });
+
+  it('keeps a migration stage mismatch of an overridden flag marked', async () => {
+    // The migration variation replaces the reason when the value is not a stage. The replacement
+    // keeps the override-affected marking, like the typed variation methods do.
+    client.close();
+    const hook = new TestHook();
+    client = makeFDv2Client(makeFDv2Platform(), {
+      logger,
+      hooks: [hook],
+      dataSystem: { overrides: source },
+    });
+    source.setOverrides([singleValueFlag('overridden-flag', 'not-a-stage')]);
+
+    const migration = await client.migrationVariation(
+      'overridden-flag',
+      user,
+      LDMigrationStage.Off,
+    );
+
+    expect(migration.value).toBe(LDMigrationStage.Off);
+    const after = hook.captureAfter.find(
+      (capture) => capture.hookContext.method === 'LDClient.migrationVariation',
+    );
+    expect(after?.detail?.reason).toEqual({
       kind: 'ERROR',
       errorKind: 'WRONG_TYPE',
       overrideAffected: true,
@@ -309,38 +340,108 @@ describe('given an override source with an asynchronous initial load', () => {
     client.close();
   });
 
-  it('waits for the initial load before evaluating', async () => {
-    let resolved = false;
-    const pending = client.boolVariationDetail('overridden-flag', user, false).then((detail) => {
-      resolved = true;
-      return detail;
-    });
-    await settle();
-    expect(resolved).toBe(false);
+  it('does not make an evaluation wait for the initial load', async () => {
+    // Evaluation never waits on the source. Before the load completes the layer is empty, so a
+    // flag the layer does not hold gets the not-ready default, and the call settles at once.
+    const detail = await client.boolVariationDetail('overridden-flag', user, false);
+    expect(detail.value).toBe(false);
+    expect(detail.reason).toEqual({ kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' });
 
     source.setOverrides([singleValueFlag('overridden-flag', true)]);
     source.completeStart();
+    await settle();
 
-    const detail = await pending;
-    expect(detail.value).toBe(true);
-    expect(detail.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
+    const afterLoad = await client.boolVariationDetail('overridden-flag', user, false);
+    expect(afterLoad.value).toBe(true);
+    expect(afterLoad.reason).toEqual({ kind: 'FALLTHROUGH', overrideAffected: true });
   });
 
-  it('waits for the initial load before reporting the all flags state', async () => {
+  it('does not make the all flags state wait for the initial load', async () => {
+    const state = await client.allFlagsState(user);
+    expect(state.valid).toBe(false);
+    expect(state.allValues()).toEqual({});
+
+    source.setOverrides([singleValueFlag('overridden-flag', true)]);
+    source.completeStart();
+    await settle();
+
+    const afterLoad = await client.allFlagsState(user);
+    expect(afterLoad.valid).toBe(true);
+    expect(afterLoad.allValues()).toEqual({ 'overridden-flag': true });
+  });
+
+  it('settles an evaluation promptly when the start never completes', async () => {
+    // A source whose initial load hangs, for example a hung read of a network file system or a
+    // custom source waiting on an unreachable endpoint, must not hold up flag evaluation.
+    client.close();
+    const hanging = {
+      start: () =>
+        new Promise<void>(() => {
+          // Never settles.
+        }),
+      close: () => {},
+    };
+    client = makeFDv2Client(makeFDv2Platform(), { dataSystem: { overrides: hanging } });
+
+    const outcome = await Promise.race([
+      client.boolVariation('some-flag', user, false).then(() => 'settled'),
+      new Promise<string>((resolve) => {
+        setTimeout(() => resolve('hung'), 500);
+      }),
+    ]);
+    expect(outcome).toBe('settled');
+  });
+});
+
+describe('given an initialized client and an override source with an asynchronous initial load', () => {
+  let source: TestOverrideSource;
+  let client: LDClientImpl;
+
+  beforeEach(() => {
+    source = new TestOverrideSource(undefined, true);
+    client = makeFDv2Client(
+      makeFDv2Platform(fdv2FullPayload({ 'ld-flag': singleValueFlag('ld-flag', true) })),
+      {
+        dataSystem: { overrides: source },
+      },
+    );
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('completes waitForInitialization only after the initial load', async () => {
+    // The initial load is part of starting the client, so the start handle resolves after it.
     let resolved = false;
-    const pending = client.allFlagsState(user).then((state) => {
+    const pending = client.waitForInitialization({ timeout: 5 }).then(() => {
       resolved = true;
-      return state;
     });
     await settle();
+    expect(client.initialized()).toBe(true);
     expect(resolved).toBe(false);
 
     source.setOverrides([singleValueFlag('overridden-flag', true)]);
     source.completeStart();
+    await pending;
+    expect(resolved).toBe(true);
+    const detail = await client.boolVariationDetail('overridden-flag', user, false);
+    expect(detail.value).toBe(true);
+  });
 
-    const state = await pending;
-    expect(state.valid).toBe(true);
-    expect(state.allValues()).toEqual({ 'overridden-flag': true });
+  it('lets waitForInitialization time out when the initial load does not complete', async () => {
+    await expect(client.waitForInitialization({ timeout: 0.1 })).rejects.toThrow(
+      /waitForInitialization/,
+    );
+    // Evaluation was never held up by the load.
+    const detail = await client.boolVariationDetail('ld-flag', user, false);
+    expect(detail.value).toBe(true);
+  });
+
+  it('completes waitForInitialization without waiting once the load has completed', async () => {
+    source.completeStart();
+    await settle();
+    await expect(client.waitForInitialization({ timeout: 1 })).resolves.toBe(client);
   });
 });
 

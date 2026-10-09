@@ -9,6 +9,7 @@ import {
   LDContext,
   LDEvaluationDetail,
   LDEvaluationDetailTyped,
+  LDEvaluationReason,
   LDLogger,
   LDPluginEnvironmentMetadata,
   LDTimeoutError,
@@ -641,8 +642,9 @@ export default class LDClientImpl implements LDClient {
 
   private _overrideSource?: LDOverrideSource;
 
-  // Settles when the override source's initial load has completed. Undefined once it has, or when
-  // there is no override source.
+  // Settles when the override source's initial load has completed, also when it failed, and is
+  // cleared then. waitForInitialization awaits it, so that the load is part of starting the
+  // client. Evaluation never waits on it: an evaluation reads the layer as it is.
   private _overridesReady?: Promise<void>;
 
   private _updateProcessor?: subsystem.LDStreamProcessor;
@@ -795,8 +797,8 @@ export default class LDClientImpl implements LDClient {
 
       if (overrides) {
         // The source starts before the data source, so an override that loads synchronously is in
-        // place before the client evaluates anything. The evaluation methods wait for an
-        // asynchronous initial load to complete.
+        // place before the client evaluates anything. An asynchronous initial load is part of
+        // starting the client: waitForInitialization resolves after it. Evaluation never waits.
         this._overrideLayer = overrides.layer;
         this._overrideSource = overrides.source;
         this._overridesReady = this._startOverrideSource(overrides.source, overrides.sink);
@@ -859,15 +861,24 @@ export default class LDClientImpl implements LDClient {
     // Initialization promise was created by a previous call to waitForInitialization.
     if (this._initializedPromise) {
       // This promise may already be resolved/rejected, but it doesn't hurt to wrap it in a timeout.
-      return this._clientWithTimeout(this._initializedPromise, options?.timeout, this._logger);
+      return this._clientWithTimeout(
+        this._withOverridesLoaded(this._initializedPromise),
+        options?.timeout,
+        this._logger,
+      );
     }
 
     // Initialization completed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a resolved promise and return it.
     if (this._initState === InitState.Initialized) {
       this._initializedPromise = Promise.resolve(this);
-      // Already initialized, no need to timeout.
-      return this._initializedPromise;
+      // Already initialized, so only the override source's initial load, if it is still in
+      // progress, is left to wait for.
+      return this._clientWithTimeout(
+        this._withOverridesLoaded(this._initializedPromise),
+        options?.timeout,
+        this._logger,
+      );
     }
 
     // Initialization failed before waitForInitialization was called, so we have completed
@@ -884,7 +895,25 @@ export default class LDClientImpl implements LDClient {
         this._initReject = reject;
       });
     }
-    return this._clientWithTimeout(this._initializedPromise, options?.timeout, this._logger);
+    return this._clientWithTimeout(
+      this._withOverridesLoaded(this._initializedPromise),
+      options?.timeout,
+      this._logger,
+    );
+  }
+
+  /**
+   * Extends the initialization promise with the override source's initial load, when that load
+   * is still in progress. The initial load is part of starting the client, so the start handle
+   * that waitForInitialization returns resolves after it. The load never rejects this promise:
+   * a failed load is logged and the client runs without overrides.
+   */
+  private _withOverridesLoaded(initialized: Promise<LDClient>): Promise<LDClient> {
+    const overridesReady = this._overridesReady;
+    if (!overridesReady) {
+      return initialized;
+    }
+    return Promise.all([initialized, overridesReady]).then(() => this);
   }
 
   variation(
@@ -1133,10 +1162,11 @@ export default class LDClientImpl implements LDClient {
               `Unrecognized MigrationState for "${key}"; returning default value.`,
             );
             this._onError(error);
-            const reason = {
-              kind: 'ERROR',
-              errorKind: ErrorKinds.WrongType,
-            };
+            // The type mismatch replaces the reason. The evaluation read the same definitions, so
+            // the new reason keeps the override-affected marking.
+            const reason: LDEvaluationReason = detail.reason.overrideAffected
+              ? { kind: 'ERROR', errorKind: ErrorKinds.WrongType, overrideAffected: true }
+              : { kind: 'ERROR', errorKind: ErrorKinds.WrongType };
             resolve({
               detail: {
                 value: defaultValue,
@@ -1273,44 +1303,42 @@ export default class LDClientImpl implements LDClient {
           evaluateAll(valid, allFlags),
         );
 
-      this._afterOverridesReady(() => {
-        if (this.initialized()) {
+      if (this.initialized()) {
+        doEval(true);
+        return;
+      }
+      this._featureStore.initialized((storeInitialized) => {
+        if (storeInitialized) {
+          if (!this._allFlagsStateLastKnownValuesWarningLogged) {
+            this._allFlagsStateLastKnownValuesWarningLogged = true;
+            this._logger?.warn(
+              'Called allFlagsState before client initialization; using last known' +
+                ' values from data store. This message is logged once.',
+            );
+          }
           doEval(true);
           return;
         }
-        this._featureStore.initialized((storeInitialized) => {
-          if (storeInitialized) {
-            if (!this._allFlagsStateLastKnownValuesWarningLogged) {
-              this._allFlagsStateLastKnownValuesWarningLogged = true;
+        // No LaunchDarkly data is available. The read returns only the flags that the override
+        // layer holds, and the result decides the state: a layer without flags gives the state
+        // nothing to report.
+        this._readStore.all(VersionedDataKinds.Features, (allFlags) => {
+          if (this._overrideLayer && Object.keys(allFlags).length > 0) {
+            if (!this._allFlagsStateOverridesOnlyWarningLogged) {
+              this._allFlagsStateOverridesOnlyWarningLogged = true;
               this._logger?.warn(
-                'Called allFlagsState before client initialization; using last known' +
-                  ' values from data store. This message is logged once.',
+                'Called allFlagsState before client initialization; returning only flags from' +
+                  ' the override layer. This message is logged once.',
               );
             }
-            doEval(true);
+            evaluateAll(true, allFlags);
             return;
           }
-          // No LaunchDarkly data is available. The read returns only the flags that the override
-          // layer holds, and the result decides the state: a layer without flags gives the state
-          // nothing to report.
-          this._readStore.all(VersionedDataKinds.Features, (allFlags) => {
-            if (this._overrideLayer && Object.keys(allFlags).length > 0) {
-              if (!this._allFlagsStateOverridesOnlyWarningLogged) {
-                this._allFlagsStateOverridesOnlyWarningLogged = true;
-                this._logger?.warn(
-                  'Called allFlagsState before client initialization; returning only flags from' +
-                    ' the override layer. This message is logged once.',
-                );
-              }
-              evaluateAll(true, allFlags);
-              return;
-            }
-            this._logger?.warn(
-              'Called allFlagsState before client initialization. Data store not available; ' +
-                'returning empty state',
-            );
-            evaluateAll(false, allFlags);
-          });
+          this._logger?.warn(
+            'Called allFlagsState before client initialization. Data store not available; ' +
+              'returning empty state',
+          );
+          evaluateAll(false, allFlags);
         });
       });
     });
@@ -1499,44 +1527,43 @@ export default class LDClientImpl implements LDClient {
     cb: (res: EvalResult, flag?: Flag) => void,
     typeChecker?: (value: any) => [boolean, string],
   ): void {
-    this._afterOverridesReady(() => {
-      if (!this.initialized()) {
-        this._featureStore.initialized((storeInitialized) => {
-          if (storeInitialized) {
-            if (!this._lastKnownValuesWarningLogged) {
-              this._lastKnownValuesWarningLogged = true;
-              this._logger?.warn(
-                'Variation called before LaunchDarkly client initialization completed' +
-                  " (did you wait for the 'ready' event?) - using last known values from feature store." +
-                  ' This message is logged once.',
-              );
-            }
-            this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
-            return;
+    if (!this.initialized()) {
+      this._featureStore.initialized((storeInitialized) => {
+        if (storeInitialized) {
+          if (!this._lastKnownValuesWarningLogged) {
+            this._lastKnownValuesWarningLogged = true;
+            this._logger?.warn(
+              'Variation called before LaunchDarkly client initialization completed' +
+                " (did you wait for the 'ready' event?) - using last known values from feature store." +
+                ' This message is logged once.',
+            );
           }
-          if (this._overrideLayer?.get(VersionedDataKinds.Features, flagKey)) {
-            // No LaunchDarkly data is available, but the override layer holds this flag. The
-            // override is served before the not-initialized short-circuit. A flag the layer does
-            // not hold still gets the not-ready default.
-            this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
-            return;
-          }
-          this._logger?.warn(
-            'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
-              "'ready' event?) - using default value",
-          );
-          cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
-        });
-        return;
-      }
-      this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
-    });
+          this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+          return;
+        }
+        if (this._overrideLayer?.get(VersionedDataKinds.Features, flagKey)) {
+          // No LaunchDarkly data is available, but the override layer holds this flag. The
+          // override is served before the not-initialized short-circuit. A flag the layer does
+          // not hold still gets the not-ready default.
+          this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+          return;
+        }
+        this._logger?.warn(
+          'Variation called before LaunchDarkly client initialization completed (did you wait for the' +
+            "'ready' event?) - using default value",
+        );
+        cb(EvalResult.forError(ErrorKinds.ClientNotReady, undefined, defaultValue));
+      });
+      return;
+    }
+    this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
   }
 
   /**
    * Starts the override source. The returned promise settles when the source's initial load has
-   * completed, also when it failed. A failure never prevents the client from operating: the
-   * layer stays as it was and the failure is logged.
+   * completed, also when it failed, and never rejects. A failure never prevents the client from
+   * operating: the layer stays as it was and the failure is logged. The load is part of starting
+   * the client, so waitForInitialization awaits this promise; evaluation does not.
    */
   private _startOverrideSource(source: LDOverrideSource, sink: OverrideSink): Promise<void> {
     let started: Promise<void>;
@@ -1552,19 +1579,6 @@ export default class LDClientImpl implements LDClient {
       .then(() => {
         this._overridesReady = undefined;
       });
-  }
-
-  /**
-   * Runs the action once the override source's initial load has completed, so an override that
-   * is present when the client is created takes effect from the first evaluation. Without an
-   * override source, or once the load has completed, the action runs immediately.
-   */
-  private _afterOverridesReady(action: () => void): void {
-    if (this._overridesReady) {
-      this._overridesReady.then(action);
-      return;
-    }
-    action();
   }
 
   private _dataSourceErrorHandler(e: any) {
