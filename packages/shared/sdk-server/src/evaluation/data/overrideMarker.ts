@@ -1,4 +1,5 @@
 /* eslint-disable no-underscore-dangle */
+import { LDEvaluationReason } from '@launchdarkly/js-sdk-common';
 
 /**
  * The override marker is carried on flag and segment definitions under a reserved, namespaced
@@ -47,6 +48,17 @@ export function isOverrideEntry(item: OverrideMarkable | undefined | null): bool
 }
 
 /**
+ * Marks an entity as an override entry. Only the override store calls this, on copies that it
+ * owns.
+ *
+ * @internal
+ */
+export function markOverrideEntry<T extends OverrideMarkable>(item: T): T {
+  item._sdk_override = true;
+  return item;
+}
+
+/**
  * Reports whether a value carries the override marker key at all.
  *
  * @internal
@@ -79,4 +91,11 @@ export function stripOverrideMarker(item: OverrideMarkable | undefined | null): 
   if (typeof item === 'object' && item !== null) {
     delete item._sdk_override;
   }
+}
+
+/**
+ * Returns a copy of an evaluation reason with the override indicator set.
+ */
+export function markOverrideAffected(reason: LDEvaluationReason): LDEvaluationReason {
+  return { ...reason, overrideAffected: true };
 }
