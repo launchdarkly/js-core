@@ -108,6 +108,20 @@ describe('given a file override source over a mock filesystem', () => {
     expect(sink.last.flags[0].version).toEqual(1);
   });
 
+  it('keys an entry by its map key when its key field names another flag', async () => {
+    // The merge de-duplicates by map key, so the layer is keyed by it too: the entry overrides
+    // the flag it is listed under, and the second file's flag is not a duplicate of it.
+    filesystem.set(first, '{"flags": {"flag1": {"key": "other", "version": 1}}}');
+    filesystem.set(second, '{"flags": {"other": {"key": "other", "version": 2}}}');
+
+    await startSource({ paths: [first, second] });
+
+    expect(sink.snapshots).toHaveLength(1);
+    expect(sink.flagKeys()).toEqual(['flag1', 'other']);
+    expect(sink.last.flags.find((flag) => flag.key === 'flag1')!.version).toEqual(1);
+    expect(sink.last.flags.find((flag) => flag.key === 'other')!.version).toEqual(2);
+  });
+
   it('fails the load for duplicate keys by default', async () => {
     filesystem.set(first, '{"flags": {"flag1": {"key": "flag1", "version": 1}}}');
     filesystem.set(second, '{"flags": {"flag1": {"key": "flag1", "version": 2}}}');
