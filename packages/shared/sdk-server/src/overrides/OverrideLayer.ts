@@ -1,3 +1,5 @@
+import { clone } from '@launchdarkly/js-sdk-common';
+
 import { DataKind } from '../api/interfaces';
 import {
   LDFeatureStoreItem,
@@ -12,23 +14,12 @@ import VersionedDataKinds from '../store/VersionedDataKinds';
 import { validateFlag, validateSegment } from './validateDefinition';
 
 /**
- * One entry of the layer: the prepared, marked definition, and the JSON text of the definition
- * as the source supplied it. The text identifies the entry for change comparison, because the
- * layer builds new copies on every snapshot.
+ * The entries of one kind, keyed by item key. Each entry is the prepared, marked copy of a
+ * definition the source supplied.
  *
  * @internal
  */
-export interface LayerEntry {
-  item: LDFeatureStoreItem;
-  json: string;
-}
-
-/**
- * The entries of one kind, keyed by item key.
- *
- * @internal
- */
-export type LayerKindContents = Record<string, LayerEntry>;
+export type LayerKindContents = Record<string, LDFeatureStoreItem>;
 
 /**
  * The entries of the layer, keyed by namespace and then by item key.
@@ -43,24 +34,22 @@ export type LayerContents = Record<string, LayerKindContents>;
  * marks it. The source's object is never modified. The check is on the copy, because the copy is
  * what the layer stores. A definition of the wrong shape throws.
  */
-function prepareFlag(item: LDKeyedFeatureStoreItem): LayerEntry {
-  const json = JSON.stringify(item);
-  const parsed = JSON.parse(json);
-  validateFlag(parsed);
-  const flag = parsed as Flag;
+function prepareFlag(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
+  const copy = clone<Record<string, any>>(item);
+  validateFlag(copy);
+  const flag = copy as Flag;
   processFlag(flag);
   markOverrideEntry(flag);
-  return { item: flag, json };
+  return flag;
 }
 
-function prepareSegment(item: LDKeyedFeatureStoreItem): LayerEntry {
-  const json = JSON.stringify(item);
-  const parsed = JSON.parse(json);
-  validateSegment(parsed);
-  const segment = parsed as Segment;
+function prepareSegment(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
+  const copy = clone<Record<string, any>>(item);
+  validateSegment(copy);
+  const segment = copy as Segment;
   processSegment(segment);
   markOverrideEntry(segment);
-  return { item: segment, json };
+  return segment;
 }
 
 function emptyContents(): LayerContents {
@@ -117,18 +106,14 @@ export default class OverrideLayer {
     if (this._empty) {
       return undefined;
     }
-    return this._contents[kind.namespace]?.[key]?.item;
+    return this._contents[kind.namespace]?.[key];
   }
 
   /**
    * Returns the entries of the given kind, keyed by item key.
    */
   all(kind: DataKind): LDFeatureStoreKindData {
-    const result: LDFeatureStoreKindData = {};
-    Object.entries(this._contents[kind.namespace] ?? {}).forEach(([key, entry]) => {
-      result[key] = entry.item;
-    });
-    return result;
+    return { ...this._contents[kind.namespace] };
   }
 
   /**

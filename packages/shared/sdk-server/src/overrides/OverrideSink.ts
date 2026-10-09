@@ -1,4 +1,4 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
+import { fastDeepEqual, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStoreKindData, LDKeyedFeatureStoreItem, LDOverrideSink } from '../api/subsystems';
 import { computeDependencies } from '../data_sources/DataSourceUpdates';
@@ -22,7 +22,8 @@ type MergedView = Record<string, LDFeatureStoreKindData>;
  * Returns the keys whose override entry differs between two layer snapshots. An added or removed
  * entry is always a change, even when its content matches the underlying LaunchDarkly data: the
  * override marker alone changes the served entry. Entries present in both snapshots are compared
- * by the text the source supplied, because the layer is rebuilt on every snapshot.
+ * by deep equality of the prepared definitions, because the layer is rebuilt on every snapshot,
+ * so a reference comparison would report every retained entry as changed.
  */
 function diffContents(
   previous: LayerContents,
@@ -35,7 +36,7 @@ function diffContents(
     const newItems = current[namespace] ?? {};
     Object.entries(oldItems).forEach(([key, oldEntry]) => {
       const newEntry = newItems[key];
-      if (!newEntry || newEntry.json !== oldEntry.json) {
+      if (!newEntry || !fastDeepEqual(oldEntry, newEntry)) {
         seeds.set(namespace, key, true);
         count += 1;
       }
@@ -55,7 +56,7 @@ function mergedView(base: MergedView, contents: LayerContents): MergedView {
   diffNamespaces.forEach((namespace) => {
     const items: LDFeatureStoreKindData = { ...base[namespace] };
     Object.entries(contents[namespace] ?? {}).forEach(([key, entry]) => {
-      items[key] = entry.item;
+      items[key] = entry;
     });
     view[namespace] = items;
   });

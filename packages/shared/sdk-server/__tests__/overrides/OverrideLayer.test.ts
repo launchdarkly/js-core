@@ -113,16 +113,17 @@ it('returns all entries of a kind keyed by key', () => {
   expect(new OverrideLayer().all(VersionedDataKinds.Features)).toEqual({});
 });
 
-it('returns the previous and the new contents with the supplied text of each entry', () => {
+it('returns the previous and the new contents', () => {
   const layer = new OverrideLayer();
   const first = layer.setAll([rawFlag('flag1', 1)], []);
   expect(first.previous.features).toEqual({});
-  expect(first.current.features.flag1.json).toEqual(JSON.stringify(rawFlag('flag1', 1)));
+  expect((first.current.features.flag1 as Flag).version).toEqual(1);
+  expect((first.current.features.flag1 as Flag)._sdk_override).toBe(true);
 
   const second = layer.setAll([rawFlag('flag1', 2)], [rawSegment('segment1')]);
   expect(second.previous).toBe(first.current);
-  expect(second.current.features.flag1.json).toEqual(JSON.stringify(rawFlag('flag1', 2)));
-  expect(second.current.segments.segment1.item.key).toEqual('segment1');
+  expect((second.current.features.flag1 as Flag).version).toEqual(2);
+  expect((second.current.segments.segment1 as Segment).key).toEqual('segment1');
 });
 
 describe('given definitions with the shape evaluation requires', () => {

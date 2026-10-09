@@ -31,6 +31,22 @@ function flagWithPrerequisite(key: string, prereqKey: string, version: number = 
   };
 }
 
+// Rebuilds a definition with the properties of every object in it in the opposite order, so
+// that it is the same definition with a different serialization.
+function withReversedProperties(value: any): any {
+  if (Array.isArray(value)) {
+    return value.map(withReversedProperties);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .reverse()
+        .map(([key, item]) => [key, withReversedProperties(item)]),
+    );
+  }
+  return value;
+}
+
 // Notifications follow the layer replacement asynchronously. Let them run.
 const settle = () =>
   new Promise<void>((resolve) => {
@@ -92,6 +108,21 @@ describe('given a sink over an initialized base store', () => {
     sink.setOverrides([], []);
     await settle();
     expect(takeNotified()).toEqual(['flag1', 'flag2']);
+  });
+
+  it('does not notify when a definition is supplied again with its properties in another order', async () => {
+    const original = flagWithSegmentRule('flag1', 'segment1', 1);
+    const reordered = withReversedProperties(original);
+    expect(reordered).toEqual(original);
+    expect(JSON.stringify(reordered)).not.toEqual(JSON.stringify(original));
+
+    sink.setOverrides([original], []);
+    await settle();
+    expect(takeNotified()).toEqual(['flag1']);
+
+    sink.setOverrides([reordered], []);
+    await settle();
+    expect(takeNotified()).toEqual([]);
   });
 
   it('makes the new layer contents visible before the notifications run', () => {
