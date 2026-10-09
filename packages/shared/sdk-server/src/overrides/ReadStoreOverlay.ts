@@ -47,7 +47,8 @@ export default class ReadStoreOverlay implements ReadStore {
       return;
     }
     this._base.all(kind, (baseItems) => {
-      callback({ ...baseItems, ...this._layer.all(kind) });
+      // A map without a prototype, so that an item keyed "__proto__" is an ordinary item.
+      callback(Object.assign(Object.create(null), baseItems, this._layer.all(kind)));
     });
   }
 

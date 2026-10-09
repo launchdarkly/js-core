@@ -2,6 +2,7 @@ import { fastDeepEqual, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import {
   LDFeatureStoreDataStorage,
+  LDFeatureStoreItem,
   LDFeatureStoreKindData,
   LDKeyedFeatureStoreItem,
   LDOverrideSink,
@@ -30,6 +31,17 @@ type MergedView = LDFeatureStoreDataStorage;
  * by deep equality of the prepared definitions, because the layer is rebuilt on every snapshot,
  * so a reference comparison would report every retained entry as changed.
  */
+function sameEntry(a: LDFeatureStoreItem, b: LDFeatureStoreItem): boolean {
+  try {
+    return fastDeepEqual(a, b);
+  } catch {
+    // The comparison can throw for a definition whose data has an own property named like a
+    // method of Object, for example a variation value with a "valueOf" key. Treat such an entry
+    // as changed rather than lose the notifications of the whole snapshot.
+    return false;
+  }
+}
+
 function diffContents(
   previous: LayerContents,
   current: LayerContents,
@@ -41,7 +53,7 @@ function diffContents(
     const newItems = current[namespace] ?? {};
     Object.entries(oldItems).forEach(([key, oldEntry]) => {
       const newEntry = newItems[key];
-      if (!newEntry || !fastDeepEqual(oldEntry, newEntry)) {
+      if (!newEntry || !sameEntry(oldEntry, newEntry)) {
         seeds.set(namespace, key, true);
         count += 1;
       }
@@ -59,7 +71,8 @@ function diffContents(
 function mergedView(base: MergedView, contents: LayerContents): MergedView {
   const view: MergedView = {};
   diffNamespaces.forEach((namespace) => {
-    const items: LDFeatureStoreKindData = { ...base[namespace] };
+    // A map without a prototype, so that an entry keyed "__proto__" is an ordinary entry.
+    const items: LDFeatureStoreKindData = Object.assign(Object.create(null), base[namespace]);
     Object.entries(contents[namespace] ?? {}).forEach(([key, entry]) => {
       items[key] = entry;
     });

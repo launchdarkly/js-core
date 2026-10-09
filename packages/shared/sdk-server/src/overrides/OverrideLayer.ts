@@ -52,10 +52,19 @@ function prepareSegment(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
   return segment;
 }
 
+/**
+ * The maps of a layer have no prototype, so a lookup of a key that the layer does not hold is
+ * undefined even for a key such as "constructor" or "toString", and a key of "__proto__" is an
+ * ordinary entry.
+ */
+function emptyKindContents(): LayerKindContents {
+  return Object.create(null);
+}
+
 function emptyContents(): LayerContents {
   return {
-    [VersionedDataKinds.Features.namespace]: {},
-    [VersionedDataKinds.Segments.namespace]: {},
+    [VersionedDataKinds.Features.namespace]: emptyKindContents(),
+    [VersionedDataKinds.Segments.namespace]: emptyKindContents(),
   };
 }
 
@@ -113,7 +122,8 @@ export default class OverrideLayer {
    * Returns the entries of the given kind, keyed by item key.
    */
   all(kind: DataKind): LDFeatureStoreKindData {
-    return { ...this._contents[kind.namespace] };
+    // Copied into a map without a prototype, so that an entry keyed "__proto__" stays an entry.
+    return Object.assign(Object.create(null), this._contents[kind.namespace]);
   }
 
   /**

@@ -5,7 +5,7 @@ import { OverrideLayer, OverrideSink } from '../../src/overrides';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
-import TestLogger from '../Logger';
+import TestLogger, { LogLevel } from '../Logger';
 import { singleValueFlag } from './overridesTestSupport';
 
 function flagWithSegmentRule(key: string, segmentKey: string, version: number = 1): any {
@@ -122,6 +122,28 @@ describe('given a sink over an initialized base store', () => {
     sink.setOverrides([reordered], []);
     await settle();
     expect(takeNotified()).toEqual([]);
+  });
+
+  it('still notifies the changed flags when a definition has a property named like a method of Object', async () => {
+    // Comparing such a definition for changes can throw. That entry counts as changed, and the
+    // notifications of the rest of the snapshot are not lost.
+    const odd = singleValueFlag('odd-flag', { valueOf: 'x', toString: 'y' }, 1);
+    sink.setOverrides([odd, singleValueFlag('flag1', 'a', 1)], []);
+    await settle();
+    takeNotified();
+
+    sink.setOverrides([odd, singleValueFlag('flag1', 'b', 1)], []);
+    await settle();
+
+    expect(takeNotified()).toContain('flag1');
+    expect(logger.getCount(LogLevel.Error)).toEqual(0);
+  });
+
+  it('notifies an override whose key is the name of a property of Object', async () => {
+    sink.setOverrides([singleValueFlag('constructor', 'a', 1)], []);
+    await settle();
+
+    expect(takeNotified()).toEqual(['constructor']);
   });
 
   it('makes the new layer contents visible before the notifications run', () => {

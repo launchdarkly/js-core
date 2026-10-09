@@ -9,13 +9,15 @@
  * the shape here, before a definition is prepared and stored.
  *
  * The checks cover the fields that evaluation and the preparation of a definition read with an
- * assumed type: a list is an array, an entry of a list is an object, and an attribute name that
- * becomes an attribute reference is a string. A field is required only where evaluation reads it
- * without a guard: the variations of a flag and the values of a target or clause. Every other
- * field may be absent, as it may be in LaunchDarkly data, and a null field counts as absent
- * because the preparation removes null fields. The checks go no further. The content of a field,
- * such as a variation index or an operator name, is evaluation's concern, and evaluation reports
- * a malformed-flag result for it.
+ * assumed type: a key is a string, the on switch of a flag is a boolean, a list is an array, an
+ * entry of a list is an object, and an attribute name that becomes an attribute reference is a
+ * string. A field is required only where the layer or evaluation reads it without a guard: the
+ * key, the variations of a flag, and the values of a target or clause. Every other field may be
+ * absent, as it may be in LaunchDarkly data, and a null field counts as absent because the
+ * preparation removes null fields. The fields that the preparation itself sets, such as the sets
+ * it generates for large target lists, cannot be supplied. The checks go no further. The content
+ * of a field, such as a variation index or an operator name, is evaluation's concern, and
+ * evaluation reports a malformed-flag result for it.
  */
 
 import { isNullish, TypeValidators } from '@launchdarkly/js-sdk-common';
@@ -90,13 +92,43 @@ class Location {
   }
 
   /**
-   * Checks that an optional field is a string when it is present.
+   * Checks that a field is a string. An optional field may be absent.
    */
-  string(parent: Definition, field: string): void {
+  string(parent: Definition, field: string, required: boolean = false): void {
     const value = parent[field];
-    if (!isNullish(value) && typeof value !== 'string') {
+    if (isNullish(value)) {
+      if (required) {
+        this.fail(`"${field}" must be a string`);
+      }
+      return;
+    }
+    if (typeof value !== 'string') {
       this.fail(`"${field}" must be a string`);
     }
+  }
+
+  /**
+   * Checks that an optional field is a boolean when it is present.
+   */
+  boolean(parent: Definition, field: string): void {
+    const value = parent[field];
+    if (!isNullish(value) && typeof value !== 'boolean') {
+      this.fail(`"${field}" must be a boolean`);
+    }
+  }
+
+  /**
+   * Rejects fields that the SDK itself sets when it prepares a definition for evaluation: the
+   * sets it generates for large target lists and the attribute references it compiles. A
+   * supplied value for one of them is not what evaluation expects, and the preparation does not
+   * always replace it, so a definition that carries one is rejected.
+   */
+  noInternalFields(parent: Definition, ...names: string[]): void {
+    Object.keys(parent).forEach((field) => {
+      if (field.startsWith('generated_') || names.includes(field)) {
+        this.fail(`"${field}" is set by the SDK and cannot be supplied`);
+      }
+    });
   }
 
   /**
@@ -124,6 +156,7 @@ class Location {
  */
 function checkTargets(parent: Definition, at: Location, field: string, label: string): void {
   at.entries(parent, field, label, (target, targetAt) => {
+    targetAt.noInternalFields(target);
     targetAt.array(target, 'values', true);
   });
 }
@@ -134,6 +167,7 @@ function checkTargets(parent: Definition, at: Location, field: string, label: st
  */
 function checkClauses(rule: Definition, at: Location): void {
   at.entries(rule, 'clauses', 'clause', (clause, clauseAt) => {
+    clauseAt.noInternalFields(clause);
     clauseAt.array(clause, 'values', true);
     clauseAt.string(clause, 'attribute');
   });
@@ -147,6 +181,7 @@ function checkRollout(parent: Definition, at: Location): void {
   const rollout = at.object(parent, 'rollout');
   if (rollout) {
     const rolloutAt = at.at('rollout');
+    rolloutAt.noInternalFields(rollout, 'bucketByAttributeReference');
     rolloutAt.string(rollout, 'bucketBy');
     rolloutAt.entries(rollout, 'variations', 'variation');
   }
@@ -160,6 +195,9 @@ function checkRollout(parent: Definition, at: Location): void {
  */
 export function validateFlag(flag: Definition): void {
   const at = new Location('flag', `${flag.key}`);
+  at.string(flag, 'key', true);
+  at.noInternalFields(flag);
+  at.boolean(flag, 'on');
   at.array(flag, 'variations', true);
   at.entries(flag, 'prerequisites', 'prerequisite');
   checkTargets(flag, at, 'targets', 'target');
@@ -182,11 +220,14 @@ export function validateFlag(flag: Definition): void {
  */
 export function validateSegment(segment: Definition): void {
   const at = new Location('segment', `${segment.key}`);
+  at.string(segment, 'key', true);
+  at.noInternalFields(segment);
   at.array(segment, 'included');
   at.array(segment, 'excluded');
   checkTargets(segment, at, 'includedContexts', 'included context');
   checkTargets(segment, at, 'excludedContexts', 'excluded context');
   at.entries(segment, 'rules', 'rule', (rule, ruleAt) => {
+    ruleAt.noInternalFields(rule, 'bucketByAttributeReference');
     checkClauses(rule, ruleAt);
     ruleAt.string(rule, 'bucketBy');
   });

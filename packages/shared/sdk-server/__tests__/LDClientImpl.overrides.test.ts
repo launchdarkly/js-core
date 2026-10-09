@@ -1,9 +1,10 @@
 import { LDClientContext, sleep } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage } from '../src/api/data/LDMigrationStage';
-import { LDOverrideSink } from '../src/api/subsystems';
+import { LDFeatureStore, LDOverrideSink } from '../src/api/subsystems';
 import LDClientImpl from '../src/LDClientImpl';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
+import { createBasicPlatform } from './createBasicPlatform';
 import { TestHook } from './hooks/TestHook';
 import makeMockLogger, { MockLogger } from './mockLogger';
 import {
@@ -14,6 +15,7 @@ import {
   singleValueFlag,
 } from './overrides/overridesTestSupport';
 import TestOverrideSource from './overrides/TestOverrideSource';
+import waitFor from './waitFor';
 
 const user = { key: 'user-key' };
 
@@ -337,6 +339,132 @@ describe('given a client with flag change listeners', () => {
     source.setOverrides([], [{ key: 'segment1', version: 99 }]);
     await settle();
     expect(updates).toEqual(['dependent']);
+  });
+});
+
+// A persistent store whose initialization check never answers, as a store that cannot be reached
+// while its first connection attempt is pending. Reads report nothing.
+function unreachableStore(): LDFeatureStore {
+  return {
+    get: (_kind, _key, callback) => callback(null),
+    all: (_kind, callback) => callback({}),
+    init: (_data, callback) => callback(),
+    delete: (_kind, _key, _version, callback) => callback(),
+    upsert: (_kind, _data, callback) => callback(),
+    initialized: () => {},
+    close: () => {},
+    getDescription: () => 'unreachable',
+  } as LDFeatureStore;
+}
+
+// A platform whose every request is rejected with 401, so that initialization fails.
+function unauthorizedPlatform() {
+  const platform = createBasicPlatform();
+  platform.requests.fetch = jest.fn(() =>
+    Promise.resolve({ status: 401, headers: new Headers(), text: async () => '' }),
+  ) as any;
+  return platform;
+}
+
+describe('given an uninitialized client over a persistent store that does not answer', () => {
+  let client: LDClientImpl;
+
+  beforeEach(() => {
+    const source = new TestOverrideSource({ flags: [singleValueFlag('overridden-flag', true)] });
+    client = makeFDv2Client(makeFDv2Platform(), {
+      logger: makeMockLogger(),
+      dataSystem: { overrides: source, persistentStore: unreachableStore() },
+    });
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('serves an override without asking the store whether it is initialized', async () => {
+    // With a persistent store the initialization check is I/O. An override is read before it,
+    // so a store that never answers does not delay an overridden flag.
+    const outcome = await Promise.race([
+      client.boolVariationDetail('overridden-flag', user, false),
+      sleep(200).then(() => 'still waiting after 200 ms'),
+    ]);
+
+    expect(outcome).toEqual(
+      expect.objectContaining({
+        value: true,
+        reason: { kind: 'FALLTHROUGH', overrideAffected: true },
+      }),
+    );
+  });
+});
+
+describe('given a client whose initialization fails and an override source with an asynchronous initial load', () => {
+  let source: TestOverrideSource;
+  let client: LDClientImpl;
+  let callbacks: ReturnType<typeof makeCallbacks>;
+
+  beforeEach(() => {
+    source = new TestOverrideSource(undefined, true);
+    callbacks = makeCallbacks();
+    client = makeFDv2Client(
+      unauthorizedPlatform() as any,
+      { logger: makeMockLogger(), dataSystem: { overrides: source } },
+      callbacks,
+    );
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  const completeLoad = () => {
+    source.setOverrides([singleValueFlag('overridden-flag', true)]);
+    source.completeStart();
+  };
+
+  it('reports the failed start only after the initial load', async () => {
+    // A failed start is still the completion of the start operation, so it waits for the load.
+    // An application that handles the failure and evaluates anyway sees the overrides.
+    let outcome: string | undefined;
+    const pending = client.waitForInitialization({ timeout: 5 }).then(
+      () => {
+        outcome = 'resolved';
+      },
+      () => {
+        outcome = 'rejected';
+      },
+    );
+    await waitFor(() => (callbacks.onFailed as jest.Mock).mock.calls.length > 0);
+    await sleep(10);
+    expect(outcome).toBeUndefined();
+
+    completeLoad();
+    await pending;
+
+    expect(outcome).toEqual('rejected');
+    expect(await client.boolVariation('overridden-flag', user, false)).toBe(true);
+  });
+
+  it('waits for the initial load when the start had already failed', async () => {
+    await waitFor(() => (callbacks.onFailed as jest.Mock).mock.calls.length > 0);
+
+    let outcome: string | undefined;
+    const pending = client.waitForInitialization({ timeout: 5 }).then(
+      () => {
+        outcome = 'resolved';
+      },
+      () => {
+        outcome = 'rejected';
+      },
+    );
+    await sleep(10);
+    expect(outcome).toBeUndefined();
+
+    completeLoad();
+    await pending;
+
+    expect(outcome).toEqual('rejected');
+    expect(await client.boolVariation('overridden-flag', user, false)).toBe(true);
   });
 });
 

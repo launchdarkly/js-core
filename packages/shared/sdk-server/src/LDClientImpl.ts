@@ -333,6 +333,12 @@ function constructFDv2(
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const dataSystem = config.dataSystem!; // dataSystem must be defined to get into this construct function
+  // The override source is created before the store, so that an invalid override configuration
+  // fails client construction before a persistent store has opened a connection.
+  const overrideSource =
+    dataSystem.overrides !== undefined && !config.offline
+      ? createOverrideSource(dataSystem.overrides, clientContext)
+      : undefined;
   const featureStore = dataSystem.featureStoreFactory(clientContext);
 
   const dataSourceUpdates = new TransactionalDataSourceUpdates(
@@ -343,17 +349,16 @@ function constructFDv2(
 
   // The override layer sits at the store read boundary. Evaluation, prerequisite and segment
   // resolution, and the all-flags read go through the overlay, so an override entry wins over
-  // LaunchDarkly data for its key. The data system never sees the layer. The source is created
-  // here so that an invalid configuration fails client construction.
+  // LaunchDarkly data for its key. The data system never sees the layer.
   let readStore: ReadStore = featureStore;
   let overrides: OverrideComponents | undefined;
-  if (dataSystem.overrides !== undefined && !config.offline) {
+  if (overrideSource) {
     const layer = new OverrideLayer();
     readStore = new ReadStoreOverlay(featureStore, layer);
     overrides = {
       layer,
       sink: new OverrideSink(layer, featureStore, onUpdate, hasEventListeners, logger),
-      source: createOverrideSource(dataSystem.overrides, clientContext),
+      source: overrideSource,
     };
   }
 
@@ -885,9 +890,14 @@ export default class LDClientImpl implements LDClient {
     // Initialization failed before waitForInitialization was called, so we have completed
     // and there was no promise. So we make a rejected promise and return it.
     if (this._initState === InitState.Failed) {
-      // Already failed, no need to timeout.
       this._initializedPromise = Promise.reject(this._rejectionReason);
-      return this._initializedPromise;
+      // Already failed, so only the override source's initial load, if it is still in progress,
+      // is left to wait for before the failure is reported.
+      return this._clientWithTimeout(
+        this._withOverridesLoaded(this._initializedPromise),
+        options?.timeout,
+        this._logger,
+      );
     }
 
     if (!this._initializedPromise) {
@@ -906,15 +916,20 @@ export default class LDClientImpl implements LDClient {
   /**
    * Extends the initialization promise with the override source's initial load, when that load
    * is still in progress. The initial load is part of starting the client, so the start handle
-   * that waitForInitialization returns resolves after it. The load never rejects this promise:
-   * a failed load is logged and the client runs without overrides.
+   * that waitForInitialization returns settles after it, whether initialization succeeded or
+   * failed: an application that handles a failed start and evaluates anyway sees the overrides
+   * that were present at startup. The load never rejects this promise: a failed load is logged
+   * and the client runs without overrides.
    */
   private _withOverridesLoaded(initialized: Promise<LDClient>): Promise<LDClient> {
     const overridesReady = this._overridesReady;
     if (!overridesReady) {
       return initialized;
     }
-    return Promise.all([initialized, overridesReady]).then(() => this);
+    // A rejection that arrives while the load is still in progress is handled here, so that it
+    // is not reported as unhandled before the returned promise adopts it.
+    initialized.catch(() => {});
+    return overridesReady.then(() => initialized);
   }
 
   variation(
@@ -1533,6 +1548,14 @@ export default class LDClientImpl implements LDClient {
     typeChecker?: (value: any) => [boolean, string],
   ): void {
     if (!this.initialized()) {
+      if (this._overrideLayer?.get(VersionedDataKinds.Features, flagKey)) {
+        // The override layer holds this flag, so it is served before the not-initialized
+        // short-circuit and without asking the data store anything: with a persistent store the
+        // initialization check below is I/O, and an override must not wait on it. A flag the
+        // layer does not hold still gets the not-ready default when the store has no data.
+        this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
+        return;
+      }
       this._featureStore.initialized((storeInitialized) => {
         if (storeInitialized) {
           if (!this._lastKnownValuesWarningLogged) {
@@ -1543,13 +1566,6 @@ export default class LDClientImpl implements LDClient {
                 ' This message is logged once.',
             );
           }
-          this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
-          return;
-        }
-        if (this._overrideLayer?.get(VersionedDataKinds.Features, flagKey)) {
-          // No LaunchDarkly data is available, but the override layer holds this flag. The
-          // override is served before the not-initialized short-circuit. A flag the layer does
-          // not hold still gets the not-ready default.
           this._variationInternal(flagKey, context, defaultValue, eventFactory, cb, typeChecker);
           return;
         }

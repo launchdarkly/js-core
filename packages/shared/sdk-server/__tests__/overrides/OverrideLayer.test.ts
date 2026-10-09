@@ -327,6 +327,17 @@ describe('given a definition that does not have the shape evaluation requires', 
       flagWithRule({ variation: undefined, rollout: { variations: [null] } }),
       'rule 0, rollout: variation 0 must be an object',
     ],
+    ['an on switch that is not a boolean', flagWith({ on: 'off' }), '"on" must be a boolean'],
+    [
+      'a rollout that carries the bucket-by reference the SDK compiles',
+      flagWith({ fallthrough: { rollout: { variations: [], bucketByAttributeReference: {} } } }),
+      'fallthrough, rollout: "bucketByAttributeReference" is set by the SDK and cannot be supplied',
+    ],
+    [
+      'a field the SDK generates',
+      flagWith({ generated_something: {} }),
+      '"generated_something" is set by the SDK and cannot be supplied',
+    ],
   ];
 
   it.each(malformedFlags)('rejects %s', (_description, flag, message) => {
@@ -373,6 +384,31 @@ describe('given a definition that does not have the shape evaluation requires', 
       segmentWithRule({ bucketBy: ['name'], clauses: [] }),
       'rule 0: "bucketBy" must be a string',
     ],
+    [
+      'the included set the SDK generates for a large target list',
+      segmentWith({ generated_includedSet: ['user-a'] }),
+      '"generated_includedSet" is set by the SDK and cannot be supplied',
+    ],
+    [
+      'a context target that carries the values set the SDK generates',
+      segmentWith({
+        includedContexts: [{ contextKind: 'org', values: ['org-a'], generated_valuesSet: {} }],
+      }),
+      'included context 0: "generated_valuesSet" is set by the SDK and cannot be supplied',
+    ],
+    [
+      'a rule that carries the bucket-by reference the SDK compiles',
+      segmentWith({
+        rules: [
+          {
+            id: 'rule',
+            clauses: [{ attribute: 'name', op: 'in', values: ['x'] }],
+            bucketByAttributeReference: {},
+          },
+        ],
+      }),
+      'rule 0: "bucketByAttributeReference" is set by the SDK and cannot be supplied',
+    ],
   ];
 
   it.each(malformedSegments)('rejects a segment with %s', (_description, segment, message) => {
@@ -380,6 +416,29 @@ describe('given a definition that does not have the shape evaluation requires', 
 
     expect(() => layer.setAll([], [segment])).toThrow(`segment "segment1": ${message}`);
     expect(layer.isEmpty()).toBe(true);
+  });
+
+  it.each([
+    ['no key', { ...rawFlag('flag1'), key: undefined }, 'flag "undefined": "key" must be a string'],
+    ['a null key', { ...rawFlag('flag1'), key: null }, 'flag "null": "key" must be a string'],
+    [
+      'a key that is not a string',
+      { ...rawFlag('flag1'), key: 7 },
+      'flag "7": "key" must be a string',
+    ],
+  ])('rejects a flag with %s', (_description, flag, message) => {
+    const layer = new OverrideLayer();
+
+    expect(() => layer.setAll([flag], [])).toThrow(message);
+    expect(layer.isEmpty()).toBe(true);
+  });
+
+  it('rejects a segment without a key', () => {
+    const layer = new OverrideLayer();
+
+    expect(() => layer.setAll([], [{ ...rawSegment('segment1'), key: undefined }])).toThrow(
+      'segment "undefined": "key" must be a string',
+    );
   });
 
   it('rejects the whole snapshot and keeps the previous layer', () => {
@@ -398,5 +457,31 @@ describe('given a definition that does not have the shape evaluation requires', 
     expect(Object.keys(layer.all(VersionedDataKinds.Features))).toEqual(['flag1']);
     expect(Object.keys(layer.all(VersionedDataKinds.Segments))).toEqual(['segment1']);
     expect(layer.isEmpty()).toBe(false);
+  });
+});
+
+describe('given keys that are the names of properties of Object', () => {
+  // The layer's maps have no prototype, so such keys are ordinary entries and a lookup of one
+  // the layer does not hold finds nothing, rather than a method inherited from Object.
+  const features = VersionedDataKinds.Features;
+
+  it('stores and returns entries with such keys', () => {
+    const layer = new OverrideLayer();
+    layer.setAll([rawFlag('constructor'), rawFlag('__proto__'), rawFlag('flag1')], []);
+
+    expect((layer.get(features, 'constructor') as Flag).key).toEqual('constructor');
+    expect((layer.get(features, '__proto__') as Flag).key).toEqual('__proto__');
+    expect(Object.keys(layer.all(features)).sort()).toEqual(['__proto__', 'constructor', 'flag1']);
+  });
+
+  it('finds nothing for such a key that the layer does not hold', () => {
+    const layer = new OverrideLayer();
+    layer.setAll([rawFlag('flag1')], []);
+
+    expect(layer.get(features, 'constructor')).toBeUndefined();
+    expect(layer.get(features, 'toString')).toBeUndefined();
+    expect(layer.get(features, 'hasOwnProperty')).toBeUndefined();
+    expect(layer.get(features, '__proto__')).toBeUndefined();
+    expect((layer.get(features, 'flag1') as Flag).on).toBe(true);
   });
 });
