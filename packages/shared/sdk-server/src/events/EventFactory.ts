@@ -13,6 +13,7 @@ export default class EventFactory extends internal.EventFactoryBase {
     detail: LDEvaluationDetail,
     defaultVal: any,
     prereqOfFlag?: Flag,
+    overrideAffected?: boolean,
   ): internal.InputEvalEvent {
     const addExperimentData = isExperiment(flag, detail.reason);
     return super.evalEvent({
@@ -22,6 +23,7 @@ export default class EventFactory extends internal.EventFactoryBase {
       defaultVal,
       excludeFromSummaries: flag.excludeFromSummaries,
       flagKey: flag.key,
+      overrideAffected,
       prereqOfFlagKey: prereqOfFlag?.key,
       reason: detail.reason,
       samplingRatio: flag.samplingRatio,
