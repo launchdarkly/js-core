@@ -50,4 +50,16 @@ describe('given header values', () => {
     }
     expect(values).toEqual(['anything', 'some-value', 'a, b']);
   });
+
+  it('iterates each header with the value before the key', () => {
+    const collected: [string, string][] = [];
+    wrapper.forEach((value, key) => {
+      collected.push([value, key]);
+    });
+    expect(collected).toEqual([
+      ['anything', 'accept'],
+      ['some-value', 'some-header'],
+      ['a, b', 'some-array'],
+    ]);
+  });
 });

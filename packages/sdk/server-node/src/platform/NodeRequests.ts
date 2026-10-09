@@ -5,6 +5,7 @@ import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
+import { createEventSource } from '@launchdarkly/eventsource';
 import {
   EventSourceCapabilities,
   LDLogger,
@@ -13,10 +14,41 @@ import {
   platform,
 } from '@launchdarkly/js-server-sdk-common';
 
-import createNodeEventSourceFactory, { NodeEventSourceFactory } from './NodeEventSource';
 import NodeResponse from './NodeResponse';
+import NodeStreamingResponse from './NodeStreamingResponse';
 
 const gzip = promisify(zlib.gzip);
+
+/**
+ * The TLS options that are copied onto each streaming `https` request. The names match the
+ * options of `https.request()`.
+ */
+const TLS_OPTION_NAMES = [
+  'pfx',
+  'key',
+  'passphrase',
+  'cert',
+  'ca',
+  'ciphers',
+  'rejectUnauthorized',
+  'secureProtocol',
+  'servername',
+  'checkServerIdentity',
+] as const;
+
+function tlsRequestOptions(tlsOptions?: LDTLSOptions): Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  if (!tlsOptions) {
+    return merged;
+  }
+  const bag = tlsOptions as unknown as Record<string, unknown>;
+  TLS_OPTION_NAMES.forEach((name) => {
+    if (bag[name] !== undefined) {
+      merged[name] = bag[name];
+    }
+  });
+  return merged;
+}
 
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   const options: https.AgentOptions & { [index: string]: any } = {
@@ -120,9 +152,7 @@ function resolveAgent(
 export default class NodeRequests implements platform.Requests {
   private _agent: https.Agent | http.Agent | undefined;
 
-  private _tlsOptions: LDTLSOptions | undefined;
-
-  private _createEventSource: NodeEventSourceFactory;
+  private _tlsParams: Record<string, unknown>;
 
   private _hasProxy: boolean = false;
 
@@ -138,10 +168,9 @@ export default class NodeRequests implements platform.Requests {
     enableEventCompression?: boolean,
   ) {
     this._agent = resolveAgent(tlsOptions, proxyOptions, proxyAgent, logger);
-    // The agent owns connection setup when the caller supplies one, so the TLS parameters are
-    // only forwarded when this class built the agent itself (or no agent exists).
-    this._tlsOptions = proxyAgent ? undefined : tlsOptions;
-    this._createEventSource = createNodeEventSourceFactory(this._agent, this._tlsOptions);
+    // The agent owns connection setup when the caller supplies one, so the per-request TLS
+    // parameters are only forwarded when this class built the agent itself (or no agent exists).
+    this._tlsParams = tlsRequestOptions(proxyAgent ? undefined : tlsOptions);
     // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
     // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
     // certificate-only agent for mTLS). Reporting true is the better default here because
@@ -157,6 +186,9 @@ export default class NodeRequests implements platform.Requests {
   }
 
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
+    if (options.streaming) {
+      return this._streamingFetch(url, options);
+    }
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
@@ -164,7 +196,7 @@ export default class NodeRequests implements platform.Requests {
     let bodyData: string | Buffer | undefined = options.body;
 
     // For get requests we are going to automatically support compressed responses.
-    // Note this does not affect SSE as the event source is not using this fetch implementation.
+    // Note this does not affect SSE as streaming requests take the branch above.
     if (options.method?.toLowerCase() === 'get') {
       headers['accept-encoding'] = 'gzip';
     }
@@ -209,11 +241,58 @@ export default class NodeRequests implements platform.Requests {
     });
   }
 
+  /**
+   * The transport for a streaming request. It does not request compressed content, and it never
+   * follows a redirect. A redirect status resolves like any other non-200 response, and the
+   * caller decides whether to retry the original URL. It applies no read or socket timeout. The
+   * caller owns the read timeout and cancels through the abort signal.
+   */
+  private _streamingFetch(url: string, options: platform.Options): Promise<platform.Response> {
+    const isSecure = url.startsWith('https://');
+    const impl = isSecure ? https : http;
+    const requestOptions: https.RequestOptions & Record<string, unknown> = {
+      method: options.method,
+      headers: options.headers,
+      agent: this._agent,
+    };
+    if (isSecure) {
+      Object.assign(requestOptions, this._tlsParams);
+    }
+    return new Promise<platform.Response>((resolve, reject) => {
+      const req = impl.request(url, requestOptions, (res) =>
+        resolve(new NodeStreamingResponse(res)),
+      );
+      // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
+      req.setNoDelay(true);
+      const { signal } = options;
+      if (signal) {
+        const abort = () => req.destroy(new Error('The stream request was aborted'));
+        if (signal.aborted) {
+          abort();
+        } else {
+          signal.addEventListener('abort', abort, { once: true });
+        }
+      }
+      // This listener stays attached after resolve. A later socket error then becomes a harmless
+      // no-op reject instead of an unhandled 'error' event that would crash the process
+      req.on('error', reject);
+      if (options.body !== undefined) {
+        req.write(options.body);
+      }
+      req.end();
+    });
+  }
+
   createEventSource(
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    return this._createEventSource(url, eventSourceInitDict);
+    return createEventSource(url, {
+      ...eventSourceInitDict,
+      maxBackoffMillis: 30 * 1000,
+      jitterRatio: 0.5,
+      fetch: (fetchUrl, init) => this.fetch(fetchUrl, { ...init, streaming: true }),
+    });
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {

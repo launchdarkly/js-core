@@ -49,3 +49,18 @@ it('reports presence with has()', () => {
   expect(wrapper.has('content-type')).toBe(true);
   expect(wrapper.has('missing')).toBe(false);
 });
+
+it('iterates each header with the value before the key', () => {
+  const wrapper = new HeaderWrapper({
+    accept: 'anything',
+    'some-array': ['a', 'b'],
+  });
+  const collected: [string, string][] = [];
+  wrapper.forEach((value, key) => {
+    collected.push([value, key]);
+  });
+  expect(collected).toEqual([
+    ['anything', 'accept'],
+    ['a, b', 'some-array'],
+  ]);
+});
