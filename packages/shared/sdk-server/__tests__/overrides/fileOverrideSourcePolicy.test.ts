@@ -1,11 +1,12 @@
 import { Flag } from '../../src/evaluation/data/Flag';
-import { fileOverrideSourcePolicy, makeOverrideFlagWithValue } from '../../src/overrides';
+import { fileOverrideSourcePolicy } from '../../src/overrides';
 
 // The policy is the one place where the file-based override source differs from the file data
 // sources in how documents become data.
 
 it('expands a flag value into a flag that is on and serves the value by fallthrough with version 1', () => {
-  expect(makeOverrideFlagWithValue('flag', 'a')).toEqual({
+  const policy = fileOverrideSourcePolicy('fail');
+  expect(policy.makeFlagWithValue('flag', 'a', undefined)).toEqual({
     key: 'flag',
     version: 1,
     on: true,
@@ -13,8 +14,8 @@ it('expands a flag value into a flag that is on and serves the value by fallthro
     variations: ['a'],
   });
   // The previous flag plays no part: an override snapshot has no version history.
-  const previous = { ...makeOverrideFlagWithValue('flag', 'old'), version: 9 };
-  expect(fileOverrideSourcePolicy('fail').makeFlagWithValue('flag', 'a', previous).version).toBe(1);
+  const previous = { ...policy.makeFlagWithValue('flag', 'old', undefined), version: 9 };
+  expect(policy.makeFlagWithValue('flag', 'a', previous).version).toBe(1);
 });
 
 it('fails the load on a duplicate key with the fail handling', () => {

@@ -1,34 +1,15 @@
-import { LDLogger } from '@launchdarkly/js-sdk-common';
-
 import { FileOverrideSourceOptions } from '../src/api/options/LDDataSystemOptions';
 import { LDOptions } from '../src/api/options/LDOptions';
 import LDClientImpl from '../src/LDClientImpl';
 import MockFilesystem from './data_sources/filedata/MockFilesystem';
+import makeMockLogger from './mockLogger';
 import { makeCallbacks, makeFDv2Platform } from './overrides/overridesTestSupport';
+import waitFor from './waitFor';
 
 const user = { key: 'user-key' };
 const directory = '/etc/launchdarkly';
 const jsonPath = `${directory}/overrides.json`;
 const yamlPath = `${directory}/overrides.yaml`;
-
-function makeLogger(): LDLogger {
-  return { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
-}
-
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 3000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => {
-      setTimeout(resolve, 20);
-    });
-  }
-  throw new Error('timed out waiting for the condition');
-}
 
 describe('given a client with a file override source over a mock filesystem', () => {
   let filesystem: MockFilesystem;
@@ -45,7 +26,7 @@ describe('given a client with a file override source over a mock filesystem', ()
       {
         sendEvents: false,
         diagnosticOptOut: true,
-        logger: makeLogger(),
+        logger: makeMockLogger(),
         ...options,
         dataSystem: {
           dataSource: {

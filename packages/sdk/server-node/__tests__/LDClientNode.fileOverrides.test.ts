@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { FileOverrideSourceOptions } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import waitFor, { sleep } from './waitFor';
 
 const user = { key: 'user-key' };
 
@@ -29,21 +30,6 @@ function makeClient(
   });
 }
 
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 10000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await new Promise((resolve) => {
-      setTimeout(resolve, 50);
-    });
-  }
-  throw new Error('timed out waiting for the condition');
-}
-
 const document = (value: string) => JSON.stringify({ flagValues: { 'overridden-flag': value } });
 
 describe('given a temporary directory of override files', () => {
@@ -65,6 +51,12 @@ describe('given a temporary directory of override files', () => {
     await writeFile(path, 'flagValues:\n  yaml-flag: "override-value"\n');
     client = makeClient(directory, { paths: [path] });
 
+    // Evaluation does not wait for the initial load, so wait for the override to be in effect.
+    await waitFor(
+      async () =>
+        (await client!.variationDetail('yaml-flag', user, 'default')).value === 'override-value',
+      10000,
+    );
     const detail = await client.variationDetail('yaml-flag', user, 'default');
 
     expect(detail.value).toEqual('override-value');
@@ -76,12 +68,16 @@ describe('given a temporary directory of override files', () => {
     const path = join(directory, 'overrides.json');
     await writeFile(path, document('b'));
     client = makeClient(directory, { paths: [path], changeDetection: 'polling', pollInterval: 1 });
-    expect(await client.variation('overridden-flag', user, 'default')).toEqual('b');
+    await waitFor(
+      async () => (await client!.variation('overridden-flag', user, 'default')) === 'b',
+      10000,
+    );
 
     await writeFile(path, document('c'));
 
     await waitFor(
       async () => (await client!.variation('overridden-flag', user, 'default')) === 'c',
+      10000,
     );
   });
 
@@ -95,6 +91,7 @@ describe('given a temporary directory of override files', () => {
 
     await waitFor(
       async () => (await client!.variation('overridden-flag', user, 'default')) === 'b',
+      10000,
     );
   });
 
@@ -102,32 +99,37 @@ describe('given a temporary directory of override files', () => {
     const path = join(directory, 'overrides.json');
     await writeFile(path, document('b'));
     client = makeClient(directory, { paths: [path] });
-    expect(await client.variation('overridden-flag', user, 'default')).toEqual('b');
+    await waitFor(
+      async () => (await client!.variation('overridden-flag', user, 'default')) === 'b',
+      10000,
+    );
 
     await unlink(path);
 
     await waitFor(async () => {
       const detail = await client!.variationDetail('overridden-flag', user, 'default');
       return detail.reason.errorKind === 'CLIENT_NOT_READY';
-    });
+    }, 10000);
   });
 
   it('keeps the last good overrides while the file is malformed', async () => {
     const path = join(directory, 'overrides.json');
     await writeFile(path, document('b'));
     client = makeClient(directory, { paths: [path] });
-    expect(await client.variation('overridden-flag', user, 'default')).toEqual('b');
+    await waitFor(
+      async () => (await client!.variation('overridden-flag', user, 'default')) === 'b',
+      10000,
+    );
 
     await writeFile(path, '{"flagValues"');
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1500);
-    });
+    await sleep(1500);
     expect(await client.variation('overridden-flag', user, 'default')).toEqual('b');
 
     await writeFile(path, document('c'));
 
     await waitFor(
       async () => (await client!.variation('overridden-flag', user, 'default')) === 'c',
+      10000,
     );
   });
 });
