@@ -406,7 +406,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     const bootstrap = options.configuration.clientSide?.bootstrap;
     const result = await client.start({
       timeout: timeout / 1000,
-      ...(bootstrap !== undefined && { bootstrap }),
+      ...(bootstrap != null && { bootstrap }),
       ...(secureModeHash !== undefined && { identifyOptions: { hash: secureModeHash } }),
     });
     if (result.status !== 'complete') {

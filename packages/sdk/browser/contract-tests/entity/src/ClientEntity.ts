@@ -357,7 +357,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
   const bootstrap = options.configuration.clientSide?.bootstrap;
   const { status } = await client.start({
     timeout: timeout / 1000,
-    ...(bootstrap !== undefined && { bootstrap }),
+    ...(bootstrap != null && { bootstrap }),
   });
   const failed = status !== 'complete';
   if (failed && !options.configuration.initCanFail) {

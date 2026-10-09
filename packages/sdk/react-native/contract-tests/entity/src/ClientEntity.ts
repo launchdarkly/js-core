@@ -369,7 +369,7 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
       client.identify(initialContext, {
         timeout: timeout / 1000,
         waitForNetworkResults: true,
-        ...(bootstrap !== undefined && { bootstrap }),
+        ...(bootstrap != null && { bootstrap }),
       }),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
