@@ -1043,6 +1043,48 @@ it('appends a blocked FDv1 fallback synchronizer when fdv1Endpoints are configur
   manager.close();
 });
 
+it('uses REPORT for the FDv1 fallback requestor when usePost is set', async () => {
+  const sourceFactoryProvider = makeSourceFactoryProvider();
+  const fdv1Endpoints = {
+    polling: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+    streaming: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+  };
+
+  (makeRequestor as jest.Mock).mockReturnValue({});
+  (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      config: makeConfig({ usePost: true }),
+      sourceFactoryProvider,
+      fdv1Endpoints,
+      foregroundMode: 'streaming',
+    }),
+  );
+  await identifyManager(manager);
+
+  const dsConfig = capturedDataSourceConfigs[0];
+  const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+  // Invoke the factory to trigger requestor creation.
+  fdv1Slot.factory.create(() => undefined);
+
+  expect(makeRequestor).toHaveBeenCalledTimes(1);
+  // The useReport argument of makeRequestor controls the REPORT method.
+  expect((makeRequestor as jest.Mock).mock.calls[0][8]).toBe(true);
+
+  manager.close();
+});
+
 it('uses per-mode fdv1Fallback pollInterval from MODE_TABLE for background mode', async () => {
   const sourceFactoryProvider = makeSourceFactoryProvider();
   const fdv1Endpoints = {
