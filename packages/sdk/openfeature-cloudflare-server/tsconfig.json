@@ -10,11 +10,13 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "sourceMap": true,
+    "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
     "resolveJsonModule": true,
     "stripInternal": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": ["@cloudflare/workers-types", "jest", "node"]
   },
   "include": ["src"],
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__"]
