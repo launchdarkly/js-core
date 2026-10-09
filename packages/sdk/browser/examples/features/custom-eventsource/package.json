@@ -16,7 +16,7 @@
     "build": "npm run clean && tsdown"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "4.10.2"
+    "@launchdarkly/js-client-sdk": "4.11.2"
   },
   "devDependencies": {
     "tsdown": "^0.17.0-beta.4",
