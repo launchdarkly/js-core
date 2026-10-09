@@ -76,6 +76,11 @@ describe('given a client with a file override source over a mock filesystem', ()
     filesystem.set(jsonPath, '{"flagValues": {"overridden-flag": true}}');
     makeClient({ paths: [jsonPath] });
 
+    // The initial load reads the file asynchronously and evaluation does not wait for it, so the
+    // test waits until the override shows.
+    await waitFor(
+      async () => (await client!.boolVariation('overridden-flag', user, false)) === true,
+    );
     const detail = await client!.boolVariationDetail('overridden-flag', user, false);
 
     expect(detail.value).toBe(true);
@@ -87,9 +92,10 @@ describe('given a client with a file override source over a mock filesystem', ()
     filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: from-platform-parser\n');
     makeClient({ paths: [yamlPath] });
 
-    const value = await client!.variation('yaml-flag', user, 'default');
-
-    expect(value).toEqual('from-platform-parser');
+    await waitFor(
+      async () =>
+        (await client!.variation('yaml-flag', user, 'default')) === 'from-platform-parser',
+    );
     expect(platformYamlParser).toHaveBeenCalledWith(
       'flagValues:\n  yaml-flag: from-platform-parser\n',
     );
@@ -100,14 +106,19 @@ describe('given a client with a file override source over a mock filesystem', ()
     filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: x\n');
     makeClient({ paths: [yamlPath], yamlParser });
 
-    expect(await client!.variation('yaml-flag', user, 'default')).toEqual('from-configured-parser');
+    await waitFor(
+      async () =>
+        (await client!.variation('yaml-flag', user, 'default')) === 'from-configured-parser',
+    );
     expect(platformYamlParser).not.toHaveBeenCalled();
   });
 
   it('reloads when the directory reports a change', async () => {
     filesystem.set(jsonPath, '{"flagValues": {"overridden-flag": "b"}}');
     makeClient({ paths: [jsonPath] });
-    expect(await client!.variation('overridden-flag', user, 'default')).toEqual('b');
+    await waitFor(
+      async () => (await client!.variation('overridden-flag', user, 'default')) === 'b',
+    );
 
     filesystem.set(jsonPath, '{"flagValues": {"overridden-flag": "c"}}');
     filesystem.emit(directory);
