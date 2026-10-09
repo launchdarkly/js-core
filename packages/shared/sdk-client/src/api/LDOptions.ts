@@ -225,6 +225,10 @@ export interface LDOptions {
    * custom HTTP method (the `customMethod` capability). Without that capability, streaming
    * requests use GET, polling requests still use POST, and the SDK logs a warning.
    *
+   * If the data system falls back to the legacy polling endpoints, this option directs those
+   * requests to use the REPORT method, so the context stays in the request body instead of
+   * the URL.
+   *
    * This is not stable, and not subject to any backwards compatibility guarantees or semantic
    * versioning. It is in early access. If you want access to this feature please join the EAP.
    * https://launchdarkly.com/docs/sdk/features/data-saving-mode

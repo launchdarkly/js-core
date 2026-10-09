@@ -314,7 +314,10 @@ export function createFDv2DataManagerBase(
           ctx.baseHeaders,
           ctx.queryParams,
           config.withReasons,
-          config.useReport,
+          // The FDv1 fallback maps usePost to the REPORT method. This keeps
+          // the context in the request body instead of the URL. The useReport
+          // option is always disabled when the data system is configured.
+          config.usePost,
         );
 
       const fdv1SyncFactory = {
