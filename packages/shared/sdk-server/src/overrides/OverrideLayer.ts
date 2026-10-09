@@ -9,6 +9,7 @@ import { markOverrideEntry } from '../evaluation/data/overrideMarker';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
+import { validateFlag, validateSegment } from './validateDefinition';
 
 /**
  * One entry of the layer: the prepared, marked definition, and the JSON text of the definition
@@ -37,12 +38,16 @@ export type LayerKindContents = Record<string, LayerEntry>;
 export type LayerContents = Record<string, LayerKindContents>;
 
 /**
- * Copies a definition the source supplied, prepares the copy for evaluation the way the SDK
- * prepares LaunchDarkly data, and marks it. The source's object is never modified.
+ * Copies a definition the source supplied, checks that the copy has the shape evaluation
+ * requires, prepares the copy for evaluation the way the SDK prepares LaunchDarkly data, and
+ * marks it. The source's object is never modified. The check is on the copy, because the copy is
+ * what the layer stores. A definition of the wrong shape throws.
  */
 function prepareFlag(item: LDKeyedFeatureStoreItem): LayerEntry {
   const json = JSON.stringify(item);
-  const flag = JSON.parse(json) as Flag;
+  const parsed = JSON.parse(json);
+  validateFlag(parsed);
+  const flag = parsed as Flag;
   processFlag(flag);
   markOverrideEntry(flag);
   return { item: flag, json };
@@ -50,7 +55,9 @@ function prepareFlag(item: LDKeyedFeatureStoreItem): LayerEntry {
 
 function prepareSegment(item: LDKeyedFeatureStoreItem): LayerEntry {
   const json = JSON.stringify(item);
-  const segment = JSON.parse(json) as Segment;
+  const parsed = JSON.parse(json);
+  validateSegment(parsed);
+  const segment = parsed as Segment;
   processSegment(segment);
   markOverrideEntry(segment);
   return { item: segment, json };
@@ -78,6 +85,11 @@ export default class OverrideLayer {
   /**
    * Replaces the entire contents of the layer in one assignment, so the layer holds exactly one
    * snapshot at any instant. Empty arrays clear the layer.
+   *
+   * Every definition is checked and prepared before the assignment. When one definition does
+   * not have the shape evaluation requires, this method throws an Error that names the kind, the
+   * key, and the field, and the layer keeps its previous contents: no part of the snapshot is
+   * applied.
    *
    * @returns The previous and the new contents, for change comparison. Neither may be modified.
    */

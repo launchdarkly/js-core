@@ -15,7 +15,10 @@ export interface LDOverrideSink {
    *
    * The definitions are plain objects in the flag and segment data model, in the form in which
    * LaunchDarkly delivers them. The SDK copies them, prepares the copies for evaluation, and
-   * marks the copies as override entries. It never modifies the objects it was given.
+   * marks the copies as override entries. It never modifies the objects it was given. A
+   * definition that does not have the shape the SDK requires, for example a flag without a
+   * `variations` array, is rejected with an error that names the kind, the key, and the field,
+   * and no part of the snapshot is applied: the layer keeps its previous contents.
    *
    * The new contents are visible to evaluations when the call returns. Flag change notifications
    * for the affected flags follow.

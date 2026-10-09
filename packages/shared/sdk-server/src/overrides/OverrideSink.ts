@@ -102,7 +102,8 @@ export default class OverrideSink implements LDOverrideSink {
    * Replaces the entire override layer in one assignment, then notifies listeners of every flag
    * whose merged-view evaluation may have changed. The replacement is visible to evaluations
    * when this method returns. The notifications follow, because they can need asynchronous
-   * reads of the base store.
+   * reads of the base store. A snapshot with a definition of the wrong shape is rejected by the
+   * layer before any of it is applied, and the error reaches the caller.
    */
   setOverrides(flags: LDKeyedFeatureStoreItem[], segments: LDKeyedFeatureStoreItem[]): void {
     const { previous, current } = this._layer.setAll(flags, segments);

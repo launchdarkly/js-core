@@ -158,6 +158,25 @@ describe('given an uninitialized client with an override source', () => {
     await expect(client.waitForInitialization({ timeout: 0.05 })).rejects.toThrow(/timed out/);
     expect(client.initialized()).toBe(false);
   });
+
+  it('keeps serving the previous overrides when a snapshot has a malformed definition', async () => {
+    // One definition of the wrong shape fails the whole snapshot. The source's call throws with
+    // the reason, and the layer keeps the earlier snapshot, so the flag it held keeps its earlier
+    // value and the valid new entry of the rejected snapshot is not served.
+    const withoutVariations = {
+      key: 'other-flag',
+      version: 1,
+      on: true,
+      fallthrough: { variation: 0 },
+    };
+    expect(() =>
+      source.setOverrides([singleValueFlag('overridden-flag', false), withoutVariations]),
+    ).toThrow('flag "other-flag": "variations" must be an array');
+
+    expect(await client.boolVariation('overridden-flag', user, false)).toBe(true);
+    const detail = await client.boolVariationDetail('other-flag', user, false);
+    expect(detail.reason).toEqual({ kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' });
+  });
 });
 
 describe('given an initialized client with LaunchDarkly data and an override source', () => {
