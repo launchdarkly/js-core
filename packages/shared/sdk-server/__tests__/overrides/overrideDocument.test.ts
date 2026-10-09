@@ -116,16 +116,24 @@ describe('given the override document parser', () => {
     );
   });
 
-  it('fills a missing entry key from the map key and keeps an existing key', () => {
+  it('keys every entry by its map key, whatever its key field says', () => {
+    // The map key is what the merge across files orders and de-duplicates by, so a key field
+    // that differs, as after pasting a definition under a new key, is set to the map key.
     const document = parseOverrideDocument()(
       'data.json',
       JSON.stringify({
-        flags: { 'flag-a': { on: false, version: 1 }, 'flag-b': { key: 'other', version: 1 } },
-        segments: { 'segment-a': { version: 1 } },
+        flags: {
+          'flag-a': { on: false, version: 1 },
+          'flag-b': { key: 'other', version: 1 },
+          'flag-c': { key: null, version: 1 },
+        },
+        segments: { 'segment-a': { version: 1 }, 'segment-b': { key: 'other', version: 1 } },
       }),
     );
     expect(document.flags?.['flag-a'].key).toEqual('flag-a');
-    expect(document.flags?.['flag-b'].key).toEqual('other');
+    expect(document.flags?.['flag-b'].key).toEqual('flag-b');
+    expect(document.flags?.['flag-c'].key).toEqual('flag-c');
     expect(document.segments?.['segment-a'].key).toEqual('segment-a');
+    expect(document.segments?.['segment-b'].key).toEqual('segment-b');
   });
 });

@@ -10,7 +10,10 @@ import { isPlainObject } from './validateDefinition';
 
 /**
  * Checks that a member of the document is an object keyed by item key, and that every entry
- * in it is an object. The key of an entry is filled from the map key when the entry omits it.
+ * in it is an object. The map key is the key of the entry: it is what the merge across files
+ * orders and de-duplicates by, and what the Go and Python SDKs key the layer by, so a key field
+ * inside the entry is set to it. Without that, an entry pasted under a new map key with its
+ * old key field would be merged under one key and stored under another.
  */
 function validateItems(document: Record<string, any>, member: 'flags' | 'segments'): void {
   const items = document[member];
@@ -24,9 +27,7 @@ function validateItems(document: Record<string, any>, member: 'flags' | 'segment
     if (!isPlainObject(item)) {
       throw new Error(`${member.slice(0, -1)} "${key}" must be an object`);
     }
-    if (item.key === undefined) {
-      item.key = key;
-    }
+    item.key = key;
   });
 }
 
