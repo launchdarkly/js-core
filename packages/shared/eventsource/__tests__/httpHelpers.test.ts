@@ -1,4 +1,4 @@
-import { splitHeaderListValue } from '../src/httpHelpers';
+import { headersToObject, splitHeaderListValue } from '../src/httpHelpers';
 
 it('splits a joined value on commas outside quotes', () => {
   expect(splitHeaderListValue('a, b, c')).toEqual(['a', ' b', ' c']);
@@ -37,4 +37,8 @@ it('runs an unterminated quoted string to the end of the value', () => {
 
 it('keeps empty parts', () => {
   expect(splitHeaderListValue('a,,b,')).toEqual(['a', '', 'b', '']);
+});
+
+it('returns an empty object when the headers expose no forEach', () => {
+  expect(headersToObject({})).toEqual({});
 });

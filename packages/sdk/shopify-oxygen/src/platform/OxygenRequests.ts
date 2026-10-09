@@ -1,4 +1,4 @@
-import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
+import { internal, NullEventSource } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -62,10 +62,10 @@ export default class OxygenRequests implements platform.Requests {
       // - Cache API not available
       // - Cache is not enabled per initialization options
       // - Not a GET request (for now, we mostly interested in caching the feature poll request)
-      return fetch(url, options);
+      return fetch(url, internal.toRequestInit(options));
     }
 
-    const request = new Request(url, finalOptions);
+    const request = new Request(url, internal.toRequestInit(finalOptions));
 
     const cachedResponse = await cache.match(request);
 
@@ -81,7 +81,7 @@ export default class OxygenRequests implements platform.Requests {
     request: Request,
     cache: Cache,
   ): Promise<platform.Response> {
-    const response = await fetch(url, options);
+    const response = await fetch(url, internal.toRequestInit(options));
 
     // Only cache successful GET requests
     if (cache && response.ok && (!options.method || options.method === 'GET')) {
