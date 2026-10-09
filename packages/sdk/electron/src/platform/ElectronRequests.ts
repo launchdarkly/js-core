@@ -4,10 +4,9 @@ import { promisify } from 'util';
 import * as zlib from 'zlib';
 
 import { createEventSource } from '@launchdarkly/eventsource';
-import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
+import { EventSourceCapabilities, internal, platform } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronResponse from './ElectronResponse';
-import ElectronStreamingResponse from './ElectronStreamingResponse';
 
 const gzip = promisify(zlib.gzip);
 
@@ -86,7 +85,7 @@ export default class ElectronRequests implements platform.Requests {
     };
     return new Promise<platform.Response>((resolve, reject) => {
       const req = impl.request(url, requestOptions, (res) =>
-        resolve(new ElectronStreamingResponse(res)),
+        resolve(internal.createStreamingResponse(res)),
       );
       // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
       req.setNoDelay(true);
