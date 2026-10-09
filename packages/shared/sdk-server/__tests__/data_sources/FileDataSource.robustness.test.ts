@@ -1,4 +1,4 @@
-import { ClientContext } from '@launchdarkly/js-sdk-common';
+import { ClientContext, sleep } from '@launchdarkly/js-sdk-common';
 
 import { FileDataSourceFactory } from '../../src/integrations';
 import Configuration from '../../src/options/Configuration';
@@ -7,6 +7,7 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger, { LogLevel } from '../Logger';
+import waitFor from '../waitFor';
 import MockFilesystem from './filedata/MockFilesystem';
 
 // These tests run on real timers. The source waits for change notifications to settle for
@@ -15,24 +16,6 @@ import MockFilesystem from './filedata/MockFilesystem';
 const directory = '/data';
 const path = `${directory}/flags.json`;
 const document = (value: string) => JSON.stringify({ flagValues: { flag: value } });
-
-const settle = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await settle(20);
-  }
-  throw new Error('timed out waiting for the condition');
-}
 
 describe('given a file data source with automatic updates over a mock filesystem', () => {
   let filesystem: MockFilesystem;
@@ -95,7 +78,7 @@ describe('given a file data source with automatic updates over a mock filesystem
       filesystem.set(path, document('b'));
       await waitFor(valueIs('b'));
 
-      await settle(50);
+      await sleep(50);
       expect(unhandled).not.toHaveBeenCalled();
     } finally {
       process.off('unhandledRejection', unhandled);
@@ -184,13 +167,13 @@ describe('given a file data source with automatic updates over a mock filesystem
         previous.then(async () => {
           filesystem.set(path, document(value));
           filesystem.emit(directory, 'change');
-          await settle(20);
+          await sleep(20);
         }),
       Promise.resolve(),
     );
 
     await waitFor(valueIs('f'));
-    await settle(150);
+    await sleep(150);
     // One reload for the whole burst.
     expect(init).toHaveBeenCalledTimes(1);
   });
