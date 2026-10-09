@@ -18,12 +18,19 @@
  * a malformed-flag result for it.
  */
 
+import { isNullish, TypeValidators } from '@launchdarkly/js-sdk-common';
+
 type DefinitionKind = 'flag' | 'segment';
 
 type Definition = Record<string, any>;
 
-function isObject(value: unknown): value is Definition {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+/**
+ * Reports whether a value is an object that is not an array and not null.
+ *
+ * @internal
+ */
+export function isPlainObject(value: unknown): value is Definition {
+  return !isNullish(value) && TypeValidators.Object.is(value);
 }
 
 /**
@@ -54,7 +61,7 @@ class Location {
    */
   array(parent: Definition, field: string, required: boolean = false): any[] | undefined {
     const value = parent[field];
-    if (value === undefined || value === null) {
+    if (isNullish(value)) {
       if (required) {
         this.fail(`"${field}" must be an array`);
       }
@@ -73,10 +80,10 @@ class Location {
    */
   object(parent: Definition, field: string): Definition | undefined {
     const value = parent[field];
-    if (value === undefined || value === null) {
+    if (isNullish(value)) {
       return undefined;
     }
-    if (!isObject(value)) {
+    if (!isPlainObject(value)) {
       this.fail(`"${field}" must be an object`);
     }
     return value;
@@ -87,7 +94,7 @@ class Location {
    */
   string(parent: Definition, field: string): void {
     const value = parent[field];
-    if (value !== undefined && value !== null && typeof value !== 'string') {
+    if (!isNullish(value) && typeof value !== 'string') {
       this.fail(`"${field}" must be a string`);
     }
   }
@@ -104,7 +111,7 @@ class Location {
     check: (entry: Definition, at: Location) => void = () => {},
   ): void {
     this.array(parent, field)?.forEach((entry, index) => {
-      if (!isObject(entry)) {
+      if (!isPlainObject(entry)) {
         this.fail(`${label} ${index} must be an object`);
       }
       check(entry, this.at(`${label} ${index}`));

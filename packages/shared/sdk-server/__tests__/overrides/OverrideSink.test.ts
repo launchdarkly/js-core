@@ -1,3 +1,5 @@
+import { sleep } from '@launchdarkly/js-sdk-common';
+
 import { LDFeatureStoreDataStorage } from '../../src/api/subsystems';
 import { OverrideLayer, OverrideSink } from '../../src/overrides';
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
@@ -48,10 +50,7 @@ function withReversedProperties(value: any): any {
 }
 
 // Notifications follow the layer replacement asynchronously. Let them run.
-const settle = () =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, 0);
-  });
+const settle = () => sleep(0);
 
 describe('given a sink over an initialized base store', () => {
   let base: InMemoryFeatureStore;

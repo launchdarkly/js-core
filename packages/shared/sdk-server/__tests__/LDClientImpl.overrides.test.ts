@@ -1,10 +1,11 @@
-import { LDClientContext, LDLogger } from '@launchdarkly/js-sdk-common';
+import { LDClientContext, sleep } from '@launchdarkly/js-sdk-common';
 
 import { LDMigrationStage } from '../src/api/data/LDMigrationStage';
 import { LDOverrideSink } from '../src/api/subsystems';
 import LDClientImpl from '../src/LDClientImpl';
 import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import { TestHook } from './hooks/TestHook';
+import makeMockLogger, { MockLogger } from './mockLogger';
 import {
   fdv2FullPayload,
   makeCallbacks,
@@ -16,27 +17,20 @@ import TestOverrideSource from './overrides/TestOverrideSource';
 
 const user = { key: 'user-key' };
 
-function makeLogger(): LDLogger & { warn: jest.Mock; error: jest.Mock } {
-  return { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
-}
-
 function warningsMatching(logger: { warn: jest.Mock }, pattern: RegExp): number {
   return logger.warn.mock.calls.filter((call) => pattern.test(String(call[0]))).length;
 }
 
 // Change notifications and asynchronous starts complete on later turns of the event loop.
-const settle = () =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, 10);
-  });
+const settle = () => sleep(10);
 
 describe('given an uninitialized client with an override source', () => {
   let source: TestOverrideSource;
   let client: LDClientImpl;
-  let logger: ReturnType<typeof makeLogger>;
+  let logger: MockLogger;
 
   beforeEach(() => {
-    logger = makeLogger();
+    logger = makeMockLogger();
     source = new TestOverrideSource({ flags: [singleValueFlag('overridden-flag', true)] });
     client = makeFDv2Client(makeFDv2Platform(), { logger, dataSystem: { overrides: source } });
   });
@@ -483,7 +477,7 @@ describe('given override source lifecycle and configuration', () => {
   });
 
   it('logs and continues the shutdown when the source fails to close', () => {
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     const throwing = {
       start: () => {},
       close: () => {
@@ -534,7 +528,7 @@ describe('given override source lifecycle and configuration', () => {
   });
 
   it('warns and ignores an override option of the wrong type', async () => {
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     client = makeFDv2Client(makeFDv2Platform(), {
       logger,
       dataSystem: { overrides: 'not an override source' as any },
@@ -546,7 +540,7 @@ describe('given override source lifecycle and configuration', () => {
   });
 
   it('logs and continues when the initial load fails', async () => {
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     const failing = {
       start: () => Promise.reject(new Error('load failed')),
       close: () => {},
@@ -559,7 +553,7 @@ describe('given override source lifecycle and configuration', () => {
   });
 
   it('logs and continues when start throws', async () => {
-    const logger = makeLogger();
+    const logger = makeMockLogger();
     const throwing = {
       start: (_sink: LDOverrideSink) => {
         throw new Error('start failed');

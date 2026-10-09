@@ -59,6 +59,7 @@ import TransactionalDataSourceUpdates from './data_sources/TransactionalDataSour
 import createDiagnosticsInitConfig from './diagnostics/createDiagnosticsInitConfig';
 import { allAsync } from './evaluation/collection';
 import { Flag } from './evaluation/data/Flag';
+import { markOverrideAffected } from './evaluation/data/overrideMarker';
 import { Segment } from './evaluation/data/Segment';
 import EvalResult from './evaluation/EvalResult';
 import Evaluator from './evaluation/Evaluator';
@@ -1164,9 +1165,13 @@ export default class LDClientImpl implements LDClient {
             this._onError(error);
             // The type mismatch replaces the reason. The evaluation read the same definitions, so
             // the new reason keeps the override-affected marking.
-            const reason: LDEvaluationReason = detail.reason.overrideAffected
-              ? { kind: 'ERROR', errorKind: ErrorKinds.WrongType, overrideAffected: true }
-              : { kind: 'ERROR', errorKind: ErrorKinds.WrongType };
+            const errorReason: LDEvaluationReason = {
+              kind: 'ERROR',
+              errorKind: ErrorKinds.WrongType,
+            };
+            const reason = detail.reason.overrideAffected
+              ? markOverrideAffected(errorReason)
+              : errorReason;
             resolve({
               detail: {
                 value: defaultValue,
@@ -1487,7 +1492,7 @@ export default class LDClientImpl implements LDClient {
               if (evalRes.overrideAffected) {
                 // The type mismatch replaces the reason. The evaluation read the same definitions,
                 // so the new result keeps the override-affected marking.
-                errorRes.detail.reason = { ...errorRes.detail.reason, overrideAffected: true };
+                errorRes.detail.reason = markOverrideAffected(errorRes.detail.reason);
                 errorRes.overrideAffected = true;
               }
               this._sendEvalEvent(errorRes, eventFactory, flag, evalContext, defaultValue);

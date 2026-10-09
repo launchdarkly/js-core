@@ -1,6 +1,11 @@
 import { fastDeepEqual, LDLogger } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStoreKindData, LDKeyedFeatureStoreItem, LDOverrideSink } from '../api/subsystems';
+import {
+  LDFeatureStoreDataStorage,
+  LDFeatureStoreKindData,
+  LDKeyedFeatureStoreItem,
+  LDOverrideSink,
+} from '../api/subsystems';
 import { computeDependencies } from '../data_sources/DataSourceUpdates';
 import DependencyTracker from '../data_sources/DependencyTracker';
 import NamespacedDataSet from '../data_sources/NamespacedDataSet';
@@ -16,7 +21,7 @@ const diffNamespaces = [
 /**
  * The data visible at the store read boundary: base data with override entries overlaid.
  */
-type MergedView = Record<string, LDFeatureStoreKindData>;
+type MergedView = LDFeatureStoreDataStorage;
 
 /**
  * Returns the keys whose override entry differs between two layer snapshots. An added or removed
