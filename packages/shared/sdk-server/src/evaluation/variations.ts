@@ -23,6 +23,11 @@ const KEY_ATTR_REF = new AttributeReference('key');
  * @internal
  */
 export function getVariation(flag: Flag, index: number, reason: LDEvaluationReason): EvalResult {
+  if (!Array.isArray(flag.variations)) {
+    // A flag from a custom store or a data file may have no variations, or a string in their
+    // place, which would otherwise be read as an array of characters.
+    return EvalResult.forError(ErrorKinds.MalformedFlag, 'Flag variations are not an array');
+  }
   if (TypeValidators.Number.is(index) && index >= 0 && index < flag.variations.length) {
     return EvalResult.forSuccess(flag.variations[index], reason, index);
   }

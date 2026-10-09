@@ -1,5 +1,8 @@
 import { LDClientImpl } from '../src';
 import TestData from '../src/integrations/test_data/TestData';
+import AsyncStoreFacade from '../src/store/AsyncStoreFacade';
+import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
+import VersionedDataKinds from '../src/store/VersionedDataKinds';
 import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger, { LogLevel } from './Logger';
 import makeCallbacks from './makeCallbacks';
@@ -365,6 +368,127 @@ describe('given an offline client', () => {
   it('can use a callback instead of a Promise', (done) => {
     client.allFlagsState(defaultUser, {}, (err, state) => {
       expect(state.valid).toEqual(false);
+      done();
+    });
+  });
+});
+
+describe('given an LDClient with a flag the evaluator cannot read', () => {
+  let client: LDClientImpl;
+  let td: TestData;
+  let onError: jest.Mock;
+
+  beforeEach(async () => {
+    td = new TestData();
+    onError = jest.fn();
+    client = new LDClientImpl(
+      'sdk-key-all-flags-malformed',
+      createBasicPlatform(),
+      {
+        updateProcessor: td.getFactory(),
+        sendEvents: false,
+      },
+      { ...makeCallbacks(true), onError },
+    );
+
+    await client.waitForInitialization({ timeout: 10 });
+    // LaunchDarkly never sends a flag without variations, but a custom store or a data file
+    // can. A healthy flag sits next to it to show the rest of the state is still built.
+    await td.usePreconfiguredFlag({
+      key: 'malformed',
+      version: 1,
+      on: true,
+      fallthrough: { variation: 0 },
+    });
+    await td.usePreconfiguredFlag({
+      key: 'healthy',
+      version: 1,
+      on: false,
+      offVariation: 0,
+      variations: ['a'],
+    });
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('resolves allFlagsState, reports the flag through the error callback, and keeps the rest', async () => {
+    const state = await client.allFlagsState(defaultUser, { withReasons: true });
+
+    expect(state.valid).toBe(true);
+    expect(state.getFlagValue('healthy')).toBe('a');
+    expect(state.getFlagValue('malformed')).toBeNull();
+    expect(state.getFlagReason('malformed')).toEqual({
+      kind: 'ERROR',
+      errorKind: 'MALFORMED_FLAG',
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0].message).toMatch(
+      /^Error for feature flag "malformed" while evaluating all flags: /,
+    );
+  });
+});
+
+describe('given an LDClient whose store holds an item that fails after evaluation', () => {
+  let client: LDClientImpl;
+  let onError: jest.Mock;
+
+  beforeEach(async () => {
+    const store = new InMemoryFeatureStore();
+    const td = new TestData();
+    onError = jest.fn();
+    client = new LDClientImpl(
+      'sdk-key-all-flags-unreadable',
+      createBasicPlatform(),
+      {
+        updateProcessor: td.getFactory(),
+        sendEvents: false,
+        featureStore: store,
+      },
+      { ...makeCallbacks(true), onError },
+    );
+    await client.waitForInitialization({ timeout: 10 });
+
+    // The evaluator turns a definition it cannot read into an error result, which allFlagsState
+    // handles like any other error. This item evaluates cleanly and then throws when its event
+    // settings are read while the state is assembled, which stands in for any unexpected
+    // failure outside of evaluation. Before the error path existed, the promise never settled.
+    const unreadable = new Proxy(
+      { key: 'unreadable', version: 1, on: false, offVariation: 0, variations: ['a'] },
+      {
+        get(target, property) {
+          if (property === 'trackEvents') {
+            throw new Error('unreadable item');
+          }
+          return target[property as keyof typeof target];
+        },
+      },
+    );
+    // The store keeps the object handed to init, while upsert copies it and would drop the trap.
+    await new AsyncStoreFacade(store).init({
+      [VersionedDataKinds.Features.namespace]: { unreadable },
+      [VersionedDataKinds.Segments.namespace]: {},
+    });
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('reports the failure through the error callback and resolves with an invalid state', async () => {
+    const state = await client.allFlagsState(defaultUser);
+
+    expect(state.valid).toBe(false);
+    expect(state.allValues()).toEqual({});
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0].message).toBe('unreadable item');
+  });
+
+  it('delivers the invalid state to a callback', (done) => {
+    client.allFlagsState(defaultUser, {}, (err, state) => {
+      expect(err).toBeNull();
+      expect(state.valid).toBe(false);
       done();
     });
   });

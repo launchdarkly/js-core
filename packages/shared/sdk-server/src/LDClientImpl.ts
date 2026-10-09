@@ -1152,6 +1152,7 @@ export default class LDClientImpl implements LDClient {
           const clientOnly = !!options?.clientSideOnly;
           const detailsOnlyIfTracked = !!options?.detailsOnlyForTrackedFlags;
 
+          let delivered = false;
           allAsync(
             Object.values(allFlags),
             (storeItem, iterCb) => {
@@ -1183,7 +1184,23 @@ export default class LDClientImpl implements LDClient {
               });
             },
             () => {
+              delivered = true;
               const res = builder.build();
+              callback?.(null, res);
+              resolve(res);
+            },
+            (err) => {
+              if (delivered) {
+                // The state has already been handed to the caller, so this exception came from
+                // the caller's callback. Let it propagate as it did before.
+                throw err;
+              }
+              delivered = true;
+              // The evaluator reports a malformed flag as an error result, which is handled
+              // above, so this is an unexpected failure while assembling the state. Report it
+              // and return an invalid state rather than leaving the promise pending.
+              this._onError(err instanceof Error ? err : new Error(String(err)));
+              const res = new FlagsStateBuilder(false, false).build();
               callback?.(null, res);
               resolve(res);
             },
