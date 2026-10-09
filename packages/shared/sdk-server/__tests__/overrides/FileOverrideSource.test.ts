@@ -1,5 +1,7 @@
 import { LDKeyedFeatureStoreItem, LDOverrideSink } from '../../src/api/subsystems';
 import { FileOverrideSource, FileOverrideSourceConfig } from '../../src/overrides';
+import OverrideLayer from '../../src/overrides/OverrideLayer';
+import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import MockFilesystem from '../data_sources/filedata/MockFilesystem';
 import TestLogger, { LogLevel } from '../Logger';
 
@@ -269,6 +271,52 @@ describe('given a file override source over a mock filesystem', () => {
     await jest.advanceTimersByTimeAsync(1000);
     expect(sink.snapshots).toHaveLength(2);
     expect(sink.last.flags[0].variations).toEqual([false]);
+  });
+
+  it('reports a definition of the wrong shape as a failed load and keeps the last good overrides', async () => {
+    // The override layer rejects a definition that evaluation cannot read. To the source that is
+    // a failed load like any other: logged once, the last good overrides stay, and a fix recovers.
+    const layer = new OverrideLayer();
+    const layerSink: LDOverrideSink = {
+      setOverrides: (flags, segments) => {
+        layer.setAll(flags, segments);
+      },
+    };
+    filesystem.set(first, '{"flagValues": {"flag1": true}}');
+    source = new FileOverrideSource(
+      {
+        paths: [first],
+        duplicateKeysHandling: 'fail',
+        changeDetection: 'watching',
+        pollIntervalMs: 1000,
+      },
+      filesystem,
+      logger,
+    );
+    await source.start(layerSink);
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')?.variations).toEqual([true]);
+
+    filesystem.set(
+      first,
+      '{"flags": {"flag1": {"key": "flag1", "version": 2, "on": true, "fallthrough": {"variation": 0}}}}',
+    );
+    filesystem.emit(directory);
+    await jest.advanceTimersByTimeAsync(300);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: /Unable to load flags: flag "flag1": "variations" must be an array/,
+      },
+    ]);
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')?.variations).toEqual([true]);
+
+    // The retry repeats the same failure at debug level only.
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(logger.getCount(LogLevel.Error)).toEqual(1);
+
+    filesystem.set(first, '{"flagValues": {"flag1": false}}');
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')?.variations).toEqual([false]);
   });
 
   it('stops detecting changes when closed', async () => {
