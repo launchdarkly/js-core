@@ -364,8 +364,13 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
 
   let failed = false;
   try {
+    const bootstrap = options.configuration.clientSide?.bootstrap;
     await Promise.race([
-      client.identify(initialContext, { timeout: timeout / 1000, waitForNetworkResults: true }),
+      client.identify(initialContext, {
+        timeout: timeout / 1000,
+        waitForNetworkResults: true,
+        ...(bootstrap !== undefined && { bootstrap }),
+      }),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
       }),

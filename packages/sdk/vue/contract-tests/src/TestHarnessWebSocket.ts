@@ -50,6 +50,7 @@ export default class TestHarnessWebSocket {
             'secure-mode-hash',
             'flag-change-listeners',
             'fdv1-fallback',
+            'bootstrap',
           ];
 
           break;

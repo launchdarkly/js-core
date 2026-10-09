@@ -43,6 +43,7 @@ app.get('/', (req: Request, res: Response) => {
       'wrapper',
       'fdv1-fallback',
       'client-event-source-http-errors',
+      'bootstrap',
     ],
   });
 });

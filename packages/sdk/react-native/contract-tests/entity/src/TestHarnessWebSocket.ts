@@ -60,6 +60,7 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'client-event-source-http-errors',
+            'bootstrap',
           ];
 
           break;
