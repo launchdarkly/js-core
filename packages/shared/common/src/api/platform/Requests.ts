@@ -177,6 +177,17 @@ export interface Options {
   streaming?: boolean;
 }
 
+/**
+ * Converts the request options into the init shape a platform's native `fetch` accepts. A
+ * platform can declare its `AbortSignal` as a lexical class, which {@link AbortSignalLike}
+ * cannot resolve to, so the `signal` member widens here. The runtime value is always a real
+ * signal for the running platform, so the widening only restores the type the runtime
+ * already has.
+ */
+export function toRequestInit(options: Options): Omit<Options, 'signal'> & { signal?: any } {
+  return options;
+}
+
 export interface EventSourceCapabilities {
   /**
    * If true the event source supports read timeouts. A read timeout for an

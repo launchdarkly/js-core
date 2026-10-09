@@ -1,4 +1,4 @@
-import { NullEventSource } from '@launchdarkly/js-server-sdk-common';
+import { NullEventSource, toRequestInit } from '@launchdarkly/js-server-sdk-common';
 import type {
   EventSource,
   EventSourceCapabilities,
@@ -8,16 +8,6 @@ import type {
 } from '@launchdarkly/js-server-sdk-common';
 
 import { OxygenCacheOptions } from '../utils/validateOptions';
-
-/**
- * Converts the platform options into a native fetch RequestInit. The platform signal type
- * falls back to a structural subset when a tsconfig declares no global AbortSignal
- * constructor, and this package's test configuration is such a case. The runtime object is
- * always a real signal, so the assertion only restores the type the runtime already has.
- */
-function toRequestInit(options: Options): RequestInit {
-  return { ...options, signal: options.signal as AbortSignal | undefined };
-}
 
 export default class OxygenRequests implements platform.Requests {
   private _cache: Cache | null = null;
