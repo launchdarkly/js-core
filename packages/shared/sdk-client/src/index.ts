@@ -46,6 +46,7 @@ export type {
   LDContext,
   LDContextStrict,
   LDStorage,
+  LDEventSourceFactory,
 } from './api';
 
 export { default as createSafeStorage } from './storage/createSafeStorage';

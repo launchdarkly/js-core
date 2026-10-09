@@ -468,3 +468,134 @@ describe('sdk-client object', () => {
     expect(mockEventSource.closed).toBe(true);
   });
 });
+
+describe('usePost validation', () => {
+  it('warns and continues when dataSystem is configured with usePost but the EventSource lacks customMethod', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    // Construction succeeds. usePost still applies to polling, and only streaming
+    // degrades to GET.
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, dataSystem: {}, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+    // The warning names the GET fallback for streaming.
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/usePost.*GET/s));
+    await client.close();
+  });
+
+  it('does not warn when dataSystem is configured with usePost and the EventSource supports customMethod', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: true,
+    }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, dataSystem: {}, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('usePost'));
+    await client.close();
+  });
+
+  it('does not warn when usePost is set without dataSystem, even if the EventSource lacks customMethod (usePost only applies to FDv2)', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { usePost: true, sendEvents: false, logger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(logger.warn).not.toHaveBeenCalledWith(expect.stringContaining('usePost'));
+    await client.close();
+  });
+});
+
+describe('useReport under dataSystem', () => {
+  it('ignores useReport and logs a warning when dataSystem is also configured', async () => {
+    const platform = createBasicPlatform();
+    platform.requests.getEventSourceCapabilities.mockImplementation(() => ({
+      readTimeout: true,
+      headers: true,
+      customMethod: false,
+    }));
+    const warnLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { useReport: true, dataSystem: {}, sendEvents: false, logger: warnLogger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(warnLogger.warn).toHaveBeenCalledWith(expect.stringContaining('useReport'));
+    await client.close();
+  });
+
+  it('does not warn when useReport is set without dataSystem', async () => {
+    const platform = createBasicPlatform();
+    const warnLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+
+    const client = new LDClientImpl(
+      testSdkKey,
+      AutoEnvAttributes.Enabled,
+      platform,
+      { useReport: true, sendEvents: false, logger: warnLogger },
+      makeTestDataManagerFactory(testSdkKey, platform),
+    );
+
+    expect(warnLogger.warn).not.toHaveBeenCalledWith(expect.stringContaining('useReport'));
+    await client.close();
+  });
+});

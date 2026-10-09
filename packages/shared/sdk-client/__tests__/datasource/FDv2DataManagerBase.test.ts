@@ -690,6 +690,30 @@ it('adds withReasons query param when config.withReasons is true', async () => {
   manager.close();
 });
 
+it('passes usePost to the requestor and the source factory context', async () => {
+  const sourceFactoryProvider = makeSourceFactoryProvider();
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      config: makeConfig({ usePost: true }),
+      sourceFactoryProvider,
+    }),
+  );
+
+  await identifyManager(manager);
+
+  expect(mockMakeFDv2Requestor).toHaveBeenCalledTimes(1);
+  expect(mockMakeFDv2Requestor.mock.calls[0][7]).toBe(true);
+
+  const factoryContexts = [
+    ...(sourceFactoryProvider.createInitializerFactory as jest.Mock).mock.calls,
+    ...(sourceFactoryProvider.createSynchronizerSlot as jest.Mock).mock.calls,
+  ].map((call) => call[1]);
+  expect(factoryContexts.length).toBeGreaterThan(0);
+  factoryContexts.forEach((ctx) => expect(ctx.usePost).toBe(true));
+
+  manager.close();
+});
+
 it('closes data source and debounce manager on close', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig());
   await identifyManager(manager);
@@ -1015,6 +1039,48 @@ it('appends a blocked FDv1 fallback synchronizer when fdv1Endpoints are configur
   const lastSlot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
   expect(lastSlot.isFDv1Fallback).toBe(true);
   expect(lastSlot.state).toBe('blocked');
+
+  manager.close();
+});
+
+it('uses REPORT for the FDv1 fallback requestor when usePost is set', async () => {
+  const sourceFactoryProvider = makeSourceFactoryProvider();
+  const fdv1Endpoints = {
+    polling: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+    streaming: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+  };
+
+  (makeRequestor as jest.Mock).mockReturnValue({});
+  (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      config: makeConfig({ usePost: true }),
+      sourceFactoryProvider,
+      fdv1Endpoints,
+      foregroundMode: 'streaming',
+    }),
+  );
+  await identifyManager(manager);
+
+  const dsConfig = capturedDataSourceConfigs[0];
+  const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+  // Invoke the factory to trigger requestor creation.
+  fdv1Slot.factory.create(() => undefined);
+
+  expect(makeRequestor).toHaveBeenCalledTimes(1);
+  // The useReport argument of makeRequestor controls the REPORT method.
+  expect((makeRequestor as jest.Mock).mock.calls[0][8]).toBe(true);
 
   manager.close();
 });

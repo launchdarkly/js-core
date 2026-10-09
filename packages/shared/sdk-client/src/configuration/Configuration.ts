@@ -56,6 +56,7 @@ export interface Configuration {
   readonly sendEvents: boolean;
   readonly sendLDHeaders: boolean;
   readonly useReport: boolean;
+  readonly usePost: boolean;
   readonly withReasons: boolean;
   readonly privateAttributes: string[];
   readonly tags: ApplicationTags;
@@ -99,7 +100,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly logger: LDLogger = createSafeLogger();
 
   // Naming conventions is not followed for these lines because the config validation
-  // accesses members based on the keys of the options. (sdk-763)
+  // accesses members based on the keys of the options.
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly baseUri = DEFAULT_POLLING;
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -122,6 +123,7 @@ export default class ConfigurationImpl implements Configuration {
   public readonly sendLDHeaders: boolean = true;
 
   public readonly useReport: boolean = false;
+  public readonly usePost: boolean = false;
   public readonly withReasons: boolean = false;
 
   public readonly privateAttributes: string[] = [];
@@ -198,6 +200,15 @@ export default class ConfigurationImpl implements Configuration {
       pristineOptions.payloadFilterKey,
     );
     this.useReport = pristineOptions.useReport ?? false;
+    // useReport is an FDv1 option with no effect in FDv2, where usePost is the
+    // equivalent. Ignore it under dataSystem and warn.
+    if (this.dataSystem && this.useReport) {
+      this.logger?.warn(
+        'The "useReport" configuration option has no effect when the "dataSystem" option is ' +
+          'set. Use "usePost" instead.',
+      );
+      this.useReport = false;
+    }
 
     this.tags = new ApplicationTags({ application: this.applicationInfo, logger: this.logger });
     this.userAgentHeaderName = internalOptions.userAgentHeaderName ?? 'user-agent';
