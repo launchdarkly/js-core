@@ -126,15 +126,19 @@ export interface Response {
 }
 
 /**
- * The subset of an AbortSignal that a platform implementation consumes. The standard
- * AbortSignal satisfies it, and the declaration keeps this package's types free of
- * platform globals.
+ * The platform's own `AbortSignal` type when the platform declares one on the global scope.
+ * An implementation that passes {@link Options} to a native `fetch` therefore type-checks
+ * against its platform's `RequestInit`. The fallback is the minimal structural subset an
+ * implementation consumes, which keeps these declarations valid on a platform without the
+ * global.
  */
-export interface AbortSignalLike {
-  readonly aborted: boolean;
-  addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void;
-  removeEventListener(type: 'abort', listener: () => void): void;
-}
+export type AbortSignalLike = typeof globalThis extends { AbortSignal: { prototype: infer T } }
+  ? T
+  : {
+      readonly aborted: boolean;
+      addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void;
+      removeEventListener(type: 'abort', listener: () => void): void;
+    };
 
 export interface Options {
   headers?: Record<string, string>;
