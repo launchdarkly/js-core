@@ -12,6 +12,14 @@ export default class EvalResult {
   public events?: internal.InputEvalEvent[];
   public prerequisites?: string[];
 
+  /**
+   * True when an override affected this evaluation, directly or transitively. The evaluator sets
+   * it from its own record of the definitions it read, so that event generation can key on this
+   * field rather than read the reason. The reason reports the same state through
+   * `overrideAffected`.
+   */
+  public overrideAffected: boolean = false;
+
   protected constructor(
     public readonly isError: boolean,
     public readonly detail: LDEvaluationDetail,

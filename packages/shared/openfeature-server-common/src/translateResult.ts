@@ -51,6 +51,11 @@ export type LDFlagMetadata = FlagMetadata & {
    */
   inExperiment?: boolean;
   /**
+   * Present, and `true`, when the evaluation read a flag or segment definition that an override
+   * source supplied.
+   */
+  overrideAffected?: boolean;
+  /**
    * The index of the rule that matched.
    */
   ruleIndex?: number;
@@ -78,6 +83,9 @@ function translateFlagMetadata(result: LDEvaluationDetail): LDFlagMetadata {
   }
   if (result.reason.inExperiment) {
     metadata.inExperiment = true;
+  }
+  if (result.reason.overrideAffected) {
+    metadata.overrideAffected = true;
   }
   if (result.reason.ruleIndex !== undefined) {
     metadata.ruleIndex = result.reason.ruleIndex;

@@ -5,7 +5,10 @@ import { Segment } from '../../src/evaluation/data/Segment';
 import {
   deserializeAll,
   deserializeDelete,
+  deserializeFlag,
   deserializePatch,
+  deserializePoll,
+  deserializeSegment,
   nullReplacer,
   replacer,
   serializeFlag,
@@ -648,4 +651,85 @@ it('serializes null values without issue', () => {
   const serialized = serializeFlag(parsed!.data.flags.flagName);
   // After serialization nulls should still be there, and any memo generated items should be gone.
   expect(JSON.parse(serialized)).toEqual(flagWithNullInJsonVariation);
+});
+
+it('deserializes a payload with a null segment entry as it did before the override marker', () => {
+  // processSegment tolerated a null entry before the marker strip was added, so a polling
+  // payload or a patch that carries one still deserializes instead of being rejected.
+  const parsed = deserializePoll(
+    JSON.stringify({
+      flags: { f: { key: 'f', version: 1, on: false, variations: [true] } },
+      segments: { s: null },
+    }),
+  );
+  expect(parsed?.flags.f.key).toEqual('f');
+  expect(parsed?.segments.s).toBeNull();
+  expect(() => deserializePatch(JSON.stringify({ path: '/segments/s', data: null }))).not.toThrow();
+});
+
+it('stores a flag without the override marker and keeps a variation property of the same name', () => {
+  const flagJson = {
+    key: 'flag',
+    version: 1,
+    on: false,
+    fallthrough: { variation: 0 },
+    variations: [{ _sdk_override: 'variation data', keep: 1 }],
+  };
+  const flag = deserializeFlag(JSON.stringify(flagJson))!;
+  // eslint-disable-next-line no-underscore-dangle
+  flag._sdk_override = true;
+
+  // Serialize the marked flag the way a persistent store write does.
+  const serialized = serializeFlag(flag);
+
+  // The marker at the root is not stored. A variation value is customer data, so a property of
+  // the same name inside it is stored and read back unchanged.
+  expect(JSON.parse(serialized)).toEqual(flagJson);
+  expect(deserializeFlag(serialized)?.variations).toEqual(flagJson.variations);
+  // eslint-disable-next-line no-underscore-dangle
+  expect(flag._sdk_override).toBe(true);
+});
+
+it('stores a segment without the override marker and keeps a clause value property of the same name', () => {
+  const segmentJson = {
+    key: 'segment',
+    version: 1,
+    rules: [
+      {
+        id: 'rule-id',
+        clauses: [
+          { attribute: 'data', op: 'in', values: [{ _sdk_override: 'clause data', keep: 1 }] },
+        ],
+      },
+    ],
+  };
+  const segment = deserializeSegment(JSON.stringify(segmentJson))!;
+  // eslint-disable-next-line no-underscore-dangle
+  segment._sdk_override = true;
+
+  // Serialize the marked segment the way a persistent store write does.
+  const serialized = serializeSegment(segment);
+
+  // The marker at the root is not stored. A clause value is customer data, so a property of the
+  // same name inside it is stored and read back unchanged.
+  expect(JSON.parse(serialized)).toEqual(segmentJson);
+  expect(deserializeSegment(serialized)?.rules?.[0].clauses[0].values).toEqual(
+    segmentJson.rules[0].clauses[0].values,
+  );
+  // eslint-disable-next-line no-underscore-dangle
+  expect(segment._sdk_override).toBe(true);
+});
+
+it('deserialization removes the override marker from a flag and a segment', () => {
+  // Only the override store marks a definition, after it is prepared. A definition that arrives
+  // with the reserved key is not an override, so the key does not survive deserialization.
+  // eslint-disable-next-line no-underscore-dangle
+  const flag = { ...flagWithNoReferences, _sdk_override: true };
+  // eslint-disable-next-line no-underscore-dangle
+  const segment = { ...segmentWithBucketBy, _sdk_override: true };
+
+  const parsed = deserializeAll(makeSerializedAllData(flag, segment));
+
+  expect(parsed?.data.flags.flagName).not.toHaveProperty('_sdk_override');
+  expect(parsed?.data.segments.segmentName).not.toHaveProperty('_sdk_override');
 });
