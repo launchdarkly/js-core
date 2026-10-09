@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.6...openfeature-js-server-common-v2.1.0) (2026-10-09)
+
+
+### Features
+
+* Support zero and indefinite initialization waiting ([#2024](https://github.com/launchdarkly/js-core/issues/2024)) ([8bfd257](https://github.com/launchdarkly/js-core/commit/8bfd257bd561109faa5be0c1a6b6a7620bb2c66f))
+
 ## [2.0.6](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.0.5...openfeature-js-server-common-v2.0.6) (2026-10-06)
 
 
