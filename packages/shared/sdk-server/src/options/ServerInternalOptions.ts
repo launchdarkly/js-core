@@ -25,4 +25,11 @@ export interface ServerInternalOptions extends internal.LDInternalOptions {
    * graph in memory, which for a per-request client is a leak.
    */
   disableBackgroundEventFlush?: boolean;
+
+  /**
+   * A YAML parser that the platform supplies for file based components, used when the
+   * application does not configure one. The parser must produce the same structure as
+   * `JSON.parse`. The Node.js SDK supplies one. Platforms without one cannot read YAML files.
+   */
+  yamlParser?: (data: string) => any;
 }
