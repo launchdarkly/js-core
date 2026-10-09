@@ -65,7 +65,7 @@
     "@launchdarkly/js-client-sdk-common": "1.32.5"
   },
   "optionalDependencies": {
-    "@launchdarkly/eventsource": "0.0.1"
+    "@launchdarkly/eventsource": "0.1.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
