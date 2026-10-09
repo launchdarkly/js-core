@@ -52,6 +52,17 @@ export default class HeaderWrapper implements platform.Headers {
     }
   }
 
+  /**
+   * Executes the callback once for each header, with the value first. The order matches the
+   * fetch `Headers.forEach` signature. Multi-value headers are joined with a comma, and
+   * headers without a value are skipped, like `entries`.
+   */
+  forEach(callback: (value: string, key: string) => void): void {
+    for (const [key, value] of this.entries()) {
+      callback(value, key);
+    }
+  }
+
   has(name: string): boolean {
     return Object.prototype.hasOwnProperty.call(this._headers, name);
   }

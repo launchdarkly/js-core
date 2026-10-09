@@ -3,25 +3,25 @@ import * as https from 'https';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { createEventSource, FetchLike } from '@launchdarkly/eventsource';
+import { createEventSource } from '@launchdarkly/eventsource';
 import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
 
-import createElectronFetch from './ElectronFetch';
 import ElectronResponse from './ElectronResponse';
+import ElectronStreamingResponse from './ElectronStreamingResponse';
 
 const gzip = promisify(zlib.gzip);
 
 export default class ElectronRequests implements platform.Requests {
-  private _eventSourceFetch: FetchLike;
-
   private _enableBodyCompression: boolean = false;
 
   constructor(enableEventCompression?: boolean) {
-    this._eventSourceFetch = createElectronFetch();
     this._enableBodyCompression = !!enableEventCompression;
   }
 
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
+    if (options.streaming) {
+      return this._streamingFetch(url, options);
+    }
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
@@ -29,7 +29,7 @@ export default class ElectronRequests implements platform.Requests {
     let bodyData: string | Buffer | undefined = options.body;
 
     // For get requests we are going to automatically support compressed responses.
-    // Note this does not affect SSE as the event source is not using this fetch implementation.
+    // Note this does not affect SSE as streaming requests take the branch above.
     if (options.method?.toLowerCase() === 'get') {
       headers['accept-encoding'] = 'gzip';
     }
@@ -69,6 +69,46 @@ export default class ElectronRequests implements platform.Requests {
     });
   }
 
+  /**
+   * The transport for a streaming request. This SDK exposes no agent, proxy, or TLS options, so
+   * the running machine's own network configuration applies and TLS verification follows the
+   * platform default. It does not request compressed content, and it never follows a redirect.
+   * A redirect status resolves like any other non-200 response, and the caller decides whether
+   * to retry the original URL. It applies no read or socket timeout. The caller owns the read
+   * timeout and cancels through the abort signal.
+   */
+  private _streamingFetch(url: string, options: platform.Options): Promise<platform.Response> {
+    const isSecure = url.startsWith('https://');
+    const impl = isSecure ? https : http;
+    const requestOptions: https.RequestOptions = {
+      method: options.method,
+      headers: options.headers,
+    };
+    return new Promise<platform.Response>((resolve, reject) => {
+      const req = impl.request(url, requestOptions, (res) =>
+        resolve(new ElectronStreamingResponse(res)),
+      );
+      // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
+      req.setNoDelay(true);
+      const { signal } = options;
+      if (signal) {
+        const abort = () => req.destroy(new Error('The stream request was aborted'));
+        if (signal.aborted) {
+          abort();
+        } else {
+          signal.addEventListener('abort', abort, { once: true });
+        }
+      }
+      // This listener stays attached after resolve. A later socket error then becomes a harmless
+      // no-op reject instead of an unhandled 'error' event that would crash the process
+      req.on('error', reject);
+      if (options.body !== undefined) {
+        req.write(options.body);
+      }
+      req.end();
+    });
+  }
+
   createEventSource(
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
@@ -77,7 +117,7 @@ export default class ElectronRequests implements platform.Requests {
       ...eventSourceInitDict,
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
-      fetch: this._eventSourceFetch,
+      fetch: (fetchUrl, init) => this.fetch(fetchUrl, { ...init, streaming: true }),
     });
   }
 

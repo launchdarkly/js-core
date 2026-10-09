@@ -5,7 +5,6 @@ import {
   TestHttpServers,
 } from 'launchdarkly-js-test-helpers';
 
-import createElectronFetch from '../../src/platform/ElectronFetch';
 import ElectronRequests from '../../src/platform/ElectronRequests';
 
 describe('given a running HTTP server', () => {
@@ -19,26 +18,27 @@ describe('given a running HTTP server', () => {
     await server.closeAndWait();
   });
 
-  it('forwards the request and exposes the status, headers, and body chunks', async () => {
+  it('forwards a streaming request and exposes the status, headers, and body chunks', async () => {
     const chunks = new AsyncQueue<string>();
     chunks.add('first');
     server.byDefault(
       TestHttpHandlers.chunkedStream(200, { 'content-type': 'text/event-stream' }, chunks),
     );
 
-    const electronFetch = createElectronFetch();
-    const res = await electronFetch(`${server.url}/stream`, {
+    const requests = new ElectronRequests();
+    const res = await requests.fetch(`${server.url}/stream`, {
       method: 'REPORT',
       headers: { authorization: 'sdk-key' },
       body: '{"kind":"user"}',
+      streaming: true,
     });
 
     expect(res.status).toEqual(200);
-    const headers: Record<string, string> = {};
-    res.headers.forEach((value, key) => {
-      headers[key] = value;
+    const collected: Record<string, string> = {};
+    res.headers.forEach?.((value, key) => {
+      collected[key] = value;
     });
-    expect(headers['content-type']).toEqual('text/event-stream');
+    expect(collected['content-type']).toEqual('text/event-stream');
 
     const reader = res.body?.getReader();
     const first = await reader?.read();
@@ -51,14 +51,55 @@ describe('given a running HTTP server', () => {
     expect(received.body).toEqual('{"kind":"user"}');
   });
 
-  it('does not follow redirects', async () => {
+  it('does not request compressed content for a streaming request', async () => {
+    const chunks = new AsyncQueue<string>();
+    server.byDefault(TestHttpHandlers.chunkedStream(200, {}, chunks));
+
+    const requests = new ElectronRequests();
+    await requests.fetch(server.url, { method: 'GET', streaming: true });
+
+    const received = await server.nextRequest();
+    expect(received.headers['accept-encoding']).toBeUndefined();
+  });
+
+  it('does not follow redirects for a streaming request', async () => {
     server.byDefault(TestHttpHandlers.respond(301, { location: `${server.url}/other` }));
 
-    const electronFetch = createElectronFetch();
-    const res = await electronFetch(server.url, { method: 'GET', headers: {} });
+    const requests = new ElectronRequests();
+    const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
 
     expect(res.status).toEqual(301);
     expect(server.requestCount()).toEqual(1);
+  });
+
+  it('stops the stream when the signal aborts', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('first');
+    server.byDefault(TestHttpHandlers.chunkedStream(200, {}, chunks));
+
+    const controller = new AbortController();
+    const requests = new ElectronRequests();
+    const res = await requests.fetch(server.url, {
+      method: 'GET',
+      streaming: true,
+      signal: controller.signal,
+    });
+    const reader = res.body?.getReader();
+    await reader?.read();
+    const pending = reader?.read();
+    controller.abort();
+    await expect(pending).rejects.toThrow();
+  });
+
+  it('rejects a streaming request when the signal is already aborted', async () => {
+    server.byDefault(TestHttpHandlers.respond(200));
+    const controller = new AbortController();
+    controller.abort();
+
+    const requests = new ElectronRequests();
+    await expect(
+      requests.fetch(server.url, { method: 'GET', streaming: true, signal: controller.signal }),
+    ).rejects.toThrow();
   });
 
   it('streams SSE events through createEventSource', async () => {
@@ -99,10 +140,10 @@ describe('given a running HTTPS server with a self-signed certificate', () => {
     await server.closeAndWait();
   });
 
-  it('rejects the connection when the certificate is not trusted', async () => {
-    // The Electron SDK exposes no TLS options. Verification follows the platform default, so a
+  it('rejects a streaming request when the certificate is not trusted', async () => {
+    // This SDK exposes no TLS options. Verification follows the platform default, so a
     // self-signed certificate the machine does not trust must fail the request.
-    const electronFetch = createElectronFetch();
-    await expect(electronFetch(server.url, { method: 'GET', headers: {} })).rejects.toThrow();
+    const requests = new ElectronRequests();
+    await expect(requests.fetch(server.url, { method: 'GET', streaming: true })).rejects.toThrow();
   });
 });
