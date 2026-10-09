@@ -14,8 +14,9 @@ export default class EvalResult {
 
   /**
    * True when an override affected this evaluation, directly or transitively. The evaluator sets
-   * it from its own record of the definitions it read. Event generation keys on this field and
-   * does not read the reason. The reason reports the same state through `overrideAffected`.
+   * it from its own record of the definitions it read, so that event generation can key on this
+   * field rather than read the reason. The reason reports the same state through
+   * `overrideAffected`.
    */
   public overrideAffected: boolean = false;
 

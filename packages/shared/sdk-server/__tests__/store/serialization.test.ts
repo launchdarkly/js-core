@@ -7,6 +7,7 @@ import {
   deserializeDelete,
   deserializeFlag,
   deserializePatch,
+  deserializePoll,
   deserializeSegment,
   nullReplacer,
   replacer,
@@ -650,6 +651,20 @@ it('serializes null values without issue', () => {
   const serialized = serializeFlag(parsed!.data.flags.flagName);
   // After serialization nulls should still be there, and any memo generated items should be gone.
   expect(JSON.parse(serialized)).toEqual(flagWithNullInJsonVariation);
+});
+
+it('deserializes a payload with a null segment entry as it did before the override marker', () => {
+  // processSegment tolerated a null entry before the marker strip was added, so a polling
+  // payload or a patch that carries one still deserializes instead of being rejected.
+  const parsed = deserializePoll(
+    JSON.stringify({
+      flags: { f: { key: 'f', version: 1, on: false, variations: [true] } },
+      segments: { s: null },
+    }),
+  );
+  expect(parsed?.flags.f.key).toEqual('f');
+  expect(parsed?.segments.s).toBeNull();
+  expect(() => deserializePatch(JSON.stringify({ path: '/segments/s', data: null }))).not.toThrow();
 });
 
 it('stores a flag without the override marker and keeps a variation property of the same name', () => {
