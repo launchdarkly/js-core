@@ -9,6 +9,16 @@ import type {
 
 import { OxygenCacheOptions } from '../utils/validateOptions';
 
+/**
+ * Converts the platform options into a native fetch RequestInit. The platform signal type
+ * falls back to a structural subset when a tsconfig declares no global AbortSignal
+ * constructor, and this package's test configuration is such a case. The runtime object is
+ * always a real signal, so the assertion only restores the type the runtime already has.
+ */
+function toRequestInit(options: Options): RequestInit {
+  return { ...options, signal: options.signal as AbortSignal | undefined };
+}
+
 export default class OxygenRequests implements platform.Requests {
   private _cache: Cache | null = null;
   private _cacheOptions: OxygenCacheOptions;
@@ -62,10 +72,10 @@ export default class OxygenRequests implements platform.Requests {
       // - Cache API not available
       // - Cache is not enabled per initialization options
       // - Not a GET request (for now, we mostly interested in caching the feature poll request)
-      return fetch(url, options);
+      return fetch(url, toRequestInit(options));
     }
 
-    const request = new Request(url, finalOptions);
+    const request = new Request(url, toRequestInit(finalOptions));
 
     const cachedResponse = await cache.match(request);
 
@@ -81,7 +91,7 @@ export default class OxygenRequests implements platform.Requests {
     request: Request,
     cache: Cache,
   ): Promise<platform.Response> {
-    const response = await fetch(url, options);
+    const response = await fetch(url, toRequestInit(options));
 
     // Only cache successful GET requests
     if (cache && response.ok && (!options.method || options.method === 'GET')) {
