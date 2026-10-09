@@ -126,11 +126,12 @@ export interface Response {
 }
 
 /**
- * The platform's own `AbortSignal` type when the platform declares one on the global scope.
- * An implementation that passes {@link Options} to a native `fetch` therefore type-checks
- * against its platform's `RequestInit`. The fallback is the minimal structural subset an
- * implementation consumes, which keeps these declarations valid on a platform without the
- * global.
+ * The platform's own `AbortSignal` type when the platform declares one as a global
+ * variable. An implementation that passes {@link Options} to a native `fetch` then
+ * type-checks against its platform's `RequestInit`. A platform that declares
+ * `AbortSignal` as a lexical class resolves to the fallback instead. The fallback is
+ * the minimal structural subset an implementation consumes. It keeps these declarations
+ * valid on a platform without the global.
  */
 export type AbortSignalLike = typeof globalThis extends { AbortSignal: { prototype: infer T } }
   ? T
@@ -175,17 +176,6 @@ export interface Options {
    * {@link Options.timeout}.
    */
   streaming?: boolean;
-}
-
-/**
- * Converts the request options into the init shape a platform's native `fetch` accepts. A
- * platform can declare its `AbortSignal` as a lexical class, which {@link AbortSignalLike}
- * cannot resolve to, so the `signal` member widens here. The runtime value is always a real
- * signal for the running platform, so the widening only restores the type the runtime
- * already has.
- */
-export function toRequestInit(options: Options): Omit<Options, 'signal'> & { signal?: any } {
-  return options;
 }
 
 export interface EventSourceCapabilities {

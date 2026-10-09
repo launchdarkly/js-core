@@ -56,14 +56,19 @@ const unsupportedOptionsCheck: UnsupportedPlatformOptions extends never ? true :
 const platformFetchSatisfiesFetchLike: (f: PlatformRequests['fetch']) => FetchLike = (f) => f;
 
 /**
+ * True only when the two types are identical. The exception checks below use it so they fail
+ * when an exception is added and when a documented exception stops being one.
+ */
+type Equals<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+
+/**
  * Every request member this package produces must be a declared platform option, so a platform
  * implementation knows to handle it. `credentials` is the deliberate exception. A platform
  * transport over a raw socket API has no equivalent and ignores it.
  */
 type UnsupportedFetchOptionMembers = Exclude<keyof FetchLikeOptions, keyof PlatformOptions>;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const fetchOptionMembersCheck: UnsupportedFetchOptionMembers extends 'credentials' ? true : false =
-  true;
+const fetchOptionMembersCheck: Equals<UnsupportedFetchOptionMembers, 'credentials'> = true;
 
 /**
  * Every response member this package reads must be declarable on the platform response, so a
@@ -72,8 +77,7 @@ const fetchOptionMembersCheck: UnsupportedFetchOptionMembers extends 'credential
  */
 type UnsupportedFetchResponseMembers = Exclude<keyof FetchLikeResponse, keyof PlatformResponse>;
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const fetchResponseMembersCheck: UnsupportedFetchResponseMembers extends 'url' ? true : false =
-  true;
+const fetchResponseMembersCheck: Equals<UnsupportedFetchResponseMembers, 'url'> = true;
 
 /**
  * Every header member this package reads must be declarable on the platform headers.
