@@ -5,29 +5,12 @@ import * as path from 'path';
 import { integrations } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import waitFor, { sleep } from './waitFor';
 
 // These tests run on real files and real timers. The source waits for change notifications to
 // settle for 100 ms and retries a failed load after one second.
 
 const document = (value: string) => JSON.stringify({ flagValues: { flag: value } });
-
-const settle = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await settle(20);
-  }
-  throw new Error('timed out waiting for the condition');
-}
 
 describe('given a file data source with automatic updates over a real directory', () => {
   let base: string;
@@ -69,7 +52,7 @@ describe('given a file data source with automatic updates over a real directory'
     expect(await valueIs('a')()).toBe(true);
 
     fs.rmSync(directory, { recursive: true });
-    await settle(300);
+    await sleep(300);
     expect(await valueIs('a')()).toBe(true);
 
     // The directory comes back with the file. The retry or the new watch loads it.

@@ -1,40 +1,20 @@
 import {
   DataSourceErrorKind,
-  Filesystem,
   LDPollingError,
   Platform,
   subsystem,
-  WatchHandle,
 } from '@launchdarkly/js-sdk-common';
 
 import FileDataInitializerFDv2 from '../../src/data_sources/fileDataInitilizerFDv2';
 import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger, { LogLevel } from '../Logger';
+import MockFilesystem from './filedata/MockFilesystem';
 
 // The FDv2 file data initializer chooses the parser by file extension only. A .yml or .yaml file
 // uses the YAML parser, and every other file uses JSON.parse, whatever the content looks like.
 
 const jsonDocument = '{"flagValues": {"flag1": "value1"}}';
 const yamlDocument = 'flagValues:\n  flag1: value1\n';
-
-class MockFilesystem implements Filesystem {
-  public fileData: Record<string, string> = {};
-
-  async getFileTimestamp(): Promise<number> {
-    return 0;
-  }
-
-  async readFile(path: string): Promise<string> {
-    if (!(path in this.fileData)) {
-      throw new Error('FILE NOT FOUND');
-    }
-    return this.fileData[path];
-  }
-
-  watch(): WatchHandle {
-    return { close: () => {} };
-  }
-}
 
 function flagValueOf(dataCallback: jest.Mock, key: string): any {
   const { payload } = dataCallback.mock.calls[0][1];
@@ -65,7 +45,7 @@ describe('given a file data initializer over files with different extensions', (
   });
 
   const load = async (path: string, data: string, withYamlParser: boolean = true) => {
-    filesystem.fileData[path] = data;
+    filesystem.set(path, data);
     const initializer = new FileDataInitializerFDv2(
       { type: 'file', paths: [path], yamlParser: withYamlParser ? yamlParser : undefined },
       platform,

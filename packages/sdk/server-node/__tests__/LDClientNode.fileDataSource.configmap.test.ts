@@ -5,6 +5,7 @@ import * as path from 'path';
 import { integrations } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import waitFor from './waitFor';
 
 // Kubernetes updates a mounted ConfigMap or Secret with an atomic symbolic link swap: the data
 // lives in a timestamped directory, `..data` links to it, and each file in the mount is a link
@@ -13,24 +14,6 @@ import LDClientNode from '../src/LDClientNode';
 // Symbolic links need privileges on Windows, so the test runs elsewhere.
 
 const document = (value: string) => JSON.stringify({ flagValues: { flag: value } });
-
-const settle = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await settle(20);
-  }
-  throw new Error('timed out waiting for the condition');
-}
 
 const itOnPosix = process.platform === 'win32' ? it.skip : it;
 

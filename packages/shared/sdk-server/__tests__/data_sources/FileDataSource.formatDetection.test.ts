@@ -1,4 +1,4 @@
-import { ClientContext, Filesystem, WatchHandle } from '@launchdarkly/js-sdk-common';
+import { ClientContext } from '@launchdarkly/js-sdk-common';
 
 import { FileDataSourceFactory } from '../../src/integrations';
 import Configuration from '../../src/options/Configuration';
@@ -7,31 +7,13 @@ import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 import { createBasicPlatform } from '../createBasicPlatform';
 import TestLogger from '../Logger';
+import MockFilesystem from './filedata/MockFilesystem';
 
 // The file data source chooses the parser by file extension only. A .yml or .yaml file uses the
 // YAML parser, and every other file uses JSON.parse, whatever the content looks like.
 
 const jsonDocument = '{"flagValues": {"flag1": "value1"}}';
 const yamlDocument = 'flagValues:\n  flag1: value1\n';
-
-class MockFilesystem implements Filesystem {
-  public fileData: Record<string, string> = {};
-
-  async getFileTimestamp(): Promise<number> {
-    return 0;
-  }
-
-  async readFile(path: string): Promise<string> {
-    if (!(path in this.fileData)) {
-      throw new Error('FILE NOT FOUND');
-    }
-    return this.fileData[path];
-  }
-
-  watch(): WatchHandle {
-    return { close: () => {} };
-  }
-}
 
 describe('given a file data source over files with different extensions', () => {
   let filesystem: MockFilesystem;
@@ -54,7 +36,7 @@ describe('given a file data source over files with different extensions', () => 
   });
 
   const load = async (path: string, data: string, withYamlParser: boolean = true) => {
-    filesystem.fileData[path] = data;
+    filesystem.set(path, data);
     const factory = new FileDataSourceFactory({
       paths: [path],
       yamlParser: withYamlParser ? yamlParser : undefined,
