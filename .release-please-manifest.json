@@ -15,7 +15,7 @@
   "packages/shared/akamai-edgeworker-sdk": "2.0.42",
   "packages/shared/common": "2.29.0",
   "packages/shared/eventsource": "0.1.0",
-  "packages/shared/openfeature-server-common": "2.0.6",
+  "packages/shared/openfeature-server-common": "2.1.0",
   "packages/shared/sdk-client": "1.32.5",
   "packages/shared/sdk-server": "2.24.1",
   "packages/shared/sdk-server-edge": "2.6.40",
@@ -26,7 +26,7 @@
   "packages/tooling/client-testing-plugin": "1.0.24",
   "packages/sdk/shopify-oxygen": "0.1.32",
   "packages/sdk/react": "4.1.26",
-  "packages/sdk/openfeature-node-server": "2.0.12",
+  "packages/sdk/openfeature-node-server": "2.1.0",
   "packages/sdk/vue": "3.0.5",
-  "packages/sdk/openfeature-cloudflare-server": "1.0.7"
+  "packages/sdk/openfeature-cloudflare-server": "1.0.8"
 }
