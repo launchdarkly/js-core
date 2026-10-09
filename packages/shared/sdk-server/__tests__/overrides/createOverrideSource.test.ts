@@ -4,11 +4,8 @@ import Configuration from '../../src/options/Configuration';
 import { createOverrideSource, FileOverrideSource } from '../../src/overrides';
 import { createBasicPlatform } from '../createBasicPlatform';
 import MockFilesystem from '../data_sources/filedata/MockFilesystem';
+import makeMockLogger, { MockLogger } from '../mockLogger';
 import TestOverrideSource from './TestOverrideSource';
-
-function makeLogger(): LDLogger & { warn: jest.Mock } {
-  return { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
-}
 
 function makeContext(logger: LDLogger, withFilesystem: boolean = true): ClientContext {
   return new ClientContext('sdk-key', new Configuration({ logger }), {
@@ -20,11 +17,11 @@ function makeContext(logger: LDLogger, withFilesystem: boolean = true): ClientCo
 const defaultYamlParser = () => ({});
 
 describe('given a client context with filesystem support', () => {
-  let logger: ReturnType<typeof makeLogger>;
+  let logger: MockLogger;
   let context: ClientContext;
 
   beforeEach(() => {
-    logger = makeLogger();
+    logger = makeMockLogger();
     context = makeContext(logger);
   });
 
@@ -181,7 +178,7 @@ describe('given a client context with filesystem support', () => {
 });
 
 it('rejects the file source on a platform without filesystem support', () => {
-  const context = makeContext(makeLogger(), false);
+  const context = makeContext(makeMockLogger(), false);
   expect(() => createOverrideSource({ type: 'file', paths: ['/a.json'] }, context)).toThrow(
     'The file-based override source requires a platform with filesystem support',
   );

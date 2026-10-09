@@ -12,7 +12,7 @@ import {
   ReloadResult,
   YamlParser,
 } from '../data_sources/filedata';
-import { Flag } from '../evaluation/data/Flag';
+import { makeFlagWithValue } from '../data_sources/FileDataSource';
 import { parseOverrideDocument } from './overrideDocument';
 
 /**
@@ -79,23 +79,6 @@ export interface FileOverrideSourceConfig {
 }
 
 /**
- * Expands a flag value into a full flag definition that returns the given value for every
- * context. The flag is on, has the value as its only variation, and serves that variation as
- * its fallthrough, so it evaluates with the FALLTHROUGH reason.
- *
- * @internal
- */
-export function makeOverrideFlagWithValue(key: string, value: any): Flag {
-  return {
-    key,
-    version: 1,
-    on: true,
-    fallthrough: { variation: 0 },
-    variations: [value],
-  };
-}
-
-/**
  * How the file-based override source translates its documents into data. This is the one place
  * where its rules differ from the file data sources.
  *
@@ -116,7 +99,8 @@ export function fileOverrideSourcePolicy(
 ): FileDataPolicy {
   return {
     parseDocument: parseOverrideDocument(yamlParser),
-    makeFlagWithValue: (key, value) => makeOverrideFlagWithValue(key, value),
+    // An override snapshot has no version history, so every expanded flag is version 1.
+    makeFlagWithValue: (key, value) => makeFlagWithValue(key, value, 1),
     resolveDuplicateKey: (category, key) => {
       if (duplicateKeysHandling === 'ignore') {
         return 'keepFirst';

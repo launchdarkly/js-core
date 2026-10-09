@@ -1,13 +1,12 @@
+import { isNullish } from '@launchdarkly/js-sdk-common';
+
 import {
   DocumentParser,
   FileDataDocument,
   parseDocumentByExtension,
   YamlParser,
 } from '../data_sources/filedata';
-
-function isPlainObject(value: any): value is Record<string, any> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+import { isPlainObject } from './validateDefinition';
 
 /**
  * Checks that a member of the document is an object keyed by item key, and that every entry
@@ -15,7 +14,7 @@ function isPlainObject(value: any): value is Record<string, any> {
  */
 function validateItems(document: Record<string, any>, member: 'flags' | 'segments'): void {
   const items = document[member];
-  if (items === undefined || items === null) {
+  if (isNullish(items)) {
     return;
   }
   if (!isPlainObject(items)) {
@@ -32,7 +31,7 @@ function validateItems(document: Record<string, any>, member: 'flags' | 'segment
 }
 
 function validateDocument(parsed: any): FileDataDocument {
-  if (parsed === undefined || parsed === null) {
+  if (isNullish(parsed)) {
     // An empty file is an empty document.
     return {};
   }
@@ -42,7 +41,7 @@ function validateDocument(parsed: any): FileDataDocument {
   validateItems(parsed, 'flags');
   validateItems(parsed, 'segments');
   const { flagValues } = parsed;
-  if (flagValues !== undefined && flagValues !== null && !isPlainObject(flagValues)) {
+  if (!isNullish(flagValues) && !isPlainObject(flagValues)) {
     throw new Error('"flagValues" must be an object keyed by flag key');
   }
   const document: FileDataDocument = {};
