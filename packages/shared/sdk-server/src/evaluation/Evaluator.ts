@@ -70,6 +70,19 @@ interface EvalState {
   bigSegmentsStatus?: BigSegmentStoreStatusString;
 
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
+
+  /**
+   * True once the top-level result has been handed to the caller. Nothing is delivered twice.
+   */
+  delivered: boolean;
+
+  /**
+   * Receives an exception raised while reading the flag, or a prerequisite or segment it
+   * references, so that it can be delivered as an error result instead of escaping. The state
+   * is shared with prerequisite evaluations, so an exception in a prerequisite fails the
+   * top-level flag.
+   */
+  onError: (err: unknown) => void;
 }
 
 interface Match {
@@ -90,6 +103,44 @@ function makeMatch(match: boolean): Match {
 
 function makeError(result: EvalResult): MatchError {
   return { error: true, isMatch: false, result };
+}
+
+/**
+ * Run part of an evaluation that may execute outside of the try/catch in evaluateCb, such as
+ * the continuation of a store lookup, routing any exception to the state's error handler.
+ */
+function guarded(state: EvalState, fn: () => void): void {
+  try {
+    fn();
+  } catch (err) {
+    state.onError(err);
+  }
+}
+
+/**
+ * Deliver the top-level result to the caller exactly once, decorated with the state
+ * accumulated during the evaluation.
+ */
+function deliverResult(state: EvalState, res: EvalResult, cb: (res: EvalResult) => void): void {
+  if (state.delivered) {
+    return;
+  }
+  state.delivered = true;
+  if (state.bigSegmentsStatus) {
+    res.detail.reason = {
+      ...res.detail.reason,
+      bigSegmentsStatus: state.bigSegmentsStatus,
+    };
+  }
+  if (state.prerequisites) {
+    res.prerequisites = state.prerequisites;
+  }
+  res.events = state.events;
+  cb(res);
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }
 
 /**
@@ -124,28 +175,40 @@ export default class Evaluator {
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
   ) {
-    const state: EvalState = {};
-    this._evaluateInternal(
-      flag,
-      context,
-      state,
-      [],
-      (res) => {
-        if (state.bigSegmentsStatus) {
-          res.detail.reason = {
-            ...res.detail.reason,
-            bigSegmentsStatus: state.bigSegmentsStatus,
-          };
+    const state: EvalState = {
+      delivered: false,
+      onError: (err) => {
+        if (state.delivered) {
+          // The result has already been handed to the caller, so this exception came from the
+          // caller's callback or from work that ran after delivery, not from reading the flag.
+          // Let it propagate as it did before.
+          throw err;
         }
-        if (state.prerequisites) {
-          res.prerequisites = state.prerequisites;
-        }
-        res.events = state.events;
-        cb(res);
+        deliverResult(
+          state,
+          EvalResult.forError(
+            ErrorKinds.MalformedFlag,
+            `Flag "${flag.key}" has a malformed definition, or references a malformed` +
+              ` prerequisite or segment: ${errorMessage(err)}`,
+          ),
+          cb,
+        );
       },
-      true,
-      eventFactory,
-    );
+    };
+    // Reading a malformed definition throws, and most of an evaluation runs synchronously, so
+    // this guard turns those exceptions into an error result. Steps that resume after a store
+    // callback or a promise are guarded where they resume.
+    guarded(state, () => {
+      this._evaluateInternal(
+        flag,
+        context,
+        state,
+        [],
+        (res) => deliverResult(state, res, cb),
+        true,
+        eventFactory,
+      );
+    });
   }
 
   /**
@@ -250,50 +313,55 @@ export default class Evaluator {
           return;
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
-        this._queries.getFlag(prereq.key, (prereqFlag) => {
-          if (!prereqFlag) {
-            prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-            iterCb(false);
-            return;
-          }
+        this._queries.getFlag(prereq.key, (prereqFlag) =>
+          // The store may call back asynchronously, after the try/catch around the top-level
+          // evaluation has left the stack, so the continuation is guarded here.
+          guarded(state, () => {
+            if (!prereqFlag) {
+              prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+              iterCb(false);
+              return;
+            }
 
-          this._evaluateInternal(
-            prereqFlag,
-            context,
-            state,
-            updatedVisitedFlags,
-            (res) => {
-              state.events ??= [];
-              if (topLevel) {
-                state.prerequisites ??= [];
+            this._evaluateInternal(
+              prereqFlag,
+              context,
+              state,
+              updatedVisitedFlags,
+              (res) => {
+                state.events ??= [];
+                if (topLevel) {
+                  state.prerequisites ??= [];
 
-                state.prerequisites.push(prereqFlag.key);
-              }
-              if (eventFactory) {
-                state.events.push(
-                  eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
-                );
-              }
+                  state.prerequisites.push(prereqFlag.key);
+                }
+                if (eventFactory) {
+                  state.events.push(
+                    eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
+                  );
+                }
 
-              if (res.isError) {
-                prereqResult = res;
-                return iterCb(false);
-              }
+                if (res.isError) {
+                  prereqResult = res;
+                  return iterCb(false);
+                }
 
-              if (res.isOff || res.detail.variationIndex !== prereq.variation) {
-                prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
-                return iterCb(false);
-              }
-              return iterCb(true);
-            },
-            false, // topLevel false evaluating the prerequisite.
-            eventFactory,
-          );
-        });
+                if (res.isOff || res.detail.variationIndex !== prereq.variation) {
+                  prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
+                  return iterCb(false);
+                }
+                return iterCb(true);
+              },
+              false, // topLevel false evaluating the prerequisite.
+              eventFactory,
+            );
+          }),
+        );
       },
       () => {
         cb(prereqResult);
       },
+      state.onError,
     );
   }
 
@@ -323,6 +391,7 @@ export default class Evaluator {
         });
       },
       () => cb(ruleResult),
+      state.onError,
     );
   }
 
@@ -338,30 +407,33 @@ export default class Evaluator {
       firstSeriesAsync(
         clause.values,
         (value, _index, iterCb) => {
-          this._queries.getSegment(value, (segment) => {
-            if (segment) {
-              if (segmentsVisited.includes(segment.key)) {
-                errorResult = EvalResult.forError(
-                  ErrorKinds.MalformedFlag,
-                  `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
-                    'This is probably a temporary condition due to an incomplete update',
-                );
-                // There was an error, so stop checking further segments.
-                iterCb(true);
-                return;
-              }
-
-              const newVisited = [...segmentsVisited, segment?.key];
-              this.segmentMatchContext(segment, context, state, newVisited, (res) => {
-                if (res.error) {
-                  errorResult = res.result;
+          this._queries.getSegment(value, (segment) =>
+            // The store may call back asynchronously; see _checkPrerequisites.
+            guarded(state, () => {
+              if (segment) {
+                if (segmentsVisited.includes(segment.key)) {
+                  errorResult = EvalResult.forError(
+                    ErrorKinds.MalformedFlag,
+                    `Segment rule referencing segment ${segment.key} caused a circular reference. ` +
+                      'This is probably a temporary condition due to an incomplete update',
+                  );
+                  // There was an error, so stop checking further segments.
+                  iterCb(true);
+                  return;
                 }
-                iterCb(res.error || res.isMatch);
-              });
-            } else {
-              iterCb(false);
-            }
-          });
+
+                const newVisited = [...segmentsVisited, segment?.key];
+                this.segmentMatchContext(segment, context, state, newVisited, (res) => {
+                  if (res.error) {
+                    errorResult = res.result;
+                  }
+                  iterCb(res.error || res.isMatch);
+                });
+              } else {
+                iterCb(false);
+              }
+            }),
+          );
         },
         (match) => {
           if (errorResult) {
@@ -370,6 +442,7 @@ export default class Evaluator {
 
           return cb(makeMatch(maybeNegate(clause, match)));
         },
+        state.onError,
       );
       return;
     }
@@ -429,6 +502,7 @@ export default class Evaluator {
         }
         return cb(undefined);
       },
+      state.onError,
     );
   }
 
@@ -556,6 +630,7 @@ export default class Evaluator {
 
         return cb(makeMatch(false));
       },
+      state.onError,
     );
   }
 
@@ -590,6 +665,7 @@ export default class Evaluator {
 
         return cb(makeMatch(matched));
       },
+      state.onError,
     );
   }
 
@@ -637,32 +713,40 @@ export default class Evaluator {
         segment,
         context,
         state,
-      ).then(cb);
+      )
+        .then(cb)
+        .catch(state.onError);
       return;
     }
 
-    this._queries.getBigSegmentsMembership(keyForBigSegment).then((result) => {
-      state.bigSegmentsMembership = state.bigSegmentsMembership || {};
-      if (result) {
-        const [membership, status] = result;
-        state.bigSegmentsMembership[keyForBigSegment] = membership;
-        state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
-          state.bigSegmentsStatus,
-          status as BigSegmentStoreStatusString,
+    this._queries
+      .getBigSegmentsMembership(keyForBigSegment)
+      .then((result) => {
+        state.bigSegmentsMembership = state.bigSegmentsMembership || {};
+        if (result) {
+          const [membership, status] = result;
+          state.bigSegmentsMembership[keyForBigSegment] = membership;
+          state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+            state.bigSegmentsStatus,
+            status as BigSegmentStoreStatusString,
+          );
+        } else {
+          state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
+            state.bigSegmentsStatus,
+            'NOT_CONFIGURED',
+          );
+        }
+        return this.bigSegmentMatchContext(
+          state.bigSegmentsMembership[keyForBigSegment],
+          segment,
+          context,
+          state,
         );
-      } else {
-        state.bigSegmentsStatus = computeUpdatedBigSegmentsStatus(
-          state.bigSegmentsStatus,
-          'NOT_CONFIGURED',
-        );
-      }
-      this.bigSegmentMatchContext(
-        state.bigSegmentsMembership[keyForBigSegment],
-        segment,
-        context,
-        state,
-      ).then(cb);
-    });
+      })
+      .then(cb)
+      // The rest of the evaluation runs inside these continuations, so an exception there would
+      // otherwise be an unhandled rejection and the result would never be delivered.
+      .catch(state.onError);
   }
 
   bigSegmentMatchContext(

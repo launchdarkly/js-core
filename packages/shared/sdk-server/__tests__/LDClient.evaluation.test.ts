@@ -34,6 +34,27 @@ describe('given an LDClient with test data', () => {
     client.close();
   });
 
+  it('returns the default value with a malformed flag reason for a flag it cannot read', async () => {
+    // A target without values throws while the flag is read. LaunchDarkly never sends one,
+    // but a custom store or a data file can.
+    await td.usePreconfiguredFlag({
+      key: 'malformed',
+      version: 1,
+      on: true,
+      targets: [{ variation: 0 }],
+      fallthrough: { variation: 1 },
+      variations: ['a', 'b'],
+    });
+
+    const detail = await client.variationDetail('malformed', defaultUser, 'default');
+    expect(detail).toEqual({
+      value: 'default',
+      variationIndex: null,
+      reason: { kind: 'ERROR', errorKind: 'MALFORMED_FLAG' },
+    });
+    expect(await client.variation('malformed', defaultUser, 'default')).toBe('default');
+  });
+
   it('evaluates a flag which has a fallthrough and a rule', async () => {
     const testId = 'abcd'.repeat(8);
     const flagKey = 'testFlag';
