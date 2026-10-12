@@ -168,8 +168,10 @@ export default class NodeRequests implements platform.Requests {
     enableEventCompression?: boolean,
   ) {
     this._agent = resolveAgent(tlsOptions, proxyOptions, proxyAgent, logger);
-    // The agent owns connection setup when the caller supplies one, so the per-request TLS
-    // parameters are only forwarded when this class built the agent itself (or no agent exists).
+    // A caller-supplied proxyAgent owns its own TLS setup, so the per-request TLS parameters
+    // are dropped in that case. When the SDK builds a proxy agent from proxyOptions, the agent
+    // options only reach the connection to the proxy. The per-request parameters are then the
+    // only carrier of the TLS options to the tunneled connection with the target.
     this._tlsParams = tlsRequestOptions(proxyAgent ? undefined : tlsOptions);
     // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
     // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
@@ -213,17 +215,18 @@ export default class NodeRequests implements platform.Requests {
       bodyData = await gzip(Buffer.from(options.body, 'utf8'));
     }
 
+    const requestOptions: https.RequestOptions & Record<string, unknown> = {
+      timeout: options.timeout,
+      headers,
+      method: options.method,
+      agent: this._agent,
+    };
+    if (isSecure) {
+      Object.assign(requestOptions, this._tlsParams);
+    }
+
     return new Promise((resolve, reject) => {
-      const req = impl.request(
-        url,
-        {
-          timeout: options.timeout,
-          headers,
-          method: options.method,
-          agent: this._agent,
-        },
-        (res) => resolve(new NodeResponse(res)),
-      );
+      const req = impl.request(url, requestOptions, (res) => resolve(new NodeResponse(res)));
 
       if (bodyData) {
         req.write(bodyData);
