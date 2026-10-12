@@ -17,7 +17,6 @@
       "@launchdarkly/react-sdk": ["../../src/client/index.ts"]
     },
     "resolveJsonModule": true,
-    "skipLibCheck": true,
     "strict": true,
     "target": "ES2017",
     "types": ["jest", "node"]

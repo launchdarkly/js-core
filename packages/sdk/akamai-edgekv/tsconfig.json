@@ -17,8 +17,7 @@
     "resolveJsonModule": true,
     "stripInternal": true,
     "moduleResolution": "bundler",
-    "types": ["jest", "node"],
-    "skipLibCheck": true
+    "types": ["jest", "node"]
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "example"]
 }

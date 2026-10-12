@@ -14,8 +14,7 @@
     "declaration": true,
     "declarationMap": true,
     "stripInternal": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": [

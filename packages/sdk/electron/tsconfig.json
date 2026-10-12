@@ -18,7 +18,6 @@
     // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
     "ignoreDeprecations": "6.0",
     "types": ["jest", "node"],
-    "skipLibCheck": true,
     "moduleResolution": "bundler"
   },
   "exclude": ["**/*.test.ts", "dist", "node_modules", "__tests__", "examples", "contract-tests"]

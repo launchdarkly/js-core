@@ -2,9 +2,7 @@
   "compilerOptions": {
     "module": "es2015",
     "target": "ES2015",
-    "strict": false,
-    "noImplicitAny": false,
-    "skipLibCheck": true,
+    "strict": true,
     "outDir": "dist/ew",
     "rootDir": ".",
     "sourceMap": false,
