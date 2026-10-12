@@ -3,7 +3,9 @@ import type { Headers, Response, ResponseBody } from '../../api/platform/Request
 // Each platform that constructs a streaming response provides the TextDecoder global. This
 // package compiles without the global type libraries, so this scoped declaration stands in
 // for it.
-declare const TextDecoder: new () => { decode(input?: Uint8Array): string };
+declare const TextDecoder: new () => {
+  decode(input?: Uint8Array, options?: { stream?: boolean }): string;
+};
 
 /**
  * The shape of raw HTTP headers: names mapped to a value, a list of values, or no value.
@@ -19,7 +21,8 @@ export type RawHeaders = Record<string, string | string[] | undefined>;
 export interface ResponseChunkIterator {
   /**
    * Resolves with the next chunk, or with `done: true` when the stream ends. Rejects when
-   * the connection drops.
+   * the connection terminates before the server ends the stream. A chunk delivered together
+   * with `done: true` is discarded, so the iterator must deliver the last chunk on its own.
    */
   next(): Promise<{ done?: boolean; value?: Uint8Array }>;
 
@@ -54,23 +57,29 @@ export type StreamingResponseSource = {
   statusMessage?: string;
 
   /**
-   * Destroys the underlying stream. When the source provides this method, `cancel` uses
-   * it to release the connection even while a read is in progress. A Node `Readable`
-   * provides it.
+   * Destroys the underlying stream. `cancel` uses it to release the connection even while
+   * a read is in progress. A Node `Readable` provides it. A source without it must release
+   * through the iterator `return` method; a source whose `return` queues behind a pending
+   * read, like a Node readable iterator, must provide `destroy` or `cancel` cannot release
+   * it mid-read.
    */
   destroy?(): void;
 } & { [K in AsyncIteratorKey]: () => ResponseChunkIterator };
 
 /**
  * Wraps the raw headers in the fetch `Headers` shape. Lookups are case-insensitive.
- * Multi-value headers are joined with ", ", and names without a value are skipped.
+ * Multi-value headers are joined with ", ", names that differ only by case merge into one
+ * joined value, and names without a value are skipped.
  */
 function wrapRawHeaders(headers: RawHeaders): Headers {
   const normalized = new Map<string, string>();
   Object.keys(headers).forEach((key) => {
     const val = headers[key];
     if (val !== undefined && val !== null) {
-      normalized.set(key.toLowerCase(), Array.isArray(val) ? val.join(', ') : val);
+      const name = key.toLowerCase();
+      const joined = Array.isArray(val) ? val.join(', ') : val;
+      const existing = normalized.get(name);
+      normalized.set(name, existing === undefined ? joined : `${existing}, ${joined}`);
     }
   });
 
@@ -97,46 +106,74 @@ export interface StreamingResponse extends Response {
 
 /**
  * Creates a response for a streaming request. The response does not buffer the body. Each
- * read hands out the next chunk from the source iterator. The `text` and `json` methods
- * read the remainder of the stream, so a caller uses either the reader or those methods,
- * not both. The `cancel` methods on the body and the reader destroy the source when it
- * provides a `destroy` method, and also call the iterator's `return` method when one
+ * read hands out the next chunk from the source iterator. The body permits one consumer:
+ * the first `getReader`, `text`, or `json` call claims it, and a later call of any of the
+ * three throws, like the lock of a standard body. The `cancel` methods on the body and the
+ * reader call every release function the source provides: they destroy the source when it
+ * has a `destroy` method, and they also call the iterator's `return` method when one
  * exists. The body passes through as-is, so the caller decodes any content encoding first.
  *
  * @param source The raw platform response, for example a Node `IncomingMessage`. A missing
  * status code maps to 0, and a missing status message maps to an empty string.
  */
 export function createStreamingResponse(source: StreamingResponseSource): StreamingResponse {
+  // A consumer compiled without `Symbol.asyncIterator` in its lib can pass a source that
+  // lacks the iterator without a compile error. The check turns that mistake into a named
+  // failure instead of a bare member-access TypeError.
+  if (typeof source[Symbol.asyncIterator] !== 'function') {
+    throw new TypeError('the streaming response source does not provide an async iterator');
+  }
   const iterator = source[Symbol.asyncIterator]();
+
+  let bodyUsed = false;
+  const claimBody = (): void => {
+    if (bodyUsed) {
+      throw new TypeError('the response body is already in use');
+    }
+    bodyUsed = true;
+  };
+
   async function text(): Promise<string> {
-    const chunks: Uint8Array[] = [];
-    let length = 0;
+    claimBody();
+    const decoder = new TextDecoder();
+    let result = '';
     let next = await iterator.next();
     while (!next.done) {
-      if (next.value) {
-        chunks.push(next.value);
-        length += next.value.length;
+      if (next.value !== undefined) {
+        try {
+          result += decoder.decode(next.value, { stream: true });
+        } catch {
+          // decode() is the BufferSource validator, like on the reader path in the
+          // streaming client. The engine's message can quote the chunk contents, and
+          // stream data must not leak into error messages and logs.
+          throw new TypeError('the source supplied a chunk that is not a BufferSource');
+        }
       }
       // The stream provides the chunks in sequence, so the reads cannot run in parallel.
       // eslint-disable-next-line no-await-in-loop
       next = await iterator.next();
     }
-    const content = new Uint8Array(length);
-    let offset = 0;
-    chunks.forEach((chunk) => {
-      content.set(chunk, offset);
-      offset += chunk.length;
-    });
-    return new TextDecoder().decode(content);
+    // The final decode flushes a trailing partial multi-byte sequence.
+    return result + decoder.decode();
   }
 
   const cancel = async (): Promise<void> => {
     // Destroy the stream first. That rejects a pending read and unblocks a queued return
     // call. A Node readable iterator queues the return call behind a pending read, and on
     // a stream that was never read it completes without a destroy, so the return call
-    // alone cannot release the connection. Do not await it for the same reason.
-    source.destroy?.();
-    iterator.return?.().catch(() => {});
+    // alone cannot release the connection. Do not await it for the same reason. Each
+    // release call is guarded on its own, so a release function that throws, or a return
+    // that resolves synchronously, does not skip the other release path or reject cancel.
+    try {
+      source.destroy?.();
+    } catch {
+      // A throwing destroy has nothing left to release.
+    }
+    try {
+      Promise.resolve(iterator.return?.()).catch(() => {});
+    } catch {
+      // A throwing return has nothing left to release.
+    }
   };
 
   return {
@@ -144,16 +181,19 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
     status: source.statusCode ?? 0,
     statusText: source.statusMessage ?? '',
     body: {
-      getReader: () => ({
-        read: async () => {
-          const next = await iterator.next();
-          if (next.done) {
-            return { done: true };
-          }
-          return { done: false, value: next.value };
-        },
-        cancel,
-      }),
+      getReader: () => {
+        claimBody();
+        return {
+          read: async () => {
+            const next = await iterator.next();
+            if (next.done) {
+              return { done: true };
+            }
+            return { done: false, value: next.value };
+          },
+          cancel,
+        };
+      },
       cancel,
     },
     text,

@@ -90,6 +90,16 @@ it('matches header names without case sensitivity', () => {
   expect(Array.from(res.headers.keys())).toEqual(['content-type']);
 });
 
+it('joins the values of header names that differ only by case', () => {
+  const res = createStreamingResponse(
+    makeTextSource([], {
+      headers: { 'Content-Type': 'text/html', 'content-type': 'text/event-stream' },
+      statusCode: 200,
+    }),
+  );
+  expect(res.headers.get('content-type')).toBe('text/html, text/event-stream');
+});
+
 it('reports a header without a value as absent', () => {
   const res = createStreamingResponse(
     makeTextSource([], { headers: { empty: undefined }, statusCode: 200 }),
@@ -136,6 +146,57 @@ it('parses the remaining stream as JSON', async () => {
   await expect(res.json()).resolves.toEqual({ a: 1 });
 });
 
+it('decodes ArrayBuffer and DataView chunks in text', async () => {
+  const bytes = utf8('buffer view');
+  const asBuffer = bytes.slice(0, 7).buffer as unknown as Uint8Array;
+  const tail = bytes.slice(7);
+  const asView = new DataView(
+    tail.buffer,
+    tail.byteOffset,
+    tail.byteLength,
+  ) as unknown as Uint8Array;
+  const res = createStreamingResponse(makeSource([asBuffer, asView]));
+  await expect(res.text()).resolves.toBe('buffer view');
+});
+
+it('rejects a string chunk in text instead of corrupting the result', async () => {
+  const res = createStreamingResponse(makeSource(['data: hi\n\n' as unknown as Uint8Array]));
+  const err = await res.text().then(
+    () => undefined,
+    (e) => e,
+  );
+  expect(err).toBeInstanceOf(TypeError);
+  expect(String(err)).toContain('BufferSource');
+  // The chunk contents must never leak into the error message.
+  expect(String(err)).not.toContain('data: hi');
+});
+
+it('throws a named error when the source has no async iterator', () => {
+  const source = { headers: {} } as unknown as StreamingResponseSource;
+  expect(() => createStreamingResponse(source)).toThrow(
+    'the streaming response source does not provide an async iterator',
+  );
+});
+
+it('throws when a second reader is requested', () => {
+  const res = createStreamingResponse(makeTextSource(['chunk']));
+  res.body.getReader();
+  expect(() => res.body.getReader()).toThrow('already in use');
+});
+
+it('rejects text after a reader was created', async () => {
+  const res = createStreamingResponse(makeTextSource(['chunk']));
+  res.body.getReader();
+  await expect(res.text()).rejects.toThrow('already in use');
+});
+
+it('throws when a reader is requested after text started', async () => {
+  const res = createStreamingResponse(makeTextSource(['chunk']));
+  const pending = res.text();
+  expect(() => res.body.getReader()).toThrow('already in use');
+  await expect(pending).resolves.toBe('chunk');
+});
+
 it('rejects a pending read when the stream errors', async () => {
   const erroring: StreamingResponseSource = {
     headers: {},
@@ -167,6 +228,39 @@ it('releases the stream through the iterator return method on cancel', async () 
 it('tolerates cancel when the iterator has no return method', async () => {
   const res = createStreamingResponse(makeTextSource(['chunk']));
   await expect(Promise.resolve(res.body.cancel?.())).resolves.toBeUndefined();
+});
+
+it('still releases the iterator when destroy throws', async () => {
+  const returnSpy = jest.fn(async () => ({ done: true }));
+  const source: StreamingResponseSource = {
+    headers: {},
+    destroy: () => {
+      throw new Error('destroy boom');
+    },
+    [Symbol.asyncIterator]: () => ({
+      next: async () => ({ done: false, value: utf8('chunk') }),
+      return: returnSpy,
+    }),
+  };
+  const res = createStreamingResponse(source);
+  await expect(Promise.resolve(res.body.cancel?.())).resolves.toBeUndefined();
+  expect(returnSpy).toHaveBeenCalledTimes(1);
+});
+
+it('tolerates an iterator whose return resolves synchronously', async () => {
+  const destroySpy = jest.fn();
+  const source: StreamingResponseSource = {
+    headers: {},
+    destroy: destroySpy,
+    [Symbol.asyncIterator]: () => ({
+      next: async () => ({ done: false, value: utf8('chunk') }),
+      // @ts-ignore deliberately violates the declared Promise-returning shape.
+      return: () => ({ done: true }),
+    }),
+  };
+  const res = createStreamingResponse(source);
+  await expect(Promise.resolve(res.body.cancel?.())).resolves.toBeUndefined();
+  expect(destroySpy).toHaveBeenCalledTimes(1);
 });
 
 it('accepts a real Node readable stream as the source', async () => {
