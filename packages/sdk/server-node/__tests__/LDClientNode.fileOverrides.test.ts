@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
-import { FileOverrideSourceOptions } from '@launchdarkly/js-server-sdk-common';
+import { FileOverrideSourceOptions, sleep } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
-import waitFor, { sleep } from './waitFor';
+import waitFor from './waitFor';
 
 const user = { key: 'user-key' };
 

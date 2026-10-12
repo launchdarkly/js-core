@@ -150,6 +150,17 @@ describe('given a client context with filesystem support', () => {
     );
   });
 
+  it('drops a path that is listed more than once and warns', () => {
+    // Otherwise every entry of that file would be a duplicate of itself under the fail handling.
+    const source = createOverrideSource(
+      { type: 'file', paths: ['/a.json', '/b.json', '/a.json', '/b.json'] },
+      context,
+    ) as FileOverrideSource;
+
+    expect(source.config.paths).toEqual(['/a.json', '/b.json']);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('more than once'));
+  });
+
   it('fails construction for a YAML file when no parser is configured', () => {
     // The SDK does not include a YAML parser, so such a file could never load. That is a
     // configuration error, reported once at construction rather than on every reload.
