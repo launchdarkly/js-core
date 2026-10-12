@@ -86,7 +86,7 @@ export interface ResponseBody {
   getReader(): BodyReader;
 
   /**
-   * Releases the body without reading it.
+   * Releases the body.
    */
   cancel?(): Promise<unknown> | void;
 }
