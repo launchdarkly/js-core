@@ -3,6 +3,7 @@
     "target": "ES2020",
     "module": "ES2020",
     "lib": ["ES2020"],
+    // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
     "ignoreDeprecations": "6.0",
     "types": ["jest", "node"],
     "moduleResolution": "bundler",

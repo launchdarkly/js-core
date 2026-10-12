@@ -4,7 +4,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020"],
     "module": "ES6",
     "moduleResolution": "bundler",
     "noImplicitOverride": true,

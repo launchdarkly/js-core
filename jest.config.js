@@ -1,7 +1,5 @@
 module.exports = {
-  transform: {
-    '^.+\\.ts?$': ['ts-jest', { tsconfig: { module: 'CommonJS' } }],
-  },
+  transform: { '^.+\\.ts?$': 'ts-jest' },
   testMatch: ['**/__tests__/**/*test.ts?(x)'],
   testEnvironment: 'jsdom',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
