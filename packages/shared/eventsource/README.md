@@ -27,6 +27,59 @@ The stream parser at `src/parser` is a fork of the
 4.1.1. It is maintained in this repository; see the third-party notices in [LICENSE](LICENSE) for
 its original MIT license terms.
 
+## Install
+
+```shell
+npm install @launchdarkly/eventsource
+```
+
+## Quick usage
+
+```js
+import { createEventSource } from '@launchdarkly/eventsource';
+
+const es = createEventSource('https://example.com/stream', {
+  initialRetryDelayMillis: 1000,
+  maxBackoffMillis: 30000,
+  jitterRatio: 0.5,
+});
+
+// The connection attempt starts before createEventSource returns. Attach
+// listeners immediately after the call, before any other code runs, to avoid
+// missing an event.
+es.onopen = (event) => {
+  console.log('connected', event.headers);
+};
+es.onerror = (event) => {
+  if (event?.status === 401) {
+    console.log('not authorized');
+  }
+};
+es.addEventListener('message', (event) => {
+  console.log('received', event.data);
+});
+
+// Later, when the stream is no longer needed:
+es.close();
+```
+
+## The EventSource instance
+
+`createEventSource` returns an object that satisfies the exported `EventSource` interface:
+
+- `readyState` -- the connection state: `CONNECTING` (0), `OPEN` (1), or `CLOSED` (2). The
+  package exports these constants.
+- `url` -- the URL of the most recent connection attempt. With a `urlBuilder` it can change
+  between attempts.
+- `reconnectInterval` -- mirrors the most recent server `retry:` field, in milliseconds; starts
+  at 1000. The retry strategy owns the actual reconnect timing; this slot only supplies the
+  fallback delay for a reconnect whose strategy call throws.
+- `close()` -- permanently closes the stream, invokes `onclose`, and dispatches the `closed`
+  event. Idempotent.
+
+Unlike the standard `EventSource`, there is no `onmessage` slot; it is left out on purpose.
+Register message listeners with `addEventListener('message', ...)`.
+
 ## Options reference
 
 This section documents the behavior of `createEventSource`'s second argument for maintainers of
@@ -63,10 +116,29 @@ Beyond the standard `open`/`message`/`error` events, this implementation dispatc
 - `retrying`: after an error, indicates a reconnect is scheduled. The event's `delayMillis`
   property gives the delay.
 
-The `open` event's `headers` property carries the HTTP response headers from the stream. The
-`error` event carries `status`/`message` for HTTP errors. A server-sent SSE frame named `error`
-also dispatches under the `error` type, with a `MessageEvent` payload; only that frame carries a
-string `data` property.
+The `open` event's `headers` property carries the HTTP response headers from the stream, as a
+plain object:
+
+```js
+{
+  'content-type': 'text/event-stream; charset=utf-8',
+  'transfer-encoding': 'chunked',
+  'cache-control': 'no-cache, no-store, must-revalidate',
+}
+```
+
+The `error` event carries `status`/`message` for HTTP errors:
+
+```js
+es.onerror = (err) => {
+  if (err?.status === 401 || err?.status === 403) {
+    console.log('not authorized');
+  }
+};
+```
+
+A server-sent SSE frame named `error` also dispatches under the `error` type, with a
+`MessageEvent` payload; only that frame carries a string `data` property.
 
 An exception thrown by the `onopen`, `onerror`, or `onretrying` slot does not stop dispatch to
 the `addEventListener` listeners for that event. An exception from a registered listener does
@@ -82,6 +154,19 @@ exception surfaces later, asynchronously, as an uncaught error.
 - `retryResetIntervalMillis` -- how long the current connection must have been delivering
   events, measured from its first event, before the backoff counter resets to the initial
   delay. A connection that fails before it delivers an event does not count as healthy.
+
+Without `maxBackoffMillis` and `jitterRatio`, every retry waits the same base delay. Set both, so
+that clients which lose their connections at the same time -- for example, in a server outage --
+do not all reconnect at the same time:
+
+```js
+const es = createEventSource(url, {
+  initialRetryDelayMillis: 2000, // the first retry waits 2 seconds
+  maxBackoffMillis: 30000, // enables backoff, with a maximum of 30 seconds
+  retryResetIntervalMillis: 60000, // backoff resets after 60 seconds of delivered events
+  jitterRatio: 0.5, // each delay is reduced by a random amount of up to 50%
+});
+```
 
 ### Custom retry delay strategy
 
@@ -115,17 +200,36 @@ returned `false`. The stream then closes cleanly and releases its connection, an
 surfaces asynchronously as an uncaught error, like a throwing listener's. Each status other than
 200, including a redirect status that the transport did not follow, is an HTTP error response.
 
+```js
+const es = createEventSource(url, {
+  // Retry every error except an unauthorized response.
+  errorFilter: (err) => err.status !== 401,
+});
+```
+
 ### Headers, method, and body
 
-`headers` sets additional request headers. Normally `Cache-Control: no-cache` and
-`Accept: text/event-stream` are also sent; `skipDefaultHeaders: true` sends only the headers you
-specify. `method` overrides the default `GET`; `body` sets a request body, for use with a
-non-`GET` method.
+`headers` sets additional request headers, for example to send cookies or an initial
+`Last-Event-ID` value. Normally `Cache-Control: no-cache` and `Accept: text/event-stream` are
+also sent; `skipDefaultHeaders: true` sends only the headers you specify. This matters for a
+cross-origin request, because CORS restricts the headers a request can carry. `method` overrides
+the default `GET`; `body` sets a request body, for use with a non-`GET` method.
+
+```js
+const es = createEventSource(url, {
+  method: 'REPORT',
+  body: JSON.stringify(context),
+  headers: { Authorization: sdkKey },
+  skipDefaultHeaders: true,
+});
+```
 
 ### Read timeout
 
 `readTimeoutMillis` drops and retries the connection if that many milliseconds elapse with no data
-received, guarding against a TCP connection that fails without an I/O error.
+received, guarding against a TCP connection that fails without an I/O error. When the server sends
+heartbeat data at a known interval -- such as a `:` comment line, which SSE ignores -- set the
+timeout longer than that interval.
 
 ### Listener registry
 

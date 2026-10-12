@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.24](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.7.23...server-sdk-ai-vercel-v0.7.24) (2026-10-08)
+
+
+### Bug Fixes
+
+* **AIC-3497:** allow server-sdk-ai 2.x as a peer of the AI provider packages ([#2090](https://github.com/launchdarkly/js-core/issues/2090)) ([aece398](https://github.com/launchdarkly/js-core/commit/aece398d3fab8688bab99540f623b9c4b7f37935))
+
 ## [0.7.23](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-vercel-v0.7.22...server-sdk-ai-vercel-v0.7.23) (2026-10-06)
 
 
