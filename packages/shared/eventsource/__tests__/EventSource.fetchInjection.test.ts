@@ -149,6 +149,25 @@ it('connects with a relative url and reports an empty origin', async () => {
   }
 });
 
+it('resolves a relative url against the global location when one exists', async () => {
+  Object.defineProperty(globalThis, 'location', {
+    value: { href: 'https://app.example.com/page' },
+    configurable: true,
+  });
+  const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n']);
+  const es = createEventSource('/relative/stream', { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    const m = await messages.take();
+    expect(m.data).toEqual('hello');
+    expect(m.origin).toEqual('https://app.example.com');
+  } finally {
+    es.close();
+    delete (globalThis as { location?: unknown }).location;
+  }
+});
+
 it('reports the origin of the final response url when the transport supplies one', async () => {
   const injected: FetchLike = async () => ({
     ...idleStreamResponse(['data: hello\n\n']),
