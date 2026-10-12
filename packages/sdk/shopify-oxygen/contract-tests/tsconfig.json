@@ -9,7 +9,6 @@
     "noImplicitOverride": true,
     "outDir": "dist",
     "rootDir": ".",
-    "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,

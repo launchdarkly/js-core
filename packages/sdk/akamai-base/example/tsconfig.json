@@ -8,7 +8,6 @@
     "lib": ["es2023", "DOM"],
     "moduleResolution": "nodenext",
     "types": ["akamai-edgeworkers"],
-    "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },

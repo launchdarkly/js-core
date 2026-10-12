@@ -2,6 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
+    // The bundled next.js declarations do not pass a lib check. The tsconfig that next.js
+    // generates sets this option: https://nextjs.org/docs/app/api-reference/config/typescript
+    "skipLibCheck": true,
     "allowJs": true,
     "noEmit": true,
     "esModuleInterop": true,

@@ -11,8 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

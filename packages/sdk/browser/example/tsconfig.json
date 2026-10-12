@@ -10,7 +10,6 @@
     "resolveJsonModule": true,
     "rootDir": ".",
     "outDir": "dist",
-    "skipLibCheck": true,
     "sourceMap": true,
     "inlineSources": true,
     "strict": true,
