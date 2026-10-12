@@ -7,7 +7,7 @@ import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { Clause } from './data/Clause';
 import { Flag } from './data/Flag';
 import { FlagRule } from './data/FlagRule';
-import { isOverrideEntry } from './data/overrideMarker';
+import { isOverrideEntry, markOverrideAffected } from './data/overrideMarker';
 import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
@@ -80,13 +80,6 @@ interface EvalState {
    * only.
    */
   overrideAffected: boolean;
-}
-
-/**
- * Returns a copy of the reason with the override indicator set.
- */
-function markOverrideAffected(reason: LDEvaluationReason): LDEvaluationReason {
-  return { ...reason, overrideAffected: true };
 }
 
 interface Match {
