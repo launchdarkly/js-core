@@ -34,11 +34,20 @@ export function fdv2FullPayload(
 
 /**
  * A platform whose polling requests return the given body. With no body, requests never
- * complete, so the client never initializes.
+ * complete, so the client never initializes. Analytics event payloads posted to the events
+ * endpoint are parsed and appended to capturedEvents, when it is given.
  */
-export function makeFDv2Platform(body?: string) {
+export function makeFDv2Platform(body?: string, capturedEvents?: any[]) {
   const platform = createBasicPlatform();
-  platform.requests.fetch = jest.fn(() => {
+  platform.requests.fetch = jest.fn((url: string, options?: { body?: string }) => {
+    if (capturedEvents && url.includes('/bulk')) {
+      capturedEvents.push(...JSON.parse(options?.body ?? '[]'));
+      return Promise.resolve({
+        status: 202,
+        headers: new Headers(),
+        text: async () => '',
+      });
+    }
     if (body === undefined) {
       return new Promise(() => {});
     }
@@ -49,6 +58,14 @@ export function makeFDv2Platform(body?: string) {
     });
   });
   return platform;
+}
+
+/**
+ * The summary counter that a flush produced for a flag, from captured analytics events.
+ */
+export function summaryCountersFor(capturedEvents: any[], flagKey: string): any[] {
+  const summary = capturedEvents.find((event) => event.kind === 'summary');
+  return summary?.features?.[flagKey]?.counters ?? [];
 }
 
 export function makeCallbacks(

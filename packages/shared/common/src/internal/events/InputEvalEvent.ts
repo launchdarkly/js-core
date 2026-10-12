@@ -24,6 +24,13 @@ export default class InputEvalEvent {
 
   public readonly excludeFromSummaries?: boolean;
 
+  /**
+   * True when an override affected the evaluation, directly or transitively. The SDK sets it
+   * from the evaluation result, not from the reason. A marked evaluation produces no individual
+   * feature or debug event and is counted in a summary counter that carries the marker.
+   */
+  public readonly overrideAffected?: boolean;
+
   constructor(
     public readonly withReasons: boolean,
     public readonly context: Context,
@@ -38,6 +45,7 @@ export default class InputEvalEvent {
     debugEventsUntilDate?: number,
     excludeFromSummaries?: boolean,
     public readonly samplingRatio: number = 1,
+    overrideAffected?: boolean,
   ) {
     this.creationDate = Date.now();
     this.value = value;
@@ -69,6 +77,10 @@ export default class InputEvalEvent {
 
     if (excludeFromSummaries !== undefined) {
       this.excludeFromSummaries = excludeFromSummaries;
+    }
+
+    if (overrideAffected !== undefined) {
+      this.overrideAffected = overrideAffected;
     }
   }
 }
