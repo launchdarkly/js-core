@@ -20,8 +20,8 @@ import NodeResponse from './NodeResponse';
 const gzip = promisify(zlib.gzip);
 
 /**
- * The TLS options that are copied onto each streaming `https` request. The names match the
- * options of `https.request()`.
+ * The TLS options that go into the agent options and onto each `https` request. The names
+ * match the options of `https.request()`.
  */
 const TLS_OPTION_NAMES = [
   'pfx',
@@ -36,46 +36,21 @@ const TLS_OPTION_NAMES = [
   'checkServerIdentity',
 ] as const;
 
-function tlsRequestOptions(tlsOptions?: LDTLSOptions): Record<string, unknown> {
+function tlsRequestOptions(
+  tlsOptions?: LDTLSOptions,
+): https.AgentOptions & Record<string, unknown> {
   const merged: Record<string, unknown> = {};
-  if (!tlsOptions) {
-    return merged;
+  if (tlsOptions) {
+    const bag = tlsOptions as unknown as Record<string, unknown>;
+    TLS_OPTION_NAMES.forEach((name) => {
+      if (bag[name] !== undefined) {
+        merged[name] = bag[name];
+      }
+    });
   }
-  const bag = tlsOptions as unknown as Record<string, unknown>;
-  TLS_OPTION_NAMES.forEach((name) => {
-    if (bag[name] !== undefined) {
-      merged[name] = bag[name];
-    }
-  });
-  return merged;
-}
-
-function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
-  const options: https.AgentOptions & { [index: string]: any } = {
-    ca: tlsOptions.ca,
-    cert: tlsOptions.cert,
-    checkServerIdentity: tlsOptions.checkServerIdentity,
-    ciphers: tlsOptions.ciphers,
-    // Our interface says object for the pfx object. But the node
-    // type is more strict. This is also true for the key and KeyObject.
-    // @ts-ignore
-    pfx: tlsOptions.pfx,
-    // @ts-ignore
-    key: tlsOptions.key,
-    passphrase: tlsOptions.passphrase,
-    rejectUnauthorized: tlsOptions.rejectUnauthorized,
-    secureProtocol: tlsOptions.secureProtocol,
-    servername: tlsOptions.servername,
-  };
-
-  // Node does not take kindly to undefined keys.
-  Object.keys(options).forEach((key) => {
-    if (options[key] === undefined) {
-      delete options[key];
-    }
-  });
-
-  return options;
+  // Our interface is less strict than the node types, for example for the pfx and key
+  // objects, but the values pass through to node unchanged.
+  return merged as https.AgentOptions & Record<string, unknown>;
 }
 
 function processProxyOptions(
@@ -97,13 +72,6 @@ function processProxyOptions(
     };
   }
 
-  // Node does not take kindly to undefined keys.
-  Object.keys(parsedOptions).forEach((key) => {
-    if (parsedOptions[key as keyof HttpsProxyAgentOptions<string>] === undefined) {
-      delete parsedOptions[key as keyof HttpsProxyAgentOptions<string>];
-    }
-  });
-
   return new HttpsProxyAgent(proxyUrl, parsedOptions);
 }
 
@@ -116,7 +84,7 @@ function createAgent(
     logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
   }
   if (tlsOptions) {
-    const agentOptions = processTlsOptions(tlsOptions);
+    const agentOptions = tlsRequestOptions(tlsOptions);
     if (proxyOptions) {
       return processProxyOptions(proxyOptions, agentOptions);
     }

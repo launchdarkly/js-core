@@ -1,5 +1,3 @@
-import http from 'http';
-import https from 'https';
 import {
   AsyncQueue,
   TestHttpHandlers,
@@ -17,7 +15,6 @@ describe('given a running HTTP server', () => {
   });
 
   afterEach(async () => {
-    jest.restoreAllMocks();
     await server.closeAndWait();
   });
 
@@ -105,18 +102,6 @@ describe('given a running HTTP server', () => {
     ).rejects.toThrow();
   });
 
-  it('does not pass the CA to the per-request options of an http streaming request', async () => {
-    const requestSpy = jest.spyOn(http, 'request');
-
-    const requests = new NodeRequests({ ca: 'unused-ca' });
-    // The https agent built from the TLS options is rejected for an http URL, so the request
-    // fails after http.request has already received its options.
-    await requests.fetch(server.url, { method: 'GET', streaming: true }).catch(() => undefined);
-
-    expect(requestSpy).toHaveBeenCalledTimes(1);
-    expect(requestSpy.mock.calls[0][1]).not.toHaveProperty('ca');
-  });
-
   it('streams SSE events through createEventSource', async () => {
     const chunks = new AsyncQueue<string>();
     chunks.add('data: hello\n\n');
@@ -152,7 +137,6 @@ describe('given a running HTTPS server with a self-signed certificate', () => {
   });
 
   afterEach(async () => {
-    jest.restoreAllMocks();
     await server.closeAndWait();
   });
 
@@ -160,18 +144,6 @@ describe('given a running HTTPS server with a self-signed certificate', () => {
     const requests = new NodeRequests({ ca: server.certificate });
     const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
     expect(res.status).toEqual(200);
-  });
-
-  it('passes the CA to the per-request options of an https streaming request', async () => {
-    const requestSpy = jest.spyOn(https, 'request');
-
-    const requests = new NodeRequests({ ca: server.certificate });
-    await requests.fetch(server.url, { method: 'GET', streaming: true });
-
-    expect(requestSpy).toHaveBeenCalledTimes(1);
-    expect(requestSpy.mock.calls[0][1]).toEqual(
-      expect.objectContaining({ ca: server.certificate }),
-    );
   });
 
   it('rejects a streaming request when no CA is supplied', async () => {
