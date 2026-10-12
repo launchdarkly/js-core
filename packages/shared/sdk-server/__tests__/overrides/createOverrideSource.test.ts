@@ -164,8 +164,8 @@ describe('given a client context with filesystem support', () => {
         context,
       ),
     ).toThrow(message);
-    expect(() => createOverrideSource({ type: 'file', paths: ['/c.YML'] }, context)).toThrow(
-      'The file-based override source was given a YAML file (/c.YML) but no yamlParser.',
+    expect(() => createOverrideSource({ type: 'file', paths: ['/c.yml'] }, context)).toThrow(
+      'The file-based override source was given a YAML file (/c.yml) but no yamlParser.',
     );
   });
 

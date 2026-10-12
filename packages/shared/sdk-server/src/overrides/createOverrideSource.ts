@@ -6,7 +6,7 @@ import {
   LDOverrideSourceOptions,
 } from '../api/options/LDDataSystemOptions';
 import { LDOverrideSource } from '../api/subsystems';
-import { YamlParser } from '../data_sources/filedata';
+import { isYamlPath, YamlParser } from '../data_sources/filedata';
 import FileOverrideSource, {
   DEFAULT_POLL_INTERVAL_SECONDS,
   FileChangeDetection,
@@ -32,11 +32,6 @@ const changeDetectionValues: FileChangeDetection[] = ['polling', 'watching'];
  * such as an unrecognized duplicate keys handling or a polling interval below the minimum, is
  * logged and replaced.
  */
-function isYamlPath(path: string): boolean {
-  const lower = path.toLowerCase();
-  return lower.endsWith('.yaml') || lower.endsWith('.yml');
-}
-
 function validateFileOverrideSourceOptions(
   options: FileOverrideSourceOptions,
   clientContext: LDClientContext,
@@ -113,7 +108,8 @@ function validateFileOverrideSourceOptions(
 
   // The SDK does not include a YAML parser. YAML files are read with the parser the application
   // configures, and a YAML file configured without one can never load, so that is reported as a
-  // configuration error rather than as a load failure on every reload.
+  // configuration error rather than as a load failure on every reload. The same extension check
+  // decides here and at load time which files are YAML.
   let yamlParser: YamlParser | undefined;
   if (options.yamlParser !== undefined) {
     if (TypeValidators.Function.is(options.yamlParser)) {
