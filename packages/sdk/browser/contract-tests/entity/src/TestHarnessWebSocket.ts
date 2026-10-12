@@ -47,7 +47,6 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
-            'retry-conformance-fdv1-polling',
           ];
 
           break;

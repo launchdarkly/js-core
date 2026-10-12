@@ -67,11 +67,19 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
           return;
         }
         const flags = JSON.parse(res);
-        this._retryState.recordSuccess();
-        try {
-          this._dataHandler?.(flags);
-        } catch (err) {
-          this._logger?.error(`Exception from data handler: ${err}`);
+        // Valid JSON that is not a flags object (a primitive, array, or null)
+        // is unusable data: record a normal failure and retry, rather than
+        // counting a healthy poll and forwarding garbage to the data handler.
+        if (flags === null || typeof flags !== 'object' || Array.isArray(flags)) {
+          this._retryState.recordFailure('normal');
+          reportJsonError(res);
+        } else {
+          this._retryState.recordSuccess();
+          try {
+            this._dataHandler?.(flags);
+          } catch (err) {
+            this._logger?.error(`Exception from data handler: ${err}`);
+          }
         }
       } catch {
         // Unusable data is a normal failure: record it and poll again after
