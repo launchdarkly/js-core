@@ -32,10 +32,14 @@ const changeDetectionValues: FileChangeDetection[] = ['polling', 'watching'];
  * such as an unrecognized duplicate keys handling or a polling interval below the minimum, is
  * logged and replaced.
  */
+function isYamlPath(path: string): boolean {
+  const lower = path.toLowerCase();
+  return lower.endsWith('.yaml') || lower.endsWith('.yml');
+}
+
 function validateFileOverrideSourceOptions(
   options: FileOverrideSourceOptions,
   clientContext: LDClientContext,
-  defaultYamlParser?: YamlParser,
 ): FileOverrideSourceConfig {
   const { logger } = clientContext.basicConfiguration;
   if (
@@ -107,7 +111,10 @@ function validateFileOverrideSourceOptions(
     }
   }
 
-  let yamlParser = defaultYamlParser;
+  // The SDK does not include a YAML parser. YAML files are read with the parser the application
+  // configures, and a YAML file configured without one can never load, so that is reported as a
+  // configuration error rather than as a load failure on every reload.
+  let yamlParser: YamlParser | undefined;
   if (options.yamlParser !== undefined) {
     if (TypeValidators.Function.is(options.yamlParser)) {
       yamlParser = options.yamlParser;
@@ -120,6 +127,14 @@ function validateFileOverrideSourceOptions(
         ),
       );
     }
+  }
+  const yamlPath = options.paths.find(isYamlPath);
+  if (yamlPath !== undefined && !yamlParser) {
+    throw new Error(
+      `The file-based override source was given a YAML file (${yamlPath}) but no yamlParser.` +
+        ' The SDK does not include a YAML parser; configure one, for example the parse function' +
+        " of the 'yaml' package.",
+    );
   }
 
   return {
@@ -141,7 +156,6 @@ function validateFileOverrideSourceOptions(
 export default function createOverrideSource(
   options: LDOverrideSourceOptions,
   clientContext: LDClientContext,
-  defaultYamlParser?: YamlParser,
 ): LDOverrideSource {
   if (TypeValidators.Function.is(options)) {
     return (options as (clientContext: LDClientContext) => LDOverrideSource)(clientContext);
@@ -152,7 +166,7 @@ export default function createOverrideSource(
       throw new Error('The file-based override source requires a platform with filesystem support');
     }
     return new FileOverrideSource(
-      validateFileOverrideSourceOptions(options, clientContext, defaultYamlParser),
+      validateFileOverrideSourceOptions(options, clientContext),
       fileSystem,
       clientContext.basicConfiguration.logger,
     );

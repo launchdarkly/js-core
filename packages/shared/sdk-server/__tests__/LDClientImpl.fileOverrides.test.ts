@@ -14,7 +14,6 @@ const yamlPath = `${directory}/overrides.yaml`;
 describe('given a client with a file override source over a mock filesystem', () => {
   let filesystem: MockFilesystem;
   let client: LDClientImpl | undefined;
-  let platformYamlParser: jest.Mock;
 
   const makeClient = (
     overrides: Omit<FileOverrideSourceOptions, 'type'>,
@@ -38,14 +37,12 @@ describe('given a client with a file override source over a mock filesystem', ()
         },
       },
       makeCallbacks(),
-      { yamlParser: platformYamlParser },
     );
     return client;
   };
 
   beforeEach(() => {
     filesystem = new MockFilesystem();
-    platformYamlParser = jest.fn(() => ({ flagValues: { 'yaml-flag': 'from-platform-parser' } }));
   });
 
   afterEach(() => {
@@ -69,20 +66,7 @@ describe('given a client with a file override source over a mock filesystem', ()
     expect(client!.initialized()).toBe(false);
   });
 
-  it('reads a YAML file with the parser the platform supplies', async () => {
-    filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: from-platform-parser\n');
-    makeClient({ paths: [yamlPath] });
-
-    await waitFor(
-      async () =>
-        (await client!.variation('yaml-flag', user, 'default')) === 'from-platform-parser',
-    );
-    expect(platformYamlParser).toHaveBeenCalledWith(
-      'flagValues:\n  yaml-flag: from-platform-parser\n',
-    );
-  });
-
-  it('prefers a configured YAML parser over the one the platform supplies', async () => {
+  it('reads a YAML file with the configured parser', async () => {
     const yamlParser = jest.fn(() => ({ flagValues: { 'yaml-flag': 'from-configured-parser' } }));
     filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: x\n');
     makeClient({ paths: [yamlPath], yamlParser });
@@ -91,7 +75,16 @@ describe('given a client with a file override source over a mock filesystem', ()
       async () =>
         (await client!.variation('yaml-flag', user, 'default')) === 'from-configured-parser',
     );
-    expect(platformYamlParser).not.toHaveBeenCalled();
+    expect(yamlParser).toHaveBeenCalledWith('flagValues:\n  yaml-flag: x\n');
+  });
+
+  it('fails client construction for a YAML file when no parser is configured', () => {
+    // The SDK does not include a YAML parser, so the file could never load.
+    filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: x\n');
+
+    expect(() => makeClient({ paths: [yamlPath] })).toThrow(
+      `The file-based override source was given a YAML file (${yamlPath}) but no yamlParser.`,
+    );
   });
 
   it('reloads when the directory reports a change', async () => {

@@ -14,8 +14,6 @@ function makeContext(logger: LDLogger, withFilesystem: boolean = true): ClientCo
   });
 }
 
-const defaultYamlParser = () => ({});
-
 describe('given a client context with filesystem support', () => {
   let logger: MockLogger;
   let context: ClientContext;
@@ -29,7 +27,6 @@ describe('given a client context with filesystem support', () => {
     const source = createOverrideSource(
       { type: 'file', paths: ['/a.json'] },
       context,
-      defaultYamlParser,
     ) as FileOverrideSource;
 
     expect(source).toBeInstanceOf(FileOverrideSource);
@@ -38,7 +35,7 @@ describe('given a client context with filesystem support', () => {
       duplicateKeysHandling: 'fail',
       changeDetection: 'polling',
       pollIntervalMs: 1000,
-      yamlParser: defaultYamlParser,
+      yamlParser: undefined,
     });
     expect(logger.warn).not.toHaveBeenCalled();
   });
@@ -55,7 +52,6 @@ describe('given a client context with filesystem support', () => {
         yamlParser,
       },
       context,
-      defaultYamlParser,
     ) as FileOverrideSource;
 
     expect(source.config).toEqual({
@@ -142,16 +138,34 @@ describe('given a client context with filesystem support', () => {
     );
   });
 
-  it('warns and keeps the default parser for a YAML parser that is not a function', () => {
+  it('warns and ignores a YAML parser that is not a function', () => {
     const source = createOverrideSource(
       { type: 'file', paths: ['/a.json'], yamlParser: 'yaml' as any },
       context,
-      defaultYamlParser,
     ) as FileOverrideSource;
 
-    expect(source.config.yamlParser).toBe(defaultYamlParser);
+    expect(source.config.yamlParser).toBeUndefined();
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('dataSystem.overrides.yamlParser'),
+    );
+  });
+
+  it('fails construction for a YAML file when no parser is configured', () => {
+    // The SDK does not include a YAML parser, so such a file could never load. That is a
+    // configuration error, reported once at construction rather than on every reload.
+    const message =
+      'The file-based override source was given a YAML file (/b.yaml) but no yamlParser.';
+    expect(() =>
+      createOverrideSource({ type: 'file', paths: ['/a.json', '/b.yaml'] }, context),
+    ).toThrow(message);
+    expect(() =>
+      createOverrideSource(
+        { type: 'file', paths: ['/a.json', '/b.yaml'], yamlParser: 'yaml' as any },
+        context,
+      ),
+    ).toThrow(message);
+    expect(() => createOverrideSource({ type: 'file', paths: ['/c.YML'] }, context)).toThrow(
+      'The file-based override source was given a YAML file (/c.YML) but no yamlParser.',
     );
   });
 

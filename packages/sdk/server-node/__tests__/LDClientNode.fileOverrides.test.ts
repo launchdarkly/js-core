@@ -1,6 +1,7 @@
 import { mkdtemp, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 
 import { FileOverrideSourceOptions } from '@launchdarkly/js-server-sdk-common';
 
@@ -46,10 +47,10 @@ describe('given a temporary directory of override files', () => {
     await rm(directory, { recursive: true, force: true });
   });
 
-  it('reads a YAML file with the built-in parser', async () => {
+  it('reads a YAML file with a configured parser', async () => {
     const path = join(directory, 'overrides.yaml');
     await writeFile(path, 'flagValues:\n  yaml-flag: "override-value"\n');
-    client = makeClient(directory, { paths: [path] });
+    client = makeClient(directory, { paths: [path], yamlParser: parseYaml });
 
     // Evaluation does not wait for the initial load, so wait for the override to be in effect.
     await waitFor(

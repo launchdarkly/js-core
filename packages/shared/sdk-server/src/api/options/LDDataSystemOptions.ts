@@ -160,8 +160,9 @@ export interface FileOverrideSourceOptions {
   pollInterval?: number;
 
   /**
-   * A YAML parser for YAML files. The parser must produce the same structure as `JSON.parse`.
-   * The Node.js SDK supplies one by default. Other platforms need one to read YAML files.
+   * A YAML parser for YAML files. The SDK does not include one; to read YAML files, supply a
+   * parser that produces the same structure as `JSON.parse`, for example the `parse` function
+   * of the `yaml` package. A YAML file configured without a parser fails client construction.
    */
   yamlParser?: (data: string) => any;
 }

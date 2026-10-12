@@ -290,7 +290,6 @@ function constructFDv2(
   instanceId: string | undefined,
   userAgentHeaderName: 'user-agent' | 'x-launchdarkly-user-agent' | undefined,
   startEventProcessor: boolean,
-  defaultYamlParser: ((data: string) => any) | undefined,
 ): {
   config: Configuration;
   logger: LDLogger | undefined;
@@ -338,7 +337,7 @@ function constructFDv2(
   // fails client construction before a persistent store has opened a connection.
   const overrideSource =
     dataSystem.overrides !== undefined && !config.offline
-      ? createOverrideSource(dataSystem.overrides, clientContext, defaultYamlParser)
+      ? createOverrideSource(dataSystem.overrides, clientContext)
       : undefined;
   const featureStore = dataSystem.featureStoreFactory(clientContext);
 
@@ -797,7 +796,6 @@ export default class LDClientImpl implements LDClient {
         internalOptions?.instanceId,
         internalOptions?.userAgentHeaderName,
         startEventProcessor,
-        internalOptions?.yamlParser,
       ));
       this._featureStore = transactionalStore;
       this.bigSegmentStatusProviderInternal = this._bigSegmentsManager
