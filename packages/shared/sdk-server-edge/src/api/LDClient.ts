@@ -1,3 +1,4 @@
+/// <reference types="node" preserve="true" />
 import { EventEmitter } from 'node:events';
 
 import { Info, internal, LDClientImpl, LDOptions } from '@launchdarkly/js-server-sdk-common';

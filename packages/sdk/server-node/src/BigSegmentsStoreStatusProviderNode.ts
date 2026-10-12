@@ -1,3 +1,4 @@
+/// <reference types="node" preserve="true" />
 import { EventEmitter } from 'events';
 
 import { BigSegmentStoreStatusProviderImpl, interfaces } from '@launchdarkly/js-server-sdk-common';
