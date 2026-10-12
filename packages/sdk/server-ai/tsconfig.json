@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "stripInternal": true,
     "types": ["jest", "node"],
+    // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
     "ignoreDeprecations": "6.0",
     "moduleResolution": "bundler"
   },

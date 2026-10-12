@@ -6,7 +6,7 @@
     "lib": ["ES2020", "DOM"],
     "module": "ESNext",
     "types": ["node"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "noImplicitOverride": true,
     "allowSyntheticDefaultImports": true,

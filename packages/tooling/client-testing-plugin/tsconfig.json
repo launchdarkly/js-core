@@ -5,6 +5,7 @@
     "declarationMap": true,
     "lib": ["es6", "dom"],
     "module": "ESNext",
+    // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
     "ignoreDeprecations": "6.0",
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,

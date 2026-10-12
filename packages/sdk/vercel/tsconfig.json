@@ -4,7 +4,7 @@
     "rootDir": ".",
     "outDir": "dist",
     "target": "es2017",
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020"],
     "module": "ESNext",
     "strict": true,
     "noImplicitOverride": true,

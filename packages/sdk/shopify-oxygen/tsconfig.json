@@ -4,7 +4,7 @@
     "esModuleInterop": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["es2020", "dom"],
+    "lib": ["es2020"],
     "module": "ES6",
     "moduleResolution": "bundler",
     "noImplicitOverride": true,
@@ -15,6 +15,7 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
+    // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
     "ignoreDeprecations": "6.0",
     "target": "ES2017",
     "types": ["jest"]

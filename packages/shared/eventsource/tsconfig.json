@@ -6,6 +6,7 @@
     "lib": ["es2020", "dom"],
     "module": "commonjs",
     "types": ["jest", "node"],
+    // lib.dom and @types/node both declare URLPattern and the types conflict.
     "skipLibCheck": true,
     "strict": true,
     "noImplicitOverride": true,

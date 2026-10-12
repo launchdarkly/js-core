@@ -1,6 +1,6 @@
 {
   "transform": {
-    "^.+\\.ts?$": "ts-jest"
+    "^.+\\.ts?$": ["ts-jest", { "diagnostics": { "ignoreCodes": ["TS151002"] } }]
   },
   "testMatch": ["**/*.test.ts?(x)"],
   "testPathIgnorePatterns": ["node_modules", "example", "dist"],
