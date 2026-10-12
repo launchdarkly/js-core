@@ -2,10 +2,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-import { integrations } from '@launchdarkly/js-server-sdk-common';
+import { integrations, sleep } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
-import waitFor, { sleep } from './waitFor';
+import waitFor from './waitFor';
 
 // These tests run on real files and real timers. The source waits for change notifications to
 // settle for 100 ms and retries a failed load after one second.

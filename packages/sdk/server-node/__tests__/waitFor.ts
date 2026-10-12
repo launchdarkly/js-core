@@ -1,11 +1,4 @@
-/**
- * Resolves after the given number of milliseconds.
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
+import { sleep } from '@launchdarkly/js-server-sdk-common';
 
 /**
  * Polls a condition until it holds or the timeout elapses.
