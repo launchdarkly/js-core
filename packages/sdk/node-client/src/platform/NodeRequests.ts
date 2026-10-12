@@ -11,37 +11,6 @@ import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
 
-/**
- * The TLS options that are copied onto each streaming `https` request. The names match the
- * options of `https.request()`.
- */
-const TLS_OPTION_NAMES = [
-  'pfx',
-  'key',
-  'passphrase',
-  'cert',
-  'ca',
-  'ciphers',
-  'rejectUnauthorized',
-  'secureProtocol',
-  'servername',
-  'checkServerIdentity',
-] as const;
-
-function tlsRequestOptions(tlsOptions?: LDTLSOptions): Record<string, unknown> {
-  const merged: Record<string, unknown> = {};
-  if (!tlsOptions) {
-    return merged;
-  }
-  const bag = tlsOptions as unknown as Record<string, unknown>;
-  TLS_OPTION_NAMES.forEach((name) => {
-    if (bag[name] !== undefined) {
-      merged[name] = bag[name];
-    }
-  });
-  return merged;
-}
-
 function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
   const options: https.AgentOptions & { [index: string]: any } = {
     ca: tlsOptions.ca,
@@ -72,13 +41,12 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
 export default class NodeRequests implements platform.Requests {
   private _agent: https.Agent | undefined;
 
-  private _tlsParams: Record<string, unknown>;
-
   private _enableBodyCompression: boolean = false;
 
   constructor(tlsOptions?: LDTLSOptions, enableEventCompression?: boolean) {
+    // This SDK has no proxy support, so the agent alone carries the TLS options to every
+    // request. No per-request TLS parameters are necessary.
     this._agent = tlsOptions ? new https.Agent(processTlsOptions(tlsOptions)) : undefined;
-    this._tlsParams = tlsRequestOptions(tlsOptions);
     this._enableBodyCompression = !!enableEventCompression;
   }
 
@@ -139,16 +107,12 @@ export default class NodeRequests implements platform.Requests {
    * caller owns the read timeout and cancels through the abort signal.
    */
   private _streamingFetch(url: string, options: platform.Options): Promise<platform.Response> {
-    const isSecure = url.startsWith('https://');
-    const impl = isSecure ? https : http;
-    const requestOptions: https.RequestOptions & Record<string, unknown> = {
+    const impl = url.startsWith('https://') ? https : http;
+    const requestOptions: https.RequestOptions = {
       method: options.method,
       headers: options.headers,
       agent: this._agent,
     };
-    if (isSecure) {
-      Object.assign(requestOptions, this._tlsParams);
-    }
     return new Promise<platform.Response>((resolve, reject) => {
       const req = impl.request(url, requestOptions, (res) =>
         resolve(internal.createStreamingResponse(res)),
