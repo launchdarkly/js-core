@@ -33,7 +33,8 @@ export interface FetchHeaders {
 
 /**
  * A reader over the response body stream. `read` resolves with the next chunk, or with
- * `done: true` when the server ends the stream, and rejects when the connection drops.
+ * `done: true` when the server ends the stream, and rejects when the connection terminates
+ * before the server ends the stream.
  */
 export interface FetchBodyReader {
   read(): Promise<{ done: boolean; value?: Uint8Array }>;

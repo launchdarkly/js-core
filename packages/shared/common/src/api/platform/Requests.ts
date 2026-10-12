@@ -54,9 +54,7 @@ export interface Headers {
 
   /**
    * Executes the callback once for each header, with the value first. Optional so existing
-   * implementations remain valid. A streaming implementation must provide it. The streaming
-   * client forwards response headers to its open and error events only through this method,
-   * so without it those events carry no headers.
+   * implementations remain valid.
    *
    * https://developer.mozilla.org/en-US/docs/Web/API/Headers/forEach
    */
@@ -69,7 +67,7 @@ export interface Headers {
 export interface BodyReader {
   /**
    * Resolves with the next chunk, or with `done: true` when the server ends the stream.
-   * Rejects when the connection drops.
+   * Rejects when the connection terminates before the server ends the stream.
    */
   read(): Promise<{ done: boolean; value?: Uint8Array }>;
 
@@ -166,14 +164,12 @@ export interface Options {
   signal?: AbortSignalLike;
 
   /**
-   * True for a streaming request. The implementation delivers response chunks with low
-   * latency. It does not request compressed content, does not buffer the response body,
-   * and applies no request timeout. The response exposes its body through
+   * True for a streaming request. The implementation does not buffer the response body,
+   * and it ignores {@link Options.timeout}. The response exposes its body through
    * {@link Response.body}. An SDK must use a fetch as a streaming transport only when the
    * implementation honors this field. A streaming implementation must provide at least one
    * release path. It honors {@link Options.signal}, or it provides the body cancel. It
-   * preferably provides both. When `streaming` is true, the implementation ignores
-   * {@link Options.timeout}.
+   * preferably provides both.
    */
   streaming?: boolean;
 }
