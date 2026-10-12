@@ -1,4 +1,5 @@
 import { Redis } from 'ioredis';
+import { parse as parseYaml } from 'yaml';
 
 import {
   CommandParams,
@@ -353,6 +354,8 @@ export async function makeSdkConfig(
     const overrides: FileOverrideSourceOptions = {
       type: 'file',
       paths: options.overrides.filePaths,
+      // The SDK does not include a YAML parser; the test service supplies one for YAML files.
+      yamlParser: parseYaml,
     };
     if (duplicateKeysHandling !== undefined && duplicateKeysHandling !== null) {
       overrides.duplicateKeysHandling =
