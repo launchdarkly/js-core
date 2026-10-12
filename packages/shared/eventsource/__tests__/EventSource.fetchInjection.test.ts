@@ -988,6 +988,34 @@ it('reads the response status once for the failure report', async () => {
   }
 });
 
+it('keeps the headers when a non-200 response has no get', async () => {
+  // A transport without get fails the content-type lookup. A failure response does not
+  // need the declared type, so the report must keep the headers that forEach collected,
+  // including the FDv1 fallback directive.
+  const headers = {
+    forEach(callback: (value: string, key: string) => void): void {
+      callback('true', 'x-ld-fd-fallback');
+    },
+  } as unknown as FetchHeaders;
+  const injected: FetchLike = async () => ({
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers,
+    body: null,
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.status).toEqual(503);
+    expect(err?.headers?.['x-ld-fd-fallback']).toEqual('true');
+  } finally {
+    es.close();
+  }
+});
+
 it('keeps the status when a non-200 response headers forEach throws', async () => {
   // Without the headers fallback, the throw would escape to the fetch catch and the 401 would
   // be reported with no status, so a permanent auth failure would retry forever.

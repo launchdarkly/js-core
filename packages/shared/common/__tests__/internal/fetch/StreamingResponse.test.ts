@@ -171,6 +171,37 @@ it('rejects a string chunk in text instead of corrupting the result', async () =
   expect(String(err)).not.toContain('data: hi');
 });
 
+it('destroys the source when text rejects a bad chunk', async () => {
+  // Readable.from on strings yields string chunks, which the decoder rejects. The
+  // rejection must release the connection, because text() owns the body.
+  const readable = Readable.from(['data: hi\n\n']);
+  const source: StreamingResponseSource = Object.assign(readable, { headers: {} });
+  const res = createStreamingResponse(source);
+  await expect(res.text()).rejects.toThrow('BufferSource');
+  expect(readable.destroyed).toBe(true);
+});
+
+it('keeps the fixed message when the source destroy throws during a bad-chunk release', async () => {
+  // The release calls inside cancel are guarded. A hostile destroy must not replace the
+  // fixed BufferSource message, and the iterator return must still run.
+  const destroySpy = jest.fn(() => {
+    throw new Error('destroy boom');
+  });
+  const returnSpy = jest.fn(async () => ({ done: true }));
+  const source: StreamingResponseSource = {
+    headers: {},
+    destroy: destroySpy,
+    [Symbol.asyncIterator]: () => ({
+      next: async () => ({ done: false, value: 'data: hi\n\n' as unknown as Uint8Array }),
+      return: returnSpy,
+    }),
+  };
+  const res = createStreamingResponse(source);
+  await expect(res.text()).rejects.toThrow('BufferSource');
+  expect(destroySpy).toHaveBeenCalledTimes(1);
+  expect(returnSpy).toHaveBeenCalledTimes(1);
+});
+
 it('throws a named error when the source has no async iterator', () => {
   const source = { headers: {} } as unknown as StreamingResponseSource;
   expect(() => createStreamingResponse(source)).toThrow(

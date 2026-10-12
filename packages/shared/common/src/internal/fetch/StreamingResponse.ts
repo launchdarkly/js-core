@@ -133,30 +133,6 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
     bodyUsed = true;
   };
 
-  async function text(): Promise<string> {
-    claimBody();
-    const decoder = new TextDecoder();
-    let result = '';
-    let next = await iterator.next();
-    while (!next.done) {
-      if (next.value !== undefined) {
-        try {
-          result += decoder.decode(next.value, { stream: true });
-        } catch {
-          // decode() is the BufferSource validator, like on the reader path in the
-          // streaming client. The engine's message can quote the chunk contents, and
-          // stream data must not leak into error messages and logs.
-          throw new TypeError('the source supplied a chunk that is not a BufferSource');
-        }
-      }
-      // The stream provides the chunks in sequence, so the reads cannot run in parallel.
-      // eslint-disable-next-line no-await-in-loop
-      next = await iterator.next();
-    }
-    // The final decode flushes a trailing partial multi-byte sequence.
-    return result + decoder.decode();
-  }
-
   const cancel = async (): Promise<void> => {
     // Destroy the stream first. That rejects a pending read and unblocks a queued return
     // call. A Node readable iterator queues the return call behind a pending read, and on
@@ -175,6 +151,31 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
       // A throwing return has nothing left to release.
     }
   };
+
+  async function text(): Promise<string> {
+    claimBody();
+    const decoder = new TextDecoder();
+    let result = '';
+    let next = await iterator.next();
+    while (!next.done) {
+      if (next.value !== undefined) {
+        try {
+          result += decoder.decode(next.value, { stream: true });
+        } catch {
+          // decode() rejects a chunk that is not a BufferSource. The fixed message keeps
+          // chunk contents out of error messages. text() owns the body, so a failed read
+          // must release the source itself.
+          cancel();
+          throw new TypeError('the source supplied a chunk that is not a BufferSource');
+        }
+      }
+      // The stream provides the chunks in sequence, so the reads cannot run in parallel.
+      // oxlint-disable-next-line no-await-in-loop
+      next = await iterator.next();
+    }
+    // The final decode flushes a trailing partial multi-byte sequence.
+    return result + decoder.decode();
+  }
 
   return {
     headers: wrapRawHeaders(source.headers),

@@ -629,13 +629,20 @@ export function createEventSource(
       let headersUnreadable = false;
       try {
         responseHeaders = headersToObject(res.headers);
+      } catch {
+        responseHeaders = {};
+        headersUnreadable = true;
+      }
+      try {
         const declaredType: unknown = res.headers.get('content-type');
         // A standard get returns a string or null. A sloppy transport can return undefined for
         // an absent header, and a hostile one can return anything. Only a string is a declared
         // type; every other value reads as no declared type.
         contentType = typeof declaredType === 'string' ? declaredType : undefined;
       } catch {
-        responseHeaders = {};
+        // A missing or throwing get leaves the declared type unknown. Only a success response
+        // needs the declared type, and the headers read above must survive for the failure
+        // report.
         headersUnreadable = true;
       }
 
