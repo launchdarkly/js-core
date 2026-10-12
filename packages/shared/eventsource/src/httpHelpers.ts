@@ -11,11 +11,23 @@
  */
 
 /**
- * The response headers. `forEach` is the only member this package reads. It is optional so a
- * transport whose response headers expose no iteration can still satisfy the type. The client
- * then treats the response as carrying no headers.
+ * The response headers. The member set mirrors the subset of the standard `Headers` class that
+ * this package reads.
  */
 export interface FetchHeaders {
+  /**
+   * Returns the value of a header, or `null` when the response carries no such header. The
+   * lookup is case-insensitive, like the standard `Headers.get`. The client validates the
+   * declared content type through it.
+   */
+  get(name: string): string | null;
+
+  /**
+   * Executes the callback once for each header, with the value first. It is optional so a
+   * transport whose response headers expose no iteration can still satisfy the type. The client
+   * forwards headers to its open and error events only through this method, so without it those
+   * events carry no headers.
+   */
   forEach?(callback: (value: string, key: string) => void): void;
 }
 
@@ -100,7 +112,7 @@ export const bodylessMethods = ['GET', 'HEAD'];
 export function headersToObject(headers: FetchHeaders): Record<string, string> {
   const result: Record<string, string> = {};
   if (!headers.forEach) {
-    // A transport without header iteration reports no headers. The client treats that the same
+    // A transport without header iteration forwards no headers. The client treats that the same
     // as an empty header set.
     return result;
   }

@@ -40,5 +40,5 @@ it('keeps empty parts', () => {
 });
 
 it('returns an empty object when the headers expose no forEach', () => {
-  expect(headersToObject({})).toEqual({});
+  expect(headersToObject({ get: () => null })).toEqual({});
 });

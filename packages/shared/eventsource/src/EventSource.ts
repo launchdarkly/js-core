@@ -625,9 +625,15 @@ export function createEventSource(
       // non-200 status would be lost with the throw, and the error filter could not classify
       // the failure.
       let responseHeaders: Record<string, string>;
+      let contentType: string | undefined;
       let headersUnreadable = false;
       try {
         responseHeaders = headersToObject(res.headers);
+        const declaredType: unknown = res.headers.get('content-type');
+        // A standard get returns a string or null. A sloppy transport can return undefined for
+        // an absent header, and a hostile one can return anything. Only a string is a declared
+        // type; every other value reads as no declared type.
+        contentType = typeof declaredType === 'string' ? declaredType : undefined;
       } catch {
         responseHeaders = {};
         headersUnreadable = true;
@@ -663,9 +669,9 @@ export function createEventSource(
       }
 
       if (headersUnreadable) {
-        // On a success status the headers decide whether the body is a stream at all. A 200
-        // whose headers cannot be read must fail and retry, not open as a headerless stream
-        // with its partially collected headers discarded.
+        // On a success status the headers feed the open event and the declared content type
+        // gates the stream. A 200 whose headers throw during the read must fail and retry, not
+        // open with its partially collected headers discarded.
         failOnce({ message: 'stream response headers could not be read' });
         releaseBody(res);
         return;
@@ -677,14 +683,13 @@ export function createEventSource(
       // transport can report no headers.
       //
       // The media type must match exactly. Parameters after it, such as a charset, are allowed.
-      // A standard Headers object comma-joins a duplicated Content-Type header, so each part of
-      // a joined value must declare the event-stream media type. This is stricter than the
-      // Fetch algorithm, which keeps only the last parsable part, and an empty or unparsable
-      // part also fails.
+      // A standard get comma-joins a duplicated Content-Type header, so each part of a joined
+      // value must declare the event-stream media type. This is stricter than the Fetch
+      // algorithm, which keeps only the last parsable part, and an empty or unparsable part
+      // also fails.
       //
       // trim() also strips NBSP, form feed, and vertical tab, which are not HTTP whitespace.
       // The extra leniency is harmless.
-      const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
         !splitHeaderListValue(contentType).every(
