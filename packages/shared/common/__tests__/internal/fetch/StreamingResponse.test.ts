@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 
 import {
   createStreamingResponse,
@@ -189,5 +189,24 @@ it('destroys a real Node readable stream when the caller cancels mid-stream', as
   const reader = res.body.getReader();
   await reader.read();
   await reader.cancel?.();
+  expect(readable.destroyed).toBe(true);
+});
+
+it('destroys a real Node readable stream when the caller cancels with a read in progress', async () => {
+  const stalled = new PassThrough();
+  const source: StreamingResponseSource = Object.assign(stalled, { headers: {} });
+  const res = createStreamingResponse(source);
+  const reader = res.body.getReader();
+  const pending = reader.read();
+  await reader.cancel?.();
+  expect(stalled.destroyed).toBe(true);
+  await expect(pending).rejects.toThrow('Premature close');
+});
+
+it('destroys a real Node readable stream when the caller cancels before reading', async () => {
+  const readable = Readable.from([Buffer.from('never read')]);
+  const source: StreamingResponseSource = Object.assign(readable, { headers: {} });
+  const res = createStreamingResponse(source);
+  await res.body.cancel?.();
   expect(readable.destroyed).toBe(true);
 });

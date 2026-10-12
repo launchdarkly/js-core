@@ -24,8 +24,8 @@ export interface ResponseChunkIterator {
   next(): Promise<{ done?: boolean; value?: Uint8Array }>;
 
   /**
-   * Releases the underlying stream. A Node `Readable` iterator destroys the stream when
-   * this method runs before the stream ends.
+   * Releases the iterator. A Node `Readable` iterator queues this call behind a pending
+   * read, so this call alone does not release an idle stream.
    */
   return?(): Promise<{ done?: boolean; value?: Uint8Array }>;
 }
@@ -52,6 +52,13 @@ export type StreamingResponseSource = {
   headers: RawHeaders;
   statusCode?: number;
   statusMessage?: string;
+
+  /**
+   * Destroys the underlying stream. When the source provides this method, `cancel` uses
+   * it to release the connection even while a read is in progress. A Node `Readable`
+   * provides it.
+   */
+  destroy?(): void;
 } & { [K in AsyncIteratorKey]: () => ResponseChunkIterator };
 
 /**
@@ -92,9 +99,9 @@ export interface StreamingResponse extends Response {
  * Creates a response for a streaming request. The response does not buffer the body. Each
  * read hands out the next chunk from the source iterator. The `text` and `json` methods
  * read the remainder of the stream, so a caller uses either the reader or those methods,
- * not both. The `cancel` methods on the body and the reader call the iterator's `return`
- * method when one exists. The body passes through as-is: the caller is responsible for any
- * content-encoding decoding before the source reaches this function.
+ * not both. The `cancel` methods on the body and the reader destroy the source when it
+ * provides a `destroy` method, and also call the iterator's `return` method when one
+ * exists. The body passes through as-is, so the caller decodes any content encoding first.
  *
  * @param source The raw platform response, for example a Node `IncomingMessage`. A missing
  * status code maps to 0, and a missing status message maps to an empty string.
@@ -124,7 +131,12 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
   }
 
   const cancel = async (): Promise<void> => {
-    await iterator.return?.();
+    // Destroy the stream first. That rejects a pending read and unblocks a queued return
+    // call. A Node readable iterator queues the return call behind a pending read, and on
+    // a stream that was never read it completes without a destroy, so the return call
+    // alone cannot release the connection. Do not await it for the same reason.
+    source.destroy?.();
+    iterator.return?.().catch(() => {});
   };
 
   return {
