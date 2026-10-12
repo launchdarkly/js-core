@@ -1,4 +1,4 @@
-import { Headers, Response, ResponseBody } from '../../api/platform/Requests';
+import type { Headers, Response, ResponseBody } from '../../api/platform/Requests';
 
 // Each platform that constructs a streaming response provides the TextDecoder global. This
 // package compiles without the global type libraries, so this scoped declaration stands in
@@ -22,13 +22,21 @@ export interface ResponseChunkIterator {
    * the connection drops.
    */
   next(): Promise<{ done?: boolean; value?: Uint8Array }>;
+
+  /**
+   * Releases the underlying stream. A Node `Readable` iterator destroys the stream when
+   * this method runs before the stream ends.
+   */
+  return?(): Promise<{ done?: boolean; value?: Uint8Array }>;
 }
 
 /**
- * The key of the chunk iterator on a streaming response source. The compiled lib of a
- * consumer may not declare `Symbol.asyncIterator`. This conditional resolves to that symbol
- * when the lib declares it, and to no key at all otherwise. It keeps these declarations
- * valid for every consumer, like `AbortSignalLike` does for the abort signal.
+ * The key of the chunk iterator on a streaming response source. A consumer's compile-time
+ * lib may not declare `Symbol.asyncIterator`. This conditional resolves to that symbol when
+ * the lib declares it, and to no key at all otherwise. That keeps these declarations valid
+ * for every consumer, like `AbortSignalLike` does for the abort signal. Without the symbol,
+ * the source type cannot require the iterator, and a source without a stream fails at run
+ * time instead of compile time.
  */
 type AsyncIteratorKey = typeof Symbol extends { readonly asyncIterator: infer S }
   ? S extends keyof any
@@ -47,51 +55,27 @@ export type StreamingResponseSource = {
 } & { [K in AsyncIteratorKey]: () => ResponseChunkIterator };
 
 /**
- * Wraps the raw headers to match those used by fetch APIs.
+ * Wraps the raw headers in the fetch `Headers` shape. Lookups are case-insensitive.
+ * Multi-value headers are joined with ", ", and names without a value are skipped.
  */
 function wrapRawHeaders(headers: RawHeaders): Headers {
-  function headerVal(name: string): string | null {
-    const val = headers[name];
-    if (val === undefined || val === null) {
-      return null;
+  const normalized = new Map<string, string>();
+  Object.keys(headers).forEach((key) => {
+    const val = headers[key];
+    if (val !== undefined && val !== null) {
+      normalized.set(key.toLowerCase(), Array.isArray(val) ? val.join(', ') : val);
     }
-    if (Array.isArray(val)) {
-      return val.join(', ');
-    }
-    return val;
-  }
-
-  // We want to use generators here for the simplicity of maintaining
-  // this interface. Also they aren't expected to be high frequency usage.
-  function* entries(): Iterable<[string, string]> {
-    for (const key of Object.keys(headers)) {
-      const val = headerVal(key);
-      if (val !== null) {
-        yield [key, val];
-      }
-    }
-  }
-
-  function* values(): Iterable<string> {
-    for (const [, val] of entries()) {
-      yield val;
-    }
-  }
+  });
 
   return {
-    get: headerVal,
-    keys: () => Object.keys(headers),
-    values,
-    entries,
-    // The callback receives the value first. The order matches the fetch `Headers.forEach`
-    // signature. Multi-value headers are joined with a comma, and headers without a value
-    // are skipped, like `entries`.
+    get: (name: string) => normalized.get(name.toLowerCase()) ?? null,
+    keys: () => normalized.keys(),
+    values: () => normalized.values(),
+    entries: () => normalized.entries(),
     forEach: (callback: (value: string, key: string) => void) => {
-      for (const [key, value] of entries()) {
-        callback(value, key);
-      }
+      normalized.forEach((value, key) => callback(value, key));
     },
-    has: (name: string) => Object.prototype.hasOwnProperty.call(headers, name),
+    has: (name: string) => normalized.has(name.toLowerCase()),
   };
 }
 
@@ -105,9 +89,12 @@ export interface StreamingResponse extends Response {
 }
 
 /**
- * Creates a response for a streaming request. It does not buffer the body: each read hands
- * out the next chunk from the source iterator. The `text` and `json` methods read the
- * remainder of the stream, so a caller uses either the reader or those methods, not both.
+ * Creates a response for a streaming request. The response does not buffer the body. Each
+ * read hands out the next chunk from the source iterator. The `text` and `json` methods
+ * read the remainder of the stream, so a caller uses either the reader or those methods,
+ * not both. The `cancel` methods on the body and the reader call the iterator's `return`
+ * method when one exists. The body passes through as-is: the caller is responsible for any
+ * content-encoding decoding before the source reaches this function.
  *
  * @param source The raw platform response, for example a Node `IncomingMessage`. A missing
  * status code maps to 0, and a missing status message maps to an empty string.
@@ -136,6 +123,10 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
     return new TextDecoder().decode(content);
   }
 
+  const cancel = async (): Promise<void> => {
+    await iterator.return?.();
+  };
+
   return {
     headers: wrapRawHeaders(source.headers),
     status: source.statusCode ?? 0,
@@ -149,7 +140,9 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
           }
           return { done: false, value: next.value };
         },
+        cancel,
       }),
+      cancel,
     },
     text,
     json: async () => JSON.parse(await text()),
