@@ -406,7 +406,7 @@ it('continues polling after an exception thrown during a request', async () => {
   });
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(logger.error).toHaveBeenCalledWith(
+  expect(logger.warn).toHaveBeenCalledWith(
     'Received I/O error (bad) for polling request - will retry',
   );
 });
@@ -440,40 +440,55 @@ it('can handle recoverable http errors', async () => {
   requests.fetch = mockFetch('', 408);
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(logger.error).toHaveBeenCalledWith('Received error 408 for polling request - will retry');
+  expect(logger.warn).toHaveBeenCalledWith('Received error 408 for polling request - will retry');
 });
 
-it('stops polling on unrecoverable error codes', (done) => {
-  const requests = makeRequests();
-  const dataCallback = jest.fn();
-  const errorCallback = jest.fn();
-  const logger = {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
+it('does not stop polling on an unexpected error code and backs off into the extended regime', async () => {
+  jest.useFakeTimers();
+  try {
+    const requests = makeRequests();
+    requests.fetch = mockFetch('', 401);
+    const dataCallback = jest.fn();
+    const errorCallback = jest.fn();
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
 
-  const polling = new PollingProcessor(
-    makeTestRequestor({
-      requests,
-    }),
-    0.01,
-    dataCallback,
-    errorCallback,
-    logger,
-  );
-  polling.start();
-
-  requests.fetch = mockFetch('', 401);
-
-  // Polling should stop on the 401, but we need to give some time for more
-  // polls to be done.
-  setTimeout(() => {
-    expect(logger.error).toHaveBeenCalledWith(
-      'Received error 401 (invalid SDK key) for polling request - giving up permanently',
+    const polling = new PollingProcessor(
+      makeTestRequestor({
+        requests,
+      }),
+      1, // 1 second normal poll interval
+      dataCallback,
+      errorCallback,
+      logger,
     );
+    polling.start();
+
+    // Let the first poll (a 401) complete and schedule the next attempt.
+    await jest.advanceTimersByTimeAsync(0);
     expect(requests.fetch).toHaveBeenCalledTimes(1);
-    done();
-  }, 50);
+    expect(errorCallback).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Received error 401 (invalid SDK key) for polling request - will retry',
+    );
+
+    // A few normal poll intervals later it has NOT retried: an unexpected
+    // failure promotes the backoff to the extended regime (minutes), not the
+    // 1-second poll interval.
+    await jest.advanceTimersByTimeAsync(3 * 1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(1);
+
+    // Once the extended-regime delay elapses it retries — it never permanently
+    // stops.
+    await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+    polling.stop();
+  } finally {
+    jest.useRealTimers();
+  }
 });

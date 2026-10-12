@@ -1,10 +1,12 @@
 import {
+  classifyHttpStatus,
   DataSourceErrorKind,
+  forPolling,
   httpErrorMessage,
   HttpErrorResponse,
-  isHttpRecoverable,
   LDLogger,
   LDPollingError,
+  RetryState,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
 
@@ -25,13 +27,17 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
 
   private _timeoutHandle: any;
 
+  private readonly _retryState: RetryState;
+
   constructor(
     private readonly _requestor: Requestor,
     private readonly _pollIntervalSeconds: number,
     private readonly _dataHandler: (flags: Flags) => void,
     private readonly _errorHandler?: PollingErrorHandler,
     private readonly _logger?: LDLogger,
-  ) {}
+  ) {
+    this._retryState = forPolling(this._pollIntervalSeconds * 1000);
+  }
 
   private async _poll() {
     if (this._stopped) {
@@ -61,12 +67,16 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
           return;
         }
         const flags = JSON.parse(res);
+        this._retryState.recordSuccess();
         try {
           this._dataHandler?.(flags);
         } catch (err) {
           this._logger?.error(`Exception from data handler: ${err}`);
         }
       } catch {
+        // Unusable data is a normal failure: record it and poll again after
+        // the resulting wait rather than permanently stopping.
+        this._retryState.recordFailure('normal');
         reportJsonError(res);
       }
     } catch (err) {
@@ -77,26 +87,34 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
         return;
       }
       const requestError = err as LDRequestError;
-      if (requestError.status !== undefined) {
-        if (!isHttpRecoverable(requestError.status)) {
-          this._logger?.error(httpErrorMessage(err as HttpErrorResponse, 'polling request'));
-          this._errorHandler?.(
-            new LDPollingError(
-              DataSourceErrorKind.ErrorResponse,
-              requestError.message,
-              requestError.status,
-            ),
-          );
-          return;
-        }
+      // A transport-level failure (no HTTP status) is always a normal failure.
+      const kind =
+        requestError.status !== undefined ? classifyHttpStatus(requestError.status) : 'normal';
+      this._retryState.recordFailure(kind);
+
+      // No failure is terminal now; every failure is retried. An unexpected
+      // failure (e.g. 401/403) backs off into the extended regime but still
+      // retries, so it is surfaced to the error handler without stopping.
+      if (kind === 'unexpected') {
+        this._logger?.error(
+          httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
+        );
+        this._errorHandler?.(
+          new LDPollingError(
+            DataSourceErrorKind.ErrorResponse,
+            requestError.message,
+            requestError.status,
+          ),
+        );
+      } else {
+        this._logger?.warn(
+          httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
+        );
       }
-      this._logger?.error(
-        httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
-      );
     }
 
     const elapsed = Date.now() - startTime;
-    const sleepFor = Math.max(this._pollIntervalSeconds * 1000 - elapsed, 0);
+    const sleepFor = Math.max(this._retryState.nextDelay - elapsed, 0);
 
     this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);
 
