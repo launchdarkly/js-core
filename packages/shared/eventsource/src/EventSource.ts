@@ -87,8 +87,7 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
  * can form, the origin is an empty string.
  */
 function resolveStreamOrigin(candidate: string): string {
-  // A structural read of the document location. This package compiles without the dom lib,
-  // so the global `location` type is not available.
+  // This package builds without the dom lib, so the global `location` has no declared type.
   const base = (globalThis as { location?: { href: string } }).location?.href;
   try {
     return new URL(candidate, base).origin;

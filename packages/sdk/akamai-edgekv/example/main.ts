@@ -8,7 +8,7 @@ const createLDContext = (r: EW.IngressClientRequest): LDMultiKindContext => ({
   kind: 'multi',
   location: {
     key: 'context-key',
-    country: r.userLocation?.country ?? 'unknown',
+    country: r.userLocation?.country,
   },
 });
 
