@@ -289,7 +289,7 @@ export default class EventProcessor implements LDEventProcessor {
 
     // An override-affected evaluation appears only in the summary counters. It produces no
     // individual feature event and no debug event, even when the flag requests them.
-    const overrideAffected = isFeature(inputEvent) && !!inputEvent.overrideAffected;
+    const overrideAffected = isFeatureEvent && !!inputEvent.overrideAffected;
 
     const addFullEvent =
       (isFeatureEvent && inputEvent.trackEvents && !overrideAffected) || !isFeatureEvent;
