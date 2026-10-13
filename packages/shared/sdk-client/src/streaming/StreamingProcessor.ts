@@ -1,8 +1,11 @@
 import {
+  classifyHttpStatus,
   DataSourceErrorKind,
   Encoding,
   EventName,
   EventSource,
+  EventSourceRetryDelayStrategy,
+  forStreaming,
   getStreamingUri,
   httpErrorMessage,
   HttpErrorResponse,
@@ -12,7 +15,7 @@ import {
   LDStreamingError,
   ProcessStreamResponse,
   Requests,
-  shouldRetry,
+  RetryState,
   StreamingErrorHandler,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -48,6 +51,7 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   private _eventSource?: EventSource;
   private _connectionAttemptStartTime?: number;
   private _stopped = false;
+  private readonly _retryState: RetryState;
 
   constructor(
     private readonly _plainContextString: string,
@@ -79,6 +83,7 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     this._headers = { ..._dataSourceConfig.baseHeaders };
     this._logger = _logger;
     this._streamUri = getStreamingUri(_dataSourceConfig.serviceEndpoints, path, parameters);
+    this._retryState = forStreaming(this._dataSourceConfig.initialRetryDelayMillis);
   }
 
   private _logConnectionStarted() {
@@ -98,28 +103,30 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   }
 
   /**
-   * This is a wrapper around the passed errorHandler which adds additional
-   * diagnostics and logging logic.
+   * Records a connection failure on the retry-state controller and surfaces it
+   * for logging and diagnostics. No failure is terminal now: the connection is
+   * always retried. An unexpected failure (e.g. 401/403) backs off into the
+   * extended regime but still retries, so it is surfaced to the error handler
+   * without stopping.
    *
    * @param err The error to be logged and handled.
-   * @return boolean whether to retry the connection.
-   *
    * @private
    */
   private _retryAndHandleError(err: HttpErrorResponse) {
-    if (!shouldRetry(err)) {
-      this._logConnectionResult(false);
+    const kind = err.status !== undefined ? classifyHttpStatus(err.status) : 'normal';
+    this._retryState.recordFailure(kind);
+
+    if (kind === 'unexpected') {
+      this._logger?.error(httpErrorMessage(err, 'streaming request', 'will retry'));
       this._errorHandler?.(
-        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status, false),
+        new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
       );
-      this._logger?.error(httpErrorMessage(err, 'streaming request'));
-      return false;
+    } else {
+      this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     }
 
-    this._logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     this._logConnectionResult(false);
     this._logConnectionStarted();
-    return true;
   }
 
   start() {
@@ -137,14 +144,28 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
       methodAndBodyOverrides = {};
     }
 
+    // The data source drives reconnection timing from its own retry state via
+    // the injected strategy. initialRetryDelayMillis / retryResetIntervalMillis
+    // remain as the fallback for transports that do not honor an injected
+    // strategy (e.g. the browser's native EventSource).
+    const retryDelayStrategy: EventSourceRetryDelayStrategy = {
+      nextRetryDelay: () => this._retryState.nextDelay,
+      setGoodSince: () => this._retryState.recordSuccess(),
+      setBaseDelay: (baseDelayMs: number) => this._retryState.applyServerDirectedRetry(baseDelayMs),
+    };
+
     // TLS is handled by the platform implementation.
     const eventSource = this._requests.createEventSource(this._streamUri, {
       headers: this._headers, // adds content-type header required when body will be present
       ...methodAndBodyOverrides,
-      errorFilter: (error: HttpErrorResponse) => this._retryAndHandleError(error),
+      errorFilter: (error: HttpErrorResponse) => {
+        this._retryAndHandleError(error);
+        return true;
+      },
       initialRetryDelayMillis: this._dataSourceConfig.initialRetryDelayMillis,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
+      retryDelayStrategy,
     });
     this._eventSource = eventSource;
 
