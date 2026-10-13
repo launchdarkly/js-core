@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.4.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.3.3...node-server-sdk-dynamodb-v6.4.0) (2026-10-13)
+
+
+### Features
+
+* Update store peer dep floor to 9.14.1 to better support error reporting and recovery ([#2097](https://github.com/launchdarkly/js-core/issues/2097)) ([1369fa4](https://github.com/launchdarkly/js-core/commit/1369fa4a157fdc3bc175f96ce77d81877a453c22))
+
 ## [6.3.3](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.3.2...node-server-sdk-dynamodb-v6.3.3) (2026-10-06)
 
 
