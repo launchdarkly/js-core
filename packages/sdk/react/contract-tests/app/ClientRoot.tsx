@@ -60,7 +60,12 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
           sdkConfig,
         );
 
-        const { status } = await client.start({ timeout: timeout / 1000 });
+        // The harness sends "bootstrap": null when a test does not set it; treat null as unset.
+        const bootstrap = params.configuration.clientSide?.bootstrap;
+        const { status } = await client.start({
+          timeout: timeout / 1000,
+          ...(bootstrap !== null && bootstrap !== undefined ? { bootstrap } : {}),
+        });
 
         if (status === 'failed' && !params.configuration.initCanFail) {
           client.close();

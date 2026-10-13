@@ -100,6 +100,11 @@ export interface SDKConfigClientSideParams {
   evaluationReasons?: boolean;
   useReport?: boolean;
   includeEnvironmentAttributes?: boolean;
+  /**
+   * Bootstrap flag data, passed through untyped so malformed wire shapes reach the parsing
+   * code under test. The harness sends an explicit null when a test sets no bootstrap.
+   */
+  bootstrap?: Record<string, unknown> | null;
 }
 
 export interface SDKConfigEvaluationHookData {

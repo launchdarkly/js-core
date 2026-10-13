@@ -4,6 +4,7 @@ import {
   LDClient,
   LDLogger,
   LDOptions,
+  LDStartOptions,
   ModeDefinition,
   SynchronizerEntry,
 } from '@launchdarkly/js-client-sdk';
@@ -76,12 +77,15 @@ function translateModeDefinition(modeDef: SDKConfigModeDefinition): ModeDefiniti
   return { initializers, synchronizers };
 }
 
+function isSet<T>(x: T | null | undefined): x is T {
+  return x !== null && x !== undefined;
+}
+
 function makeSdkConfig(options: SDKConfigParams, tag: string) {
   if (!options.clientSide) {
     throw new Error('configuration did not include clientSide options');
   }
 
-  const isSet = (x?: unknown) => x !== null && x !== undefined;
   const maybeTime = (seconds?: number) => (isSet(seconds) ? seconds / 1000 : undefined);
 
   const cf: LDOptions = {
@@ -319,11 +323,9 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
 
   logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
 
-  const timeout =
-    options.configuration.startWaitTimeMs !== null &&
-    options.configuration.startWaitTimeMs !== undefined
-      ? options.configuration.startWaitTimeMs
-      : 5000;
+  const timeout = isSet(options.configuration.startWaitTimeMs)
+    ? options.configuration.startWaitTimeMs
+    : 5000;
   const sdkConfig = makeSdkConfig(options.configuration, options.tag);
   const initialContext =
     options.configuration.clientSide?.initialUser ||
@@ -334,10 +336,17 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     initialContext,
     sdkConfig,
   );
+
+  // The harness always sends a "bootstrap" key, using null when a test doesn't set it.
+  // isSet() treats null as unset so startOptions stays undefined in that case; a bare
+  // `!== undefined` check would not.
+  const bootstrap = options.configuration.clientSide?.bootstrap;
+  const startOptions: LDStartOptions | undefined = isSet(bootstrap) ? { bootstrap } : undefined;
+
   let failed = false;
   try {
     await Promise.race([
-      client.start(),
+      client.start(startOptions),
       new Promise((_resolve, reject) => {
         setTimeout(reject, timeout);
       }),

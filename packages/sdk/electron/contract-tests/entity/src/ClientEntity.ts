@@ -15,6 +15,7 @@ import {
   CommandType,
   CreateInstanceParams,
   makeLogger,
+  SDKConfigModeDefinition,
   SDKConfigParams,
   ClientSideTestHook as TestHook,
   ValueType,
@@ -62,6 +63,44 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     }
     cf.initialConnectionMode = 'streaming';
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+  }
+
+  // The Electron SDK predates the FDv2 data system config: it only has a single
+  // initialConnectionMode plus one streaming and one polling endpoint. Flatten the
+  // harness's dataSystem config onto that surface so newer tests can still point the
+  // SDK at the mock endpoints.
+  if (options.dataSystem) {
+    const applyModeDefinition = (modeDef: SDKConfigModeDefinition) => {
+      (modeDef.synchronizers ?? []).forEach((sync) => {
+        if (sync.streaming?.baseUri) {
+          cf.streamUri = sync.streaming.baseUri;
+          cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+        }
+        if (sync.polling?.baseUri) {
+          cf.baseUri = sync.polling.baseUri;
+        }
+      });
+      (modeDef.initializers ?? []).forEach((init) => {
+        if (init.polling?.baseUri) {
+          cf.baseUri = init.polling.baseUri;
+        }
+      });
+    };
+
+    const connMode = options.dataSystem.connectionModeConfig;
+    if (connMode) {
+      if (connMode.initialConnectionMode) {
+        cf.initialConnectionMode =
+          connMode.initialConnectionMode as LDOptions['initialConnectionMode'];
+      }
+      Object.values(connMode.customConnectionModes ?? {}).forEach(applyModeDefinition);
+    } else if (options.dataSystem.initializers || options.dataSystem.synchronizers) {
+      cf.initialConnectionMode = 'streaming';
+      applyModeDefinition({
+        initializers: options.dataSystem.initializers,
+        synchronizers: options.dataSystem.synchronizers,
+      });
+    }
   }
 
   if (options.events) {
@@ -274,7 +313,12 @@ export async function createEntity(options: CreateInstanceParams) {
     makeDefaultInitialContext();
   const client = createClient(clientSideId, initialContext, sdkConfig);
 
-  const { status } = await client.start({ timeout: timeoutMs / 1000 });
+  // The harness sends "bootstrap": null when a test does not set it; treat null as unset.
+  const bootstrap = options.configuration.clientSide?.bootstrap;
+  const { status } = await client.start({
+    timeout: timeoutMs / 1000,
+    ...(bootstrap !== null && bootstrap !== undefined ? { bootstrap } : {}),
+  });
   if ((status === 'failed' || status === 'timeout') && !options.configuration.initCanFail) {
     client.close();
     throw new Error('client initialization failed');

@@ -42,6 +42,7 @@ app.get('/', (req: Request, res: Response) => {
       'tls:custom-ca',
       'wrapper',
       'client-event-source-http-errors',
+      'bootstrap',
       // NOTE: this needs additional fixes to the shared
       // SDK code to support
       // 'fdv1-fallback',

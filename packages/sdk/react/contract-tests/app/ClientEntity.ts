@@ -6,6 +6,9 @@ import {
   CommandParams,
   CommandType,
   makeLogger,
+  SDKConfigDataInitializer,
+  SDKConfigDataSynchronizer,
+  SDKConfigModeDefinition,
   SDKConfigParams,
   ClientSideTestHook as TestHook,
   ValueType,
@@ -14,6 +17,54 @@ import { LDOptions, LDReactClient, useLDClient } from '@launchdarkly/react-sdk';
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
+
+function translateInitializer(init: SDKConfigDataInitializer) {
+  if (init.polling) {
+    return {
+      type: 'polling',
+      ...(init.polling.pollIntervalMs !== undefined && {
+        pollInterval: init.polling.pollIntervalMs / 1000,
+      }),
+      ...(init.polling.baseUri && {
+        endpoints: { pollingBaseUri: init.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateSynchronizer(sync: SDKConfigDataSynchronizer) {
+  if (sync.streaming) {
+    return {
+      type: 'streaming',
+      ...(sync.streaming.initialRetryDelayMs !== undefined && {
+        initialReconnectDelay: sync.streaming.initialRetryDelayMs / 1000,
+      }),
+      ...(sync.streaming.baseUri && {
+        endpoints: { streamingBaseUri: sync.streaming.baseUri },
+      }),
+    };
+  }
+  if (sync.polling) {
+    return {
+      type: 'polling',
+      ...(sync.polling.pollIntervalMs !== undefined && {
+        pollInterval: sync.polling.pollIntervalMs / 1000,
+      }),
+      ...(sync.polling.baseUri && {
+        endpoints: { pollingBaseUri: sync.polling.baseUri },
+      }),
+    };
+  }
+  return undefined;
+}
+
+function translateModeDefinition(modeDef: SDKConfigModeDefinition) {
+  return {
+    initializers: (modeDef.initializers ?? []).map(translateInitializer).filter(Boolean),
+    synchronizers: (modeDef.synchronizers ?? []).map(translateSynchronizer).filter(Boolean),
+  };
+}
 
 export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
   if (!options.clientSide) {
@@ -47,6 +98,62 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
     }
     cf.streaming = true;
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
+  }
+
+  // Translate the harness's FDv2 dataSystem config to the underlying browser SDK's
+  // dataSystem options, mirroring the browser contract-test entity.
+  if (options.dataSystem) {
+    const dataSystem: any = {};
+
+    const applyEndpointOverrides = (modeDef: SDKConfigModeDefinition) => {
+      (modeDef.synchronizers ?? []).forEach((sync) => {
+        if (sync.streaming?.baseUri) {
+          cf.streamUri = sync.streaming.baseUri;
+          cf.streamInitialReconnectDelay = maybeTime(sync.streaming.initialRetryDelayMs);
+        }
+        if (sync.polling?.baseUri) {
+          cf.baseUri = sync.polling.baseUri;
+        }
+      });
+      (modeDef.initializers ?? []).forEach((init) => {
+        if (init.polling?.baseUri) {
+          cf.baseUri = init.polling.baseUri;
+        }
+      });
+    };
+
+    if (options.dataSystem.connectionModeConfig) {
+      const connMode = options.dataSystem.connectionModeConfig;
+      dataSystem.automaticModeSwitching = connMode.initialConnectionMode
+        ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
+        : false;
+
+      if (connMode.customConnectionModes) {
+        const connectionModes: Record<string, any> = {};
+        Object.entries(connMode.customConnectionModes).forEach(([modeName, modeDef]) => {
+          connectionModes[modeName] = translateModeDefinition(modeDef);
+          applyEndpointOverrides(modeDef);
+        });
+        dataSystem.connectionModes = connectionModes;
+      }
+    } else if (options.dataSystem.initializers || options.dataSystem.synchronizers) {
+      // Top-level initializers/synchronizers (no connection modes). Wrap them
+      // into a single 'streaming' connection mode.
+      const modeDef: SDKConfigModeDefinition = {
+        initializers: options.dataSystem.initializers,
+        synchronizers: options.dataSystem.synchronizers,
+      };
+      dataSystem.automaticModeSwitching = {
+        type: 'manual',
+        initialConnectionMode: 'streaming',
+      };
+      dataSystem.connectionModes = {
+        streaming: translateModeDefinition(modeDef),
+      };
+      applyEndpointOverrides(modeDef);
+    }
+
+    (cf as any).dataSystem = dataSystem;
   }
 
   if (options.events) {

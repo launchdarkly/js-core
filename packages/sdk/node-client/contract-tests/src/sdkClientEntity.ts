@@ -257,7 +257,12 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
     initialContext,
     sdkConfig,
   );
-  const startResult = await client.start({ timeout: timeout / 1000 });
+  // The harness sends "bootstrap": null when a test does not set it; treat null as unset.
+  const bootstrap = options.configuration.clientSide?.bootstrap;
+  const startResult = await client.start({
+    timeout: timeout / 1000,
+    ...(bootstrap !== null && bootstrap !== undefined ? { bootstrap } : {}),
+  });
   const failed = startResult.status !== 'complete';
   if (failed && !options.configuration.initCanFail) {
     await client.close();
