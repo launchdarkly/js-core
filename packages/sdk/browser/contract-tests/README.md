@@ -80,7 +80,18 @@ go run . --url http://localhost:8000 \
 
 #### Suppression files
 
-Two skip-lists live alongside this README; pass the appropriate one to `-skip-from`:
+Three skip-lists live alongside this README; pass the appropriate one to `-skip-from`:
 
-- **`suppressions.txt`** — the standard skip list for the Browser SDK contract tests.
-- **`suppressions_datamode_changes.txt`** — a broader skip list used when running against the FDv2 (data system / "data mode") client-side work. In addition to the standard skips, it excludes request tests that are not expected to pass in that configuration yet (the HTTP `REPORT` streaming/polling request variants and the `tags` streaming/polling request tests), giving a clean baseline on that branch.
+- **`suppressions.txt`** — the standard skip list for the Browser SDK contract tests (harness v2). It skips tests that the native browser EventSource can never pass: `REPORT` streaming and the `tags` stream-request header assertions.
+- **`suppressions_datamode_changes.txt`** — the skip list for the FDv2 (data system / "data mode") run (harness v3). It skips the `tags` request tests that fail because the SDK's FDv2 path does not send the tags header.
+- **`suppressions_custom_eventsource.txt`** — the skip list for the fetch EventSource run (harness v3). In this run the entity forces the fetch-based EventSource for every client, so no native transport limits apply. Only the FDv2-path `tags` gaps remain.
+
+#### Fetch EventSource run
+
+Open the entity with `?eventsource=fetch` to make it use the fetch-based EventSource for every client and advertise the `client-use-post` capability:
+
+```bash
+node packages/sdk/browser/contract-tests/entity/open-browser.mjs 'http://localhost:5173/?eventsource=fetch' &
+```
+
+Then run the v3 harness with `suppressions_custom_eventsource.txt`. This proves the custom EventSource against the full suite, including `usePost` and `REPORT` streaming.

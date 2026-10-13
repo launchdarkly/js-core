@@ -115,8 +115,28 @@ jobs:
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
+          stop_service: 'false'
           version: v3
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/browser/contract-tests/suppressions_datamode_changes.txt'
+
+      # Reopen the entity with the fetch EventSource toggle. The adapter recreates its REST
+      # server when the new page connects over the WebSocket.
+      - name: Restart browser app with the fetch EventSource
+        run: |
+          kill $(cat /tmp/playwright.pid) || true
+          node packages/sdk/browser/contract-tests/entity/open-browser.mjs 'http://localhost:5173/?eventsource=fetch' > /tmp/playwright-fetch.log 2>&1 &
+          echo $! > /tmp/playwright.pid
+          sleep 5  # Give the browser time to initialize and connect via WebSocket
+
+      # This run proves the fetch-based EventSource against the full suite. It uses its own
+      # skip list, which does not contain the native EventSource transport limits.
+      - name: Run contract tests (FDv2, fetch EventSource)
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        with:
+          test_service_port: 8000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: v3
+          extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/browser/contract-tests/suppressions_custom_eventsource.txt'
 
       - name: Print logs on failure
         if: failure()
@@ -127,6 +147,8 @@ jobs:
           cat /tmp/http-server.log || echo "No http-server log"
           echo "=== Playwright Log ==="
           cat /tmp/playwright.log || echo "No playwright log"
+          echo "=== Playwright Log (fetch EventSource) ==="
+          cat /tmp/playwright-fetch.log || echo "No fetch playwright log"
 
       - name: Cleanup contract test services
         if: always()
