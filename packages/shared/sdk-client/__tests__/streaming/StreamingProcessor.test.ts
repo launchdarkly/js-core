@@ -230,6 +230,7 @@ describe('given a stream processor', () => {
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
+        retryDelayStrategy: expect.any(Object),
       },
     );
   });
@@ -257,6 +258,7 @@ describe('given a stream processor', () => {
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
+        retryDelayStrategy: expect.any(Object),
       },
     );
   });
@@ -313,6 +315,7 @@ describe('given a stream processor', () => {
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
+        retryDelayStrategy: expect.any(Object),
       },
     );
   });
@@ -504,8 +507,8 @@ describe('given a stream processor', () => {
     });
   });
 
-  describe.each([401, 403])('given irrecoverable http errors', (status) => {
-    it(`stops retrying after error: ${status}`, () => {
+  describe.each([401, 403])('given unexpected http errors', (status) => {
+    it(`retries (does not permanently stop) after error: ${status}`, () => {
       streamingProcessor = new StreamingProcessor(
         'mockContextString',
         getStreamingDataSourceConfig(),
@@ -525,12 +528,16 @@ describe('given a stream processor', () => {
       const testError = { status, message: 'stopping. irrecoverable.' };
       const willRetry = simulateError(testError);
 
-      expect(willRetry).toBeFalsy();
+      expect(willRetry).toBeTruthy();
       expect(mockErrorHandler).toBeCalledWith(
-        new LDStreamingError(DataSourceErrorKind.Unknown, testError.message, testError.status),
+        new LDStreamingError(
+          DataSourceErrorKind.ErrorResponse,
+          testError.message,
+          testError.status,
+        ),
       );
       expect(logger.error).toBeCalledWith(
-        expect.stringMatching(new RegExp(`${status}.*permanently`)),
+        expect.stringMatching(new RegExp(`${status}.*will retry`)),
       );
 
       const diagnosticEvent = diagnosticsManager.createStatsEventAndReset(0, 0, 0);
@@ -539,6 +546,59 @@ describe('given a stream processor', () => {
       expect(si.timestamp).toEqual(startTime);
       expect(si.failed).toBeTruthy();
       expect(si.durationMillis).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('given the injected retry-delay strategy (end-to-end backoff regime)', () => {
+    // The normal regime never exceeds the 30s streaming ceiling, so a delay
+    // above it is proof the state moved into the extended (5min-1hr) regime.
+    const NORMAL_CEILING_MS = 30 * 1000;
+
+    function startAndGetStrategy() {
+      streamingProcessor = new StreamingProcessor(
+        'mockContextString',
+        getStreamingDataSourceConfig(),
+        listeners,
+        basicPlatform.requests,
+        basicPlatform.encoding!,
+        makeTestRequestor({ requests: basicPlatform.requests }),
+        diagnosticsManager,
+        mockErrorHandler,
+        logger,
+      );
+      streamingProcessor.start();
+      return mockEventSource.options.retryDelayStrategy as {
+        nextRetryDelay: (nowMs: number) => number;
+        setGoodSince: (timeMs?: number) => void;
+        setBaseDelay: (baseDelayMs: number) => void;
+      };
+    }
+
+    it('enters the extended regime after an unexpected (401) error', () => {
+      const strategy = startAndGetStrategy();
+      simulateError({ status: 401, message: 'unexpected' });
+      expect(strategy.nextRetryDelay(Date.now())).toBeGreaterThan(NORMAL_CEILING_MS);
+    });
+
+    it('stays in the normal regime after a recoverable (503) error', () => {
+      const strategy = startAndGetStrategy();
+      simulateError({ status: 503, message: 'recoverable' });
+      const delay = strategy.nextRetryDelay(Date.now());
+      expect(delay).toBeGreaterThan(0);
+      expect(delay).toBeLessThanOrEqual(NORMAL_CEILING_MS);
+    });
+
+    it('does not reset the extended regime on a single healthy signal', () => {
+      const strategy = startAndGetStrategy();
+      simulateError({ status: 401, message: 'unexpected' });
+      expect(strategy.nextRetryDelay(Date.now())).toBeGreaterThan(NORMAL_CEILING_MS);
+
+      // A healthy signal that has not lasted the 60s reset window must not drop
+      // the state back to the normal regime (no sawtooth to the 1s floor). The
+      // full time-based reset is covered by the RetryState unit tests.
+      strategy.setGoodSince(Date.now());
+      simulateError({ status: 401, message: 'unexpected again' });
+      expect(strategy.nextRetryDelay(Date.now())).toBeGreaterThan(NORMAL_CEILING_MS);
     });
   });
 
@@ -634,6 +694,7 @@ it('includes custom query parameters', () => {
       initialRetryDelayMillis: 1000,
       readTimeoutMillis: 300000,
       retryResetIntervalMillis: 60000,
+      retryDelayStrategy: expect.any(Object),
     },
   );
 });

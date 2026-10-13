@@ -311,8 +311,8 @@ describe('sdk-client object', () => {
 
     await expect(ldc.identify(carContext)).rejects.toThrow('test-error');
     expect(logger.error).toHaveBeenCalledTimes(2);
-    expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringMatching(/^error:.*test-error/));
-    expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringContaining('Received error 404'));
+    expect(logger.error).toHaveBeenNthCalledWith(1, expect.stringContaining('Received error 404'));
+    expect(logger.error).toHaveBeenNthCalledWith(2, expect.stringMatching(/^error:.*test-error/));
   });
 
   test('identify change and error listeners', async () => {
@@ -413,7 +413,7 @@ describe('sdk-client object', () => {
     );
   });
 
-  test('data source status emits closed when initialization encounters unrecoverable error', async () => {
+  test('data source status stays initializing (does not close) on an unexpected error during initialization', async () => {
     const carContext: LDContext = { kind: 'car', key: 'test-car' };
 
     mockPlatform.crypto.randomUUID.mockReturnValue('random1');
@@ -444,7 +444,7 @@ describe('sdk-client object', () => {
     expect(spyListener).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        state: DataSourceState.Closed,
+        state: DataSourceState.Initializing,
         stateSince: expect.any(Number),
         lastError: expect.anything(),
       }),

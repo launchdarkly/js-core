@@ -406,7 +406,7 @@ it('continues polling after an exception thrown during a request', async () => {
   });
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(logger.error).toHaveBeenCalledWith(
+  expect(logger.warn).toHaveBeenCalledWith(
     'Received I/O error (bad) for polling request - will retry',
   );
 });
@@ -440,40 +440,186 @@ it('can handle recoverable http errors', async () => {
   requests.fetch = mockFetch('', 408);
   await waitFor(() => expect(requests.fetch).toHaveBeenCalled());
   polling.stop();
-  expect(logger.error).toHaveBeenCalledWith('Received error 408 for polling request - will retry');
+  expect(logger.warn).toHaveBeenCalledWith('Received error 408 for polling request - will retry');
 });
 
-it('stops polling on unrecoverable error codes', (done) => {
-  const requests = makeRequests();
-  const dataCallback = jest.fn();
-  const errorCallback = jest.fn();
-  const logger = {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn(),
-    debug: jest.fn(),
-  };
+it('does not stop polling on an unexpected error code and backs off into the extended regime', async () => {
+  jest.useFakeTimers();
+  try {
+    const requests = makeRequests();
+    requests.fetch = mockFetch('', 401);
+    const dataCallback = jest.fn();
+    const errorCallback = jest.fn();
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
 
-  const polling = new PollingProcessor(
-    makeTestRequestor({
-      requests,
-    }),
-    0.01,
-    dataCallback,
-    errorCallback,
-    logger,
-  );
-  polling.start();
-
-  requests.fetch = mockFetch('', 401);
-
-  // Polling should stop on the 401, but we need to give some time for more
-  // polls to be done.
-  setTimeout(() => {
-    expect(logger.error).toHaveBeenCalledWith(
-      'Received error 401 (invalid SDK key) for polling request - giving up permanently',
+    const polling = new PollingProcessor(
+      makeTestRequestor({
+        requests,
+      }),
+      1, // 1 second normal poll interval
+      dataCallback,
+      errorCallback,
+      logger,
     );
+    polling.start();
+
+    // Let the first poll (a 401) complete and schedule the next attempt.
+    await jest.advanceTimersByTimeAsync(0);
     expect(requests.fetch).toHaveBeenCalledTimes(1);
-    done();
-  }, 50);
+    expect(errorCallback).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Received error 401 (invalid SDK key) for polling request - will retry',
+    );
+
+    // A few normal poll intervals later it has NOT retried: an unexpected
+    // failure promotes the backoff to the extended regime (minutes), not the
+    // 1-second poll interval.
+    await jest.advanceTimersByTimeAsync(3 * 1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(1);
+
+    // Once the extended-regime delay elapses it retries — it never permanently
+    // stops.
+    await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+    polling.stop();
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+it('reschedules a recoverable (normal) HTTP failure at the poll interval, not the extended regime', async () => {
+  jest.useFakeTimers();
+  const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+  try {
+    const requests = makeRequests();
+    requests.fetch = mockFetch('', 503);
+    const dataCallback = jest.fn();
+    const errorCallback = jest.fn();
+    const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+
+    const polling = new PollingProcessor(
+      makeTestRequestor({ requests }),
+      1, // 1 second poll interval
+      dataCallback,
+      errorCallback,
+      logger,
+    );
+    polling.start();
+
+    await jest.advanceTimersByTimeAsync(0);
+    expect(requests.fetch).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringMatching(/503.*will retry/));
+
+    // A normal failure stays on the 1s poll cadence (an unexpected failure would
+    // be minutes). With zero jitter the next poll is exactly one interval later.
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+    polling.stop();
+  } finally {
+    randomSpy.mockRestore();
+    jest.useRealTimers();
+  }
+});
+
+it('treats valid JSON that is not a flags object as a normal failure and keeps polling', async () => {
+  jest.useFakeTimers();
+  const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+  try {
+    const requests = makeRequests();
+    requests.fetch = mockFetch('[]', 200); // valid JSON, wrong shape
+    const dataCallback = jest.fn();
+    const errorCallback = jest.fn();
+    const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+
+    const polling = new PollingProcessor(
+      makeTestRequestor({ requests }),
+      1,
+      dataCallback,
+      errorCallback,
+      logger,
+    );
+    polling.start();
+
+    await jest.advanceTimersByTimeAsync(0);
+    expect(requests.fetch).toHaveBeenCalledTimes(1);
+    // Not counted as a successful poll: the data handler is never called, the
+    // error handler is, and it is logged as invalid data.
+    expect(dataCallback).not.toHaveBeenCalled();
+    expect(errorCallback).toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledWith('Polling received invalid data');
+
+    // It is a normal failure, so polling continues at the interval.
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+    polling.stop();
+  } finally {
+    randomSpy.mockRestore();
+    jest.useRealTimers();
+  }
+});
+
+it('resets to the normal poll cadence after two consecutive successes following an unexpected error', async () => {
+  jest.useFakeTimers();
+  const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+  try {
+    const requests = makeRequests();
+    // One fetch mock whose response depends on the attempt — 401, two
+    // successes, then 503 — so the call count accumulates on a single mock
+    // (reassigning `requests.fetch` would reset the observed count).
+    let call = 0;
+    requests.fetch = jest.fn(() => {
+      call += 1;
+      if (call === 1) {
+        return mockResponse('', 401); // poll 1: unexpected → extended regime
+      }
+      if (call <= 3) {
+        return mockResponse('{ "flagA": true }', 200); // polls 2-3: recover
+      }
+      return mockResponse('', 503); // poll 4+: normal failure
+    });
+    const dataCallback = jest.fn();
+    const errorCallback = jest.fn();
+    const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+
+    const polling = new PollingProcessor(
+      makeTestRequestor({ requests }),
+      1,
+      dataCallback,
+      errorCallback,
+      logger,
+    );
+    polling.start();
+
+    // poll 1: a 401 promotes the backoff to the extended regime (5 min, zero jitter).
+    await jest.advanceTimersByTimeAsync(0);
+    expect(requests.fetch).toHaveBeenCalledTimes(1);
+
+    // poll 2 fires after the extended delay; its success restores the 1s cadence.
+    await jest.advanceTimersByTimeAsync(5 * 60 * 1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+    // poll 3 one interval later; the second consecutive success resets the regime.
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(3);
+
+    // After two successes the regime is reset, so the subsequent NORMAL (503)
+    // failures schedule at the 1s interval — not the extended delay they would
+    // use had the regime persisted.
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(4);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(5);
+
+    polling.stop();
+  } finally {
+    randomSpy.mockRestore();
+    jest.useRealTimers();
+  }
 });

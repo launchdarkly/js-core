@@ -3,8 +3,10 @@ import {
   EventListener,
   EventName,
   EventSourceInitDict,
+  EventSourceRetryDelayStrategy,
   HttpErrorResponse,
   EventSource as LDEventSource,
+  monotonicNow,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
@@ -24,6 +26,12 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private _backoff: DefaultBackoff;
   private _errorFilter: (err: HttpErrorResponse) => boolean;
   private _urlBuilder?: () => string;
+  private _retryDelayStrategy?: EventSourceRetryDelayStrategy;
+
+  // Whether at least one event has been received on the current connection.
+  // Used to anchor the retry strategy's healthy-reset clock on first data
+  // rather than on open.
+  private _receivedEventThisConnection = false;
 
   // The type of the handle can be platform specific and we treat is opaquely.
   private _reconnectTimeoutHandle?: any;
@@ -40,6 +48,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     );
     this._errorFilter = options.errorFilter;
     this._urlBuilder = options.urlBuilder;
+    this._retryDelayStrategy = options.retryDelayStrategy;
     this._openConnection();
   }
 
@@ -55,13 +64,14 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     if (this._urlBuilder) {
       this._url = this._urlBuilder();
     }
+    this._receivedEventThisConnection = false;
     this._es = new EventSource(this._url);
     this._es.onopen = () => {
       this._backoff.success();
       this.onopen?.();
     };
-    // The error could be from a polyfill, or from the browser event source, so we are loose on the
-    // typing.
+    // The error could be from the LaunchDarkly custom eventsource, or from the browser native event
+    // source, so we are loose on the typing.
     this._es.onerror = (err: any) => {
       // In browsers, a server-sent "event: error" SSE message fires both
       // addEventListener('error', ...) AND onerror. We must not treat it as a
@@ -76,15 +86,35 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     };
     Object.entries(this._listeners).forEach(([eventName, listeners]) => {
       listeners.forEach((listener) => {
-        this._es?.addEventListener(eventName, listener);
+        this._attachListener(eventName, listener);
       });
+    });
+  }
+
+  /**
+   * Attaches a listener to the underlying event source, anchoring the retry
+   * strategy's healthy-reset clock on the first event received over the
+   * connection (data delivery) rather than on open. A connection that opens
+   * but never delivers data must not reset the retry regime; this matches the
+   * shared eventsource transport used by the non-browser client SDKs.
+   */
+  private _attachListener(type: EventName, listener: EventListener) {
+    this._es?.addEventListener(type, (event: any) => {
+      if (!this._receivedEventThisConnection) {
+        this._receivedEventThisConnection = true;
+        // Use a monotonic clock so the strategy's healthy-reset window is
+        // immune to wall-clock/NTP shifts, matching the shared eventsource
+        // transport used by the non-browser client SDKs.
+        this._retryDelayStrategy?.setGoodSince(monotonicNow());
+      }
+      listener(event);
     });
   }
 
   addEventListener(type: EventName, listener: EventListener): void {
     this._listeners[type] ??= [];
     this._listeners[type].push(listener);
-    this._es?.addEventListener(type, listener);
+    this._attachListener(type, listener);
   }
 
   close(): void {
@@ -107,15 +137,26 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private _handleError(err: any): void {
     this.close();
 
-    // The event source may not produce a status. But the LaunchDarkly
-    // polyfill can. If we can get the status, then we should stop retrying
-    // on certain error codes.
-    if (typeof err.status === 'number' && !this._errorFilter(err)) {
-      // If we encounter an unrecoverable condition, then we do not want to
-      // retry anymore.
+    // The browser native event source may not produce a status. But the
+    // LaunchDarkly custom eventsource can. When a status is available,
+    // the error filter classifies the failure (recording it on the injected
+    // retry-delay strategy) and decides whether the condition is terminal.
+    if (typeof err.status === 'number') {
+      if (!this._errorFilter(err)) {
+        // Unrecoverable per the filter: do not retry.
+        return;
+      }
+      // The filter just advanced the strategy; reconnect on its computed delay
+      // (the extended regime for an unexpected status), falling back to the
+      // built-in backoff when no strategy was injected.
+      this._tryConnect(
+        this._retryDelayStrategy?.nextRetryDelay(monotonicNow()) ?? this._backoff.fail(),
+      );
       return;
     }
 
+    // A native EventSource error carries no status, so the filter cannot
+    // classify it and the strategy is not advanced; use the built-in backoff.
     this._tryConnect(this._backoff.fail());
   }
 }
