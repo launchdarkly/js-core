@@ -93,7 +93,7 @@
   "devDependencies": {
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
-    "typedoc": "0.25.0",
+    "typedoc": "0.28.20",
     "typescript": "6.0.3"
   },
   "packageManager": "yarn@4.15.0",

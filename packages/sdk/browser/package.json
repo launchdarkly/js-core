@@ -57,7 +57,7 @@
     "rimraf": "^5.0.5",
     "ts-jest": "^29.1.1",
     "tsup": "^8.3.5",
-    "typedoc": "0.25.0",
+    "typedoc": "0.28.20",
     "typescript": "6.0.3"
   }
 }
