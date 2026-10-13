@@ -43,6 +43,8 @@ app.get('/', (req: Request, res: Response) => {
       'wrapper',
       'fdv1-fallback',
       'client-event-source-http-errors',
+      'retry-conformance-fdv1-streaming',
+      'retry-conformance-fdv1-polling',
       'bootstrap',
     ],
   });

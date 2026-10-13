@@ -96,14 +96,14 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       }
       const requestError = err as LDRequestError;
       // A transport-level failure (no HTTP status) is always a normal failure.
-      const kind =
+      const failureKind =
         requestError.status !== undefined ? classifyHttpStatus(requestError.status) : 'normal';
-      this._retryState.recordFailure(kind);
+      this._retryState.recordFailure(failureKind);
 
       // No failure is terminal now; every failure is retried. An unexpected
       // failure (e.g. 401/403) backs off into the extended regime but still
       // retries, so it is surfaced to the error handler without stopping.
-      if (kind === 'unexpected') {
+      if (failureKind === 'unexpected') {
         this._logger?.error(
           httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
         );

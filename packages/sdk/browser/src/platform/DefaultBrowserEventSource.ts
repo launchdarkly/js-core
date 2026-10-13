@@ -6,6 +6,7 @@ import {
   EventSourceRetryDelayStrategy,
   HttpErrorResponse,
   EventSource as LDEventSource,
+  monotonicNow,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**
@@ -101,7 +102,10 @@ export default class DefaultBrowserEventSource implements LDEventSource {
     this._es?.addEventListener(type, (event: any) => {
       if (!this._receivedEventThisConnection) {
         this._receivedEventThisConnection = true;
-        this._retryDelayStrategy?.setGoodSince(Date.now());
+        // Use a monotonic clock so the strategy's healthy-reset window is
+        // immune to wall-clock/NTP shifts, matching the shared eventsource
+        // transport used by the non-browser client SDKs.
+        this._retryDelayStrategy?.setGoodSince(monotonicNow());
       }
       listener(event);
     });
@@ -146,7 +150,7 @@ export default class DefaultBrowserEventSource implements LDEventSource {
       // (the extended regime for an unexpected status), falling back to the
       // built-in backoff when no strategy was injected.
       this._tryConnect(
-        this._retryDelayStrategy?.nextRetryDelay(Date.now()) ?? this._backoff.fail(),
+        this._retryDelayStrategy?.nextRetryDelay(monotonicNow()) ?? this._backoff.fail(),
       );
       return;
     }

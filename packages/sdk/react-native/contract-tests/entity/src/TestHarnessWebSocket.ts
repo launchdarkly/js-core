@@ -60,6 +60,8 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'client-event-source-http-errors',
+            'retry-conformance-fdv1-streaming',
+            'retry-conformance-fdv1-polling',
             'bootstrap',
           ];
 

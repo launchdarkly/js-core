@@ -113,10 +113,10 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
    * @private
    */
   private _retryAndHandleError(err: HttpErrorResponse) {
-    const kind = err.status !== undefined ? classifyHttpStatus(err.status) : 'normal';
-    this._retryState.recordFailure(kind);
+    const failureKind = err.status !== undefined ? classifyHttpStatus(err.status) : 'normal';
+    this._retryState.recordFailure(failureKind);
 
-    if (kind === 'unexpected') {
+    if (failureKind === 'unexpected') {
       this._logger?.error(httpErrorMessage(err, 'streaming request', 'will retry'));
       this._errorHandler?.(
         new LDStreamingError(DataSourceErrorKind.ErrorResponse, err.message, err.status),
