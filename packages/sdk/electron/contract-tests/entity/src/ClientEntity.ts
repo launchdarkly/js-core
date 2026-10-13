@@ -2,14 +2,14 @@ import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 
+/* eslint-disable import/no-duplicates */
 // eslint-disable-next-line import/no-extraneous-dependencies
-import {
-  createClient,
-  LDClient,
-  LDLogger,
-  LDOptions,
-  resetElectronStorage,
-} from '@launchdarkly/electron-client-sdk';
+import { createClient, LDClient, LDLogger, LDOptions } from '@launchdarkly/electron-client-sdk';
+// The runtime exports resetElectronStorage. The SDK marks it internal, so the
+// declaration file omits it.
+// @ts-expect-error
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { resetElectronStorage } from '@launchdarkly/electron-client-sdk';
 import {
   CommandParams,
   CommandType,

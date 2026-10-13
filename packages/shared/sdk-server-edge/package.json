@@ -47,7 +47,7 @@
     "oxlint": "1.78.0",
     "rimraf": "^5.0.0",
     "ts-jest": "^29.1.0",
-    "typedoc": "0.25.0",
+    "typedoc": "0.28.20",
     "typescript": "6.0.3"
   }
 }

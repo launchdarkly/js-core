@@ -53,7 +53,7 @@ app.on('ready', () => {
       res.set('Location', resourceUrl);
     } catch (error) {
       res.status(500);
-      res.write(JSON.stringify({ error: error.message }));
+      res.write(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }));
     }
 
     res.send();
@@ -71,7 +71,7 @@ app.on('ready', () => {
       }
     } catch (error) {
       res.status(500);
-      res.json({ error: error.message });
+      res.json({ error: error instanceof Error ? error.message : String(error) });
     }
   });
 
