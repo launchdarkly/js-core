@@ -3,7 +3,7 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    // Required for the tsup DTS build: tsup injects the deprecated baseUrl option.
+    // tsup injects the deprecated baseUrl option into its DTS build, so allow TS 6.0 deprecations.
     "ignoreDeprecations": "6.0",
     "lib": ["es2020", "dom"],
     "module": "es2022",
