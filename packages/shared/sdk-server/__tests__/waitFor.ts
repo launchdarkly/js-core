@@ -1,3 +1,5 @@
+import { sleep } from '@launchdarkly/js-sdk-common';
+
 /**
  * Polls a condition until it holds or the timeout elapses.
  */
@@ -13,9 +15,7 @@ export default async function waitFor(
       return;
     }
     // eslint-disable-next-line no-await-in-loop
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, intervalMs);
-    });
+    await sleep(intervalMs);
   }
   throw new Error('timed out waiting for the condition');
 }
