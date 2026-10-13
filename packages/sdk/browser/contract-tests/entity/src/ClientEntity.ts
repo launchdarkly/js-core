@@ -25,6 +25,15 @@ import {
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
 
+/**
+ * True when the test page was opened with `?eventsource=fetch`. A dedicated CI run opens the
+ * entity with this query parameter to run the full suite against the fetch-based EventSource.
+ * Other runs use the SDK defaults.
+ */
+export function useFetchEventSource(): boolean {
+  return new URLSearchParams(window.location.search).get('eventsource') === 'fetch';
+}
+
 function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
   if (init.polling) {
     return {
@@ -110,10 +119,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     useReport: options.clientSide.useReport ?? undefined,
   };
 
-  // The native browser EventSource cannot send POST or REPORT requests. Use the
-  // fetch-based EventSource so that usePost and useReport apply to the streaming
-  // connection.
-  if (options.clientSide.usePost || options.clientSide.useReport) {
+  // In the fetch EventSource run, every client uses the fetch-based EventSource. This proves
+  // the custom EventSource against the full suite, including usePost and REPORT streaming.
+  if (useFetchEventSource()) {
     cf.eventSource = fetchBrowserEventSource;
   }
   if (options.clientSide.usePost) {

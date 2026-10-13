@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-client-sdk';
 import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
 
-import { ClientEntity, newSdkClientEntity } from './ClientEntity';
+import { ClientEntity, newSdkClientEntity, useFetchEventSource } from './ClientEntity';
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;
@@ -47,8 +47,13 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
-            'client-use-post',
           ];
+
+          // The native browser EventSource cannot send a POST request. Only advertise usePost
+          // support when the run uses the fetch-based EventSource.
+          if (useFetchEventSource()) {
+            resData.capabilities.push('client-use-post');
+          }
 
           break;
         case 'createClient':

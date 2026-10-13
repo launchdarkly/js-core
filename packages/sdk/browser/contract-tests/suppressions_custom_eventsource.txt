@@ -1,0 +1,36 @@
+# Skip list for the fetch EventSource run (harness v3). The entity forces the
+# fetch-based EventSource for every client, so no transport limits apply here.
+# The remaining suppressions are gaps in the SDK's FDv2 path, not in the transport.
+#
+# Under FDv2 (dataSystem configured) the SDK does not send the tags header on any
+# request, so every tags assertion that expects a non-empty header value fails. This
+# includes polling requests, which can send headers -- the gap is in the SDK's FDv2
+# path, not in the transport.
+tags/FDv1 fallback directive requests
+tags/disallowed characters
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"","applicationVersion":null}
+tags/stream requests/{"applicationId":"","applicationVersion":""}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
