@@ -1,139 +1,117 @@
 import { allAsync, allSeriesAsync, firstSeriesAsync } from '../../src/evaluation/collection';
 
-// The series helpers recurse synchronously for small collections and defer to a resolved
-// promise once a collection has more than 50 items, so a throw after that point happens off the
-// caller's stack. Both sizes are exercised. Each run settles on whichever callback fires first,
-// so a result delivered where an error was expected fails the assertion rather than hanging. If
-// a helper swallowed an exception and called neither callback, the test would time out.
-const smallCollection = [0, 1, 2];
-const largeCollection = Array.from({ length: 60 }, (_, index) => index);
+// The helpers do not guard the steps that run on the caller's stack; an exception there
+// propagates to the caller as it always did. The two places where a step leaves that stack, a
+// step deferred past the recursion limit and the promise chain in allAsync, route an exception to
+// the optional onError so that the caller is not left waiting for a completion that never comes.
 
-type SeriesHelper = typeof allSeriesAsync;
-type SeriesCheck = Parameters<SeriesHelper>[1];
-type Outcome = { result: boolean | null | undefined } | { error: unknown };
+const SMALL = Array.from({ length: 5 }, (_, i) => i);
+const LARGE = Array.from({ length: 60 }, (_, i) => i);
 
-function runSeries(
-  helper: SeriesHelper,
-  collection: unknown,
-  check: SeriesCheck,
-): Promise<Outcome> {
-  return new Promise<Outcome>((resolve) => {
-    helper(
-      collection as number[],
-      check,
-      (result) => resolve({ result }),
-      (error) => resolve({ error }),
-    );
+// A check result that lets the iteration continue to the next item: allSeriesAsync stops at the
+// first false, firstSeriesAsync at the first true.
+function continuing(continueWith: boolean) {
+  return (_val: number, _index: number, cb: (res: boolean) => void) => {
+    cb(continueWith);
+  };
+}
+
+function throwingAt(failIndex: number, continueWith: boolean) {
+  return (val: number, _index: number, cb: (res: boolean) => void) => {
+    if (val === failIndex) {
+      throw new Error(`check ${val} failed`);
+    }
+    cb(continueWith);
+  };
+}
+
+function settle(): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 0);
   });
 }
 
-function runAll(collection: number[], check: Parameters<typeof allAsync>[1]): Promise<Outcome> {
-  return new Promise<Outcome>((resolve) => {
-    allAsync(
-      collection,
-      check,
-      (result) => resolve({ result }),
-      (error) => resolve({ error }),
-    );
-  });
-}
-
-describe.each<[string, SeriesHelper, boolean]>([
-  // The third column is the value a check must produce for iteration to move to the next item.
+describe.each([
   ['allSeriesAsync', allSeriesAsync, true],
   ['firstSeriesAsync', firstSeriesAsync, false],
-])('%s', (_name, helper, continueValue) => {
-  it('calls cb with the aggregate result when no check throws', async () => {
-    const outcome = await runSeries(helper, largeCollection, (_item, _index, itemCb) =>
-      itemCb(continueValue),
-    );
-    expect(outcome).toEqual({ result: continueValue });
+])('%s', (_name, helper, continueWith) => {
+  // When every check lets the iteration continue, the aggregate is the continuing value: true
+  // for allSeriesAsync (all passed) and false for firstSeriesAsync (none passed).
+  it('calls cb with the aggregate result for a small collection', async () => {
+    const cb = jest.fn();
+    helper(SMALL, continuing(continueWith), cb, jest.fn());
+    await settle();
+    expect(cb).toHaveBeenCalledWith(continueWith);
   });
 
-  it.each<[string, number[], number]>([
-    ['a small', smallCollection, 1],
-    ['a large', largeCollection, 55],
-  ])(
-    'reports an exception from a check in %s collection through onError',
-    async (_description, collection, throwAt) => {
-      const outcome = await runSeries(helper, collection, (item, _index, itemCb) => {
-        if (item === throwAt) {
-          throw new Error(`boom at ${item}`);
-        }
-        itemCb(continueValue);
-      });
-      expect(outcome).toEqual({ error: new Error(`boom at ${throwAt}`) });
-    },
-  );
-
-  it('reports an exception from the completion callback after an asynchronous check', async () => {
-    // Once a check calls back from a promise, the rest of the iteration runs in that
-    // continuation, where the try/catch around the original call is no longer on the stack.
-    // The first item ends the iteration early, so the completion callback runs there directly.
-    const error = await new Promise<unknown>((resolve) => {
-      helper(
-        smallCollection,
-        (_item, _index, itemCb) => {
-          Promise.resolve().then(() => itemCb(!continueValue));
-        },
-        () => {
-          throw new Error('from cb after async callback');
-        },
-        resolve,
-      );
-    });
-    expect(error).toEqual(new Error('from cb after async callback'));
+  it('calls cb with the aggregate result for a collection past the recursion limit', async () => {
+    const cb = jest.fn();
+    helper(LARGE, continuing(continueWith), cb, jest.fn());
+    await settle();
+    expect(cb).toHaveBeenCalledWith(continueWith);
   });
 
-  it('reports an exception from the completion callback through onError', async () => {
-    const error = await new Promise<unknown>((resolve) => {
-      helper(
-        smallCollection,
-        (_item, _index, itemCb) => itemCb(continueValue),
-        () => {
-          throw new Error('from cb');
-        },
-        resolve,
-      );
-    });
-    expect(error).toEqual(new Error('from cb'));
+  it('propagates an exception from a step on the caller stack', () => {
+    const cb = jest.fn();
+    const onError = jest.fn();
+    expect(() => helper(SMALL, throwingAt(2, continueWith), cb, onError)).toThrow('check 2 failed');
+    expect(onError).not.toHaveBeenCalled();
+    expect(cb).not.toHaveBeenCalled();
   });
 
-  it('reports a collection that is not an array through onError without running a check', async () => {
-    const check = jest.fn((_item, _index, itemCb) => itemCb(continueValue));
-    const outcome = await runSeries(helper, {}, check);
-    expect(outcome).toEqual({ error: new TypeError('Expected an array but received object') });
-    expect(check).not.toHaveBeenCalled();
+  it('routes an exception from a step deferred past the recursion limit to onError', async () => {
+    const cb = jest.fn();
+    const onError = jest.fn();
+    // Steps after the first run from a resolved promise, so a throw there is off the caller's
+    // stack. Without onError it would be an unhandled rejection and cb would never be called.
+    helper(LARGE, throwingAt(10, continueWith), cb, onError);
+    await settle();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect((onError.mock.calls[0][0] as Error).message).toBe('check 10 failed');
+    expect(cb).not.toHaveBeenCalled();
   });
 });
 
 describe('allAsync', () => {
   it('calls cb with true when every check passes', async () => {
-    const outcome = await runAll(largeCollection, (_item, itemCb) => itemCb(true));
-    expect(outcome).toEqual({ result: true });
+    const cb = jest.fn();
+    allAsync(SMALL, (_val, cb2) => cb2(true), cb, jest.fn());
+    await settle();
+    expect(cb).toHaveBeenCalledWith(true);
   });
 
-  it('reports an exception from a check through onError', async () => {
-    const outcome = await runAll(smallCollection, (item, itemCb) => {
-      if (item === 1) {
-        throw new Error('boom at 1');
-      }
-      itemCb(true);
-    });
-    expect(outcome).toEqual({ error: new Error('boom at 1') });
+  it('routes an exception from a check to onError', async () => {
+    const cb = jest.fn();
+    const onError = jest.fn();
+    allAsync(
+      SMALL,
+      (val, cb2) => {
+        if (val === 3) {
+          throw new Error('check 3 failed');
+        }
+        cb2(true);
+      },
+      cb,
+      onError,
+    );
+    await settle();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect((onError.mock.calls[0][0] as Error).message).toBe('check 3 failed');
+    expect(cb).not.toHaveBeenCalled();
   });
 
-  it('reports an exception from the completion callback through onError', async () => {
-    const error = await new Promise<unknown>((resolve) => {
-      allAsync(
-        smallCollection,
-        (_item, itemCb) => itemCb(true),
-        () => {
-          throw new Error('from cb');
-        },
-        resolve,
-      );
-    });
-    expect(error).toEqual(new Error('from cb'));
+  it('routes an exception from the completion callback to onError', async () => {
+    const onError = jest.fn();
+    allAsync(
+      SMALL,
+      (_val, cb2) => cb2(true),
+      () => {
+        throw new Error('completion failed');
+      },
+      onError,
+    );
+    await settle();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect((onError.mock.calls[0][0] as Error).message).toBe('completion failed');
   });
 });

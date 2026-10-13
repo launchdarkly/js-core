@@ -19,9 +19,10 @@ export function firstResult<T, U>(
 }
 
 /**
- * Receives an exception thrown by a check or completion callback during asynchronous
- * iteration. Iteration stops and the completion callback is not called, so the caller
- * can report the failure instead of waiting for a result that would never arrive.
+ * Receives an exception from an iteration step that runs outside the caller's stack: a step
+ * deferred to a resolved promise, or a concurrent check or completion callback in allAsync.
+ * Without a handler such an exception is an unhandled rejection and the completion callback
+ * never runs. Steps on the caller's stack propagate to the caller as usual.
  */
 export type IterationErrorHandler = (err: unknown) => void;
 
@@ -33,51 +34,45 @@ function seriesAsync<T>(
   all: boolean,
   index: number,
   cb: (res: boolean) => void,
-  onError: IterationErrorHandler,
+  onError?: IterationErrorHandler,
 ): void {
-  try {
-    if (!collection) {
-      cb(false);
-      return;
-    }
-    if (!Array.isArray(collection)) {
-      // A string would be indexed character by character and an object would be treated as
-      // an empty collection, so a value that is not an array is reported instead of iterated.
-      throw new TypeError(`Expected an array but received ${typeof collection}`);
-    }
-    if (index >= collection.length) {
-      cb(all);
-      return;
-    }
+  if (!collection) {
+    cb(false);
+    return;
+  }
+  if (index < collection?.length) {
     check(collection[index], index, (res) => {
-      // The check may call back asynchronously, after the try/catch around this function has
-      // left the stack, so the continuation is guarded on its own.
-      try {
-        if (all) {
-          if (!res) {
-            cb(false);
-            return;
-          }
-        } else if (res) {
-          cb(true);
+      if (all) {
+        if (!res) {
+          cb(false);
           return;
         }
-        if (collection.length > ITERATION_RECURSION_LIMIT) {
-          // When we hit the recursion limit we defer execution
-          // by using a resolved promise. This is similar to using setImmediate
-          // but more portable.
-          Promise.resolve().then(() => {
+      } else if (res) {
+        cb(true);
+        return;
+      }
+      if (collection.length > ITERATION_RECURSION_LIMIT) {
+        // When we hit the recursion limit we defer execution
+        // by using a resolved promise. This is similar to using setImmediate
+        // but more portable.
+        Promise.resolve().then(() => {
+          // This step runs from the microtask queue, outside any try/catch the caller has
+          // around the iteration, so an exception here goes to the caller's handler.
+          try {
             seriesAsync(collection, check, all, index + 1, cb, onError);
-          });
-        } else {
-          seriesAsync(collection, check, all, index + 1, cb, onError);
-        }
-      } catch (err) {
-        onError(err);
+          } catch (err) {
+            if (!onError) {
+              throw err;
+            }
+            onError(err);
+          }
+        });
+      } else {
+        seriesAsync(collection, check, all, index + 1, cb, onError);
       }
     });
-  } catch (err) {
-    onError(err);
+  } else {
+    cb(all);
   }
 }
 
@@ -86,13 +81,13 @@ function seriesAsync<T>(
  * @param collection The collection to iterate.
  * @param check The check to perform for each item in the container.
  * @param cb Called with true if all items pass the check.
- * @param onError Called instead of cb if a check or cb throws.
+ * @param onError Receives an exception from a step deferred past the recursion limit.
  */
 export function allSeriesAsync<T>(
   collection: T[] | undefined,
   check: (val: T, index: number, cb: (res: boolean) => void) => void,
   cb: (res: boolean) => void,
-  onError: IterationErrorHandler,
+  onError?: IterationErrorHandler,
 ): void {
   seriesAsync(collection, check, true, 0, cb, onError);
 }
@@ -103,13 +98,13 @@ export function allSeriesAsync<T>(
  * @param check The check to perform for each item in the container.
  * @param cb called with true on the first item that passes the check. False
  * means no items passed the check.
- * @param onError Called instead of cb if a check or cb throws.
+ * @param onError Receives an exception from a step deferred past the recursion limit.
  */
 export function firstSeriesAsync<T>(
   collection: T[] | undefined,
   check: (val: T, index: number, cb: (res: boolean) => void) => void,
   cb: (res: boolean) => void,
-  onError: IterationErrorHandler,
+  onError?: IterationErrorHandler,
 ): void {
   seriesAsync(collection, check, false, 0, cb, onError);
 }
@@ -122,35 +117,32 @@ export function firstSeriesAsync<T>(
  * @param cb Callback executed when all items have been checked. The callback
  * will be called with true if each item resulted in true, otherwise it will
  * be called with false.
- * @param onError Called instead of cb if a check or cb throws.
+ * @param onError Receives an exception thrown by a check or by cb.
  */
 export function allAsync<T>(
   collection: T[] | undefined,
   check: (val: T, cb: (res: boolean) => void) => void,
   cb: (res: boolean | null | undefined) => void,
-  onError: IterationErrorHandler,
+  onError?: IterationErrorHandler,
 ): void {
-  try {
-    if (!collection) {
-      cb(false);
-      return;
-    }
+  if (!collection) {
+    cb(false);
+    return;
+  }
 
-    Promise.all(
-      collection.map(
-        (item) =>
-          new Promise((resolve) => {
-            check(item, resolve);
-          }),
-      ),
-    )
-      .then((results) => {
-        cb(results.every((success) => success));
-      })
-      // A throw inside a check rejects its promise, and a throw inside cb rejects the chain.
-      // Without this handler either one would be an unhandled rejection and cb would never run.
-      .catch(onError);
-  } catch (err) {
-    onError(err);
+  const completion = Promise.all(
+    collection?.map(
+      (item) =>
+        new Promise((resolve) => {
+          check(item, resolve);
+        }),
+    ),
+  ).then((results) => {
+    cb(results.every((success) => success));
+  });
+  if (onError) {
+    // A throw inside a check rejects its promise and a throw inside cb rejects the chain. Either
+    // would otherwise be an unhandled rejection, with cb never called.
+    completion.catch(onError);
   }
 }

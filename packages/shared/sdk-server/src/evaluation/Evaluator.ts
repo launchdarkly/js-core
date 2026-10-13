@@ -106,18 +106,6 @@ function makeError(result: EvalResult): MatchError {
 }
 
 /**
- * Run part of an evaluation that may execute outside of the try/catch in evaluateCb, such as
- * the continuation of a store lookup, routing any exception to the state's error handler.
- */
-function guarded(state: EvalState, fn: () => void): void {
-  try {
-    fn();
-  } catch (err) {
-    state.onError(err);
-  }
-}
-
-/**
  * Deliver the top-level result to the caller exactly once, decorated with the state
  * accumulated during the evaluation.
  */
@@ -195,10 +183,11 @@ export default class Evaluator {
         );
       },
     };
-    // Reading a malformed definition throws, and most of an evaluation runs synchronously, so
-    // this guard turns those exceptions into an error result. Steps that resume after a store
-    // callback or a promise are guarded where they resume.
-    guarded(state, () => {
+    // The evaluator assumes the definitions it reads are well formed; reading one that is not
+    // throws. Most of an evaluation runs synchronously, so this try/catch turns such an
+    // exception into an error result. The steps that resume after a store callback or a promise
+    // catch their own exceptions where they resume.
+    try {
       this._evaluateInternal(
         flag,
         context,
@@ -208,7 +197,9 @@ export default class Evaluator {
         true,
         eventFactory,
       );
-    });
+    } catch (err) {
+      state.onError(err);
+    }
   }
 
   /**
@@ -313,10 +304,10 @@ export default class Evaluator {
           return;
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
-        this._queries.getFlag(prereq.key, (prereqFlag) =>
+        this._queries.getFlag(prereq.key, (prereqFlag) => {
           // The store may call back asynchronously, after the try/catch around the top-level
-          // evaluation has left the stack, so the continuation is guarded here.
-          guarded(state, () => {
+          // evaluation has left the stack, so this continuation catches its own exceptions.
+          try {
             if (!prereqFlag) {
               prereqResult = getOffVariation(flag, Reasons.prerequisiteFailed(prereq.key));
               iterCb(false);
@@ -355,8 +346,10 @@ export default class Evaluator {
               false, // topLevel false evaluating the prerequisite.
               eventFactory,
             );
-          }),
-        );
+          } catch (err) {
+            state.onError(err);
+          }
+        });
       },
       () => {
         cb(prereqResult);
@@ -407,9 +400,9 @@ export default class Evaluator {
       firstSeriesAsync(
         clause.values,
         (value, _index, iterCb) => {
-          this._queries.getSegment(value, (segment) =>
+          this._queries.getSegment(value, (segment) => {
             // The store may call back asynchronously; see _checkPrerequisites.
-            guarded(state, () => {
+            try {
               if (segment) {
                 if (segmentsVisited.includes(segment.key)) {
                   errorResult = EvalResult.forError(
@@ -432,8 +425,10 @@ export default class Evaluator {
               } else {
                 iterCb(false);
               }
-            }),
-          );
+            } catch (err) {
+              state.onError(err);
+            }
+          });
         },
         (match) => {
           if (errorResult) {

@@ -11,8 +11,10 @@ import EventFactory from '../../src/events/EventFactory';
 import { createBasicPlatform } from '../createBasicPlatform';
 
 // LaunchDarkly never sends these shapes, but a custom store, a data file, or an override can
-// hand the evaluator anything. Each test awaits the evaluation directly: if the evaluator threw,
-// the promise would reject, and if it never delivered a result, the test would time out.
+// hand the evaluator anything. The evaluator does not check shapes; reading one of these throws,
+// and the exception becomes an error result. Each test awaits the evaluation directly: if the
+// evaluator threw, the promise would reject, and if it never delivered a result, the test would
+// time out.
 
 const userContext = Context.fromLDContext({ key: 'user-key' });
 
@@ -112,25 +114,7 @@ describe('given an evaluator and flag definitions it cannot read', () => {
   it('returns a malformed flag result for a flag with no variations', async () => {
     const result = await evaluator.evaluate(makeFlag({ variations: undefined }), userContext);
     expectMalformed(result);
-    expect(result.message).toBe('Flag variations are not an array');
-  });
-
-  it('returns a malformed flag result when variations are not an array', async () => {
-    // A string has a length and can be indexed, so without an explicit check one of its
-    // characters would be served as the flag value.
-    const result = await evaluator.evaluate(makeFlag({ variations: 'abc' }), userContext);
-    expectMalformed(result);
-    expect(result.message).toBe('Flag variations are not an array');
-  });
-
-  it('returns a malformed flag result for a rule whose clauses are not an array', async () => {
-    // A rule with no clauses at all is treated as not matching. Clauses that are present but
-    // not a list cannot be iterated, and an object would otherwise match every context.
-    const flag = makeFlag({ rules: [{ id: 'rule', variation: 0, clauses: {} }] });
-    const result = await evaluator.evaluate(flag, userContext);
-    expectMalformed(result);
     expect(result.message).toContain('Flag "malformed-flag" has a malformed definition');
-    expect(result.message).toContain('Expected an array but received object');
   });
 
   it('returns a malformed flag result for a clause with no values', async () => {
@@ -159,7 +143,7 @@ describe('given an evaluator and flag definitions it cannot read', () => {
   });
 
   it('delivers the result once and propagates an exception thrown by the receiving callback', () => {
-    // The guards are for exceptions raised while reading the definition. One raised by the
+    // The handling is for exceptions raised while reading the definition. One raised by the
     // caller after the result was delivered is not a flag problem and must stay visible, and
     // it must not cause the result to be delivered a second time on its way out.
     const flag = makeFlag({
