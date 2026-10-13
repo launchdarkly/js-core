@@ -2,10 +2,6 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
-    // The bundled Next.js file dist/server/web/spec-extension/url-pattern.d.ts names URLPattern
-    // types that lib.dom does not have, so its lib check fails. Next.js sets this option in the
-    // tsconfig that it generates (https://nextjs.org/docs/app/api-reference/config/typescript).
-    "skipLibCheck": true,
     "allowJs": true,
     "noEmit": true,
     "esModuleInterop": true,
