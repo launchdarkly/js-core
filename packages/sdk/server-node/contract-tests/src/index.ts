@@ -53,8 +53,7 @@ app.get('/', (req: Request, res: Response) => {
       'instance-id',
       'persistent-data-store-redis',
       'persistent-data-store-dynamodb',
-      // TODO: enable this capability once it is added to contract tests.
-      // 'persistent-data-store-recovery',
+      'persistent-data-store-recovery',
     ],
   });
 });
