@@ -6,6 +6,7 @@ import {
   HttpErrorResponse,
   LDLogger,
   LDPollingError,
+  monotonicNow,
   RetryState,
   subsystem,
 } from '@launchdarkly/js-sdk-common';
@@ -56,7 +57,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
     };
 
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
-    const startTime = Date.now();
+    const startTime = monotonicNow();
     try {
       const res = await this._requestor.requestPayload();
       try {
@@ -121,7 +122,7 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       }
     }
 
-    const elapsed = Date.now() - startTime;
+    const elapsed = monotonicNow() - startTime;
     const sleepFor = Math.max(this._retryState.nextDelay - elapsed, 0);
 
     this._logger?.debug('Elapsed: %d ms, sleeping for %d ms', elapsed, sleepFor);

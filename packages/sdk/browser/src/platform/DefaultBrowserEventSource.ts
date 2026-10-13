@@ -70,8 +70,8 @@ export default class DefaultBrowserEventSource implements LDEventSource {
       this._backoff.success();
       this.onopen?.();
     };
-    // The error could be from a polyfill, or from the browser event source, so we are loose on the
-    // typing.
+    // The error could be from the LaunchDarkly custom eventsource, or from the browser native event
+    // source, so we are loose on the typing.
     this._es.onerror = (err: any) => {
       // In browsers, a server-sent "event: error" SSE message fires both
       // addEventListener('error', ...) AND onerror. We must not treat it as a
@@ -137,10 +137,10 @@ export default class DefaultBrowserEventSource implements LDEventSource {
   private _handleError(err: any): void {
     this.close();
 
-    // The event source may not produce a status. But the LaunchDarkly polyfill
-    // can. When a status is available, the error filter classifies the failure
-    // (recording it on the injected retry-delay strategy) and decides whether
-    // the condition is terminal.
+    // The browser native event source may not produce a status. But the
+    // LaunchDarkly custom eventsource can. When a status is available,
+    // the error filter classifies the failure (recording it on the injected
+    // retry-delay strategy) and decides whether the condition is terminal.
     if (typeof err.status === 'number') {
       if (!this._errorFilter(err)) {
         // Unrecoverable per the filter: do not retry.
