@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.30.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.29.0...js-sdk-common-v2.30.0) (2026-10-14)
+
+
+### Features
+
+* Add optional streaming members to the platform fetch types ([#2092](https://github.com/launchdarkly/js-core/issues/2092)) ([4137805](https://github.com/launchdarkly/js-core/commit/4137805723e14f1f21c07b45039c4eeda9889519))
+
 ## [2.29.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.28.1...js-sdk-common-v2.29.0) (2026-10-06)
 
 

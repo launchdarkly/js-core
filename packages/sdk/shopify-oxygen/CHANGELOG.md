@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.32...shopify-oxygen-sdk-v0.2.0) (2026-10-14)
+
+
+### Features
+
+* Add optional streaming members to the platform fetch types ([#2092](https://github.com/launchdarkly/js-core/issues/2092)) ([4137805](https://github.com/launchdarkly/js-core/commit/4137805723e14f1f21c07b45039c4eeda9889519))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.24.1 to 2.24.2
+
 ## [0.1.32](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.1.31...shopify-oxygen-sdk-v0.1.32) (2026-10-06)
 
 
