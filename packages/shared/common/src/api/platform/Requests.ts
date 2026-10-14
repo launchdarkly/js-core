@@ -54,7 +54,8 @@ export interface Headers {
 
   /**
    * Executes the callback once for each header, with the value first. Optional so existing
-   * implementations remain valid.
+   * implementations remain valid. The streaming client reads response headers through this
+   * method, or through {@link Headers.entries} when this method is absent.
    *
    * https://developer.mozilla.org/en-US/docs/Web/API/Headers/forEach
    */
@@ -165,7 +166,8 @@ export interface Options {
 
   /**
    * True for a streaming request. The implementation does not buffer the response body,
-   * and it ignores {@link Options.timeout}. The response exposes its body through
+   * it does not request compressed content, and it ignores {@link Options.timeout}. The
+   * response exposes its body through
    * {@link Response.body}. An SDK must use a fetch as a streaming transport only when the
    * implementation honors this field. A streaming implementation must provide at least one
    * release path. It honors {@link Options.signal}, or it provides the body cancel. It

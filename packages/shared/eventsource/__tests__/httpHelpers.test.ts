@@ -39,6 +39,27 @@ it('keeps empty parts', () => {
   expect(splitHeaderListValue('a,,b,')).toEqual(['a', '', 'b', '']);
 });
 
-it('returns an empty object when the headers expose no forEach', () => {
-  expect(headersToObject({ get: () => null })).toEqual({});
+it('returns null when the headers expose no iteration method', () => {
+  expect(headersToObject({ get: () => null })).toBeNull();
+});
+
+it('collects headers through forEach and folds the names to lowercase', () => {
+  expect(
+    headersToObject({
+      get: () => null,
+      forEach: (callback) => {
+        callback('text/event-stream', 'Content-Type');
+      },
+    }),
+  ).toEqual({ 'content-type': 'text/event-stream' });
+});
+
+it('collects headers through entries when forEach is absent', () => {
+  const pairs: [string, string][] = [['Content-Type', 'text/event-stream']];
+  expect(
+    headersToObject({
+      get: () => null,
+      entries: () => pairs,
+    }),
+  ).toEqual({ 'content-type': 'text/event-stream' });
 });

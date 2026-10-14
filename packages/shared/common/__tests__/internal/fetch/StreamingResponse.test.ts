@@ -209,23 +209,23 @@ it('throws a named error when the source has no async iterator', () => {
   );
 });
 
-it('throws when a second reader is requested', () => {
-  const res = createStreamingResponse(makeTextSource(['chunk']));
-  res.body.getReader();
-  expect(() => res.body.getReader()).toThrow('already in use');
-});
-
-it('rejects text after a reader was created', async () => {
-  const res = createStreamingResponse(makeTextSource(['chunk']));
-  res.body.getReader();
-  await expect(res.text()).rejects.toThrow('already in use');
-});
-
-it('throws when a reader is requested after text started', async () => {
-  const res = createStreamingResponse(makeTextSource(['chunk']));
-  const pending = res.text();
-  expect(() => res.body.getReader()).toThrow('already in use');
-  await expect(pending).resolves.toBe('chunk');
+it('releases the source when a read fails during text', async () => {
+  const destroySpy = jest.fn();
+  const returnSpy = jest.fn(async () => ({ done: true }));
+  const source: StreamingResponseSource = {
+    headers: {},
+    destroy: destroySpy,
+    [Symbol.asyncIterator]: () => ({
+      next: async () => {
+        throw new Error('connection reset');
+      },
+      return: returnSpy,
+    }),
+  };
+  const res = createStreamingResponse(source);
+  await expect(res.text()).rejects.toThrow('connection reset');
+  expect(destroySpy).toHaveBeenCalledTimes(1);
+  expect(returnSpy).toHaveBeenCalledTimes(1);
 });
 
 it('rejects a pending read when the stream errors', async () => {

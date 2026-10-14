@@ -16,8 +16,8 @@ import {
 import {
   bodylessMethods,
   defaultFetch,
-  headersToObject,
   INVALID_HEADER_VALUE_CHAR,
+  parseResponseHeaders,
   splitHeaderListValue,
 } from './httpHelpers';
 import { createDefaultEventRegistry } from './listenerRegistry';
@@ -621,30 +621,14 @@ export function createEventSource(
         return;
       }
 
-      // A hostile headers object must not break the failure report. Without the fallback, a
-      // non-200 status would be lost with the throw, and the error filter could not classify
-      // the failure.
-      let responseHeaders: Record<string, string>;
-      let contentType: string | undefined;
-      let headersUnreadable = false;
-      try {
-        responseHeaders = headersToObject(res.headers);
-      } catch {
-        responseHeaders = {};
-        headersUnreadable = true;
-      }
-      try {
-        const declaredType: unknown = res.headers.get('content-type');
-        // A standard get returns a string or null. A sloppy transport can return undefined for
-        // an absent header, and a hostile one can return anything. Only a string is a declared
-        // type; every other value reads as no declared type.
-        contentType = typeof declaredType === 'string' ? declaredType : undefined;
-      } catch {
-        // A missing or throwing get leaves the declared type unknown. Only a success response
-        // needs the declared type, and the headers read above must survive for the failure
-        // report.
-        headersUnreadable = true;
-      }
+      // Every header access is guarded inside the parser, so a hostile headers object cannot
+      // break the failure report. Without that guard, a non-200 status would be lost with the
+      // throw, and the error filter could not classify the failure.
+      const {
+        headers: responseHeaders,
+        contentType,
+        unreadable: headersUnreadable,
+      } = parseResponseHeaders(res);
 
       // The status is read once. A getter that changes its answer between reads would skew the
       // classification, and a throw on a later read would skip the release below.

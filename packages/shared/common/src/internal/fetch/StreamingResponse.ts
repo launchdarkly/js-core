@@ -106,9 +106,9 @@ export interface StreamingResponse extends Response {
 
 /**
  * Creates a response for a streaming request. The response does not buffer the body. Each
- * read hands out the next chunk from the source iterator. The body permits one consumer:
- * the first `getReader`, `text`, or `json` call claims it, and a later call of any of the
- * three throws, like the lock of a standard body. The `cancel` methods on the body and the
+ * read hands out the next chunk from the source iterator. The body does not enforce a
+ * consumer lock: every `getReader`, `text`, and `json` call reads from the same iterator,
+ * so the caller uses one consumer per response. The `cancel` methods on the body and the
  * reader call every release function the source provides: they destroy the source when it
  * has a `destroy` method, and they also call the iterator's `return` method when one
  * exists. The body passes through as-is, so the caller decodes any content encoding first.
@@ -124,14 +124,6 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
     throw new TypeError('the streaming response source does not provide an async iterator');
   }
   const iterator = source[Symbol.asyncIterator]();
-
-  let bodyUsed = false;
-  const claimBody = (): void => {
-    if (bodyUsed) {
-      throw new TypeError('the response body is already in use');
-    }
-    bodyUsed = true;
-  };
 
   const cancel = async (): Promise<void> => {
     // Destroy the stream first. That rejects a pending read and unblocks a queued return
@@ -153,25 +145,29 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
   };
 
   async function text(): Promise<string> {
-    claimBody();
     const decoder = new TextDecoder();
     let result = '';
-    let next = await iterator.next();
-    while (!next.done) {
-      if (next.value !== undefined) {
-        try {
-          result += decoder.decode(next.value, { stream: true });
-        } catch {
-          // decode() rejects a chunk that is not a BufferSource. The fixed message keeps
-          // chunk contents out of error messages. text() owns the body, so a failed read
-          // must release the source itself.
-          cancel();
-          throw new TypeError('the source supplied a chunk that is not a BufferSource');
+    try {
+      let next = await iterator.next();
+      while (!next.done) {
+        if (next.value !== undefined) {
+          try {
+            result += decoder.decode(next.value, { stream: true });
+          } catch {
+            // decode() rejects a chunk that is not a BufferSource. The fixed message keeps
+            // chunk contents out of error messages.
+            throw new TypeError('the source supplied a chunk that is not a BufferSource');
+          }
         }
+        // The stream provides the chunks in sequence, so the reads cannot run in parallel.
+        // oxlint-disable-next-line no-await-in-loop
+        next = await iterator.next();
       }
-      // The stream provides the chunks in sequence, so the reads cannot run in parallel.
-      // oxlint-disable-next-line no-await-in-loop
-      next = await iterator.next();
+    } catch (err) {
+      // text() owns the body, so any failed read must release the source itself. This
+      // covers a rejecting next() as well as a bad chunk.
+      cancel();
+      throw err;
     }
     // The final decode flushes a trailing partial multi-byte sequence.
     return result + decoder.decode();
@@ -182,19 +178,16 @@ export function createStreamingResponse(source: StreamingResponseSource): Stream
     status: source.statusCode ?? 0,
     statusText: source.statusMessage ?? '',
     body: {
-      getReader: () => {
-        claimBody();
-        return {
-          read: async () => {
-            const next = await iterator.next();
-            if (next.done) {
-              return { done: true };
-            }
-            return { done: false, value: next.value };
-          },
-          cancel,
-        };
-      },
+      getReader: () => ({
+        read: async () => {
+          const next = await iterator.next();
+          if (next.done) {
+            return { done: true };
+          }
+          return { done: false, value: next.value };
+        },
+        cancel,
+      }),
       cancel,
     },
     text,
