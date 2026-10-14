@@ -225,6 +225,7 @@ export default class NodeRequests implements platform.Requests {
       method: options.method,
       headers: options.headers,
       agent: this._agent,
+      signal: options.signal,
     };
     if (isSecure) {
       Object.assign(requestOptions, this._tlsParams);
@@ -235,15 +236,6 @@ export default class NodeRequests implements platform.Requests {
       );
       // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
       req.setNoDelay(true);
-      const { signal } = options;
-      if (signal) {
-        const abort = () => req.destroy(new Error('The stream request was aborted'));
-        if (signal.aborted) {
-          abort();
-        } else {
-          signal.addEventListener('abort', abort, { once: true });
-        }
-      }
       // This listener stays attached after resolve. A later socket error then becomes a harmless
       // no-op reject instead of an unhandled 'error' event that would crash the process
       req.on('error', reject);
