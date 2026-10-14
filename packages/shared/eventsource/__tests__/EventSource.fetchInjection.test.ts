@@ -24,6 +24,25 @@ import {
 } from './helpers';
 
 /**
+ * Builds a FetchHeaders over a record, like the SDK platform adapters do: `get` folds case, and
+ * `forEach` reports the record's own casing.
+ */
+function recordHeaders(record: Record<string, string>): FetchHeaders {
+  return {
+    get: (name: string) => {
+      const match = Object.keys(record).find((key) => key.toLowerCase() === name.toLowerCase());
+      return match === undefined ? null : record[match];
+    },
+    forEach: (callback: (value: string, key: string) => void) => {
+      Object.entries(record).forEach(([key, value]) => callback(value, key));
+    },
+  };
+}
+
+/** The headers of an ordinary SSE response. */
+const sseHeaders = (): FetchHeaders => recordHeaders({ 'content-type': 'text/event-stream' });
+
+/**
  * A canned response whose body hands out the given chunks and then stays pending forever, like an
  * idle SSE connection. The shape matches what the Node SDK http/https adapters produce.
  */
@@ -33,11 +52,7 @@ function idleStreamResponse(chunks: string[], headers?: FetchHeaders): FetchLike
   return {
     status: 200,
     statusText: 'OK',
-    headers: headers ?? {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: headers ?? sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -176,7 +191,7 @@ it('reports a non-200 response from an injected fetch as an error', async () => 
   const injected: FetchLike = async () => ({
     status: 401,
     statusText: 'Unauthorized',
-    headers: { forEach: () => {} },
+    headers: recordHeaders({}),
     body: null,
   });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
@@ -191,14 +206,170 @@ it('reports a non-200 response from an injected fetch as an error', async () => 
   }
 });
 
-it('accepts a response whose transport supplies no headers at all', async () => {
-  const injected: FetchLike = async () => idleStreamResponse(['data: hello\n\n'], { forEach() {} });
+it('accepts a response whose headers iterate no entries', async () => {
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], { get: () => null, forEach() {} });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const es = createEventSource(url, { fetch: injected });
   es.onerror = () => {};
   try {
     const messages = startMessageQueue(es);
     expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('opens the stream when the response headers expose no forEach', async () => {
+  // A transport without header iteration reports no headers. A 200 with no headers is accepted,
+  // so the stream must open rather than fail as unreadable.
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], { get: () => null });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('rejects a wrong declared content type from a transport without forEach', async () => {
+  // Content-type validation reads through get, so it works for a transport whose headers
+  // expose no iteration.
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], { get: () => 'application/json' });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('unexpected Content-Type');
+  } finally {
+    es.close();
+  }
+});
+
+it('opens the stream when get returns undefined for an absent header', async () => {
+  // A sloppy transport can implement get as a plain record lookup, which returns undefined
+  // instead of null. That reads as no declared type, not as a failure.
+  const sloppy = { get: () => undefined };
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], sloppy as unknown as FetchHeaders);
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('rejects a wrong content type that only the iterated headers reveal', async () => {
+  // A get that does not fold header-name case returns null for a present header. The
+  // iterated record closes that gate bypass.
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], {
+      get: () => null,
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/html', 'Content-Type');
+      },
+    });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('unexpected Content-Type');
+  } finally {
+    es.close();
+  }
+});
+
+it('rejects a wrong content type when get returns a non-string value', async () => {
+  // Only a string from get is a declared type. A hostile non-string result defers to the
+  // iterated record instead of skipping the gate.
+  const hostile = {
+    get: () => 12345,
+    forEach(callback: (value: string, key: string) => void): void {
+      callback('text/html', 'content-type');
+    },
+  };
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], hostile as unknown as FetchHeaders);
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('unexpected Content-Type');
+  } finally {
+    es.close();
+  }
+});
+
+it('opens the stream for a transport whose headers only expose forEach', async () => {
+  // The only legal headers shape before get was added. It must keep working through the
+  // iterated record.
+  const legacy = {
+    forEach(callback: (value: string, key: string) => void): void {
+      callback('text/event-stream', 'content-type');
+    },
+  };
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], legacy as unknown as FetchHeaders);
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('rejects a wrong content type for a transport whose headers only expose forEach', async () => {
+  const legacy = {
+    forEach(callback: (value: string, key: string) => void): void {
+      callback('text/html', 'content-type');
+    },
+  };
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], legacy as unknown as FetchHeaders);
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.message).toContain('unexpected Content-Type');
+  } finally {
+    es.close();
+  }
+});
+
+it('reports an empty message for a non-200 response without a statusText', async () => {
+  const injected: FetchLike = async () => ({
+    status: 503,
+    headers: { get: () => null },
+    body: null,
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.status).toEqual(503);
+    expect(err?.message).toEqual('');
   } finally {
     es.close();
   }
@@ -211,7 +382,7 @@ it('aborts the request when a 200 response has no body', async () => {
     return {
       status: 200,
       statusText: 'OK',
-      headers: { forEach: () => {} },
+      headers: recordHeaders({}),
       body: null,
     };
   };
@@ -232,12 +403,10 @@ it('folds response header names to lowercase for a transport that reports wire c
   // A standard Headers object reports lowercase names; a raw-header transport reports the wire
   // case. Consumers look headers up by lowercase name, so both must produce the same shape.
   const injected: FetchLike = async () =>
-    idleStreamResponse(['data: hello\n\n'], {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'Content-Type');
-        callback('abc', 'X-LD-EnvId');
-      },
-    });
+    idleStreamResponse(
+      ['data: hello\n\n'],
+      recordHeaders({ 'Content-Type': 'text/event-stream', 'X-LD-EnvId': 'abc' }),
+    );
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
   const es = createEventSource(url, { fetch: injected });
   es.onerror = () => {};
@@ -258,11 +427,7 @@ it('cancels the body reader on close for a transport that ignores the abort sign
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => {
         let delivered = false;
@@ -299,11 +464,7 @@ it('yields to timers while a transport resolves reads synchronously', async () =
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -341,11 +502,7 @@ it('treats a stream of empty chunks as dead when the read timeout elapses', asyn
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -386,11 +543,7 @@ it('does not create a reader when onopen closes the stream', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: { getReader, cancel: bodyCancel },
   });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
@@ -414,17 +567,13 @@ it('releases the unread body of a rejected response', async () => {
     {
       status: 503,
       statusText: 'Service Unavailable',
-      headers: { forEach: () => {} },
+      headers: recordHeaders({}),
       body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
     },
     {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/html', 'content-type');
-        },
-      },
+      headers: recordHeaders({ 'content-type': 'text/html' }),
       body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
     },
   ];
@@ -464,7 +613,7 @@ it('releases the body of a response that resolves after close', async () => {
   resolveFetch!({
     status: 200,
     statusText: 'OK',
-    headers: { forEach: () => {} },
+    headers: recordHeaders({}),
     body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }), cancel: bodyCancel },
   });
   // The response reaches the stale callback on the microtask queue. The timer hop runs after it.
@@ -482,11 +631,7 @@ it('delivers chunks a transport supplies as ArrayBuffer', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -530,11 +675,7 @@ it('delivers chunks from an ArrayBuffer created in another realm', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -573,11 +714,7 @@ it('reports the fallback message when a read rejection hides its own message', a
     return {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => ({
           read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -632,11 +769,7 @@ it('delivers chunks a transport supplies as SharedArrayBuffer', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -672,11 +805,7 @@ it('delivers an ArrayBuffer chunk that carries its own string tag', async () => 
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -708,11 +837,7 @@ it('reports an error for a chunk that forges the buffer brand', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => ({
@@ -737,7 +862,7 @@ it('reports an error for a chunk that forges the buffer brand', async () => {
 it('keeps the status when a response statusText getter throws', async () => {
   const hostile = {
     status: 503,
-    headers: { forEach: () => {} },
+    headers: recordHeaders({}),
     body: null,
   };
   Object.defineProperty(hostile, 'statusText', {
@@ -765,7 +890,7 @@ it('releases the request when a hostile response getter escapes the callback', a
     signal = init.signal;
     const hostile = {
       statusText: 'OK',
-      headers: { forEach: () => {} },
+      headers: recordHeaders({}),
       body: null,
     };
     Object.defineProperty(hostile, 'status', {
@@ -790,15 +915,63 @@ it('releases the request when a hostile response getter escapes the callback', a
 });
 
 it('fails a 200 response whose headers cannot be read', async () => {
-  // A forEach that delivers a wrong content type and then throws must not open the stream as a
-  // headerless success with its partial headers discarded.
+  // A forEach that throws must not open the stream as a headerless success with its partial
+  // headers discarded, even when get works and declares a valid content type.
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
     headers: {
+      get: () => 'text/event-stream',
       forEach(callback: (value: string, key: string) => void): void {
         callback('text/html', 'content-type');
         throw new Error('headers boom');
+      },
+    },
+    body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }) },
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const events = new AsyncQueue<string>();
+  es.addEventListener('open', () => events.add('open'));
+  es.onerror = (e) => events.add(`error:${e?.message}`);
+  try {
+    expect(await events.take()).toEqual('error:stream response headers could not be read');
+  } finally {
+    es.close();
+  }
+});
+
+it('opens through the iterated headers when get throws', async () => {
+  // A throwing get leaves the iterated record as the only content-type source. The stream
+  // must open through it instead of failing as unreadable.
+  const injected: FetchLike = async () =>
+    idleStreamResponse(['data: hello\n\n'], {
+      get: () => {
+        throw new Error('get boom');
+      },
+      forEach(callback: (value: string, key: string) => void): void {
+        callback('text/event-stream', 'content-type');
+      },
+    });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected });
+  es.onerror = () => {};
+  try {
+    const messages = startMessageQueue(es);
+    expect((await messages.take()).data).toEqual('hello');
+  } finally {
+    es.close();
+  }
+});
+
+it('fails a 200 response whose headers expose no access method', async () => {
+  // With no usable get and no iteration, the content type cannot be validated at all.
+  const injected: FetchLike = async () => ({
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      get: () => {
+        throw new Error('get boom');
       },
     },
     body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }) },
@@ -824,11 +997,7 @@ it('cancels the reader when getReader itself closes the stream', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => {
         es?.close();
@@ -862,6 +1031,7 @@ it('stays closed when a transport accessor calls close during the response callb
     status: 200,
     statusText: 'OK',
     headers: {
+      get: () => 'text/event-stream',
       forEach(): void {
         es?.close();
       },
@@ -894,7 +1064,7 @@ it('reads the response status once for the failure report', async () => {
   let reads = 0;
   const hostile = {
     statusText: 'Service Unavailable',
-    headers: { forEach: () => {} },
+    headers: recordHeaders({}),
     body: null,
   };
   Object.defineProperty(hostile, 'status', {
@@ -924,6 +1094,34 @@ it('reads the response status once for the failure report', async () => {
   }
 });
 
+it('keeps the headers when a non-200 response has no get', async () => {
+  // A transport without get fails the content-type lookup. A failure response does not
+  // need the declared type, so the report must keep the headers that forEach collected,
+  // including the FDv1 fallback directive.
+  const headers = {
+    forEach(callback: (value: string, key: string) => void): void {
+      callback('true', 'x-ld-fd-fallback');
+    },
+  } as unknown as FetchHeaders;
+  const injected: FetchLike = async () => ({
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers,
+    body: null,
+  });
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.status).toEqual(503);
+    expect(err?.headers?.['x-ld-fd-fallback']).toEqual('true');
+  } finally {
+    es.close();
+  }
+});
+
 it('keeps the status when a non-200 response headers forEach throws', async () => {
   // Without the headers fallback, the throw would escape to the fetch catch and the 401 would
   // be reported with no status, so a permanent auth failure would retry forever.
@@ -931,6 +1129,7 @@ it('keeps the status when a non-200 response headers forEach throws', async () =
     status: 401,
     statusText: 'Unauthorized',
     headers: {
+      get: () => null,
       forEach(): void {
         throw new Error('headers boom');
       },
@@ -944,6 +1143,52 @@ it('keeps the status when a non-200 response headers forEach throws', async () =
   try {
     const err = await errors.take();
     expect(err?.status).toEqual(401);
+  } finally {
+    es.close();
+  }
+});
+
+it('keeps the status when the response headers getter throws', async () => {
+  // The headers read happens once, inside the parser's guard. A throwing getter must not
+  // erase the status from the failure report, or a permanent auth failure would retry forever.
+  const hostile = { status: 401, statusText: 'Unauthorized', body: null };
+  Object.defineProperty(hostile, 'headers', {
+    get() {
+      throw new Error('headers boom');
+    },
+  });
+  const injected: FetchLike = async () => hostile as unknown as FetchLikeResponse;
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const errors = new AsyncQueue<ErrorEvent | undefined>();
+  const es = createEventSource(url, { fetch: injected, errorFilter: () => false });
+  es.onerror = (e) => errors.add(e);
+  try {
+    const err = await errors.take();
+    expect(err?.status).toEqual(401);
+  } finally {
+    es.close();
+  }
+});
+
+it('fails a 200 response whose headers getter throws', async () => {
+  const hostile = {
+    status: 200,
+    statusText: 'OK',
+    body: { getReader: () => ({ read: () => new Promise<never>(() => {}) }) },
+  };
+  Object.defineProperty(hostile, 'headers', {
+    get() {
+      throw new Error('headers boom');
+    },
+  });
+  const injected: FetchLike = async () => hostile as unknown as FetchLikeResponse;
+  const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const events = new AsyncQueue<string>();
+  es.addEventListener('open', () => events.add('open'));
+  es.onerror = (e) => events.add(`error:${e?.message}`);
+  try {
+    expect(await events.take()).toEqual('error:stream response headers could not be read');
   } finally {
     es.close();
   }
@@ -976,11 +1221,7 @@ it('ignores a stale fetch rejection after a newer attempt is streaming', async (
     return Promise.resolve({
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => ({
           read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -1060,11 +1301,7 @@ it('reports an error instead of stalling when a transport supplies a non-buffer 
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => ({
@@ -1097,11 +1334,7 @@ it('keeps the read timeout alive across a partial multi-byte chunk', async () =>
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => ({
         read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -1142,11 +1375,7 @@ it('releases the request when getReader throws an error whose message getter thr
     return {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => {
           const hostile = {};
@@ -1185,11 +1414,7 @@ it('releases the request when getReader throws', async () => {
     return {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => {
           throw new Error('stream locked');
@@ -1219,11 +1444,7 @@ it('close() tolerates a reader cancel that throws synchronously', async () => {
   const injected: FetchLike = async () => ({
     status: 200,
     statusText: 'OK',
-    headers: {
-      forEach(callback: (value: string, key: string) => void): void {
-        callback('text/event-stream', 'content-type');
-      },
-    },
+    headers: sseHeaders(),
     body: {
       getReader: () => {
         let delivered = false;
@@ -1263,11 +1484,7 @@ it('aborts the failed request when a retried read error schedules a reconnect', 
     return {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => ({
           read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
@@ -1307,11 +1524,7 @@ it('recomputes the message origin when urlBuilder picks a new origin for a recon
     return {
       status: 200,
       statusText: 'OK',
-      headers: {
-        forEach(callback: (value: string, key: string) => void): void {
-          callback('text/event-stream', 'content-type');
-        },
-      },
+      headers: sseHeaders(),
       body: {
         getReader: () => ({
           read: async (): Promise<{ done: boolean; value?: Uint8Array }> => {
