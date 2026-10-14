@@ -5,6 +5,7 @@ import * as path from 'path';
 import { integrations } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import waitFor from './waitFor';
 
 // A configured path can be a symbolic link to a file in another directory. The directory that
 // contains the link never reports a change to the target, so the source also watches the path
@@ -12,24 +13,6 @@ import LDClientNode from '../src/LDClientNode';
 // elsewhere.
 
 const document = (value: string) => JSON.stringify({ flagValues: { flag: value } });
-
-const settle = (ms: number) =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
-
-async function waitFor(condition: () => Promise<boolean>, timeoutMs: number = 5000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    // eslint-disable-next-line no-await-in-loop
-    if (await condition()) {
-      return;
-    }
-    // eslint-disable-next-line no-await-in-loop
-    await settle(20);
-  }
-  throw new Error('timed out waiting for the condition');
-}
 
 const itOnPosix = process.platform === 'win32' ? it.skip : it;
 
