@@ -47,6 +47,7 @@ import {
 import { ensureKey } from './context/ensureKey';
 import { DataManager, DataManagerFactory } from './DataManager';
 import type { InternalDataSystemOptions } from './datasource/LDClientDataSystemOptions';
+import { supportsCustomMethod } from './datasource/SourceFactoryProvider';
 import createDiagnosticsManager from './diagnostics/createDiagnosticsManager';
 import {
   createErrorEvaluationDetail,
@@ -132,7 +133,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (
       !!this._config.dataSystem &&
       this._config.usePost &&
-      !platform.requests.getEventSourceCapabilities().customMethod
+      !supportsCustomMethod(platform.requests)
     ) {
       this._config.logger?.warn(
         'usePost is set, but the configured EventSource does not support custom HTTP methods. ' +

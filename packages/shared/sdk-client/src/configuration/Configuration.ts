@@ -201,7 +201,7 @@ export default class ConfigurationImpl implements Configuration {
     );
     this.useReport = pristineOptions.useReport ?? false;
     // useReport is an FDv1 option with no effect in FDv2, where usePost is the
-    // equivalent. Ignore it under dataSystem and warn.
+    // equivalent.
     if (this.dataSystem && this.useReport) {
       this.logger?.warn(
         'The "useReport" configuration option has no effect when the "dataSystem" option is ' +

@@ -22,6 +22,14 @@ import { createStreamingInitializer } from './fdv2/StreamingInitializerFDv2';
 import { createStreamingSynchronizer } from './fdv2/StreamingSynchronizerFDv2';
 
 /**
+ * True when the platform's event sources can send a custom HTTP method.
+ * usePost needs this capability to stream with POST.
+ */
+export function supportsCustomMethod(requests: Requests): boolean {
+  return requests.getEventSourceCapabilities().customMethod;
+}
+
+/**
  * Context needed to create concrete initializer/synchronizer factories
  * for a given identify call. Built once per identify and reused across
  * mode switches.
@@ -168,7 +176,7 @@ function buildStreamingBase(
   const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
   const requestor = resolvePollingRequestor(ctx, entry.endpoints);
   // usePost applies to the stream only when the EventSource can send a custom HTTP method.
-  const streamPost = ctx.usePost && ctx.requests.getEventSourceCapabilities().customMethod;
+  const streamPost = ctx.usePost && supportsCustomMethod(ctx.requests);
   const streamUriPath = streamPost
     ? ctx.streaming.paths.pathPost(ctx.encoding, ctx.plainContextString)
     : ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);

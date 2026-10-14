@@ -314,9 +314,8 @@ export function createFDv2DataManagerBase(
           ctx.baseHeaders,
           ctx.queryParams,
           config.withReasons,
-          // The FDv1 fallback maps usePost to the REPORT method. This keeps
-          // the context in the request body instead of the URL. The useReport
-          // option is always disabled when the data system is configured.
+          // Map usePost to REPORT to keep the context out of the URL.
+          // useReport itself is always disabled under the data system.
           config.usePost,
         );
 
