@@ -16,8 +16,8 @@ import {
 import {
   bodylessMethods,
   defaultFetch,
-  headersToObject,
   INVALID_HEADER_VALUE_CHAR,
+  parseResponseHeaders,
   splitHeaderListValue,
 } from './httpHelpers';
 import { createDefaultEventRegistry } from './listenerRegistry';
@@ -621,17 +621,14 @@ export function createEventSource(
         return;
       }
 
-      // A hostile headers object must not break the failure report. Without the fallback, a
-      // non-200 status would be lost with the throw, and the error filter could not classify
-      // the failure.
-      let responseHeaders: Record<string, string>;
-      let headersUnreadable = false;
-      try {
-        responseHeaders = headersToObject(res.headers);
-      } catch {
-        responseHeaders = {};
-        headersUnreadable = true;
-      }
+      // Every header access is guarded inside the parser, so a hostile headers object cannot
+      // break the failure report. Without that guard, a non-200 status would be lost with the
+      // throw, and the error filter could not classify the failure.
+      const {
+        headers: responseHeaders,
+        contentType,
+        unreadable: headersUnreadable,
+      } = parseResponseHeaders(res);
 
       // The status is read once. A getter that changes its answer between reads would skew the
       // classification, and a throw on a later read would skip the release below.
@@ -663,9 +660,9 @@ export function createEventSource(
       }
 
       if (headersUnreadable) {
-        // On a success status the headers decide whether the body is a stream at all. A 200
-        // whose headers cannot be read must fail and retry, not open as a headerless stream
-        // with its partially collected headers discarded.
+        // On a success status the headers feed the open event and the declared content type
+        // gates the stream. A 200 whose headers throw during the read must fail and retry, not
+        // open with its partially collected headers discarded.
         failOnce({ message: 'stream response headers could not be read' });
         releaseBody(res);
         return;
@@ -677,14 +674,13 @@ export function createEventSource(
       // transport can report no headers.
       //
       // The media type must match exactly. Parameters after it, such as a charset, are allowed.
-      // A standard Headers object comma-joins a duplicated Content-Type header, so each part of
-      // a joined value must declare the event-stream media type. This is stricter than the
-      // Fetch algorithm, which keeps only the last parsable part, and an empty or unparsable
-      // part also fails.
+      // A standard get comma-joins a duplicated Content-Type header, so each part of a joined
+      // value must declare the event-stream media type. This is stricter than the Fetch
+      // algorithm, which keeps only the last parsable part, and an empty or unparsable part
+      // also fails.
       //
       // trim() also strips NBSP, form feed, and vertical tab, which are not HTTP whitespace.
       // The extra leniency is harmless.
-      const contentType = responseHeaders['content-type'];
       if (
         contentType !== undefined &&
         !splitHeaderListValue(contentType).every(
