@@ -135,4 +135,92 @@ describe('EventSource', () => {
 
     expect(mockXhr.open).toHaveBeenLastCalledWith('GET', `${uri}?basis=initial`, true);
   });
+
+  test('uses the injected retryDelayStrategy for the reconnect delay instead of the built-in backoff', () => {
+    const retryDelayStrategy = {
+      nextRetryDelay: jest.fn((_nowMs: number) => 300000),
+      setGoodSince: jest.fn((_timeMs?: number) => {}),
+      setBaseDelay: jest.fn((_baseDelayMs: number) => {}),
+    };
+    const es = new EventSource<EventName>(uri, { logger, retryDelayStrategy });
+
+    // @ts-ignore - private
+    const delay = es._getNextRetryDelay();
+
+    expect(retryDelayStrategy.nextRetryDelay).toHaveBeenCalledTimes(1);
+    expect(delay).toEqual(300000);
+    // The built-in backoff counter is untouched when a strategy drives the delay.
+    // @ts-ignore - private
+    expect(es._retryCount).toEqual(0);
+  });
+
+  test('anchors the retryDelayStrategy healthy-reset on the first received event only', () => {
+    const retryDelayStrategy = {
+      nextRetryDelay: jest.fn((_nowMs: number) => 300000),
+      setGoodSince: jest.fn((_timeMs?: number) => {}),
+      setBaseDelay: jest.fn((_baseDelayMs: number) => {}),
+    };
+    const es = new EventSource<EventName>(uri, { logger, retryDelayStrategy });
+
+    // Drive the SSE parser directly with a growing buffer carrying two events.
+    // @ts-ignore - private
+    es._handleEvent('data: a\n\n');
+    // @ts-ignore - private
+    es._handleEvent('data: a\n\ndata: b\n\n');
+
+    // Only the first event anchors the healthy-reset window.
+    expect(retryDelayStrategy.setGoodSince).toHaveBeenCalledTimes(1);
+  });
+
+  test('reports a clean server close through the error filter before reconnecting', () => {
+    // The transport reads XMLHttpRequest.DONE off the (mocked) global.
+    (window.XMLHttpRequest as any).DONE = 4;
+
+    const retryAndHandleError = jest.fn(() => true);
+    const es = new EventSource<EventName>(uri, { logger, retryAndHandleError });
+    es.onretrying = jest.fn();
+
+    // Open the connection so the readystatechange handler is wired up.
+    jest.runAllTimers();
+
+    // Server cleanly closes the stream: a 2xx response reaching readyState DONE.
+    mockXhr.status = 200;
+    mockXhr.readyState = 4;
+    mockXhr.onreadystatechange();
+
+    // The clean close is reported with no status, so the strategy classifies it
+    // as a `normal` failure and backs off rather than reconnecting on the stale
+    // (post-success) delay.
+    expect(retryAndHandleError).toHaveBeenCalledTimes(1);
+    expect(retryAndHandleError).toHaveBeenCalledWith({ message: 'stream closed by server' });
+
+    // The filter allowed a retry, so a reconnect is scheduled — a clean close
+    // never permanently stops the stream.
+    expect(es.onretrying).toHaveBeenCalled();
+  });
+
+  test('retries after a 401 instead of permanently stopping', () => {
+    (window.XMLHttpRequest as any).DONE = 4;
+
+    const retryAndHandleError = jest.fn(() => true);
+    const es = new EventSource<EventName>(uri, { logger, retryAndHandleError });
+    es.onretrying = jest.fn();
+
+    // Open the connection so the readystatechange handler is wired up.
+    jest.runAllTimers();
+
+    // Server responds 401 and completes.
+    mockXhr.status = 401;
+    mockXhr.readyState = 4;
+    mockXhr.onreadystatechange();
+
+    // The status-bearing failure is routed to the error filter, which decides
+    // whether to retry. The SDK's filter always retries, so the stream never
+    // permanently stops on a 401.
+    expect(retryAndHandleError).toHaveBeenCalledTimes(1);
+    expect(retryAndHandleError).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }));
+
+    // A reconnect is scheduled rather than the stream permanently stopping.
+    expect(es.onretrying).toHaveBeenCalled();
+  });
 });

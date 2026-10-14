@@ -22,6 +22,7 @@ export default class PlatformRequests implements Requests {
       retryAndHandleError: eventSourceInitDict.errorFilter,
       logger: this._logger,
       urlBuilder: eventSourceInitDict.urlBuilder,
+      retryDelayStrategy: eventSourceInitDict.retryDelayStrategy,
     });
   }
 
