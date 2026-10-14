@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.33.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.32.5...js-client-sdk-common-v1.33.0) (2026-10-14)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2098](https://github.com/launchdarkly/js-core/issues/2098)) ([0d5e30d](https://github.com/launchdarkly/js-core/commit/0d5e30d1d9c904c1b34020075d397b06523a5c3a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.29.0 to 2.30.0
+
 ## [1.32.5](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.32.4...js-client-sdk-common-v1.32.5) (2026-10-06)
 
 
