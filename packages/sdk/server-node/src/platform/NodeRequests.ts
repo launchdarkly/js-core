@@ -234,10 +234,11 @@ export default class NodeRequests implements platform.Requests {
       const req = impl.request(url, requestOptions, (res) =>
         resolve(internal.createStreamingResponse(res)),
       );
-      // An SSE consumer wants each chunk as soon as it arrives; do not batch small writes.
+      // Send the request headers and body at once. TCP batches small writes by default
+      // on sockets from the proxy agent and from a caller-supplied agent.
       req.setNoDelay(true);
       // This listener stays attached after resolve. A later socket error then becomes a harmless
-      // no-op reject instead of an unhandled 'error' event that would crash the process
+      // no-op reject instead of an unhandled 'error' event that would crash the process.
       req.on('error', reject);
       if (options.body !== undefined) {
         req.write(options.body);

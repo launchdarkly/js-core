@@ -1,3 +1,4 @@
+import { getEventListeners } from 'events';
 import {
   AsyncQueue,
   TestHttpHandlers,
@@ -100,6 +101,44 @@ describe('given a running HTTP server', () => {
     await expect(
       requests.fetch(server.url, { method: 'GET', streaming: true, signal: controller.signal }),
     ).rejects.toThrow();
+    expect(server.requestCount()).toEqual(0);
+  });
+
+  it('rejects when the signal aborts before the response arrives', async () => {
+    // The handler never responds, so the abort happens while the request waits for headers.
+    server.byDefault(() => {});
+
+    const controller = new AbortController();
+    const requests = new NodeRequests();
+    const pending = requests.fetch(server.url, {
+      method: 'GET',
+      streaming: true,
+      signal: controller.signal,
+    });
+    await server.nextRequest();
+    controller.abort();
+    await expect(pending).rejects.toThrow();
+  });
+
+  it('removes the abort listener when the stream ends', async () => {
+    server.byDefault(TestHttpHandlers.respond(200, {}, 'done'));
+
+    const controller = new AbortController();
+    const requests = new NodeRequests();
+    const res = await requests.fetch(server.url, {
+      method: 'GET',
+      streaming: true,
+      signal: controller.signal,
+    });
+    const reader = res.body?.getReader();
+    const first = await reader?.read();
+    const second = first?.done ? first : await reader?.read();
+    expect(second?.done).toBe(true);
+    // Node removes the listener on the request close event, which lands after the final read.
+    await new Promise((resolve) => {
+      setTimeout(resolve, 20);
+    });
+    expect(getEventListeners(controller.signal, 'abort')).toHaveLength(0);
   });
 
   it('streams SSE events through createEventSource', async () => {
