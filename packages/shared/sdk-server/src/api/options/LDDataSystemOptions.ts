@@ -79,8 +79,7 @@ export interface LDDataSystemOptions {
   fdv1Fallback?: FDv1FallbackConfiguration | null;
 
   /**
-   * Configures an override source. Flag overrides are currently experimental and subject to
-   * change.
+   * Configures an override source.
    *
    * The source supplies flag and segment definitions that take precedence over data received
    * from LaunchDarkly on a per-key basis. Overrides let an operator force one or more flags to a
@@ -94,13 +93,14 @@ export interface LDDataSystemOptions {
    * Some implementations provide the source object itself, while others provide a factory
    * function that creates the source based on the SDK configuration. This property accepts
    * either.
+   *
+   * @experimental Flag overrides are currently experimental and subject to change.
    */
   overrides?: LDOverrideSourceOptions;
 }
 
 /**
- * Configuration of the file-based override source. Flag overrides are currently experimental and
- * subject to change.
+ * Configuration of the file-based override source.
  *
  * The source reads flag and segment overrides from one or more local files and reloads them as
  * the files change. The files use the same document format as the file data source: a JSON or
@@ -121,6 +121,8 @@ export interface LDDataSystemOptions {
  *   },
  * });
  * ```
+ *
+ * @experimental Flag overrides are currently experimental and subject to change.
  */
 export interface FileOverrideSourceOptions {
   type: 'file';
@@ -171,7 +173,7 @@ export interface FileOverrideSourceOptions {
  * The ways an override source can be configured: the file-based source, a source object, or a
  * factory function that creates a source from the client context.
  *
- * Flag overrides are currently experimental and subject to change.
+ * @experimental Flag overrides are currently experimental and subject to change.
  */
 export type LDOverrideSourceOptions =
   | FileOverrideSourceOptions

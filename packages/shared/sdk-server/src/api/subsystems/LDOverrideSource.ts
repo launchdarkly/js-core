@@ -5,7 +5,7 @@ import { LDKeyedFeatureStoreItem } from './LDFeatureStore';
  * interface and passes it to {@link LDOverrideSource.start}. Override sources call it. They do
  * not implement it.
  *
- * Flag overrides are currently experimental and subject to change.
+ * @experimental Flag overrides are currently experimental and subject to change.
  */
 export interface LDOverrideSink {
   /**
@@ -41,7 +41,7 @@ export interface LDOverrideSink {
  *
  * Configure an override source with the `overrides` property of the data system options.
  *
- * Flag overrides are currently experimental and subject to change.
+ * @experimental Flag overrides are currently experimental and subject to change.
  */
 export interface LDOverrideSource {
   /**
