@@ -18,9 +18,9 @@ const CAPABILITIES: EventSourceCapabilities = {
  * browser one.
  *
  * Unlike the native browser EventSource, this one can send request headers, use a method other than
- * GET with a request body (which is what REPORT streaming needs), and apply a read timeout. It
- * requires `fetch()`, `AbortController` and a streaming `Response.body`, which every evergreen
- * browser provides.
+ * GET with a request body, and apply a read timeout. The custom method support is what lets the
+ * FDv2 `usePost` option stream evaluations over POST. It requires `fetch()`, `AbortController` and
+ * a streaming `Response.body`, which every browser implementation should be able to support.
  *
  * It is not the default. Pass it as the `eventSource` option to opt in:
  *
