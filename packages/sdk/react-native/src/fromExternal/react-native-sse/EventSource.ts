@@ -12,6 +12,11 @@
  *    an issue with Vega OS where they do not fire a readyStatechange
  *    event when the response is received.
  */
+import {
+  EventSourceRetryDelayStrategy,
+  monotonicNow,
+} from '@launchdarkly/js-client-sdk-common';
+
 import type { EventSourceEvent, EventSourceListener, EventSourceOptions, EventType } from './types';
 
 const XMLReadyStateMap = ['UNSENT', 'OPENED', 'HEADERS_RECEIVED', 'LOADING', 'DONE'];
@@ -69,6 +74,11 @@ export default class EventSource<E extends string = never> {
   private _retryCount: number = 0;
   private _logger?: any;
   private _urlBuilder?: () => string;
+  private _retryDelayStrategy?: EventSourceRetryDelayStrategy;
+
+  // Whether at least one event has been received on the current connection.
+  // Used to anchor the retry strategy's healthy-reset on first data.
+  private _firstEventAnchored = false;
 
   constructor(url: string, options?: EventSourceOptions) {
     const opts = {
@@ -86,11 +96,15 @@ export default class EventSource<E extends string = never> {
     this._initialRetryDelayMillis = opts.initialRetryDelayMillis!;
     this._logger = opts.logger;
     this._urlBuilder = opts.urlBuilder;
+    this._retryDelayStrategy = opts.retryDelayStrategy;
 
     this._tryConnect(true);
   }
 
   private _getNextRetryDelay() {
+    if (this._retryDelayStrategy) {
+      return this._retryDelayStrategy.nextRetryDelay(monotonicNow());
+    }
     const delay = jitter(backoff(this._initialRetryDelayMillis, this._retryCount));
     this._retryCount += 1;
     return delay;
@@ -118,6 +132,8 @@ export default class EventSource<E extends string = never> {
     try {
       this._lastIndexProcessed = 0;
       this._status = this.CONNECTING;
+      // Re-arm so the retry strategy's healthy-reset is measured per connection.
+      this._firstEventAnchored = false;
       // Recompute the URL on each (re)connection so that reconnects pick up
       // state that changes over the connection's lifetime (for example the
       // FDv2 `basis` selector, which must be replayed on reconnect).
@@ -203,7 +219,24 @@ export default class EventSource<E extends string = never> {
 
           if (this._xhr.readyState === XMLHttpRequest.DONE) {
             this._logger?.debug('[EventSource][onreadystatechange][DONE] Operation done.');
-            this._tryConnect();
+
+            // A clean server close (2xx, stream ended) is still a connection
+            // failure that must be recorded before reconnecting. Route it through
+            // the error filter the same way the error-status branch below does,
+            // with no status so it classifies as a `normal` failure. Without this
+            // the retry strategy never records the close, so the reconnect reads
+            // the post-success delay (0) and busy-loops on repeated closes.
+            if (!this._retryAndHandleError) {
+              this._tryConnect();
+            } else {
+              const shouldRetry = this._retryAndHandleError({
+                message: 'stream closed by server',
+              });
+
+              if (shouldRetry) {
+                this._tryConnect();
+              }
+            }
           }
         } else {
           this._status = this.ERROR;
@@ -311,6 +344,11 @@ export default class EventSource<E extends string = never> {
             url: this._url,
             lastEventId: this._lastEventId,
           };
+
+          if (!this._firstEventAnchored) {
+            this._firstEventAnchored = true;
+            this._retryDelayStrategy?.setGoodSince(monotonicNow());
+          }
 
           this.dispatch(eventType, event);
 

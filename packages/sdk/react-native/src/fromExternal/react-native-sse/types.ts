@@ -1,3 +1,5 @@
+import type { EventSourceRetryDelayStrategy } from '@launchdarkly/js-client-sdk-common';
+
 export type BuiltInEventType = 'open' | 'message' | 'error' | 'close' | 'retry';
 export type EventType<E extends string = never> = E | BuiltInEventType;
 
@@ -53,6 +55,7 @@ export interface EventSourceOptions {
   body?: any;
   retryAndHandleError?: (err: any) => boolean;
   initialRetryDelayMillis?: number;
+  retryDelayStrategy?: EventSourceRetryDelayStrategy;
   logger?: any;
   /**
    * Called before each (re)connection to compute the URL to connect to. When
