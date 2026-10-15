@@ -1,5 +1,12 @@
 # Changelog
 
+## [10.22.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.21.0...react-native-client-sdk-v10.22.0) (2026-10-15)
+
+
+### Features
+
+* conform the React Native SDK streaming data source to the RETRY spec ([#2103](https://github.com/launchdarkly/js-core/issues/2103)) ([8cc60e5](https://github.com/launchdarkly/js-core/commit/8cc60e5acec595347026d54fabe35c6d82a89f33))
+
 ## [10.21.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.20.7...react-native-client-sdk-v10.21.0) (2026-10-14)
 
 
