@@ -131,8 +131,9 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    *
    * @remarks
    * A factory should declare what its event sources support through the optional `capabilities`
-   * property. The SDK only uses REPORT streaming, for example, when `capabilities.customMethod` is
-   * true; a factory that declares nothing is treated as supporting nothing.
+   * property. The SDK only streams over POST (the FDv2 `usePost` option), for example, when
+   * `capabilities.customMethod` is true; a factory that declares nothing is treated as supporting
+   * nothing.
    */
   eventSource?: LDEventSourceFactory;
 }
