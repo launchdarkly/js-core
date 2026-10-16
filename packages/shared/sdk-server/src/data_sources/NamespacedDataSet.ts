@@ -2,7 +2,9 @@
  * @internal
  */
 export default class NamespacedDataSet<T> {
-  private _itemsByNamespace: Record<string, Record<string, T>> = {};
+  // The maps have no prototype, so a namespace or key named like a property of Object (for
+  // example a flag key of "constructor" or "__proto__") is an ordinary entry.
+  private _itemsByNamespace: Record<string, Record<string, T>> = Object.create(null);
 
   get(namespace: string, key: string): T | undefined {
     return this._itemsByNamespace[namespace]?.[key];
@@ -10,7 +12,7 @@ export default class NamespacedDataSet<T> {
 
   set(namespace: string, key: string, value: T) {
     if (!(namespace in this._itemsByNamespace)) {
-      this._itemsByNamespace[namespace] = {};
+      this._itemsByNamespace[namespace] = Object.create(null);
     }
     this._itemsByNamespace[namespace][key] = value;
   }
@@ -23,7 +25,7 @@ export default class NamespacedDataSet<T> {
   }
 
   removeAll() {
-    this._itemsByNamespace = {};
+    this._itemsByNamespace = Object.create(null);
   }
 
   enumerate(callback: (namespace: string, key: string, value: T) => void) {
