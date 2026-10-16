@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.2.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.1.7...node-client-sdk-v4.2.0) (2026-10-14)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2098](https://github.com/launchdarkly/js-core/issues/2098)) ([0d5e30d](https://github.com/launchdarkly/js-core/commit/0d5e30d1d9c904c1b34020075d397b06523a5c3a))
+* enable FDv1 streaming extended-regime backoff for node-client and electron ([#2102](https://github.com/launchdarkly/js-core/issues/2102)) ([567e3b3](https://github.com/launchdarkly/js-core/commit/567e3b32629b4d1c75b93f7bcbfc3be3dc28d546))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.5 to 1.33.0
+
 ## [4.1.7](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.1.6...node-client-sdk-v4.1.7) (2026-10-06)
 
 

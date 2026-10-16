@@ -1,5 +1,26 @@
 # Changelog
 
+## [10.22.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.21.0...react-native-client-sdk-v10.22.0) (2026-10-15)
+
+
+### Features
+
+* conform the React Native SDK streaming data source to the RETRY spec ([#2103](https://github.com/launchdarkly/js-core/issues/2103)) ([8cc60e5](https://github.com/launchdarkly/js-core/commit/8cc60e5acec595347026d54fabe35c6d82a89f33))
+
+## [10.21.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.20.7...react-native-client-sdk-v10.21.0) (2026-10-14)
+
+
+### Features
+
+* conform FDv1 streaming and polling data sources to the RETRY spec ([#2098](https://github.com/launchdarkly/js-core/issues/2098)) ([0d5e30d](https://github.com/launchdarkly/js-core/commit/0d5e30d1d9c904c1b34020075d397b06523a5c3a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.5 to 1.33.0
+
 ## [10.20.7](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.20.6...react-native-client-sdk-v10.20.7) (2026-10-06)
 
 

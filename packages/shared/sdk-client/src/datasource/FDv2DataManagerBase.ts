@@ -314,7 +314,9 @@ export function createFDv2DataManagerBase(
           ctx.baseHeaders,
           ctx.queryParams,
           config.withReasons,
-          config.useReport,
+          // Map usePost to REPORT to keep the context out of the URL.
+          // useReport itself is always disabled under the data system.
+          config.usePost,
         );
 
       const fdv1SyncFactory = {
@@ -525,6 +527,7 @@ export function createFDv2DataManagerBase(
         platform.encoding!,
         baseHeaders,
         queryParams,
+        config.usePost,
       );
 
       const environmentNamespace = await namespaceForEnvironment(
@@ -547,6 +550,7 @@ export function createFDv2DataManagerBase(
         baseHeaders,
         queryParams,
         plainContextString,
+        usePost: config.usePost,
         logger,
         polling: {
           paths: pollingEndpoints,

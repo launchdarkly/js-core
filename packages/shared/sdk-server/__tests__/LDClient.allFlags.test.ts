@@ -369,3 +369,60 @@ describe('given an offline client', () => {
     });
   });
 });
+
+describe('given an LDClient with a flag the evaluator cannot read', () => {
+  let client: LDClientImpl;
+  let td: TestData;
+  let onError: jest.Mock;
+
+  beforeEach(async () => {
+    td = new TestData();
+    onError = jest.fn();
+    client = new LDClientImpl(
+      'sdk-key-all-flags-malformed',
+      createBasicPlatform(),
+      {
+        updateProcessor: td.getFactory(),
+        sendEvents: false,
+      },
+      { ...makeCallbacks(true), onError },
+    );
+
+    await client.waitForInitialization({ timeout: 10 });
+    // LaunchDarkly never sends a flag without variations, but a custom store or a data file
+    // can. A healthy flag sits next to it to show the rest of the state is still built.
+    await td.usePreconfiguredFlag({
+      key: 'malformed',
+      version: 1,
+      on: true,
+      fallthrough: { variation: 0 },
+    });
+    await td.usePreconfiguredFlag({
+      key: 'healthy',
+      version: 1,
+      on: false,
+      offVariation: 0,
+      variations: ['a'],
+    });
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('resolves allFlagsState, reports the flag through the error callback, and keeps the rest', async () => {
+    const state = await client.allFlagsState(defaultUser, { withReasons: true });
+
+    expect(state.valid).toBe(true);
+    expect(state.getFlagValue('healthy')).toBe('a');
+    expect(state.getFlagValue('malformed')).toBeNull();
+    expect(state.getFlagReason('malformed')).toEqual({
+      kind: 'ERROR',
+      errorKind: 'MALFORMED_FLAG',
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][0].message).toMatch(
+      /^Error for feature flag "malformed" while evaluating all flags: /,
+    );
+  });
+});

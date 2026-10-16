@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.25](https://github.com/launchdarkly/js-core/compare/client-testing-plugin-v1.0.24...client-testing-plugin-v1.0.25) (2026-10-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.32.5 to 1.33.0
+  * devDependencies
+    * @launchdarkly/js-client-sdk bumped from 4.11.2 to 4.12.0
+    * @launchdarkly/react-sdk bumped from 4.1.26 to 4.1.27
+  * peerDependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.9.1 to ^4.12.0
+    * @launchdarkly/react-sdk bumped from ^4.1.4 to ^4.1.27
+
 ## [1.0.24](https://github.com/launchdarkly/js-core/compare/client-testing-plugin-v1.0.23...client-testing-plugin-v1.0.24) (2026-10-06)
 
 

@@ -129,6 +129,7 @@ it('aborts the request when the error filter declines a retry mid-stream', async
     status: 200,
     statusText: 'OK',
     headers: {
+      get: () => 'text/event-stream',
       forEach(callback: (value: string, key: string) => void): void {
         callback('text/event-stream', 'content-type');
       },
@@ -237,6 +238,7 @@ it('closes cleanly and aborts the request when the error filter throws mid-strea
     status: 200,
     statusText: 'OK',
     headers: {
+      get: () => 'text/event-stream',
       forEach(callback: (value: string, key: string) => void): void {
         callback('text/event-stream', 'content-type');
       },

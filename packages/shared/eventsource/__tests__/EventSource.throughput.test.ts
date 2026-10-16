@@ -12,6 +12,7 @@ function singleChunkResponse(chunk: Uint8Array): FetchLikeResponse {
     status: 200,
     statusText: 'OK',
     headers: {
+      get: () => 'text/event-stream',
       forEach(callback: (value: string, key: string) => void): void {
         callback('text/event-stream', 'content-type');
       },

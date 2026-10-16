@@ -1,4 +1,4 @@
-import { splitHeaderListValue } from '../src/httpHelpers';
+import { headersToObject, splitHeaderListValue } from '../src/httpHelpers';
 
 it('splits a joined value on commas outside quotes', () => {
   expect(splitHeaderListValue('a, b, c')).toEqual(['a', ' b', ' c']);
@@ -37,4 +37,29 @@ it('runs an unterminated quoted string to the end of the value', () => {
 
 it('keeps empty parts', () => {
   expect(splitHeaderListValue('a,,b,')).toEqual(['a', '', 'b', '']);
+});
+
+it('returns null when the headers expose no iteration method', () => {
+  expect(headersToObject({ get: () => null })).toBeNull();
+});
+
+it('collects headers through forEach and folds the names to lowercase', () => {
+  expect(
+    headersToObject({
+      get: () => null,
+      forEach: (callback) => {
+        callback('text/event-stream', 'Content-Type');
+      },
+    }),
+  ).toEqual({ 'content-type': 'text/event-stream' });
+});
+
+it('collects headers through entries when forEach is absent', () => {
+  const pairs: [string, string][] = [['Content-Type', 'text/event-stream']];
+  expect(
+    headersToObject({
+      get: () => null,
+      entries: () => pairs,
+    }),
+  ).toEqual({ 'content-type': 'text/event-stream' });
 });

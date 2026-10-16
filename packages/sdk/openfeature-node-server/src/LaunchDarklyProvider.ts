@@ -10,10 +10,14 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
    * Construct a {@link LaunchDarklyProvider}.
    * @param sdkKey The SDK key.
    * @param options Any options for the SDK.
-   * @param initTimeoutSeconds The default amount of time to wait for initialization in seconds.
-   * Defaults to 10 seconds.
+   * @param initTimeoutSeconds The maximum amount of time to wait for initialization in seconds.
+   * Defaults to 10 seconds. Zero does not wait, and 'forever' waits indefinitely.
    */
-  constructor(sdkKey: string, options: LDOptions = {}, initTimeoutSeconds: number = 10) {
+  constructor(
+    sdkKey: string,
+    options: LDOptions = {},
+    initTimeoutSeconds: number | 'forever' = 10,
+  ) {
     super({
       logger: options.logger ?? basicLogger({ level: 'info' }),
       providerName: 'launchdarkly-node-provider',
@@ -24,7 +28,7 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
       const client = init(sdkKey, {
         ...options,
         wrapperName: 'open-feature-node-server',
-        wrapperVersion: '2.0.12', // x-release-please-version
+        wrapperVersion: '2.1.1', // x-release-please-version
       });
 
       this.setClient(client);
