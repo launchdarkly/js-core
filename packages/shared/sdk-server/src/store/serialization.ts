@@ -5,6 +5,11 @@ import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { VersionedData } from '../api/interfaces';
 import { Flag } from '../evaluation/data/Flag';
+import {
+  hasOverrideMarker,
+  stripOverrideMarker,
+  withoutOverrideMarker,
+} from '../evaluation/data/overrideMarker';
 import { Rollout } from '../evaluation/data/Rollout';
 import { Segment } from '../evaluation/data/Segment';
 import VersionedDataKinds, { VersionedDataKind } from './VersionedDataKinds';
@@ -153,6 +158,9 @@ function processRollout(rollout?: Rollout) {
  */
 export function processFlag(flag: Flag) {
   nullReplacer(flag, ['variations']);
+  // Only the override store marks a definition, after this preparation. A definition that
+  // arrives with the marker is not an override.
+  stripOverrideMarker(flag);
 
   if (flag.fallthrough && flag.fallthrough.rollout) {
     const rollout = flag.fallthrough.rollout!;
@@ -178,6 +186,7 @@ export function processFlag(flag: Flag) {
  */
 export function processSegment(segment: Segment) {
   nullReplacer(segment);
+  stripOverrideMarker(segment);
   if (segment?.included?.length && segment.included.length > TARGET_LIST_ARRAY_CUTOFF) {
     segment.generated_includedSet = new Set(segment.included);
     delete segment.included;
@@ -341,7 +350,10 @@ export function deserializeDelete(data: string): DeleteData | undefined {
  * @internal
  */
 export function serializeFlag(flag: Flag): string {
-  return JSON.stringify(flag, replacer);
+  // The override marker is not part of the data model, so a marked flag is serialized from a
+  // copy without the marker. Only the root of the flag carries the marker. A property of the
+  // same name inside a variation value is data and stays.
+  return JSON.stringify(hasOverrideMarker(flag) ? withoutOverrideMarker(flag) : flag, replacer);
 }
 
 /**
@@ -367,7 +379,13 @@ export function deserializeFlag(data: string): Flag | undefined {
  * @internal
  */
 export function serializeSegment(segment: Segment): string {
-  return JSON.stringify(segment, replacer);
+  // The override marker is not part of the data model, so a marked segment is serialized from a
+  // copy without the marker. Only the root of the segment carries the marker. A property of the
+  // same name inside a clause value is data and stays.
+  return JSON.stringify(
+    hasOverrideMarker(segment) ? withoutOverrideMarker(segment) : segment,
+    replacer,
+  );
 }
 
 /**

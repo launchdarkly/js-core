@@ -7,6 +7,7 @@ import { allSeriesAsync, firstSeriesAsync } from './collection';
 import { Clause } from './data/Clause';
 import { Flag } from './data/Flag';
 import { FlagRule } from './data/FlagRule';
+import { isOverrideEntry, markOverrideAffected } from './data/overrideMarker';
 import { Segment } from './data/Segment';
 import { SegmentRule } from './data/SegmentRule';
 import { VariationOrRollout } from './data/VariationOrRollout';
@@ -72,6 +73,15 @@ interface EvalState {
   bigSegmentsMembership?: Record<string, BigSegmentStoreMembership | null>;
 
   /**
+   * True when the evaluation of the current flag has read a definition that carries the override
+   * marker. The value belongs to the flag whose evaluation is in progress. It starts from that
+   * flag's own marker. A segment read sets it. A prerequisite evaluation starts its own value and
+   * merges it back into the parent's value when it completes, so the marking propagates upward
+   * only.
+   */
+  overrideAffected: boolean;
+
+  /**
    * True once the top-level result has been handed to the caller. Nothing is delivered twice.
    */
   delivered: boolean;
@@ -120,6 +130,12 @@ function deliverResult(state: EvalState, res: EvalResult, cb: (res: EvalResult) 
       bigSegmentsStatus: state.bigSegmentsStatus,
     };
   }
+  // Error results are marked too. A malformed override definition yields an error reason, and
+  // an override still affected that result.
+  if (state.overrideAffected) {
+    res.detail.reason = markOverrideAffected(res.detail.reason);
+    res.overrideAffected = true;
+  }
   if (state.prerequisites) {
     res.prerequisites = state.prerequisites;
   }
@@ -163,7 +179,10 @@ export default class Evaluator {
     cb: (res: EvalResult) => void,
     eventFactory?: EventFactory,
   ) {
+    // Reading the flag's own definition is the first read of the evaluation, so the marking
+    // starts from the flag's marker.
     const state: EvalState = {
+      overrideAffected: isOverrideEntry(flag),
       delivered: false,
       onError: (err) => {
         if (state.delivered) {
@@ -305,6 +324,11 @@ export default class Evaluator {
         }
         const updatedVisitedFlags = [...visitedFlags, prereq.key];
         this._queries.getFlag(prereq.key, (prereqFlag) => {
+          // The prerequisite is an evaluation in its own right. Its marker starts from its own
+          // definition and merges into this flag's marker when it completes, so the marking
+          // propagates upward only. Its record reflects only the definitions that its own
+          // evaluation read.
+          const parentOverrideAffected = state.overrideAffected;
           // The store may call back asynchronously, after the try/catch around the top-level
           // evaluation has left the stack, so this continuation catches its own exceptions.
           try {
@@ -314,12 +338,19 @@ export default class Evaluator {
               return;
             }
 
+            state.overrideAffected = isOverrideEntry(prereqFlag);
             this._evaluateInternal(
               prereqFlag,
               context,
               state,
               updatedVisitedFlags,
               (res) => {
+                const prereqOverrideAffected = state.overrideAffected;
+                state.overrideAffected = parentOverrideAffected || prereqOverrideAffected;
+                if (prereqOverrideAffected) {
+                  res.detail.reason = markOverrideAffected(res.detail.reason);
+                  res.overrideAffected = true;
+                }
                 state.events ??= [];
                 if (topLevel) {
                   state.prerequisites ??= [];
@@ -327,8 +358,16 @@ export default class Evaluator {
                   state.prerequisites.push(prereqFlag.key);
                 }
                 if (eventFactory) {
+                  // The record carries the prerequisite's own marking, not the parent's.
                   state.events.push(
-                    eventFactory.evalEventServer(prereqFlag, context, res.detail, null, flag),
+                    eventFactory.evalEventServer(
+                      prereqFlag,
+                      context,
+                      res.detail,
+                      null,
+                      flag,
+                      res.overrideAffected,
+                    ),
                   );
                 }
 
@@ -347,6 +386,10 @@ export default class Evaluator {
               eventFactory,
             );
           } catch (err) {
+            // The exception ends the evaluation with an error result for the top-level flag. That
+            // result is marked when this flag was affected by an override before the prerequisite
+            // was read, the same as a completed prerequisite would have left it.
+            state.overrideAffected = parentOverrideAffected || state.overrideAffected;
             state.onError(err);
           }
         });
@@ -404,6 +447,12 @@ export default class Evaluator {
             // The store may call back asynchronously; see _checkPrerequisites.
             try {
               if (segment) {
+                // The segment definition is read at this point, so an override segment marks the
+                // evaluation here. A match is not required: a negated clause turns a non-match into
+                // a match, so the definition shapes the result either way.
+                if (isOverrideEntry(segment)) {
+                  state.overrideAffected = true;
+                }
                 if (segmentsVisited.includes(segment.key)) {
                   errorResult = EvalResult.forError(
                     ErrorKinds.MalformedFlag,

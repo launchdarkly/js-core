@@ -1,6 +1,6 @@
 import { LDClientContext } from '@launchdarkly/js-sdk-common';
 
-import { LDFeatureStore } from '../subsystems';
+import { LDFeatureStore, LDOverrideSource } from '../subsystems';
 
 /**
  * Configuration options for the Data System that the SDK uses to get and maintain flags and other
@@ -77,6 +77,111 @@ export interface LDDataSystemOptions {
    * will transition to a terminal Closed state when the directive is received.
    */
   fdv1Fallback?: FDv1FallbackConfiguration | null;
+
+  /**
+   * Configures an override source.
+   *
+   * The source supplies flag and segment definitions that take precedence over data received
+   * from LaunchDarkly on a per-key basis. Overrides let an operator force one or more flags to a
+   * known state on a running client, whether or not the client can reach LaunchDarkly. Flags not
+   * present in the override data are unaffected.
+   *
+   * The override source is not a data source. It has no effect on the client's initialization
+   * status or data source status. Configuring it changes nothing until the source supplies an
+   * override. At most one override source can be configured.
+   *
+   * Some implementations provide the source object itself, while others provide a factory
+   * function that creates the source based on the SDK configuration. This property accepts
+   * either.
+   *
+   * @experimental Flag overrides are currently experimental and subject to change.
+   */
+  overrides?: LDOverrideSourceOptions;
+}
+
+/**
+ * Configuration of the file-based override source.
+ *
+ * The source reads flag and segment overrides from one or more local files and reloads them as
+ * the files change. The files use the same document format as the file data source: a JSON or
+ * YAML document with optional `flags`, `flagValues`, and `segments` members. `flagValues` entries
+ * expand into full flag definitions that return the given value for every context.
+ *
+ * A configured file that does not exist contributes no overrides. It can be created later, and
+ * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
+ * reload: the previously loaded overrides stay in effect, the failure is logged, and the source
+ * retries. Every applied change is logged at Info level with the overrides in effect and what
+ * each file supplied.
+ *
+ * @example
+ * ```typescript
+ * const client = init(sdkKey, {
+ *   dataSystem: {
+ *     overrides: { type: 'file', paths: ['/etc/launchdarkly/overrides.json'] },
+ *   },
+ * });
+ * ```
+ *
+ * @experimental Flag overrides are currently experimental and subject to change.
+ */
+export interface FileOverrideSourceOptions {
+  type: 'file';
+
+  /**
+   * The paths of the files to read, in precedence order. At least one path is required. The
+   * order decides which file wins under the duplicate keys handling when the same key appears in
+   * more than one file.
+   */
+  paths: string[];
+
+  /**
+   * What to do when the same flag or segment key appears in more than one file. `fail`, the
+   * default, treats the reload as failed and keeps the previously loaded overrides. `ignore`
+   * keeps the entry from the first configured file that defines the key and discards the others.
+   */
+  duplicateKeysHandling?: 'fail' | 'ignore';
+
+  /**
+   * How the source detects file changes. The two modes are alternatives.
+   *
+   * `polling`, the default, examines the files on a fixed interval and reloads when the
+   * modification time or the size of a file changes. It works on every filesystem, including
+   * network mounts and directories whose contents are swapped through symbolic links.
+   *
+   * `watching` reloads in response to filesystem change notifications for the directories that
+   * contain the files. It reacts faster than polling. It depends on notifications, which some
+   * filesystems do not deliver reliably.
+   */
+  changeDetection?: 'polling' | 'watching';
+
+  /**
+   * The interval between examinations of the files in polling mode, in seconds. The default is
+   * 1. An interval below 1 is raised to 1. A value that is not a finite number, or that exceeds
+   * 2147483 seconds, is invalid and the default is used. Watching mode ignores it.
+   */
+  pollInterval?: number;
+
+  /**
+   * A YAML parser for YAML files. The SDK does not include one; to read YAML files, supply a
+   * parser that produces the same structure as `JSON.parse`, for example the `parse` function
+   * of the `yaml` package. A YAML file configured without a parser fails client construction.
+   */
+  yamlParser?: (data: string) => any;
+}
+
+/**
+ * The ways an override source can be configured: the file-based source, a source object, or a
+ * factory function that creates a source from the client context.
+ *
+ * @experimental Flag overrides are currently experimental and subject to change.
+ */
+export type LDOverrideSourceOptions =
+  | FileOverrideSourceOptions
+  | LDOverrideSource
+  | ((clientContext: LDClientContext) => LDOverrideSource);
+
+export function isFileOverrideSourceOptions(u: any): u is FileOverrideSourceOptions {
+  return typeof u === 'object' && u !== null && u.type === 'file';
 }
 
 /**

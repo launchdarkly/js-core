@@ -1,10 +1,11 @@
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
+import { OverrideMarkable } from './overrideMarker';
 import { SegmentRule } from './SegmentRule';
 import { SegmentTarget } from './SegmentTarget';
 import { Versioned } from './Versioned';
 
-export interface Segment extends Versioned {
+export interface Segment extends Versioned, OverrideMarkable {
   included?: string[];
   excluded?: string[];
 

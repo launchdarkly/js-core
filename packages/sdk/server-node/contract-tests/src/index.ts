@@ -54,6 +54,7 @@ app.get('/', (req: Request, res: Response) => {
       'persistent-data-store-redis',
       'persistent-data-store-dynamodb',
       'persistent-data-store-recovery',
+      'flag-overrides',
     ],
   });
 });

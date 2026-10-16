@@ -9,6 +9,7 @@ export type EvalEventArgs = {
   defaultVal: any;
   excludeFromSummaries?: boolean;
   flagKey: string;
+  overrideAffected?: boolean;
   prereqOfFlagKey?: string;
   reason?: LDEvaluationReason;
   samplingRatio?: number;
@@ -37,6 +38,7 @@ export default class EventFactoryBase {
       e.debugEventsUntilDate,
       e.excludeFromSummaries,
       e.samplingRatio,
+      e.overrideAffected,
     );
   }
 

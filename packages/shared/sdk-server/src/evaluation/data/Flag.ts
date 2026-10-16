@@ -1,5 +1,6 @@
 import { ClientSideAvailability } from './ClientSideAvailability';
 import { FlagRule } from './FlagRule';
+import { OverrideMarkable } from './overrideMarker';
 import { Prerequisite } from './Prerequisite';
 import { Rollout } from './Rollout';
 import { Target } from './Target';
@@ -10,7 +11,7 @@ interface VariationOrRollout {
   rollout?: Rollout;
 }
 
-export interface Flag extends Versioned {
+export interface Flag extends Versioned, OverrideMarkable {
   on: boolean;
   prerequisites?: Prerequisite[];
   targets?: Omit<Target, 'contextKind'>[];
