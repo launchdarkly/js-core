@@ -65,8 +65,10 @@ const main = async () => {
 
   const { status } = await ldclient.waitForInitialization();
 
-  // Force a streaming connection, so the demo always shows the POST stream in the
-  // Network tab. Without it, a visible page defaults to one-shot polling.
+  // Pin the connection to streaming, so the demo always shows the POST stream in
+  // the Network tab. The change listener above already enables automatic streaming.
+  // setStreaming keeps the stream even if listeners are removed, and
+  // setConnectionMode switches the mode directly.
   ldclient.setStreaming(true);
   ldclient.setConnectionMode('streaming');
 
