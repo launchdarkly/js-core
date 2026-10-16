@@ -204,6 +204,11 @@ it('silently ignores unrecognized object kinds', async () => {
     version: 1,
     object: { data: 'ignored' },
   });
+  simulateEvent(mockEventSource, 'delete-object', {
+    kind: 'unknown_kind',
+    key: 'mystery-deleted',
+    version: 2,
+  });
   simulateEvent(mockEventSource, 'payload-transferred', { state: '(p:p1:1)', version: 1 });
 
   const result = await base.takeResult();
@@ -212,6 +217,8 @@ it('silently ignores unrecognized object kinds', async () => {
 
   expect(result.payload.updates).toHaveLength(1);
   expect(result.payload.updates[0].key).toBe('known');
+  expect(logger.warn).not.toHaveBeenCalled();
+  expect(logger.error).not.toHaveBeenCalled();
 
   base.close();
 });

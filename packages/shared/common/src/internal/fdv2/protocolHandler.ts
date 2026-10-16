@@ -88,6 +88,12 @@ export function createProtocolHandler(
   let tempType: PayloadType = 'partial';
   let tempUpdates: Update[] = [];
 
+  // Only kinds with a registered processor are supported. An own-property check keeps
+  // kinds such as 'constructor' from resolving to inherited members.
+  function isSupportedKind(kind: string): boolean {
+    return Object.prototype.hasOwnProperty.call(objProcessors, kind);
+  }
+
   function processObj(kind: string, jsonObj: any): any {
     return objProcessors[kind]?.(jsonObj);
   }
@@ -171,6 +177,13 @@ export function createProtocolHandler(
       return ACTION_NONE;
     }
 
+    // Objects of unsupported kinds are dropped silently so the protocol can add new kinds
+    // without disrupting older SDKs.
+    if (!isSupportedKind(data.kind)) {
+      logger?.debug(`Ignoring put-object with unsupported kind: '${data.kind}'`);
+      return ACTION_NONE;
+    }
+
     const obj = processObj(data.kind, data.object);
     if (!obj) {
       logger?.warn(`Unable to process object for kind: '${data.kind}'`);
@@ -196,6 +209,11 @@ export function createProtocolHandler(
       logger?.warn(
         `Ignoring delete-object with missing fields: kind=${data.kind}, key=${data.key}, version=${data.version}`,
       );
+      return ACTION_NONE;
+    }
+
+    if (!isSupportedKind(data.kind)) {
+      logger?.debug(`Ignoring delete-object with unsupported kind: '${data.kind}'`);
       return ACTION_NONE;
     }
 

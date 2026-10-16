@@ -101,6 +101,58 @@ describe('given a polling processor', () => {
     });
   });
 
+  it('applies supported objects and ignores objects of unsupported kinds', () => {
+    const logger = new TestLogger();
+    processor = new PollingProcessorFDv2(requestor as unknown as Requestor, longInterval, logger);
+    const body = JSON.stringify({
+      events: [
+        {
+          event: 'server-intent',
+          data: { payloads: [{ intentCode: 'xfer-full', id: 'mockId' }] },
+        },
+        {
+          event: 'put-object',
+          data: { kind: 'flag', key: 'flagA', version: 1, object: { key: 'flagA', version: 1 } },
+        },
+        {
+          event: 'put-object',
+          data: { kind: 'some-future-kind', key: 'futureA', version: 1, object: { foo: 1 } },
+        },
+        {
+          event: 'delete-object',
+          data: { kind: 'some-future-kind', key: 'futureB', version: 2 },
+        },
+        {
+          event: 'put-object',
+          data: { kind: 'segment', key: 'segA', version: 1, object: { key: 'segA', version: 1 } },
+        },
+        {
+          event: 'payload-transferred',
+          data: { state: 'mockState', version: 1 },
+        },
+      ],
+    });
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, body, headers));
+    const dataCallback = jest.fn();
+    const statusCallback = jest.fn();
+
+    // Poll a response that mixes supported and unsupported kinds.
+    processor.start(dataCallback, statusCallback);
+
+    // Only the supported objects are delivered, and the source reports valid without warnings.
+    expect(dataCallback).toHaveBeenCalledTimes(1);
+    expect(dataCallback.mock.calls[0][1].payload.updates).toEqual([
+      { kind: 'flag', key: 'flagA', version: 1, object: { key: 'flagA', version: 1 } },
+      { kind: 'segment', key: 'segA', version: 1, object: { key: 'segA', version: 1 } },
+    ]);
+    expect(statusCallback.mock.calls).toEqual([
+      [subsystem.DataSourceState.Initializing],
+      [subsystem.DataSourceState.Valid],
+    ]);
+    expect(logger.getCount(LogLevel.Warn)).toBe(0);
+    expect(logger.getCount(LogLevel.Error)).toBe(0);
+  });
+
   it('can process FDv1 data when configured to do so', async () => {
     processor = new PollingProcessorFDv2(
       requestor as unknown as Requestor,
