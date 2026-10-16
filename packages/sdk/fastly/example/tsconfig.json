@@ -9,8 +9,7 @@
     "lib": ["ES2022"],
     "rootDir": "src",
     "outDir": "build",
-    "types": ["@fastly/js-compute"],
-    "skipLibCheck": true
+    "types": ["@fastly/js-compute"]
   },
   "include": ["./src/**/*.js", "./src/**/*.ts"],
   "exclude": ["node_modules"]

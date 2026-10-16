@@ -10,7 +10,11 @@ export default defineConfig([
     splitting: false,
     sourcemap: true,
     clean: true,
-    dts: true,
+    // The public types name Buffer. The dts bundler strips triple-slash
+    // directives from source files, so inject the node reference here.
+    dts: {
+      banner: '/// <reference types="node" />',
+    },
     metafile: true,
   },
 ]);

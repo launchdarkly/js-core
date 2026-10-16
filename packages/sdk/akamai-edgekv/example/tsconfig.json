@@ -2,11 +2,12 @@
   "compilerOptions": {
     "module": "es2015",
     "target": "ES2015",
-    "noImplicitAny": false,
+    "strict": true,
     "outDir": "dist/ew",
     "rootDir": ".",
     "sourceMap": false,
-    "moduleResolution": "node"
+    "moduleResolution": "bundler",
+    "types": ["akamai-edgeworkers"]
   },
   "exclude": ["node_modules"]
 }
