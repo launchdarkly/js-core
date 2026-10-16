@@ -41,6 +41,7 @@
 <a href="platform-1.internal.InputEvalEvent.html#excludeFromSummaries" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>exclude<wbr/>From<wbr/>Summaries?</span></a>
 <a href="platform-1.internal.InputEvalEvent.html#key" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>key</span></a>
 <a href="platform-1.internal.InputEvalEvent.html#kind" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>kind</span></a>
+<a href="platform-1.internal.InputEvalEvent.html#overrideAffected" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>override<wbr/>Affected?</span></a>
 <a href="platform-1.internal.InputEvalEvent.html#prereqOf" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>prereq<wbr/>Of?</span></a>
 <a href="platform-1.internal.InputEvalEvent.html#reason" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>reason?</span></a>
 <a href="platform-1.internal.InputEvalEvent.html#samplingRatio" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>sampling<wbr/>Ratio</span></a>
@@ -55,7 +56,7 @@
 <section class="tsd-panel tsd-member"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><g stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round" id="icon-anchor"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5"></path></g></svg></a></h3>
 <ul class="tsd-signatures">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_InputEvalEvent"><span class="tsd-kind-constructor-signature">new <wbr/>Input<wbr/>Eval<wbr/>Event</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">withReasons</span>, <span class="tsd-kind-parameter">context</span>, <span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">value</span>, <span class="tsd-kind-parameter">defValue</span>, <span class="tsd-kind-parameter">version</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">variation</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">trackEvents</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">prereqOf</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">reason</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">debugEventsUntilDate</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">excludeFromSummaries</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">samplingRatio</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.InputEvalEvent.html" class="tsd-signature-type tsd-kind-class">InputEvalEvent</a><a href="#constructor.new_InputEvalEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_InputEvalEvent"><span class="tsd-kind-constructor-signature">new <wbr/>Input<wbr/>Eval<wbr/>Event</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">withReasons</span>, <span class="tsd-kind-parameter">context</span>, <span class="tsd-kind-parameter">key</span>, <span class="tsd-kind-parameter">value</span>, <span class="tsd-kind-parameter">defValue</span>, <span class="tsd-kind-parameter">version</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">variation</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">trackEvents</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">prereqOf</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">reason</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">debugEventsUntilDate</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">excludeFromSummaries</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">samplingRatio</span><span class="tsd-signature-symbol">?</span>, <span class="tsd-kind-parameter">overrideAffected</span><span class="tsd-signature-symbol">?</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="platform-1.internal.InputEvalEvent.html" class="tsd-signature-type tsd-kind-class">InputEvalEvent</a><a href="#constructor.new_InputEvalEvent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
@@ -85,10 +86,12 @@
 <li>
 <h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">excludeFromSummaries</span>: <span class="tsd-signature-type">boolean</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
 <li>
-<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">samplingRatio</span>: <span class="tsd-signature-type">number</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">samplingRatio</span>: <span class="tsd-signature-type">number</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li>
+<li>
+<h5><code class="tsd-tag ts-flagOptional">Optional</code> <span class="tsd-kind-parameter">overrideAffected</span>: <span class="tsd-signature-type">boolean</span></h5><code class="tsd-tag ts-flagOptional">Optional</code> </li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="platform-1.internal.InputEvalEvent.html" class="tsd-signature-type tsd-kind-class">InputEvalEvent</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/common/dist/esm/internal/events/InputEvalEvent.d.ts:19</li></ul></aside></li></ul></section></section>
+<li>Defined in packages/shared/common/dist/esm/internal/events/InputEvalEvent.d.ts:25</li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member"><a id="context" class="tsd-anchor"></a>
@@ -126,6 +129,16 @@
 <div class="tsd-signature"><span class="tsd-kind-property">kind</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;feature&quot;</span><span class="tsd-signature-symbol"> = &quot;feature&quot;</span></div><aside class="tsd-sources">
 <ul>
 <li>Defined in packages/shared/common/dist/esm/internal/events/InputEvalEvent.d.ts:8</li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="overrideAffected" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>override<wbr/>Affected</span><a href="#overrideAffected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">override<wbr/>Affected</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p>True when an override affected the evaluation, directly or transitively. The SDK sets it
+from the evaluation result, not from the reason. A marked evaluation produces no individual
+feature or debug event and is counted in a summary counter that carries the marker.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/common/dist/esm/internal/events/InputEvalEvent.d.ts:24</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="prereqOf" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagReadonly">Readonly</code> <span>prereq<wbr/>Of</span><a href="#prereqOf" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">prereq<wbr/>Of</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
@@ -193,6 +206,7 @@
 <li><a href="#excludeFromSummaries" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>exclude<wbr/>From<wbr/>Summaries</span></a></li>
 <li><a href="#key" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>key</span></a></li>
 <li><a href="#kind" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>kind</span></a></li>
+<li><a href="#overrideAffected" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>override<wbr/>Affected</span></a></li>
 <li><a href="#prereqOf" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>prereq<wbr/>Of</span></a></li>
 <li><a href="#reason" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>reason</span></a></li>
 <li><a href="#samplingRatio" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>sampling<wbr/>Ratio</span></a></li>
@@ -230,6 +244,7 @@
 <li><a href="../modules.html#EventSourceRetryDelayStrategy"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Source<wbr/>Retry<wbr/>Delay<wbr/>Strategy</span></a></li>
 <li><a href="../modules.html#FactoryOrInstance"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Factory<wbr/>Or<wbr/>Instance</span></a></li>
 <li><a href="../modules.html#FailureKind"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Failure<wbr/>Kind</span></a></li>
+<li><a href="../modules.html#FileStats"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>File<wbr/>Stats</span></a></li>
 <li><a href="../modules.html#Filesystem"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Filesystem</span></a></li>
 <li><a href="../modules.html#Function"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Function</span></a></li>
 <li><a href="../modules.html#Hasher"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Hasher</span></a></li>
@@ -424,6 +439,7 @@
 <li><a href="../interfaces/platform-1.EventSourceCapabilities.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Capabilities</span></a></li>
 <li><a href="../interfaces/platform-1.EventSourceInitDict.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Init<wbr/>Dict</span></a></li>
 <li><a href="../interfaces/platform-1.EventSourceRetryDelayStrategy.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Retry<wbr/>Delay<wbr/>Strategy</span></a></li>
+<li><a href="../interfaces/platform-1.FileStats.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>Stats</span></a></li>
 <li><a href="../interfaces/platform-1.Filesystem.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Filesystem</span></a></li>
 <li><a href="../interfaces/platform-1.Hasher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hasher</span></a></li>
 <li><a href="../interfaces/platform-1.Headers.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Headers</span></a></li>
@@ -521,6 +537,7 @@
 <li><a href="../interfaces/DataKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Data<wbr/>Kind</span></a></li>
 <li><a href="../interfaces/EdgeProvider.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Edge<wbr/>Provider</span></a></li>
 <li><a href="../interfaces/FDv1FallbackConfiguration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>FDv1<wbr/>Fallback<wbr/>Configuration</span></a></li>
+<li><a href="../interfaces/FileOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>Override<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="../interfaces/FileSystemDataSourceConfiguration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>System<wbr/>Data<wbr/>Source<wbr/>Configuration</span></a></li>
 <li><a href="../interfaces/LDBigSegmentsOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDBig<wbr/>Segments<wbr/>Options</span></a></li>
 <li><a href="../interfaces/LDClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDClient</span></a></li>
@@ -542,6 +559,8 @@
 <li><a href="../interfaces/LDMigrationOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Options</span></a></li>
 <li><a href="../interfaces/LDMigrationTracker.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Tracker</span></a></li>
 <li><a href="../interfaces/LDMigrationVariation.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Variation</span></a></li>
+<li><a href="../interfaces/LDOverrideSink.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDOverride<wbr/>Sink</span></a></li>
+<li><a href="../interfaces/LDOverrideSource.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDOverride<wbr/>Source</span></a></li>
 <li><a href="../interfaces/LDProxyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDProxy<wbr/>Options</span></a></li>
 <li><a href="../interfaces/LDTLSOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDTLSOptions</span></a></li>
 <li><a href="../interfaces/LDTransactionalFeatureStore.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDTransactional<wbr/>Feature<wbr/>Store</span></a></li>
@@ -564,6 +583,7 @@
 <li><a href="../types/LDMigrationWriteResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Write<wbr/>Result</span></a></li>
 <li><a href="../types/LDOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions</span></a></li>
 <li><a href="../types/LDOptionsInternal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions<wbr/>Internal</span></a></li>
+<li><a href="../types/LDOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOverride<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="../types/SynchronizerDataSource.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Synchronizer<wbr/>Data<wbr/>Source</span></a></li>
 <li><a href="../functions/IsMigrationStage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>Is<wbr/>Migration<wbr/>Stage</span></a></li>
 <li><a href="../functions/LDMigrationError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Error</span></a></li>
@@ -572,6 +592,7 @@
 <li><a href="../functions/deserializePoll.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deserialize<wbr/>Poll</span></a></li>
 <li><a href="../functions/init.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>init</span></a></li>
 <li><a href="../functions/isCustomOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Custom<wbr/>Options</span></a></li>
+<li><a href="../functions/isFileOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>File<wbr/>Override<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="../functions/isPollingOnlyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Polling<wbr/>Only<wbr/>Options</span></a></li>
 <li><a href="../functions/isStandardOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Standard<wbr/>Options</span></a></li>
 <li><a href="../functions/isStreamingOnlyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Streaming<wbr/>Only<wbr/>Options</span></a></li>
