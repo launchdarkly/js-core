@@ -1,6 +1,8 @@
-import * as http from 'http';
-import * as https from 'https';
+import { app, net } from 'electron';
+import type { ClientRequest, IncomingMessage } from 'electron';
 // No types for the event source.
+// TODO: once we merge in the shared @launchdarkly/eventsource, we will replace
+// this dependency. Expect some deviations between streaming and polling until then.
 // @ts-ignore
 import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { promisify } from 'util';
@@ -19,9 +21,17 @@ export default class ElectronRequests implements platform.Requests {
     this._enableBodyCompression = !!enableEventCompression;
   }
 
+  /**
+   * Uses Electron's `net` module (Chromium's networking stack) for polling, analytics,
+   * and diagnostic requests. The `net` module is only usable once Electron's `ready` event
+   * has fired.
+   *
+   * https://www.electronjs.org/docs/latest/api/net
+   */
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
-    const isSecure = url.startsWith('https://');
-    const impl = isSecure ? https : http;
+    if (!app.isReady()) {
+      await app.whenReady();
+    }
 
     const headers = { ...options.headers };
     let bodyData: string | Buffer | undefined = options.body;
@@ -45,23 +55,68 @@ export default class ElectronRequests implements platform.Requests {
     }
 
     return new Promise((resolve, reject) => {
-      const req = impl.request(
+      const req: ClientRequest = net.request({
+        method: options.method,
         url,
-        {
-          timeout: options.timeout,
-          headers,
-          method: options.method,
-        },
-        (res) => resolve(new ElectronResponse(res)),
-      );
+        // These options are set to be compatible with Node's http/https never
+        // (which was used in the previous version implementation).
+
+        // surface any redirect as an error instead of silently following it with credentials
+        // attached.
+        redirect: 'error',
+
+        // don't attach ambient session auth.
+        credentials: 'omit',
+
+        // don't let polling/analytics/diagnostic responses be served from or written into
+        // the app's shared HTTP cache.
+        cache: 'no-store',
+      });
+
+      Object.entries(headers).forEach(([name, value]) => {
+        if (value !== undefined) {
+          req.setHeader(name, value);
+        }
+      });
+
+      // The net module has no built-in request timeout, unlike Node's http/https,
+      // so we abort the request ourselves and surface it the same way.
+      let timedOut = false;
+      let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+      if (options.timeout && options.timeout > 0) {
+        timeoutHandle = setTimeout(() => {
+          timedOut = true;
+          req.abort();
+        }, options.timeout);
+      }
+      const clearRequestTimeout = () => {
+        if (timeoutHandle) {
+          clearTimeout(timeoutHandle);
+        }
+      };
+
+      req.on('response', (res: IncomingMessage) => {
+        clearRequestTimeout();
+        resolve(new ElectronResponse(res));
+      });
+
+      // abort() only emits 'abort' (and then 'close'), not 'error', so a
+      // self-triggered timeout must be surfaced here rather than in 'error'.
+      req.on('abort', () => {
+        clearRequestTimeout();
+        if (timedOut) {
+          reject(new Error('Request timed out'));
+        }
+      });
+
+      req.on('error', (err) => {
+        clearRequestTimeout();
+        reject(err);
+      });
 
       if (bodyData) {
         req.write(bodyData);
       }
-
-      req.on('error', (err) => {
-        reject(err);
-      });
 
       req.end();
     });
