@@ -119,8 +119,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     useReport: options.clientSide.useReport ?? undefined,
   };
 
-  // In the fetch EventSource run, every client uses the fetch-based EventSource. This proves
-  // the custom EventSource against the full suite, including usePost and REPORT streaming.
+  // In the fetch EventSource runs, every client uses the fetch-based EventSource. The v2
+  // harness run proves REPORT streaming on the FDv1 path, and the v3 run proves the usePost
+  // POST streaming variants on the FDv2 path.
   if (useFetchEventSource()) {
     cf.eventSource = fetchBrowserEventSource;
   }

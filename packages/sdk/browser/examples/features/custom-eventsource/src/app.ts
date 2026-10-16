@@ -65,9 +65,9 @@ const main = async () => {
 
   const { status } = await ldclient.waitForInitialization();
 
-  // Both calls are required to open a stream. setStreaming forces the foreground mode to
-  // 'streaming' instead of the browser default of 'one-shot' (a single fetch with no ongoing
-  // connection). setConnectionMode overrides the resolved mode outright.
+  // Force a streaming connection for the demo. setStreaming flips the automatic foreground
+  // mode to 'streaming' instead of the browser default of 'one-shot' (a single fetch with no
+  // ongoing connection), and setConnectionMode pins the resolved mode explicitly.
   ldclient.setStreaming(true);
   ldclient.setConnectionMode('streaming');
 

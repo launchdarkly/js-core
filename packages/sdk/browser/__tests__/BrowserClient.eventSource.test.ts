@@ -60,6 +60,6 @@ it('drops an invalid event source factory and warns', () => {
 
   expect(getWiredEventSource()).toBeUndefined();
   expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "eventSource" should be of type object, got string, using default value',
+    'Config option "eventSource" should be of type LDEventSourceFactory, got string, using default value',
   );
 });

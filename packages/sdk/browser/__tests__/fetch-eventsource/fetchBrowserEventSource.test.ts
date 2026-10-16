@@ -54,3 +54,23 @@ it('passes the url and every option through, plus the backoff defaults', () => {
     jitterRatio: 0.5,
   });
 });
+
+it('does not forward the tags header, which the streaming service CORS allow-list rejects', () => {
+  const initDict: EventSourceInitDict = {
+    headers: {
+      authorization: 'sdk-key',
+      'x-launchdarkly-user-agent': 'JSClient/4.12.0',
+      'x-launchdarkly-tags': 'application-id/test-app',
+    },
+    errorFilter: () => true,
+    readTimeoutMillis: 300000,
+  };
+
+  fetchBrowserEventSource.createEventSource('http://example.com/stream', initDict);
+
+  const passed = mockCreateEventSource.mock.calls[0][1];
+  expect(passed.headers).toEqual({
+    authorization: 'sdk-key',
+    'x-launchdarkly-user-agent': 'JSClient/4.12.0',
+  });
+});
