@@ -22,6 +22,14 @@ import { createStreamingInitializer } from './fdv2/StreamingInitializerFDv2';
 import { createStreamingSynchronizer } from './fdv2/StreamingSynchronizerFDv2';
 
 /**
+ * True when the platform's event sources can send a custom HTTP method.
+ * usePost needs this capability to stream with POST.
+ */
+export function supportsCustomMethod(requests: Requests): boolean {
+  return requests.getEventSourceCapabilities().customMethod;
+}
+
+/**
  * Context needed to create concrete initializer/synchronizer factories
  * for a given identify call. Built once per identify and reused across
  * mode switches.
@@ -41,6 +49,10 @@ export interface SourceFactoryContext {
   queryParams: { key: string; value: string }[];
   /** JSON-serialized evaluation context. */
   plainContextString: string;
+  /**
+   * Whether requests should use POST instead of GET.
+   */
+  usePost: boolean;
   /** Logger. */
   logger: LDLogger;
 
@@ -147,6 +159,7 @@ function resolvePollingRequestor(
     ctx.encoding,
     ctx.baseHeaders,
     ctx.queryParams,
+    ctx.usePost,
   );
 }
 
@@ -162,7 +175,11 @@ function buildStreamingBase(
 ) {
   const entryEndpoints = resolveEndpoints(ctx, entry.endpoints);
   const requestor = resolvePollingRequestor(ctx, entry.endpoints);
-  const streamUriPath = ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
+  // usePost applies to the stream only when the EventSource can send a custom HTTP method.
+  const streamPost = ctx.usePost && supportsCustomMethod(ctx.requests);
+  const streamUriPath = streamPost
+    ? ctx.streaming.paths.pathPost(ctx.encoding, ctx.plainContextString)
+    : ctx.streaming.paths.pathGet(ctx.encoding, ctx.plainContextString);
   return createStreamingBase({
     requests: ctx.requests,
     serviceEndpoints: entryEndpoints,
@@ -174,6 +191,7 @@ function buildStreamingBase(
       (entry.initialReconnectDelay ?? ctx.streaming.initialReconnectDelaySeconds) * 1000,
     logger: ctx.logger,
     pingHandler: createPingHandler(requestor, sg, ctx.logger),
+    ...(streamPost ? { method: 'POST' as const, body: ctx.plainContextString } : {}),
   });
 }
 
