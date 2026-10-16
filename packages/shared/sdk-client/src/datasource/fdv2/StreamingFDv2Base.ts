@@ -122,6 +122,11 @@ export function createStreamingBase(config: {
   let pendingFallback = false;
   let started = false;
   let stopped = false;
+  // True while a failure the error filter already reported may still reach
+  // onerror. The shared eventsource transport runs the filter on every failure
+  // and then dispatches the same event to onerror; without this mark, a
+  // status-less failure would queue two interrupted results.
+  let filterHandledFailure = false;
 
   function logConnectionAttempt() {
     connectionAttemptStartTime = Date.now();
@@ -224,6 +229,10 @@ export function createStreamingBase(config: {
   }
 
   function handleError(err: HttpErrorResponse): boolean {
+    // Every branch below queues a result for this failure, so onerror must not
+    // queue another one for the same event.
+    filterHandledFailure = true;
+
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
     const directive = internal.readFallbackDirective({
@@ -386,6 +395,13 @@ export function createStreamingBase(config: {
           return;
         }
 
+        // Consume the mark before any early return. A transport that runs the
+        // error filter dispatches the same event here, status or not; leaving
+        // the mark set past a status-bearing failure would suppress the report
+        // of a later failure that reaches only this slot.
+        const alreadyReported = filterHandledFailure;
+        filterHandledFailure = false;
+
         // Server-sent FDv2 error frames and connection failures share the 'error' type, and
         // both reach this slot. The protocol listener owns the frames; reporting one here too
         // would replace the real reason with a fabricated network error. Only a protocol frame
@@ -396,6 +412,10 @@ export function createStreamingBase(config: {
 
         if (err && typeof err.status === 'number') {
           // This condition will be handled by the error filter.
+          return;
+        }
+
+        if (alreadyReported) {
           return;
         }
         putWithFallback((fallback) =>

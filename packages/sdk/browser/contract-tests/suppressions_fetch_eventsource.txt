@@ -1,0 +1,17 @@
+# The fetch EventSource strips the x-launchdarkly-tags header, because the LaunchDarkly
+# streaming service CORS allow-list rejects it and a browser preflight with it fails.
+# These stream assertions expect that header, so they can never pass with this transport.
+# The combos that expect no header still run and pass. Only the FDv1 fetch run (harness
+# v2) uses this file; the FDv2 fetch run uses suppressions_datamode_changes.txt.
+tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":null,"applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":null}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":""}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678","applicationVersion":"________________________________________________________________"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":null}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
+tags/stream requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
