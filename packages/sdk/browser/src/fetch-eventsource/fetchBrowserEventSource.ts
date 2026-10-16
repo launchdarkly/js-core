@@ -22,6 +22,9 @@ const CAPABILITIES: EventSourceCapabilities = {
  * FDv2 `usePost` option stream evaluations over POST. It requires `fetch()`, `AbortController` and
  * a streaming `Response.body`, which all current browsers provide.
  *
+ * One exception: this transport never sends the `x-launchdarkly-tags` header on the stream,
+ * for any endpoint, because the LaunchDarkly streaming service's CORS allow-list rejects it.
+ *
  * It is not the default. Pass it as the `eventSource` option to opt in:
  *
  * ```javascript
@@ -34,8 +37,8 @@ const CAPABILITIES: EventSourceCapabilities = {
 const fetchBrowserEventSource: LDEventSourceFactory = {
   createEventSource: (url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource => {
     // The LaunchDarkly streaming service's CORS allow-list does not include
-    // x-launchdarkly-tags. A browser preflight with that header fails, so the stream
-    // could never connect. Do not send it from this transport.
+    // x-launchdarkly-tags. A browser preflight with that header fails, and the stream
+    // can never connect.
     const { 'x-launchdarkly-tags': _tags, ...headers } = eventSourceInitDict.headers;
     return createEventSource(url, {
       ...eventSourceInitDict,

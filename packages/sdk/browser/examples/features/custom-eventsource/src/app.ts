@@ -65,9 +65,8 @@ const main = async () => {
 
   const { status } = await ldclient.waitForInitialization();
 
-  // Force a streaming connection for the demo. setStreaming flips the automatic foreground
-  // mode to 'streaming' instead of the browser default of 'one-shot' (a single fetch with no
-  // ongoing connection), and setConnectionMode pins the resolved mode explicitly.
+  // Force a streaming connection, so the demo always shows the POST stream in the
+  // Network tab. Without it, a visible page defaults to one-shot polling.
   ldclient.setStreaming(true);
   ldclient.setConnectionMode('streaming');
 
