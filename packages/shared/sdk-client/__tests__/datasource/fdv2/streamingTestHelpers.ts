@@ -173,7 +173,7 @@ export function sendFullTransfer(
 
 export function simulateErrorFilter(
   mockRequests: MockRequests,
-  error: { status: number; message: string; headers?: Record<string, string> },
+  error: { status?: number; message: string; headers?: Record<string, string> },
 ): boolean {
   const createCall = mockRequests.createEventSource.mock.calls[0];
   const options = createCall[1];
