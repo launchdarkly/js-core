@@ -213,38 +213,44 @@ export default class NodeRequests implements platform.Requests {
   }
 
   /**
-   * The transport for a streaming request. It does not request compressed content, and it never
-   * follows a redirect. A redirect status resolves like any other non-200 response, and the
-   * caller decides whether to retry the original URL. It applies no read or socket timeout. The
-   * caller owns the read timeout and cancels through the abort signal.
+   * The transport for a streaming request. It does not request compressed content. It follows
+   * 301 and 307 redirects through `internal.followStreamingRedirects`, and each hop re-sends
+   * the method, body, and headers, the Authorization header included, to its redirect target.
+   * It applies no read or socket timeout. The caller owns the read timeout and cancels through
+   * the abort signal.
    */
-  private _streamingFetch(url: string, options: platform.Options): Promise<platform.Response> {
-    const isSecure = url.startsWith('https://');
-    const impl = isSecure ? https : http;
-    const requestOptions: https.RequestOptions & Record<string, unknown> = {
+  private async _streamingFetch(
+    url: string,
+    options: platform.Options,
+  ): Promise<platform.Response> {
+    const baseOptions: https.RequestOptions & Record<string, unknown> = {
       method: options.method,
       headers: options.headers,
       agent: this._agent,
       signal: options.signal,
     };
-    if (isSecure) {
-      Object.assign(requestOptions, this._tlsParams);
-    }
-    return new Promise<platform.Response>((resolve, reject) => {
-      const req = impl.request(url, requestOptions, (res) =>
-        resolve(internal.createStreamingResponse(res)),
-      );
-      // Send the request headers and body at once. TCP batches small writes by default
-      // on sockets from the proxy agent and from a caller-supplied agent.
-      req.setNoDelay(true);
-      // This listener stays attached after resolve. A later socket error then becomes a harmless
-      // no-op reject instead of an unhandled 'error' event that would crash the process.
-      req.on('error', reject);
-      if (options.body !== undefined) {
-        req.write(options.body);
-      }
-      req.end();
-    });
+    const doRequest = (requestUrl: string): Promise<http.IncomingMessage> => {
+      const isSecure = requestUrl.startsWith('https://');
+      const impl = isSecure ? https : http;
+      const requestOptions = isSecure ? { ...baseOptions, ...this._tlsParams } : baseOptions;
+      return new Promise<http.IncomingMessage>((resolve, reject) => {
+        const req = impl.request(requestUrl, requestOptions, resolve);
+        // Send the request headers and body at once. TCP batches small writes by default
+        // on sockets from the proxy agent and from a caller-supplied agent.
+        req.setNoDelay(true);
+        // This listener stays attached after resolve. A later socket error then becomes a
+        // harmless no-op reject instead of an unhandled 'error' event that would crash the
+        // process.
+        req.on('error', reject);
+        if (options.body !== undefined) {
+          req.write(options.body);
+        }
+        req.end();
+      });
+    };
+    return internal.createStreamingResponse(
+      await internal.followStreamingRedirects(url, doRequest),
+    );
   }
 
   createEventSource(

@@ -47,9 +47,8 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/eventsource": "0.2.0",
+    "@launchdarkly/eventsource": "0.2.1",
     "@launchdarkly/js-server-sdk-common": "2.25.0",
-    "https-proxy-agent": "^7.0.6"
     "https-proxy-agent": "^7.0.6"
   },
   "devDependencies": {

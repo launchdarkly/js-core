@@ -48,7 +48,7 @@
     "contract-tests": "./contract-tests/run-contract-tests.sh"
   },
   "dependencies": {
-    "@launchdarkly/eventsource": "0.2.0",
+    "@launchdarkly/eventsource": "0.2.1",
     "@launchdarkly/js-client-sdk-common": "1.34.0"
   },
   "devDependencies": {
