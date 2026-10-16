@@ -28,11 +28,16 @@ it('logs no warnings when all configuration is valid', () => {
     },
   };
 
+  const eventSource = { createEventSource: jest.fn() } as unknown as NonNullable<
+    Parameters<typeof validateBrowserOptions>[0]['eventSource']
+  >;
+
   validateBrowserOptions(
     {
       fetchGoals: true,
       eventUrlTransformer: (url: string) => url,
       storage,
+      eventSource,
     },
     logger,
   );

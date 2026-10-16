@@ -1070,3 +1070,60 @@ it('surfaces a deferred fallback directive on a retryable errorFilter error', as
 
   base.close();
 });
+
+it('reports one interruption when the transport runs the error filter and onerror for one status-less failure', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // The shared eventsource transport classifies every failure through the
+  // error filter and then dispatches the same event to onerror.
+  const err = { message: 'network unreachable' };
+  const willRetry = simulateErrorFilter(mockRequests, err);
+  expect(willRetry).toBe(true);
+  mockEventSource.onerror(err);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+
+  const raced = await Promise.race([
+    base.takeResult().then(() => 'second-result'),
+    new Promise((resolve) => setTimeout(() => resolve('no-second-result'), 50)),
+  ]);
+  expect(raced).toBe('no-second-result');
+
+  base.close();
+});
+
+it('still reports a status-less onerror failure after an earlier filter-classified failure', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // A status-bearing failure: the filter classifies it, and onerror receives
+  // the same event but defers to the filter.
+  const statusErr = { status: 500, message: 'Error 500' };
+  expect(simulateErrorFilter(mockRequests, statusErr)).toBe(true);
+  mockEventSource.onerror(statusErr);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+
+  // A native EventSource failure carries no status and reaches only onerror.
+  // It must still report after the filter-classified failure above.
+  mockEventSource.onerror({ message: 'IO Error' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.kind).toBe('NETWORK_ERROR');
+
+  base.close();
+});
