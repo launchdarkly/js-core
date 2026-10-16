@@ -68,7 +68,7 @@ export interface LDEvaluationReason {
    * Otherwise it is false or undefined. In the JSON representation of the reason the property is
    * present only when it is true.
    *
-   * Flag overrides are currently experimental and subject to change.
+   * @experimental Flag overrides are currently experimental and subject to change.
    */
   overrideAffected?: boolean;
 }
