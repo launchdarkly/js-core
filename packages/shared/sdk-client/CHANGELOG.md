@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.34.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.33.0...js-client-sdk-common-v1.34.0) (2026-10-16)
+
+
+### Features
+
+* Add eventSource factory and usePost options to the client-side SDK common ([#2032](https://github.com/launchdarkly/js-core/issues/2032)) ([f514d5b](https://github.com/launchdarkly/js-core/commit/f514d5bc1fd7c995ed63e7eae3ff4624889ea941))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.30.0 to 2.31.0
+
 ## [1.33.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.32.5...js-client-sdk-common-v1.33.0) (2026-10-14)
 
 

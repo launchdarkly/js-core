@@ -1,5 +1,16 @@
 # Changelog
 
+## [6.4.2](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.1...node-server-sdk-dynamodb-v6.4.2) (2026-10-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.14.5 to 9.15.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.15.0
+
 ## [6.4.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.0...node-server-sdk-dynamodb-v6.4.1) (2026-10-14)
 
 

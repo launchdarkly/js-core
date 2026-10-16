@@ -2,6 +2,23 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.31.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.30.0...js-sdk-common-v2.31.0) (2026-10-16)
+
+
+### Features
+
+* Add experimental support for file-based overrides. ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Add optional file stats, watch error reporting, and the changed entry name to the platform filesystem interface ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+
+
+### Bug Fixes
+
+* Coalesce bursts of file change notifications into one file data reload ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Detect rename-based writes and recreated files in the file data source by watching the containing directories ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Re-establish the file data watch when a watched directory is deleted and created again ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Report file data read and processing failures through the error handler instead of an unhandled promise rejection ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Retry a failed file data reload and keep the last good data in effect ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+
 ## [2.30.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.29.0...js-sdk-common-v2.30.0) (2026-10-14)
 
 

@@ -8,6 +8,31 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.25.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.24.2...js-server-sdk-common-v2.25.0) (2026-10-16)
+
+
+### Features
+
+* Add experimental support for file-based overrides. ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Add optional file stats, watch error reporting, and the changed entry name to the platform filesystem interface ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+
+
+### Bug Fixes
+
+* Coalesce bursts of file change notifications into one file data reload ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Detect rename-based writes and recreated files in the file data source by watching the containing directories ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Re-establish the file data watch when a watched directory is deleted and created again ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Report file data read and processing failures through the error handler instead of an unhandled promise rejection ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Retry a failed file data reload and keep the last good data in effect ([9c0effe](https://github.com/launchdarkly/js-core/commit/9c0effe9d614ce41cf72a3254e25822c32d9d2f2))
+* Return a malformed flag result instead of throwing for a definition the evaluator cannot read ([#2095](https://github.com/launchdarkly/js-core/issues/2095)) ([22038e1](https://github.com/launchdarkly/js-core/commit/22038e10bb69f2f7b43ffc256572354bd2343626))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.30.0 to 2.31.0
+
 ## [2.24.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.24.1...js-server-sdk-common-v2.24.2) (2026-10-14)
 
 
