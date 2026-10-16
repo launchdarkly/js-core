@@ -18,8 +18,9 @@ implementation which _can_ send a POST request with a body, which is what lets
 this example and look for a `POST` request to the streaming endpoint, instead of the
 `GET`-based request the default transport would make.
 
-This example also enables the FDv2 data system (`dataSystem: {}`). `usePost` only applies
-to FDv2's streaming synchronizer -- the FDv1 data source uses `useReport` instead, which
+This example also enables the FDv2 data system (`dataSystem: {}`). `usePost` switches both
+FDv2 polling and FDv2 streaming requests to `POST`; streaming needs this custom EventSource
+because the native one is GET-only. The FDv1 data source uses `useReport` instead, which
 this example does not set.
 
 `fetchBrowserEventSource` lives behind its own entry point specifically so that neither it
@@ -30,7 +31,7 @@ optional dependency of the SDK. If your install omits optional dependencies (for
 
 ## Prerequisites
 
-Nodejs 20.6.0 or later
+Nodejs 22 or later
 
 ## Build instructions
 

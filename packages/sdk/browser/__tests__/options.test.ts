@@ -142,7 +142,22 @@ it('warns and drops an event source that is not an object', () => {
 
   expect(opts.eventSource).toBeUndefined();
   expect(logger.warn).toHaveBeenCalledWith(
-    'Config option "eventSource" should be of type object, got string, using default value',
+    'Config option "eventSource" should be of type LDEventSourceFactory, got string, using default value',
+  );
+});
+
+it('warns and drops an event source factory without a createEventSource function', () => {
+  const opts = validateBrowserOptions(
+    {
+      // @ts-ignore
+      eventSource: {},
+    },
+    logger,
+  );
+
+  expect(opts.eventSource).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "eventSource" should be of type LDEventSourceFactory, got object, using default value',
   );
 });
 

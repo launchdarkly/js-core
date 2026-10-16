@@ -1,7 +1,8 @@
-# Under FDv2 (dataSystem configured) the SDK does not send the tags header on any
-# request, so every tags assertion that expects a non-empty header value fails. This
-# includes polling requests, which can send headers -- the gap is in the SDK's FDv2
-# path, not in the transport.
+# This run uses the native browser EventSource, which cannot send the tags header on
+# stream requests, so the stream tags assertions fail. The same tests pass when the
+# fetch EventSource is injected, so the SDK's FDv2 path does send the header. The
+# poll-request tags failures in this run have an unidentified cause; see the fetch
+# EventSource runs for suppression-free tags coverage.
 tags/FDv1 fallback directive requests
 tags/disallowed characters
 tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}

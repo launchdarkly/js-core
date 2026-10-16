@@ -67,3 +67,17 @@ it('reports no optional capabilities for a factory that declares none', () => {
     headers: false,
   });
 });
+
+it('coerces non-boolean capability values to false', () => {
+  const factory = {
+    createEventSource: jest.fn(),
+    capabilities: { customMethod: 'no', readTimeout: 1, headers: undefined },
+  } as unknown as LDEventSourceFactory;
+  const requests = new BrowserRequests(factory);
+
+  expect(requests.getEventSourceCapabilities()).toEqual({
+    customMethod: false,
+    readTimeout: false,
+    headers: false,
+  });
+});

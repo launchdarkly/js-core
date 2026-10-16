@@ -47,6 +47,13 @@ export default class BrowserRequests implements Requests {
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {
-    return { ...(this._eventSourceFactory.capabilities ?? DEFAULT_CAPABILITIES) };
+    // Coerce to booleans so a truthy non-boolean from a custom factory cannot read as
+    // support for a feature the transport lacks.
+    const capabilities = this._eventSourceFactory.capabilities;
+    return {
+      customMethod: capabilities?.customMethod === true,
+      readTimeout: capabilities?.readTimeout === true,
+      headers: capabilities?.headers === true,
+    };
   }
 }

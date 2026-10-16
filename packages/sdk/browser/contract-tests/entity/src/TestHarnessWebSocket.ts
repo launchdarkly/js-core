@@ -49,10 +49,12 @@ export default class TestHarnessWebSocket {
             'bootstrap',
           ];
 
-          // The native browser EventSource cannot send a POST request. Only advertise usePost
-          // support when the run uses the fetch-based EventSource.
+          // The native browser EventSource cannot send a POST request and hides HTTP error
+          // details. Only advertise the capabilities that need them when the run uses the
+          // fetch-based EventSource.
           if (useFetchEventSource()) {
             resData.capabilities.push('client-use-post');
+            resData.capabilities.push('client-event-source-http-errors');
           }
 
           break;

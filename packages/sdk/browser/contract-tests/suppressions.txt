@@ -1,6 +1,6 @@
 # This run uses the SDK defaults, so streaming uses the native browser EventSource.
 # The native EventSource can only send GET requests. The REPORT streaming tests can
-# never pass in this configuration. The fetch EventSource run covers them.
+# never pass in this configuration. The FDv1 fetch EventSource run covers them.
 streaming/requests/method and headers/REPORT/http
 streaming/requests/URL path is computed correctly/no environment filter/base URI has no trailing slash/REPORT
 streaming/requests/URL path is computed correctly/no environment filter/base URI has a trailing slash/REPORT

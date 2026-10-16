@@ -20,7 +20,7 @@ const CAPABILITIES: EventSourceCapabilities = {
  * Unlike the native browser EventSource, this one can send request headers, use a method other than
  * GET with a request body, and apply a read timeout. The custom method support is what lets the
  * FDv2 `usePost` option stream evaluations over POST. It requires `fetch()`, `AbortController` and
- * a streaming `Response.body`, which every browser implementation should be able to support.
+ * a streaming `Response.body`, which all current browsers provide.
  *
  * It is not the default. Pass it as the `eventSource` option to opt in:
  *
@@ -32,14 +32,21 @@ const CAPABILITIES: EventSourceCapabilities = {
  * ```
  */
 const fetchBrowserEventSource: LDEventSourceFactory = {
-  createEventSource: (url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource =>
-    createEventSource(url, {
+  createEventSource: (url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource => {
+    // The LaunchDarkly streaming service's CORS allow-list does not include
+    // x-launchdarkly-tags. A browser preflight with that header fails, so the stream
+    // could never connect. Do not send it from this transport.
+    const { 'x-launchdarkly-tags': _tags, ...headers } = eventSourceInitDict.headers;
+    return createEventSource(url, {
       ...eventSourceInitDict,
-      // The platform init dict carries no retry shaping, so set the backoff ceiling and jitter
-      // here.
+      headers,
+      // The backoff ceiling and jitter apply to the transport's built-in retry strategy.
+      // A data source that injects its own retryDelayStrategy owns all retry timing, and
+      // the transport then ignores these two values.
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
-    }),
+    });
+  },
   capabilities: CAPABILITIES,
 };
 

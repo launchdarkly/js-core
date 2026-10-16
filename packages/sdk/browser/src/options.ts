@@ -157,13 +157,23 @@ const optDefaults = {
   eventSource: undefined,
 };
 
+// A bare object check would accept a factory without a createEventSource function, and the
+// failure would then surface as a TypeError at stream start instead of a warning here.
+const eventSourceFactoryValidator: TypeValidator = {
+  is: (u: unknown): boolean =>
+    u !== null &&
+    typeof u === 'object' &&
+    typeof (u as Partial<LDEventSourceFactory>).createEventSource === 'function',
+  getType: () => 'LDEventSourceFactory',
+};
+
 const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefined } = {
   fetchGoals: TypeValidators.Boolean,
   eventUrlTransformer: TypeValidators.Function,
   streaming: TypeValidators.Boolean,
   plugins: TypeValidators.createTypeArray('LDPlugin', {}),
   storage: TypeValidators.Object,
-  eventSource: TypeValidators.Object,
+  eventSource: eventSourceFactoryValidator,
 };
 
 function withBrowserDefaults(opts: BrowserOptions): BrowserOptions {
