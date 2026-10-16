@@ -38,6 +38,7 @@ part of the <a href="platform-1.LDEvaluationDetail.html" class="tsd-kind-interfa
 <a href="platform-1.LDEvaluationReason.html#errorKind" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>error<wbr/>Kind?</span></a>
 <a href="platform-1.LDEvaluationReason.html#inExperiment" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>in<wbr/>Experiment?</span></a>
 <a href="platform-1.LDEvaluationReason.html#kind" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>kind</span></a>
+<a href="platform-1.LDEvaluationReason.html#overrideAffected" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>override<wbr/>Affected?</span></a>
 <a href="platform-1.LDEvaluationReason.html#prerequisiteKey" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>prerequisite<wbr/>Key?</span></a>
 <a href="platform-1.LDEvaluationReason.html#ruleId" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>rule<wbr/>Id?</span></a>
 <a href="platform-1.LDEvaluationReason.html#ruleIndex" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>rule<wbr/>Index?</span></a>
@@ -99,6 +100,19 @@ to an unexpected error.</li>
 <div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
 <ul>
 <li>Defined in packages/shared/common/dist/esm/api/data/LDEvaluationReason.d.ts:18</li></ul></aside></section>
+<section class="tsd-panel tsd-member"><a id="overrideAffected" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <code class="tsd-tag ts-flagExperimental">Experimental</code> <span>override<wbr/>Affected</span><a href="#overrideAffected" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">override<wbr/>Affected</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p>True when an override affected the evaluation, directly or transitively.</p>
+<p>This is the case when the evaluated flag came from the SDK&#39;s override store, or when a
+prerequisite flag at any depth or a segment read during the evaluation came from that store.
+Otherwise it is false or undefined. In the JSON representation of the reason the property is
+present only when it is true.</p>
+<p> Flag overrides are currently experimental and subject to change.</p>
+</div>
+<div class="tsd-comment tsd-typography"></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/common/dist/esm/api/data/LDEvaluationReason.d.ts:66</li></ul></aside></section>
 <section class="tsd-panel tsd-member"><a id="prerequisiteKey" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagOptional">Optional</code> <span>prerequisite<wbr/>Key</span><a href="#prerequisiteKey" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24"><use href="#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">prerequisite<wbr/>Key</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
@@ -146,6 +160,7 @@ to an unexpected error.</li>
 <li><a href="#errorKind" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>error<wbr/>Kind</span></a></li>
 <li><a href="#inExperiment" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>in<wbr/>Experiment</span></a></li>
 <li><a href="#kind" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>kind</span></a></li>
+<li><a href="#overrideAffected" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>override<wbr/>Affected</span></a></li>
 <li><a href="#prerequisiteKey" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>prerequisite<wbr/>Key</span></a></li>
 <li><a href="#ruleId" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>rule<wbr/>Id</span></a></li>
 <li><a href="#ruleIndex" class=""><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-1024"></use></svg><span>rule<wbr/>Index</span></a></li></ul></div></details></div>
@@ -178,6 +193,7 @@ to an unexpected error.</li>
 <li><a href="../modules.html#EventSourceRetryDelayStrategy"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Event<wbr/>Source<wbr/>Retry<wbr/>Delay<wbr/>Strategy</span></a></li>
 <li><a href="../modules.html#FactoryOrInstance"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Factory<wbr/>Or<wbr/>Instance</span></a></li>
 <li><a href="../modules.html#FailureKind"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Failure<wbr/>Kind</span></a></li>
+<li><a href="../modules.html#FileStats"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>File<wbr/>Stats</span></a></li>
 <li><a href="../modules.html#Filesystem"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Filesystem</span></a></li>
 <li><a href="../modules.html#Function"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Function</span></a></li>
 <li><a href="../modules.html#Hasher"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-4194304"></use></svg><span>Hasher</span></a></li>
@@ -321,6 +337,7 @@ to an unexpected error.</li>
 <li><a href="platform-1.EventSourceCapabilities.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Capabilities</span></a></li>
 <li><a href="platform-1.EventSourceInitDict.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Init<wbr/>Dict</span></a></li>
 <li><a href="platform-1.EventSourceRetryDelayStrategy.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Event<wbr/>Source<wbr/>Retry<wbr/>Delay<wbr/>Strategy</span></a></li>
+<li><a href="platform-1.FileStats.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>Stats</span></a></li>
 <li><a href="platform-1.Filesystem.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Filesystem</span></a></li>
 <li><a href="platform-1.Hasher.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Hasher</span></a></li>
 <li><a href="platform-1.Headers.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Headers</span></a></li>
@@ -418,6 +435,7 @@ to an unexpected error.</li>
 <li><a href="DataKind.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Data<wbr/>Kind</span></a></li>
 <li><a href="EdgeProvider.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>Edge<wbr/>Provider</span></a></li>
 <li><a href="FDv1FallbackConfiguration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>FDv1<wbr/>Fallback<wbr/>Configuration</span></a></li>
+<li><a href="FileOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>Override<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="FileSystemDataSourceConfiguration.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>File<wbr/>System<wbr/>Data<wbr/>Source<wbr/>Configuration</span></a></li>
 <li><a href="LDBigSegmentsOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDBig<wbr/>Segments<wbr/>Options</span></a></li>
 <li><a href="LDClient.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDClient</span></a></li>
@@ -439,6 +457,8 @@ to an unexpected error.</li>
 <li><a href="LDMigrationOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Options</span></a></li>
 <li><a href="LDMigrationTracker.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Tracker</span></a></li>
 <li><a href="LDMigrationVariation.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDMigration<wbr/>Variation</span></a></li>
+<li><a href="LDOverrideSink.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDOverride<wbr/>Sink</span></a></li>
+<li><a href="LDOverrideSource.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDOverride<wbr/>Source</span></a></li>
 <li><a href="LDProxyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDProxy<wbr/>Options</span></a></li>
 <li><a href="LDTLSOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDTLSOptions</span></a></li>
 <li><a href="LDTransactionalFeatureStore.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-256"></use></svg><span>LDTransactional<wbr/>Feature<wbr/>Store</span></a></li>
@@ -461,6 +481,7 @@ to an unexpected error.</li>
 <li><a href="../types/LDMigrationWriteResult.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDMigration<wbr/>Write<wbr/>Result</span></a></li>
 <li><a href="../types/LDOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions</span></a></li>
 <li><a href="../types/LDOptionsInternal.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOptions<wbr/>Internal</span></a></li>
+<li><a href="../types/LDOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>LDOverride<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="../types/SynchronizerDataSource.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-2097152"></use></svg><span>Synchronizer<wbr/>Data<wbr/>Source</span></a></li>
 <li><a href="../functions/IsMigrationStage.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>Is<wbr/>Migration<wbr/>Stage</span></a></li>
 <li><a href="../functions/LDMigrationError.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>LDMigration<wbr/>Error</span></a></li>
@@ -469,6 +490,7 @@ to an unexpected error.</li>
 <li><a href="../functions/deserializePoll.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>deserialize<wbr/>Poll</span></a></li>
 <li><a href="../functions/init.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>init</span></a></li>
 <li><a href="../functions/isCustomOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Custom<wbr/>Options</span></a></li>
+<li><a href="../functions/isFileOverrideSourceOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>File<wbr/>Override<wbr/>Source<wbr/>Options</span></a></li>
 <li><a href="../functions/isPollingOnlyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Polling<wbr/>Only<wbr/>Options</span></a></li>
 <li><a href="../functions/isStandardOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Standard<wbr/>Options</span></a></li>
 <li><a href="../functions/isStreamingOnlyOptions.html"><svg class="tsd-kind-icon" viewBox="0 0 24 24"><use href="#icon-64"></use></svg><span>is<wbr/>Streaming<wbr/>Only<wbr/>Options</span></a></li>
