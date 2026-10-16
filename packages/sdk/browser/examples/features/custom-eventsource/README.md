@@ -31,7 +31,7 @@ optional dependency of the SDK. If your install omits optional dependencies (for
 
 ## Prerequisites
 
-Nodejs 22 or later
+Node.js 22 or later
 
 ## Build instructions
 

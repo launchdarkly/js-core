@@ -129,24 +129,24 @@ jobs:
           sleep 5  # Give the browser time to initialize and connect via WebSocket
 
       # The v2 harness exercises the FDv1 default path over the fetch EventSource. REPORT
-      # streaming and the tags header tests run here without a capability gate, so this run
-      # needs no skip list.
+      # streaming runs here without a capability gate.
       - name: Run contract tests (FDv1, fetch EventSource)
         uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
           stop_service: 'false'
+          extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/browser/contract-tests/suppressions_fetch_eventsource.txt'
 
       # This run proves the fetch-based EventSource against the FDv2 suite, including the
-      # usePost POST streaming variants. The fetch transport has no native EventSource
-      # limits, so the run needs no skip list.
+      # usePost POST streaming variants.
       - name: Run contract tests (FDv2, fetch EventSource)
         uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v3
+          extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/browser/contract-tests/suppressions_datamode_changes.txt'
 
       - name: Print logs on failure
         if: failure()

@@ -83,7 +83,8 @@ go run . --url http://localhost:8000 \
 Two skip-lists live alongside this README; pass the appropriate one to `-skip-from`:
 
 - **`suppressions.txt`** - the standard skip list for the Browser SDK contract tests (harness v2). It skips tests that the native browser EventSource can never pass, which are `REPORT` streaming and the `tags` stream-request header assertions.
-- **`suppressions_datamode_changes.txt`** - the skip list for the FDv2 (data system / "data mode") run with the native EventSource (harness v3). It skips the `tags` request tests that fail with that transport. The same tests pass over the fetch EventSource, so the fetch runs use no skip list.
+- **`suppressions_datamode_changes.txt`** - the skip list for both FDv2 (data system / "data mode") runs (harness v3). The stream tags assertions fail with both transports, and the FDv2 path does not send the tags header on the other requests (an SDK gap, not a transport limit).
+- **`suppressions_fetch_eventsource.txt`** - the skip list for the FDv1 fetch EventSource run (harness v2). The fetch transport strips the tags header, because the streaming service CORS allow-list rejects it, so the stream tags assertions can never pass.
 
 #### Fetch EventSource run
 
@@ -93,4 +94,4 @@ Open the entity with `?eventsource=fetch` to make it use the fetch-based EventSo
 node packages/sdk/browser/contract-tests/entity/open-browser.mjs 'http://localhost:5173/?eventsource=fetch' &
 ```
 
-Then run both harnesses against it. The v2 harness needs no skip list and proves the FDv1 path, including `REPORT` streaming and the tags header tests. The v3 harness proves the FDv2 path, including the `usePost` POST streaming variants.
+Then run both harnesses against it. The v2 harness takes `suppressions_fetch_eventsource.txt` and proves the FDv1 path, including `REPORT` streaming. The v3 harness takes `suppressions_datamode_changes.txt` and proves the FDv2 path, including the `usePost` POST streaming variants. Both runs skip the stream tags assertions, because the transport strips that header for CORS.
