@@ -7,6 +7,9 @@ import {
   TestHttpServer,
   TestHttpServers,
 } from 'launchdarkly-js-test-helpers';
+import * as net from 'net';
+
+import { internal } from '@launchdarkly/js-server-sdk-common';
 
 import NodeRequests from '../../src/platform/NodeRequests';
 
@@ -66,14 +69,100 @@ describe('given a running HTTP server', () => {
     expect(received.headers['accept-encoding']).toBeUndefined();
   });
 
-  it('does not follow redirects for a streaming request', async () => {
-    server.byDefault(TestHttpHandlers.respond(301, { location: `${server.url}/other` }));
+  it.each([301, 307])(
+    'follows a %s redirect for a streaming request and re-sends the method, body, and headers',
+    async (status) => {
+      const chunks = new AsyncQueue<string>();
+      server.forMethodAndPath(
+        'report',
+        '/',
+        TestHttpHandlers.respond(status, { location: `${server.url}/other` }),
+      );
+      server.forMethodAndPath(
+        'report',
+        '/other',
+        TestHttpHandlers.chunkedStream(200, { 'content-type': 'text/event-stream' }, chunks),
+      );
+
+      const requests = new NodeRequests();
+      const res = await requests.fetch(server.url, {
+        method: 'REPORT',
+        headers: { authorization: 'sdk-key' },
+        body: '{"kind":"user"}',
+        streaming: true,
+      });
+
+      expect(res.status).toEqual(200);
+      await server.nextRequest();
+      const redirected = await server.nextRequest();
+      expect(redirected.path).toEqual('/other');
+      expect(redirected.method.toUpperCase()).toEqual('REPORT');
+      expect(redirected.headers.authorization).toEqual('sdk-key');
+      expect(redirected.body).toEqual('{"kind":"user"}');
+    },
+  );
+
+  it('does not follow a 302 for a streaming request', async () => {
+    server.byDefault(TestHttpHandlers.respond(302, { location: `${server.url}/other` }));
+
+    const requests = new NodeRequests();
+    const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
+
+    expect(res.status).toEqual(302);
+    expect(server.requestCount()).toEqual(1);
+  });
+
+  it('stops following a streaming redirect chain at the hop limit', async () => {
+    server.byDefault(TestHttpHandlers.respond(301, { location: `${server.url}/` }));
 
     const requests = new NodeRequests();
     const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
 
     expect(res.status).toEqual(301);
-    expect(server.requestCount()).toEqual(1);
+    // The initial request plus one request per allowed hop. The next redirect goes to the
+    // caller.
+    expect(server.requestCount()).toEqual(internal.MAX_STREAMING_REDIRECT_HOPS + 1);
+  });
+
+  it('uses TLS for a redirect hop to an https target', async () => {
+    // A raw TCP listener stands in for the https target. The first byte it receives shows
+    // which transport the hop used. A TLS handshake starts with the record type 0x16. A
+    // plaintext HTTP request starts with an ASCII method character.
+    const raw = net.createServer();
+    await new Promise<void>((resolve) => {
+      raw.listen(0, '127.0.0.1', resolve);
+    });
+    try {
+      const { port } = raw.address() as net.AddressInfo;
+      const firstByte = new Promise<number>((resolve) => {
+        raw.on('connection', (socket) => {
+          socket.once('data', (data) => {
+            resolve(data[0]);
+            socket.destroy();
+          });
+        });
+      });
+      server.byDefault(TestHttpHandlers.respond(301, { location: `https://127.0.0.1:${port}/` }));
+
+      const requests = new NodeRequests();
+      // The listener destroys the connection mid-handshake, so the fetch rejects.
+      await expect(
+        requests.fetch(server.url, { method: 'GET', streaming: true }),
+      ).rejects.toThrow();
+
+      // A hop that never connects must fail this test, not hang it on the unsettled promise.
+      const received = await Promise.race([
+        firstByte,
+        new Promise<number>((resolve) => {
+          setTimeout(() => resolve(-1), 1000).unref();
+        }),
+      ]);
+      expect(received).toEqual(0x16);
+    } finally {
+      await new Promise<void>((resolve) => {
+        raw.close(() => resolve());
+      });
+    }
   });
 
   it('stops the stream when the signal aborts', async () => {
@@ -212,6 +301,23 @@ describe('given a running HTTPS server with a self-signed certificate', () => {
     const requests = new NodeRequests({ ca: server.certificate });
     const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
     expect(res.status).toEqual(200);
+  });
+
+  it('applies the TLS options to a redirect hop', async () => {
+    // The hop must carry the agent and the per-request TLS options. Without the CA on the
+    // hop, the self-signed certificate fails verification and the fetch rejects.
+    server.forMethodAndPath(
+      'get',
+      '/entry',
+      TestHttpHandlers.respond(301, { location: `${server.url}/stream` }),
+    );
+
+    const requests = new NodeRequests({ ca: server.certificate });
+    const res = await requests.fetch(`${server.url}/entry`, { method: 'GET', streaming: true });
+
+    expect(res.status).toEqual(200);
+    expect((await server.nextRequest()).path).toEqual('/entry');
+    expect((await server.nextRequest()).path).toEqual('/stream');
   });
 
   it('passes the CA to the per-request options of an https streaming request', async () => {

@@ -82,6 +82,27 @@ describe('given a CONNECT proxy and an HTTPS server with a self-signed certifica
     expect(proxy.connectCount()).toEqual(1);
   });
 
+  it('routes a streaming redirect hop through the proxy', async () => {
+    // The hop must keep the proxy agent. A hop that drops the agent would connect to the
+    // target directly, and the tunnel count would stay at one.
+    server.forMethodAndPath(
+      'get',
+      '/entry',
+      TestHttpHandlers.respond(301, { location: `${server.url}/stream` }),
+    );
+    server.byDefault(TestHttpHandlers.respond(200));
+
+    const requests = new NodeRequests(
+      { ca: server.certificate },
+      { host: '127.0.0.1', port: proxy.port },
+    );
+    const res = await requests.fetch(`${server.url}/entry`, { method: 'GET', streaming: true });
+
+    expect(res.status).toEqual(200);
+    // Each hop opens its own tunnel, because a followed redirect response is destroyed.
+    expect(proxy.connectCount()).toEqual(2);
+  });
+
   it('completes a buffered request through the proxy when the CA is supplied in the TLS options', async () => {
     server.byDefault(TestHttpHandlers.respond(200, {}, 'ok'));
 
