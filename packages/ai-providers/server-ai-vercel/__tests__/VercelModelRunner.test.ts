@@ -90,6 +90,30 @@ describe('VercelModelRunner', () => {
       expect(out.metrics.tokens).toEqual({ total: 100, input: 40, output: 60 });
     });
 
+    it('uses a LDMessage[] directly without prepending config messages', async () => {
+      (generateText as jest.Mock).mockResolvedValue({
+        text: 'direct',
+        usage: { totalTokens: 5, promptTokens: 2, completionTokens: 3 },
+      });
+
+      const configWithMessages: LDAICompletionConfig = {
+        ...baseConfig,
+        messages: [{ role: 'system', content: 'Should not appear' }],
+      };
+      const r = new VercelModelRunner(fakeModel as any, configWithMessages, {}, mockLogger);
+      const prebuilt = [
+        { role: 'system' as const, content: 'Custom system' },
+        { role: 'user' as const, content: 'Direct input' },
+      ];
+      await r.run(prebuilt);
+
+      expect(generateText).toHaveBeenCalledWith({
+        model: fakeModel,
+        messages: prebuilt,
+        experimental_telemetry: { isEnabled: true },
+      });
+    });
+
     it('returns success=false when generateText throws', async () => {
       const err = new Error('boom');
       (generateText as jest.Mock).mockRejectedValue(err);
