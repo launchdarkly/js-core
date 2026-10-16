@@ -216,10 +216,11 @@ export interface LDOptions {
   /**
    * Directs the SDK to use the POST method, with the evaluation context in the request body,
    * for polling and streaming requests instead of GET with the context encoded in the URL path.
-   * (Default: `false`)
    *
-   * This is the FDv2 equivalent of `useReport`, and only takes effect when the `dataSystem`
-   * option is also configured.
+   * @defaultValue `false`
+   *
+   * @remark
+   * This option only takes effect when the `dataSystem` option is also configured.
    *
    * For streaming specifically, this also requires an EventSource implementation that supports a
    * custom HTTP method (the `customMethod` capability). Without that capability, streaming
