@@ -525,7 +525,8 @@ function constructFDv2(
     // Fallback Directive (the `x-ld-fd-fallback: true` response header). When configured
     // explicitly via `dataSystem.fdv1Fallback`, those values take precedence over the
     // top-level baseUri/pollInterval. Setting `dataSystem.fdv1Fallback` to `null` leaves
-    // the SDK without an FDv1 fallback so the data source terminates on the directive.
+    // the SDK without an FDv1 fallback, so it only waits out the fallback TTL before
+    // retrying FDv2.
     const fdv1FallbackConfig = dataSystem.fdv1Fallback;
     if (fdv1FallbackConfig !== null) {
       const fdv1FallbackPollInterval =
