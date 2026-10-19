@@ -73,7 +73,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
 
     const startTime = Date.now();
     this._logger?.debug('Polling LaunchDarkly for feature flag updates');
-    this._requestor.requestAllData((err, body, headers, fallbackToFDv1) => {
+    this._requestor.requestAllData((err, body, headers, fallbackToFDv1, fdv1FallbackTtlMs) => {
       if (this._stopped) {
         return;
       }
@@ -81,7 +81,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
       const elapsed = Date.now() - startTime;
       const sleepFor = Math.max(this._pollInterval * 1000 - elapsed, 0);
 
-      // Helper to emit the terminal FDv1 fallback signal. Callers must `return` after
+      // Helper to emit the FDv1 fallback signal. Callers must `return` after
       // invoking this; no further poll is scheduled.
       const emitFallback = () => {
         const fallbackErr =
@@ -93,6 +93,7 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
                   ? httpErrorMessage(err, 'polling request', 'falling back to FDv1')
                   : `Response header indicates to fallback to FDv1`,
                 err?.status,
+                fdv1FallbackTtlMs,
               );
         this._logger?.warn(fallbackErr.message);
         statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
@@ -173,12 +174,18 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
           // object: CompositeDataSource will swap its synchronizer list to FDv1 before
           // resolving the switchToSync transition.
           payloadProcessor.addPayloadListener((payload) => {
-            const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+            const data: {
+              initMetadata: any;
+              payload: any;
+              fallbackToFDv1?: boolean;
+              fdv1FallbackTtlMs?: number;
+            } = {
               initMetadata,
               payload,
             };
             if (fallbackToFDv1) {
               data.fallbackToFDv1 = true;
+              data.fdv1FallbackTtlMs = fdv1FallbackTtlMs;
               this._logger?.warn(`Response header indicates to fallback to FDv1`);
             }
             dataCallback(payload.type === 'full', data);

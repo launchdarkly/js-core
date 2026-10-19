@@ -215,6 +215,48 @@ describe('given a requestor', () => {
     expect(res.fallbackToFDv1).toBe(true);
   });
 
+  it.each([
+    ['500', 500],
+    ['1', 1],
+    ['3600', 3600],
+  ])('uses a valid fallback TTL header of %s seconds as-is', async (ttl, seconds) => {
+    testStatus = 500;
+    testHeaders = {
+      'x-ld-fd-fallback': 'true',
+      'x-ld-fd-fallback-ttl': ttl,
+    };
+
+    const res = await promisify<{ err: any; fdv1FallbackTtlMs: number | undefined }>((cb) => {
+      requestor.requestAllData((err, _body, _headers, _fallbackToFDv1, fdv1FallbackTtlMs) =>
+        cb({ err, fdv1FallbackTtlMs }),
+      );
+    });
+
+    expect(res.fdv1FallbackTtlMs).toBe(seconds * 1000);
+    expect(res.err.fdv1FallbackTtlMs).toBe(seconds * 1000);
+  });
+
+  it.each([undefined, '0', '-5', '3601', 'abc'])(
+    'uses a default fallback TTL between 30 minutes and 1 hour for a TTL header of %s',
+    async (ttl) => {
+      testStatus = 200;
+      testResponse = 'a response';
+      testHeaders = { 'x-ld-fd-fallback': 'true' };
+      if (ttl !== undefined) {
+        testHeaders['x-ld-fd-fallback-ttl'] = ttl;
+      }
+
+      const res = await promisify<number | undefined>((cb) => {
+        requestor.requestAllData((_err, _body, _headers, _fallbackToFDv1, fdv1FallbackTtlMs) =>
+          cb(fdv1FallbackTtlMs),
+        );
+      });
+
+      expect(res).toBeGreaterThanOrEqual(30 * 60 * 1000);
+      expect(res).toBeLessThanOrEqual(60 * 60 * 1000);
+    },
+  );
+
   it('passes the configured timeout (converted to milliseconds) in the request options', async () => {
     testResponse = 'a response';
     const localRequestor = new Requestor(new Configuration({ timeout: 10 }), requests, baseHeaders);
