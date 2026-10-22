@@ -9,7 +9,7 @@ on:
     paths-ignore:
       - '**.md'
   pull_request:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'devin/1792686117-node16-types']
     paths-ignore:
       - '**.md'
   schedule:
