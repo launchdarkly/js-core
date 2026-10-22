@@ -26,11 +26,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./actions/setup-yarn
       - name: Install dependencies
-        run: yarn install
+        run: yarn workspaces focus $(node scripts/released-packages.js)
         env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-      - name: Build
-        run: yarn build
+      - name: Build released packages
+        run: yarn workspaces foreach -pR --topological-dev $(node scripts/released-packages.js | sed 's/^/--from /') run build
       - name: Pack released packages
         run: node scripts/package-config-tests/run.js pack --packs ${{ runner.temp }}/packs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
