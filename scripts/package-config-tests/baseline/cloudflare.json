@@ -1,0 +1,10 @@
+{
+  "cloudflare | wrangler-4.152.0 | cjs-require | deploy-dry-run": "ok",
+  "cloudflare | wrangler-4.152.0 | cjs-require | evaluate": "ok",
+  "cloudflare | wrangler-4.152.0 | openfeature | deploy-dry-run": "ok",
+  "cloudflare | wrangler-4.152.0 | openfeature | evaluate": "ok",
+  "cloudflare | wrangler-4.152.0 | sdk | deploy-dry-run": "ok",
+  "cloudflare | wrangler-4.152.0 | sdk | evaluate": "ok",
+  "cloudflare | wrangler-4.152.0 | tsup-prebuilt | deploy-dry-run": "ok",
+  "cloudflare | wrangler-4.152.0 | tsup-prebuilt | evaluate": "ok"
+}
