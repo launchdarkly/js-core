@@ -31,6 +31,8 @@ async function runSuite({ work, packs, variant }) {
       ...Object.fromEntries(versions.map((v) => [`typescript-${v}`, `npm:typescript@${v}`])),
       '@types/node': '24.19.2',
       '@types/react': '19.3.0',
+      react: '19.3.1',
+      'react-dom': '19.3.1',
     },
   });
 

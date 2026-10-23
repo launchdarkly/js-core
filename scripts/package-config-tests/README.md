@@ -1,8 +1,10 @@
 # Package configuration tests
 
 These tests check the published form of every released package (the tarball from
-`yarn pack`), installed with npm into fresh consumer projects, against many build
-configurations. Workspace links and source files are never used, so the tests see exactly what
+`yarn pack`), installed with Yarn into fresh consumer projects, against many build
+configurations. The consumer projects use the repository's `npmMinimalAgeGate` and
+`npmPreapprovedPackages` from `.yarnrc.yml`, so external dependencies, including transitive
+ones, only install once they are old enough. Workspace links and source files are never used, so the tests see exactly what
 users install.
 
 | Suite             | What it checks                                                                                                                                                                                                                           |

@@ -4,7 +4,7 @@ const path = require('path');
 const { copyDir, install, run } = require('../lib');
 const { check, startServer } = require('./edge');
 
-const WRANGLER = '4.152.0';
+const WRANGLER = '4.151.3';
 const KV_KEY = 'LD-Env-test-client-side-id';
 
 const WORKERS = {
@@ -41,8 +41,6 @@ async function runSuite({ work, packs }) {
       tsup: '8.5.1',
       typescript: '5.9.3',
     },
-    // wrangler 4 declares an optional peer on workers-types 5, while the SDK depends on 4.
-    extraArgs: ['--legacy-peer-deps'],
   });
 
   const results = {};

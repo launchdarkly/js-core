@@ -23,7 +23,7 @@ const BUNDLES = [
 async function runSuite({ work, packs }) {
   const dir = path.join(work, 'runtime');
   fs.rmSync(dir, { recursive: true, force: true });
-  install(dir, packs, { deps: { esbuild: '0.25.10' } });
+  install(dir, packs, { deps: { esbuild: '0.25.10', react: '19.3.1', 'react-dom': '19.3.1' } });
   const esbuild = path.join(dir, 'node_modules', '.bin', 'esbuild');
 
   const jobs = [];
