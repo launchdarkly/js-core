@@ -19,22 +19,34 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./js-client-sdk": {
-      "types": "./dist/clients/js-client-sdk.d.ts",
-      "import": "./dist/clients/js-client-sdk.js",
-      "require": "./dist/clients/js-client-sdk.cjs",
-      "default": "./dist/clients/js-client-sdk.js"
+      "import": {
+        "types": "./dist/clients/js-client-sdk.d.ts",
+        "default": "./dist/clients/js-client-sdk.js"
+      },
+      "require": {
+        "types": "./dist/clients/js-client-sdk.d.cts",
+        "default": "./dist/clients/js-client-sdk.cjs"
+      }
     },
     "./react-sdk": {
-      "types": "./dist/clients/react-sdk.d.ts",
-      "import": "./dist/clients/react-sdk.js",
-      "require": "./dist/clients/react-sdk.cjs",
-      "default": "./dist/clients/react-sdk.js"
+      "import": {
+        "types": "./dist/clients/react-sdk.d.ts",
+        "default": "./dist/clients/react-sdk.js"
+      },
+      "require": {
+        "types": "./dist/clients/react-sdk.d.cts",
+        "default": "./dist/clients/react-sdk.cjs"
+      }
     }
   },
   "files": [
