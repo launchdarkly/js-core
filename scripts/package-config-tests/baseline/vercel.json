@@ -1,0 +1,8 @@
+{
+  "vercel | next-16.4.2-turbopack | build": "ok",
+  "vercel | next-16.4.2-turbopack | edge-route": "ok",
+  "vercel | next-16.4.2-turbopack | middleware": "ok",
+  "vercel | next-16.4.2-webpack | build": "ok",
+  "vercel | next-16.4.2-webpack | edge-route": "ok",
+  "vercel | next-16.4.2-webpack | middleware": "ok"
+}
