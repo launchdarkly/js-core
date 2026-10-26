@@ -29,4 +29,5 @@ tsc --module commonjs --outDir dist/cjs/
 echo "$CJS_PACKAGE_JSON" > dist/cjs/package.json
 
 tsc --module es2022 --outDir dist/esm/
+node "$(dirname "$0")/add-esm-declaration-extensions.js" dist/esm
 echo "$ESM_PACKAGE_JSON" > dist/esm/package.json
