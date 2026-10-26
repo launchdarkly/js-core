@@ -202,14 +202,67 @@ it('ignores put-objects received before a server-intent', () => {
   expect(action.type).toBe('none');
 });
 
-it('silently ignores put-objects with unrecognized kinds', () => {
-  const handler = createHandler();
-  handler.processEvent(intentEvent('xfer-full'));
-  handler.processEvent(putEvent('unknownKind', 'f1', 1, { on: true }));
+it('silently ignores put-objects and delete-objects with unsupported kinds', () => {
+  const logger: LDLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const handler = createProtocolHandler(passthrough, logger);
+  handler.processEvent(intentEvent('xfer-changes'));
 
+  // Interleave objects of an unsupported kind with supported ones.
+  const actions = [
+    putEvent('flag', 'f1', 1, { on: true }),
+    putEvent('some-future-kind', 'x1', 1, { foo: 1 }),
+    deleteEvent('some-future-kind', 'x2', 2),
+    deleteEvent('segment', 's1', 3),
+    transferredEvent('s', 1),
+  ].map((event) => handler.processEvent(event));
+
+  // No event is rejected, the payload holds only the supported objects, and nothing is
+  // logged above debug.
+  const action = actions.pop()!;
+  expect(actions.every((other) => other.type === 'none')).toBe(true);
+  expect(action.type).toBe('payload');
+  if (action.type !== 'payload') return;
+  expect(action.payload.updates).toEqual([
+    { kind: 'flag', key: 'f1', version: 1, object: { on: true } },
+    { kind: 'segment', key: 's1', version: 3, deleted: true },
+  ]);
+  expect(logger.warn).not.toHaveBeenCalled();
+  expect(logger.error).not.toHaveBeenCalled();
+});
+
+it.each(['constructor', 'toString', '__proto__'])(
+  'ignores objects whose kind names an inherited object member: %s',
+  (kind) => {
+    const handler = createHandler();
+    handler.processEvent(intentEvent('xfer-changes'));
+    handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+
+    // Send a put and a delete whose kind is not a registered processor.
+    handler.processEvent(putEvent(kind, 'x1', 1, { foo: 1 }));
+    handler.processEvent(deleteEvent(kind, 'x2', 2));
+    const action = handler.processEvent(transferredEvent('s', 1));
+
+    // Only the supported object is in the payload.
+    expect(action.type).toBe('payload');
+    if (action.type !== 'payload') return;
+    expect(action.payload.updates.map((update) => update.key)).toEqual(['f1']);
+  },
+);
+
+it('warns when the processor for a supported kind rejects the object', () => {
+  const logger: LDLogger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const handler = createProtocolHandler({ flag: () => undefined }, logger);
+  handler.processEvent(intentEvent('xfer-full'));
+
+  // The processor for a supported kind rejects the object.
+  handler.processEvent(putEvent('flag', 'f1', 1, { on: true }));
+
+  // The object is dropped and the rejection is reported.
   const action = handler.processEvent(transferredEvent('s', 1));
+  expect(action.type).toBe('payload');
   if (action.type !== 'payload') return;
   expect(action.payload.updates).toHaveLength(0);
+  expect(logger.warn).toHaveBeenCalledTimes(1);
 });
 
 it('accumulates delete-objects during a transfer', () => {
