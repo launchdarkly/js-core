@@ -1,0 +1,5 @@
+# Yarn settings for the consumer projects. The installer appends the repository's yarnPath,
+# enableScripts, npmMinimalAgeGate and npmPreapprovedPackages, so the age gate has one source.
+enableImmutableInstalls: false
+
+nodeLinker: node-modules

@@ -61,13 +61,12 @@ function repoYarnSettings() {
     );
     yarnSettings = {
       yarnPath: get('yarnPath'),
-      rc: {
-        enableImmutableInstalls: false,
-        enableScripts: get('enableScripts'),
-        nodeLinker: 'node-modules',
-        npmMinimalAgeGate: get('npmMinimalAgeGate'),
-        npmPreapprovedPackages: get('npmPreapprovedPackages'),
-      },
+      inherited: Object.fromEntries(
+        ['enableScripts', 'npmMinimalAgeGate', 'npmPreapprovedPackages'].map((key) => [
+          key,
+          get(key),
+        ]),
+      ),
       // jco (a dependency of the Fastly SDK) depends on a TypeScript version that Yarn's
       // built-in TypeScript patch cannot handle; the repository pins it, and so do we.
       resolutions: Object.fromEntries(
@@ -146,8 +145,12 @@ function install(dir, packs, { launchdarkly, deps = {}, type }) {
     dependencies: { ...selected, ...deps },
     resolutions: { ...settings.resolutions, ...all },
   };
-  // JSON is valid YAML.
-  fs.writeFileSync(path.join(dir, '.yarnrc.yml'), `${JSON.stringify(settings.rc, null, 2)}\n`);
+  const template = fs.readFileSync(path.join(__dirname, 'fixtures/consumer.yarnrc.yml'), 'utf8');
+  // JSON values are valid YAML.
+  const inherited = Object.entries({ ...settings.inherited, yarnPath: settings.yarnPath })
+    .map(([key, value]) => `\n${key}: ${JSON.stringify(value)}\n`)
+    .join('');
+  fs.writeFileSync(path.join(dir, '.yarnrc.yml'), `${template}${inherited}`);
   // Add missing required peers, as npm would, until there are none left.
   for (let attempt = 0; ; attempt += 1) {
     fs.writeFileSync(path.join(dir, 'package.json'), `${JSON.stringify(pkg, null, 2)}\n`);
