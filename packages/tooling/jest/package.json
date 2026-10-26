@@ -20,10 +20,6 @@
     "./react-native": {
       "types": "./dist/src/react-native/index.d.ts",
       "default": "./dist/src/react-native/index.js"
-    },
-    "./react": {
-      "types": "./dist/src/react/index.d.ts",
-      "default": "./dist/src/react/index.js"
     }
   },
   "files": [
@@ -31,7 +27,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && tsc && node ../../../scripts/add-esm-declaration-extensions.js dist/src",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "oxlint .",

@@ -20,22 +20,34 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./bridge": {
-      "types": "./dist/bridge.d.ts",
-      "import": "./dist/bridge.js",
-      "require": "./dist/bridge.cjs",
-      "default": "./dist/bridge.js"
+      "import": {
+        "types": "./dist/bridge.d.ts",
+        "default": "./dist/bridge.js"
+      },
+      "require": {
+        "types": "./dist/bridge.d.cts",
+        "default": "./dist/bridge.cjs"
+      }
     },
     "./renderer": {
-      "types": "./dist/renderer.d.ts",
-      "import": "./dist/renderer.js",
-      "require": "./dist/renderer.cjs",
-      "default": "./dist/renderer.js"
+      "import": {
+        "types": "./dist/renderer.d.ts",
+        "default": "./dist/renderer.js"
+      },
+      "require": {
+        "types": "./dist/renderer.d.cts",
+        "default": "./dist/renderer.cjs"
+      }
     }
   },
   "files": [

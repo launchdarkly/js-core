@@ -26,7 +26,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist",
-    "build": "npx tsc",
+    "build": "npx tsc && node ../../../scripts/add-esm-declaration-extensions.js dist/src",
     "tsw": "yarn tsc --watch",
     "start": "rimraf dist && yarn tsw",
     "lint": "oxlint .",

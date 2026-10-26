@@ -31,7 +31,7 @@ export default [
     plugins: [
       resolve(),
       commonjs(),
-      typescript({ declaration: false, declarationMap: false }),
+      typescript({ declaration: true, declarationDir: 'dist/cjs' }),
       json(),
       terser(),
       filesize(),

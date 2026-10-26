@@ -33,7 +33,7 @@
     "make-cjs-package-json": "echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
     "make-esm-package-json": "echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "make-package-jsons": "npm run make-cjs-package-json && npm run make-esm-package-json",
-    "build": "npx tsc --noEmit && rollup -c rollup.config.js && npm run make-package-jsons",
+    "build": "npx tsc --noEmit && rollup -c rollup.config.js && node ../../../scripts/add-esm-declaration-extensions.js dist/esm && npm run make-package-jsons",
     "clean": "rimraf dist",
     "lint": "oxlint .",
     "lint:fix": "yarn run lint --fix",
