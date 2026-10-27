@@ -1,8 +1,7 @@
-# This run uses the native browser EventSource, which cannot send the tags header on
-# stream requests, so the stream tags assertions fail. The same tests pass when the
-# fetch EventSource is injected, so the SDK's FDv2 path does send the header. The
-# poll-request tags failures in this run have an unidentified cause; see the fetch
-# EventSource runs for suppression-free tags coverage.
+# Skip list for both FDv2 (data system) runs, native and fetch EventSource (harness v3).
+# The stream tags assertions fail on both transports. The native EventSource cannot set
+# request headers, and the fetch transport strips the tags header to avoid CORS
+# preflight failures.
 tags/FDv1 fallback directive requests
 tags/disallowed characters
 tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}

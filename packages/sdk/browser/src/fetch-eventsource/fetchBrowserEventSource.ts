@@ -19,8 +19,9 @@ const CAPABILITIES: EventSourceCapabilities = {
  *
  * Unlike the native browser EventSource, this one can send request headers, use a method other than
  * GET with a request body, and apply a read timeout. The custom method support is what lets the
- * FDv2 `usePost` option stream evaluations over POST. It requires `fetch()`, `AbortController` and
- * a streaming `Response.body`, which all current browsers provide.
+ * FDv2 `usePost` option stream evaluations over POST and the FDv1 `useReport` option stream them
+ * over REPORT. It requires `fetch()`, `AbortController` and a streaming `Response.body`, which all
+ * current browsers provide.
  *
  * This transport never sends the `x-launchdarkly-tags` header, for any stream endpoint,
  * because the LaunchDarkly streaming service's CORS allow-list does not include it.

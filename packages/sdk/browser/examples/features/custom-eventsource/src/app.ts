@@ -56,7 +56,6 @@ const main = async () => {
     );
   });
 
-  // Listen for flag changes
   ldclient.on('change', () => {
     render();
   });
@@ -65,11 +64,8 @@ const main = async () => {
 
   const { status } = await ldclient.waitForInitialization();
 
-  // Pin the connection to streaming, so the demo always shows the POST stream in
-  // the Network tab. The change listener above already enables automatic streaming.
-  // setStreaming keeps the stream even if listeners are removed, and
-  // setConnectionMode switches the mode directly.
-  ldclient.setStreaming(true);
+  // Pin the connection to streaming, so the demo always shows the POST stream
+  // in the Network tab even if the change listener is removed.
   ldclient.setConnectionMode('streaming');
 
   if (status === 'complete') {

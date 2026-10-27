@@ -122,11 +122,13 @@ export function createStreamingBase(config: {
   let pendingFallback = false;
   let started = false;
   let stopped = false;
-  // True while a failure the error filter already reported may still reach
-  // onerror. The shared eventsource transport runs the filter on every failure
-  // and then dispatches the same event to onerror; without this mark, a
-  // status-less failure would queue two interrupted results.
-  let filterHandledFailure = false;
+  // The failure event the error filter already reported. A transport that
+  // passes the same event object to the filter and then to onerror gets one
+  // queued result per failure.
+  //
+  // NOTE: The React Native transport dispatches different objects, so its
+  // failures are not deduped here.
+  let filterHandledError: HttpErrorResponse | undefined;
 
   function logConnectionAttempt() {
     connectionAttemptStartTime = Date.now();
@@ -231,12 +233,12 @@ export function createStreamingBase(config: {
   function handleError(err: HttpErrorResponse): boolean {
     // Every branch below queues a result for this failure, so onerror must not
     // queue another one for the same event.
-    filterHandledFailure = true;
+    filterHandledError = err;
 
     // A failure without a status is a network failure, not an HTTP error response.
     const errorInfo = err.status
       ? errorInfoFromHttpError(err.status)
-      : errorInfoFromNetworkError(err.message ?? 'IO Error');
+      : errorInfoFromNetworkError(err.message || 'IO Error');
 
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
@@ -395,12 +397,12 @@ export function createStreamingBase(config: {
           return;
         }
 
-        // Consume the mark before any early return. A transport that runs the
-        // error filter dispatches the same event here, status or not; leaving
-        // the mark set past a status-bearing failure would suppress the report
-        // of a later failure that reaches only this slot.
-        const alreadyReported = filterHandledFailure;
-        filterHandledFailure = false;
+        // Suppress only the exact event the filter reported. A transport can
+        // run the filter without a matching onerror dispatch (a stream end, a
+        // clean close), so a boolean mark could go stale and swallow a later
+        // failure that reaches only this slot.
+        const alreadyReported = err !== undefined && err === filterHandledError;
+        filterHandledError = undefined;
 
         // Server-sent FDv2 error frames and connection failures share the 'error' type, and
         // both reach this slot. The protocol listener owns the frames; reporting one here too
@@ -419,7 +421,7 @@ export function createStreamingBase(config: {
           return;
         }
         putWithFallback((fallback) =>
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fallback),
+          interrupted(errorInfoFromNetworkError(err?.message || 'IO Error'), fallback),
         );
       };
 

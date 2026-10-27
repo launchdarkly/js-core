@@ -47,6 +47,13 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
+            // The SDK retries every HTTP error on both transports. However, an
+            // unexpected error in the browser native eventsource retries after
+            // an extended delay of minutes, which is longer than the legacy
+            // permanent-stop tests watch, so those tests would record a false
+            // positive. We can keep this here until we decide how we want to
+            // handle the browser native case.
+            'retry-conformance-fdv1-streaming',
           ];
 
           // The native browser EventSource cannot send a POST request and hides HTTP error

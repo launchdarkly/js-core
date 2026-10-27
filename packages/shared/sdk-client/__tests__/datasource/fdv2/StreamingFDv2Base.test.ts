@@ -1079,8 +1079,8 @@ it('reports one interruption when the transport runs the error filter and onerro
   const base = createBase(mockRequests, logger);
   base.start();
 
-  // The shared eventsource transport classifies every failure through the
-  // error filter and then dispatches the same event to onerror.
+  // The shared eventsource transport classifies a failure through the error
+  // filter and can dispatch the same event to onerror.
   const err = { message: 'network unreachable' };
   const willRetry = simulateErrorFilter(mockRequests, err);
   expect(willRetry).toBe(true);
@@ -1108,7 +1108,7 @@ it('still reports a status-less onerror failure after an earlier filter-classifi
   const base = createBase(mockRequests, logger);
   base.start();
 
-  // A status-bearing failure: the filter classifies it, and onerror receives
+  // The filter classifies this status-bearing failure, and onerror receives
   // the same event but defers to the filter.
   const statusErr = { status: 500, message: 'Error 500' };
   expect(simulateErrorFilter(mockRequests, statusErr)).toBe(true);
@@ -1128,6 +1128,60 @@ it('still reports a status-less onerror failure after an earlier filter-classifi
   if (second.type !== 'status') return;
   expect(second.state).toBe('interrupted');
   expect(second.errorInfo?.kind).toBe('NETWORK_ERROR');
+
+  base.close();
+});
+
+it('still reports an onerror-only failure after a filter call with no matching onerror dispatch', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Some transports run the error filter for a failure they never dispatch to
+  // onerror, for example a clean server close.
+  expect(simulateErrorFilter(mockRequests, { message: 'stream ended' })).toBe(true);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+
+  // A later failure that reaches only onerror must still be reported.
+  mockEventSource.onerror({ message: 'connection setup failed' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.kind).toBe('NETWORK_ERROR');
+  expect(second.errorInfo?.message).toContain('connection setup failed');
+
+  base.close();
+});
+
+it('maps an empty transport failure message to IO Error', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // The shared transport defaults a missing error message to an empty string.
+  expect(simulateErrorFilter(mockRequests, { message: '' })).toBe(true);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+  expect(first.errorInfo?.message).toBe('IO Error');
+
+  mockEventSource.onerror({ message: '' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.message).toBe('IO Error');
 
   base.close();
 });
