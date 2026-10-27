@@ -102,8 +102,8 @@ export default class NodeRequests implements platform.Requests {
    * The transport for a streaming request. It does not request compressed content. It follows
    * 301 and 307 redirects through `internal.followStreamingRedirects`, and each hop re-sends
    * the method, body, and headers, the Authorization header included, to its redirect target.
-   * It applies no read or socket timeout. The caller owns the read timeout and cancels through
-   * the abort signal.
+   * It applies no read or socket timeout, and it ignores the timeout option. The caller owns
+   * the read timeout. It cancels through the abort signal or through the body `cancel`.
    */
   private async _streamingFetch(
     url: string,

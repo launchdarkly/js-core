@@ -39,6 +39,18 @@ function recordHeaders(record: Record<string, string>): FetchHeaders {
   };
 }
 
+/**
+ * Queues the message data and the error messages in arrival order. Use it with a long retry
+ * delay, so a failed connection fails the test at once. A plain message queue waits through
+ * endless reconnects until the jest timeout, and the client then stays open.
+ */
+function startOutcomeQueue(es: EventSource): AsyncQueue<string> {
+  const outcomes = new AsyncQueue<string>();
+  es.addEventListener('message', (m) => outcomes.add(`message:${m.data}`));
+  es.onerror = (e) => outcomes.add(`error:${e?.message}`);
+  return outcomes;
+}
+
 /** The headers of an ordinary SSE response. */
 const sseHeaders = (): FetchHeaders => recordHeaders({ 'content-type': 'text/event-stream' });
 
@@ -210,11 +222,10 @@ it('accepts a response whose headers iterate no entries', async () => {
   const injected: FetchLike = async () =>
     idleStreamResponse(['data: hello\n\n'], { get: () => null, forEach() {} });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
-  es.onerror = () => {};
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const outcomes = startOutcomeQueue(es);
   try {
-    const messages = startMessageQueue(es);
-    expect((await messages.take()).data).toEqual('hello');
+    expect(await outcomes.take()).toEqual('message:hello');
   } finally {
     es.close();
   }
@@ -226,11 +237,10 @@ it('opens the stream when the response headers expose no forEach', async () => {
   const injected: FetchLike = async () =>
     idleStreamResponse(['data: hello\n\n'], { get: () => null });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
-  es.onerror = () => {};
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const outcomes = startOutcomeQueue(es);
   try {
-    const messages = startMessageQueue(es);
-    expect((await messages.take()).data).toEqual('hello');
+    expect(await outcomes.take()).toEqual('message:hello');
   } finally {
     es.close();
   }
@@ -260,11 +270,10 @@ it('opens the stream when get returns undefined for an absent header', async () 
   const injected: FetchLike = async () =>
     idleStreamResponse(['data: hello\n\n'], sloppy as unknown as FetchHeaders);
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
-  es.onerror = () => {};
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const outcomes = startOutcomeQueue(es);
   try {
-    const messages = startMessageQueue(es);
-    expect((await messages.take()).data).toEqual('hello');
+    expect(await outcomes.take()).toEqual('message:hello');
   } finally {
     es.close();
   }
@@ -326,11 +335,10 @@ it('opens the stream for a transport whose headers only expose forEach', async (
   const injected: FetchLike = async () =>
     idleStreamResponse(['data: hello\n\n'], legacy as unknown as FetchHeaders);
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
-  es.onerror = () => {};
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const outcomes = startOutcomeQueue(es);
   try {
-    const messages = startMessageQueue(es);
-    expect((await messages.take()).data).toEqual('hello');
+    expect(await outcomes.take()).toEqual('message:hello');
   } finally {
     es.close();
   }
@@ -954,11 +962,10 @@ it('opens through the iterated headers when get throws', async () => {
       },
     });
   const url = `http://localhost:${deliberatelyUnusedPort}/stream`;
-  const es = createEventSource(url, { fetch: injected });
-  es.onerror = () => {};
+  const es = createEventSource(url, { fetch: injected, initialRetryDelayMillis: 60000 });
+  const outcomes = startOutcomeQueue(es);
   try {
-    const messages = startMessageQueue(es);
-    expect((await messages.take()).data).toEqual('hello');
+    expect(await outcomes.take()).toEqual('message:hello');
   } finally {
     es.close();
   }
@@ -1149,8 +1156,8 @@ it('keeps the status when a non-200 response headers forEach throws', async () =
 });
 
 it('keeps the status when the response headers getter throws', async () => {
-  // The headers read happens once, inside the parser's guard. A throwing getter must not
-  // erase the status from the failure report, or a permanent auth failure would retry forever.
+  // A throwing headers getter must not erase the status from the failure report, or a
+  // permanent auth failure would retry forever.
   const hostile = { status: 401, statusText: 'Unauthorized', body: null };
   Object.defineProperty(hostile, 'headers', {
     get() {
