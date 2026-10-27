@@ -262,6 +262,8 @@ describe.each([408, 429, 500, 503])('given recoverable HTTP error %d', (status) 
     if (result.type !== 'status') return;
 
     expect(result.state).toBe('interrupted');
+    expect(result.errorInfo?.kind).toBe('ERROR_RESPONSE');
+    expect(result.errorInfo?.statusCode).toBe(status);
 
     base.close();
   });
@@ -1088,6 +1090,8 @@ it('reports one interruption when the transport runs the error filter and onerro
   expect(result.type).toBe('status');
   if (result.type !== 'status') return;
   expect(result.state).toBe('interrupted');
+  expect(result.errorInfo?.kind).toBe('NETWORK_ERROR');
+  expect(result.errorInfo?.message).toContain('network unreachable');
 
   const raced = await Promise.race([
     base.takeResult().then(() => 'second-result'),

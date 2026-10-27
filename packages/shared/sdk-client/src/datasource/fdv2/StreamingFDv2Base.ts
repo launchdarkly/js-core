@@ -233,6 +233,11 @@ export function createStreamingBase(config: {
     // queue another one for the same event.
     filterHandledFailure = true;
 
+    // A failure without a status is a network failure, not an HTTP error response.
+    const errorInfo = err.status
+      ? errorInfoFromHttpError(err.status)
+      : errorInfoFromNetworkError(err.message ?? 'IO Error');
+
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
     const directive = internal.readFallbackDirective({
@@ -243,26 +248,21 @@ export function createStreamingBase(config: {
       // otherwise-recoverable HTTP status: the server is telling us to stop
       // trying FDv2 now rather than keep retrying this connection.
       logConnectionResult(false);
-      putWithFallback(
-        (fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
-        directive,
-      );
+      putWithFallback((fallback) => terminalError(errorInfo, fallback), directive);
       return false;
     }
 
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      putWithFallback((fallback) =>
-        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
-      );
+      putWithFallback((fallback) => terminalError(errorInfo, fallback));
       return false;
     }
 
     config.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     logConnectionResult(false);
     logConnectionAttempt();
-    putWithFallback((fallback) => interrupted(errorInfoFromHttpError(err.status ?? 0), fallback));
+    putWithFallback((fallback) => interrupted(errorInfo, fallback));
     return true;
   }
 
