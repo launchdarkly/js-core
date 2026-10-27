@@ -14,15 +14,38 @@ import DependencyTracker from './DependencyTracker';
 import NamespacedDataSet from './NamespacedDataSet';
 
 /**
+ * Dependency edges that live outside the LaunchDarkly data, such as those of the override layer's
+ * entries. Given an item, adds it and everything that depends on it through those edges.
+ *
+ * @internal
+ */
+export interface ExternalDependencies {
+  updateModifiedItems(
+    inDependencySet: NamespacedDataSet<boolean>,
+    namespace: string,
+    key: string,
+  ): void;
+}
+
+/**
  * @internal
  */
 export default class TransactionalDataSourceUpdates implements LDTransactionalDataSourceUpdates {
   private readonly _dependencyTracker = new DependencyTracker();
 
+  /**
+   * @param _featureStore The store the data is written to.
+   * @param _hasEventListeners Reports whether anything listens for flag changes.
+   * @param _onChange Receives the key of each flag whose evaluation may have changed.
+   * @param _externalDependencies Dependencies of definitions the data system does not hold. The
+   * override layer supplies its entries' dependencies, so that a change to a LaunchDarkly item
+   * also notifies the overridden flags that reference it.
+   */
   constructor(
     private readonly _featureStore: LDTransactionalFeatureStore,
     private readonly _hasEventListeners: () => boolean,
     private readonly _onChange: (key: string) => void,
+    private readonly _externalDependencies?: ExternalDependencies,
   ) {}
 
   init(
@@ -135,7 +158,39 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
     if (newValue && oldValue && newValue.version <= oldValue.version) {
       return;
     }
-    this._dependencyTracker.updateModifiedItems(toDataSet, namespace, key);
+    this._addAffectedItems(toDataSet, namespace, key);
+  }
+
+  /**
+   * Adds the modified item and everything that depends on it to the set. The LaunchDarkly data
+   * and the external dependencies each know their own edges, and a chain can cross between them
+   * in either direction: an overridden flag can reference a LaunchDarkly segment, and a
+   * LaunchDarkly flag can have an overridden prerequisite. Each newly reached item is therefore
+   * expanded through both until nothing new is found.
+   */
+  private _addAffectedItems(toDataSet: NamespacedDataSet<boolean>, namespace: string, key: string) {
+    if (!this._externalDependencies) {
+      this._dependencyTracker.updateModifiedItems(toDataSet, namespace, key);
+      return;
+    }
+    const pending: [string, string][] = [[namespace, key]];
+    while (pending.length > 0) {
+      const [pendingNamespace, pendingKey] = pending.pop()!;
+      // Each tracker gets its own set: a tracker skips an item that is already in the set it is
+      // given, so sharing one set would stop the second tracker at the starting item.
+      const viaData = new NamespacedDataSet<boolean>();
+      this._dependencyTracker.updateModifiedItems(viaData, pendingNamespace, pendingKey);
+      const viaExternal = new NamespacedDataSet<boolean>();
+      this._externalDependencies.updateModifiedItems(viaExternal, pendingNamespace, pendingKey);
+      [viaData, viaExternal].forEach((reached) => {
+        reached.enumerate((reachedNamespace, reachedKey) => {
+          if (!toDataSet.get(reachedNamespace, reachedKey)) {
+            toDataSet.set(reachedNamespace, reachedKey, true);
+            pending.push([reachedNamespace, reachedKey]);
+          }
+        });
+      });
+    }
   }
 
   sendChangeEvents(dataSet: NamespacedDataSet<boolean>) {

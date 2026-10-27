@@ -1,15 +1,14 @@
 import * as http from 'http';
 import * as https from 'https';
 import { HttpsProxyAgent, HttpsProxyAgentOptions } from 'https-proxy-agent';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { format as formatUrl } from 'url';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
+import { createEventSource } from '@launchdarkly/eventsource';
 import {
   EventSourceCapabilities,
+  internal,
   LDLogger,
   LDProxyOptions,
   LDTLSOptions,
@@ -20,32 +19,38 @@ import NodeResponse from './NodeResponse';
 
 const gzip = promisify(zlib.gzip);
 
-function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
-  const options: https.AgentOptions & { [index: string]: any } = {
-    ca: tlsOptions.ca,
-    cert: tlsOptions.cert,
-    checkServerIdentity: tlsOptions.checkServerIdentity,
-    ciphers: tlsOptions.ciphers,
-    // Our interface says object for the pfx object. But the node
-    // type is more strict. This is also true for the key and KeyObject.
-    // @ts-ignore
-    pfx: tlsOptions.pfx,
-    // @ts-ignore
-    key: tlsOptions.key,
-    passphrase: tlsOptions.passphrase,
-    rejectUnauthorized: tlsOptions.rejectUnauthorized,
-    secureProtocol: tlsOptions.secureProtocol,
-    servername: tlsOptions.servername,
-  };
+/**
+ * The TLS options that go into the agent options and onto each `https` request. The names
+ * match the options of `https.request()`.
+ */
+const TLS_OPTION_NAMES = [
+  'pfx',
+  'key',
+  'passphrase',
+  'cert',
+  'ca',
+  'ciphers',
+  'rejectUnauthorized',
+  'secureProtocol',
+  'servername',
+  'checkServerIdentity',
+] as const;
 
-  // Node does not take kindly to undefined keys.
-  Object.keys(options).forEach((key) => {
-    if (options[key] === undefined) {
-      delete options[key];
-    }
-  });
-
-  return options;
+function tlsRequestOptions(
+  tlsOptions?: LDTLSOptions,
+): https.AgentOptions & Record<string, unknown> {
+  const merged: Record<string, unknown> = {};
+  if (tlsOptions) {
+    const bag = tlsOptions as unknown as Record<string, unknown>;
+    TLS_OPTION_NAMES.forEach((name) => {
+      if (bag[name] !== undefined) {
+        merged[name] = bag[name];
+      }
+    });
+  }
+  // Our interface is less strict than the node types, for example for the pfx and key
+  // objects, but the values pass through to node unchanged.
+  return merged as https.AgentOptions & Record<string, unknown>;
 }
 
 function processProxyOptions(
@@ -67,13 +72,6 @@ function processProxyOptions(
     };
   }
 
-  // Node does not take kindly to undefined keys.
-  Object.keys(parsedOptions).forEach((key) => {
-    if (parsedOptions[key as keyof HttpsProxyAgentOptions<string>] === undefined) {
-      delete parsedOptions[key as keyof HttpsProxyAgentOptions<string>];
-    }
-  });
-
   return new HttpsProxyAgent(proxyUrl, parsedOptions);
 }
 
@@ -86,7 +84,7 @@ function createAgent(
     logger?.warn('Proxy configured with TLS options, but is not using an https auth.');
   }
   if (tlsOptions) {
-    const agentOptions = processTlsOptions(tlsOptions);
+    const agentOptions = tlsRequestOptions(tlsOptions);
     if (proxyOptions) {
       return processProxyOptions(proxyOptions, agentOptions);
     }
@@ -122,7 +120,7 @@ function resolveAgent(
 export default class NodeRequests implements platform.Requests {
   private _agent: https.Agent | http.Agent | undefined;
 
-  private _tlsOptions: LDTLSOptions | undefined;
+  private _tlsParams: Record<string, unknown>;
 
   private _hasProxy: boolean = false;
 
@@ -138,6 +136,11 @@ export default class NodeRequests implements platform.Requests {
     enableEventCompression?: boolean,
   ) {
     this._agent = resolveAgent(tlsOptions, proxyOptions, proxyAgent, logger);
+    // A caller-supplied proxyAgent owns its own TLS setup, so the per-request TLS parameters
+    // are dropped in that case. When the SDK builds a proxy agent from proxyOptions, the agent
+    // options only reach the connection to the proxy. The per-request parameters are then the
+    // only carrier of the TLS options to the tunneled connection with the target.
+    this._tlsParams = tlsRequestOptions(proxyAgent ? undefined : tlsOptions);
     // A caller-supplied proxyAgent is treated as a best-effort proxy signal: the SDK cannot
     // inspect an opaque agent to know whether it actually proxies (it could just as easily be a
     // certificate-only agent for mTLS). Reporting true is the better default here because
@@ -153,6 +156,9 @@ export default class NodeRequests implements platform.Requests {
   }
 
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
+    if (options.streaming) {
+      return this._streamingFetch(url, options);
+    }
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
@@ -160,7 +166,7 @@ export default class NodeRequests implements platform.Requests {
     let bodyData: string | Buffer | undefined = options.body;
 
     // For get requests we are going to automatically support compressed responses.
-    // Note this does not affect SSE as the event source is not using this fetch implementation.
+    // Note this does not affect SSE as streaming requests take the branch above.
     if (options.method?.toLowerCase() === 'get') {
       headers['accept-encoding'] = 'gzip';
     }
@@ -177,17 +183,18 @@ export default class NodeRequests implements platform.Requests {
       bodyData = await gzip(Buffer.from(options.body, 'utf8'));
     }
 
+    const requestOptions: https.RequestOptions & Record<string, unknown> = {
+      timeout: options.timeout,
+      headers,
+      method: options.method,
+      agent: this._agent,
+    };
+    if (isSecure) {
+      Object.assign(requestOptions, this._tlsParams);
+    }
+
     return new Promise((resolve, reject) => {
-      const req = impl.request(
-        url,
-        {
-          timeout: options.timeout,
-          headers,
-          method: options.method,
-          agent: this._agent,
-        },
-        (res) => resolve(new NodeResponse(res)),
-      );
+      const req = impl.request(url, requestOptions, (res) => resolve(new NodeResponse(res)));
 
       if (bodyData) {
         req.write(bodyData);
@@ -205,18 +212,57 @@ export default class NodeRequests implements platform.Requests {
     });
   }
 
+  /**
+   * The transport for a streaming request. It does not request compressed content. It follows
+   * 301 and 307 redirects through `internal.followStreamingRedirects`, and each hop re-sends
+   * the method, body, and headers, the Authorization header included, to its redirect target.
+   * It applies no read or socket timeout. The caller owns the read timeout and cancels through
+   * the abort signal.
+   */
+  private async _streamingFetch(
+    url: string,
+    options: platform.Options,
+  ): Promise<platform.Response> {
+    const baseOptions: https.RequestOptions & Record<string, unknown> = {
+      method: options.method,
+      headers: options.headers,
+      agent: this._agent,
+      signal: options.signal,
+    };
+    const doRequest = (requestUrl: string): Promise<http.IncomingMessage> => {
+      const isSecure = requestUrl.startsWith('https://');
+      const impl = isSecure ? https : http;
+      const requestOptions = isSecure ? { ...baseOptions, ...this._tlsParams } : baseOptions;
+      return new Promise<http.IncomingMessage>((resolve, reject) => {
+        const req = impl.request(requestUrl, requestOptions, resolve);
+        // Send the request headers and body at once. TCP batches small writes by default
+        // on sockets from the proxy agent and from a caller-supplied agent.
+        req.setNoDelay(true);
+        // This listener stays attached after resolve. A later socket error then becomes a
+        // harmless no-op reject instead of an unhandled 'error' event that would crash the
+        // process.
+        req.on('error', reject);
+        if (options.body !== undefined) {
+          req.write(options.body);
+        }
+        req.end();
+      });
+    };
+    return internal.createStreamingResponse(
+      await internal.followStreamingRedirects(url, doRequest),
+    );
+  }
+
   createEventSource(
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
+    return createEventSource(url, {
       ...eventSourceInitDict,
-      agent: this._agent,
-      tlsParams: this._tlsOptions,
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
-    };
-    return new LDEventSource(url, expandedOptions);
+      fetch: (fetchUrl, init) => this.fetch(fetchUrl, { ...init, streaming: true }),
+    });
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {

@@ -30,7 +30,9 @@ export interface NodeOptions extends LDOptionsBase {
    * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
    * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
    *
-   * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
+   * For more information, see the Node documentation for
+   * [`https.request()`](https://nodejs.org/api/https.html#httpsrequestoptions-callback) and
+   * [`tls.connect()`](https://nodejs.org/api/tls.html#tlsconnectoptions-callback).
    */
   tlsParams?: LDTLSOptions;
 

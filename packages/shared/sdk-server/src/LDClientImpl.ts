@@ -341,23 +341,27 @@ function constructFDv2(
       : undefined;
   const featureStore = dataSystem.featureStoreFactory(clientContext);
 
+  // The override layer sits at the store read boundary. Evaluation, prerequisite and segment
+  // resolution, and the all-flags read go through the overlay, so an override entry wins over
+  // LaunchDarkly data for its key. The data system never sees the layer's entries. It only asks
+  // the layer which entries depend on a LaunchDarkly item that changed, so that those flags are
+  // notified like the LaunchDarkly flags that depend on it.
+  const overrideLayer = overrideSource ? new OverrideLayer() : undefined;
+
   const dataSourceUpdates = new TransactionalDataSourceUpdates(
     featureStore,
     hasEventListeners,
     onUpdate,
+    overrideLayer,
   );
 
-  // The override layer sits at the store read boundary. Evaluation, prerequisite and segment
-  // resolution, and the all-flags read go through the overlay, so an override entry wins over
-  // LaunchDarkly data for its key. The data system never sees the layer.
   let readStore: ReadStore = featureStore;
   let overrides: OverrideComponents | undefined;
-  if (overrideSource) {
-    const layer = new OverrideLayer();
-    readStore = new ReadStoreOverlay(featureStore, layer);
+  if (overrideSource && overrideLayer) {
+    readStore = new ReadStoreOverlay(featureStore, overrideLayer);
     overrides = {
-      layer,
-      sink: new OverrideSink(layer, featureStore, onUpdate, hasEventListeners, logger),
+      layer: overrideLayer,
+      sink: new OverrideSink(overrideLayer, featureStore, onUpdate, hasEventListeners, logger),
       source: overrideSource,
     };
   }

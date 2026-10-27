@@ -226,7 +226,13 @@ export interface LDOptions {
    * Additional parameters to pass to the Node HTTPS API for secure requests.  These can include any
    * of the TLS-related parameters supported by `https.request()`, such as `ca`, `cert`, and `key`.
    *
-   * For more information, see the Node documentation for `https.request()` and `tls.connect()`.
+   * These parameters also apply when the SDK connects through a proxy configured with
+   * {@link proxyOptions}. They apply to each request on the tunneled connection to
+   * LaunchDarkly, and to the connection to the proxy itself when the proxy uses TLS.
+   *
+   * For more information, see the Node documentation for
+   * [`https.request()`](https://nodejs.org/api/https.html#httpsrequestoptions-callback) and
+   * [`tls.connect()`](https://nodejs.org/api/tls.html#tlsconnectoptions-callback).
    */
   tlsParams?: LDTLSOptions;
 
