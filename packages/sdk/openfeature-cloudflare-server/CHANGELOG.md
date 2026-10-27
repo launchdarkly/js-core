@@ -1,30 +1,5 @@
 # Changelog
 
-## [1.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.0.0...openfeature-cloudflare-server-v1.0.0) (2026-10-27)
-
-
-### Bug Fixes
-
-* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
-
-## [1.0.0](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.0.10...openfeature-cloudflare-server-v1.0.0) (2026-10-27)
-
-
-### Bug Fixes
-
-* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
-
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @launchdarkly/openfeature-js-server-common bumped from 2.2.0 to 2.2.1
-  * devDependencies
-    * @launchdarkly/cloudflare-server-sdk bumped from 2.7.46 to 2.7.47
-  * peerDependencies
-    * @launchdarkly/cloudflare-server-sdk bumped from ^2.7.0 to ^2.7.47
-
 ## [1.0.10](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.0.9...openfeature-cloudflare-server-v1.0.10) (2026-10-16)
 
 
