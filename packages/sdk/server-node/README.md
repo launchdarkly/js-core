@@ -16,7 +16,7 @@ For using LaunchDarkly in _client-side_ Node.js applications, refer to our [Clie
 
 ## Supported Node versions
 
-This version of the LaunchDarkly SDK is compatible with Node.js versions 14 and above.
+This version of the LaunchDarkly SDK is compatible with Node.js versions 16 and above.
 
 ## Getting started
 

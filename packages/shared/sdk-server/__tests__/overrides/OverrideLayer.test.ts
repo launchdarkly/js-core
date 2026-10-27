@@ -2,6 +2,7 @@
 import { AttributeReference } from '@launchdarkly/js-sdk-common';
 
 import { makeFlagWithValue } from '../../src/data_sources/FileDataSource';
+import NamespacedDataSet from '../../src/data_sources/NamespacedDataSet';
 import { Flag } from '../../src/evaluation/data/Flag';
 import { Segment } from '../../src/evaluation/data/Segment';
 import TestData from '../../src/integrations/test_data/TestData';
@@ -483,5 +484,59 @@ describe('given keys that are the names of properties of Object', () => {
     expect(layer.get(features, 'hasOwnProperty')).toBeUndefined();
     expect(layer.get(features, '__proto__')).toBeUndefined();
     expect((layer.get(features, 'flag1') as Flag).on).toBe(true);
+  });
+});
+
+describe('given a layer whose entries reference other definitions', () => {
+  const features = VersionedDataKinds.Features.namespace;
+  const segments = VersionedDataKinds.Segments.namespace;
+
+  function flagReferencing(key: string, segmentKey: string, prerequisites: string[] = []): any {
+    return {
+      key,
+      version: 1,
+      on: true,
+      fallthrough: { variation: 0 },
+      variations: [true, false],
+      prerequisites: prerequisites.map((prerequisite) => ({ key: prerequisite, variation: 0 })),
+      rules: [
+        {
+          id: 'rule',
+          variation: 0,
+          clauses: [{ attribute: '', op: 'segmentMatch', values: [segmentKey], negate: false }],
+        },
+      ],
+    };
+  }
+
+  function reachedFrom(layer: OverrideLayer, namespace: string, key: string): string[] {
+    const set = new NamespacedDataSet<boolean>();
+    layer.updateModifiedItems(set, namespace, key);
+    const items: string[] = [];
+    set.enumerate((itemNamespace, itemKey) => items.push(`${itemNamespace}/${itemKey}`));
+    return items.sort();
+  }
+
+  it('reports the entries that depend on a segment or a prerequisite, transitively', () => {
+    const layer = new OverrideLayer();
+    layer.setAll([flagReferencing('a', 'seg'), flagReferencing('b', 'other', ['a'])], []);
+
+    // b does not reference seg itself; it depends on a, which does.
+    expect(reachedFrom(layer, segments, 'seg')).toEqual([
+      'features/a',
+      'features/b',
+      'segments/seg',
+    ]);
+    expect(reachedFrom(layer, features, 'a')).toEqual(['features/a', 'features/b']);
+    expect(reachedFrom(layer, segments, 'unreferenced')).toEqual(['segments/unreferenced']);
+  });
+
+  it('forgets the edges of the entries that a replacement removed', () => {
+    const layer = new OverrideLayer();
+    layer.setAll([flagReferencing('a', 'seg')], []);
+    layer.setAll([flagReferencing('c', 'seg2')], []);
+
+    expect(reachedFrom(layer, segments, 'seg')).toEqual(['segments/seg']);
+    expect(reachedFrom(layer, segments, 'seg2')).toEqual(['features/c', 'segments/seg2']);
   });
 });

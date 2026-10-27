@@ -1,12 +1,10 @@
 import * as http from 'http';
 import * as https from 'https';
-// No types for the event source.
-// @ts-ignore
-import { EventSource as LDEventSource } from 'launchdarkly-eventsource';
 import { promisify } from 'util';
 import * as zlib from 'zlib';
 
-import { EventSourceCapabilities, platform } from '@launchdarkly/js-client-sdk-common';
+import { createEventSource } from '@launchdarkly/eventsource';
+import { EventSourceCapabilities, internal, platform } from '@launchdarkly/js-client-sdk-common';
 
 import type { LDTLSOptions } from '../NodeOptions';
 import NodeResponse from './NodeResponse';
@@ -43,17 +41,17 @@ function processTlsOptions(tlsOptions: LDTLSOptions): https.AgentOptions {
 export default class NodeRequests implements platform.Requests {
   private _agent: https.Agent | undefined;
 
-  private _tlsOptions: LDTLSOptions | undefined;
-
   private _enableBodyCompression: boolean = false;
 
   constructor(tlsOptions?: LDTLSOptions, enableEventCompression?: boolean) {
     this._agent = tlsOptions ? new https.Agent(processTlsOptions(tlsOptions)) : undefined;
-    this._tlsOptions = tlsOptions;
     this._enableBodyCompression = !!enableEventCompression;
   }
 
   async fetch(url: string, options: platform.Options = {}): Promise<platform.Response> {
+    if (options.streaming) {
+      return this._streamingFetch(url, options);
+    }
     const isSecure = url.startsWith('https://');
     const impl = isSecure ? https : http;
 
@@ -100,18 +98,54 @@ export default class NodeRequests implements platform.Requests {
     });
   }
 
+  /**
+   * The transport for a streaming request. It does not request compressed content. It follows
+   * 301 and 307 redirects through `internal.followStreamingRedirects`, and each hop re-sends
+   * the method, body, and headers, the Authorization header included, to its redirect target.
+   * It applies no read or socket timeout. The caller owns the read timeout and cancels through
+   * the abort signal.
+   */
+  private async _streamingFetch(
+    url: string,
+    options: platform.Options,
+  ): Promise<platform.Response> {
+    const requestOptions: https.RequestOptions = {
+      method: options.method,
+      headers: options.headers,
+      agent: this._agent,
+      signal: options.signal,
+    };
+    const doRequest = (requestUrl: string): Promise<http.IncomingMessage> => {
+      const impl = requestUrl.startsWith('https://') ? https : http;
+      return new Promise<http.IncomingMessage>((resolve, reject) => {
+        const req = impl.request(requestUrl, requestOptions, resolve);
+        // Send the request headers and body at once, without TCP batching of small writes.
+        req.setNoDelay(true);
+        // This listener stays attached after resolve. A later socket error then becomes a
+        // harmless no-op reject instead of an unhandled 'error' event that would crash the
+        // process.
+        req.on('error', reject);
+        if (options.body !== undefined) {
+          req.write(options.body);
+        }
+        req.end();
+      });
+    };
+    return internal.createStreamingResponse(
+      await internal.followStreamingRedirects(url, doRequest),
+    );
+  }
+
   createEventSource(
     url: string,
     eventSourceInitDict: platform.EventSourceInitDict,
   ): platform.EventSource {
-    const expandedOptions = {
+    return createEventSource(url, {
       ...eventSourceInitDict,
-      agent: this._agent,
-      tlsParams: this._tlsOptions,
       maxBackoffMillis: 30 * 1000,
       jitterRatio: 0.5,
-    };
-    return new LDEventSource(url, expandedOptions);
+      fetch: (fetchUrl, init) => this.fetch(fetchUrl, { ...init, streaming: true }),
+    });
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {

@@ -6,6 +6,9 @@ import {
   LDFeatureStoreKindData,
   LDKeyedFeatureStoreItem,
 } from '../api/subsystems';
+import { computeDependencies } from '../data_sources/DataSourceUpdates';
+import DependencyTracker from '../data_sources/DependencyTracker';
+import NamespacedDataSet from '../data_sources/NamespacedDataSet';
 import { Flag } from '../evaluation/data/Flag';
 import { markOverrideEntry } from '../evaluation/data/overrideMarker';
 import { Segment } from '../evaluation/data/Segment';
@@ -78,6 +81,10 @@ function emptyContents(): LayerContents {
 export default class OverrideLayer {
   private _contents: LayerContents = emptyContents();
 
+  // The dependency edges of the layer's own entries: which entries reference which flags and
+  // segments. Rebuilt with the contents on every replacement.
+  private _dependencies = new DependencyTracker();
+
   private _empty = true;
 
   /**
@@ -102,10 +109,31 @@ export default class OverrideLayer {
     segments.forEach((segment) => {
       current[VersionedDataKinds.Segments.namespace][segment.key] = prepareSegment(segment);
     });
+    const dependencies = new DependencyTracker();
+    Object.entries(current).forEach(([namespace, items]) => {
+      Object.entries(items).forEach(([key, item]) => {
+        dependencies.updateDependenciesFrom(namespace, key, computeDependencies(namespace, item));
+      });
+    });
     const previous = this._contents;
     this._contents = current;
+    this._dependencies = dependencies;
     this._empty = flags.length === 0 && segments.length === 0;
     return { previous, current };
+  }
+
+  /**
+   * Adds the given item to the set together with every item whose override entry depends on
+   * it, directly or through other override entries. A LaunchDarkly update uses this so that a
+   * change to a LaunchDarkly segment or prerequisite notifies the overridden flags that reference
+   * it, which the data system's own dependency tracking cannot see.
+   */
+  updateModifiedItems(
+    inDependencySet: NamespacedDataSet<boolean>,
+    namespace: string,
+    key: string,
+  ): void {
+    this._dependencies.updateModifiedItems(inDependencySet, namespace, key);
   }
 
   /**
