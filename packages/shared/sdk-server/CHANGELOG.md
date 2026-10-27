@@ -8,6 +8,28 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.25.0...js-server-sdk-common-v2.26.0) (2026-10-27)
+
+
+### Features
+
+* Migrate the Node.js server and client SDKs to @launchdarkly/eventsource through the platform fetch ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+* Verify TLS certificates on streaming connections by default; a stream served by a private CA now requires tlsParams ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+
+
+### Bug Fixes
+
+* Allow polling and event delivery to connect through a proxy when a private CA is configured ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+* Ignore FDv2 put-object and delete-object events with unsupported kinds ([#2109](https://github.com/launchdarkly/js-core/issues/2109)) ([2729c04](https://github.com/launchdarkly/js-core/commit/2729c046493ba4c84ce0f4abf5be0b369d86c68c))
+* Notify overridden flags when the LaunchDarkly data they depend on changes ([#2108](https://github.com/launchdarkly/js-core/issues/2108)) ([1c21ae9](https://github.com/launchdarkly/js-core/commit/1c21ae9c1ad9c35a8962e73499187978c0df8d5f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.31.0 to 2.32.0
+
 ## [2.25.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.24.2...js-server-sdk-common-v2.25.0) (2026-10-16)
 
 

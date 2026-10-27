@@ -2,6 +2,21 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.32.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.31.0...js-sdk-common-v2.32.0) (2026-10-27)
+
+
+### Features
+
+* Migrate the Node.js server and client SDKs to @launchdarkly/eventsource through the platform fetch ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+* Verify TLS certificates on streaming connections by default; a stream served by a private CA now requires tlsParams ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+
+
+### Bug Fixes
+
+* Allow polling and event delivery to connect through a proxy when a private CA is configured ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+* Ignore FDv2 put-object and delete-object events with unsupported kinds ([#2109](https://github.com/launchdarkly/js-core/issues/2109)) ([2729c04](https://github.com/launchdarkly/js-core/commit/2729c046493ba4c84ce0f4abf5be0b369d86c68c))
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
 ## [2.31.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.30.0...js-sdk-common-v2.31.0) (2026-10-16)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.2](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.2.1...shopify-oxygen-sdk-v0.2.2) (2026-10-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.25.0 to 2.26.0
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/shopify-oxygen-sdk-v0.2.0...shopify-oxygen-sdk-v0.2.1) (2026-10-16)
 
 

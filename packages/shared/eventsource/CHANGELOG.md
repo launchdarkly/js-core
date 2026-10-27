@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.2](https://github.com/launchdarkly/js-core/compare/eventsource-v0.2.1...eventsource-v0.2.2) (2026-10-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-sdk-common bumped from 2.31.0 to 2.32.0
+
 ## [0.2.1](https://github.com/launchdarkly/js-core/compare/eventsource-v0.2.0...eventsource-v0.2.1) (2026-10-16)
 
 
