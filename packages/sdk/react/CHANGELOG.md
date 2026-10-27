@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.1.29](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.28...react-sdk-v4.1.29) (2026-10-27)
+
+
+### Bug Fixes
+
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from ^4.13.0 to ^4.13.1
+    * @launchdarkly/js-server-sdk-common bumped from ^2.25.0 to ^2.26.0
+
 ## [4.1.28](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.27...react-sdk-v4.1.28) (2026-10-16)
 
 

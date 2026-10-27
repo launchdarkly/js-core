@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.34.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.34.0...js-client-sdk-common-v1.34.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* Ignore FDv2 put-object and delete-object events with unsupported kinds ([#2109](https://github.com/launchdarkly/js-core/issues/2109)) ([2729c04](https://github.com/launchdarkly/js-core/commit/2729c046493ba4c84ce0f4abf5be0b369d86c68c))
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.31.0 to 2.32.0
+
 ## [1.34.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.33.0...js-client-sdk-common-v1.34.0) (2026-10-16)
 
 

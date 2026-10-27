@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.13.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.13.0...js-client-sdk-v4.13.1) (2026-10-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.34.0 to 1.34.1
+
 ## [4.13.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.12.0...js-client-sdk-v4.13.0) (2026-10-16)
 
 

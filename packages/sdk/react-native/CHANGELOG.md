@@ -1,5 +1,19 @@
 # Changelog
 
+## [10.23.1](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.23.0...react-native-client-sdk-v10.23.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.34.0 to 1.34.1
+
 ## [10.23.0](https://github.com/launchdarkly/js-core/compare/react-native-client-sdk-v10.22.0...react-native-client-sdk-v10.23.0) (2026-10-16)
 
 

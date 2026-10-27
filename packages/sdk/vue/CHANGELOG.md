@@ -1,5 +1,19 @@
 # Changelog
 
+## [3.0.8](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v3.0.7...vue-client-sdk-v3.0.8) (2026-10-27)
+
+
+### Bug Fixes
+
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk bumped from 4.13.0 to 4.13.1
+
 ## [3.0.7](https://github.com/launchdarkly/js-core/compare/vue-client-sdk-v3.0.6...vue-client-sdk-v3.0.7) (2026-10-16)
 
 

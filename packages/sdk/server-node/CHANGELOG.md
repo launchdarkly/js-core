@@ -2,6 +2,27 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.16.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.15.0...node-server-sdk-v9.16.0) (2026-10-27)
+
+
+### Features
+
+* Migrate the Node.js server and client SDKs to @launchdarkly/eventsource through the platform fetch ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+* Verify TLS certificates on streaming connections by default; a stream served by a private CA now requires tlsParams ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+
+
+### Bug Fixes
+
+* Allow polling and event delivery to connect through a proxy when a private CA is configured ([10b57b0](https://github.com/launchdarkly/js-core/commit/10b57b01ce348b216fd98e515740bc5d50830017))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/eventsource bumped from 0.2.1 to 0.2.2
+    * @launchdarkly/js-server-sdk-common bumped from 2.25.0 to 2.26.0
+
 ## [9.15.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.14.5...node-server-sdk-v9.15.0) (2026-10-16)
 
 

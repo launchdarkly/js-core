@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.1.3](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v2.1.2...openfeature-node-server-v2.1.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* Resolve types under node16/nodenext module resolution ([#2115](https://github.com/launchdarkly/js-core/issues/2115)) ([ca1613c](https://github.com/launchdarkly/js-core/commit/ca1613c20130b9308bafb8c98e0843d8d92fee01))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 2.2.0 to 2.2.1
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.15.0 to 9.16.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from ^9.0.0 to ^9.16.0
+
 ## [2.1.2](https://github.com/launchdarkly/js-core/compare/openfeature-node-server-v2.1.1...openfeature-node-server-v2.1.2) (2026-10-16)
 
 
