@@ -126,8 +126,8 @@ export function createStreamingBase(config: {
   // passes the same event object to the filter and then to onerror gets one
   // queued result per failure.
   //
-  // NOTE: The React Native transport dispatches different objects, so its
-  // failures are not deduped here.
+  // NOTE: The React Native transport dispatches onerror before the filter and
+  // with a different object, so its failures are not deduped here.
   let filterHandledError: HttpErrorResponse | undefined;
 
   function logConnectionAttempt() {

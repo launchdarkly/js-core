@@ -1175,6 +1175,7 @@ it('maps an empty transport failure message to IO Error', async () => {
   expect(first.state).toBe('interrupted');
   expect(first.errorInfo?.message).toBe('IO Error');
 
+  // A new object, so the identity dedup does not suppress this result.
   mockEventSource.onerror({ message: '' });
 
   const second = await base.takeResult();

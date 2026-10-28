@@ -47,12 +47,12 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
-            // The SDK retries every HTTP error on both transports. However, an
-            // unexpected error in the browser native eventsource retries after
-            // an extended delay of minutes, which is longer than the legacy
-            // permanent-stop tests watch, so those tests would record a false
-            // positive. We can keep this here until we decide how we want to
-            // handle the browser native case.
+            // The FDv1 streaming data source retries every HTTP error. On the
+            // fetch transport an unexpected status retries after the extended
+            // delay of minutes, which is longer than the legacy permanent-stop
+            // tests watch, so those tests would pass for the wrong reason. The
+            // native transport cannot report a status, so the harness already
+            // skips those tests in native mode.
             'retry-conformance-fdv1-streaming',
           ];
 
