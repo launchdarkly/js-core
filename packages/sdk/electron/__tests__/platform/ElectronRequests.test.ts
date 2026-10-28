@@ -1,122 +1,18 @@
 import * as http from 'http';
 import * as zlib from 'zlib';
 
-// electron.net isn't available outside a real Electron main process, so this fakes just
-// enough of the ClientRequest API to drive the local test server below over Node's real
-// http module. Verified against real Electron 42.6.0: Chromium's net module transparently
-// decompresses a compressed body while `IncomingMessage.headers` still reports the origin's
-// original `content-encoding` -- this fake reproduces exactly that (see the scrutinize
-// report for the real-Electron verification), rather than handing back a raw, never
-// -transcoded Node response the way a naive passthrough would.
-jest.mock('electron', () => {
-  // eslint-disable-next-line global-require
-  const { EventEmitter } = require('events');
-  // eslint-disable-next-line global-require
-  const nodeHttp = require('http');
-  // eslint-disable-next-line global-require
-  const nodeZlib = require('zlib');
-
-  class ChromiumLikeResponse extends EventEmitter {
-    headers: http.IncomingHttpHeaders;
-
-    statusCode: number;
-
-    constructor(headers: http.IncomingHttpHeaders, statusCode: number) {
-      super();
-      this.headers = headers;
-      this.statusCode = statusCode;
-    }
-  }
-
-  class FakeClientRequest extends EventEmitter {
-    headers: Record<string, string> = {};
-
-    chunks: Buffer[] = [];
-
-    realRequest?: http.ClientRequest;
-
-    ended: boolean = false;
-
-    constructor(
-      private options: {
-        method?: string;
-        url: string;
-        redirect?: string;
-        credentials?: string;
-        cache?: string;
-      },
-    ) {
-      super();
-    }
-
-    setHeader(name: string, value: string) {
-      this.headers[name] = value;
-    }
-
-    write(chunk: string | Buffer) {
-      this.chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-
-    end() {
-      if (this.ended) {
-        return;
-      }
-      this.ended = true;
-      const body = Buffer.concat(this.chunks);
-      this.realRequest = nodeHttp.request(
-        this.options.url,
-        { method: this.options.method, headers: this.headers },
-        (res: http.IncomingMessage) => {
-          // 'response' fires as soon as headers arrive, same as real net.request -- the
-          // status/headers are available immediately, independent of whether the body ever
-          // completes (this matters for the /reset scenario below).
-          const fakeRes = new ChromiumLikeResponse(res.headers, res.statusCode!);
-          this.emit('response', fakeRes);
-
-          const raw: Buffer[] = [];
-          res.on('data', (chunk: Buffer) => raw.push(chunk));
-          res.on('aborted', () => fakeRes.emit('aborted'));
-          res.on('error', (err: Error) => fakeRes.emit('error', err));
-          res.on('end', () => {
-            // Chromium decompresses transparently; the caller never sees compressed bytes,
-            // even though res.headers still reports the origin's content-encoding.
-            const decoded =
-              res.headers['content-encoding'] === 'gzip'
-                ? nodeZlib.gunzipSync(Buffer.concat(raw))
-                : Buffer.concat(raw);
-            if (decoded.length) {
-              fakeRes.emit('data', decoded);
-            }
-            fakeRes.emit('end');
-          });
-        },
-      );
-      this.realRequest!.on('error', (err: Error) => this.emit('error', err));
-      if (body.length) {
-        this.realRequest!.write(body);
-      }
-      this.realRequest!.end();
-    }
-
-    abort() {
-      this.realRequest?.destroy();
-      this.emit('abort');
-      this.emit('close');
-    }
-  }
-
-  return {
-    app: {
-      isReady: jest.fn(() => true),
-      whenReady: jest.fn(() => Promise.resolve()),
-    },
-    net: {
-      request: jest.fn(
-        (options: { method?: string; url: string }) => new FakeClientRequest(options),
-      ),
-    },
-  };
-});
+// electron.net isn't available outside a real Electron main process. net.fetch is a standard
+// fetch over Chromium's stack, so Node's own fetch stands in for it. Both decode a compressed
+// body and keep the origin's content-encoding header.
+jest.mock('electron', () => ({
+  app: {
+    isReady: jest.fn(() => true),
+    whenReady: jest.fn(() => Promise.resolve()),
+  },
+  net: {
+    fetch: jest.fn((url: string, init: RequestInit) => globalThis.fetch(url, init)),
+  },
+}));
 
 // eslint-disable-next-line import/first
 import { app as mockedElectronApp, net as mockedElectronNet } from 'electron';
@@ -320,13 +216,164 @@ describe('given a default instance of ElectronRequests', () => {
 
   it('does not follow redirects, omits ambient session credentials, and bypasses the shared cache', async () => {
     await requests.fetch(`http://localhost:${PORT}`);
-    expect(mockedElectronNet.request).toHaveBeenCalledWith(
+    expect(mockedElectronNet.fetch).toHaveBeenLastCalledWith(
+      `http://localhost:${PORT}`,
       expect.objectContaining({
         redirect: 'error',
         credentials: 'omit',
         cache: 'no-store',
       }),
     );
+  });
+});
+
+describe('given a streaming server', () => {
+  // A long-lived server on its own port. Restarting a server per test leaves undici's pooled
+  // connections pointing at the old one, which resets the next streaming request.
+  const STREAM_PORT = 3334;
+  const SSE_CHUNK = 'event: put\ndata: {"hello":"world"}\n\n';
+  const requests = new ElectronRequests();
+  let streamServer: http.Server;
+  let streamRequest: Promise<TestRequestData>;
+  let streamResolve: (value: TestRequestData) => void;
+
+  beforeAll(async () => {
+    streamServer = http.createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        if (req.url === '/redirect') {
+          res.writeHead(307, { Location: '/stream' });
+          res.end();
+          return;
+        }
+        streamResolve({
+          method: req.method,
+          body: Buffer.concat(chunks).toString(),
+          headers: req.headers,
+        });
+        // Holds the connection open after the first event, like an SSE stream.
+        res.writeHead(200, { 'Content-Type': 'text/event-stream' });
+        res.write(SSE_CHUNK);
+      });
+    });
+    await new Promise<void>((res) => {
+      streamServer.listen(STREAM_PORT, res);
+    });
+  });
+
+  beforeEach(() => {
+    streamRequest = new Promise<TestRequestData>((res) => {
+      streamResolve = res;
+    });
+  });
+
+  afterAll(
+    async () =>
+      new Promise((resolveClose) => {
+        streamServer.close(resolveClose);
+        streamServer.closeAllConnections();
+      }),
+  );
+
+  it('delivers body chunks before the stream ends', async () => {
+    const res = await requests.fetch(`http://localhost:${STREAM_PORT}/stream`, {
+      streaming: true,
+    });
+    expect(res.status).toEqual(200);
+    expect(res.headers.get('content-type')).toEqual('text/event-stream');
+
+    const reader = res.body!.getReader();
+    const first = await reader.read();
+    expect(first.done).toBe(false);
+    expect(Buffer.from(first.value!).toString()).toEqual(SSE_CHUNK);
+    await reader.cancel?.();
+  });
+
+  it('uses net.fetch with the method, headers, body, and signal', async () => {
+    const controller = new AbortController();
+    const res = await requests.fetch(`http://localhost:${STREAM_PORT}/stream`, {
+      method: 'REPORT',
+      headers: { 'Sample-Header': 'Some header value' },
+      body: '{"key":"user"}',
+      signal: controller.signal,
+      timeout: 1,
+      streaming: true,
+    });
+    expect(mockedElectronNet.fetch).toHaveBeenLastCalledWith(
+      `http://localhost:${STREAM_PORT}/stream`,
+      {
+        method: 'REPORT',
+        headers: { 'Sample-Header': 'Some header value' },
+        body: '{"key":"user"}',
+        signal: controller.signal,
+        redirect: 'follow',
+        credentials: 'omit',
+        cache: 'no-store',
+      },
+    );
+    const serverResult = await streamRequest;
+    expect(serverResult.method).toEqual('REPORT');
+    expect(serverResult.body).toEqual('{"key":"user"}');
+    expect(serverResult.headers['sample-header']).toEqual('Some header value');
+    expect(serverResult.headers['accept-encoding']).not.toEqual('gzip');
+    controller.abort();
+    await expect(res.body!.getReader().read()).rejects.toThrow('This operation was aborted');
+  });
+
+  it('follows a redirect', async () => {
+    const res = await requests.fetch(`http://localhost:${STREAM_PORT}/redirect`, {
+      streaming: true,
+    });
+    expect(res.status).toEqual(200);
+    const reader = res.body!.getReader();
+    const first = await reader.read();
+    expect(Buffer.from(first.value!).toString()).toEqual(SSE_CHUNK);
+    await reader.cancel?.();
+  });
+
+  it('waits for whenReady() before issuing the request', async () => {
+    (mockedElectronNet.fetch as jest.Mock).mockClear();
+    (mockedElectronApp.isReady as jest.Mock).mockReturnValueOnce(false);
+    let readyResolve: () => void = () => {};
+    (mockedElectronApp.whenReady as jest.Mock).mockReturnValueOnce(
+      new Promise<void>((res) => {
+        readyResolve = res;
+      }),
+    );
+
+    const fetchPromise = requests.fetch(`http://localhost:${STREAM_PORT}/stream`, {
+      streaming: true,
+    });
+    await Promise.resolve();
+    expect(mockedElectronNet.fetch).not.toHaveBeenCalled();
+
+    readyResolve();
+    const res = await fetchPromise;
+    expect(res.status).toEqual(200);
+    await res.body!.cancel?.();
+  });
+
+  it('delivers server-sent events through createEventSource', async () => {
+    const es = requests.createEventSource(`http://localhost:${STREAM_PORT}/stream`, {
+      headers: { authorization: 'sdk-key' },
+      errorFilter: () => true,
+      initialRetryDelayMillis: 1000,
+      readTimeoutMillis: 0,
+      retryResetIntervalMillis: 60000,
+    });
+    try {
+      const data = await new Promise<string>((resolveEvent) => {
+        es.addEventListener('put', (event) => resolveEvent(event?.data));
+      });
+      expect(JSON.parse(data)).toEqual({ hello: 'world' });
+      expect(mockedElectronNet.fetch).toHaveBeenCalled();
+      const serverResult = await streamRequest;
+      expect(serverResult.headers.authorization).toEqual('sdk-key');
+      expect(serverResult.headers.accept).toEqual('text/event-stream');
+    } finally {
+      es.close();
+    }
   });
 });
 
@@ -378,13 +425,13 @@ describe('given the app is not ready yet', () => {
     const requests = new ElectronRequests();
     const fetchPromise = requests.fetch(`http://localhost:${PORT}`);
 
-    expect(mockedElectronNet.request).not.toHaveBeenCalled();
+    expect(mockedElectronNet.fetch).not.toHaveBeenCalled();
 
     readyResolve();
     const res = await fetchPromise;
 
     expect(res.status).toEqual(200);
-    expect(mockedElectronNet.request).toHaveBeenCalled();
+    expect(mockedElectronNet.fetch).toHaveBeenCalled();
   });
 
   it('does not call whenReady() when the app is already ready', async () => {
