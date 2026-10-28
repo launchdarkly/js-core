@@ -90,6 +90,9 @@ export interface LDDataSystemOptions {
    * status or data source status. Configuring it changes nothing until the source supplies an
    * override. At most one override source can be configured.
    *
+   * When the client is offline, the source is not built or started: no overrides are served, and
+   * a configuration error in the source is not reported. The SDK logs a warning instead.
+   *
    * Some implementations provide the source object itself, while others provide a factory
    * function that creates the source based on the SDK configuration. This property accepts
    * either.
