@@ -14,6 +14,15 @@ function makeContext(logger: LDLogger, withFilesystem: boolean = true): ClientCo
   });
 }
 
+function makeContextOn(logger: LDLogger, osName: string): ClientContext {
+  const platform = createBasicPlatform();
+  platform.info.platformData.mockReturnValue({ os: { name: osName } });
+  return new ClientContext('sdk-key', new Configuration({ logger }), {
+    ...platform,
+    fileSystem: new MockFilesystem(),
+  });
+}
+
 describe('given a client context with filesystem support', () => {
   let logger: MockLogger;
   let context: ClientContext;
@@ -159,6 +168,28 @@ describe('given a client context with filesystem support', () => {
 
     expect(source.config.paths).toEqual(['/a.json', '/b.json']);
     expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('more than once'));
+  });
+
+  it('drops a path repeated in a different case on Windows, where file names ignore case', () => {
+    const windowsLogger = makeMockLogger();
+    const source = createOverrideSource(
+      { type: 'file', paths: ['C:\\overrides\\a.json', 'c:\\Overrides\\A.JSON'] },
+      makeContextOn(windowsLogger, 'Windows'),
+    ) as FileOverrideSource;
+
+    expect(source.config.paths).toEqual(['C:\\overrides\\a.json']);
+    expect(windowsLogger.warn).toHaveBeenCalledWith(expect.stringContaining('more than once'));
+  });
+
+  it('keeps paths that differ only in case on other platforms', () => {
+    const linuxLogger = makeMockLogger();
+    const source = createOverrideSource(
+      { type: 'file', paths: ['/overrides/a.json', '/Overrides/A.json'] },
+      makeContextOn(linuxLogger, 'Linux'),
+    ) as FileOverrideSource;
+
+    expect(source.config.paths).toEqual(['/overrides/a.json', '/Overrides/A.json']);
+    expect(linuxLogger.warn).not.toHaveBeenCalled();
   });
 
   it('fails construction for a YAML file when no parser is configured', () => {

@@ -45,8 +45,18 @@ function validateFileOverrideSourceOptions(
     throw new Error('The file-based override source requires at least one file path');
   }
   // A path listed more than once would make every entry of that file a duplicate of itself, so
-  // the repeats are dropped and the first occurrence keeps its place in the order.
-  const paths = options.paths.filter((path, index) => options.paths.indexOf(path) === index);
+  // the repeats are dropped and the first occurrence keeps its place in the order. Windows file
+  // names ignore case, so there a path repeated in a different case names the same file.
+  const ignoreCase = clientContext.platform.info.platformData().os?.name === 'Windows';
+  const seen = new Set<string>();
+  const paths = options.paths.filter((path) => {
+    const comparable = ignoreCase ? path.toLowerCase() : path;
+    if (seen.has(comparable)) {
+      return false;
+    }
+    seen.add(comparable);
+    return true;
+  });
   if (paths.length !== options.paths.length) {
     logger?.warn(
       'dataSystem.overrides.paths lists the same file more than once; the repeats are ignored',
