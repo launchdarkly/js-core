@@ -16,7 +16,7 @@ The minimum version of the LaunchDarkly Server-Side SDK for Node for use with th
 
 ## Supported Node versions
 
-This package is compatible with Node.js versions 14 and above.
+This package is compatible with Node.js versions 16 and above.
 
 ## Getting started
 
