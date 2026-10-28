@@ -24,7 +24,9 @@ export default class ElectronRequests implements platform.Requests {
   /**
    * Uses Electron's `net` module (Chromium's networking stack) for polling, analytics,
    * and diagnostic requests. The `net` module is only usable once Electron's `ready` event
-   * has fired.
+   * has fired; this method transparently waits for that milestone (which Electron reaches
+   * on its own, independent of application code) rather than requiring callers to
+   * sequence their own calls around it.
    *
    * https://www.electronjs.org/docs/latest/api/net
    */
@@ -58,18 +60,14 @@ export default class ElectronRequests implements platform.Requests {
       const req: ClientRequest = net.request({
         method: options.method,
         url,
-        // These options are set to be compatible with Node's http/https never
-        // (which was used in the previous version implementation).
-
+        // Node's http/https never followed redirects, sent ambient session credentials, or
+        // served requests from a shared cache; net.request() defaults to all three (`redirect:
+        // 'follow'`, session-ambient auth, `cache: 'default'`). Preserve the prior behavior:
         // surface any redirect as an error instead of silently following it with credentials
-        // attached.
+        // attached, don't attach ambient session auth, and don't let polling/analytics/
+        // diagnostic responses be served from or written into the app's shared HTTP cache.
         redirect: 'error',
-
-        // don't attach ambient session auth.
         credentials: 'omit',
-
-        // don't let polling/analytics/diagnostic responses be served from or written into
-        // the app's shared HTTP cache.
         cache: 'no-store',
       });
 
