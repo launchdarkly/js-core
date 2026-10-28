@@ -398,6 +398,68 @@ describe('given an uninitialized client over a persistent store that does not an
   });
 });
 
+// A persistent store that holds LaunchDarkly flags but reports that it is not initialized, as a
+// store that has data without the marker that a complete data set was written.
+function storeWithFlagsButNotInitialized(flags: Record<string, any>): LDFeatureStore {
+  return {
+    get: (_kind, key, callback) => callback(_kind.namespace === 'features' ? flags[key] : null),
+    all: (kind, callback) => callback(kind.namespace === 'features' ? { ...flags } : {}),
+    init: (_data, callback) => callback(),
+    delete: (_kind, _key, _version, callback) => callback(),
+    upsert: (_kind, _data, callback) => callback(),
+    initialized: (callback) => callback(false),
+    close: () => {},
+    getDescription: () => 'not initialized',
+  } as LDFeatureStore;
+}
+
+describe('given an uninitialized client over a store that holds flags but is not initialized', () => {
+  const storeFlags = { 'ld-flag': singleValueFlag('ld-flag', 'ld-value') };
+  let client: LDClientImpl;
+  let logger: MockLogger;
+
+  const makeClient = (overrides?: TestOverrideSource) =>
+    makeFDv2Client(makeFDv2Platform(), {
+      logger,
+      dataSystem: { overrides, persistentStore: storeWithFlagsButNotInitialized(storeFlags) },
+    });
+
+  beforeEach(() => {
+    logger = makeMockLogger();
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('reports the same invalid all flags state with an empty override layer as without a source', async () => {
+    client = makeClient();
+    const withoutSource = await client.allFlagsState(user);
+    client.close();
+
+    client = makeClient(new TestOverrideSource());
+    const withEmptySource = await client.allFlagsState(user);
+
+    // Configuring a source that supplies nothing changes nothing.
+    expect(withoutSource.valid).toBe(false);
+    expect(withEmptySource.toJSON()).toEqual(withoutSource.toJSON());
+    expect(warningsMatching(logger, /Data store not available/)).toEqual(2);
+    expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(0);
+  });
+
+  it('reports only the flags of the override layer, not the flags in the store', async () => {
+    client = makeClient(
+      new TestOverrideSource({ flags: [singleValueFlag('overridden-flag', true)] }),
+    );
+
+    const state = await client.allFlagsState(user);
+
+    expect(state.valid).toBe(true);
+    expect(state.allValues()).toEqual({ 'overridden-flag': true });
+    expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(1);
+  });
+});
+
 describe('given a client whose initialization fails and an override source with an asynchronous initial load', () => {
   let source: TestOverrideSource;
   let client: LDClientImpl;

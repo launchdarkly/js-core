@@ -1343,27 +1343,28 @@ export default class LDClientImpl implements LDClient {
           doEval(true);
           return;
         }
-        // No LaunchDarkly data is available. The read returns only the flags that the override
-        // layer holds, and the result decides the state: a layer without flags gives the state
-        // nothing to report.
-        this._readStore.all(VersionedDataKinds.Features, (allFlags) => {
-          if (this._overrideLayer && Object.keys(allFlags).length > 0) {
-            if (!this._allFlagsStateOverridesOnlyWarningLogged) {
-              this._allFlagsStateOverridesOnlyWarningLogged = true;
-              this._logger?.warn(
-                'Called allFlagsState before client initialization; returning only flags from' +
-                  ' the override layer. This message is logged once.',
-              );
-            }
-            evaluateAll(true, allFlags);
-            return;
+        // No LaunchDarkly data is available. When the override layer holds flags, the state
+        // contains only those flags, read from the layer itself rather than through the overlay:
+        // a store that is not initialized can still hold LaunchDarkly flags, and a state marked
+        // valid must not present them. A layer without flags leaves the state as it is without an
+        // override source.
+        const overrideFlags = this._overrideLayer?.all(VersionedDataKinds.Features);
+        if (overrideFlags && Object.keys(overrideFlags).length > 0) {
+          if (!this._allFlagsStateOverridesOnlyWarningLogged) {
+            this._allFlagsStateOverridesOnlyWarningLogged = true;
+            this._logger?.warn(
+              'Called allFlagsState before client initialization; returning only flags from' +
+                ' the override layer. This message is logged once.',
+            );
           }
-          this._logger?.warn(
-            'Called allFlagsState before client initialization. Data store not available; ' +
-              'returning empty state',
-          );
-          evaluateAll(false, allFlags);
-        });
+          evaluateAll(true, overrideFlags);
+          return;
+        }
+        this._logger?.warn(
+          'Called allFlagsState before client initialization. Data store not available; ' +
+            'returning empty state',
+        );
+        doEval(false);
       });
     });
   }
