@@ -5,6 +5,7 @@ import {
   ConditionGroup,
   ConditionType,
   DEFAULT_FALLBACK_TIMEOUT_MS,
+  DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
   DEFAULT_RECOVERY_TIMEOUT_MS,
   getConditions,
 } from './Conditions';
@@ -48,6 +49,26 @@ export interface FDv2DataSourceConfig {
 
   /** Recovery condition timeout in ms (default 300s). */
   recoveryTimeoutMs?: number;
+
+  /**
+   * Not-yet-initialized fallback leg timeout in ms (default 10s). Fires if
+   * the data system has never received data within this long of the current
+   * synchronizer becoming active.
+   */
+  initFallbackTimeoutMs?: number;
+
+  /**
+   * Whether the data system already has data from a previous data source
+   * instance -- e.g. this instance was created for a connection-mode switch
+   * after the SDK was already initialized. A fresh instance otherwise has
+   * no way to know that, so without this flag a data-less `'none'` response
+   * (the server's "you're already up to date" answer) looks identical to a
+   * still-uninitialized system: it would never satisfy the init-fallback
+   * leg's data check, so that leg would keep firing forever. When true, the
+   * leg never applies, and a `'none'` response is enough to settle this
+   * instance's {@link FDv2DataSource.start} promise.
+   */
+  hasExistingData?: boolean;
 }
 
 /**
@@ -85,6 +106,8 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     logger,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
+    initFallbackTimeoutMs = DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
+    hasExistingData = false,
   } = config;
 
   let initialized = false;
@@ -166,22 +189,36 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return false;
     }
 
-    // The deadline is armed whether or not an FDv1 fallback synchronizer is
-    // configured, and a newer directive always supersedes the pending one.
+    // The deadline is armed on every directive. A non-FDv1-origin directive
+    // always halts the FDv2 source below, so it can never repeat from a
+    // still-running source; the only other repeat source is the FDv1
+    // synchronizer's own traffic, which legitimately supersedes the pending
+    // deadline with a fresh TTL.
     scheduleFdv2Recovery(result);
 
-    // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
-    // fdv1Fallback, do not re-run the fallback machinery - we are already on
-    // FDv1. Only the new deadline applies.
+    // Guard: if the FDv1 fallback synchronizer itself produces this result,
+    // do not re-run the fallback machinery - we are already on FDv1.
     if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
       return false;
     }
 
-    if (sourceManager.hasFDv1Fallback()) {
-      sourceManager.fdv1Fallback();
-      return true;
+    // With no synchronizers configured at all (e.g. one-shot mode), there
+    // is nothing to halt or recover to -- keep trying other initializers.
+    if (synchronizerSlots.length === 0) {
+      return false;
     }
-    return false;
+
+    if (!sourceManager.hasFDv1Fallback()) {
+      // No FDv1 fallback synchronizer configured: run no synchronizer and
+      // report interrupted while the recovery deadline is pending.
+      statusManager.requestStateUpdate('INTERRUPTED');
+    }
+
+    // Halts the current run: with an FDv1 fallback configured it becomes
+    // the sole active source; without one, every FDv2 slot is blocked and
+    // the orchestrator runs no synchronizer until recovery.
+    sourceManager.fdv1Fallback();
+    return true;
   }
 
   // The orchestration loops intentionally use await-in-loop for sequential
@@ -330,8 +367,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       const conditions: ConditionGroup = getConditions(
         sourceManager.getAvailableSynchronizerCount(),
         sourceManager.isPrimeSynchronizer(),
+        initialized || hasExistingData,
         fallbackTimeoutMs,
         recoveryTimeoutMs,
+        initFallbackTimeoutMs,
       );
 
       if (conditions.promise) {
@@ -390,7 +429,14 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
 
             if (syncResult.type === 'changeSet') {
               applyChangeSet(syncResult);
-              if (!initialized) {
+              // A 'none' payload (e.g. an unchanged poll response) carries no
+              // data, so it must not count toward "initialized with data" --
+              // matching the initializer phase's same payload.type check.
+              // Exception: if the data system already has data from a prior
+              // instance (hasExistingData), a 'none' response is a genuine
+              // "you're already up to date" answer, not evidence of an empty
+              // system, so it still settles this instance's start() promise.
+              if (!initialized && (syncResult.payload.type !== 'none' || hasExistingData)) {
                 markInitialized();
               }
             } else if (syncResult.type === 'status') {

@@ -203,6 +203,10 @@ export function createSourceManager(
         visited += 1;
       }
 
+      // Every slot is blocked: nothing will read from the previously active
+      // source again, so close it instead of leaving its transport running
+      // (and its results piling up unread) for as long as recovery takes.
+      closeActiveSource();
       return undefined;
     },
 
