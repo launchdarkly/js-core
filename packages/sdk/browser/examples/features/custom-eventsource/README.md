@@ -1,7 +1,10 @@
-# LaunchDarkly Browser SDK custom EventSource example
+# LaunchDarkly sample javascript application with a custom EventSource
 
-A minimal vanilla-TypeScript app that demonstrates the Browser SDK's injectable
+We've built a simple browser application that demonstrates the Browser SDK's injectable
 `eventSource` option.
+
+Below, you'll find the build procedure. For more comprehensive instructions, you can visit your [Quickstart page](https://app.launchdarkly.com/quickstart#/) or
+the [{name of SDK} reference guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
 
 ## What it demonstrates
 
@@ -31,23 +34,17 @@ optional dependency of the SDK. If your install omits optional dependencies (for
 
 ## Prerequisites
 
-Node.js 22 or later
+Nodejs 22 or later
 
 ## Build instructions
 
-1. From the repository root, build the SDK and its dependencies first:
-
-   ```bash
-   yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
-   ```
-
-2. Make a copy of the `.env.template` and name it `.env`
+1. Make a copy of the `.env.template` and name it `.env`
 
    ```
    cp .env.template .env
    ```
 
-3. Set the variables in `.env` to your specific LD values
+2. Set the variables in `.env` to your specific LD values
 
    ```
    # Set LAUNCHDARKLY_CLIENT_SIDE_ID to your LaunchDarkly client-side ID
@@ -61,19 +58,24 @@ Node.js 22 or later
    > Setting these values is equivalent to modifying the `clientSideID` and `flagKey`
    > in [app.ts](./src/app.ts).
 
-4. Install and build the example:
+3. Install and build the project. This example uses the workspace build of
+   `@launchdarkly/js-client-sdk`, so from the repository root build the SDK and its
+   dependencies first, then the example:
 
    ```bash
+   yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
    yarn workspace @launchdarkly/browser-example-custom-eventsource build
    ```
 
-5. Run the example:
+4. On the command line, run the example:
+
    ```bash
    yarn workspace @launchdarkly/browser-example-custom-eventsource start
    ```
-   > [!NOTE]
-   > The `start` script simply runs `open index.html`. If that is not working for you, you
-   > can open the `index.html` file in a browser for the same results.
 
-The application will run continuously and react to flag changes in LaunchDarkly, streaming
-over the fetch-based EventSource the whole time.
+   > [!NOTE]
+   > The `start` script simply runs `open index.html`. If that is not working for you,
+   > you can open the `index.html` file in a browser for the same results.
+
+The application will run continuously and react to the flag changes in LaunchDarkly,
+streaming over the fetch-based EventSource the whole time.

@@ -23,9 +23,6 @@ const CAPABILITIES: EventSourceCapabilities = {
  * over REPORT. It requires `fetch()`, `AbortController` and a streaming `Response.body`, which all
  * current browsers provide.
  *
- * This transport never sends the `x-launchdarkly-tags` header, for any stream endpoint,
- * because the LaunchDarkly streaming service's CORS allow-list does not include it.
- *
  * It is not the default. Pass it as the `eventSource` option to opt in:
  *
  * ```javascript

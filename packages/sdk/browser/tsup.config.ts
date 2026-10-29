@@ -13,9 +13,6 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
-  // `@launchdarkly/eventsource` must stay external so mangleProps never rewrites its `_`-prefixed
-  // internals. It is an optional dependency, and tsup only externalizes regular and peer
-  // dependencies by default, so list it explicitly.
   external: ['@launchdarkly/eventsource'],
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,
