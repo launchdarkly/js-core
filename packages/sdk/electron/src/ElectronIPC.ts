@@ -30,37 +30,6 @@ type IPCSyncChannel =
  */
 type IPCAsyncChannel = 'waitForInitialization' | 'flush' | 'identify' | 'setConnectionMode';
 
-export const AllSyncChannels: readonly IPCSyncChannel[] = [
-  'addEventHandler',
-  'removeEventHandler',
-  'allFlags',
-  'boolVariation',
-  'boolVariationDetail',
-  'getContext',
-  'jsonVariation',
-  'jsonVariationDetail',
-  'log',
-  'numberVariation',
-  'numberVariationDetail',
-  'stringVariation',
-  'stringVariationDetail',
-  'track',
-  'variation',
-  'variationDetail',
-  'getConnectionMode',
-  'isOffline',
-];
-
-/**
- * All asynchronous IPC channel names.
- */
-export const AllAsyncChannels: readonly IPCAsyncChannel[] = [
-  'waitForInitialization',
-  'flush',
-  'identify',
-  'setConnectionMode',
-];
-
 /**
  * All IPC channel base names.
  */
@@ -92,4 +61,36 @@ export function getIPCChannelName(namespace: string, channel: IPCChannel): strin
  */
 export function deriveNamespace(credential: string, customNamespace?: string): string {
   return customNamespace ? `${customNamespace}_${credential}` : credential;
+}
+
+// Namespaces that currently own ipcMain handlers. Electron rejects a second ipcMain.handle on
+// the same channel, so a second client on the same namespace is rejected here, before it builds
+// anything.
+const activeNamespaces = new Set<string>();
+
+/**
+ * Throws when another client already owns the namespace. Does not claim it.
+ */
+export function assertNamespaceAvailable(namespace: string): void {
+  if (activeNamespaces.has(namespace)) {
+    throw new Error(
+      `IPC namespace "${namespace}" is already in use by another LaunchDarkly client. Close that ` +
+        'client first, or give each client that shares a credential a unique "namespace" option.',
+    );
+  }
+}
+
+/**
+ * Marks the namespace as owned by a client. Throws when the namespace is in use.
+ */
+export function claimNamespace(namespace: string): void {
+  assertNamespaceAvailable(namespace);
+  activeNamespaces.add(namespace);
+}
+
+/**
+ * Frees the namespace so a later client can claim it. Releasing an unclaimed namespace is a no-op.
+ */
+export function releaseNamespace(namespace: string): void {
+  activeNamespaces.delete(namespace);
 }

@@ -316,3 +316,15 @@ describe('given an instance of ElectronRendererClient', () => {
     expect(ldClientBridge.removeEventHandler).toHaveBeenNthCalledWith(2, 'handle-2');
   });
 });
+
+it('passes identify() options with a secure mode hash through to bridge', async () => {
+  const context: LDContext = { kind: 'user', key: 'test-user-id' };
+
+  const client = new ElectronRendererClient(clientSideId);
+  await client.identify(context, { hash: 'per-identify-hash' });
+
+  expect(ldClientBridge.identify).toHaveBeenCalledTimes(1);
+  expect(ldClientBridge.identify).toHaveBeenNthCalledWith(1, context, {
+    hash: 'per-identify-hash',
+  });
+});

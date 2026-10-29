@@ -116,12 +116,9 @@ export class ClientEntity {
   async close() {
     try {
       await this._client.close();
-      if (fs.existsSync(this._storagePath)) {
-        fs.rmSync(this._storagePath, { recursive: true });
-      }
-      if (fs.existsSync(`${this._storagePath}.tmp`)) {
-        fs.rmSync(`${this._storagePath}.tmp`, { recursive: true });
-      }
+      // The SDK cache lives in this directory. A stale cache changes the
+      // first evaluation of the next test, so remove the whole directory.
+      fs.rmSync(this._storagePath, { recursive: true, force: true });
       // Reset the singleton so the next client gets a fresh storage instance
       // that reads from disk instead of returning stale in-memory data.
       resetElectronStorage();
@@ -238,7 +235,7 @@ export async function createEntity(options: CreateInstanceParams) {
   const clientSideId = options.configuration.credential || 'unknown-env-id';
   logger.info(`Creating client with configuration: ${JSON.stringify(options.configuration)}`);
 
-  const storagePath = path.join(app.getPath('userData'), 'ldcache');
+  const storagePath = path.join(app.getPath('userData'), 'ldclient-user-cache');
 
   const timeoutMs =
     options.configuration.startWaitTimeMs !== null &&

@@ -1,7 +1,6 @@
 import { BasicLogger, BasicLoggerOptions, LDLogger } from '@launchdarkly/js-client-sdk-common';
 
 export type {
-  LDIdentifyOptions,
   AutoEnvAttributes,
   BasicLogger,
   BasicLoggerOptions,
@@ -30,6 +29,7 @@ export type {
   LDSingleKindContext,
   TrackSeriesContext,
   LDPluginBase,
+  LDStorage,
   LDPluginEnvironmentMetadata,
   LDPluginSdkMetadata,
   LDPluginApplicationMetadata,

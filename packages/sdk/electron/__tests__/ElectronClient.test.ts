@@ -731,6 +731,60 @@ it('can set connection mode to not offline', async () => {
   expect(setEventSendingEnabled).toHaveBeenNthCalledWith(1, true, false);
 });
 
+it('does not re-enable event sending when the connection mode is set after close', async () => {
+  const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+  await client.close();
+  const setEventSendingEnabled = jest.spyOn(client as any, 'setEventSendingEnabled');
+
+  await client.setConnectionMode('streaming');
+
+  expect(setEventSendingEnabled).not.toHaveBeenCalled();
+  expect(client.getConnectionMode()).toEqual('offline');
+});
+
+it('leaves event sending disabled when concurrent calls end in offline', async () => {
+  const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+  const setEventSendingEnabled = jest.spyOn(client as any, 'setEventSendingEnabled');
+
+  const first = client.setConnectionMode('streaming');
+  const second = client.setConnectionMode('offline');
+  await Promise.all([first, second]);
+
+  expect(client.getConnectionMode()).toEqual('offline');
+  expect(setEventSendingEnabled).not.toHaveBeenCalledWith(true, false);
+  await client.close();
+});
+
+it('ignores an unknown connection mode and keeps the mode through a network cycle', async () => {
+  const logger = { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() };
+  const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'streaming',
+    logger,
+  });
+  const dataManagerSetMode = jest.spyOn((client as any).dataManager, 'setConnectionMode');
+  client.setNetworkAvailability(false);
+
+  // @ts-ignore JS callers can pass any string.
+  await client.setConnectionMode('bogus'.repeat(1000));
+  expect(() => client.setNetworkAvailability(true)).not.toThrow();
+
+  expect(dataManagerSetMode).not.toHaveBeenCalled();
+  expect(client.getConnectionMode()).toEqual('streaming');
+  const [message] = logger.warn.mock.calls.find(([m]) => m.includes('Unknown connection mode'))!;
+  expect(message.length).toBeLessThan(200);
+  await client.close();
+});
+
 it('can use bootstrap data with identify', async () => {
   const mockedCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) =>
     createMockEventSource(streamUri, options),
@@ -797,4 +851,90 @@ it('parses bootstrap data when start is called with bootstrap', async () => {
   expect(client.allFlags().killswitch).toBe(true);
   expect(client.allFlags()['string-flag']).toBe('is bob');
   expect(client.allFlags().cat).toBe(false);
+});
+
+it('accepts a per-identify hash in the identify options', async () => {
+  const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    useClientSideId: true,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+  await client.start();
+
+  const result = await client.identify(
+    { kind: 'user', key: 'hashed-user' },
+    { hash: 'per-identify-hash' },
+  );
+
+  expect(result).toEqual({ status: 'completed' });
+});
+
+it('forwards setNetworkAvailability to the FDv1 data manager', () => {
+  const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+  const spy = jest.spyOn((client as any).dataManager, 'setNetworkAvailability');
+
+  client.setNetworkAvailability(false);
+  client.setNetworkAvailability(true);
+
+  expect(spy).toHaveBeenNthCalledWith(1, false);
+  expect(spy).toHaveBeenNthCalledWith(2, true);
+});
+
+it('exposes setNetworkAvailability on the public client', async () => {
+  const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+
+  const spy = jest.spyOn(ElectronClient.prototype, 'setNetworkAvailability');
+
+  client.setNetworkAvailability(false);
+
+  expect(spy).toHaveBeenCalledWith(false);
+  spy.mockRestore();
+  await client.close();
+});
+
+it('emits dataSourceStatus in the main process as the stream initializes and delivers flags', async () => {
+  const mockedCreateEventSource = jest.fn((streamUri: string = '', options: any = {}) =>
+    createMockEventSourceThatDeliversPut(streamUri, options),
+  );
+  (ElectronPlatform as jest.Mock).mockReturnValue({
+    crypto: new ElectronCrypto(),
+    info: new ElectronInfo(),
+    requests: {
+      createEventSource: mockedCreateEventSource,
+      fetch: jest.fn(),
+      getEventSourceCapabilities: jest.fn(),
+    },
+    encoding: new ElectronEncoding(),
+    storage: {
+      clear: jest.fn(),
+      get: jest.fn(),
+      set: jest.fn(),
+    },
+  });
+  const client = new ElectronClient('mobile-key-123', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    sendEvents: false,
+    initialConnectionMode: 'streaming',
+  });
+  const statusListener = jest.fn();
+  client.on('dataSourceStatus', statusListener);
+
+  await client.start();
+
+  const states = statusListener.mock.calls.map(([status]) => status.state);
+  expect(states).toEqual(['INITIALIZING', 'VALID']);
+  expect(statusListener).toHaveBeenLastCalledWith(
+    expect.objectContaining({ state: 'VALID', stateSince: expect.any(Number) }),
+  );
+  await client.close();
 });

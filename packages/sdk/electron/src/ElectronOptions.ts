@@ -1,15 +1,21 @@
-import { ConnectionMode, LDOptions as LDOptionsBase } from '@launchdarkly/js-client-sdk-common';
+import {
+  ConnectionMode,
+  LDOptions as LDOptionsBase,
+  LDStorage,
+} from '@launchdarkly/js-client-sdk-common';
 
 import type { LDPlugin } from './LDPlugin';
 
+/**
+ * A custom storage implementation for the flag cache. See {@link LDStorage} for the contract.
+ */
+export type LDElectronStorage = LDStorage;
+
 export interface ElectronOptions extends LDOptionsBase {
   /**
-   * Set to true to opt in to compressing event payloads if the SDK supports it, since the
-   * compression library may not be supported in the underlying SDK framework.  If the compression
-   * library is not supported then event payloads will not be compressed even if this option
-   * is enabled.
+   * Set to `true` to compress analytics event payloads with gzip before they are sent.
    *
-   * Defaults to false.
+   * Defaults to `false`.
    */
   enableEventCompression?: boolean;
 
@@ -18,6 +24,9 @@ export interface ElectronOptions extends LDOptionsBase {
    *
    * @remarks
    * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
+   *
+   * This option applies only to the default data source. When the `dataSystem` option is set, the
+   * SDK ignores it and logs a warning. Use `dataSystem.automaticModeSwitching` instead.
    *
    * Defaults to streaming.
    */
@@ -31,27 +40,70 @@ export interface ElectronOptions extends LDOptionsBase {
   plugins?: LDPlugin[];
 
   /**
-   * When true (the default), registers the Electron IpcMain event handlers so a
-   * LaunchDarkly client in renderer processes can communicate with the main process.
+   * When `true`, the client registers `ipcMain` handlers so a renderer client created with
+   * `createRendererClient` can use this client through the preload bridge.
    *
-   * Defaults to true.
+   * Set to `false` when only the main process uses the SDK. No IPC channel is registered and
+   * renderer clients cannot connect.
+   *
+   * Defaults to `true`.
    */
   enableIPC?: boolean;
 
   /**
-   * Will use the client side id as the sdk key instead of the mobile key
-   * this is here to support legacy usage of the sdk.
+   * Selects the client-side ID as the credential. When `true`, the credential passed to
+   * `createClient` is a client-side ID instead of a mobile key, and the SDK uses the client-side
+   * endpoints.
    *
-   * @default false
+   * Secure mode ({@link ElectronOptions.hash}) works only with the client-side ID. Setting `hash`
+   * while this option is `false` makes `createClient` throw.
    *
-   * @deprecated using client side id as the sdk key is deprecated and will be removed
-   * in future versions of this sdk. Please use mobile key instead.
+   * Defaults to `false` (mobile key).
    */
   useClientSideId?: boolean;
 
   /**
-   * An optional namespace to isolate this client's IPC channels
-   * from other clients using the same credential in the same process.
+   * The secure mode hash for the initial context.
+   *
+   * Secure mode works only when {@link ElectronOptions.useClientSideId} is `true`. `createClient`
+   * throws when this option is set with a mobile key. A `hash` passed in the identify options
+   * replaces this value for that identify call and the requests that follow it.
+   *
+   * @see https://docs.launchdarkly.com/sdk/features/secure-mode
+   */
+  hash?: string;
+
+  /**
+   * An optional namespace that isolates this client's IPC channels from other clients that use
+   * the same credential in the same main process.
+   *
+   * Two IPC-enabled clients (`enableIPC` is `true`) that share a credential must each set a unique
+   * namespace. Otherwise the second `createClient` call throws before it builds the client.
+   * Renderer clients must pass the same namespace to `createRendererClient`.
    */
   namespace?: string;
+
+  /**
+   * A custom storage implementation that replaces the built-in file cache.
+   *
+   * @remarks
+   * By default the SDK persists cached flags to a file in the Electron `userData` directory.
+   * Provide an {@link LDElectronStorage} to store that data somewhere else. The SDK catches and logs
+   * errors thrown by a custom storage, so they never reach the application.
+   */
+  storage?: LDElectronStorage;
+
+  /**
+   * When `true`, the built-in file cache is encrypted with Electron's `safeStorage` API and is
+   * written to its own file. A plain-text cache from an earlier run is deleted and never read.
+   *
+   * When `safeStorage` reports that encryption is not available, the SDK logs a warning and keeps
+   * flags in memory only. It never writes a plain-text cache while this option is `true`.
+   * `safeStorage` is usable only after the Electron `ready` event, so the cache waits for it.
+   *
+   * This option has no effect when {@link ElectronOptions.storage} is set.
+   *
+   * Defaults to `false`.
+   */
+  encryptStorage?: boolean;
 }

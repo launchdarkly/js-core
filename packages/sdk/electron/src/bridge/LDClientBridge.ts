@@ -8,7 +8,7 @@ export interface LDMessagePort extends MessagePort {
 
 export type LDClientBridge = Omit<
   LDClient,
-  'logger' | 'close' | 'addHook' | 'on' | 'off' | 'start'
+  'logger' | 'close' | 'addHook' | 'on' | 'off' | 'start' | 'setNetworkAvailability'
 > & {
   /**
    * Bridge API used to implement renderer on() over IPC.

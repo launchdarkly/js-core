@@ -267,3 +267,15 @@ it('rebuilds the singleton after resetElectronStorage', () => {
   const second = getElectronStorage();
   expect(second).not.toBe(first);
 });
+
+it('returns the same instance and does not warn when later callers ask for the same encryption setting', () => {
+  const logger = createMockLogger();
+  const first = getElectronStorage(logger, { encrypt: false });
+
+  const second = getElectronStorage(logger, { encrypt: false });
+  const third = getElectronStorage(logger);
+
+  expect(second).toBe(first);
+  expect(third).toBe(first);
+  expect(logger.warn).not.toHaveBeenCalled();
+});

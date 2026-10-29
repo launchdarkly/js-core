@@ -8,8 +8,9 @@ export type {
   LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
-  LDIdentifyOptions,
 } from '@launchdarkly/js-client-sdk-common';
+
+export type { ElectronIdentifyOptions as LDIdentifyOptions } from '../ElectronIdentifyOptions';
 
 export type { LDRendererClient };
 

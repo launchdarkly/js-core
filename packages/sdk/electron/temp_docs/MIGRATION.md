@@ -65,7 +65,7 @@ You can still `await client.identify(context)` without inspecting the result if 
 
 This SDK now uses the **mobile key** by default instead of the client-side ID. If you were previously passing a client-side ID to initialize the SDK, you should switch to your environment’s mobile key (from **Account settings** → **Projects** → your project → **Environments** → **Mobile key**).
 
-- **Continue using the client-side ID:** If you need to keep your existing behavior, pass `useClientSideId: true` in options when calling creating the SDK instance. This option is deprecated and may be removed in a future major version; prefer migrating to the mobile key when possible.
+- **Continue using the client-side ID:** If you need to keep your existing behavior, pass `useClientSideId: true` in options when creating the SDK instance. The client-side ID is also required for Secure Mode (see below).
 
 - **Enable flags for mobile SDKs:** By default, flags are only available to server-side SDKs. For the Electron SDK (using the mobile key) to evaluate a flag, you must make that flag available to **SDKs using Mobile Key** in the LaunchDarkly UI. When creating a new flag, check the appropriate box in the "Create flag" dialog; for existing flags, use the **Advanced controls** section in the flag’s right sidebar. See [Make flags available to client-side and mobile SDKs](https://launchdarkly.com/docs/home/flags/new#make-flags-available-to-client-side-and-mobile-sdks) in the LaunchDarkly docs.
 
