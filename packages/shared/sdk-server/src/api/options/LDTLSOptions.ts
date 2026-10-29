@@ -1,10 +1,19 @@
 /**
- * The Node `Buffer` type when the Node type definitions are present, and `never` otherwise.
+ * The Node `Buffer` type when `@types/node` declares it as a global `var`, and `never` otherwise.
  *
  * This package is also used on edge runtimes, where consumers do not have `@types/node`.
  * A direct `Buffer` reference would not resolve for those consumers.
+ *
+ * The type comes from the `Buffer.isBuffer` type guard, which every `@types/node` version declares
+ * as `obj is Buffer`. Inferring it from the constructor would pick up the last `new` overload, which
+ * returns `Buffer<ArrayBuffer>` in some versions. That narrower type rejects a plain `Buffer`.
+ *
+ * Known limit: `typeof globalThis` only sees `var` declarations. `@types/node` versions older than
+ * 16.3.3 declare `Buffer` as a `const` or a `class`, so they also resolve to `never`.
  */
-type GlobalBuffer = typeof globalThis extends { Buffer: new (...args: never[]) => infer T }
+type GlobalBuffer = typeof globalThis extends {
+  Buffer: { isBuffer(obj: any): obj is infer T };
+}
   ? T
   : never;
 
