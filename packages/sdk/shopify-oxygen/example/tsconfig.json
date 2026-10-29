@@ -3,9 +3,11 @@
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,
-    "lib": ["es6"],
+    // tsup injects the deprecated baseUrl option into its DTS build, so allow TS 6.0 deprecations.
+    "ignoreDeprecations": "6.0",
+    "lib": ["es2020", "dom"],
     "module": "es2022",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noImplicitOverride": true,
     "outDir": "dist",
     "resolveJsonModule": true,

@@ -1,3 +1,4 @@
+/// <reference types="node" preserve="true" />
 import * as http from 'http';
 import { pipeline, Writable } from 'stream';
 import * as zlib from 'zlib';

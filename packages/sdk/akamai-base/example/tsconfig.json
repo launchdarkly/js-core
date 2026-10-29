@@ -7,6 +7,7 @@
     "target": "ESNext",
     "lib": ["es2023", "DOM"],
     "moduleResolution": "nodenext",
+    "types": ["akamai-edgeworkers"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },

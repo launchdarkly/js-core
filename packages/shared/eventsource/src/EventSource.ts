@@ -87,7 +87,8 @@ function defaultErrorFilter(error: ErrorEvent): boolean {
  * can form, the origin is an empty string.
  */
 function resolveStreamOrigin(candidate: string): string {
-  const base = typeof location !== 'undefined' ? location.href : undefined;
+  // This package builds without the dom lib, so the global `location` has no declared type.
+  const base = (globalThis as { location?: { href: string } }).location?.href;
   try {
     return new URL(candidate, base).origin;
   } catch {

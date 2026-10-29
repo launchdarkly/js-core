@@ -1,3 +1,4 @@
+/// <reference types="jest" preserve="true" />
 import {
   LDClient,
   LDFlagSet,

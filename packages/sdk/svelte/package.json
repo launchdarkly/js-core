@@ -64,8 +64,8 @@
     "publint": "^0.1.9",
     "rimraf": "^5.0.5",
     "svelte": "^5.4.0",
-    "typedoc": "0.25.0",
-    "typescript": "5.1.6",
+    "typedoc": "0.28.20",
+    "typescript": "6.0.3",
     "vite": "8.1.6",
     "vitest": "^4.1.8"
   }

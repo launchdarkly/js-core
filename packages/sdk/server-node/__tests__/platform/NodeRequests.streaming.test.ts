@@ -1,6 +1,8 @@
 import { getEventListeners } from 'events';
-import * as http from 'http';
-import * as https from 'https';
+// Default imports keep the live module objects so jest.spyOn can patch them.
+// Namespace imports compile to frozen copies under this package's node16 module setting.
+import http from 'http';
+import https from 'https';
 import {
   AsyncQueue,
   TestHttpHandlers,

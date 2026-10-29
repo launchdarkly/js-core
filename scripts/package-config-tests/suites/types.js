@@ -5,6 +5,13 @@ const { entrypoints, install, pool, runAsync } = require('../lib');
 
 const TYPESCRIPT_VERSIONS = ['5.0.4', '5.9.3', '6.0.3'];
 
+// The `tlsParams` regression cases compile a `Buffer` assignment with an @types/node version
+// whose last `BufferConstructor` construct signature returns `Buffer<ArrayBuffer>`. A bad
+// `GlobalBuffer` inference then rejects `fs.readFileSync(...)` under TS 5.9 and later.
+const TLS_TYPES_NODE = '22.13.6';
+const TLS_MIN_TS = [5, 9];
+const TLS_CONSUMERS = ['@launchdarkly/js-server-sdk-common', '@launchdarkly/node-server-sdk'];
+
 // Consumer compiler settings. The file extension controls whether the consumer is a
 // CommonJS or an ES module under node16/nodenext.
 const CONFIGS = {
@@ -67,23 +74,72 @@ async function runSuite({ work, packs, variant }) {
             path.join(caseDir, 'tsconfig.json'),
             JSON.stringify({ compilerOptions, files: [`index.${c.ext}`] }),
           );
-          cases.push({ key: `${spec} | ${config} | ts${version}`, caseDir, version });
+          cases.push({ key: `${spec} | ${config} | ts${version}`, dir, caseDir, version });
         }
+      }
+    }
+  }
+
+  const tlsVersions = versions.filter((version) => atLeast(version, TLS_MIN_TS));
+  if (tlsVersions.length) {
+    const tlsDir = path.join(work, `types-tls-${variant || 'all'}`);
+    fs.rmSync(tlsDir, { recursive: true, force: true });
+    install(tlsDir, packs, {
+      launchdarkly: TLS_CONSUMERS,
+      deps: {
+        ...Object.fromEntries(tlsVersions.map((v) => [`typescript-${v}`, `npm:typescript@${v}`])),
+        '@types/node': TLS_TYPES_NODE,
+      },
+    });
+    for (const spec of TLS_CONSUMERS) {
+      for (const version of tlsVersions) {
+        const caseDir = path.join(
+          tlsDir,
+          'cases',
+          `${spec.replace(/[@/]/g, '_')}__tls__${version}`,
+        );
+        fs.mkdirSync(caseDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(caseDir, 'index.cts'),
+          `import * as fs from 'fs';\nimport type { LDOptions } from '${spec}';\n\nexport const options: LDOptions = {\n  tlsParams: { ca: fs.readFileSync('ca.pem') },\n};\n\n// The rejection proves the option type did not collapse to \`any\`.\nexport const rejected: LDOptions = {\n  // @ts-expect-error a number is not a valid certificate value\n  tlsParams: { ca: 42 },\n};\n`,
+        );
+        const compilerOptions = {
+          module: 'node16',
+          moduleResolution: 'node16',
+          target: 'es2022',
+          lib: ['es2022'],
+          strict: true,
+          noEmit: true,
+          // The case checks the published option types, not the @types/node internals.
+          skipLibCheck: true,
+          esModuleInterop: true,
+          types: ['node'],
+          typeRoots: [path.join(tlsDir, 'node_modules/@types')],
+        };
+        fs.writeFileSync(
+          path.join(caseDir, 'tsconfig.json'),
+          JSON.stringify({ compilerOptions, files: ['index.cts'] }),
+        );
+        cases.push({ key: `${spec} | tls | ts${version}`, dir: tlsDir, caseDir, version });
       }
     }
   }
 
   const results = {};
   const details = {};
-  await pool(cases, Math.max(2, require('os').cpus().length), async ({ key, caseDir, version }) => {
-    const tsc = path.join(dir, 'node_modules', `typescript-${version}`, 'bin', 'tsc');
-    const { stdout } = await runAsync(process.execPath, [tsc, '-p', caseDir], { cwd: dir });
-    const errors = stdout.split('\n').filter((line) => /error TS\d+/.test(line));
-    const codes = [...new Set(errors.map((line) => line.match(/error (TS\d+)/)[1]))].sort();
-    results[key] = codes.length ? codes.join(' ') : 'ok';
-    if (errors.length)
-      details[key] = errors.slice(0, 20).map((l) => l.replace(/^.*node_modules\//, ''));
-  });
+  await pool(
+    cases,
+    Math.max(2, require('os').cpus().length),
+    async ({ key, dir: caseRoot, caseDir, version }) => {
+      const tsc = path.join(caseRoot, 'node_modules', `typescript-${version}`, 'bin', 'tsc');
+      const { stdout } = await runAsync(process.execPath, [tsc, '-p', caseDir], { cwd: caseRoot });
+      const errors = stdout.split('\n').filter((line) => /error TS\d+/.test(line));
+      const codes = [...new Set(errors.map((line) => line.match(/error (TS\d+)/)[1]))].sort();
+      results[key] = codes.length ? codes.join(' ') : 'ok';
+      if (errors.length)
+        details[key] = errors.slice(0, 20).map((l) => l.replace(/^.*node_modules\//, ''));
+    },
+  );
 
   return { results, details, inScope: (key) => versions.some((v) => key.endsWith(`| ts${v}`)) };
 }
