@@ -189,23 +189,17 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return false;
     }
 
-    // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
-    // fdv1Fallback, do not re-run the fallback machinery - we are already on
-    // FDv1. Its own traffic legitimately supersedes the pending deadline with
-    // the new TTL.
-    if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
-      scheduleFdv2Recovery(result);
-      return false;
-    }
+    // The deadline is armed on every directive. A non-FDv1-origin directive
+    // always halts the FDv2 source below, so it can never repeat from a
+    // still-running source; the only other repeat source is the FDv1
+    // synchronizer's own traffic, which legitimately supersedes the pending
+    // deadline with a fresh TTL.
+    scheduleFdv2Recovery(result);
 
-    // A directive observed while a deadline is already pending, but not from
-    // the FDv1 synchronizer's own traffic, is a repeated signal from a source
-    // that has not yet transitioned off FDv2 (e.g. because no FDv1 fallback
-    // synchronizer is configured, so the FDv2 source keeps running). The
-    // first directive's TTL already governs the return to FDv2; a repeat
-    // must not keep re-arming the deadline, or it could never elapse.
-    if (recoveryTimer.promise === undefined) {
-      scheduleFdv2Recovery(result);
+    // Guard: if the FDv1 fallback synchronizer itself produces this result,
+    // do not re-run the fallback machinery - we are already on FDv1.
+    if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
+      return false;
     }
 
     // With no synchronizers configured at all (e.g. one-shot mode), there

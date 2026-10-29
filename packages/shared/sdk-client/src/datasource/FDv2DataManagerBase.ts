@@ -423,7 +423,7 @@ export function createFDv2DataManagerBase(
       // Whether the SDK already has data from a previous data source
       // instance, e.g. this call is rebuilding the data source for a
       // connection-mode switch rather than the first identify.
-      hasExistingData: initialized,
+      hasExistingData: initialized || selector !== undefined,
     });
 
     dataSource

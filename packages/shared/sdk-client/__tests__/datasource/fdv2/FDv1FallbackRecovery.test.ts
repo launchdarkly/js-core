@@ -48,17 +48,16 @@ function makeTickingSynchronizer(
   };
 }
 
-it('does not let a directive repeated faster than its TTL starve FDv2 recovery (no FDv1 slot configured)', async () => {
+it('schedules FDv2 recovery once and honors the TTL (no FDv1 slot configured)', async () => {
   const statusManager = makeStatusManager();
   const logger = makeLogger();
 
-  // No FDv1 fallback slot: per the pre-existing gap, the active FDv2
-  // synchronizer is never stopped on a directive, so it keeps running and
-  // keeps producing directive-carrying results (e.g. a polling synchronizer
-  // whose every response carries "X-LD-FD-Fallback: true").
+  // No FDv1 fallback slot: the first directive halts and closes this
+  // synchronizer (every slot is blocked with nothing to unblock), so it
+  // never gets the chance to tick again before recovery.
   const sync = makeTickingSynchronizer(
     () => interrupted(makeErrorInfo(), { fdv1Fallback: true, fdv1FallbackTtlMs: 30 }),
-    8, // faster than the 30ms TTL -- each result used to re-arm the deadline before it fired
+    8, // faster than the 30ms TTL, in case the halt ever stopped applying
   );
 
   const ds = createFDv2DataSource({
@@ -82,12 +81,11 @@ it('does not let a directive repeated faster than its TTL starve FDv2 recovery (
   const scheduleLogs = infoCalls.filter((m) => m.includes('retry scheduled')).length;
   const recoveredLogs = infoCalls.filter((m) => m.includes('restarting FDv2')).length;
 
-  // handleFdv1Fallback() only re-arms the deadline once per Directed Fallback
-  // engagement -- a repeated directive from a source that has not
-  // transitioned off FDv2 does not keep resetting it.
+  // Exactly one directive is ever processed, since halting the source on
+  // the first one leaves it with no chance to tick again before recovery.
   expect(scheduleLogs).toBe(1);
-  // The deadline set by the first directive is honored: the SDK returns to
-  // FDv2 once it elapses, per DATASYSTEM v2 Requirement 1.6.4.1.
+  // The deadline set by that directive is honored: the SDK returns to FDv2
+  // once it elapses.
   expect(recoveredLogs).toBeGreaterThan(0);
 });
 
