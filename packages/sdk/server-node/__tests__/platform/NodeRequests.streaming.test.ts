@@ -11,7 +11,7 @@ import {
 } from 'launchdarkly-js-test-helpers';
 import * as net from 'net';
 
-import { internal } from '@launchdarkly/js-server-sdk-common';
+import { internal, platform } from '@launchdarkly/js-server-sdk-common';
 
 import NodeRequests from '../../src/platform/NodeRequests';
 
@@ -58,11 +58,12 @@ describe('given a running HTTP server', () => {
     expect(received.method.toUpperCase()).toEqual('REPORT');
     expect(received.headers.authorization).toEqual('sdk-key');
     expect(received.body).toEqual('{"kind":"user"}');
+    // Closing the queue ends the chunked response, so no read stays pending at teardown.
+    chunks.close();
   });
 
   it('does not request compressed content for a streaming request', async () => {
-    const chunks = new AsyncQueue<string>();
-    server.byDefault(TestHttpHandlers.chunkedStream(200, {}, chunks));
+    server.byDefault(TestHttpHandlers.respond(200));
 
     const requests = new NodeRequests();
     await requests.fetch(server.url, { method: 'GET', streaming: true });
@@ -214,6 +215,47 @@ describe('given a running HTTP server', () => {
     await expect(pending).rejects.toThrow();
   });
 
+  it.each(['reader', 'body'] as const)(
+    'closes the connection when the %s is cancelled',
+    async (target) => {
+      const closed = new AsyncQueue<void>();
+      server.byDefault((_req, res) => {
+        // The response never ends, so the close event shows that the client released the
+        // connection.
+        res.on('close', () => closed.add());
+        res.writeHead(200, { 'content-type': 'text/event-stream' });
+        res.write('first');
+      });
+
+      const requests = new NodeRequests();
+      const res = await requests.fetch(server.url, { method: 'GET', streaming: true });
+      const reader = res.body?.getReader();
+      await reader?.read();
+      await (target === 'reader' ? reader : res.body)?.cancel?.();
+
+      await expect(closed.take()).resolves.toBeUndefined();
+    },
+  );
+
+  it('ignores the timeout option for a streaming request', async () => {
+    const chunks = new AsyncQueue<string>();
+    chunks.add('first');
+    server.byDefault(TestHttpHandlers.chunkedStream(200, {}, chunks));
+    // The spy captures the outgoing request. A timeout option would set its timeout field and
+    // attach a timeout listener.
+    const endSpy = jest.spyOn(http.ClientRequest.prototype, 'end');
+
+    const requests = new NodeRequests();
+    const res = await requests.fetch(server.url, { method: 'GET', streaming: true, timeout: 10 });
+
+    expect(endSpy).toHaveBeenCalledTimes(1);
+    // Node sets the timeout field at run time, but some @types/node versions do not declare it.
+    const req = endSpy.mock.contexts[0] as http.ClientRequest & { timeout?: number };
+    expect(req.timeout).toBeUndefined();
+    expect(req.listenerCount('timeout')).toEqual(0);
+    await res.body?.cancel?.();
+  });
+
   it('removes the abort listener when the stream ends', async () => {
     server.byDefault(TestHttpHandlers.respond(200, {}, 'done'));
 
@@ -349,9 +391,13 @@ describe('given a running HTTPS server with a self-signed certificate', () => {
       errorFilter: () => false,
     });
     try {
-      const errors = new AsyncQueue<unknown>();
-      es.addEventListener('error', (event) => errors.add(event));
-      expect(await errors.take()).toBeDefined();
+      const errors = new AsyncQueue<platform.HttpErrorResponse | undefined>();
+      es.onerror = (err) => errors.add(err);
+      // The certificate failure ends the connection before any HTTP response, so the error
+      // carries the TLS message and no status. That separates it from the fetch-level test.
+      const err = await errors.take();
+      expect(err?.message).toMatch(/self[- ]signed certificate/);
+      expect(err?.status).toBeUndefined();
     } finally {
       es.close();
     }

@@ -1,4 +1,10 @@
-import { headersToObject, splitHeaderListValue } from '../src/httpHelpers';
+import {
+  FetchHeaders,
+  FetchLikeResponse,
+  headersToObject,
+  parseResponseHeaders,
+  splitHeaderListValue,
+} from '../src/httpHelpers';
 
 it('splits a joined value on commas outside quotes', () => {
   expect(splitHeaderListValue('a, b, c')).toEqual(['a', ' b', ' c']);
@@ -62,4 +68,96 @@ it('collects headers through entries when forEach is absent', () => {
       entries: () => pairs,
     }),
   ).toEqual({ 'content-type': 'text/event-stream' });
+});
+
+function responseWith(headers: unknown): FetchLikeResponse {
+  return { status: 200, headers: headers as FetchHeaders };
+}
+
+function iterates(record: Record<string, string>) {
+  return (callback: (value: string, key: string) => void) => {
+    Object.entries(record).forEach(([key, value]) => callback(value, key));
+  };
+}
+
+const throws = () => {
+  throw new Error('boom');
+};
+
+it.each([
+  [
+    'a string get result wins over the iterated record',
+    { get: () => 'text/event-stream', forEach: iterates({ 'content-type': 'text/html' }) },
+    {
+      headers: { 'content-type': 'text/html' },
+      contentType: 'text/event-stream',
+      unreadable: false,
+    },
+  ],
+  [
+    'a throwing get falls back to the iterated record',
+    { get: throws, forEach: iterates({ 'content-type': 'text/event-stream' }) },
+    {
+      headers: { 'content-type': 'text/event-stream' },
+      contentType: 'text/event-stream',
+      unreadable: false,
+    },
+  ],
+  [
+    'a non-string get result falls back to the iterated record',
+    { get: () => 42, forEach: iterates({ 'content-type': 'text/event-stream' }) },
+    {
+      headers: { 'content-type': 'text/event-stream' },
+      contentType: 'text/event-stream',
+      unreadable: false,
+    },
+  ],
+  [
+    'a get that reports the header absent, without iteration, is readable',
+    { get: () => null },
+    { headers: {}, contentType: undefined, unreadable: false },
+  ],
+  [
+    'a throwing get without iteration is unreadable',
+    { get: throws },
+    { headers: {}, contentType: undefined, unreadable: true },
+  ],
+  [
+    'a non-string get result without iteration is unreadable',
+    { get: () => 42 },
+    { headers: {}, contentType: undefined, unreadable: true },
+  ],
+  [
+    'headers with no access method are unreadable',
+    {},
+    { headers: {}, contentType: undefined, unreadable: true },
+  ],
+  [
+    'a throwing iteration keeps no partial headers and is unreadable even when get works',
+    {
+      get: () => 'text/event-stream',
+      forEach: (callback: (value: string, key: string) => void) => {
+        callback('text/html', 'content-type');
+        throw new Error('boom');
+      },
+    },
+    { headers: {}, contentType: 'text/event-stream', unreadable: true },
+  ],
+  [
+    'missing headers are unreadable',
+    undefined,
+    { headers: {}, contentType: undefined, unreadable: true },
+  ],
+])('parses response headers: %s', (_name, headers, expected) => {
+  expect(parseResponseHeaders(responseWith(headers))).toEqual(expected);
+});
+
+it('reports a response whose headers getter throws as unreadable', () => {
+  const res = { status: 200 };
+  Object.defineProperty(res, 'headers', { get: throws });
+  expect(parseResponseHeaders(res as FetchLikeResponse)).toEqual({
+    headers: {},
+    contentType: undefined,
+    unreadable: true,
+  });
 });

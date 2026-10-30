@@ -140,7 +140,8 @@ export function headersToObject(headers: FetchHeaders): Record<string, string> |
 /**
  * The response headers in the shape the client consumes. `contentType` is the declared
  * content type, or `undefined` when the response declares none. `unreadable` is true when
- * no header access works at all.
+ * the header iteration throws, even if `get` returns a value. It is also true when no
+ * header access gives a usable answer.
  */
 export interface ParsedResponseHeaders {
   headers: Record<string, string>;
@@ -149,9 +150,10 @@ export interface ParsedResponseHeaders {
 }
 
 /**
- * Reads and validates the headers of a response. Every access to the headers object is
- * guarded, so a hostile response cannot break the failure report with a throw. The declared
- * content type prefers the `get` lookup and falls back to the iterated record.
+ * Reads the headers of a response. The caller validates the result. Every access to the
+ * headers object is guarded, so a hostile response cannot break the failure report with a
+ * throw. The declared content type prefers the `get` lookup and falls back to the iterated
+ * record.
  */
 export function parseResponseHeaders(res: FetchLikeResponse): ParsedResponseHeaders {
   let resHeaders: FetchHeaders | undefined;
@@ -175,9 +177,8 @@ export function parseResponseHeaders(res: FetchLikeResponse): ParsedResponseHead
     unreadable = true;
   }
 
-  // `getResult` holds what `get` returned. `getAnsweredAbsent` is true only when a working
-  // `get` reported the header as absent, which is the one case where a missing record is
-  // not a failure.
+  // `getAnsweredAbsent` is true only when a working `get` reported the header as absent.
+  // That is the one case where a missing record is not a failure.
   let getResult: unknown;
   let getAnsweredAbsent = false;
   try {
