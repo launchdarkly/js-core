@@ -33,6 +33,7 @@ export interface TestHarnessWebSocketOptions {
  */
 export default abstract class TestHarnessWebSocket {
   private _ws?: WebSocket;
+  private _intentionalClose = false;
   protected readonly logger: LDLogger = makeLogger('TestHarnessWebSocket');
 
   constructor(
@@ -58,14 +59,22 @@ export default abstract class TestHarnessWebSocket {
 
   connect() {
     this.logger.info(`Connecting to web socket.`);
+    this._intentionalClose = false;
     this._ws = new WebSocket(this._url, ['v1']);
     this._ws.onopen = () => {
       this.logger.info('Connected to websocket.');
     };
     this._ws.onclose = () => {
+      if (this._intentionalClose) {
+        this.logger.info('Websocket closed.');
+        return;
+      }
       this.logger.info('Websocket closed. Attempting to reconnect in 1 second.');
       setTimeout(() => {
-        this.connect();
+        // disconnect() may run while the reconnect timer is pending.
+        if (!this._intentionalClose) {
+          this.connect();
+        }
       }, 1000);
     };
     this._ws.onerror = (err) => {
@@ -134,6 +143,7 @@ export default abstract class TestHarnessWebSocket {
   }
 
   disconnect() {
+    this._intentionalClose = true;
     this._ws?.close();
   }
 
