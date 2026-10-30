@@ -33,6 +33,6 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@launchdarkly/akamai-server-base-sdk": "3.0.46"
+    "@launchdarkly/akamai-server-base-sdk": "3.0.47"
   }
 }

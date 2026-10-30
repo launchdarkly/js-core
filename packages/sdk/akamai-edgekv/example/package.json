@@ -32,6 +32,6 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@launchdarkly/akamai-server-edgekv-sdk": "1.4.48"
+    "@launchdarkly/akamai-server-edgekv-sdk": "1.4.49"
   }
 }
