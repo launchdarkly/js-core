@@ -7,24 +7,24 @@ import {
 import { ClientEntity, newSdkClientEntity } from './ClientEntity';
 
 const CAPABILITIES = [
-            'client-side',
-            'mobile',
-            'service-endpoints',
-            'tags',
-            'user-type',
-            'inline-context-all',
-            'anonymous-redaction',
-            'strongly-typed',
-            'client-prereq-events',
-            'client-prereq-cycle-detection',
-            'client-per-context-summaries',
-            'track-hooks',
-            'fdv1-fallback',
-            'client-event-source-http-errors',
-            'retry-conformance-fdv1-streaming',
-            'retry-conformance-fdv1-polling',
-            'bootstrap',
-          ];
+  'client-side',
+  'mobile',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-prereq-cycle-detection',
+  'client-per-context-summaries',
+  'track-hooks',
+  'fdv1-fallback',
+  'client-event-source-http-errors',
+  'retry-conformance-fdv1-streaming',
+  'retry-conformance-fdv1-polling',
+  'bootstrap',
+];
 
 export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
   constructor(url: string, onConnectionChange?: (connected: boolean) => void) {
