@@ -105,7 +105,10 @@ export interface LDDataSystemOptions {
  * The source reads flag and segment overrides from one or more local files and reloads them as
  * the files change. The files use the same document format as the file data source: a JSON or
  * YAML document with optional `flags`, `flagValues`, and `segments` members. `flagValues` entries
- * expand into full flag definitions that return the given value for every context.
+ * expand into full flag definitions that return the given value for every context. A `flagValues`
+ * entry is not available to client-side SDKs, so `allFlagsState` with `clientSideOnly` leaves it
+ * out, even when the flag it overrides is available to them. To override such a flag, define it
+ * in `flags` with `"clientSideAvailability": { "usingEnvironmentId": true }`.
  *
  * A configured file that does not exist contributes no overrides. It can be created later, and
  * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that

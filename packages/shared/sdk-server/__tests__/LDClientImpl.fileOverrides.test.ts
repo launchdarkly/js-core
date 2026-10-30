@@ -66,6 +66,35 @@ describe('given a client with a file override source over a mock filesystem', ()
     expect(client!.initialized()).toBe(false);
   });
 
+  it('leaves a flagValues entry out of a client-side state and keeps a client-side definition', async () => {
+    // A flagValues entry is not available to client-side SDKs. A full definition with client-side
+    // availability is, so that is how an operator overrides a flag that client-side SDKs use.
+    filesystem.set(
+      jsonPath,
+      JSON.stringify({
+        flagValues: { 'value-flag': true },
+        flags: {
+          'full-flag': {
+            key: 'full-flag',
+            version: 1,
+            on: true,
+            variations: [true],
+            fallthrough: { variation: 0 },
+            clientSideAvailability: { usingEnvironmentId: true },
+          },
+        },
+      }),
+    );
+    makeClient({ paths: [jsonPath] });
+    await waitFor(async () => (await client!.boolVariation('value-flag', user, false)) === true);
+
+    const all = await client!.allFlagsState(user);
+    expect(Object.keys(all.allValues()).sort()).toEqual(['full-flag', 'value-flag']);
+    const clientSide = await client!.allFlagsState(user, { clientSideOnly: true });
+    expect(clientSide.valid).toBe(true);
+    expect(clientSide.allValues()).toEqual({ 'full-flag': true });
+  });
+
   it('reads a YAML file with the configured parser', async () => {
     const yamlParser = jest.fn(() => ({ flagValues: { 'yaml-flag': 'from-configured-parser' } }));
     filesystem.set(yamlPath, 'flagValues:\n  yaml-flag: x\n');
