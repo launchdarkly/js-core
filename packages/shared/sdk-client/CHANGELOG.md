@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.34.1...js-client-sdk-common-v1.35.0) (2026-10-30)
+
+
+### Features
+
+* Add an opt-in fetch-based EventSource entry to the browser SDK ([#2033](https://github.com/launchdarkly/js-core/issues/2033)) ([7a21f6f](https://github.com/launchdarkly/js-core/commit/7a21f6f717acd88a45d2a97e634126cb7d263630))
+
 ## [1.34.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.34.0...js-client-sdk-common-v1.34.1) (2026-10-27)
 
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.4.1](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.4.0...node-client-sdk-v4.4.1) (2026-10-30)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.34.1 to 1.35.0
+
 ## [4.4.0](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.3.0...node-client-sdk-v4.4.0) (2026-10-27)
 
 
