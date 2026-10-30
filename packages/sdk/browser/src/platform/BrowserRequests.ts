@@ -2,6 +2,7 @@ import {
   EventSourceCapabilities,
   EventSourceInitDict,
   EventSource as LDEventSource,
+  LDEventSourceFactory,
   Options,
   Requests,
   Response,
@@ -9,21 +10,50 @@ import {
 
 import DefaultBrowserEventSource from './DefaultBrowserEventSource';
 
+/**
+ * The native browser EventSource, which this SDK uses unless an override is configured, supports
+ * none of the optional transport features.
+ */
+const DEFAULT_CAPABILITIES: EventSourceCapabilities = {
+  customMethod: false,
+  readTimeout: false,
+  headers: false,
+};
+
+const defaultEventSourceFactory: LDEventSourceFactory = {
+  createEventSource: (url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource =>
+    new DefaultBrowserEventSource(url, eventSourceInitDict),
+  capabilities: DEFAULT_CAPABILITIES,
+};
+
 export default class BrowserRequests implements Requests {
+  private _eventSourceFactory: LDEventSourceFactory;
+
+  /**
+   * @param eventSourceFactory Optional override for the EventSource implementation. When omitted,
+   * the native browser EventSource is used.
+   */
+  constructor(eventSourceFactory?: LDEventSourceFactory) {
+    this._eventSourceFactory = eventSourceFactory ?? defaultEventSourceFactory;
+  }
+
   fetch(url: string, options?: Options): Promise<Response> {
     // @ts-ignore
     return fetch(url, options);
   }
 
   createEventSource(url: string, eventSourceInitDict: EventSourceInitDict): LDEventSource {
-    return new DefaultBrowserEventSource(url, eventSourceInitDict);
+    return this._eventSourceFactory.createEventSource(url, eventSourceInitDict);
   }
 
   getEventSourceCapabilities(): EventSourceCapabilities {
+    // Coerce to booleans so a truthy non-boolean from a custom factory cannot read as
+    // support for a feature the transport lacks.
+    const capabilities = this._eventSourceFactory.capabilities;
     return {
-      customMethod: false,
-      readTimeout: false,
-      headers: false,
+      customMethod: capabilities?.customMethod === true,
+      readTimeout: capabilities?.readTimeout === true,
+      headers: capabilities?.headers === true,
     };
   }
 }

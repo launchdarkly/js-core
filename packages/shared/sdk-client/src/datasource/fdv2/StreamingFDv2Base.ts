@@ -122,6 +122,13 @@ export function createStreamingBase(config: {
   let pendingFallback = false;
   let started = false;
   let stopped = false;
+  // The failure event the error filter already reported. A transport that
+  // passes the same event object to the filter and then to onerror gets one
+  // queued result per failure.
+  //
+  // NOTE: The React Native transport dispatches onerror before the filter and
+  // with a different object, so its failures are not deduped here.
+  let filterHandledError: HttpErrorResponse | undefined;
 
   function logConnectionAttempt() {
     connectionAttemptStartTime = Date.now();
@@ -224,6 +231,15 @@ export function createStreamingBase(config: {
   }
 
   function handleError(err: HttpErrorResponse): boolean {
+    // Every branch below queues a result for this failure, so onerror must not
+    // queue another one for the same event.
+    filterHandledError = err;
+
+    // A failure without a status is a network failure, not an HTTP error response.
+    const errorInfo = err.status
+      ? errorInfoFromHttpError(err.status)
+      : errorInfoFromNetworkError(err.message || 'IO Error');
+
     // Check for FDv1 fallback header (with optional TTL).
     const errHeaders = err.headers ?? {};
     const directive = internal.readFallbackDirective({
@@ -234,26 +250,21 @@ export function createStreamingBase(config: {
       // otherwise-recoverable HTTP status: the server is telling us to stop
       // trying FDv2 now rather than keep retrying this connection.
       logConnectionResult(false);
-      putWithFallback(
-        (fallback) => terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
-        directive,
-      );
+      putWithFallback((fallback) => terminalError(errorInfo, fallback), directive);
       return false;
     }
 
     if (!shouldRetry(err)) {
       config.logger?.error(httpErrorMessage(err, 'streaming request'));
       logConnectionResult(false);
-      putWithFallback((fallback) =>
-        terminalError(errorInfoFromHttpError(err.status ?? 0), fallback),
-      );
+      putWithFallback((fallback) => terminalError(errorInfo, fallback));
       return false;
     }
 
     config.logger?.warn(httpErrorMessage(err, 'streaming request', 'will retry'));
     logConnectionResult(false);
     logConnectionAttempt();
-    putWithFallback((fallback) => interrupted(errorInfoFromHttpError(err.status ?? 0), fallback));
+    putWithFallback((fallback) => interrupted(errorInfo, fallback));
     return true;
   }
 
@@ -386,6 +397,13 @@ export function createStreamingBase(config: {
           return;
         }
 
+        // Suppress only the exact event the filter reported. A transport can
+        // run the filter without a matching onerror dispatch (a stream end, a
+        // clean close), so a boolean mark could go stale and swallow a later
+        // failure that reaches only this slot.
+        const alreadyReported = err !== undefined && err === filterHandledError;
+        filterHandledError = undefined;
+
         // Server-sent FDv2 error frames and connection failures share the 'error' type, and
         // both reach this slot. The protocol listener owns the frames; reporting one here too
         // would replace the real reason with a fabricated network error. Only a protocol frame
@@ -398,8 +416,12 @@ export function createStreamingBase(config: {
           // This condition will be handled by the error filter.
           return;
         }
+
+        if (alreadyReported) {
+          return;
+        }
         putWithFallback((fallback) =>
-          interrupted(errorInfoFromNetworkError(err?.message ?? 'IO Error'), fallback),
+          interrupted(errorInfoFromNetworkError(err?.message || 'IO Error'), fallback),
         );
       };
 

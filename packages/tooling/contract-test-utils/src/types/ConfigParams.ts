@@ -127,6 +127,7 @@ export interface SDKConfigClientSideParams {
   initialUser?: any;
   evaluationReasons?: boolean;
   useReport?: boolean;
+  usePost?: boolean;
   includeEnvironmentAttributes?: boolean;
   hash?: string;
   bootstrap?: unknown;

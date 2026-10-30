@@ -1,7 +1,7 @@
 import { LDLogger } from '@launchdarkly/js-client-sdk';
 import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
 
-import { ClientEntity, newSdkClientEntity } from './ClientEntity';
+import { ClientEntity, newSdkClientEntity, useFetchEventSource } from './ClientEntity';
 
 export default class TestHarnessWebSocket {
   private _ws?: WebSocket;
@@ -47,7 +47,22 @@ export default class TestHarnessWebSocket {
             'track-hooks',
             'fdv1-fallback',
             'bootstrap',
+            // The FDv1 streaming data source retries every HTTP error. On the
+            // fetch transport an unexpected status retries after the extended
+            // delay of minutes, which is longer than the legacy permanent-stop
+            // tests watch, so those tests would pass for the wrong reason. The
+            // native transport cannot report a status, so the harness already
+            // skips those tests in native mode.
+            'retry-conformance-fdv1-streaming',
           ];
+
+          // The native browser EventSource cannot send a POST request and hides HTTP error
+          // details. Only advertise the capabilities that need them when the run uses the
+          // fetch-based EventSource.
+          if (useFetchEventSource()) {
+            resData.capabilities.push('client-use-post');
+            resData.capabilities.push('client-event-source-http-errors');
+          }
 
           break;
         case 'createClient':

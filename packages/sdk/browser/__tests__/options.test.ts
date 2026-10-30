@@ -28,11 +28,16 @@ it('logs no warnings when all configuration is valid', () => {
     },
   };
 
+  const eventSource = { createEventSource: jest.fn() } as unknown as NonNullable<
+    Parameters<typeof validateBrowserOptions>[0]['eventSource']
+  >;
+
   validateBrowserOptions(
     {
       fetchGoals: true,
       eventUrlTransformer: (url: string) => url,
       storage,
+      eventSource,
     },
     logger,
   );
@@ -118,4 +123,58 @@ it('passes an empty dataSystem through to base options', () => {
   } as any;
   const result = filterToBaseOptionsWithDefaults(opts);
   expect((result as any).dataSystem).toEqual({});
+});
+
+it('accepts an event source factory', () => {
+  const eventSource = { createEventSource: jest.fn() } as unknown as NonNullable<
+    Parameters<typeof validateBrowserOptions>[0]['eventSource']
+  >;
+
+  const opts = validateBrowserOptions({ eventSource }, logger);
+
+  expect(opts.eventSource).toBe(eventSource);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('warns and drops an event source that is not an object', () => {
+  const opts = validateBrowserOptions(
+    {
+      // @ts-ignore
+      eventSource: 'not an object',
+    },
+    logger,
+  );
+
+  expect(opts.eventSource).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "eventSource" should be of type LDEventSourceFactory, got string, using default value',
+  );
+});
+
+it('warns and drops an event source factory without a createEventSource function', () => {
+  const opts = validateBrowserOptions(
+    {
+      // @ts-ignore
+      eventSource: {},
+    },
+    logger,
+  );
+
+  expect(opts.eventSource).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "eventSource" should be of type LDEventSourceFactory, got object, using default value',
+  );
+});
+
+it('defaults the event source factory to undefined', () => {
+  const opts = validateBrowserOptions({}, logger);
+  expect(opts.eventSource).toBeUndefined();
+});
+
+it('strips the event source factory from base options', () => {
+  const eventSource = { createEventSource: jest.fn() } as unknown as NonNullable<
+    Parameters<typeof validateBrowserOptions>[0]['eventSource']
+  >;
+  const baseOpts = filterToBaseOptionsWithDefaults({ eventSource });
+  expect(baseOpts).not.toHaveProperty('eventSource');
 });

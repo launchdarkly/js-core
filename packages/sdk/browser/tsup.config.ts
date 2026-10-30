@@ -5,6 +5,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
+    'fetch-eventsource': 'src/fetch-eventsource/index.ts',
   },
   tsconfig: 'tsconfig.build.json',
   minify: true,
@@ -12,6 +13,7 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
+  external: ['@launchdarkly/eventsource'],
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,
   metafile: true,

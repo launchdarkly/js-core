@@ -262,6 +262,8 @@ describe.each([408, 429, 500, 503])('given recoverable HTTP error %d', (status) 
     if (result.type !== 'status') return;
 
     expect(result.state).toBe('interrupted');
+    expect(result.errorInfo?.kind).toBe('ERROR_RESPONSE');
+    expect(result.errorInfo?.statusCode).toBe(status);
 
     base.close();
   });
@@ -1067,6 +1069,120 @@ it('surfaces a deferred fallback directive on a retryable errorFilter error', as
   expect(result.state).toBe('interrupted');
   expect(result.fdv1Fallback).toBe(true);
   expect(result.fdv1FallbackTtlMs).toBe(75000);
+
+  base.close();
+});
+
+it('reports one interruption when the transport runs the error filter and onerror for one status-less failure', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // The shared eventsource transport classifies a failure through the error
+  // filter and can dispatch the same event to onerror.
+  const err = { message: 'network unreachable' };
+  const willRetry = simulateErrorFilter(mockRequests, err);
+  expect(willRetry).toBe(true);
+  mockEventSource.onerror(err);
+
+  const result = await base.takeResult();
+  expect(result.type).toBe('status');
+  if (result.type !== 'status') return;
+  expect(result.state).toBe('interrupted');
+  expect(result.errorInfo?.kind).toBe('NETWORK_ERROR');
+  expect(result.errorInfo?.message).toContain('network unreachable');
+
+  const raced = await Promise.race([
+    base.takeResult().then(() => 'second-result'),
+    new Promise((resolve) => setTimeout(() => resolve('no-second-result'), 50)),
+  ]);
+  expect(raced).toBe('no-second-result');
+
+  base.close();
+});
+
+it('still reports a status-less onerror failure after an earlier filter-classified failure', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // The filter classifies this status-bearing failure, and onerror receives
+  // the same event but defers to the filter.
+  const statusErr = { status: 500, message: 'Error 500' };
+  expect(simulateErrorFilter(mockRequests, statusErr)).toBe(true);
+  mockEventSource.onerror(statusErr);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+
+  // A native EventSource failure carries no status and reaches only onerror.
+  // It must still report after the filter-classified failure above.
+  mockEventSource.onerror({ message: 'IO Error' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.kind).toBe('NETWORK_ERROR');
+
+  base.close();
+});
+
+it('still reports an onerror-only failure after a filter call with no matching onerror dispatch', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // Some transports run the error filter for a failure they never dispatch to
+  // onerror, for example a clean server close.
+  expect(simulateErrorFilter(mockRequests, { message: 'stream ended' })).toBe(true);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+
+  // A later failure that reaches only onerror must still be reported.
+  mockEventSource.onerror({ message: 'connection setup failed' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.kind).toBe('NETWORK_ERROR');
+  expect(second.errorInfo?.message).toContain('connection setup failed');
+
+  base.close();
+});
+
+it('maps an empty transport failure message to IO Error', async () => {
+  const mockEventSource = createMockEventSource();
+  const mockRequests = createMockRequests(mockEventSource);
+  const base = createBase(mockRequests, logger);
+  base.start();
+
+  // The shared transport defaults a missing error message to an empty string.
+  expect(simulateErrorFilter(mockRequests, { message: '' })).toBe(true);
+
+  const first = await base.takeResult();
+  expect(first.type).toBe('status');
+  if (first.type !== 'status') return;
+  expect(first.state).toBe('interrupted');
+  expect(first.errorInfo?.message).toBe('IO Error');
+
+  // A new object, so the identity dedup does not suppress this result.
+  mockEventSource.onerror({ message: '' });
+
+  const second = await base.takeResult();
+  expect(second.type).toBe('status');
+  if (second.type !== 'status') return;
+  expect(second.state).toBe('interrupted');
+  expect(second.errorInfo?.message).toBe('IO Error');
 
   base.close();
 });

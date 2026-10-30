@@ -7,6 +7,7 @@ import {
   ModeDefinition,
   SynchronizerEntry,
 } from '@launchdarkly/js-client-sdk';
+import { fetchBrowserEventSource } from '@launchdarkly/js-client-sdk/fetch-eventsource';
 import {
   CommandParams,
   CommandType,
@@ -23,6 +24,15 @@ import {
 
 export const badCommandError = new Error('unsupported command');
 export const malformedCommand = new Error('command was malformed');
+
+/**
+ * True when the test page was opened with `?eventsource=fetch`. A dedicated CI run opens the
+ * entity with this query parameter to run the full suite against the fetch-based EventSource.
+ * Other runs use the SDK defaults.
+ */
+export function useFetchEventSource(): boolean {
+  return new URLSearchParams(window.location.search).get('eventsource') === 'fetch';
+}
 
 function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
   if (init.polling) {
@@ -108,6 +118,16 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     logger: makeLogger(`${tag}.sdk`),
     useReport: options.clientSide.useReport ?? undefined,
   };
+
+  // In the fetch EventSource runs, every client uses the fetch-based EventSource. The v2
+  // harness run proves REPORT streaming on the FDv1 path, and the v3 run proves the usePost
+  // POST streaming variants on the FDv2 path.
+  if (useFetchEventSource()) {
+    cf.eventSource = fetchBrowserEventSource;
+  }
+  if (options.clientSide.usePost) {
+    cf.usePost = true;
+  }
 
   if (options.serviceEndpoints) {
     cf.streamUri = options.serviceEndpoints.streaming;
