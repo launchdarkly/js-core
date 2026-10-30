@@ -101,6 +101,8 @@ export default class OverrideSink implements LDOverrideSink {
   // Notifications for successive snapshots are computed one at a time, in order.
   private _chain: Promise<void> = Promise.resolve();
 
+  private _closed = false;
+
   /**
    * @param _layer The layer to write to.
    * @param _base The store that holds LaunchDarkly data, without the overlay. The merged views
@@ -125,6 +127,12 @@ export default class OverrideSink implements LDOverrideSink {
    * layer before any of it is applied, and the error reaches the caller.
    */
   setOverrides(flags: LDKeyedFeatureStoreItem[], segments: LDKeyedFeatureStoreItem[]): void {
+    if (this._closed) {
+      this._logger?.debug(
+        'Ignoring an override snapshot supplied after the override source was closed',
+      );
+      return;
+    }
     const { previous, current } = this._layer.setAll(flags, segments);
     // Computing the affected flags needs the merged view before and after the replacement. Skip
     // all of that work when nothing is listening.
@@ -136,6 +144,14 @@ export default class OverrideSink implements LDOverrideSink {
       .catch((err) => {
         this._logger?.error(`Unable to compute the flags affected by an override change: ${err}`);
       });
+  }
+
+  /**
+   * Stops accepting snapshots. The client calls this before it closes the source, so a snapshot
+   * that the source supplies afterward is ignored. The layer keeps its contents.
+   */
+  close(): void {
+    this._closed = true;
   }
 
   /**

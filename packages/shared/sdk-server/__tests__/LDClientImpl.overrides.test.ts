@@ -637,6 +637,48 @@ describe('given override source lifecycle and configuration', () => {
     expect(await client.boolVariation('overridden-flag', user, false)).toBe(false);
   });
 
+  it('warns in offline mode that the source is not started and no overrides are served', () => {
+    const logger = makeMockLogger();
+    const factory = jest.fn((_clientContext: LDClientContext) => new TestOverrideSource());
+    client = makeFDv2Client(makeFDv2Platform(), {
+      logger,
+      offline: true,
+      dataSystem: { overrides: factory },
+    });
+
+    expect(factory).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Offline mode is enabled; the override source is not started and no overrides are served',
+    );
+  });
+
+  it('does not warn about overrides in offline mode without an override source', () => {
+    const logger = makeMockLogger();
+    client = makeFDv2Client(makeFDv2Platform(), { logger, offline: true, dataSystem: {} });
+
+    expect(warningsMatching(logger, /override source/)).toEqual(0);
+  });
+
+  it('ignores a snapshot that the source supplies after the client is closed', async () => {
+    const updates: string[] = [];
+    const source = new TestOverrideSource();
+    const created = makeFDv2Client(
+      makeFDv2Platform(),
+      { dataSystem: { overrides: source } },
+      makeCallbacks((key) => updates.push(key), true),
+    );
+    client = created;
+    created.close();
+
+    // A custom source can keep supplying snapshots after it is closed.
+    source.sink!.setOverrides([singleValueFlag('late-flag', true)], []);
+    await settle();
+
+    expect(updates).toEqual([]);
+    const detail = await created.boolVariationDetail('late-flag', user, false);
+    expect(detail.reason).toEqual({ kind: 'ERROR', errorKind: 'CLIENT_NOT_READY' });
+  });
+
   it('accepts a factory function for the source', () => {
     const source = new TestOverrideSource();
     const factory = jest.fn((_clientContext: LDClientContext) => source);
