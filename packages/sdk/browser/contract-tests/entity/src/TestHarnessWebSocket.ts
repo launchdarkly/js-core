@@ -1,117 +1,72 @@
-import { LDLogger } from '@launchdarkly/js-client-sdk';
-import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
+import {
+  CreateInstanceParams,
+  TestHarnessWebSocket as BaseTestHarnessWebSocket,
+} from '@launchdarkly/js-contract-test-utils/client';
 
 import { ClientEntity, newSdkClientEntity, useFetchEventSource } from './ClientEntity';
 
-export default class TestHarnessWebSocket {
-  private _ws?: WebSocket;
+const BASE_CAPABILITIES = [
+  'client-side',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-prereq-cycle-detection',
+  'client-per-context-summaries',
+  'track-hooks',
+  'fdv1-fallback',
+  'bootstrap',
+  // The FDv1 streaming data source retries every HTTP error. On the
+  // fetch transport an unexpected status retries after the extended
+  // delay of minutes, which is longer than the legacy permanent-stop
+  // tests watch, so those tests would pass for the wrong reason. The
+  // native transport cannot report a status, so the harness already
+  // skips those tests in native mode.
+  'retry-conformance-fdv1-streaming',
+];
+
+// The native browser EventSource cannot send a POST request and hides HTTP error
+// details. Only advertise the capabilities that need them when the run uses the
+// fetch-based EventSource.
+function browserCapabilities(): string[] {
+  return useFetchEventSource()
+    ? [...BASE_CAPABILITIES, 'client-use-post', 'client-event-source-http-errors']
+    : BASE_CAPABILITIES;
+}
+
+export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
   private readonly _entities: Record<string, ClientEntity> = {};
   private _clientCounter = 0;
-  private _logger: LDLogger = makeLogger('TestHarnessWebSocket');
 
-  constructor(private readonly _url: string) {}
-
-  connect() {
-    this._logger.info(`Connecting to web socket.`);
-    this._ws = new WebSocket(this._url, ['v1']);
-    this._ws.onopen = () => {
-      this._logger.info('Connected to websocket.');
-    };
-    this._ws.onclose = () => {
-      this._logger.info('Websocket closed. Attempting to reconnect in 1 second.');
-      setTimeout(() => {
-        this.connect();
-      }, 1000);
-    };
-    this._ws.onerror = (err) => {
-      this._logger.info(`error:`, err);
-    };
-
-    this._ws.onmessage = async (msg) => {
-      this._logger.info('Test harness message', msg);
-      const data = JSON.parse(msg.data);
-      const resData: any = { reqId: data.reqId };
-      switch (data.command) {
-        case 'getCapabilities':
-          resData.capabilities = [
-            'client-side',
-            'service-endpoints',
-            'tags',
-            'user-type',
-            'inline-context-all',
-            'anonymous-redaction',
-            'strongly-typed',
-            'client-prereq-events',
-            'client-prereq-cycle-detection',
-            'client-per-context-summaries',
-            'track-hooks',
-            'fdv1-fallback',
-            'bootstrap',
-            // The FDv1 streaming data source retries every HTTP error. On the
-            // fetch transport an unexpected status retries after the extended
-            // delay of minutes, which is longer than the legacy permanent-stop
-            // tests watch, so those tests would pass for the wrong reason. The
-            // native transport cannot report a status, so the harness already
-            // skips those tests in native mode.
-            'retry-conformance-fdv1-streaming',
-          ];
-
-          // The native browser EventSource cannot send a POST request and hides HTTP error
-          // details. Only advertise the capabilities that need them when the run uses the
-          // fetch-based EventSource.
-          if (useFetchEventSource()) {
-            resData.capabilities.push('client-use-post');
-            resData.capabilities.push('client-event-source-http-errors');
-          }
-
-          break;
-        case 'createClient':
-          try {
-            const entity = await newSdkClientEntity(data.body);
-            resData.resourceUrl = `/clients/${this._clientCounter}`;
-            resData.status = 201;
-            this._entities[this._clientCounter] = entity;
-            this._clientCounter += 1;
-          } catch (e: any) {
-            resData.status = 500;
-            resData.error = e?.message ?? String(e);
-          }
-          break;
-        case 'runCommand':
-          if (Object.prototype.hasOwnProperty.call(this._entities, data.id)) {
-            const entity = this._entities[data.id];
-            const body = await entity.doCommand(data.body);
-            resData.body = body;
-            resData.status = body ? 200 : 204;
-          } else {
-            resData.status = 404;
-            this._logger.warn(`Client did not exist: ${data.id}`);
-          }
-
-          break;
-        case 'deleteClient':
-          if (Object.prototype.hasOwnProperty.call(this._entities, data.id)) {
-            const entity = this._entities[data.id];
-            entity.close();
-            delete this._entities[data.id];
-          } else {
-            resData.status = 404;
-            this._logger.warn(`Could not delete client because it did not exist: ${data.id}`);
-          }
-          break;
-        default:
-          break;
-      }
-
-      this.send(resData);
-    };
+  constructor(url: string) {
+    super(url, { capabilities: browserCapabilities() });
   }
 
-  disconnect() {
-    this._ws?.close();
+  protected async createClient(params: CreateInstanceParams): Promise<string> {
+    const entity = await newSdkClientEntity(params);
+    const id = String(this._clientCounter);
+    this._clientCounter += 1;
+    this._entities[id] = entity;
+    return id;
   }
 
-  send(data: unknown) {
-    this._ws?.send(JSON.stringify(data));
+  protected getCommandHandler(id: string) {
+    if (!Object.prototype.hasOwnProperty.call(this._entities, id)) {
+      return undefined;
+    }
+    return (params: Parameters<ClientEntity['doCommand']>[0]) =>
+      this._entities[id].doCommand(params);
+  }
+
+  protected deleteClient(id: string): boolean {
+    if (!Object.prototype.hasOwnProperty.call(this._entities, id)) {
+      return false;
+    }
+    this._entities[id].close();
+    delete this._entities[id];
+    return true;
   }
 }
