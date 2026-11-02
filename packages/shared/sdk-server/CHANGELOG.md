@@ -8,6 +8,14 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.0...js-server-sdk-common-v2.26.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* Treat a repeated override file path in a different case as a repeat on Windows ([#2134](https://github.com/launchdarkly/js-core/issues/2134)) ([d331546](https://github.com/launchdarkly/js-core/commit/d3315463a3142e1e90edf7589a0f77d8f53406b3))
+* Warn when offline mode skips the override source, and ignore snapshots after close ([#2133](https://github.com/launchdarkly/js-core/issues/2133)) ([612918c](https://github.com/launchdarkly/js-core/commit/612918cf89b76b587fe681837f7919c9d1f311d6))
+
 ## [2.26.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.25.0...js-server-sdk-common-v2.26.0) (2026-10-27)
 
 

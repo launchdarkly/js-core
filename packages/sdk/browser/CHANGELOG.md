@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.14.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.13.1...js-client-sdk-v4.14.0) (2026-11-02)
+
+
+### Features
+
+* Add a shared WebSocket base to the contract test utils and use it in the browser contract tests ([#2136](https://github.com/launchdarkly/js-core/issues/2136)) ([af2f096](https://github.com/launchdarkly/js-core/commit/af2f096c72a198ceb5beda50437068aa6d354006))
+* Add an opt-in fetch-based EventSource entry to the browser SDK ([#2033](https://github.com/launchdarkly/js-core/issues/2033)) ([7a21f6f](https://github.com/launchdarkly/js-core/commit/7a21f6f717acd88a45d2a97e634126cb7d263630))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.34.1 to 1.35.0
+
 ## [4.13.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.13.0...js-client-sdk-v4.13.1) (2026-10-27)
 
 
