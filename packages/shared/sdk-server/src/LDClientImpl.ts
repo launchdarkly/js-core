@@ -1351,16 +1351,18 @@ export default class LDClientImpl implements LDClient {
           doEval(true);
           return;
         }
-        // No LaunchDarkly data is available. The read returns only the flags that the override
-        // layer holds, and the result decides the state: a layer without flags gives the state
-        // nothing to report.
+        // Neither the client nor the store is initialized, so no complete LaunchDarkly data
+        // set is available. The state holds whatever flags the store has and is invalid.
         this._readStore.all(VersionedDataKinds.Features, (allFlags) => {
-          if (this._overrideLayer && Object.keys(allFlags).length > 0) {
+          // Overrides apply whether or not LaunchDarkly data is available, so the state is valid
+          // when the override layer holds flags.
+          const overrideFlags = this._overrideLayer?.all(VersionedDataKinds.Features);
+          if (overrideFlags && Object.keys(overrideFlags).length > 0) {
             if (!this._allFlagsStateOverridesOnlyWarningLogged) {
               this._allFlagsStateOverridesOnlyWarningLogged = true;
               this._logger?.warn(
-                'Called allFlagsState before client initialization; returning only flags from' +
-                  ' the override layer. This message is logged once.',
+                'Called allFlagsState before client initialization; returning flags from the' +
+                  ' override layer and the data store. This message is logged once.',
               );
             }
             evaluateAll(true, allFlags);

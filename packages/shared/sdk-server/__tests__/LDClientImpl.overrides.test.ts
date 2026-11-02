@@ -113,7 +113,7 @@ describe('given an uninitialized client with an override source', () => {
     });
   });
 
-  it('reports only the override layer in the all flags state and warns once', async () => {
+  it('reports the override layer in the all flags state of an empty store and warns once', async () => {
     const state = await client.allFlagsState(user, { withReasons: true });
 
     expect(state.valid).toBe(true);
@@ -124,7 +124,7 @@ describe('given an uninitialized client with an override source', () => {
     });
 
     await client.allFlagsState(user);
-    expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(1);
+    expect(warningsMatching(logger, /returning flags from the override layer/)).toEqual(1);
   });
 
   it('reports an invalid empty all flags state when the override layer holds only segments', async () => {
@@ -137,7 +137,7 @@ describe('given an uninitialized client with an override source', () => {
     expect(state.valid).toBe(false);
     expect(state.allValues()).toEqual({});
     expect(warningsMatching(logger, /Data store not available/)).toEqual(1);
-    expect(warningsMatching(logger, /returning only flags from the override layer/)).toEqual(0);
+    expect(warningsMatching(logger, /returning flags from the override layer/)).toEqual(0);
   });
 
   it('reports an invalid empty all flags state when the override layer is empty', async () => {
@@ -395,6 +395,84 @@ describe('given an uninitialized client over a persistent store that does not an
         reason: { kind: 'FALLTHROUGH', overrideAffected: true },
       }),
     );
+  });
+});
+
+// A persistent store that holds LaunchDarkly flags but reports that it is not initialized, as a
+// store that has data without the marker that a complete data set was written.
+function storeWithFlagsButNotInitialized(flags: Record<string, any>): LDFeatureStore {
+  return {
+    get: (_kind, key, callback) => callback(_kind.namespace === 'features' ? flags[key] : null),
+    all: (kind, callback) => callback(kind.namespace === 'features' ? { ...flags } : {}),
+    init: (_data, callback) => callback(),
+    delete: (_kind, _key, _version, callback) => callback(),
+    upsert: (_kind, _data, callback) => callback(),
+    initialized: (callback) => callback(false),
+    close: () => {},
+    getDescription: () => 'not initialized',
+  } as LDFeatureStore;
+}
+
+describe('given an uninitialized client over a store that holds flags but is not initialized', () => {
+  const storeFlags = {
+    'ld-flag': singleValueFlag('ld-flag', 'ld-value'),
+    'other-ld-flag': singleValueFlag('other-ld-flag', 'other-value'),
+  };
+  let client: LDClientImpl;
+  let logger: MockLogger;
+
+  const makeClient = (overrides?: TestOverrideSource) =>
+    makeFDv2Client(makeFDv2Platform(), {
+      logger,
+      dataSystem: { overrides, persistentStore: storeWithFlagsButNotInitialized(storeFlags) },
+    });
+
+  beforeEach(() => {
+    logger = makeMockLogger();
+  });
+
+  afterEach(() => {
+    client.close();
+  });
+
+  it('reports the same invalid all flags state with an empty override layer as without a source', async () => {
+    client = makeClient();
+    const withoutSource = await client.allFlagsState(user);
+    client.close();
+
+    client = makeClient(new TestOverrideSource());
+    const withEmptySource = await client.allFlagsState(user);
+
+    // Configuring a source that supplies nothing changes nothing.
+    expect(withoutSource.valid).toBe(false);
+    expect(withEmptySource.toJSON()).toEqual(withoutSource.toJSON());
+    expect(warningsMatching(logger, /Data store not available/)).toEqual(2);
+    expect(warningsMatching(logger, /returning flags from the override layer/)).toEqual(0);
+  });
+
+  it('reports the flags in the store with the override layer taking precedence', async () => {
+    // Without a source the state holds the store's flags. Overrides add to it and win for a key
+    // they share with the store; they never take a flag away.
+    client = makeClient(
+      new TestOverrideSource({
+        flags: [
+          singleValueFlag('overridden-flag', true),
+          singleValueFlag('ld-flag', 'override-value'),
+        ],
+      }),
+    );
+
+    const state = await client.allFlagsState(user);
+
+    expect(state.valid).toBe(true);
+    expect(state.allValues()).toEqual({
+      'ld-flag': 'override-value',
+      'other-ld-flag': 'other-value',
+      'overridden-flag': true,
+    });
+    expect(
+      warningsMatching(logger, /returning flags from the override layer and the data store/),
+    ).toEqual(1);
   });
 });
 
