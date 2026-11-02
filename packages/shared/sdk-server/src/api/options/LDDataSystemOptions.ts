@@ -119,6 +119,15 @@ export interface LDDataSystemOptions {
  * retries. Every applied change is logged at Info level with the overrides in effect and what
  * each file supplied.
  *
+ * A file can be rewritten in place. To remove a file's overrides, delete it or write a document
+ * with no entries, such as `{}`. A JSON file with no content is not a valid document: it fails to
+ * load, and the overrides in effect stay. A file that had content and is found empty may be in
+ * the middle of a rewrite, so the source waits about a second and reads it again before applying
+ * it. An emptied YAML file therefore removes its overrides about a second later. YAML that is cut
+ * off between two entries can still parse, so for a YAML file, replacing its entire contents in
+ * one operation, such as renaming a fully written temporary file over it, avoids briefly applying
+ * only a part of it.
+ *
  * @example
  * ```typescript
  * const client = init(sdkKey, {
@@ -171,6 +180,8 @@ export interface FileOverrideSourceOptions {
    * A YAML parser for YAML files. The SDK does not include one; to read YAML files, supply a
    * parser that produces the same structure as `JSON.parse`, for example the `parse` function
    * of the `yaml` package. A YAML file configured without a parser fails client construction.
+   * A result of `null` or `undefined`, which YAML parsers return for a file with no content,
+   * means that the file has no entries.
    */
   yamlParser?: (data: string) => any;
 }

@@ -1,4 +1,5 @@
 import {
+  hasContent,
   isFileNotFoundError,
   isYamlPath,
   parseDocumentByExtension,
@@ -35,6 +36,28 @@ describe('given the extension-based parser', () => {
     expect(yamlParser).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['data.json', ''],
+    ['data.json', ' \n\t\r\n'],
+    ['data.json', '\uFEFF'],
+    ['data', ''],
+    ['data.txt', '  '],
+  ])('rejects %s with no content %j, which is not a JSON document', (path, data) => {
+    const yamlParser = jest.fn();
+    const parse = () => parseDocumentByExtension(yamlParser)(path, data);
+    expect(parse).toThrow(SyntaxError);
+    expect(parse).toThrow('the file has no content, which is not a JSON document');
+    expect(yamlParser).not.toHaveBeenCalled();
+  });
+
+  it.each(['data.yml', 'data.yaml'])(
+    'returns the YAML parser result for %s with no content as it is',
+    (path) => {
+      expect(parseDocumentByExtension(() => null)(path, '')).toBeNull();
+      expect(parseDocumentByExtension(() => undefined)(path, ' \n')).toBeUndefined();
+    },
+  );
+
   it.each(['data.yml', 'data.yaml'])(
     'parses %s with the YAML parser even when the content looks like JSON',
     (path) => {
@@ -63,6 +86,14 @@ describe('given the extension-based parser', () => {
     });
     expect(parse('data.json', 'null')).toBeNull();
   });
+});
+
+it('treats text with only white space or a byte order mark as no content', () => {
+  expect(hasContent('')).toBe(false);
+  expect(hasContent(' \n\t\r\n')).toBe(false);
+  expect(hasContent('\uFEFF\n')).toBe(false);
+  expect(hasContent('{}')).toBe(true);
+  expect(hasContent('\n  a')).toBe(true);
 });
 
 it('recognizes YAML paths', () => {

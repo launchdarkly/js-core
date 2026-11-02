@@ -1,6 +1,7 @@
 import {
   DocumentParser,
   FileDataDocument,
+  hasContent,
   isFileNotFoundError,
   isYamlPath,
   parseDocumentByExtension,
@@ -38,6 +39,7 @@ export {
   FileReloader,
   FileReloaderConfig,
   FileSummary,
+  hasContent,
   isFileNotFoundError,
   isYamlPath,
   ItemCategory,

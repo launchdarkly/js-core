@@ -143,8 +143,10 @@ function countsText(flags: number, segments: number): string {
  * A reload replaces the entire override set. A configured file that does not exist contributes
  * no overrides, so deleting a file removes its overrides. A file that exists but cannot be read
  * or parsed makes that whole reload fail. The previously loaded overrides stay in effect, the
- * failure is logged, and the source retries after a short delay. Every applied change is logged
- * at Info level with the overrides in effect and what each file supplied.
+ * failure is logged, and the source retries after a short delay. A JSON file with no content
+ * cannot be parsed. A file that had content and is found empty may be in the middle of an
+ * in-place rewrite, so it is read again after the retry delay before it is applied. Every applied
+ * change is logged at Info level with the overrides in effect and what each file supplied.
  *
  * Flag overrides are currently experimental and subject to change.
  *

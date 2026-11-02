@@ -1,25 +1,30 @@
+import { promises as fsPromises } from 'node:fs';
 import { mkdtemp, rm, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
-import { FileOverrideSourceOptions, sleep } from '@launchdarkly/js-server-sdk-common';
+import { FileOverrideSourceOptions, LDLogger, sleep } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import { rewriteInPlace, sampleValues } from './inPlaceWrites';
 import waitFor from './waitFor';
 
 const user = { key: 'user-key' };
+
+const silentLogger: LDLogger = { error: () => {}, warn: () => {}, info: () => {}, debug: () => {} };
 
 // The client never obtains data from LaunchDarkly: its only initializer reads a file that does
 // not exist. Overrides are served from the override layer alone.
 function makeClient(
   directory: string,
   overrides: Omit<FileOverrideSourceOptions, 'type'>,
+  logger: LDLogger = silentLogger,
 ): LDClientNode {
   return new LDClientNode('sdk-key-file-overrides', {
     sendEvents: false,
     diagnosticOptOut: true,
-    logger: { error: () => {}, warn: () => {}, info: () => {}, debug: () => {} },
+    logger,
     dataSystem: {
       dataSource: {
         dataSourceOptionsType: 'custom',
@@ -132,5 +137,74 @@ describe('given a temporary directory of override files', () => {
       async () => (await client!.variation('overridden-flag', user, 'default')) === 'c',
       10000,
     );
+  });
+
+  describe.each([
+    ['json', 'watching'],
+    ['json', 'polling'],
+    ['yaml', 'watching'],
+    ['yaml', 'polling'],
+  ] as const)('given a %s file in %s mode', (extension, changeDetection) => {
+    let polls: number[];
+
+    beforeEach(() => {
+      polls = [];
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    // Records when the poller examines the file, so that a test can start a rewrite just before a
+    // poll.
+    const recordPolls = (path: string) => {
+      const realStat = fsPromises.stat;
+      jest.spyOn(fsPromises, 'stat').mockImplementation(((statPath: any, ...rest: any[]) => {
+        if (statPath === path) {
+          polls.push(Date.now());
+        }
+        return (realStat as any).call(fsPromises, statPath, ...rest);
+      }) as any);
+    };
+
+    it('keeps the override while the file is rewritten in place', async () => {
+      const path = join(directory, `overrides.${extension}`);
+      await writeFile(path, document('a')); // JSON is also YAML
+      const errors: string[] = [];
+      recordPolls(path);
+      client = makeClient(
+        directory,
+        { paths: [path], changeDetection, pollInterval: 1, yamlParser: parseYaml },
+        { ...silentLogger, error: (message: string) => errors.push(message) },
+      );
+      await waitFor(
+        async () => (await client!.variation('overridden-flag', user, 'default')) === 'a',
+        10000,
+      );
+      let pauseMs = 300;
+      if (changeDetection === 'polling') {
+        // The rewrite starts 750 ms after a poll, so the next poll finds the file empty, and its
+        // reload 100 ms later still does. The file is written 250 ms after that, well before the
+        // retry reads it again a second after the reload.
+        const count = polls.length;
+        await waitFor(() => polls.length > count, 5000, 1);
+        await sleep(polls[polls.length - 1] + 750 - Date.now());
+        pauseMs = 600;
+      }
+      // In watching mode, the reload that the truncation starts runs after the 100 ms settle
+      // window, while the file is still empty.
+      const sampler = sampleValues(() => client!.variation('overridden-flag', user, 'default'));
+      try {
+        await rewriteInPlace(path, document('b'), pauseMs);
+        // Waits for the sampler itself to see the new value, so it has recorded everything that
+        // the client served before it.
+        await waitFor(() => sampler.served.includes('b'), 10000);
+      } finally {
+        await sampler.stop();
+      }
+
+      expect(sampler.served).toEqual(['a', 'b']);
+      expect(errors.filter((message) => message.startsWith('Unable to load flags'))).toEqual([]);
+    });
   });
 });

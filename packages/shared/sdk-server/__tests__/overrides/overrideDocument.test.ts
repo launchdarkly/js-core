@@ -80,6 +80,12 @@ describe('given the override document parser', () => {
     expect(parseOverrideDocument(() => undefined)('empty.yaml', '')).toEqual({});
   });
 
+  it.each(['', ' \n\t\n'])('rejects a JSON file with no content %j', (data) => {
+    expect(() => parseOverrideDocument()('empty.json', data)).toThrow(
+      'the file has no content, which is not a JSON document',
+    );
+  });
+
   it('rejects malformed JSON', () => {
     expect(() => parseOverrideDocument()('data.json', '{"flagValues"')).toThrow(/json/i);
   });

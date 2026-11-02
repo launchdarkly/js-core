@@ -33,7 +33,8 @@ function validateItems(document: Record<string, any>, member: 'flags' | 'segment
 
 function validateDocument(parsed: any): FileDataDocument {
   if (isNullish(parsed)) {
-    // An empty file is an empty document.
+    // A YAML parser returns null or undefined for a file with no content, which is a document with
+    // no entries. A JSON file with no content fails to parse instead.
     return {};
   }
   if (!isPlainObject(parsed)) {
@@ -65,7 +66,8 @@ function validateDocument(parsed: any): FileDataDocument {
  *
  * The result is validated: the document and its `flags`, `flagValues`, and `segments` members
  * must be objects, every flag and segment entry must be an object, and an entry that omits its
- * `key` gets it from the map key. An empty document is a document with no members.
+ * `key` gets it from the map key. A YAML file with no content is a document with no members, and
+ * a JSON file with no content fails to parse.
  *
  * @internal
  */

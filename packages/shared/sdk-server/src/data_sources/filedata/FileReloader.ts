@@ -1,7 +1,7 @@
 import { Filesystem, LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../evaluation/data/Flag';
-import { FileDataDocument, isFileNotFoundError } from './document';
+import { FileDataDocument, hasContent, isFileNotFoundError } from './document';
 import { FileDataPolicy } from './FileDataPolicy';
 import { FileSummary, mergeDocuments, MergeResult } from './merge';
 
@@ -104,8 +104,9 @@ export interface FileReloaderConfig {
    */
   debounceDelayMs: number;
   /**
-   * How long to wait after a failed reload before retrying it without a trigger. Zero or
-   * negative disables the automatic retry.
+   * How long to wait after a failed reload before retrying it without a trigger. A file that had
+   * content and is found empty is read again after the same delay before it is applied. Zero or
+   * negative disables the automatic retry, and an empty file is then parsed as it is.
    */
   retryDelayMs: number;
   /**
@@ -125,6 +126,10 @@ function asError(err: unknown): Error {
  * Owns the reload cycle for a set of data files. It serializes reloads, debounces change
  * signals, keeps the last good result on failure (by not calling `apply`), retries after
  * failures, and skips no-op applications.
+ *
+ * A file that is rewritten in place is truncated and then written, so a reload can find it
+ * empty. A reload that finds a file empty after it had content keeps the current data and reads
+ * the file again after the retry delay, whatever the file's format. See `_readAgainLater`.
  *
  * @internal
  */
@@ -152,6 +157,15 @@ export default class FileReloader {
   private _lastGoodFlags: Record<string, Flag> = {};
 
   private _lastFailureKey?: string;
+
+  // Whether the last read of each configured path found content. A missing file counts as no
+  // content.
+  private readonly _lastReadHadContent = new Map<string, boolean>();
+
+  // Set by a reload that found a file emptied and armed the retry to read it again, to that
+  // reload's reason, until the next reload starts. The next reload continues the deferred one, so
+  // it reports a failure the way the deferred reload would have.
+  private _readAgainReason?: ReloadReason;
 
   constructor(private readonly _config: FileReloaderConfig) {}
 
@@ -258,14 +272,21 @@ export default class FileReloader {
    * wins for a key. Every filesystem and parsing failure is caught and reported, so the returned
    * promise never rejects.
    */
-  private async _reload(reason: ReloadReason): Promise<void> {
+  private async _reload(requested: ReloadReason): Promise<void> {
     if (this._closed) {
       return;
     }
     const { logger, paths, policy } = this._config;
-    if (reason === 'change') {
+    // The retry that reads an emptied file again continues the reload that found it empty, so a
+    // failure is news when it would have been news to that reload.
+    const deferredReason = requested === 'retry' ? this._readAgainReason : undefined;
+    const reason = deferredReason ?? requested;
+    this._readAgainReason = undefined;
+    if (requested === 'change') {
       logger?.info('Reloading flag data after detecting a change');
-    } else if (reason === 'retry') {
+    } else if (deferredReason) {
+      logger?.debug('Reading flag data again after a file was found empty');
+    } else if (requested === 'retry') {
       logger?.debug('Retrying flag data load after earlier failure');
     }
     // A pending retry is superseded by this reload. It either succeeds, or it fails and arms a
@@ -276,23 +297,35 @@ export default class FileReloader {
     const files: FileSummary[] = [];
     const contents: string[] = [];
     let failure: LoadFailure | undefined;
+    let emptied: string | undefined;
 
     const readAll = paths.reduce(
       (previous, path) =>
         previous.then(async () => {
-          if (failure) {
+          if (failure || emptied !== undefined) {
             return;
           }
           let data: string;
           try {
             data = await this._config.filesystem.readFile(path);
           } catch (err) {
-            if (policy.missingFile === 'skip' && isFileNotFoundError(err)) {
+            const missing = isFileNotFoundError(err);
+            if (missing) {
+              this._lastReadHadContent.set(path, false);
+            }
+            if (missing && policy.missingFile === 'skip') {
               logger?.debug(`File ${path} does not exist. It contributes no data.`);
               files.push({ path, present: false, flags: 0, segments: 0 });
               return;
             }
             failure = { kind: 'read', error: asError(err), path, repeated: false };
+            return;
+          }
+          const nonEmpty = hasContent(data);
+          const hadContent = this._lastReadHadContent.get(path) === true;
+          this._lastReadHadContent.set(path, nonEmpty);
+          if (!nonEmpty && hadContent && this._config.retryDelayMs > 0) {
+            emptied = path;
             return;
           }
           contents.push(data);
@@ -307,6 +340,11 @@ export default class FileReloader {
       Promise.resolve(),
     );
     await readAll;
+
+    if (emptied !== undefined) {
+      this._readAgainLater(emptied, reason);
+      return;
+    }
 
     let merged: MergeResult | undefined;
     if (!failure) {
@@ -361,6 +399,27 @@ export default class FileReloader {
     this._lastFailureKey = undefined;
     this._lastGoodContent = content;
     this._lastGoodFlags = nextFlags;
+  }
+
+  /**
+   * A file that had content when it was last read and is empty now may be in the middle of an
+   * in-place rewrite: a writer that truncates the file and then writes the new content. Whatever
+   * the file's format, the reload keeps the current data and arms the retry without reporting a
+   * failure, so the file is read again after the retry delay. The change signal for the write
+   * starts a reload sooner. That next reload parses what the file holds then, because the file
+   * was empty when it was last read: a file that is still empty is invalid JSON, or a YAML
+   * document with no entries. So the current data is kept for at most one more reload, and a file
+   * that is empty from the start, such as a placeholder, is never read again.
+   */
+  private _readAgainLater(path: string, reason: ReloadReason): void {
+    if (this._closed) {
+      return;
+    }
+    this._config.logger?.debug(
+      `File ${path} is empty, possibly while it is being rewritten; reading it again before applying it`,
+    );
+    this._readAgainReason = reason;
+    this._armRetry();
   }
 
   private _fail(failure: LoadFailure, reason: ReloadReason): void {

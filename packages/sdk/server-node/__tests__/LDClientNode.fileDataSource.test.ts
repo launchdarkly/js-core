@@ -1,8 +1,13 @@
-import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { parse as parseYaml } from 'yaml';
 
 import { integrations } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
+import { rewriteInPlace, sampleValues } from './inPlaceWrites';
+import waitFor from './waitFor';
 
 const flag1Key = 'flag1';
 const flag2Key = 'flag2';
@@ -176,5 +181,61 @@ describe('When using a file data source', () => {
     expect(f2VarB).toEqual('default');
 
     client.close();
+  });
+});
+
+describe('given a file data source that reloads a file rewritten in place', () => {
+  let directory: string;
+
+  beforeEach(async () => {
+    directory = await mkdtemp(join(tmpdir(), 'ld-file-data-'));
+  });
+
+  afterEach(async () => {
+    await rm(directory, { recursive: true, force: true });
+  });
+
+  it.each(['json', 'yaml'])('never serves the emptied %s file', async (extension) => {
+    // The file is empty for 300 ms, longer than the settle window after a change, so a reload
+    // reads it empty. The client must keep serving the old value until the new one is written.
+    const path = join(directory, `flags.${extension}`);
+    await writeFile(path, JSON.stringify({ flagValues: { flag1: 'a' } })); // JSON is also YAML
+    const errors: string[] = [];
+    const fds = new integrations.FileDataSourceFactory({
+      paths: [path],
+      autoUpdate: true,
+      yamlParser: parseYaml,
+    });
+    const client = new LDClientNode('sdk-key', {
+      updateProcessor: fds.getFactory(),
+      sendEvents: false,
+      diagnosticOptOut: true,
+      logger: {
+        error: (message: string) => errors.push(message),
+        warn: () => {},
+        info: () => {},
+        debug: () => {},
+      },
+    });
+    try {
+      await client.waitForInitialization({ timeout: 10 });
+      expect(await client.variation('flag1', { key: 'user1' }, 'default')).toEqual('a');
+
+      const sampler = sampleValues(() => client.variation('flag1', { key: 'user1' }, 'default'));
+      try {
+        await rewriteInPlace(path, JSON.stringify({ flagValues: { flag1: 'b' } }), 300);
+        // Waits for the sampler itself to see the new value, so it has recorded everything that
+        // the client served before it.
+        await waitFor(() => sampler.served.includes('b'), 10000);
+      } finally {
+        await sampler.stop();
+      }
+
+      expect(sampler.served).toEqual(['a', 'b']);
+      // The file was read while it was empty, which is not an error to report.
+      expect(errors).toEqual([]);
+    } finally {
+      client.close();
+    }
   });
 });
