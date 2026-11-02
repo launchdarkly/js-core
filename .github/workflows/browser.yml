@@ -186,3 +186,20 @@ jobs:
           workspace_name: '@launchdarkly/browser-example'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           before_test: 'yarn workspace @launchdarkly/browser-example playwright install --with-deps chromium'
+
+  run-custom-eventsource-example:
+    # Fork PRs cannot use OIDC to get the e2e SDK keys. Skip this job for them.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 24
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@launchdarkly/browser-example-custom-eventsource'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          before_test: 'yarn workspace @launchdarkly/browser-example-custom-eventsource playwright install --with-deps chromium'
