@@ -17,10 +17,11 @@ export interface FileDataSourceOptions {
    * A file that is replaced by a rename, or deleted and created again, is detected. A load
    * that fails, for example because a file was read while it was written, is retried after a
    * short delay and the previously loaded data stays in effect until it succeeds.
-   * A file can be rewritten in place: a file that had content and is found empty is read again
-   * after the same delay before it is applied. YAML that is cut off between two entries can still
-   * parse, so for a YAML file, replacing its entire contents in one operation, such as renaming a
-   * fully written temporary file over it, avoids briefly applying only a part of it.
+   * A file can be rewritten in place: a file whose data is in effect and that is found empty is
+   * not applied until it has stayed empty, without being written, for the same delay. YAML that is
+   * cut off between two entries can still parse, so for a YAML file, replacing its entire contents
+   * in one operation, such as renaming a fully written temporary file over it, avoids briefly
+   * applying only a part of it.
    * A change to another entry in a directory causes a reload only when the metadata of a
    * configured file changed, read through any symbolic link, which is how a mounted ConfigMap
    * or Secret is updated.

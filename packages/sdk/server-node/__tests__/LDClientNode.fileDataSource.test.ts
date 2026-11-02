@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
-import { integrations } from '@launchdarkly/js-server-sdk-common';
+import { integrations, sleep } from '@launchdarkly/js-server-sdk-common';
 
 import LDClientNode from '../src/LDClientNode';
 import { rewriteInPlace, sampleValues } from './inPlaceWrites';
@@ -195,11 +195,17 @@ describe('given a file data source that reloads a file rewritten in place', () =
     await rm(directory, { recursive: true, force: true });
   });
 
-  it.each(['json', 'yaml'])('never serves the emptied %s file', async (extension) => {
-    // The file is empty for 300 ms, longer than the settle window after a change, so a reload
-    // reads it empty. The client must keep serving the old value until the new one is written.
+  const flagsDocument = (value: string) => JSON.stringify({ flagValues: { flag1: value } });
+
+  // Starts a client whose data file serves 'a', runs the rewrites while it samples what the client
+  // serves, and returns what it served until it served the final value, and the errors it logged.
+  const sampleRewrites = async (
+    extension: string,
+    rewrites: (path: string) => Promise<void>,
+    finalValue: string,
+  ) => {
     const path = join(directory, `flags.${extension}`);
-    await writeFile(path, JSON.stringify({ flagValues: { flag1: 'a' } })); // JSON is also YAML
+    await writeFile(path, flagsDocument('a')); // JSON is also YAML
     const errors: string[] = [];
     const fds = new integrations.FileDataSourceFactory({
       paths: [path],
@@ -223,19 +229,52 @@ describe('given a file data source that reloads a file rewritten in place', () =
 
       const sampler = sampleValues(() => client.variation('flag1', { key: 'user1' }, 'default'));
       try {
-        await rewriteInPlace(path, JSON.stringify({ flagValues: { flag1: 'b' } }), 300);
-        // Waits for the sampler itself to see the new value, so it has recorded everything that
+        await rewrites(path);
+        // Waits for the sampler itself to see the final value, so it has recorded everything that
         // the client served before it.
-        await waitFor(() => sampler.served.includes('b'), 10000);
+        await waitFor(() => sampler.served.includes(finalValue), 10000);
       } finally {
         await sampler.stop();
       }
-
-      expect(sampler.served).toEqual(['a', 'b']);
-      // The file was read while it was empty, which is not an error to report.
-      expect(errors).toEqual([]);
+      return { served: sampler.served, errors };
     } finally {
       client.close();
     }
+  };
+
+  it.each(['json', 'yaml'])('never serves the emptied %s file', async (extension) => {
+    // The file is empty for 300 ms, longer than the settle window after a change, so a reload
+    // reads it empty. The client must keep serving the old value until the new one is written.
+    const { served, errors } = await sampleRewrites(
+      extension,
+      (path) => rewriteInPlace(path, flagsDocument('b'), 300),
+      'b',
+    );
+
+    expect(served).toEqual(['a', 'b']);
+    // The file was read while it was empty, which is not an error to report.
+    expect(errors).toEqual([]);
   });
+
+  it.each(['json', 'yaml'])(
+    'never serves the %s file emptied by two in-place rewrites in a row',
+    async (extension) => {
+      // The first rewrite's write and the second's truncation fall in one settle window, so the
+      // load after them finds the file empty again.
+      const { served, errors } = await sampleRewrites(
+        extension,
+        async (path) => {
+          await rewriteInPlace(path, flagsDocument('b'), 300);
+          await sleep(20);
+          await rewriteInPlace(path, flagsDocument('c'), 300);
+        },
+        'c',
+      );
+
+      expect(served).not.toContain('default');
+      expect(served[0]).toEqual('a');
+      expect(served[served.length - 1]).toEqual('c');
+      expect(errors).toEqual([]);
+    },
+  );
 });

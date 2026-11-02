@@ -121,12 +121,12 @@ export interface LDDataSystemOptions {
  *
  * A file can be rewritten in place. To remove a file's overrides, delete it or write a document
  * with no entries, such as `{}`. A JSON file with no content is not a valid document: it fails to
- * load, and the overrides in effect stay. A file that had content and is found empty may be in
- * the middle of a rewrite, so the source waits about a second and reads it again before applying
- * it. An emptied YAML file therefore removes its overrides about a second later. YAML that is cut
- * off between two entries can still parse, so for a YAML file, replacing its entire contents in
- * one operation, such as renaming a fully written temporary file over it, avoids briefly applying
- * only a part of it.
+ * load, and the overrides in effect stay. A file whose overrides are in effect and that is found
+ * empty may be in the middle of a rewrite, so the source applies it only once it has stayed empty,
+ * without being written, for about a second. An emptied YAML file therefore removes its overrides
+ * about a second later. YAML that is cut off between two entries can still parse, so for a YAML
+ * file, replacing its entire contents in one operation, such as renaming a fully written temporary
+ * file over it, avoids briefly applying only a part of it.
  *
  * @example
  * ```typescript
