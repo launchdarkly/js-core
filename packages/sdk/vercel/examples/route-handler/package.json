@@ -12,7 +12,7 @@
     "@launchdarkly/vercel-server-sdk": "workspace:^",
     "@vercel/edge-config": "^1.5.0",
     "next": "16.4.3",
-    "react": "^18.2.0",
+    "react": "^19.3.1",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
