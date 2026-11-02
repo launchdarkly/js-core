@@ -339,6 +339,11 @@ function constructFDv2(
     dataSystem.overrides !== undefined && !config.offline
       ? createOverrideSource(dataSystem.overrides, clientContext)
       : undefined;
+  if (dataSystem.overrides !== undefined && config.offline) {
+    logger?.warn(
+      'Offline mode is enabled; the override source is not started and no overrides are served',
+    );
+  }
   const featureStore = dataSystem.featureStoreFactory(clientContext);
 
   // The override layer sits at the store read boundary. Evaluation, prerequisite and segment
@@ -650,6 +655,8 @@ export default class LDClientImpl implements LDClient {
 
   private _overrideLayer?: OverrideLayer;
 
+  private _overrideSink?: OverrideSink;
+
   private _overrideSource?: LDOverrideSource;
 
   // Settles when the override source's initial load has completed, also when it failed, and is
@@ -810,6 +817,7 @@ export default class LDClientImpl implements LDClient {
         // place before the client evaluates anything. An asynchronous initial load is part of
         // starting the client: waitForInitialization resolves after it. Evaluation never waits.
         this._overrideLayer = overrides.layer;
+        this._overrideSink = overrides.sink;
         this._overrideSource = overrides.source;
         this._overridesReady = this._startOverrideSource(overrides.source, overrides.sink);
       }
@@ -1385,6 +1393,9 @@ export default class LDClientImpl implements LDClient {
   }
 
   close(): void {
+    // The sink stops accepting snapshots first, so a snapshot that the source supplies while or
+    // after it closes neither changes the layer nor notifies the application.
+    this._overrideSink?.close();
     try {
       this._overrideSource?.close();
     } catch (err) {
