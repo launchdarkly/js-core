@@ -39,3 +39,7 @@ SUPPRESSIONS=./contract-tests/testharness-suppressions-fdv2.txt yarn contract-te
 
 - `TEST_HARNESS_PARAMS` -- extra params appended to the harness command line (e.g. `-run TestName`).
 - `VERSION` -- the major version of `sdk-test-harness` to download. Defaults to `v2`.
+
+## Client-side ID mode
+
+The service uses a mobile key by default, so the harness runs its mobile test suite. Start the service with `USE_MOBILE_KEY=false` to use a client-side ID, the SDK default. The harness then runs its client-side (JS) test suite, which includes the secure mode hash tests. Set `PORT` to run this instance next to the default one on port 8000. CI runs both.
