@@ -351,6 +351,9 @@ export default class FileReloader {
     // The empty files that this reload holds back. The other files are still read, so that files
     // that are emptied together start their delays in the same reload.
     const heldBack: string[] = [];
+    // Every file that this reload got to and did not hold back, including a file that failed to
+    // read or parse and a missing file.
+    const reached: string[] = [];
 
     const readAll = paths.reduce(
       (previous, path) =>
@@ -362,6 +365,7 @@ export default class FileReloader {
           try {
             data = await this._config.filesystem.readFile(path);
           } catch (err) {
+            reached.push(path);
             const missing = isFileNotFoundError(err);
             if (missing) {
               this._fileChanged(path);
@@ -385,6 +389,9 @@ export default class FileReloader {
             try {
               document = policy.parseDocument(path, data);
             } catch (err) {
+              // Content ends the file's empty state, even content that fails to parse.
+              reached.push(path);
+              this._fileChanged(path);
               failure = { kind: 'parse', error: asError(err), path, repeated: false };
               return;
             }
@@ -396,7 +403,7 @@ export default class FileReloader {
             heldBack.push(path);
             return;
           }
-          // The file was read and is not held back, whether or not its empty content parses.
+          reached.push(path);
           hadContent.set(path, !noEntries);
           if (blank) {
             try {
@@ -416,9 +423,9 @@ export default class FileReloader {
 
     if (heldBack.length === 0) {
       // A reload that holds nothing back, whether it applies, skips or fails, starts the bound over
-      // for every file that it read: such a file is no longer held, so its next rewrite is a new
-      // one. A file that the reload did not get to keeps its bound.
-      hadContent.forEach((_hadContent, path) => {
+      // for every file that it got to: such a file is no longer held, so its next rewrite is a new
+      // one. A file after the one that failed, which the reload did not get to, keeps its bound.
+      reached.forEach((path) => {
         const empty = this._emptyFiles.get(path);
         if (empty) {
           empty.firstHeld = undefined;
@@ -498,8 +505,9 @@ export default class FileReloader {
     this._emptyFiles.clear();
   }
 
-  // Called when a reload finds a file with content, or missing. The next time a reload finds it
-  // empty, its delay starts over. Its bound does not.
+  // Called when a reload finds a file with content, even content that fails to parse, or finds it
+  // missing. That ends the file's empty state: the next time a reload finds it empty, its delay
+  // starts over. Its bound does not.
   private _fileChanged(path: string): void {
     const empty = this._emptyFiles.get(path);
     if (empty) {
@@ -519,10 +527,14 @@ export default class FileReloader {
    * empty, or files that are rewritten in turn so that every reload finds one of them empty, would
    * be held back without end, so a file is held back for at most `MAX_HOLD_RETRY_DELAYS` retry
    * delays. That bound is the file's own: it starts at the first reload that holds the file back,
-   * and starts over only at a reload that holds nothing back and reads the file, or when data is
-   * applied. A file whose content is not in effect, such as a placeholder that has always been empty,
-   * is parsed right away, and so is any file when retries are off, since nothing would read it
-   * again.
+   * and starts over only when data is applied, or at a reload that holds nothing back and gets to
+   * the file, whether the file reads, parses, fails or is missing. A file after one that fails to
+   * load is not read, so it keeps its bound. The bounds of files that keep being written while
+   * empty do not overlap: with n such files whose rewrites start 4.5 retry delays apart, the first
+   * application comes about 4.5 n + 0.5 retry delays after the first rewrite started, and a failure
+   * of another file that recurs exactly when each bound ends could hold them back without end. A
+   * file whose content is not in effect, such as a placeholder that has always been empty, is
+   * parsed right away, and so is any file when retries are off, since nothing would read it again.
    *
    * The clock is read after the file's own read, so that a slow read of another file does not
    * shorten this file's delay.

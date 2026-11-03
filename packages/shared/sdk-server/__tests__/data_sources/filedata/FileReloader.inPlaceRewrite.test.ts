@@ -470,6 +470,26 @@ describe('given a reloader over a file that is rewritten in place', () => {
       expect(readAgainMessages()).toHaveLength(2);
     });
 
+    it('starts a fresh delay for a file emptied again after content that fails to parse', async () => {
+      writeCoarse(yamlPath, documentA);
+      makeReloader([yamlPath]);
+      await reloader.reloadNow();
+
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      writeCoarse(yamlPath, '{"flagValues": ');
+      await changeAndSettle();
+      expect(failures).toHaveLength(1);
+
+      // More than a retry delay after the first emptying, the file is emptied again, and looks as
+      // it did then.
+      await advance(1500);
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      expect(values()).toEqual(['a']);
+      expect(readAgainMessages()).toHaveLength(2);
+    });
+
     it('starts a fresh delay for a file that is deleted and created empty again', async () => {
       writeCoarse(jsonPath, documentA);
       makeReloader([jsonPath], (config) => {
@@ -616,6 +636,148 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
     write(jsonPath, otherB);
     write(yamlPath, '');
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a']);
+    expect(readAgainMessages()).toHaveLength(1);
+  });
+
+  it.each([yamlPath, jsonPath])(
+    'holds back the in-place save that fixes %s after it was saved in place with an error',
+    async (path) => {
+      await startWith(path, documentA);
+
+      write(path, '');
+      await changeAndSettle();
+      expect(readAgainMessages()).toHaveLength(1);
+      write(path, '{"flagValues": ');
+      await changeAndSettle();
+      expect(failures).toHaveLength(1);
+      // The broken file keeps failing for longer than the bound.
+      await advance(6 * retryDelayMs);
+      const failed = failures.length;
+
+      // The fix is saved in place. Its truncation is held back, and no failure is reported.
+      write(path, '');
+      await changeAndSettle();
+      expect(failures).toHaveLength(failed);
+      expect(readAgainMessages()).toHaveLength(2);
+      write(path, documentB);
+      await changeAndSettle();
+      expect(values()).toEqual(['a', 'b']);
+    },
+  );
+
+  it('holds back a file created empty again after it was missing for longer than the bound', async () => {
+    write(jsonPath, documentA);
+    makeReloader([jsonPath], (config) => {
+      config.policy = testPolicy({ missingFile: 'fail' });
+    });
+    await reloader.reloadNow();
+
+    write(jsonPath, '');
+    await changeAndSettle();
+    filesystem.remove(jsonPath);
+    await changeAndSettle();
+    await advance(6 * retryDelayMs);
+    const failed = failures.length;
+
+    // The file is created empty, and then written.
+    write(jsonPath, '');
+    await changeAndSettle();
+    expect(failures).toHaveLength(failed);
+    expect(readAgainMessages()).toHaveLength(2);
+    write(jsonPath, documentB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a', 'b']);
+  });
+
+  it('keeps the bound of a file that a failing load did not get to', async () => {
+    write(jsonPath, otherA);
+    write(yamlPath, documentA);
+    makeReloader([jsonPath, yamlPath]);
+    await reloader.reloadNow();
+
+    // The second file keeps being written while empty. The first file fails at every other load,
+    // before the second file is read.
+    write(yamlPath, '');
+    await changeAndSettle();
+    await [1, 2, 3, 4, 5, 6, 7, 8].reduce<Promise<void>>(
+      (previous, step) =>
+        previous.then(async () => {
+          await advance(600);
+          write(yamlPath, documentB);
+          write(yamlPath, '');
+          write(jsonPath, step % 2 === 0 ? '{"flagValues": ' : otherA);
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    expect(values()).toEqual(['a,a']);
+
+    // 5400 ms after it was first held back, the second file is applied although it was just
+    // written.
+    await advance(600);
+    write(yamlPath, documentB);
+    write(yamlPath, '');
+    write(jsonPath, otherB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a', 'b']);
+  });
+
+  it('does not start bounds over at a load that holds a file back and then fails', async () => {
+    const thirdPath = '/data/third.json';
+    write(yamlPath, documentA);
+    write(otherYamlPath, otherA);
+    write(thirdPath, '{"flagValues": {"flag3": "a"}}');
+    makeReloader([yamlPath, otherYamlPath, thirdPath]);
+    await reloader.reloadNow();
+
+    // The first two files are rewritten in turn, so that every load holds one of them back, and
+    // the third file fails at every other load, after that.
+    write(yamlPath, '');
+    await changeAndSettle();
+    await Array.from({ length: 12 }, (_, index) => index + 1).reduce<Promise<void>>(
+      (previous, step) =>
+        previous.then(async () => {
+          if (applied.length > 1) {
+            return;
+          }
+          await advance(500);
+          if (step % 2 === 1) {
+            write(yamlPath, documentB);
+            write(otherYamlPath, '');
+            write(thirdPath, '{"flagValues": ');
+          } else {
+            write(otherYamlPath, otherB);
+            write(yamlPath, '');
+            write(thirdPath, '{"flagValues": {"flag3": "b"}}');
+          }
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    expect(applied.length).toBeGreaterThan(1);
+  });
+
+  it('starts a new delay for a missing file when it is created empty again with the same state', async () => {
+    write(yamlPath, documentA);
+    write(jsonPath, otherA);
+    makeReloader([yamlPath, jsonPath]);
+    await reloader.reloadNow();
+
+    write(jsonPath, '{"flagValues": ');
+    write(yamlPath, '');
+    const firstEmptyModified = modified;
+    await changeAndSettle();
+    filesystem.remove(yamlPath);
+    await changeAndSettle();
+    expect(failures.length).toBeGreaterThan(0);
+
+    // The file is created empty again, with the modification time of its first emptying, more than
+    // a retry delay after that. The other file is fixed.
+    await advance(1170);
+    filesystem.set(yamlPath, '', firstEmptyModified);
+    write(jsonPath, otherB);
     await changeAndSettle();
     expect(values()).toEqual(['a,a']);
     expect(readAgainMessages()).toHaveLength(1);
