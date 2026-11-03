@@ -107,11 +107,13 @@ export interface LDDataSystemOptions {
  *
  * The source reads flag and segment overrides from one or more local files and reloads them as
  * the files change. The files use the same document format as the file data source: a JSON or
- * YAML document with optional `flags`, `flagValues`, and `segments` members. `flagValues` entries
- * expand into full flag definitions that return the given value for every context. A `flagValues`
- * entry is not available to client-side SDKs, so `allFlagsState` with `clientSideOnly` leaves it
- * out, even when the flag it overrides is available to them. To override such a flag, define it
- * in `flags` with `"clientSideAvailability": { "usingEnvironmentId": true }`.
+ * YAML document with optional `flags`, `flagValues`, and `segments` members. A file whose name
+ * ends in `.yml` or `.yaml` is YAML, and any other file is JSON; files are read as UTF-8.
+ * `flagValues` entries expand into full flag definitions that return the given value for every
+ * context. A `flagValues` entry is not available to client-side SDKs, so `allFlagsState` with
+ * `clientSideOnly` leaves it out, even when the flag it overrides is available to them. To
+ * override such a flag, define it in `flags` with
+ * `"clientSideAvailability": { "usingEnvironmentId": true }`.
  *
  * A configured file that does not exist contributes no overrides. It can be created later, and
  * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
@@ -119,16 +121,11 @@ export interface LDDataSystemOptions {
  * retries. Every applied change is logged at Info level with the overrides in effect and what
  * each file supplied.
  *
- * A file can be rewritten in place. To remove a file's overrides, delete it or write a document
- * with no entries, such as `{}`. A file whose content is in effect and that is found empty, or
- * with only a YAML comment or document marker, may be in the middle of a rewrite. The source holds
- * it back until it has stayed so, without being written, for about a second, and for at most about
- * five seconds while that file keeps being rewritten. Changes to the other files wait with it, because
- * a reload applies all of the files or none of them. After that, an empty YAML file removes its
- * overrides. An empty JSON file is not a valid document: it fails to load, and the overrides in
- * effect stay. YAML that is cut off between two entries can still parse, so for a YAML file,
- * replacing its entire contents in one operation, such as renaming a fully written temporary file
- * over it, avoids briefly applying only a part of it.
+ * Files can be rewritten in place: if the source finds a file empty while it is being rewritten,
+ * it keeps the overrides in effect until the new content is written. To remove a file's
+ * overrides, delete the file or write a document with no entries, such as `{}`. An empty JSON file
+ * is not a valid document. For a YAML file, replacing its contents in one operation, such as by
+ * renaming a fully written temporary file over it, avoids briefly applying a partly written file.
  *
  * @example
  * ```typescript
@@ -182,8 +179,8 @@ export interface FileOverrideSourceOptions {
    * A YAML parser for YAML files. The SDK does not include one; to read YAML files, supply a
    * parser that produces the same structure as `JSON.parse`, for example the `parse` function
    * of the `yaml` package. A YAML file configured without a parser fails client construction.
-   * A result of `null` or `undefined`, which YAML parsers return for a file with no content,
-   * means that the file has no entries.
+   * A result of `null` or `undefined`, which YAML parsers return for an empty file, means that the
+   * file has no entries.
    */
   yamlParser?: (data: string) => any;
 }

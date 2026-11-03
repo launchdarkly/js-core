@@ -14,17 +14,11 @@ export interface FileDataSourceOptions {
    * This feature uses Node's `fs.watch()` API on the directories that contain the files, so it
    * is subject to the limitations described
    * [here](https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener).
-   * A file that is replaced by a rename, or deleted and created again, is detected. A load
-   * that fails, for example because a file was read while it was written, is retried after a
-   * short delay and the previously loaded data stays in effect until it succeeds.
-   * A file can be rewritten in place: a file whose content is in effect and that is found empty is
-   * held back until it has stayed empty, without being written, for about a second, and for at most
-   * about five seconds while that file keeps being rewritten. Changes to the other files wait with it,
-   * because a load applies all of the files or none of them. A file that is still empty then fails
-   * to load, which is reported, and the previously loaded data stays in effect. YAML that is cut
-   * off between two entries can still parse, so for a YAML file, replacing its entire contents in
-   * one operation, such as renaming a fully written temporary file over it, avoids briefly applying
-   * only a part of it.
+   * A file that is replaced by a rename, or deleted and created again, is detected.
+   * Files can be rewritten in place. If the data source reads a file while it is being written, or
+   * a file cannot be parsed, it keeps the flags it has and reads the file again shortly afterward.
+   * For a YAML file, replacing its contents in one operation, such as by renaming a fully written
+   * temporary file over it, avoids briefly loading a partly written file.
    * A change to another entry in a directory causes a reload only when the metadata of a
    * configured file changed, read through any symbolic link, which is how a mounted ConfigMap
    * or Secret is updated.
