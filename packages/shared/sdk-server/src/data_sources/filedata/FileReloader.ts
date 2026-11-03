@@ -134,8 +134,8 @@ type ReloadReason = 'initial' | 'change' | 'retry';
  * A file whose content is in effect and that reloads have found empty, with times on the monotonic
  * clock. `since` is since when it has been empty without being written, and `state` its state
  * then; `since` is undefined after a reload found the file with content or missing. `firstHeld` is
- * when reloads began holding it back, kept across reads with content and across failed reloads,
- * so that a file that keeps being rewritten is bounded.
+ * when a reload first held it back since a reload that held nothing back read it, so that a file
+ * that keeps being rewritten, or files that are rewritten in turn, are bounded.
  */
 interface EmptyFile {
   since?: number;
@@ -396,6 +396,8 @@ export default class FileReloader {
             heldBack.push(path);
             return;
           }
+          // The file was read and is not held back, whether or not its empty content parses.
+          hadContent.set(path, !noEntries);
           if (blank) {
             try {
               document = policy.parseDocument(path, data);
@@ -404,7 +406,6 @@ export default class FileReloader {
               return;
             }
           }
-          hadContent.set(path, !noEntries);
           contents.push(data);
           documents.push(document as FileDataDocument);
           files.push({ path, present: true, flags: 0, segments: 0 });
@@ -412,6 +413,18 @@ export default class FileReloader {
       Promise.resolve(),
     );
     await readAll;
+
+    if (heldBack.length === 0) {
+      // A reload that holds nothing back, whether it applies, skips or fails, starts the bound over
+      // for every file that it read: such a file is no longer held, so its next rewrite is a new
+      // one. A file that the reload did not get to keeps its bound.
+      hadContent.forEach((_hadContent, path) => {
+        const empty = this._emptyFiles.get(path);
+        if (empty) {
+          empty.firstHeld = undefined;
+        }
+      });
+    }
 
     // A file that cannot be read or parsed fails the reload, whether or not another file is held
     // back.
@@ -506,8 +519,8 @@ export default class FileReloader {
    * empty, or files that are rewritten in turn so that every reload finds one of them empty, would
    * be held back without end, so a file is held back for at most `MAX_HOLD_RETRY_DELAYS` retry
    * delays. That bound is the file's own: it starts at the first reload that holds the file back,
-   * and starts over only when data is applied or when the file has stayed empty for the whole
-   * delay. A file whose content is not in effect, such as a placeholder that has always been empty,
+   * and starts over only at a reload that holds nothing back and reads the file, or when data is
+   * applied. A file whose content is not in effect, such as a placeholder that has always been empty,
    * is parsed right away, and so is any file when retries are off, since nothing would read it
    * again.
    *
@@ -531,8 +544,6 @@ export default class FileReloader {
       empty.state = state;
     }
     if (now - empty.since >= retryDelayMs) {
-      // The file stayed empty for the whole delay. A later rewrite gets a fresh bound.
-      empty.firstHeld = undefined;
       return false;
     }
     if (

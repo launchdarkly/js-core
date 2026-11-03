@@ -565,6 +565,89 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(values()).toEqual(['a,a', 'b']);
   });
 
+  it('applies files that are emptied in staggered turns once their bounds are over', async () => {
+    // Two files stay empty and are truncated again in turn, so that whenever one of them has
+    // stayed empty for the whole delay, the other is still within its delay and holds the load
+    // back. A file that settles so does not get a fresh bound while the other is held back.
+    write(yamlPath, documentA);
+    write(otherYamlPath, otherA);
+    makeReloader([yamlPath, otherYamlPath]);
+    await reloader.reloadNow();
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(readAgainMessages()).toHaveLength(1);
+    // Every 900 ms one file is truncated again, with a load then and one 200 ms later, standing
+    // for the retry. The second file is emptied at the first step.
+    await Array.from({ length: 14 }, (_, index) => index + 1).reduce<Promise<void>>(
+      (previous, step) =>
+        previous.then(async () => {
+          if (applied.length > 1) {
+            return;
+          }
+          await advance(step === 1 ? 900 : 700);
+          write(step % 2 === 1 ? otherYamlPath : yamlPath, '');
+          await changeAndSettle();
+          await advance(200);
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    expect(applied.length).toBeGreaterThan(1);
+  });
+
+  it('starts the bound of a file held back during a failure over once a failed load reads it', async () => {
+    // While the other file fails to load, the first file is rewritten once and its gap is held
+    // back. Much later, the other file is fixed while the first file is in the middle of another
+    // rewrite, which is held back with a bound of its own.
+    write(yamlPath, documentA);
+    write(jsonPath, otherA);
+    makeReloader([yamlPath, jsonPath]);
+    await reloader.reloadNow();
+
+    write(jsonPath, '{"flagValues": ');
+    write(yamlPath, '');
+    await changeAndSettle();
+    write(yamlPath, documentB);
+    await changeAndSettle();
+    await advance(6 * retryDelayMs);
+    // A reload that fails reports the failure, not the files it holds back.
+    expect(readAgainMessages()).toEqual([]);
+
+    write(jsonPath, otherB);
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a']);
+    expect(readAgainMessages()).toHaveLength(1);
+  });
+
+  it('asks for the retry from the end of the load, when the read of another file takes longer than the rest of the delay', async () => {
+    write(yamlPath, documentA);
+    write(otherYamlPath, otherA);
+    makeReloader([yamlPath, otherYamlPath]);
+    await reloader.reloadNow();
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    await advance(retryDelayMs * 0.95);
+
+    // The first file is still within its delay when it is read. The read of the second file
+    // takes 60 ms, past the end of that delay, so the retry is due right away, after the margin.
+    const readFile = filesystem.readFile.bind(filesystem);
+    jest.spyOn(filesystem, 'readFile').mockImplementation(async (path: string) => {
+      if (path === otherYamlPath) {
+        await new Promise((resolve) => {
+          setTimeout(resolve, 60);
+        });
+      }
+      return readFile(path);
+    });
+    reloader.trigger();
+    await advance(60);
+    expect(readAgainMessages()).toHaveLength(2);
+    expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs / 10);
+  });
+
   it('reads the clock after each file is read, so a slow read of another file does not shorten the delay', async () => {
     write(otherYamlPath, otherA);
     write(yamlPath, documentA);
