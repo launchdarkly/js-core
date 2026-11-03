@@ -667,6 +667,38 @@ describe('given a reloader over a file that is rewritten in place', () => {
     });
   });
 
+  it('holds back a file emptied again after a read of its content when its state looks the same', async () => {
+    // On a filesystem that records modification times coarsely, a file emptied a second time can
+    // look exactly as it did the first time. The read of its content in between still starts its
+    // delay over. The other file is kept written while empty, so that no load applies.
+    write(yamlPath, documentA);
+    write(otherYamlPath, otherA);
+    makeReloader([yamlPath, otherYamlPath]);
+    await reloader.reloadNow();
+
+    write(yamlPath, '');
+    const firstEmptyModified = modified;
+    write(otherYamlPath, '');
+    await changeAndSettle();
+    expect(readAgainMessages()).toHaveLength(2);
+
+    await advance(500);
+    write(yamlPath, documentA);
+    write(otherYamlPath, '');
+    await changeAndSettle();
+
+    await advance(400);
+    filesystem.set(yamlPath, '', firstEmptyModified);
+    write(otherYamlPath, '');
+    await changeAndSettle();
+
+    // The other file gets its content back while the first file is still within its new delay.
+    await advance(700);
+    write(otherYamlPath, otherB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a']);
+  });
+
   it('holds back a file whose content moved to it from another configured file', async () => {
     // The content in effect comes from the second file. Moving it to the first leaves the
     // contents the same, so the load applies nothing, but the first file now contributes them.
