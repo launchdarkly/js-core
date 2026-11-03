@@ -5,6 +5,7 @@ import {
   DataSourceState,
   LDDataSourceFactory,
 } from '../api/subsystem/DataSystem/DataSource';
+import { resolveFallbackTtlMs } from '../internal/fdv2/fallbackDirective';
 import { Backoff, DefaultBackoff } from './Backoff';
 import { DataSourceList } from './dataSourceList';
 import { LDFlagDeliveryFallbackError } from './errors';
@@ -27,6 +28,8 @@ export type TransitionConditions = {
 interface TransitionRequest {
   transition: Transition;
   err?: Error;
+  // Set when the FDv1 fallback TTL elapsed and the FDv2 synchronizers should be restored.
+  recoverFDv2?: boolean;
 }
 
 /**
@@ -39,12 +42,17 @@ export class CompositeDataSource implements DataSource {
   private _initPhaseActive: boolean;
   private _initFactories: DataSourceList<LDDataSourceFactory>;
   private _syncFactories: DataSourceList<LDDataSourceFactory>;
+  // The FDv2 synchronizers, retained while FDv1 fallback is engaged so they can be restored.
+  private _fdv2SyncFactories: DataSourceList<LDDataSourceFactory>;
   private _fdv1Synchronizers: DataSourceList<LDDataSourceFactory>;
   // Set after the server-directed FDv1 fallback has been engaged. The directive is
   // one-way: subsequent fallback signals from the FDv1 synchronizer (e.g. if the FDv1
   // endpoint were to echo `x-ld-fd-fallback`) are ignored so the data source does not
   // loop replacing its synchronizer list with itself.
   private _fdv1FallbackEngaged: boolean = false;
+  // Resolves when the FDv1 fallback TTL elapses. Fallback is never permanent: once this
+  // resolves, the FDv2 synchronizers are restored whether or not an FDv1 synchronizer ran.
+  private _fdv2Recovery?: Promise<TransitionRequest>;
 
   private _stopped: boolean = true;
   private _externalTransitionPromise: Promise<TransitionRequest>;
@@ -82,6 +90,7 @@ export class CompositeDataSource implements DataSource {
     this._initPhaseActive = initializers.length > 0; // init phase if we have initializers
     this._initFactories = new DataSourceList(false, initializers);
     this._syncFactories = new DataSourceList(true, synchronizers);
+    this._fdv2SyncFactories = this._syncFactories;
     this._fdv1Synchronizers = new DataSourceList(true, fdv1Synchronizers);
   }
 
@@ -114,6 +123,10 @@ export class CompositeDataSource implements DataSource {
         cullDSFactory,
       } = this._pickDataSource(lastTransition);
 
+      // Detaches the current data source's callbacks and scheduled transitions so that it
+      // cannot affect the composite after the loop moves on from it.
+      let detachCurrentDS = () => {};
+
       const internalTransitionPromise = new Promise<TransitionRequest>((transitionResolve) => {
         if (currentDS) {
           // these local variables are used for handling automatic transition related to data source status (ex: recovering to primary after
@@ -122,37 +135,44 @@ export class CompositeDataSource implements DataSource {
           let cancelScheduledTransition: () => void = () => {};
 
           // Engages the FDv1 Fallback Directive: swaps the synchronizer list to FDv1 (or
-          // empties it when no FDv1 fallback is configured), reports the in-progress status
-          // through the sanitizer, cancels any pending scheduled transition, and resolves
-          // a switchToSync transition. The directive is one-way; the engagement flag is
-          // checked by the callers so we don't re-enter this branch on repeated signals.
-          const engageFDv1Fallback = (statusToReport: DataSourceState, err: unknown) => {
+          // empties it when no FDv1 fallback is configured), schedules the return to FDv2
+          // after the fallback TTL, reports the in-progress status through the sanitizer,
+          // cancels any pending scheduled transition, and resolves a switchToSync
+          // transition. The engagement flag is checked by the callers so we don't re-enter
+          // this branch on repeated signals before the TTL elapses.
+          const engageFDv1Fallback = (
+            statusToReport: DataSourceState,
+            err: unknown,
+            fdv1FallbackTtlMs: number | undefined,
+          ) => {
+            const ttlMs = fdv1FallbackTtlMs ?? resolveFallbackTtlMs(undefined);
             if (this._fdv1Synchronizers.length() > 0) {
-              this._logger?.warn(`Falling back to FDv1`);
+              this._logger?.warn(`Falling back to FDv1; will retry FDv2 in ${ttlMs}ms`);
             } else {
               this._logger?.warn(
-                `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; data source will terminate`,
+                `FDv1 fallback was requested but no FDv1 fallback synchronizer is configured; will retry FDv2 in ${ttlMs}ms`,
               );
             }
             this._fdv1FallbackEngaged = true;
             this._syncFactories = this._fdv1Synchronizers;
+            this._scheduleFDv2Recovery(ttlMs);
             sanitizedStatusCallback(statusToReport, err);
             this._consumeCancelToken(cancelScheduledTransition);
             transitionResolve({ transition: 'switchToSync', err: err as Error | undefined });
           };
 
           // this callback handler can be disabled and ensures only one transition request occurs
-          const callbackHandler = new CallbackHandler(
+          const callbackHandler: CallbackHandler = new CallbackHandler(
             (basis: boolean, data: any) => {
               this._backoff.success();
               dataCallback(basis, data);
 
               // The FDv1 fallback directive can ride along on the same data callback that
               // delivers a payload, so the swap to FDv1 is atomic with payload application.
-              // Once engaged, the directive is one-way -- subsequent signals are ignored.
+              // Once engaged, subsequent signals are ignored until the TTL elapses.
               if (data?.fallbackToFDv1 && !this._fdv1FallbackEngaged) {
                 callbackHandler.disable();
-                engageFDv1Fallback(DataSourceState.Interrupted, undefined);
+                engageFDv1Fallback(DataSourceState.Interrupted, undefined, data.fdv1FallbackTtlMs);
                 return;
               }
 
@@ -173,18 +193,20 @@ export class CompositeDataSource implements DataSource {
               );
               if (err || state === DataSourceState.Closed) {
                 callbackHandler.disable();
+
+                // Status-callback path for the FDv1 Fallback Directive (used when the
+                // server-directed signal arrives without an accompanying payload, e.g. on
+                // an HTTP error or a malformed body). The FDv2 source is not culled, so it
+                // can be restored once the fallback TTL elapses.
+                if (err instanceof LDFlagDeliveryFallbackError && !this._fdv1FallbackEngaged) {
+                  engageFDv1Fallback(state, err, err.fdv1FallbackTtlMs);
+                  return;
+                }
+
                 if (err?.recoverable === false) {
                   // don't use this datasource's factory again
                   this._logger?.debug(`Culling data source due to err ${err}`);
                   cullDSFactory?.();
-                }
-
-                // Status-callback path for the FDv1 Fallback Directive (used when the
-                // server-directed signal arrives without an accompanying payload, e.g. on
-                // an HTTP error or a malformed body).
-                if (err instanceof LDFlagDeliveryFallbackError && !this._fdv1FallbackEngaged) {
-                  engageFDv1Fallback(state, err);
-                  return;
                 }
 
                 sanitizedStatusCallback(state, err);
@@ -215,11 +237,18 @@ export class CompositeDataSource implements DataSource {
               }
             },
           );
+          detachCurrentDS = () => {
+            callbackHandler.disable();
+            this._consumeCancelToken(cancelScheduledTransition);
+          };
           currentDS.start(
             (basis, data) => callbackHandler.dataHandler(basis, data),
             (status, err) => callbackHandler.statusHandler(status, err),
             selectorGetter,
           );
+        } else if (this._fdv2Recovery) {
+          // FDv1 fallback is engaged but no FDv1 synchronizer is available. Wait for the
+          // fallback TTL to elapse and the FDv2 synchronizers to be restored.
         } else {
           // we don't have a data source to use!
           transitionResolve({
@@ -232,14 +261,18 @@ export class CompositeDataSource implements DataSource {
         }
       });
 
-      // await transition triggered by internal data source or an external stop request
+      // await transition triggered by internal data source, the FDv1 fallback TTL elapsing,
+      // or an external stop request
       // eslint-disable-next-line no-await-in-loop
       let transitionRequest = await Promise.race([
+        ...(this._fdv2Recovery ? [this._fdv2Recovery] : []),
         internalTransitionPromise,
         this._externalTransitionPromise,
       ]);
 
-      // stop the underlying datasource before transitioning to next state
+      // stop the underlying datasource before transitioning to next state, so that FDv1
+      // and FDv2 sources never deliver data concurrently
+      detachCurrentDS();
       currentDS?.stop();
 
       // Skip backoff only on the initial server-directed FDv1 engagement (a `switchToSync`
@@ -276,6 +309,14 @@ export class CompositeDataSource implements DataSource {
         this._consumeCancelToken(cancelDelay);
       }
 
+      if (transitionRequest.recoverFDv2) {
+        this._logger?.info('FDv1 fallback TTL elapsed; retrying FDv2');
+        this._fdv2Recovery = undefined;
+        this._fdv1FallbackEngaged = false;
+        this._syncFactories = this._fdv2SyncFactories;
+        sanitizedStatusCallback(DataSourceState.Interrupted);
+      }
+
       lastTransition = transitionRequest.transition;
       if (transitionRequest.transition === 'stop') {
         // exit the loop, this is intentionally not the sanitized status callback
@@ -298,13 +339,24 @@ export class CompositeDataSource implements DataSource {
     this._stopped = true;
     this._initPhaseActive = this._initFactories.length() > 0; // init phase if we have initializers;
     this._initFactories.reset();
+    this._syncFactories = this._fdv2SyncFactories;
     this._syncFactories.reset();
     this._fdv1Synchronizers.reset();
     this._fdv1FallbackEngaged = false;
+    this._fdv2Recovery = undefined;
     this._externalTransitionPromise = new Promise<TransitionRequest>((tr) => {
       this._externalTransitionResolve = tr;
     });
     // intentionally not resetting the backoff to avoid a code path that could circumvent throttling
+  }
+
+  private _scheduleFDv2Recovery(delayMS: number) {
+    const { promise, cancel } = this._cancellableDelay(delayMS);
+    this._cancelTokens.push(cancel);
+    this._fdv2Recovery = promise.then((): TransitionRequest => {
+      this._consumeCancelToken(cancel);
+      return { transition: 'switchToSync', recoverFDv2: true };
+    });
   }
 
   /**

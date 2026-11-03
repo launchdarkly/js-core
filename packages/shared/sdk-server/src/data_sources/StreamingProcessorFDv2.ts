@@ -20,6 +20,12 @@ import { Flag } from '../evaluation/data/Flag';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 
+function readHeaderFallbackDirective(headers?: {
+  [key: string]: string;
+}): internal.FallbackDirective {
+  return internal.readFallbackDirective({ get: (name) => headers?.[name] ?? null });
+}
+
 export default class StreamingProcessorFDv2 implements subsystemCommon.DataSource {
   private readonly _serviceEndpoints: ServiceEndpoints;
   private readonly _headers: { [key: string]: string | string[] };
@@ -84,11 +90,13 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     statusCallback: (status: subsystemCommon.DataSourceState, err?: any) => void,
   ) {
     // this is a short term error and will be removed once FDv2 adoption is sufficient.
-    if (err.headers?.[`x-ld-fd-fallback`] === `true`) {
+    const directive = readHeaderFallbackDirective(err.headers);
+    if (directive.fdv1Fallback) {
       const fallbackErr = new LDFlagDeliveryFallbackError(
         DataSourceErrorKind.ErrorResponse,
         `Response header indicates to fallback to FDv1`,
         err.status,
+        directive.fdv1FallbackTtlMs,
       );
       statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
       return false;
@@ -131,6 +139,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     // finish applying the next payload before emitting the fallback signal so evaluations
     // can serve the server-provided data while the FDv1 synchronizer takes over.
     let fallbackRequested = false;
+    let fdv1FallbackTtlMs: number | undefined;
 
     const eventSource = this._requests.createEventSource(uri, {
       headers: this._headers,
@@ -161,8 +170,10 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       this._initMetadata = internal.initMetadataFromHeaders(e.headers);
       // The fallback signal is captured here from the connection-open response headers and
       // is honored by the payload listener above once the next payload has been applied.
-      if (e.headers?.[`x-ld-fd-fallback`] === `true`) {
+      const directive = readHeaderFallbackDirective(e.headers);
+      if (directive.fdv1Fallback) {
         fallbackRequested = true;
+        fdv1FallbackTtlMs = directive.fdv1FallbackTtlMs;
       }
       statusCallback(subsystemCommon.DataSourceState.Valid);
     };
@@ -193,6 +204,8 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
           const fallbackErr = new LDFlagDeliveryFallbackError(
             DataSourceErrorKind.ErrorResponse,
             `Response header indicates to fallback to FDv1`,
+            undefined,
+            fdv1FallbackTtlMs,
           );
           this._logger?.warn(fallbackErr.message);
           statusCallback(subsystemCommon.DataSourceState.Closed, fallbackErr);
@@ -218,12 +231,18 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       // switchToSync transition. A separate status callback after the data callback would
       // be silently dropped because the basis-during-init auto-transition disables the
       // composite's callback handler.
-      const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+      const data: {
+        initMetadata: any;
+        payload: any;
+        fallbackToFDv1?: boolean;
+        fdv1FallbackTtlMs?: number;
+      } = {
         initMetadata: this._initMetadata,
         payload,
       };
       if (fallbackRequested) {
         data.fallbackToFDv1 = true;
+        data.fdv1FallbackTtlMs = fdv1FallbackTtlMs;
         this._logger?.warn(`Response header indicates to fallback to FDv1`);
       }
       dataCallback(payload.type === 'full', data);

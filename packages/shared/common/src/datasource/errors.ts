@@ -42,11 +42,19 @@ export class LDFlagDeliveryFallbackError extends Error {
   public readonly kind: DataSourceErrorKind;
   public readonly code?: number;
   public readonly recoverable: boolean;
+  /** How long to remain on FDv1 before retrying FDv2, if the directive carried a TTL. */
+  public readonly fdv1FallbackTtlMs?: number;
 
-  constructor(kind: DataSourceErrorKind, message: string, code?: number) {
+  constructor(
+    kind: DataSourceErrorKind,
+    message: string,
+    code?: number,
+    fdv1FallbackTtlMs?: number,
+  ) {
     super(message);
     this.kind = kind;
     this.code = code;
+    this.fdv1FallbackTtlMs = fdv1FallbackTtlMs;
     this.name = 'LDFlagDeliveryFallbackError';
     this.recoverable = false;
   }

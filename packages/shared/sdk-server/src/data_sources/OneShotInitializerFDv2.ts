@@ -31,7 +31,7 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
     statusCallback(subsystemCommon.DataSourceState.Initializing);
 
     this._logger?.debug('Performing initialization request to LaunchDarkly for feature flag data.');
-    this._requestor.requestAllData((err, body, headers, fallbackToFDv1) => {
+    this._requestor.requestAllData((err, body, headers, fallbackToFDv1, fdv1FallbackTtlMs) => {
       if (this._stopped) {
         return;
       }
@@ -46,7 +46,12 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         this._logger?.warn(message);
         statusCallback(
           subsystemCommon.DataSourceState.Closed,
-          new LDFlagDeliveryFallbackError(DataSourceErrorKind.ErrorResponse, message, status),
+          new LDFlagDeliveryFallbackError(
+            DataSourceErrorKind.ErrorResponse,
+            message,
+            status,
+            fdv1FallbackTtlMs,
+          ),
         );
       };
 
@@ -125,12 +130,18 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
         // attach a fallbackToFDv1 marker to the data object: CompositeDataSource will swap
         // its synchronizer list to FDv1 before resolving the switchToSync transition.
         payloadProcessor.addPayloadListener((payload) => {
-          const data: { initMetadata: any; payload: any; fallbackToFDv1?: boolean } = {
+          const data: {
+            initMetadata: any;
+            payload: any;
+            fallbackToFDv1?: boolean;
+            fdv1FallbackTtlMs?: number;
+          } = {
             initMetadata,
             payload,
           };
           if (fallbackToFDv1) {
             data.fallbackToFDv1 = true;
+            data.fdv1FallbackTtlMs = fdv1FallbackTtlMs;
             this._logger?.warn(`Response header indicates to fallback to FDv1`);
           }
           dataCallback(payload.type === 'full', data);

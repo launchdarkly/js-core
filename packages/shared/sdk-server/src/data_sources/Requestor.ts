@@ -1,6 +1,7 @@
 import {
   DataSourceErrorKind,
   getPollingUri,
+  internal,
   LDFlagDeliveryFallbackError,
   LDHeaders,
   LDLogger,
@@ -77,7 +78,13 @@ export default class Requestor implements LDFeatureRequestor {
   }
 
   async requestAllData(
-    cb: (err: any, body: any, headers: any, fallbackToFDv1?: boolean) => void,
+    cb: (
+      err: any,
+      body: any,
+      headers: any,
+      fallbackToFDv1?: boolean,
+      fdv1FallbackTtlMs?: number,
+    ) => void,
     queryParams: { key: string; value: string }[] = [],
   ) {
     const options: Options = {
@@ -94,10 +101,12 @@ export default class Requestor implements LDFeatureRequestor {
       this._logger?.debug(`Requestor got (possibly cached) body: ${JSON.stringify(body)}`);
 
       // Per the FDv2 spec, x-ld-fd-fallback signals that the SDK should switch to FDv1
-      // for the remainder of the lifetime. The signal can ride along on either a successful
+      // until the fallback TTL elapses. The signal can ride along on either a successful
       // response or an error response -- in both cases callers must apply any accompanying
       // payload before honoring the directive.
-      const fallbackToFDv1 = res.headers.get(`x-ld-fd-fallback`) === `true`;
+      const { fdv1Fallback: fallbackToFDv1, fdv1FallbackTtlMs } = internal.readFallbackDirective(
+        res.headers,
+      );
       const responseHeaders = Object.fromEntries(res.headers.entries());
 
       if (res.status !== 200 && res.status !== 304) {
@@ -106,15 +115,22 @@ export default class Requestor implements LDFeatureRequestor {
               DataSourceErrorKind.ErrorResponse,
               `Response header indicates to fallback to FDv1.`,
               res.status,
+              fdv1FallbackTtlMs,
             )
           : new LDPollingError(
               DataSourceErrorKind.ErrorResponse,
               `Unexpected status code: ${res.status}`,
               res.status,
             );
-        return cb(err, undefined, responseHeaders, fallbackToFDv1);
+        return cb(err, undefined, responseHeaders, fallbackToFDv1, fdv1FallbackTtlMs);
       }
-      return cb(undefined, res.status === 304 ? null : body, responseHeaders, fallbackToFDv1);
+      return cb(
+        undefined,
+        res.status === 304 ? null : body,
+        responseHeaders,
+        fallbackToFDv1,
+        fdv1FallbackTtlMs,
+      );
     } catch (err) {
       return cb(err, undefined, undefined, false);
     }

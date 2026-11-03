@@ -404,6 +404,22 @@ describe('given a stream processor with mock event source', () => {
     expect(mockEventSource.close).toBeCalled();
   });
 
+  it('attaches the fallback TTL from the open headers to the data callback', () => {
+    mockEventSource.onopen({
+      headers: {
+        ...openHeaders,
+        'x-ld-fd-fallback': 'true',
+        'x-ld-fd-fallback-ttl': '120',
+      },
+    });
+    simulateEvents();
+
+    expect(mockDataCallback).toHaveBeenCalledWith(
+      true,
+      expect.objectContaining({ fallbackToFDv1: true, fdv1FallbackTtlMs: 120000 }),
+    );
+  });
+
   it('passes error to callback if json data is malformed', async () => {
     simulateEvents({
       'server-intent': {
