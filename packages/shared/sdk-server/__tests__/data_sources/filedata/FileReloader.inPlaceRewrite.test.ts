@@ -691,14 +691,13 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(values()).toEqual(['a', 'b']);
   });
 
-  it('keeps the bound of a file that a failing load did not get to', async () => {
+  it('applies a file kept written while empty after its bound while an earlier file fails', async () => {
     write(jsonPath, otherA);
     write(yamlPath, documentA);
     makeReloader([jsonPath, yamlPath]);
     await reloader.reloadNow();
 
-    // The second file keeps being written while empty. The first file fails at every other load,
-    // before the second file is read.
+    // The second file keeps being written while empty. The first file fails at every other load.
     write(yamlPath, '');
     await changeAndSettle();
     await [1, 2, 3, 4, 5, 6, 7, 8].reduce<Promise<void>>(
@@ -722,6 +721,31 @@ describe('given a reloader over a file that is rewritten in place', () => {
     write(jsonPath, otherB);
     await changeAndSettle();
     expect(values()).toEqual(['a,a', 'b']);
+  });
+
+  it('starts the bound of a file after a failing file over once a failing load reads it', async () => {
+    // The first file breaks while the second is written with content. Much later, the first file
+    // is fixed while the second is in the middle of a rewrite, which is held back with a bound of
+    // its own.
+    write(jsonPath, otherA);
+    write(yamlPath, documentA);
+    makeReloader([jsonPath, yamlPath]);
+    await reloader.reloadNow();
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(readAgainMessages()).toHaveLength(1);
+    write(jsonPath, '{"flagValues": ');
+    write(yamlPath, documentB);
+    await changeAndSettle();
+    expect(failures).toHaveLength(1);
+    await advance(6 * retryDelayMs);
+
+    write(jsonPath, otherB);
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a']);
+    expect(readAgainMessages()).toHaveLength(2);
   });
 
   it('does not start bounds over at a load that holds a file back and then fails', async () => {
@@ -944,7 +968,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   it('holds back a file whose content moved to it from another configured file', async () => {
     // The content in effect comes from the second file. Moving it to the first leaves the
-    // contents the same, so the load applies nothing, but the first file now contributes them.
+    // contents the same, and the load applies them, because the first file now contributes them.
     write(otherYamlPath, documentA);
     makeReloader([yamlPath, otherYamlPath]);
     await reloader.reloadNow();
@@ -953,15 +977,15 @@ describe('given a reloader over a file that is rewritten in place', () => {
     filesystem.remove(otherYamlPath);
     write(yamlPath, documentA);
     await changeAndSettle();
-    expect(values()).toEqual(['a']);
+    expect(values()).toEqual(['a', 'a']);
 
     write(yamlPath, '');
     await changeAndSettle();
-    expect(values()).toEqual(['a']);
+    expect(values()).toEqual(['a', 'a']);
 
     write(yamlPath, documentB);
     await changeAndSettle();
-    expect(values()).toEqual(['a', 'b']);
+    expect(values()).toEqual(['a', 'a', 'b']);
   });
 
   it('never holds back an empty placeholder file, and it does not delay a change to another file', async () => {

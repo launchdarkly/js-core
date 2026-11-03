@@ -344,23 +344,25 @@ export default class FileReloader {
 
     const documents: FileDataDocument[] = [];
     const files: FileSummary[] = [];
-    const contents: string[] = [];
+    // Each configured path with its content, or null when it is missing, for skip-unchanged. The
+    // format is chosen by the path's extension, so the same content under another path can be
+    // other data.
+    const contents: [string, string | null][] = [];
     // Whether each path that this reload read, or found missing, has content.
     const hadContent = new Map<string, boolean>();
+    // The first failure. The other files are still read and classified, so that every file this
+    // reload gets to is reached, and the reload fails with this failure after the loop.
     let failure: LoadFailure | undefined;
     // The empty files that this reload holds back. The other files are still read, so that files
     // that are emptied together start their delays in the same reload.
     const heldBack: string[] = [];
-    // Every file that this reload got to and did not hold back, including a file that failed to
-    // read or parse and a missing file.
+    // Every file that this reload read or found missing and did not hold back, including a file
+    // that failed to read or parse.
     const reached: string[] = [];
 
     const readAll = paths.reduce(
       (previous, path) =>
         previous.then(async () => {
-          if (failure) {
-            return;
-          }
           let data: string;
           try {
             data = await this._config.filesystem.readFile(path);
@@ -373,10 +375,11 @@ export default class FileReloader {
             if (missing && policy.missingFile === 'skip') {
               logger?.debug(`File ${path} does not exist. It contributes no data.`);
               hadContent.set(path, false);
+              contents.push([path, null]);
               files.push({ path, present: false, flags: 0, segments: 0 });
               return;
             }
-            failure = { kind: 'read', error: asError(err), path, repeated: false };
+            failure = failure ?? { kind: 'read', error: asError(err), path, repeated: false };
             return;
           }
           // A file with no content, or with content that its parser reads as no document, such as
@@ -392,7 +395,7 @@ export default class FileReloader {
               // Content ends the file's empty state, even content that fails to parse.
               reached.push(path);
               this._fileChanged(path);
-              failure = { kind: 'parse', error: asError(err), path, repeated: false };
+              failure = failure ?? { kind: 'parse', error: asError(err), path, repeated: false };
               return;
             }
           }
@@ -409,11 +412,11 @@ export default class FileReloader {
             try {
               document = policy.parseDocument(path, data);
             } catch (err) {
-              failure = { kind: 'parse', error: asError(err), path, repeated: false };
+              failure = failure ?? { kind: 'parse', error: asError(err), path, repeated: false };
               return;
             }
           }
-          contents.push(data);
+          contents.push([path, data]);
           documents.push(document as FileDataDocument);
           files.push({ path, present: true, flags: 0, segments: 0 });
         }),
@@ -423,8 +426,8 @@ export default class FileReloader {
 
     if (heldBack.length === 0) {
       // A reload that holds nothing back, whether it applies, skips or fails, starts the bound over
-      // for every file that it got to: such a file is no longer held, so its next rewrite is a new
-      // one. A file after the one that failed, which the reload did not get to, keeps its bound.
+      // for every file, since it reads them all: such a file is no longer held, so its next rewrite
+      // is a new one. A reload that holds a file back starts no bound over, even when it fails.
       reached.forEach((path) => {
         const empty = this._emptyFiles.get(path);
         if (empty) {
@@ -474,10 +477,8 @@ export default class FileReloader {
     const recovering = this._lastFailureKey !== undefined;
     const content = JSON.stringify(contents);
     if (this._config.skipUnchanged && !recovering && content === this._lastGoodContent) {
-      // The contents are compared without their paths, so a file can have moved to another
-      // configured path, which now contributes the content in effect.
+      // Every file has the same content as in the data in effect, so it contributes what it did.
       this._lastFailureKey = undefined;
-      this._rememberAppliedContent(hadContent);
       return;
     }
     // Nothing is remembered until the consumer has accepted the result. A result the consumer
@@ -527,9 +528,9 @@ export default class FileReloader {
    * empty, or files that are rewritten in turn so that every reload finds one of them empty, would
    * be held back without end, so a file is held back for at most `MAX_HOLD_RETRY_DELAYS` retry
    * delays. That bound is the file's own: it starts at the first reload that holds the file back,
-   * and starts over only when data is applied, or at a reload that holds nothing back and gets to
-   * the file, whether the file reads, parses, fails or is missing. A file after one that fails to
-   * load is not read, so it keeps its bound. The bounds of files that keep being written while
+   * and starts over only when data is applied, or at a reload that holds nothing back, whether the
+   * file reads, parses, fails or is missing. A reload reads every file even after one fails, so
+   * that it starts every file's bound over. The bounds of files that keep being written while
    * empty do not overlap: with n such files whose rewrites start 4.5 retry delays apart, the first
    * application comes about 4.5 n + 0.5 retry delays after the first rewrite started, and a failure
    * of another file that recurs exactly when each bound ends could hold them back without end. A

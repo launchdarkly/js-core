@@ -165,7 +165,7 @@ describe('given a reloader over a mock filesystem', () => {
     expect(failures[0].error.message).toEqual('duplicate flag flag1');
   });
 
-  it('stops reading after the first failing file', async () => {
+  it('reads every file even after one fails, and reports the first failure', async () => {
     filesystem.set(second, '{"flagValues": {"flag2": true}}');
     const readFile = jest.spyOn(filesystem, 'readFile');
     makeReloader((config) => {
@@ -175,7 +175,46 @@ describe('given a reloader over a mock filesystem', () => {
     await reloader.reloadNow();
 
     expect(failures).toHaveLength(1);
-    expect(readFile).toHaveBeenCalledTimes(1);
+    expect(failures[0].path).toEqual(path);
+    expect(readFile).toHaveBeenCalledTimes(2);
+    expect(applied).toHaveLength(0);
+  });
+
+  it.each([
+    ['content that fails to parse', '{"flagValues"', 'parse'],
+    ['no content', '', 'parse'],
+    ['a missing file', undefined, 'read'],
+  ])('reports the first of two failing files, for %s', async (_case, data, kind) => {
+    if (data !== undefined) {
+      filesystem.set(path, data);
+      filesystem.set(second, data);
+    }
+    makeReloader((config) => {
+      config.paths = [path, second];
+    });
+
+    await reloader.reloadNow();
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatchObject({ kind, path });
+  });
+
+  it('applies files that changed places with the same contents instead of skipping them', async () => {
+    filesystem.set(path, '{"flagValues": {"flag1": true}}');
+    makeReloader((config) => {
+      config.paths = [path, second];
+      config.policy = testPolicy({ missingFile: 'skip' });
+      config.skipUnchanged = true;
+    });
+    await reloader.reloadNow();
+    expect(applied[0].files.map((file) => file.present)).toEqual([true, false]);
+
+    filesystem.remove(path);
+    filesystem.set(second, '{"flagValues": {"flag1": true}}');
+    reloader.trigger();
+    await flushMicrotasks();
+    expect(applied).toHaveLength(2);
+    expect(applied[1].files.map((file) => file.present)).toEqual([false, true]);
   });
 
   it('merges multiple files in the configured order', async () => {
