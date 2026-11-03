@@ -24,6 +24,11 @@ const CAPABILITIES = [
   'retry-conformance-fdv1-streaming',
   'retry-conformance-fdv1-polling',
   'bootstrap',
+  'evaluation-hooks',
+  'wrapper',
+  'client-independence',
+  'client-use-post',
+  'polling-gzip',
 ];
 
 export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {

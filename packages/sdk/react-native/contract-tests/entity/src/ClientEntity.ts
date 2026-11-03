@@ -108,6 +108,10 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     automaticBackgroundHandling: false,
   };
 
+  if (options.clientSide.usePost) {
+    cf.usePost = true;
+  }
+
   if (options.serviceEndpoints) {
     cf.streamUri = options.serviceEndpoints.streaming;
     cf.baseUri = options.serviceEndpoints.polling;
@@ -213,6 +217,15 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
 
   if (options.hooks) {
     cf.hooks = TestHook.forClient(options.hooks.hooks);
+  }
+
+  if (options.wrapper) {
+    if (options.wrapper.name) {
+      cf.wrapperName = options.wrapper.name;
+    }
+    if (options.wrapper.version) {
+      cf.wrapperVersion = options.wrapper.version;
+    }
   }
 
   return cf;
