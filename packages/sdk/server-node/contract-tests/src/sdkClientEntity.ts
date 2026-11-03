@@ -1,3 +1,4 @@
+import * as http from 'http';
 import { Redis } from 'ioredis';
 import { parse as parseYaml } from 'yaml';
 
@@ -184,8 +185,18 @@ export async function makeSdkConfig(
   const maybeTime = (seconds?: number) =>
     seconds === undefined || seconds === null ? undefined : seconds / 1000;
 
+  if (options.serviceEndpoints) {
+    cf.streamUri = options.serviceEndpoints.streaming;
+    cf.baseUri = options.serviceEndpoints.polling;
+    cf.eventsUri = options.serviceEndpoints.events;
+  }
+
+  // A per-component base URI overrides the service endpoints only when it is set. The harness
+  // can send an empty events object together with serviceEndpoints.events.
   if (options.streaming) {
-    cf.streamUri = options.streaming.baseUri;
+    if (options.streaming.baseUri) {
+      cf.streamUri = options.streaming.baseUri;
+    }
     cf.streamInitialReconnectDelay = maybeTime(options.streaming.initialRetryDelayMs);
     if (options.streaming.filter) {
       cf.payloadFilterKey = options.streaming.filter;
@@ -194,7 +205,9 @@ export async function makeSdkConfig(
 
   if (options.polling) {
     cf.stream = false;
-    cf.baseUri = options.polling.baseUri;
+    if (options.polling.baseUri) {
+      cf.baseUri = options.polling.baseUri;
+    }
     cf.pollInterval = maybeTime(options.polling.pollIntervalMs);
     if (options.polling.filter) {
       cf.payloadFilterKey = options.polling.filter;
@@ -203,12 +216,28 @@ export async function makeSdkConfig(
 
   if (options.events) {
     cf.allAttributesPrivate = options.events.allAttributesPrivate;
-    cf.eventsUri = options.events.baseUri;
+    if (options.events.baseUri) {
+      cf.eventsUri = options.events.baseUri;
+    }
     cf.capacity = options.events.capacity;
     cf.diagnosticOptOut = !options.events.enableDiagnostics;
     cf.flushInterval = maybeTime(options.events.flushIntervalMs);
     cf.privateAttributes = options.events.globalPrivateAttributes;
     cf.enableEventCompression = options.events.enableGzip;
+  } else {
+    // An omitted events object means that events are disabled.
+    cf.sendEvents = false;
+  }
+
+  if (options.tls?.skipVerifyPeer) {
+    cf.tlsParams = { rejectUnauthorized: false };
+  }
+
+  if (options.proxy?.httpProxy) {
+    // The agent the SDK builds from proxyOptions always tunnels with CONNECT, which the harness
+    // proxy does not accept. Node's built-in proxy support (Node 22.21 and later) sends http
+    // requests to the proxy with an absolute URI, so the proxy is given to the SDK as an agent.
+    cf.proxyAgent = new http.Agent({ proxyEnv: { HTTP_PROXY: options.proxy.httpProxy } });
   }
 
   if (options.tags) {
@@ -526,6 +555,11 @@ export async function newSdkClientEntity(options: CreateInstanceParams): Promise
       case 'flushEvents':
         client.flush();
         return undefined;
+
+      case 'secureModeHash': {
+        const psmh = params.secureModeHash!;
+        return { result: client.secureModeHash(contextOrUser(psmh.context, psmh.user)) };
+      }
 
       case 'getBigSegmentStoreStatus':
         return client.bigSegmentStoreStatusProvider.requireStatus();

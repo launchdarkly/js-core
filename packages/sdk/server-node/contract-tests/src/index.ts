@@ -55,6 +55,10 @@ app.get('/', (req: Request, res: Response) => {
       'persistent-data-store-dynamodb',
       'persistent-data-store-recovery',
       'flag-overrides',
+      'secure-mode-hash',
+      'service-endpoints',
+      'tls:skip-verify-peer',
+      'http-proxy',
     ],
   });
 });
