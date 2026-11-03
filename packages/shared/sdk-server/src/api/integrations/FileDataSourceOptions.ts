@@ -19,7 +19,7 @@ export interface FileDataSourceOptions {
    * short delay and the previously loaded data stays in effect until it succeeds.
    * A file can be rewritten in place: a file whose content is in effect and that is found empty is
    * held back until it has stayed empty, without being written, for about a second, and for at most
-   * about five seconds while files keep being rewritten. Changes to the other files wait with it,
+   * about five seconds while that file keeps being rewritten. Changes to the other files wait with it,
    * because a load applies all of the files or none of them. A file that is still empty then fails
    * to load, which is reported, and the previously loaded data stays in effect. YAML that is cut
    * off between two entries can still parse, so for a YAML file, replacing its entire contents in

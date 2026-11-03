@@ -385,7 +385,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(failures).toHaveLength(failed);
   });
 
-  it('starts a fresh hold for a file that is deleted and created empty again', async () => {
+  it('starts a fresh delay for a file that is deleted and created empty again', async () => {
     write(jsonPath, documentA);
     makeReloader([jsonPath], (config) => {
       config.policy = testPolicy({ missingFile: 'fail' });
@@ -401,17 +401,16 @@ describe('given a reloader over a file that is rewritten in place', () => {
     const reported = () => failures.filter((failure) => !failure.repeated);
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
 
-    // The data in effect still has the file's content, so the empty file is held back. The failed
-    // loads ended the run of holding loads, so a load more than five retry delays after the first
-    // hold still holds it back.
-    await advance(4400);
+    // The data in effect still has the file's content, so the empty file is held back, with a
+    // delay that starts when it is found empty again.
+    await advance(1900);
     write(jsonPath, '');
     await changeAndSettle();
-    await advance(600);
+    await advance(500);
     await changeAndSettle();
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
 
-    await advance(holdRetryMs - 600 - 1);
+    await advance(holdRetryMs - 500 - 1);
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
     await advance(1);
     expect(reported().map((failure) => failure.kind)).toEqual(['read', 'parse']);
@@ -422,6 +421,35 @@ describe('given a reloader over a file that is rewritten in place', () => {
     // Every write keeps the same modification time, as two writes within one tick of a coarse
     // clock do, so a file that is empty again looks unchanged since it was last found empty.
     const writeCoarse = (path: string, data: string) => filesystem.set(path, data, 1);
+
+    it('starts a fresh delay for a file emptied again after a failed load read its content', async () => {
+      writeCoarse(yamlPath, documentA);
+      writeCoarse(jsonPath, otherA);
+      makeReloader([yamlPath, jsonPath]);
+      await reloader.reloadNow();
+
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      // The file gets its content, but another file is malformed, so nothing is applied.
+      await advance(300);
+      writeCoarse(yamlPath, documentB);
+      writeCoarse(jsonPath, '{"flagValues": ');
+      await changeAndSettle();
+      expect(failures).toHaveLength(1);
+
+      // The file is emptied again, more than a retry delay after it was first found empty.
+      await advance(1200);
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      await advance(100);
+      writeCoarse(jsonPath, otherB);
+      await changeAndSettle();
+      expect(values()).toEqual(['a,a']);
+
+      writeCoarse(yamlPath, documentC);
+      await changeAndSettle();
+      expect(values()).toEqual(['a,a', 'c,b']);
+    });
 
     it('starts a fresh delay for a file that is emptied again after its content was read', async () => {
       writeCoarse(yamlPath, documentA);
@@ -462,6 +490,180 @@ describe('given a reloader over a file that is rewritten in place', () => {
       await changeAndSettle();
       expect(reported().map((failure) => failure.kind)).toEqual(['read']);
       expect(readAgainMessages()).toHaveLength(2);
+    });
+  });
+
+  it('does not restart the bound of a file that is held back when another file fails', async () => {
+    write(yamlPath, documentA);
+    write(jsonPath, otherA);
+    makeReloader([yamlPath, jsonPath]);
+    await reloader.reloadNow();
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    // Every 600 ms the first file is written and truncated again before a load reads it, and the
+    // other file is malformed at every other step, which fails those loads.
+    await [1, 2, 3, 4, 5, 6, 7, 8].reduce<Promise<void>>(
+      (previous, step) =>
+        previous.then(async () => {
+          await advance(600);
+          write(yamlPath, documentB);
+          write(yamlPath, '');
+          write(jsonPath, step % 2 === 0 ? '{"flagValues": ' : otherA);
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    expect(values()).toEqual(['a,a']);
+    expect(failures.length).toBeGreaterThan(0);
+
+    // 5400 ms after it was first held back, the file is applied although it was just written.
+    await advance(600);
+    write(yamlPath, documentB);
+    write(yamlPath, '');
+    write(jsonPath, otherB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a', 'b']);
+  });
+
+  it("does not cut another file's rewrite short when one file's bound is over", async () => {
+    write(yamlPath, documentA);
+    write(otherYamlPath, otherA);
+    makeReloader([yamlPath, otherYamlPath]);
+    await reloader.reloadNow();
+
+    // The first file keeps being written and truncated again before every load.
+    write(yamlPath, '');
+    await changeAndSettle();
+    await Array.from({ length: 7 }).reduce<Promise<void>>(
+      (previous) =>
+        previous.then(async () => {
+          await advance(600);
+          write(yamlPath, documentB);
+          write(yamlPath, '');
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    // At 4750 ms, a quarter of a retry delay before the first file's bound is over, the second
+    // file starts an ordinary in-place rewrite.
+    await advance(550);
+    write(otherYamlPath, '');
+    await changeAndSettle();
+    await advance(50);
+    write(yamlPath, documentB);
+    write(yamlPath, '');
+    await changeAndSettle();
+
+    // At 5100 ms the retry finds the first file's bound over, and the second file still in its
+    // delay, so nothing is applied.
+    await advance(300);
+    expect(values()).toEqual(['a,a']);
+
+    write(otherYamlPath, otherB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a', 'b']);
+  });
+
+  it('reads the clock after each file is read, so a slow read of another file does not shorten the delay', async () => {
+    write(otherYamlPath, otherA);
+    write(yamlPath, documentA);
+    makeReloader([otherYamlPath, yamlPath]);
+    await reloader.reloadNow();
+
+    // The read of the first file takes 900 ms. The second file is empty when it is read.
+    write(yamlPath, '');
+    filesystem.deferReads = true;
+    reloader.trigger();
+    await advance(0);
+    expect(filesystem.pendingReads).toHaveLength(1);
+    await advance(900);
+    filesystem.deferReads = false;
+    filesystem.completePendingReads();
+    await advance(0);
+    expect(readAgainMessages()).toHaveLength(1);
+    expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
+
+    // The delay started when the second file was read, so a load 500 ms later still holds it back.
+    await advance(500);
+    await changeAndSettle();
+    expect(values()).toEqual(['a,a']);
+  });
+
+  describe('the retry that a hold asks for', () => {
+    it('comes a retry delay and a tenth after the first hold', async () => {
+      await startWith(yamlPath, documentA);
+      write(yamlPath, '');
+      await changeAndSettle();
+      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
+    });
+
+    it('comes when the delay ends, plus a tenth, after a later hold', async () => {
+      await startWith(yamlPath, documentA);
+      write(yamlPath, '');
+      await changeAndSettle();
+      await advance(500);
+      await changeAndSettle();
+      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 500);
+    });
+
+    it('comes when the bound ends, plus a tenth, when that is sooner', async () => {
+      await startWith(yamlPath, documentA);
+      write(yamlPath, '');
+      await changeAndSettle();
+      await Array.from({ length: 8 }).reduce<Promise<void>>(
+        (previous) =>
+          previous.then(async () => {
+            await advance(600);
+            write(yamlPath, documentB);
+            write(yamlPath, '');
+            await changeAndSettle();
+          }),
+        Promise.resolve(),
+      );
+      // At 4800 ms the file's delay would end at 5800 ms, and its bound ends at 5000 ms.
+      expect(reloader.lastRetryDelayMs).toEqual(5000 - 4800 + retryDelayMs / 10);
+    });
+
+    it.each([
+      ['first', [yamlPath, otherYamlPath]],
+      ['second', [otherYamlPath, yamlPath]],
+    ])(
+      'comes when the file whose delay ends first is due, when that file is configured %s',
+      async (_order, paths) => {
+        write(yamlPath, documentA);
+        write(otherYamlPath, otherA);
+        makeReloader(paths);
+        await reloader.reloadNow();
+
+        write(yamlPath, '');
+        await changeAndSettle();
+        await advance(400);
+        write(otherYamlPath, '');
+        await changeAndSettle();
+        expect(readAgainMessages()).toHaveLength(3);
+        expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 400);
+      },
+    );
+
+    it('is computed the same way for a hold by a retry', async () => {
+      await startWith(yamlPath, documentA);
+      write(yamlPath, '{"flagValues": ');
+      await changeAndSettle();
+      expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
+
+      write(yamlPath, '');
+      await advance(retryDelayMs);
+      expect(readAgainMessages()).toHaveLength(1);
+      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
+    });
+
+    it('is a retry delay after a failure', async () => {
+      await startWith(jsonPath, documentA);
+      write(jsonPath, '{"flagValues": ');
+      await changeAndSettle();
+      expect(failures).toHaveLength(1);
+      expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
     });
   });
 

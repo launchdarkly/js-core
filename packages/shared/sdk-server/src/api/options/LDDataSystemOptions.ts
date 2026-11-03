@@ -123,7 +123,7 @@ export interface LDDataSystemOptions {
  * with no entries, such as `{}`. A file whose content is in effect and that is found empty, or
  * with only a YAML comment or document marker, may be in the middle of a rewrite. The source holds
  * it back until it has stayed so, without being written, for about a second, and for at most about
- * five seconds while files keep being rewritten. Changes to the other files wait with it, because
+ * five seconds while that file keeps being rewritten. Changes to the other files wait with it, because
  * a reload applies all of the files or none of them. After that, an empty YAML file removes its
  * overrides. An empty JSON file is not a valid document: it fails to load, and the overrides in
  * effect stay. YAML that is cut off between two entries can still parse, so for a YAML file,

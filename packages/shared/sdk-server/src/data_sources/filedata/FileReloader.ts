@@ -33,9 +33,9 @@ export const DEFAULT_RETRY_DELAY_MS = 1000;
 export const MAX_DEBOUNCE_DELAY_MS = 1000;
 
 /**
- * Reloads stop holding files back once they have held some back for this many retry delays in a
- * row, so that a file that keeps being written while every reload finds it empty, or files that
- * are rewritten in turn, are not held back without end.
+ * Reloads stop holding a file back once they have held it back for this many retry delays, so
+ * that a file that keeps being written while every reload finds it empty, or files that are
+ * rewritten in turn, are not held back without end.
  *
  * @internal
  */
@@ -116,7 +116,7 @@ export interface FileReloaderConfig {
   /**
    * How long to wait after a failed reload before retrying it without a trigger. A file whose
    * content is in effect and that is found empty is not applied until it has stayed empty, without
-   * being written, for the same delay, or until reloads have held files back for
+   * being written, for the same delay, or until reloads have held it back for
    * `MAX_HOLD_RETRY_DELAYS` times the delay. Zero or negative disables the automatic retry, and an
    * empty file is then parsed as it is.
    */
@@ -131,12 +131,16 @@ export interface FileReloaderConfig {
 type ReloadReason = 'initial' | 'change' | 'retry';
 
 /**
- * A file whose content is in effect and that reloads have found empty: since when it has been
- * empty without being written, on the monotonic clock, and its state then.
+ * A file whose content is in effect and that reloads have found empty, with times on the monotonic
+ * clock. `since` is since when it has been empty without being written, and `state` its state
+ * then; `since` is undefined after a reload found the file with content or missing. `firstHeld` is
+ * when reloads began holding it back, kept across reads with content and across failed reloads,
+ * so that a file that keeps being rewritten is bounded.
  */
 interface EmptyFile {
-  since: number;
-  state: FileState;
+  since?: number;
+  state?: FileState;
+  firstHeld?: number;
 }
 
 /**
@@ -194,9 +198,8 @@ export default class FileReloader {
   // The paths whose content is in effect and that reloads have found empty since.
   private readonly _emptyFiles = new Map<string, EmptyFile>();
 
-  // When the current run of reloads that hold files back began, on the monotonic clock. Undefined
-  // when the last reload did not hold any back.
-  private _holdingSince?: number;
+  // The delay of the retry that was armed last. Tests read it.
+  private _lastRetryDelayMs?: number;
 
   // Set by a reload that held back an empty file and armed the retry to read it again, to that
   // reload's reason, until the next reload starts. The next reload continues the deferred one, so
@@ -213,6 +216,15 @@ export default class FileReloader {
    */
   reloadNow(): Promise<void> {
     return this._enqueue('initial');
+  }
+
+  /**
+   * The delay of the retry that was armed last, in milliseconds, if any. For tests.
+   *
+   * @internal
+   */
+  get lastRetryDelayMs(): number | undefined {
+    return this._lastRetryDelayMs;
   }
 
   /**
@@ -296,6 +308,7 @@ export default class FileReloader {
       return;
     }
     this._clearRetry();
+    this._lastRetryDelayMs = delayMs;
     this._retryTimer = setTimeout(() => {
       this._retryTimer = undefined;
       this._enqueue('retry');
@@ -328,7 +341,6 @@ export default class FileReloader {
     // A pending retry is superseded by this reload. It either succeeds, or it fails and arms a
     // fresh retry.
     this._clearRetry();
-    const now = monotonicNow();
 
     const documents: FileDataDocument[] = [];
     const files: FileSummary[] = [];
@@ -352,7 +364,7 @@ export default class FileReloader {
           } catch (err) {
             const missing = isFileNotFoundError(err);
             if (missing) {
-              this._emptyFiles.delete(path);
+              this._fileChanged(path);
             }
             if (missing && policy.missingFile === 'skip') {
               logger?.debug(`File ${path} does not exist. It contributes no data.`);
@@ -379,8 +391,8 @@ export default class FileReloader {
           }
           const noEntries = blank || isNoDocument(document);
           if (!noEntries) {
-            this._emptyFiles.delete(path);
-          } else if (await this._holdsBack(path, now)) {
+            this._fileChanged(path);
+          } else if (await this._holdsBack(path)) {
             heldBack.push(path);
             return;
           }
@@ -404,11 +416,9 @@ export default class FileReloader {
     // A file that cannot be read or parsed fails the reload, whether or not another file is held
     // back.
     if (!failure && heldBack.length > 0) {
-      this._holdBack(heldBack, now, reason);
+      this._holdBack(heldBack, reason);
       return;
     }
-    // A run of reloads that hold files back ends with any reload that does not.
-    this._holdingSince = undefined;
 
     let merged: MergeResult | undefined;
     if (!failure) {
@@ -469,8 +479,19 @@ export default class FileReloader {
     this._rememberAppliedContent(hadContent);
   }
 
+  // Called when the data of a reload is in effect. The files' bounds start over.
   private _rememberAppliedContent(hadContent: Map<string, boolean>): void {
     hadContent.forEach((value, path) => this._appliedHadContent.set(path, value));
+    this._emptyFiles.clear();
+  }
+
+  // Called when a reload finds a file with content, or missing. The next time a reload finds it
+  // empty, its delay starts over. Its bound does not.
+  private _fileChanged(path: string): void {
+    const empty = this._emptyFiles.get(path);
+    if (empty) {
+      empty.since = undefined;
+    }
   }
 
   /**
@@ -479,59 +500,79 @@ export default class FileReloader {
    * A file whose content is in effect and that has none now may be in the middle of an in-place
    * rewrite: a writer that truncates the file and then writes the new content. Such a file is held
    * back until it has stayed so, without being written, for the retry delay. A change of its
-   * state, its modification time and size read through any symbolic link, means that it was
-   * written since a reload last found it so, for example rewritten and truncated again between two
+   * state, its modification time and size as the platform reports them, means that it was written
+   * since a reload last found it so, for example rewritten and truncated again between two
    * reloads, so the delay starts over. A file that keeps being written while every reload finds it
    * empty, or files that are rewritten in turn so that every reload finds one of them empty, would
-   * be held back without end, so reloads stop holding files back once they have held some back for
-   * `MAX_HOLD_RETRY_DELAYS` retry delays in a row. A file whose content is not in effect, such as a
-   * placeholder that has always been empty, is parsed right away, and so is any file when retries
-   * are off, since nothing would read it again.
+   * be held back without end, so a file is held back for at most `MAX_HOLD_RETRY_DELAYS` retry
+   * delays. That bound is the file's own: it starts at the first reload that holds the file back,
+   * and starts over only when data is applied or when the file has stayed empty for the whole
+   * delay. A file whose content is not in effect, such as a placeholder that has always been empty,
+   * is parsed right away, and so is any file when retries are off, since nothing would read it
+   * again.
+   *
+   * The clock is read after the file's own read, so that a slow read of another file does not
+   * shorten this file's delay.
    */
-  private async _holdsBack(path: string, now: number): Promise<boolean> {
+  private async _holdsBack(path: string): Promise<boolean> {
     const { retryDelayMs } = this._config;
     if (retryDelayMs <= 0 || this._appliedHadContent.get(path) !== true) {
       return false;
     }
     const state = await observeFile(this._config.filesystem, path);
+    const now = monotonicNow();
     let empty = this._emptyFiles.get(path);
     if (!empty) {
-      empty = { since: now, state };
+      empty = {};
       this._emptyFiles.set(path, empty);
-    } else if (!sameFileState(empty.state, state)) {
+    }
+    if (empty.since === undefined || !empty.state || !sameFileState(empty.state, state)) {
       empty.since = now;
       empty.state = state;
     }
-    return (
-      now - empty.since < retryDelayMs &&
-      now - (this._holdingSince ?? now) < MAX_HOLD_RETRY_DELAYS * retryDelayMs
-    );
+    if (now - empty.since >= retryDelayMs) {
+      // The file stayed empty for the whole delay. A later rewrite gets a fresh bound.
+      empty.firstHeld = undefined;
+      return false;
+    }
+    if (
+      empty.firstHeld !== undefined &&
+      now - empty.firstHeld >= MAX_HOLD_RETRY_DELAYS * retryDelayMs
+    ) {
+      return false;
+    }
+    empty.firstHeld = empty.firstHeld ?? now;
+    return true;
   }
 
   /**
    * Holds back the files that `_holdsBack` decided to hold back. Whatever their format, the reload
    * keeps the current data and arms the retry without reporting a failure. The retry comes when the
-   * first of the files has stayed empty for the retry delay, or when the reloads have held files
-   * back for as long as they may, plus a tenth of the retry delay, so that a timer that fires a
-   * little early still finds the delay over. The change signal for a write starts a reload sooner.
-   * Once a file has stayed empty for the retry delay, a reload parses it: a file that is still
-   * empty is invalid JSON, or a YAML document with no entries.
+   * first of the files has stayed empty for the retry delay, or has been held back for as long as
+   * it may be, plus a tenth of the retry delay, so that a timer that fires a little early still
+   * finds the time over. The change signal for a write starts a reload sooner. Once a file has
+   * stayed empty for the retry delay, a reload parses it: a file that is still empty is invalid
+   * JSON, or a YAML document with no entries.
    */
-  private _holdBack(paths: string[], now: number, reason: ReloadReason): void {
+  private _holdBack(paths: string[], reason: ReloadReason): void {
     if (this._closed) {
       return;
     }
     const { logger, retryDelayMs } = this._config;
-    this._holdingSince = this._holdingSince ?? now;
-    let until = this._holdingSince + MAX_HOLD_RETRY_DELAYS * retryDelayMs;
+    let until = Infinity;
     paths.forEach((path) => {
       logger?.debug(
         `File ${path} is empty, possibly while it is being rewritten; reading it again before applying it`,
       );
-      until = Math.min(until, this._emptyFiles.get(path)!.since + retryDelayMs);
+      const { since, firstHeld } = this._emptyFiles.get(path)!;
+      until = Math.min(
+        until,
+        since! + retryDelayMs,
+        firstHeld! + MAX_HOLD_RETRY_DELAYS * retryDelayMs,
+      );
     });
     this._readAgainReason = reason;
-    this._armRetry(Math.max(until - now, 0) + retryDelayMs / 10);
+    this._armRetry(Math.max(until - monotonicNow(), 0) + retryDelayMs / 10);
   }
 
   private _fail(failure: LoadFailure, reason: ReloadReason): void {

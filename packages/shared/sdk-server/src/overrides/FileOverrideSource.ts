@@ -147,7 +147,7 @@ function countsText(flags: number, segments: number): string {
  * cannot be parsed. A file whose content is in effect and that is found with no entries, empty or
  * with only a YAML comment, may be in the middle of an in-place rewrite, so it is held back until
  * it has stayed so, without being written, for the retry delay, and for at most five retry delays
- * while files keep being rewritten; the other files wait with it. Every applied change is logged
+ * while that file keeps being rewritten; the other files wait with it. Every applied change is logged
  * at Info level with the overrides in effect and what each file supplied.
  *
  * Flag overrides are currently experimental and subject to change.

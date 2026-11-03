@@ -1,8 +1,8 @@
 import { Filesystem } from '@launchdarkly/js-sdk-common';
 
 /**
- * The observed state of one file, or its absence: its modification time and size, read through
- * any symbolic link.
+ * The observed state of one file, or its absence: its modification time and size, as the
+ * platform's `getFileStats` reports them. The Node platform reads them through any symbolic link.
  *
  * @internal
  */
