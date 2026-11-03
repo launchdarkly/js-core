@@ -61,9 +61,11 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
         );
 
         const bootstrap = params.configuration.clientSide?.bootstrap;
+        const hash = params.configuration.clientSide?.hash;
         const { status } = await client.start({
           timeout: timeout / 1000,
           ...(bootstrap != null && { bootstrap }),
+          ...(hash != null && { identifyOptions: { hash } }),
         });
 
         if (status === 'failed' && !params.configuration.initCanFail) {
