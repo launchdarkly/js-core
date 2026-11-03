@@ -418,6 +418,53 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(reported()[1].error.message).toEqual(emptyJson);
   });
 
+  describe('on a filesystem whose modification times are coarse', () => {
+    // Every write keeps the same modification time, as two writes within one tick of a coarse
+    // clock do, so a file that is empty again looks unchanged since it was last found empty.
+    const writeCoarse = (path: string, data: string) => filesystem.set(path, data, 1);
+
+    it('starts a fresh delay for a file that is emptied again after its content was read', async () => {
+      writeCoarse(yamlPath, documentA);
+      makeReloader([yamlPath]);
+      await reloader.reloadNow();
+
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      await advance(300);
+      writeCoarse(yamlPath, documentB);
+      await changeAndSettle();
+      expect(values()).toEqual(['a', 'b']);
+
+      await advance(2000);
+      writeCoarse(yamlPath, '');
+      await changeAndSettle();
+      expect(values()).toEqual(['a', 'b']);
+      expect(readAgainMessages()).toHaveLength(2);
+    });
+
+    it('starts a fresh delay for a file that is deleted and created empty again', async () => {
+      writeCoarse(jsonPath, documentA);
+      makeReloader([jsonPath], (config) => {
+        config.policy = testPolicy({ missingFile: 'fail' });
+      });
+      await reloader.reloadNow();
+
+      writeCoarse(jsonPath, '');
+      await changeAndSettle();
+      await advance(100);
+      filesystem.remove(jsonPath);
+      await changeAndSettle();
+      const reported = () => failures.filter((failure) => !failure.repeated);
+      expect(reported().map((failure) => failure.kind)).toEqual(['read']);
+
+      await advance(2000);
+      writeCoarse(jsonPath, '');
+      await changeAndSettle();
+      expect(reported().map((failure) => failure.kind)).toEqual(['read']);
+      expect(readAgainMessages()).toHaveLength(2);
+    });
+  });
+
   it('holds back a file whose content moved to it from another configured file', async () => {
     // The content in effect comes from the second file. Moving it to the first leaves the
     // contents the same, so the load applies nothing, but the first file now contributes them.
