@@ -101,6 +101,7 @@ export default abstract class TestHarnessWebSocket {
             resData.resourceUrl = `/clients/${id}`;
             resData.status = 201;
           } catch (e: any) {
+            this.logger.error(`Failed to create client: ${e?.message ?? e}`);
             resData.status = 500;
             resData.error = e?.message ?? String(e);
           }
@@ -118,6 +119,7 @@ export default abstract class TestHarnessWebSocket {
                 resData.status = 400;
                 resData.error = e.message;
               } else {
+                this.logger.error(`Command failed: ${e?.message ?? e}`);
                 resData.status = 500;
                 resData.error = e?.message ?? String(e);
               }
