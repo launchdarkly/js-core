@@ -590,81 +590,79 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(values()).toEqual(['a,a']);
   });
 
-  describe('the retry that a hold asks for', () => {
-    it('comes a retry delay and a tenth after the first hold', async () => {
-      await startWith(yamlPath, documentA);
-      write(yamlPath, '');
-      await changeAndSettle();
-      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
-    });
+  it('asks for a retry a retry delay and a tenth after the first hold', async () => {
+    await startWith(yamlPath, documentA);
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
+  });
 
-    it('comes when the delay ends, plus a tenth, after a later hold', async () => {
-      await startWith(yamlPath, documentA);
-      write(yamlPath, '');
-      await changeAndSettle();
-      await advance(500);
-      await changeAndSettle();
-      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 500);
-    });
+  it('asks for a retry when the delay ends, plus a tenth, after a later hold', async () => {
+    await startWith(yamlPath, documentA);
+    write(yamlPath, '');
+    await changeAndSettle();
+    await advance(500);
+    await changeAndSettle();
+    expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 500);
+  });
 
-    it('comes when the bound ends, plus a tenth, when that is sooner', async () => {
-      await startWith(yamlPath, documentA);
-      write(yamlPath, '');
-      await changeAndSettle();
-      await Array.from({ length: 8 }).reduce<Promise<void>>(
-        (previous) =>
-          previous.then(async () => {
-            await advance(600);
-            write(yamlPath, documentB);
-            write(yamlPath, '');
-            await changeAndSettle();
-          }),
-        Promise.resolve(),
-      );
-      // At 4800 ms the file's delay would end at 5800 ms, and its bound ends at 5000 ms.
-      expect(reloader.lastRetryDelayMs).toEqual(5000 - 4800 + retryDelayMs / 10);
-    });
-
-    it.each([
-      ['first', [yamlPath, otherYamlPath]],
-      ['second', [otherYamlPath, yamlPath]],
-    ])(
-      'comes when the file whose delay ends first is due, when that file is configured %s',
-      async (_order, paths) => {
-        write(yamlPath, documentA);
-        write(otherYamlPath, otherA);
-        makeReloader(paths);
-        await reloader.reloadNow();
-
-        write(yamlPath, '');
-        await changeAndSettle();
-        await advance(400);
-        write(otherYamlPath, '');
-        await changeAndSettle();
-        expect(readAgainMessages()).toHaveLength(3);
-        expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 400);
-      },
+  it('asks for a retry when the bound ends, plus a tenth, when that is sooner', async () => {
+    await startWith(yamlPath, documentA);
+    write(yamlPath, '');
+    await changeAndSettle();
+    await Array.from({ length: 8 }).reduce<Promise<void>>(
+      (previous) =>
+        previous.then(async () => {
+          await advance(600);
+          write(yamlPath, documentB);
+          write(yamlPath, '');
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
     );
+    // At 4800 ms the file's delay would end at 5800 ms, and its bound ends at 5000 ms.
+    expect(reloader.lastRetryDelayMs).toEqual(5000 - 4800 + retryDelayMs / 10);
+  });
 
-    it('is computed the same way for a hold by a retry', async () => {
-      await startWith(yamlPath, documentA);
-      write(yamlPath, '{"flagValues": ');
-      await changeAndSettle();
-      expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
+  it.each([
+    ['first', [yamlPath, otherYamlPath]],
+    ['second', [otherYamlPath, yamlPath]],
+  ])(
+    'asks for a retry when the file whose delay ends first is due, when that file is configured %s',
+    async (_order, paths) => {
+      write(yamlPath, documentA);
+      write(otherYamlPath, otherA);
+      makeReloader(paths);
+      await reloader.reloadNow();
 
       write(yamlPath, '');
-      await advance(retryDelayMs);
-      expect(readAgainMessages()).toHaveLength(1);
-      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
-    });
-
-    it('is a retry delay after a failure', async () => {
-      await startWith(jsonPath, documentA);
-      write(jsonPath, '{"flagValues": ');
       await changeAndSettle();
-      expect(failures).toHaveLength(1);
-      expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
-    });
+      await advance(400);
+      write(otherYamlPath, '');
+      await changeAndSettle();
+      expect(readAgainMessages()).toHaveLength(3);
+      expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs - 400);
+    },
+  );
+
+  it('asks for a retry the same way for a hold by a retry', async () => {
+    await startWith(yamlPath, documentA);
+    write(yamlPath, '{"flagValues": ');
+    await changeAndSettle();
+    expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
+
+    write(yamlPath, '');
+    await advance(retryDelayMs);
+    expect(readAgainMessages()).toHaveLength(1);
+    expect(reloader.lastRetryDelayMs).toEqual(holdRetryMs);
+  });
+
+  it('asks for a retry a retry delay after a failure', async () => {
+    await startWith(jsonPath, documentA);
+    write(jsonPath, '{"flagValues": ');
+    await changeAndSettle();
+    expect(failures).toHaveLength(1);
+    expect(reloader.lastRetryDelayMs).toEqual(retryDelayMs);
   });
 
   it('holds back a file emptied again after a read of its content when its state looks the same', async () => {
