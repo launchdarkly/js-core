@@ -106,6 +106,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     // Disable automatic lifecycle handling for contract tests
     automaticNetworkHandling: false,
     automaticBackgroundHandling: false,
+    // Without the cache, identify waits for data from the harness instead of completing with
+    // flags cached for the same context.
+    disableCache: true,
   };
 
   if (options.clientSide.usePost) {
