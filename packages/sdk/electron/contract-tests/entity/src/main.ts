@@ -25,6 +25,13 @@ const capabilities = [
   'client-per-context-summaries',
   'track-hooks',
   'event-gzip',
+  'optional-event-gzip',
+  'evaluation-hooks',
+  'client-independence',
+  // The SDK keeps retrying after HTTP errors such as 401. Declaring the first of these without
+  // the second runs the legacy tests that expect the stream to stop.
+  'client-event-source-http-errors',
+  'retry-conformance-fdv1-streaming',
 
   /// ////////////////////////////
   // TODO: this is not working for some reason. sdk-1873
