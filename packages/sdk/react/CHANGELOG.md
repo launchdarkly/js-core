@@ -1,5 +1,19 @@
 # Changelog
 
+## [4.2.0](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.30...react-sdk-v4.2.0) (2026-11-03)
+
+
+### Features
+
+* add fetch-based eventsource entry point to the react sdk ([#2150](https://github.com/launchdarkly/js-core/issues/2150)) ([a4f23b3](https://github.com/launchdarkly/js-core/commit/a4f23b340f81cb768ac2279523c7f2859735f2ec))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.26.1 to 2.26.2
+
 ## [4.1.30](https://github.com/launchdarkly/js-core/compare/react-sdk-v4.1.29...react-sdk-v4.1.30) (2026-11-02)
 
 
