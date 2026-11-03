@@ -116,10 +116,10 @@ export interface LDDataSystemOptions {
  * `"clientSideAvailability": { "usingEnvironmentId": true }`.
  *
  * A configured file that does not exist contributes no overrides. It can be created later, and
- * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
- * reload: the previously loaded overrides stay in effect, the failure is logged, and the source
- * retries. Every applied change is logged at Info level with the overrides in effect and what
- * each file supplied.
+ * deleting it removes its overrides. If a file that exists cannot be read or parsed, the
+ * previously loaded overrides stay in effect, the failure is logged, and the source loads the
+ * file once it is valid again. Every applied change is logged at Info level with the overrides
+ * in effect and what each file supplied.
  *
  * Files can be rewritten in place: if the source finds a file empty while it is being rewritten,
  * it keeps the overrides in effect until the new content is written. To remove a file's
