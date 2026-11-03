@@ -106,7 +106,14 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     // Disable automatic lifecycle handling for contract tests
     automaticNetworkHandling: false,
     automaticBackgroundHandling: false,
+    // Without the cache, identify waits for data from the harness instead of completing with
+    // flags cached for the same context.
+    disableCache: true,
   };
+
+  if (options.clientSide.usePost) {
+    cf.usePost = true;
+  }
 
   if (options.serviceEndpoints) {
     cf.streamUri = options.serviceEndpoints.streaming;
@@ -213,6 +220,15 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
 
   if (options.hooks) {
     cf.hooks = TestHook.forClient(options.hooks.hooks);
+  }
+
+  if (options.wrapper) {
+    if (options.wrapper.name) {
+      cf.wrapperName = options.wrapper.name;
+    }
+    if (options.wrapper.version) {
+      cf.wrapperVersion = options.wrapper.version;
+    }
   }
 
   return cf;
