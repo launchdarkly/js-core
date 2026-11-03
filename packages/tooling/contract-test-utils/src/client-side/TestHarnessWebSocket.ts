@@ -24,6 +24,8 @@ const DEFAULT_CAPABILITIES = [
 export interface TestHarnessWebSocketOptions {
   /** Capabilities reported to the harness. Defaults to the browser list. */
   capabilities?: string[];
+  /** Called with true when the socket opens and false when it closes. */
+  onConnectionChange?: (connected: boolean) => void;
 }
 
 /**
@@ -63,8 +65,10 @@ export default abstract class TestHarnessWebSocket {
     this._ws = new WebSocket(this._url, ['v1']);
     this._ws.onopen = () => {
       this.logger.info('Connected to websocket.');
+      this._options.onConnectionChange?.(true);
     };
     this._ws.onclose = () => {
+      this._options.onConnectionChange?.(false);
       if (this._intentionalClose) {
         this.logger.info('Websocket closed.');
         return;
@@ -97,6 +101,7 @@ export default abstract class TestHarnessWebSocket {
             resData.resourceUrl = `/clients/${id}`;
             resData.status = 201;
           } catch (e: any) {
+            this.logger.error(`Failed to create client: ${e?.message ?? e}`);
             resData.status = 500;
             resData.error = e?.message ?? String(e);
           }
@@ -114,6 +119,7 @@ export default abstract class TestHarnessWebSocket {
                 resData.status = 400;
                 resData.error = e.message;
               } else {
+                this.logger.error(`Command failed: ${e?.message ?? e}`);
                 resData.status = 500;
                 resData.error = e?.message ?? String(e);
               }

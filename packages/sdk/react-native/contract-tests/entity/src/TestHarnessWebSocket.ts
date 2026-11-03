@@ -1,124 +1,60 @@
-import { makeLogger } from '@launchdarkly/js-contract-test-utils/client';
-import { LDLogger } from '@launchdarkly/react-native-client-sdk';
+import {
+  CommandParams,
+  CreateInstanceParams,
+  TestHarnessWebSocket as BaseTestHarnessWebSocket,
+} from '@launchdarkly/js-contract-test-utils/client';
 
 import { ClientEntity, newSdkClientEntity } from './ClientEntity';
 
-export default class TestHarnessWebSocket {
-  private _ws?: WebSocket;
+const CAPABILITIES = [
+  'client-side',
+  'mobile',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-prereq-cycle-detection',
+  'client-per-context-summaries',
+  'track-hooks',
+  'fdv1-fallback',
+  'client-event-source-http-errors',
+  'retry-conformance-fdv1-streaming',
+  'retry-conformance-fdv1-polling',
+  'bootstrap',
+];
+
+export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
+  constructor(url: string, onConnectionChange?: (connected: boolean) => void) {
+    super(url, { capabilities: CAPABILITIES, onConnectionChange });
+  }
+
   private readonly _entities: Record<string, ClientEntity> = {};
   private _clientCounter = 0;
-  private _logger: LDLogger = makeLogger('TestHarnessWebSocket');
-  private _intentionalClose = false;
-  private _onConnectionChange?: (connected: boolean) => void;
 
-  constructor(
-    private readonly _url: string,
-    onConnectionChange?: (connected: boolean) => void,
-  ) {
-    this._onConnectionChange = onConnectionChange;
+  protected async createClient(params: CreateInstanceParams): Promise<string> {
+    const entity = await newSdkClientEntity(params);
+    const id = String(this._clientCounter);
+    this._clientCounter += 1;
+    this._entities[id] = entity;
+    return id;
   }
 
-  connect() {
-    this._intentionalClose = false;
-    this._logger.info(`Connecting to web socket.`);
-    this._ws = new WebSocket(this._url, 'v1');
-    this._ws.onopen = () => {
-      this._logger.info('Connected to websocket.');
-      this._onConnectionChange?.(true);
-    };
-    this._ws.onclose = () => {
-      this._logger.info('Websocket closed. Attempting to reconnect in 1 second.');
-      this._onConnectionChange?.(false);
-      if (!this._intentionalClose) {
-        setTimeout(() => {
-          this.connect();
-        }, 1000);
-      }
-    };
-    this._ws.onerror = (err) => {
-      this._logger.info(`error:`, err);
-    };
-
-    this._ws.onmessage = async (msg) => {
-      this._logger.info('Test harness message', msg);
-      const data = JSON.parse(msg.data as string);
-      const resData: any = { reqId: data.reqId };
-      switch (data.command) {
-        case 'getCapabilities':
-          resData.capabilities = [
-            'client-side',
-            'mobile',
-            'service-endpoints',
-            'tags',
-            'user-type',
-            'inline-context-all',
-            'anonymous-redaction',
-            'strongly-typed',
-            'client-prereq-events',
-            'client-prereq-cycle-detection',
-            'client-per-context-summaries',
-            'track-hooks',
-            'fdv1-fallback',
-            'client-event-source-http-errors',
-            'retry-conformance-fdv1-streaming',
-            'retry-conformance-fdv1-polling',
-            'bootstrap',
-          ];
-
-          break;
-        case 'createClient':
-          try {
-            resData.resourceUrl = `/clients/${this._clientCounter}`;
-            resData.status = 201;
-            const entity = await newSdkClientEntity(data.body);
-            this._entities[this._clientCounter] = entity;
-            this._clientCounter += 1;
-          } catch (e: any) {
-            this._logger.error(`Failed to create client: ${e?.message ?? e}`);
-            resData.status = 500;
-          }
-          break;
-        case 'runCommand':
-          if (Object.prototype.hasOwnProperty.call(this._entities, data.id)) {
-            const entity = this._entities[data.id];
-            try {
-              const body = await entity.doCommand(data.body);
-              resData.body = body;
-              resData.status = body ? 200 : 204;
-            } catch (e: any) {
-              this._logger.error(`Command failed: ${e?.message ?? e}`);
-              resData.status = 500;
-            }
-          } else {
-            resData.status = 404;
-            this._logger.warn(`Client did not exist: ${data.id}`);
-          }
-
-          break;
-        case 'deleteClient':
-          if (Object.prototype.hasOwnProperty.call(this._entities, data.id)) {
-            const entity = this._entities[data.id];
-            entity.close();
-            delete this._entities[data.id];
-          } else {
-            resData.status = 404;
-            this._logger.warn(`Could not delete client because it did not exist: ${data.id}`);
-          }
-          break;
-        default:
-          break;
-      }
-
-      this.send(resData);
-    };
+  protected getCommandHandler(id: string) {
+    if (!Object.prototype.hasOwnProperty.call(this._entities, id)) {
+      return undefined;
+    }
+    return (params: CommandParams) => this._entities[id].doCommand(params);
   }
 
-  disconnect() {
-    this._intentionalClose = true;
-    this._ws?.close();
-  }
-
-  send(data: unknown) {
-    this._ws?.send(JSON.stringify(data));
+  protected deleteClient(id: string): boolean {
+    if (!Object.prototype.hasOwnProperty.call(this._entities, id)) {
+      return false;
+    }
+    this._entities[id].close();
+    delete this._entities[id];
+    return true;
   }
 }
