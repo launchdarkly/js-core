@@ -12,20 +12,31 @@ import testPolicy from './testPolicy';
 
 // These tests rewrite a file the way an application or editor rewrites it in place: the file is
 // truncated, and the new content is written some time later. A reload in between finds the file
-// empty.
+// empty. The clock is Jest's fake clock, so every time below is exact.
 
 const jsonPath = '/data/data.json';
 const yamlPath = '/data/data.yaml';
 const otherYamlPath = '/data/other.yaml';
 const retryDelayMs = 1000;
+// The retry that a hold arms comes a tenth of the retry delay after the delay ends.
+const holdRetryMs = retryDelayMs + retryDelayMs / 10;
 
 const documentA = '{"flagValues": {"flag1": "a"}}';
 const documentB = '{"flagValues": {"flag1": "b"}}';
 const documentC = '{"flagValues": {"flag1": "c"}}';
+const otherA = '{"flagValues": {"flag2": "a"}}';
+const otherB = '{"flagValues": {"flag2": "b"}}';
 
-// A stand-in for a YAML parser. A flow-style document like the ones above is both JSON and YAML,
-// and like the YAML parsers, it returns null for a file with no content.
-const yamlParser = (data: string) => (hasContent(data) ? JSON.parse(data) : null);
+// A stand-in for a YAML parser. A flow-style document like the ones above is both JSON and YAML.
+// Like the YAML parsers, it returns null for content with no document: white space, comments and
+// document markers.
+const yamlParser = (data: string) => {
+  const body = data
+    .split('\n')
+    .filter((line) => !/^\s*(#.*)?$/.test(line) && line.trim() !== '---')
+    .join('\n');
+  return hasContent(body) ? JSON.parse(body) : null;
+};
 
 const emptiedReadAgain = /is empty, possibly while it is being rewritten; reading it again/;
 const emptyJson = 'the file has no content, which is not a JSON document';
@@ -49,6 +60,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   afterEach(() => {
     reloader?.close();
+    jest.restoreAllMocks();
     jest.useRealTimers();
   });
 
@@ -60,7 +72,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   };
 
   // The policy parses by extension and validates the document as the override source does, so a
-  // YAML file with no content is a document with no entries and a JSON file with no content fails.
+  // YAML file with no document has no entries and a JSON file with no content fails.
   const makeReloader = (paths: string[], configure?: (config: FileReloaderConfig) => void) => {
     const config: FileReloaderConfig = {
       paths,
@@ -84,6 +96,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   const values = () =>
     applied.map((result) => result.flags.map(({ item }) => item.variations?.[0]).join(','));
 
+  // Two triggers without a settle in between coalesce into one load, so every change settles.
   const changeAndSettle = async () => {
     reloader.trigger();
     await jest.advanceTimersByTimeAsync(0);
@@ -91,12 +104,16 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   const advance = (ms: number) => jest.advanceTimersByTimeAsync(ms);
 
+  const startWith = async (path: string, data: string) => {
+    write(path, data);
+    makeReloader([path]);
+    await reloader.reloadNow();
+  };
+
   it.each(['', ' \n\t\r\n', '\uFEFF'])(
-    'reads an emptied file again and applies the rewritten content with no empty application, for content %j',
+    'holds back an emptied file and applies the rewritten content with no empty application, for content %j',
     async (empty) => {
-      write(yamlPath, documentA);
-      makeReloader([yamlPath]);
-      await reloader.reloadNow();
+      await startWith(yamlPath, documentA);
 
       write(yamlPath, empty);
       await changeAndSettle();
@@ -111,59 +128,74 @@ describe('given a reloader over a file that is rewritten in place', () => {
     },
   );
 
-  it('applies a YAML file that stays empty once it has been empty for the retry delay', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+  it.each(['# only a comment\n', '---\n', '---\n# a comment\n'])(
+    'holds back a YAML file whose content is no document, %j',
+    async (content) => {
+      await startWith(yamlPath, documentA);
+
+      write(yamlPath, content);
+      await changeAndSettle();
+      expect(values()).toEqual(['a']);
+      expect(readAgainMessages()).toHaveLength(1);
+
+      write(yamlPath, documentB);
+      await changeAndSettle();
+      expect(values()).toEqual(['a', 'b']);
+    },
+  );
+
+  it('applies a file that holds an empty document right away', async () => {
+    await startWith(yamlPath, documentA);
+
+    write(yamlPath, '{}');
+    await changeAndSettle();
+    expect(values()).toEqual(['a', '']);
+    expect(readAgainMessages()).toEqual([]);
+  });
+
+  it('applies a YAML file that stays empty when the retry comes after the delay', async () => {
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
-    expect(values()).toEqual(['a']);
 
-    await advance(retryDelayMs - 1);
+    await advance(holdRetryMs - 1);
     expect(values()).toEqual(['a']);
     await advance(1);
     expect(values()).toEqual(['a', '']);
     expect(failures).toEqual([]);
   });
 
-  it('applies a file that stays empty at a load nine tenths of a retry delay after it was found empty', async () => {
-    // The retry comes a retry delay after the hold, and a timer can fire slightly early. The slack
-    // makes sure that the retry applies a file that stayed empty.
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+  it('holds back a file until exactly the retry delay has passed', async () => {
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
-    await advance(retryDelayMs * 0.9 - 1);
+    await advance(retryDelayMs * 0.95);
     await changeAndSettle();
     expect(values()).toEqual(['a']);
-    await advance(1);
+
+    await advance(retryDelayMs * 0.05);
     await changeAndSettle();
     expect(values()).toEqual(['a', '']);
   });
 
   it('does not report an emptied JSON file at the load that finds it empty, and the retry reports it', async () => {
-    write(jsonPath, documentA);
-    makeReloader([jsonPath]);
-    await reloader.reloadNow();
+    await startWith(jsonPath, documentA);
 
     write(jsonPath, '');
     await changeAndSettle();
     expect(failures).toEqual([]);
 
-    await advance(retryDelayMs);
+    await advance(holdRetryMs);
     expect(failures).toHaveLength(1);
     expect(failures[0]).toMatchObject({ kind: 'parse', path: jsonPath, repeated: false });
     expect(failures[0].error.message).toEqual(emptyJson);
     expect(values()).toEqual(['a']);
   });
 
-  it('does not apply a file that stays empty at a further change signal within the retry delay', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+  it('does not apply a file that stays empty at a further change signal, and the retry applies it when the delay ends', async () => {
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
@@ -171,8 +203,9 @@ describe('given a reloader over a file that is rewritten in place', () => {
     await changeAndSettle();
     expect(values()).toEqual(['a']);
 
-    // The retry that the further change signal armed applies the file a retry delay later.
-    await advance(retryDelayMs - 1);
+    // The retry that the further load armed comes when the delay that started at the first load
+    // ends, plus a tenth of the delay.
+    await advance(holdRetryMs - 500 - 1);
     expect(values()).toEqual(['a']);
     await advance(1);
     expect(values()).toEqual(['a', '']);
@@ -181,9 +214,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   it('restarts the delay when the file is written and truncated again between two loads', async () => {
     // Two quick rewrites in watching mode: the write of the first and the truncation of the second
     // fall in one settle window, so no load sees the first one's content.
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
@@ -191,10 +222,10 @@ describe('given a reloader over a file that is rewritten in place', () => {
     write(yamlPath, documentB);
     write(yamlPath, '');
     await changeAndSettle();
-    expect(values()).toEqual(['a']);
 
-    // The first emptying alone would be applied now. The second restarted the delay.
-    await advance(retryDelayMs - 600);
+    // A load after the first delay would have ended still holds the file back.
+    await advance(450);
+    await changeAndSettle();
     expect(values()).toEqual(['a']);
 
     write(yamlPath, documentC);
@@ -205,14 +236,14 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   it('does not apply a file that is mid-rewrite when another file changes', async () => {
     write(yamlPath, documentA);
-    write(otherYamlPath, '{"flagValues": {"flag2": "a"}}');
+    write(otherYamlPath, otherA);
     makeReloader([yamlPath, otherYamlPath]);
     await reloader.reloadNow();
 
     write(yamlPath, '');
     await changeAndSettle();
     await advance(300);
-    write(otherYamlPath, '{"flagValues": {"flag2": "b"}}');
+    write(otherYamlPath, otherB);
     await changeAndSettle();
     expect(values()).toEqual(['a,a']);
 
@@ -226,9 +257,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   it('does not apply the truncation of a later rewrite that the retry finds', async () => {
     // Polling with two rewrites about a second apart: no load reads the first one's content
     // before the second truncation.
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
@@ -236,7 +265,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
     write(yamlPath, documentB);
     await advance(500);
     write(yamlPath, '');
-    await advance(100);
+    await advance(holdRetryMs - 900);
     expect(values()).toEqual(['a']);
     expect(readAgainMessages()).toHaveLength(2);
 
@@ -245,35 +274,68 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(values()).toEqual(['a', 'c']);
   });
 
-  it('applies a file that keeps being rewritten so that every load finds it empty, once five retry delays have passed since a load first found it empty', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+  it('applies a file that keeps being rewritten so that every load finds it empty, once loads have held it back for five retry delays', async () => {
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
     // Every 600 ms the file is written and truncated again before a load reads it.
-    const rewriteBeforeALoad = async () => {
-      await advance(600);
-      write(yamlPath, documentB);
-      write(yamlPath, '');
-      await changeAndSettle();
-    };
     await Array.from({ length: 8 }).reduce<Promise<void>>(
-      (previous) => previous.then(rewriteBeforeALoad),
+      (previous) =>
+        previous.then(async () => {
+          await advance(600);
+          write(yamlPath, documentB);
+          write(yamlPath, '');
+          await changeAndSettle();
+        }),
       Promise.resolve(),
     );
     expect(values()).toEqual(['a']);
 
-    // 5400 ms after a load first found it empty, the file is applied although it was just written.
-    await rewriteBeforeALoad();
+    // The last load, at 4800 ms, armed the retry for when the five retry delays end, plus a
+    // tenth of the delay.
+    await advance(299);
+    expect(values()).toEqual(['a']);
+    await advance(1);
     expect(values()).toEqual(['a', '']);
   });
 
-  it('starts a new delay for a file that is emptied again after its content was read', async () => {
+  it('applies files that are rewritten in turn, once loads have held them back for five retry delays', async () => {
     write(yamlPath, documentA);
-    makeReloader([yamlPath]);
+    write(otherYamlPath, otherA);
+    makeReloader([yamlPath, otherYamlPath]);
     await reloader.reloadNow();
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    // Every 600 ms the file that is empty is written and the other one is truncated, so every load
+    // finds one of them empty, and each file's own delay starts over.
+    await [1, 2, 3, 4, 5, 6, 7, 8].reduce<Promise<void>>(
+      (previous, step) =>
+        previous.then(async () => {
+          await advance(600);
+          if (step % 2 === 1) {
+            write(yamlPath, documentB);
+            write(otherYamlPath, '');
+          } else {
+            write(otherYamlPath, otherB);
+            write(yamlPath, '');
+          }
+          await changeAndSettle();
+        }),
+      Promise.resolve(),
+    );
+    // Changes to the file that has content wait while the other one is held back.
+    expect(values()).toEqual(['a,a']);
+
+    await advance(299);
+    expect(values()).toEqual(['a,a']);
+    await advance(1);
+    expect(values()).toEqual(['a,a', 'b']);
+  });
+
+  it('starts a fresh hold for a file that is emptied again after its content was read', async () => {
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
@@ -282,21 +344,48 @@ describe('given a reloader over a file that is rewritten in place', () => {
     await changeAndSettle();
     expect(values()).toEqual(['a', 'b']);
 
-    // Later, within five retry delays of the first emptying, the file is emptied again. A load
-    // 200 ms after that, and more than five retry delays after the first emptying, holds it back.
+    // The load that applied the content ended the run of holding loads, so a load more than five
+    // retry delays after the first hold still holds the file back.
     await advance(4600);
     write(yamlPath, '');
     await changeAndSettle();
     await advance(200);
     await changeAndSettle();
     expect(values()).toEqual(['a', 'b']);
-    await advance(retryDelayMs - 1);
+
+    await advance(holdRetryMs - 200 - 1);
     expect(values()).toEqual(['a', 'b']);
     await advance(1);
     expect(values()).toEqual(['a', 'b', '']);
   });
 
-  it('starts a new delay for a file that is deleted and created empty again', async () => {
+  it('starts a fresh hold for a JSON file that has been empty for long and is rewritten in place', async () => {
+    await startWith(jsonPath, documentA);
+
+    write(jsonPath, '');
+    await changeAndSettle();
+    await advance(holdRetryMs);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].error.message).toEqual(emptyJson);
+
+    // The file stays empty, and the retries keep failing. A failing load ends the run of holding
+    // loads.
+    await advance(10000);
+    const failed = failures.length;
+
+    // The file is rewritten in place. Its truncation is a new state, held back without a report.
+    write(jsonPath, '');
+    await changeAndSettle();
+    expect(failures).toHaveLength(failed);
+    expect(readAgainMessages()).toHaveLength(2);
+
+    write(jsonPath, documentB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a', 'b']);
+    expect(failures).toHaveLength(failed);
+  });
+
+  it('starts a fresh hold for a file that is deleted and created empty again', async () => {
     write(jsonPath, documentA);
     makeReloader([jsonPath], (config) => {
       config.policy = testPolicy({ missingFile: 'fail' });
@@ -312,19 +401,43 @@ describe('given a reloader over a file that is rewritten in place', () => {
     const reported = () => failures.filter((failure) => !failure.repeated);
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
 
-    // The data in effect still has the file's content, so the empty file is held back, with a new
-    // delay: a load more than five retry delays after the first emptying holds it back.
+    // The data in effect still has the file's content, so the empty file is held back. The failed
+    // loads ended the run of holding loads, so a load more than five retry delays after the first
+    // hold still holds it back.
     await advance(4400);
     write(jsonPath, '');
     await changeAndSettle();
     await advance(600);
     await changeAndSettle();
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
-    await advance(retryDelayMs - 1);
+
+    await advance(holdRetryMs - 600 - 1);
     expect(reported().map((failure) => failure.kind)).toEqual(['read']);
     await advance(1);
     expect(reported().map((failure) => failure.kind)).toEqual(['read', 'parse']);
     expect(reported()[1].error.message).toEqual(emptyJson);
+  });
+
+  it('holds back a file whose content moved to it from another configured file', async () => {
+    // The content in effect comes from the second file. Moving it to the first leaves the
+    // contents the same, so the load applies nothing, but the first file now contributes them.
+    write(otherYamlPath, documentA);
+    makeReloader([yamlPath, otherYamlPath]);
+    await reloader.reloadNow();
+    expect(values()).toEqual(['a']);
+
+    filesystem.remove(otherYamlPath);
+    write(yamlPath, documentA);
+    await changeAndSettle();
+    expect(values()).toEqual(['a']);
+
+    write(yamlPath, '');
+    await changeAndSettle();
+    expect(values()).toEqual(['a']);
+
+    write(yamlPath, documentB);
+    await changeAndSettle();
+    expect(values()).toEqual(['a', 'b']);
   });
 
   it('never holds back an empty placeholder file, and it does not delay a change to another file', async () => {
@@ -342,10 +455,9 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   it('holds back each of two files that are rewritten together', async () => {
     write(yamlPath, documentA);
-    write(otherYamlPath, '{"flagValues": {"flag2": "a"}}');
+    write(otherYamlPath, otherA);
     makeReloader([yamlPath, otherYamlPath]);
     await reloader.reloadNow();
-    expect(values()).toEqual(['a,a']);
 
     write(yamlPath, '');
     write(otherYamlPath, '');
@@ -356,15 +468,15 @@ describe('given a reloader over a file that is rewritten in place', () => {
     await changeAndSettle();
     expect(values()).toEqual(['a,a']);
 
-    write(otherYamlPath, '{"flagValues": {"flag2": "b"}}');
+    write(otherYamlPath, otherB);
     await changeAndSettle();
     expect(values()).toEqual(['a,a', 'b,b']);
     expect(failures).toEqual([]);
   });
 
-  it('applies two files that are emptied together and stay empty one retry delay later', async () => {
+  it('applies two files that are emptied together and stay empty at the same retry', async () => {
     write(yamlPath, documentA);
-    write(otherYamlPath, '{"flagValues": {"flag2": "a"}}');
+    write(otherYamlPath, otherA);
     makeReloader([yamlPath, otherYamlPath]);
     await reloader.reloadNow();
 
@@ -374,7 +486,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(readAgainMessages()).toHaveLength(2);
 
     // Both files started their delays in the same load.
-    await advance(retryDelayMs - 1);
+    await advance(holdRetryMs - 1);
     expect(values()).toEqual(['a,a']);
     await advance(1);
     expect(values()).toEqual(['a,a', '']);
@@ -382,7 +494,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
   it('reports a failure of another file even when a file is held back', async () => {
     write(yamlPath, documentA);
-    write(jsonPath, '{"flagValues": {"flag2": "a"}}');
+    write(jsonPath, otherA);
     makeReloader([yamlPath, jsonPath]);
     await reloader.reloadNow();
 
@@ -395,7 +507,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(values()).toEqual(['a,a']);
   });
 
-  it('applies a file that is deleted and then created empty right away', async () => {
+  it('applies a file that is deleted and then created empty right away, where a missing file contributes nothing', async () => {
     write(yamlPath, documentA);
     makeReloader([yamlPath], (config) => {
       config.skipUnchanged = false;
@@ -413,9 +525,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   });
 
   it('holds back an emptied file when a retry left over from a failure finds it', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+    await startWith(yamlPath, documentA);
 
     // A malformed edit fails the reload and arms the retry.
     write(yamlPath, '{"flagValues": ');
@@ -427,6 +537,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
     await advance(retryDelayMs);
     expect(values()).toEqual(['a']);
     expect(failures).toHaveLength(1);
+    expect(readAgainMessages()).toHaveLength(1);
 
     write(yamlPath, documentB);
     await changeAndSettle();
@@ -454,7 +565,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
 
     write(yamlPath, '');
     await changeAndSettle();
-    await advance(retryDelayMs);
+    await advance(holdRetryMs);
     expect(values()).toEqual(['a', '']);
 
     // The file is written empty again: nothing it supplied is in effect, so nothing is held back.
@@ -464,9 +575,7 @@ describe('given a reloader over a file that is rewritten in place', () => {
   });
 
   it('does not count holding back as a failure, so an unchanged rewrite applies nothing', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     await changeAndSettle();
@@ -478,35 +587,80 @@ describe('given a reloader over a file that is rewritten in place', () => {
     expect(failures).toEqual([]);
   });
 
-  it('reports a failure after reading again as news when the load that found the file empty followed a change', async () => {
-    write(jsonPath, documentA);
-    makeReloader([jsonPath]);
-    await reloader.reloadNow();
+  it('holds back a file when its state cannot be read', async () => {
+    await startWith(yamlPath, documentA);
+    jest.spyOn(filesystem, 'getFileStats').mockRejectedValue(new Error('EIO: i/o error'));
 
-    // A malformed edit fails, and the retries keep failing the same way.
-    write(jsonPath, '{"flagValues": ');
+    write(yamlPath, '');
     await changeAndSettle();
-    await advance(retryDelayMs);
-    expect(failures.map((failure) => failure.repeated)).toEqual([false, true]);
+    expect(values()).toEqual(['a']);
+    expect(readAgainMessages()).toHaveLength(1);
+    expect(logger.getMessages(LogLevel.Error)).toEqual([]);
 
-    // The file is emptied, which is a change. The retry that reads it again finds it still empty.
-    // That failure is news, as it would have been for the load that the change started.
-    write(jsonPath, '');
-    await changeAndSettle();
-    expect(failures).toHaveLength(2);
-    await advance(retryDelayMs);
-    expect(failures).toHaveLength(3);
-    expect(failures[2].repeated).toBe(false);
-    expect(failures[2].error.message).toEqual(emptyJson);
-    logger.expectMessages([
-      { level: LogLevel.Debug, matches: /Reading flag data again after a file was found empty/ },
-    ]);
+    await advance(holdRetryMs);
+    expect(values()).toEqual(['a', '']);
+  });
+
+  describe('when a failure is reported after a hold', () => {
+    // The file is malformed, and a retry has repeated the failure, so the last report is a parse
+    // failure of the file.
+    const startFailing = async () => {
+      await startWith(jsonPath, documentA);
+      write(jsonPath, '{"flagValues": ');
+      await changeAndSettle();
+      await advance(retryDelayMs);
+      expect(failures.map((failure) => failure.repeated)).toEqual([false, true]);
+    };
+
+    it('reports it as news when the load that held the file back followed a change', async () => {
+      await startFailing();
+
+      // The file is emptied, which is a change. The retry that reads it again finds it still
+      // empty. That failure is news, as it would have been for the load that the change started.
+      write(jsonPath, '');
+      await changeAndSettle();
+      expect(failures).toHaveLength(2);
+      await advance(holdRetryMs);
+      expect(failures).toHaveLength(3);
+      expect(failures[2].repeated).toBe(false);
+      expect(failures[2].error.message).toEqual(emptyJson);
+      logger.expectMessages([
+        { level: LogLevel.Debug, matches: /Reading flag data again after a file was found empty/ },
+      ]);
+    });
+
+    it('reports it as a repeat when a retry held the file back and the next retry fails', async () => {
+      await startFailing();
+
+      // A retry finds the file emptied, without a change signal, and holds it back. The retry
+      // after it continues that retry, so its failure on the same file is a repeat.
+      write(jsonPath, '');
+      await advance(retryDelayMs);
+      expect(failures).toHaveLength(2);
+      expect(readAgainMessages()).toHaveLength(1);
+      await advance(holdRetryMs);
+      expect(failures).toHaveLength(3);
+      expect(failures[2].repeated).toBe(true);
+    });
+
+    it('reports it as news when a change follows a hold by a retry', async () => {
+      await startFailing();
+
+      write(jsonPath, '');
+      await advance(retryDelayMs);
+      expect(failures).toHaveLength(2);
+      expect(readAgainMessages()).toHaveLength(1);
+
+      // A change signal does not continue the retry that held the file back.
+      write(jsonPath, '{"flagValues": ');
+      await changeAndSettle();
+      expect(failures).toHaveLength(3);
+      expect(failures[2].repeated).toBe(false);
+    });
   });
 
   it('does not read again after close', async () => {
-    write(yamlPath, documentA);
-    makeReloader([yamlPath]);
-    await reloader.reloadNow();
+    await startWith(yamlPath, documentA);
 
     write(yamlPath, '');
     filesystem.deferReads = true;

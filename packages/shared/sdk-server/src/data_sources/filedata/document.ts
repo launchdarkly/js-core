@@ -21,6 +21,16 @@ export interface FileDataDocument {
 }
 
 /**
+ * The document of a file that has no entries because its content is no document at all: a YAML
+ * file with only white space, a comment, or a document marker, for which a YAML parser returns
+ * null. A parser returns it, rather than an empty object, so that the reloader can tell such a
+ * file from one that holds an empty document such as `{}`.
+ *
+ * @internal
+ */
+export const NO_ENTRIES: FileDataDocument = Object.freeze({});
+
+/**
  * Parses the text of one file into a document.
  *
  * @internal

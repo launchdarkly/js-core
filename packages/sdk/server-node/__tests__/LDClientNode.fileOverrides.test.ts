@@ -211,53 +211,64 @@ describe('given a temporary directory of override files', () => {
     const loadFailures = () =>
       errors.filter((message) => message.startsWith('Unable to load flags'));
 
-    it('keeps the override while the file is rewritten in place', async () => {
-      await start();
-      let pauseMs = 300;
-      if (changeDetection === 'polling') {
-        // The rewrite starts 750 ms after a poll, so the next poll finds the file empty, and its
-        // reload 100 ms later still does. The file is written 250 ms after that, well before the
-        // retry reads it again a second after the reload.
-        await sleep((await nextPoll()) + 750 - Date.now());
-        pauseMs = 600;
-      }
-      // In watching mode, the reload that the truncation starts runs after the 100 ms settle
-      // window, while the file is still empty.
-      const served = await sampleWhile(() => rewriteInPlace(path, document('b'), pauseMs), 'b');
+    // A polling test waits for a poll and then for the rewrites, several seconds in all.
+    const testTimeoutMs = 15000;
 
-      expect(served).toEqual(['a', 'b']);
-      expect(loadFailures()).toEqual([]);
-    });
+    it(
+      'keeps the override while the file is rewritten in place',
+      async () => {
+        await start();
+        let pauseMs = 300;
+        if (changeDetection === 'polling') {
+          // The rewrite starts 750 ms after a poll, so the next poll finds the file empty, and its
+          // reload 100 ms later still does. The file is written 250 ms after that, well before the
+          // retry reads it again a second after the reload.
+          await sleep((await nextPoll()) + 750 - Date.now());
+          pauseMs = 600;
+        }
+        // In watching mode, the reload that the truncation starts runs after the 100 ms settle
+        // window, while the file is still empty.
+        const served = await sampleWhile(() => rewriteInPlace(path, document('b'), pauseMs), 'b');
 
-    it('keeps the override through two in-place rewrites in a row', async () => {
-      await start();
-      let rewrites: () => Promise<void>;
-      if (changeDetection === 'polling') {
-        // The first rewrite starts 750 ms after a poll, so the next poll finds the file empty.
-        // The second starts 1900 ms after that poll, before the next poll and the retry, so they
-        // find the file empty again before any load has read the first rewrite's content.
-        const poll = await nextPoll();
-        await sleep(poll + 750 - Date.now());
-        rewrites = async () => {
-          await rewriteInPlace(path, document('b'), 600);
-          await sleep(poll + 1900 - Date.now());
-          await rewriteInPlace(path, document('c'), 600);
-        };
-      } else {
-        // The first rewrite's write and the second's truncation fall in one settle window, so the
-        // load after them finds the file empty again.
-        rewrites = async () => {
-          await rewriteInPlace(path, document('b'), 300);
-          await sleep(20);
-          await rewriteInPlace(path, document('c'), 300);
-        };
-      }
-      const served = await sampleWhile(rewrites, 'c');
+        expect(served).toEqual(['a', 'b']);
+        expect(loadFailures()).toEqual([]);
+      },
+      testTimeoutMs,
+    );
 
-      expect(served).not.toContain('default');
-      expect(served[0]).toEqual('a');
-      expect(served[served.length - 1]).toEqual('c');
-      expect(loadFailures()).toEqual([]);
-    });
+    it(
+      'keeps the override through two in-place rewrites in a row',
+      async () => {
+        await start();
+        let rewrites: () => Promise<void>;
+        if (changeDetection === 'polling') {
+          // The first rewrite starts 750 ms after a poll, so the next poll finds the file empty.
+          // The second starts 1900 ms after that poll, before the next poll and the retry, so they
+          // find the file empty again before any load has read the first rewrite's content.
+          const poll = await nextPoll();
+          await sleep(poll + 750 - Date.now());
+          rewrites = async () => {
+            await rewriteInPlace(path, document('b'), 600);
+            await sleep(poll + 1900 - Date.now());
+            await rewriteInPlace(path, document('c'), 600);
+          };
+        } else {
+          // The first rewrite's write and the second's truncation fall in one settle window, so the
+          // load after them finds the file empty again.
+          rewrites = async () => {
+            await rewriteInPlace(path, document('b'), 300);
+            await sleep(20);
+            await rewriteInPlace(path, document('c'), 300);
+          };
+        }
+        const served = await sampleWhile(rewrites, 'c');
+
+        expect(served).not.toContain('default');
+        expect(served[0]).toEqual('a');
+        expect(served[served.length - 1]).toEqual('c');
+        expect(loadFailures()).toEqual([]);
+      },
+      testTimeoutMs,
+    );
   });
 });

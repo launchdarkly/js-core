@@ -1,8 +1,9 @@
 import { Filesystem, LDLogger, monotonicNow } from '@launchdarkly/js-sdk-common';
 
 import { Flag } from '../../evaluation/data/Flag';
-import { FileDataDocument, hasContent, isFileNotFoundError } from './document';
+import { FileDataDocument, hasContent, isFileNotFoundError, NO_ENTRIES } from './document';
 import { FileDataPolicy } from './FileDataPolicy';
+import { FileState, observeFile, sameFileState } from './FilePoller';
 import { FileSummary, mergeDocuments, MergeResult } from './merge';
 
 /**
@@ -32,12 +33,13 @@ export const DEFAULT_RETRY_DELAY_MS = 1000;
 export const MAX_DEBOUNCE_DELAY_MS = 1000;
 
 /**
- * A file that keeps being written so that every reload finds it empty is applied at the latest
- * this many retry delays after a reload first found it empty.
+ * Reloads stop holding files back once they have held some back for this many retry delays in a
+ * row, so that a file that keeps being written while every reload finds it empty, or files that
+ * are rewritten in turn, are not held back without end.
  *
  * @internal
  */
-export const MAX_EMPTY_FILE_RETRY_DELAYS = 5;
+export const MAX_HOLD_RETRY_DELAYS = 5;
 
 /**
  * The result of one successful reload: the merged items plus a summary of each configured
@@ -114,8 +116,9 @@ export interface FileReloaderConfig {
   /**
    * How long to wait after a failed reload before retrying it without a trigger. A file whose
    * content is in effect and that is found empty is not applied until it has stayed empty, without
-   * being written, for the same delay. Zero or negative disables the automatic retry, and an empty
-   * file is then parsed as it is.
+   * being written, for the same delay, or until reloads have held files back for
+   * `MAX_HOLD_RETRY_DELAYS` times the delay. Zero or negative disables the automatic retry, and an
+   * empty file is then parsed as it is.
    */
   retryDelayMs: number;
   /**
@@ -128,15 +131,20 @@ export interface FileReloaderConfig {
 type ReloadReason = 'initial' | 'change' | 'retry';
 
 /**
- * A file whose content is in effect and that reloads have found empty. `firstSeen` is when a
- * reload first found it empty and `since` is since when it has been empty without being written,
- * both on the monotonic clock. `modified` is the file's modification time when a reload last found
- * it empty, or undefined when it could not be read.
+ * A file whose content is in effect and that reloads have found empty: since when it has been
+ * empty without being written, on the monotonic clock, and its state then.
  */
 interface EmptyFile {
-  firstSeen: number;
   since: number;
-  modified?: number;
+  state: FileState;
+}
+
+/**
+ * Reports whether a parsed document has no entries because the content was no document at all,
+ * as a YAML parser reports for a file with only a comment or a document marker.
+ */
+function isNoDocument(document: FileDataDocument | null | undefined): boolean {
+  return document === null || document === undefined || document === NO_ENTRIES;
 }
 
 function asError(err: unknown): Error {
@@ -185,6 +193,10 @@ export default class FileReloader {
 
   // The paths whose content is in effect and that reloads have found empty since.
   private readonly _emptyFiles = new Map<string, EmptyFile>();
+
+  // When the current run of reloads that hold files back began, on the monotonic clock. Undefined
+  // when the last reload did not hold any back.
+  private _holdingSince?: number;
 
   // Set by a reload that held back an empty file and armed the retry to read it again, to that
   // reload's reason, until the next reload starts. The next reload continues the deferred one, so
@@ -279,7 +291,7 @@ export default class FileReloader {
     }
   }
 
-  private _armRetry(): void {
+  private _armRetry(delayMs: number = this._config.retryDelayMs): void {
     if (this._closed || this._config.retryDelayMs <= 0) {
       return;
     }
@@ -287,7 +299,7 @@ export default class FileReloader {
     this._retryTimer = setTimeout(() => {
       this._retryTimer = undefined;
       this._enqueue('retry');
-    }, this._config.retryDelayMs);
+    }, delayMs);
   }
 
   /**
@@ -316,6 +328,7 @@ export default class FileReloader {
     // A pending retry is superseded by this reload. It either succeeds, or it fails and arms a
     // fresh retry.
     this._clearRetry();
+    const now = monotonicNow();
 
     const documents: FileDataDocument[] = [];
     const files: FileSummary[] = [];
@@ -350,23 +363,38 @@ export default class FileReloader {
             failure = { kind: 'read', error: asError(err), path, repeated: false };
             return;
           }
-          if (hasContent(data)) {
-            this._emptyFiles.delete(path);
-            hadContent.set(path, true);
-          } else {
-            if (await this._holdsBack(path)) {
-              heldBack.push(path);
+          // A file with no content, or with content that its parser reads as no document, such as
+          // YAML with only a comment, has no entries. A read can see that much of a file that is
+          // being written. Content with no document is invalid JSON, so it is only parsed when the
+          // file is not held back.
+          const blank = !hasContent(data);
+          let document: FileDataDocument | undefined;
+          if (!blank) {
+            try {
+              document = policy.parseDocument(path, data);
+            } catch (err) {
+              failure = { kind: 'parse', error: asError(err), path, repeated: false };
               return;
             }
-            hadContent.set(path, false);
           }
-          contents.push(data);
-          try {
-            documents.push(policy.parseDocument(path, data));
-          } catch (err) {
-            failure = { kind: 'parse', error: asError(err), path, repeated: false };
+          const noEntries = blank || isNoDocument(document);
+          if (!noEntries) {
+            this._emptyFiles.delete(path);
+          } else if (await this._holdsBack(path, now)) {
+            heldBack.push(path);
             return;
           }
+          if (blank) {
+            try {
+              document = policy.parseDocument(path, data);
+            } catch (err) {
+              failure = { kind: 'parse', error: asError(err), path, repeated: false };
+              return;
+            }
+          }
+          hadContent.set(path, !noEntries);
+          contents.push(data);
+          documents.push(document as FileDataDocument);
           files.push({ path, present: true, flags: 0, segments: 0 });
         }),
       Promise.resolve(),
@@ -376,9 +404,11 @@ export default class FileReloader {
     // A file that cannot be read or parsed fails the reload, whether or not another file is held
     // back.
     if (!failure && heldBack.length > 0) {
-      this._readAgainLater(heldBack, reason);
+      this._holdBack(heldBack, now, reason);
       return;
     }
+    // A run of reloads that hold files back ends with any reload that does not.
+    this._holdingSince = undefined;
 
     let merged: MergeResult | undefined;
     if (!failure) {
@@ -414,8 +444,10 @@ export default class FileReloader {
     const recovering = this._lastFailureKey !== undefined;
     const content = JSON.stringify(contents);
     if (this._config.skipUnchanged && !recovering && content === this._lastGoodContent) {
-      // The content is the same as the content in effect, so each file contributed what it did.
+      // The contents are compared without their paths, so a file can have moved to another
+      // configured path, which now contributes the content in effect.
       this._lastFailureKey = undefined;
+      this._rememberAppliedContent(hadContent);
       return;
     }
     // Nothing is remembered until the consumer has accepted the result. A result the consumer
@@ -434,78 +466,72 @@ export default class FileReloader {
     this._lastFailureKey = undefined;
     this._lastGoodContent = content;
     this._lastGoodFlags = nextFlags;
+    this._rememberAppliedContent(hadContent);
+  }
+
+  private _rememberAppliedContent(hadContent: Map<string, boolean>): void {
     hadContent.forEach((value, path) => this._appliedHadContent.set(path, value));
   }
 
   /**
-   * Decides whether a reload holds back a file that it found empty.
+   * Decides whether a reload holds back a file that it found with no entries.
    *
-   * A file whose content is in effect and that is empty now may be in the middle of an in-place
-   * rewrite: a writer that truncates the file and then writes the new content. Such a file is not
-   * applied until it has stayed empty, without being written, for one retry delay. A change of its
-   * modification time means that it was written since a reload last found it empty, for example
-   * rewritten and truncated again between two reloads, so the delay starts over. Modification
-   * times are only compared with each other, never with the clock. A file that keeps being written
-   * so that every reload finds it empty is applied at the latest `MAX_EMPTY_FILE_RETRY_DELAYS`
-   * retry delays after a reload first found it empty. A file whose content is not in effect, such
-   * as a placeholder that has always been empty, is parsed right away, and so is any empty file
-   * when retries are off, since nothing would read it again.
-   *
-   * The delay is checked against nine tenths of the retry delay. The retry that the hold arms
-   * comes one retry delay later, and a timer can fire slightly early, so a file that stays empty
-   * is applied by that retry rather than held for another retry delay.
+   * A file whose content is in effect and that has none now may be in the middle of an in-place
+   * rewrite: a writer that truncates the file and then writes the new content. Such a file is held
+   * back until it has stayed so, without being written, for the retry delay. A change of its
+   * state, its modification time and size read through any symbolic link, means that it was
+   * written since a reload last found it so, for example rewritten and truncated again between two
+   * reloads, so the delay starts over. A file that keeps being written while every reload finds it
+   * empty, or files that are rewritten in turn so that every reload finds one of them empty, would
+   * be held back without end, so reloads stop holding files back once they have held some back for
+   * `MAX_HOLD_RETRY_DELAYS` retry delays in a row. A file whose content is not in effect, such as a
+   * placeholder that has always been empty, is parsed right away, and so is any file when retries
+   * are off, since nothing would read it again.
    */
-  private async _holdsBack(path: string): Promise<boolean> {
+  private async _holdsBack(path: string, now: number): Promise<boolean> {
     const { retryDelayMs } = this._config;
     if (retryDelayMs <= 0 || this._appliedHadContent.get(path) !== true) {
       return false;
     }
-    const modified = await this._modifiedTime(path);
-    const now = monotonicNow();
+    const state = await observeFile(this._config.filesystem, path);
     let empty = this._emptyFiles.get(path);
     if (!empty) {
-      empty = { firstSeen: now, since: now, modified };
+      empty = { since: now, state };
       this._emptyFiles.set(path, empty);
-    } else if (empty.modified !== modified) {
+    } else if (!sameFileState(empty.state, state)) {
       empty.since = now;
-      empty.modified = modified;
+      empty.state = state;
     }
     return (
-      now - empty.since < retryDelayMs - retryDelayMs / 10 &&
-      now - empty.firstSeen < MAX_EMPTY_FILE_RETRY_DELAYS * retryDelayMs
+      now - empty.since < retryDelayMs &&
+      now - (this._holdingSince ?? now) < MAX_HOLD_RETRY_DELAYS * retryDelayMs
     );
-  }
-
-  private async _modifiedTime(path: string): Promise<number | undefined> {
-    const { filesystem } = this._config;
-    try {
-      if (filesystem.getFileStats) {
-        return (await filesystem.getFileStats(path))?.timestamp;
-      }
-      return await filesystem.getFileTimestamp(path);
-    } catch {
-      return undefined;
-    }
   }
 
   /**
    * Holds back the files that `_holdsBack` decided to hold back. Whatever their format, the reload
-   * keeps the current data and arms the retry without reporting a failure, so the files are read
-   * again after the retry delay. The change signal for a write starts a reload sooner. Once a file
-   * has stayed empty for the retry delay, a reload parses it: a file that is still empty is invalid
-   * JSON, or a YAML document with no entries.
+   * keeps the current data and arms the retry without reporting a failure. The retry comes when the
+   * first of the files has stayed empty for the retry delay, or when the reloads have held files
+   * back for as long as they may, plus a tenth of the retry delay, so that a timer that fires a
+   * little early still finds the delay over. The change signal for a write starts a reload sooner.
+   * Once a file has stayed empty for the retry delay, a reload parses it: a file that is still
+   * empty is invalid JSON, or a YAML document with no entries.
    */
-  private _readAgainLater(paths: string[], reason: ReloadReason): void {
+  private _holdBack(paths: string[], now: number, reason: ReloadReason): void {
     if (this._closed) {
       return;
     }
-    paths.forEach((path) =>
-      this._config.logger?.debug(
+    const { logger, retryDelayMs } = this._config;
+    this._holdingSince = this._holdingSince ?? now;
+    let until = this._holdingSince + MAX_HOLD_RETRY_DELAYS * retryDelayMs;
+    paths.forEach((path) => {
+      logger?.debug(
         `File ${path} is empty, possibly while it is being rewritten; reading it again before applying it`,
-      ),
-    );
+      );
+      until = Math.min(until, this._emptyFiles.get(path)!.since + retryDelayMs);
+    });
     this._readAgainReason = reason;
-    this._armRetry();
+    this._armRetry(Math.max(until - now, 0) + retryDelayMs / 10);
   }
 
   private _fail(failure: LoadFailure, reason: ReloadReason): void {

@@ -3,6 +3,7 @@ import { isNullish } from '@launchdarkly/js-sdk-common';
 import {
   DocumentParser,
   FileDataDocument,
+  NO_ENTRIES,
   parseDocumentByExtension,
   YamlParser,
 } from '../data_sources/filedata';
@@ -33,9 +34,10 @@ function validateItems(document: Record<string, any>, member: 'flags' | 'segment
 
 function validateDocument(parsed: any): FileDataDocument {
   if (isNullish(parsed)) {
-    // A YAML parser returns null or undefined for a file with no content, which is a document with
-    // no entries. A JSON file with no content fails to parse instead.
-    return {};
+    // A YAML parser returns null or undefined for a file with no content, or with only a comment
+    // or a document marker, which is a document with no entries. A JSON file with no content fails
+    // to parse instead.
+    return NO_ENTRIES;
   }
   if (!isPlainObject(parsed)) {
     throw new Error('file data must be an object');

@@ -1,9 +1,12 @@
 import { Filesystem } from '@launchdarkly/js-sdk-common';
 
 /**
- * The observed state of one file, or its absence.
+ * The observed state of one file, or its absence: its modification time and size, read through
+ * any symbolic link.
+ *
+ * @internal
  */
-interface FileState {
+export interface FileState {
   exists: boolean;
   timestamp: number;
   size: number;
@@ -11,7 +14,12 @@ interface FileState {
 
 const absent: FileState = { exists: false, timestamp: 0, size: 0 };
 
-async function observe(filesystem: Filesystem, path: string): Promise<FileState> {
+/**
+ * Observes the state of one file. A file that the filesystem cannot examine counts as absent.
+ *
+ * @internal
+ */
+export async function observeFile(filesystem: Filesystem, path: string): Promise<FileState> {
   try {
     if (filesystem.getFileStats) {
       const stats = await filesystem.getFileStats(path);
@@ -31,10 +39,15 @@ async function observe(filesystem: Filesystem, path: string): Promise<FileState>
 }
 
 function observeAll(filesystem: Filesystem, paths: string[]): Promise<FileState[]> {
-  return Promise.all(paths.map((path) => observe(filesystem, path)));
+  return Promise.all(paths.map((path) => observeFile(filesystem, path)));
 }
 
-function sameState(a: FileState, b: FileState): boolean {
+/**
+ * Reports whether two observations of a file are the same.
+ *
+ * @internal
+ */
+export function sameFileState(a: FileState, b: FileState): boolean {
   return a.exists === b.exists && a.timestamp === b.timestamp && a.size === b.size;
 }
 
@@ -103,7 +116,7 @@ export default class FilePoller {
     if (this._closed) {
       return;
     }
-    const changed = current.some((state, index) => !sameState(state, this._last[index]));
+    const changed = current.some((state, index) => !sameFileState(state, this._last[index]));
     this._last = current;
     if (changed) {
       this._onChange();
