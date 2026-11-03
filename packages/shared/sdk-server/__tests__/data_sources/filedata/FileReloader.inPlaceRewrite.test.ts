@@ -144,6 +144,20 @@ describe('given a reloader over a file that is rewritten in place', () => {
     },
   );
 
+  it.each(['null', '[]', '42'])(
+    'reports a JSON file holding %s, which is not an object, and keeps the data',
+    async (data) => {
+      await startWith(jsonPath, documentA);
+
+      write(jsonPath, data);
+      await changeAndSettle();
+      expect(values()).toEqual(['a']);
+      expect(readAgainMessages()).toEqual([]);
+      expect(failures).toHaveLength(1);
+      expect(failures[0].error.message).toEqual('file data must be an object');
+    },
+  );
+
   it('applies a file that holds an empty document right away', async () => {
     await startWith(yamlPath, documentA);
 

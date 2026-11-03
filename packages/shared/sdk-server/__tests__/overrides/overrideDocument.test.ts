@@ -94,6 +94,15 @@ describe('given the override document parser', () => {
     expect(() => parseOverrideDocument()('data.json', '{"flagValues"')).toThrow(/json/i);
   });
 
+  it.each(['null', '[]', '42'])(
+    'rejects a JSON file holding %s, which is not an object',
+    (data) => {
+      expect(() => parseOverrideDocument()('data.json', data)).toThrow(
+        'file data must be an object',
+      );
+    },
+  );
+
   it('rejects a document that is not an object', () => {
     expect(() => parseOverrideDocument(() => ['a'])('data.yaml', '- a\n')).toThrow(
       'file data must be an object',

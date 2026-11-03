@@ -69,17 +69,26 @@ function parseJson(data: string): any {
     // rewritten in place can be empty for a moment, and the failure keeps the last good data.
     throw new SyntaxError('the file has no content, which is not a JSON document');
   }
-  return JSON.parse(data);
+  const parsed = JSON.parse(data);
+  // A document is an object. JSON such as `null` or `[]` is not one, so it fails to load and the
+  // last good data stays. A YAML parser returns null for a file with no document, which is
+  // handled by the caller.
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('file data must be an object');
+  }
+  return parsed;
 }
 
 /**
  * A parser that chooses the format by file extension only. A `.yml` or `.yaml` file uses the
- * YAML parser, and every other file is JSON. The parsed value is returned as it is. This is the
- * rule of the file data sources.
+ * YAML parser, and every other file is JSON. A JSON document must be an object, and is otherwise
+ * returned as it is, without validation, as is the YAML parser's result. This is the rule of the
+ * file data sources.
  *
  * Whether a file with no content is valid depends on its format. A JSON file with no content,
- * or only white space, is not a JSON document and fails to parse. A YAML parser returns null or
- * undefined for it, which is returned as it is.
+ * or only white space, is not a JSON document and fails to parse, and a JSON value that is not an
+ * object, such as `null`, fails too. A YAML parser returns null or undefined for a file with no
+ * document, which is returned as it is.
  *
  * @internal
  */

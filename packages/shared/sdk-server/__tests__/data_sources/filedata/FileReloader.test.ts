@@ -199,6 +199,21 @@ describe('given a reloader over a mock filesystem', () => {
     expect(failures[0]).toMatchObject({ kind, path });
   });
 
+  it('reports a JSON file holding null as a parse failure, and keeps the data', async () => {
+    filesystem.set(path, '{"flagValues": {"flag1": true}}');
+    makeReloader();
+    await reloader.reloadNow();
+    expect(applied).toHaveLength(1);
+
+    filesystem.set(path, 'null');
+    reloader.trigger();
+    await flushMicrotasks();
+    expect(applied).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toMatchObject({ kind: 'parse', path });
+    expect(failures[0].error.message).toEqual('file data must be an object');
+  });
+
   it('applies files that changed places with the same contents instead of skipping them', async () => {
     filesystem.set(path, '{"flagValues": {"flag1": true}}');
     makeReloader((config) => {
