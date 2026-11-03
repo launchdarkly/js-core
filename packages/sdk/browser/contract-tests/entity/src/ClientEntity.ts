@@ -233,6 +233,14 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
     cf.hooks = TestHook.forClient(options.hooks.hooks);
   }
 
+  // The harness sends an empty string for a wrapper name or version it did not set.
+  if (options.wrapper?.name) {
+    cf.wrapperName = options.wrapper.name;
+  }
+  if (options.wrapper?.version) {
+    cf.wrapperVersion = options.wrapper.version;
+  }
+
   cf.fetchGoals = false;
 
   return cf;
@@ -375,9 +383,11 @@ export async function newSdkClientEntity(options: CreateInstanceParams) {
     sdkConfig,
   );
   const bootstrap = options.configuration.clientSide?.bootstrap;
+  const hash = options.configuration.clientSide?.hash;
   const { status } = await client.start({
     timeout: timeout / 1000,
     ...(bootstrap != null && { bootstrap }),
+    ...(hash != null && { identifyOptions: { hash } }),
   });
   const failed = status !== 'complete';
   if (failed && !options.configuration.initCanFail) {
