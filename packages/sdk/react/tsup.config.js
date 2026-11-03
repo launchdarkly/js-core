@@ -44,4 +44,16 @@ export default defineConfig([
       mangleProps(opts);
     },
   },
+  {
+    ...sharedOptions,
+    entry: { 'fetch-eventsource': 'src/fetch-eventsource/index.ts' },
+    clean: false,
+    // Keep the browser SDK's entry as an import so `@launchdarkly/eventsource` stays an optional
+    // dependency of js-client-sdk and is not bundled or required from this package.
+    noExternal: sharedOptions.noExternal.filter((name) => name !== '@launchdarkly/js-client-sdk'),
+    external: ['@launchdarkly/js-client-sdk'],
+    esbuildOptions(opts) {
+      mangleProps(opts);
+    },
+  },
 ]);
