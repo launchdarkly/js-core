@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.1...js-server-sdk-common-v2.26.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* Base the validity of the uninitialized all flags state on the override layer's flags ([#2132](https://github.com/launchdarkly/js-core/issues/2132)) ([9cafac5](https://github.com/launchdarkly/js-core/commit/9cafac5abf2933146a5d78636bb48b7f4f23de02))
+
 ## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.0...js-server-sdk-common-v2.26.1) (2026-11-02)
 
 
