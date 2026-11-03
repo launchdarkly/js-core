@@ -34,6 +34,9 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
   const cf: LDOptions = {
     withReasons: options.clientSide.evaluationReasons,
     logger: makeLogger(`${tag}.sdk`),
+    // Without the cache, identify waits for data from the harness instead of completing with
+    // flags cached for the same context.
+    disableCache: true,
   };
 
   if (options.clientSide?.useReport) {
