@@ -123,6 +123,8 @@ describe('given a closed browser client', () => {
 
   it('does not flush when the page is hidden', async () => {
     const before = eventPosts(platform).length;
+    // Queue an event after close, so a leaked listener would have something to post.
+    client.track('metric');
 
     window.dispatchEvent(new Event('pagehide'));
     await settle();

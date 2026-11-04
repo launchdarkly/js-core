@@ -14,10 +14,9 @@ import { ClientContext, getEventsUri } from '../../options';
 import { httpErrorMessage, LDHeaders, sleep } from '../../utils';
 
 /**
- * The Fetch Standard rejects a keepalive request with a body over 64 KiB. The body length is
- * in UTF-16 code units, and each code unit is at least one byte, so a body over this length is
- * always over the limit. A shorter body with non-ASCII text can still be over the limit. The
- * retry sends without keepalive, so such a body still gets through.
+ * The Fetch Standard caps the total body size of in-flight keepalive requests at 64 KiB. The
+ * body length is in UTF-16 code units, and each code unit is at least one byte, so a body over
+ * this length is always over the cap. A shorter body with non-ASCII text can still be over it.
  */
 const KEEPALIVE_BODY_LIMIT = 64 * 1024;
 
@@ -77,8 +76,8 @@ export default class EventSender implements LDEventSender {
         method: 'POST',
         // When sending events from browser environments the request should be completed even
         // if the user is navigating away from the page. A browser rejects a keepalive request
-        // with a large body, so a large body is sent without it. The retry, which has no
-        // further retry, also goes without it so a body the length check missed gets through.
+        // with a large body, so a large body is sent without it. The retry is the last attempt,
+        // so it never asks for keepalive. This lets a body the length check missed get through.
         keepalive: canRetry && body.length <= KEEPALIVE_BODY_LIMIT,
       });
 

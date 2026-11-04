@@ -213,6 +213,29 @@ describe('given an event sender', () => {
     );
   });
 
+  it('requests keepalive for a body exactly at the limit', async () => {
+    // The JSON wrapper around the value adds 14 code units.
+    const event = { eventId: 'x'.repeat(64 * 1024 - 14) };
+    expect(JSON.stringify(event).length).toBe(64 * 1024);
+    await runWithTimers(() => eventSender.sendEventData(LDEventType.AnalyticsEvents, event));
+
+    expect(mockFetch).toHaveBeenLastCalledWith(
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: true }),
+    );
+  });
+
+  it('does not request keepalive for a body one code unit over the limit', async () => {
+    const event = { eventId: 'x'.repeat(64 * 1024 - 13) };
+    expect(JSON.stringify(event).length).toBe(64 * 1024 + 1);
+    await runWithTimers(() => eventSender.sendEventData(LDEventType.AnalyticsEvents, event));
+
+    expect(mockFetch).toHaveBeenLastCalledWith(
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: false }),
+    );
+  });
+
   it('retries without keepalive', async () => {
     setupMockFetch(503);
     await runWithTimers(() =>
