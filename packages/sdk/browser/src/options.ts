@@ -142,7 +142,7 @@ export interface ValidatedOptions {
   fetchGoals: boolean;
   eventUrlTransformer: (url: string) => string;
   streaming?: boolean;
-  automaticBackgroundHandling?: boolean;
+  automaticBackgroundHandling: boolean;
   plugins: LDPlugin[];
   storage?: LDStorage;
   eventSource?: LDEventSourceFactory;
@@ -152,6 +152,7 @@ const optDefaults = {
   fetchGoals: true,
   eventUrlTransformer: (url: string) => url,
   streaming: undefined,
+  automaticBackgroundHandling: true,
   plugins: [],
   storage: undefined,
   eventSource: undefined,
@@ -171,6 +172,7 @@ const validators: { [Property in keyof BrowserOptions]: TypeValidator | undefine
   fetchGoals: TypeValidators.Boolean,
   eventUrlTransformer: TypeValidators.Function,
   streaming: TypeValidators.Boolean,
+  automaticBackgroundHandling: TypeValidators.Boolean,
   plugins: TypeValidators.createTypeArray('LDPlugin', {}),
   storage: TypeValidators.Object,
   eventSource: eventSourceFactoryValidator,
