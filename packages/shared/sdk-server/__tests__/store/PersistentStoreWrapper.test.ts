@@ -382,6 +382,35 @@ describe.each(['caching', 'non-caching'])(
       expect(spy).toBeCalledTimes(1);
     });
 
+    itif(isCaching)(
+      'does not query the store again for a missing item until the cache expires',
+      async () => {
+        await asyncWrapper.init({});
+
+        const spy = jest.spyOn(mockPersistentStore, 'get');
+        // Ask twice for an item that is not in the store.
+        const value = await asyncWrapper.get(VersionedDataKinds.Features, 'missing');
+        const value2 = await asyncWrapper.get(VersionedDataKinds.Features, 'missing');
+        // Both report the item as missing, and only the first request reaches the store.
+        expect(value).toBeNull();
+        expect(value2).toBeNull();
+        expect(spy).toBeCalledTimes(1);
+      },
+    );
+
+    itif(isCaching)('returns an item upserted after a cached miss', async () => {
+      await asyncWrapper.init({});
+      await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+
+      // Write the item that was just reported as missing.
+      await asyncWrapper.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+      // The upsert replaces the cached miss.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toEqual({
+        key: 'key1',
+        version: 1,
+      });
+    });
+
     it('it can delete an item', async () => {
       await asyncWrapper.init({
         features: {

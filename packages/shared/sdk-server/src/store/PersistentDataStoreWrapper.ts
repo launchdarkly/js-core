@@ -232,6 +232,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         callback(itemIfNotDeleted(value));
         return;
       }
+      // Cache the miss as well, so that requests for an item that is not in the store do not
+      // query the store again until the cache TTL expires.
+      this._itemCache?.set(cacheKey(kind, key), deletedDescriptor(descriptor?.version ?? 0));
       callback(null);
     });
   }
