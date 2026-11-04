@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ManagedResult | @launchdarkly/server-sdk-ai - v2.0.18</title><meta name="description" content="Documentation for @launchdarkly/server-sdk-ai"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/server-sdk-ai - v2.0.18</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>ManagedResult | @launchdarkly/server-sdk-ai - v2.0.19</title><meta name="description" content="Documentation for @launchdarkly/server-sdk-ai"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/server-sdk-ai - v2.0.19</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -16,7 +16,7 @@ Includes a promise for asynchronous judge evaluations.</p>
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">ManagedResult</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#content">content</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#evaluations">evaluations</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="LDJudgeResult.html" class="tsd-signature-type tsd-kind-interface">LDJudgeResult</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#metrics">metrics</a><span class="tsd-signature-symbol">:</span> <a href="LDAIMetricSummary.html" class="tsd-signature-type tsd-kind-interface">LDAIMetricSummary</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#parsed">parsed</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#raw">raw</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L77">api/model/types.ts:77</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L77">api/model/types.ts:77</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -39,7 +39,7 @@ Includes a promise for asynchronous judge evaluations.</p>
 <div class="tsd-comment tsd-typography"><p>The text content of the model's response.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L81">api/model/types.ts:81</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L81">api/model/types.ts:81</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="evaluations"><span>evaluations</span><a href="#evaluations" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">evaluations</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="LDJudgeResult.html" class="tsd-signature-type tsd-kind-interface">LDJudgeResult</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -49,28 +49,28 @@ This promise encapsulates both evaluation and tracking
 Awaiting this promise guarantees both evaluation and tracking are complete.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L104">api/model/types.ts:104</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L104">api/model/types.ts:104</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="metrics"><span>metrics</span><a href="#metrics" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">metrics</span><span class="tsd-signature-symbol">:</span> <a href="LDAIMetricSummary.html" class="tsd-signature-type tsd-kind-interface">LDAIMetricSummary</a></div>
 <div class="tsd-comment tsd-typography"><p>Summarized metrics for this invocation.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L86">api/model/types.ts:86</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L86">api/model/types.ts:86</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="parsed"><code class="tsd-tag">Optional</code><span>parsed</span><a href="#parsed" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">parsed</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span></div>
 <div class="tsd-comment tsd-typography"><p>Parsed structured output, if available.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L96">api/model/types.ts:96</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L96">api/model/types.ts:96</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="raw"><code class="tsd-tag">Optional</code><span>raw</span><a href="#raw" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">raw</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">unknown</span></div>
 <div class="tsd-comment tsd-typography"><p>The raw response object from the provider, if available.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/db9c302ad32ec7b2dda830b84e479a714786ad5c/packages/sdk/server-ai/src/api/model/types.ts#L91">api/model/types.ts:91</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L91">api/model/types.ts:91</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -89,7 +89,7 @@ Awaiting this promise guarantees both evaluation and tracking are complete.</p>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#content"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>content</span></a><a href="#evaluations"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>evaluations</span></a><a href="#metrics"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>metrics</span></a><a href="#parsed"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>parsed</span></a><a href="#raw"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>raw</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/server-sdk-ai - v2.0.18</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/server-sdk-ai - v2.0.19</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
