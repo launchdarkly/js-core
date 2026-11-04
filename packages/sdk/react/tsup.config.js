@@ -50,6 +50,7 @@ export default defineConfig([
     clean: false,
     // Keep the browser SDK's entry as an import so `@launchdarkly/eventsource` stays an optional
     // dependency of js-client-sdk and is not bundled or required from this package.
+    // __tests__/fetch-eventsource/externalization.test.ts fails if the entry gets bundled.
     noExternal: sharedOptions.noExternal.filter((name) => name !== '@launchdarkly/js-client-sdk'),
     external: ['@launchdarkly/js-client-sdk'],
     esbuildOptions(opts) {
