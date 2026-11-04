@@ -28,9 +28,9 @@ export default class EventSummarizer implements LDEventSummarizer {
 
   private _endDate = 0;
 
-  private _counters: Record<string, SummaryCounter> = {};
+  private _counters: Map<string, SummaryCounter> = new Map();
 
-  private _contextKinds: Record<string, Set<string>> = {};
+  private _contextKinds: Map<string, Set<string>> = new Map();
 
   private _context?: Context;
 
@@ -45,25 +45,28 @@ export default class EventSummarizer implements LDEventSummarizer {
         this._context = event.context;
       }
       const countKey = counterKey(event);
-      const counter = this._counters[countKey];
-      let kinds = this._contextKinds[event.key];
+      const counter = this._counters.get(countKey);
+      let kinds = this._contextKinds.get(event.key);
       if (!kinds) {
         kinds = new Set();
-        this._contextKinds[event.key] = kinds;
+        this._contextKinds.set(event.key, kinds);
       }
       event.context.kinds.forEach((kind) => kinds.add(kind));
 
       if (counter) {
         counter.increment();
       } else {
-        this._counters[countKey] = new SummaryCounter(
-          1,
-          event.key,
-          event.value,
-          event.default,
-          event.version,
-          event.variation,
-          event.overrideAffected,
+        this._counters.set(
+          countKey,
+          new SummaryCounter(
+            1,
+            event.key,
+            event.value,
+            event.default,
+            event.version,
+            event.variation,
+            event.overrideAffected,
+          ),
         );
       }
 
@@ -77,14 +80,14 @@ export default class EventSummarizer implements LDEventSummarizer {
   }
 
   getSummary(): SummarizedFlagsEvent {
-    const features = Object.values(this._counters).reduce(
+    const features = [...this._counters.values()].reduce(
       (acc: Record<string, FlagSummary>, counter) => {
         let flagSummary = acc[counter.key];
         if (!flagSummary) {
           flagSummary = {
             default: counter.default,
             counters: [],
-            contextKinds: [...this._contextKinds[counter.key]],
+            contextKinds: [...(this._contextKinds.get(counter.key) ?? [])],
           };
           acc[counter.key] = flagSummary;
         }
@@ -109,7 +112,8 @@ export default class EventSummarizer implements LDEventSummarizer {
 
         return acc;
       },
-      {},
+      // No prototype, so that __proto__ is an ordinary flag key.
+      Object.create(null),
     );
 
     const event: SummarizedFlagsEvent = {
@@ -129,7 +133,7 @@ export default class EventSummarizer implements LDEventSummarizer {
   private _clearSummary() {
     this._startDate = 0;
     this._endDate = 0;
-    this._counters = {};
-    this._contextKinds = {};
+    this._counters = new Map();
+    this._contextKinds = new Map();
   }
 }
