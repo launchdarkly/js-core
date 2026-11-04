@@ -97,3 +97,46 @@ describe('given a browser client with background handling disabled', () => {
     expect(eventPosts(platform).length).toBe(before);
   });
 });
+
+describe('given a closed browser client', () => {
+  let platform: any;
+  let client: ReturnType<typeof makeClient>;
+  let removeEventListener: jest.SpyInstance;
+
+  beforeEach(async () => {
+    removeEventListener = jest.spyOn(window, 'removeEventListener');
+    platform = makeBasicPlatform();
+    client = makeClient(
+      'client-side-id',
+      { key: 'user-key', kind: 'user' },
+      AutoEnvAttributes.Disabled,
+      { streaming: false, logger, diagnosticOptOut: true },
+      platform,
+    );
+    await client.start();
+    await client.close();
+  });
+
+  afterEach(() => {
+    removeEventListener.mockRestore();
+  });
+
+  it('does not flush when the page is hidden', async () => {
+    const before = eventPosts(platform).length;
+
+    window.dispatchEvent(new Event('pagehide'));
+    await settle();
+
+    expect(eventPosts(platform).length).toBe(before);
+  });
+
+  it('removes the page and location listeners', () => {
+    const removed = removeEventListener.mock.calls.map(([type]) => type);
+    expect(removed).toContain('pagehide');
+    expect(removed).toContain('popstate');
+  });
+
+  it('can be closed a second time', async () => {
+    await expect(client.close()).resolves.toBeUndefined();
+  });
+});

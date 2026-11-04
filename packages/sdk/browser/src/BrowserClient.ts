@@ -42,6 +42,7 @@ import { getAllStorageKeys } from './platform/LocalStorage';
 
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
+  private _removeStateListeners?: () => void;
   private readonly _plugins?: LDPlugin[];
 
   constructor(
@@ -220,8 +221,17 @@ class BrowserClientImpl extends LDClientImpl {
     }
 
     if (validatedBrowserOptions.automaticBackgroundHandling) {
-      registerStateDetection(() => this.flush());
+      this._removeStateListeners = registerStateDetection(() => this.flush());
     }
+  }
+
+  override async close(): Promise<void> {
+    // Remove the page listeners first, so a page exit during the final flush does not call
+    // flush on a client that is closing. Clearing the field makes a second close a no-op.
+    this._removeStateListeners?.();
+    this._removeStateListeners = undefined;
+    this._goalManager?.close();
+    await super.close();
   }
 
   registerPlugins(client: LDClient): void {
