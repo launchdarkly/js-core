@@ -217,10 +217,10 @@ class BrowserClientImpl extends LDClientImpl {
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
       this._goalManager.initialize();
+    }
 
-      if (validatedBrowserOptions.automaticBackgroundHandling) {
-        registerStateDetection(() => this.flush());
-      }
+    if (validatedBrowserOptions.automaticBackgroundHandling) {
+      registerStateDetection(() => this.flush());
     }
   }
 

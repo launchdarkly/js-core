@@ -72,12 +72,40 @@ it('applies default browser-specific options', () => {
   const opts = validateBrowserOptions({}, logger);
 
   expect(opts.fetchGoals).toBe(true);
+  expect(opts.automaticBackgroundHandling).toBe(true);
   expect(opts.eventUrlTransformer).toBeDefined();
 
   expect(logger.debug).not.toHaveBeenCalled();
   expect(logger.info).not.toHaveBeenCalled();
   expect(logger.warn).not.toHaveBeenCalled();
   expect(logger.error).not.toHaveBeenCalled();
+});
+
+it('accepts automaticBackgroundHandling false', () => {
+  const opts = validateBrowserOptions({ automaticBackgroundHandling: false }, logger);
+
+  expect(opts.automaticBackgroundHandling).toBe(false);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('warns and uses the default for an automaticBackgroundHandling of the wrong type', () => {
+  const opts = validateBrowserOptions(
+    {
+      // @ts-ignore
+      automaticBackgroundHandling: 'yes',
+    },
+    logger,
+  );
+
+  expect(opts.automaticBackgroundHandling).toBe(true);
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "automaticBackgroundHandling" should be of type boolean, got string, using default value',
+  );
+});
+
+it('strips automaticBackgroundHandling from base options', () => {
+  const baseOpts = filterToBaseOptionsWithDefaults({ automaticBackgroundHandling: false });
+  expect(baseOpts).not.toHaveProperty('automaticBackgroundHandling');
 });
 
 it('filters to base options', () => {

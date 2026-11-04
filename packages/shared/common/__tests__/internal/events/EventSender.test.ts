@@ -192,6 +192,65 @@ describe('given an event sender', () => {
     );
   });
 
+  it('does not request keepalive when the body is over the browser limit', async () => {
+    const largeEvent = { eventId: 'x'.repeat(64 * 1024) };
+    await runWithTimers(() => eventSender.sendEventData(LDEventType.AnalyticsEvents, largeEvent));
+
+    expect(mockFetch).toHaveBeenLastCalledWith(
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: false }),
+    );
+  });
+
+  it('requests keepalive for a body just under the limit', async () => {
+    // The JSON wrapper adds a few bytes, so stay inside the limit.
+    const event = { eventId: 'x'.repeat(63 * 1024) };
+    await runWithTimers(() => eventSender.sendEventData(LDEventType.AnalyticsEvents, event));
+
+    expect(mockFetch).toHaveBeenLastCalledWith(
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: true }),
+    );
+  });
+
+  it('retries without keepalive', async () => {
+    setupMockFetch(503);
+    await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
+    );
+
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      1,
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: true }),
+    );
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: false }),
+    );
+  });
+
+  it('retries without keepalive when the first attempt throws', async () => {
+    mockFetch = jest
+      .fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValue({ headers: { get: mockHeadersGet }, status: 200 });
+    mockPlatform.requests.fetch = mockFetch;
+    const { status } = await runWithTimers(() =>
+      eventSender.sendEventData(LDEventType.AnalyticsEvents, testEventData1),
+    );
+
+    expect(status).toEqual(LDDeliveryStatus.Succeeded);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenNthCalledWith(
+      2,
+      `${basicConfig.serviceEndpoints.events}/bulk`,
+      expect.objectContaining({ keepalive: false }),
+    );
+  });
+
   describe.each([400, 408, 429, 503])('given recoverable errors', (responseStatusCode) => {
     beforeEach(async () => {
       setupMockFetch(responseStatusCode);
