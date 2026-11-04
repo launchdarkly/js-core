@@ -15,14 +15,14 @@
     "@launchdarkly/js-contract-test-utils": "workspace:^",
     "@launchdarkly/react-native-client-sdk": "workspace:^",
     "@react-native-async-storage/async-storage": "^2.0.0",
-    "expo": "52.0.14",
-    "expo-status-bar": "~1.11.1",
-    "react": "18.3.1",
-    "react-native": "0.76.3"
+    "expo": "53.0.27",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "@types/react": "~18.2.55",
+    "@types/react": "~19.0.10",
     "typescript": "6.0.3"
   },
   "installConfig": {
