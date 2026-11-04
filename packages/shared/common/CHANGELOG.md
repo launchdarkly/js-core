@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.32.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.32.0...js-sdk-common-v2.32.1) (2026-11-04)
+
+
+### Bug Fixes
+
+* **js-client-sdk:** better handling for event batches over 64 kb ([3a6c08a](https://github.com/launchdarkly/js-core/commit/3a6c08aa83b99f27dbbf08c6af458c675f1e1723))
+
 ## [2.32.0](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.31.0...js-sdk-common-v2.32.0) (2026-10-27)
 
 
