@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.14.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.0...js-client-sdk-v4.14.1) (2026-11-04)
+
+
+### Bug Fixes
+
+* **js-client-sdk:** better handling for event batches over 64 kb ([3a6c08a](https://github.com/launchdarkly/js-core/commit/3a6c08aa83b99f27dbbf08c6af458c675f1e1723))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.35.0 to 1.35.1
+  * optionalDependencies
+    * @launchdarkly/eventsource bumped from 0.2.2 to 0.2.3
+
 ## [4.14.0](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.13.1...js-client-sdk-v4.14.0) (2026-11-02)
 
 
