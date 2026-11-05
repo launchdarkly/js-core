@@ -323,11 +323,10 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
               this._itemCache?.set(cacheKey(kind, data.key), value);
             } else if (updatedDescriptor.deleted) {
               // Deleted and there was not a serialized representation.
-              this._itemCache?.set(data.key, {
-                key: data.key,
-                version: updatedDescriptor.version,
-                deleted: true,
-              });
+              this._itemCache?.set(
+                cacheKey(kind, data.key),
+                deletedDescriptor(updatedDescriptor.version),
+              );
             }
           }
           cb(err);

@@ -446,6 +446,25 @@ describe.each(['caching', 'non-caching'])(
       expect(read).toBeCalledTimes(2);
     });
 
+    itif(isCaching)(
+      'caches a delete that the store reports without a serialized item',
+      async () => {
+        await asyncWrapper.init({ features: { key1: { key: 'key1', version: 1 } } });
+        // The store reports the deleted item by its version and deletion state only.
+        jest
+          .spyOn(mockPersistentStore, 'upsert')
+          .mockImplementationOnce((_kind, _key, descriptor, upsertCallback) =>
+            upsertCallback(undefined, { version: descriptor.version, deleted: true }),
+          );
+
+        // Delete the item, then get it.
+        await asyncWrapper.delete(VersionedDataKinds.Features, 'key1', 2);
+        const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+        // The cached item is the deleted one, not the item from init.
+        expect(value).toBeNull();
+      },
+    );
+
     it('it can delete an item', async () => {
       await asyncWrapper.init({
         features: {
