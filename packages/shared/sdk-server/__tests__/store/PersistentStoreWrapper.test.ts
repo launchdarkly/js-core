@@ -279,6 +279,25 @@ describe.each(['caching', 'non-caching'])(
       expect(spy).toBeCalledTimes(0);
     });
 
+    it('gets all flags, including a flag whose key is __proto__', async () => {
+      // Initialize with data parsed from JSON, as a data source does, so that __proto__ is an own
+      // key.
+      await asyncWrapper.init(
+        JSON.parse(
+          '{"features": {"__proto__": {"key": "__proto__", "version": 1},' +
+            ' "a": {"key": "a", "version": 1}}, "segments": {}}',
+        ),
+      );
+
+      // Get all flags after init, and again after an upsert makes the wrapper read the store.
+      const afterInit = await asyncWrapper.all(VersionedDataKinds.Features);
+      await asyncWrapper.upsert(VersionedDataKinds.Features, { key: 'b', version: 1 });
+      const afterUpsert = await asyncWrapper.all(VersionedDataKinds.Features);
+      // Both results include the flag.
+      expect(Object.keys(afterInit).sort()).toEqual(['__proto__', 'a']);
+      expect(Object.keys(afterUpsert).sort()).toEqual(['__proto__', 'a', 'b']);
+    });
+
     it('after something is upserted, then the cache is not used for getting all values', async () => {
       await asyncWrapper.init({
         features: {
