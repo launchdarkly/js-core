@@ -13,7 +13,20 @@ interface FlagMeta {
   prerequisites?: string[];
 }
 
+// Sets an own property even for a key such as __proto__, where assignment (and object spread or
+// Object.assign) would set the object's prototype instead.
+function setOwnProperty(target: Record<string, any>, key: string, value: any) {
+  Object.defineProperty(target, key, {
+    value,
+    writable: true,
+    enumerable: true,
+    configurable: true,
+  });
+}
+
 export default class FlagsStateBuilder {
+  // Both objects keep the normal prototype, because some callers accept only plain objects. For
+  // example, React server components cannot pass a null-prototype object to a client component.
   private _flagValues: LDFlagSet = {};
 
   private _flagMetadata: Record<string, FlagMeta> = {};
@@ -34,7 +47,7 @@ export default class FlagsStateBuilder {
     detailsOnlyIfTracked: boolean,
     prerequisites?: string[],
   ) {
-    this._flagValues[flag.key] = value;
+    setOwnProperty(this._flagValues, flag.key, value);
     const meta: FlagMeta = {};
     if (variation !== undefined) {
       meta.variation = variation;
@@ -59,21 +72,27 @@ export default class FlagsStateBuilder {
     if (prerequisites && prerequisites.length) {
       meta.prerequisites = prerequisites;
     }
-    this._flagMetadata[flag.key] = meta;
+    setOwnProperty(this._flagMetadata, flag.key, meta);
   }
 
   build(): LDFlagsState {
     return {
       valid: this._valid,
       allValues: () => this._flagValues,
-      getFlagValue: (key) => this._flagValues[key],
-      getFlagReason: (key) =>
-        (this._flagMetadata[key] ? this._flagMetadata[key].reason : null) ?? null,
-      toJSON: () => ({
-        ...this._flagValues,
-        $flagsState: this._flagMetadata,
-        $valid: this._valid,
-      }),
+      getFlagValue: (key) =>
+        Object.prototype.hasOwnProperty.call(this._flagValues, key)
+          ? this._flagValues[key]
+          : undefined,
+      getFlagReason: (key) => this._flagMetadata[key]?.reason ?? null,
+      toJSON: () => {
+        const json: Record<string, any> = {};
+        Object.keys(this._flagValues).forEach((key) =>
+          setOwnProperty(json, key, this._flagValues[key]),
+        );
+        json.$flagsState = this._flagMetadata;
+        json.$valid = this._valid;
+        return json;
+      },
     };
   }
 }

@@ -174,6 +174,25 @@ describe('createPayloadListenerFDv2', () => {
     );
   });
 
+  test('converts items whose keys are names of built-in object members', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+    const updates = ['flagkey', '__proto__', 'constructor'].map((key) => ({
+      kind: 'flag',
+      key,
+      version: 1,
+      object: { key, version: 1 },
+    }));
+
+    // Transfer the flags in one full payload.
+    listener({ ...fullTransferPayload, payload: { ...fullTransferPayload.payload, updates } });
+
+    // Every flag, including one after the first, is an own key of the converted data.
+    const { features } = (dataSourceUpdates.applyChanges as jest.Mock).mock.calls[0][1];
+    expect(Object.keys(features).sort()).toEqual(['__proto__', 'constructor', 'flagkey']);
+    expect(features['__proto__']).toEqual({ key: '__proto__', version: 1 });
+    expect(features.constructor).toEqual({ key: 'constructor', version: 1 });
+  });
+
   test('data source updates not called when basis is false and changes are empty', async () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
     listener(changesTransferNone);
