@@ -34,7 +34,7 @@ class MockPersistentStore implements PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: SerializedItemDescriptor | undefined, err?: Error) => void,
   ): void {
     const itemsForKind = this.allData?.find((kvp) => kvp.key.namespace === kind.namespace)?.item;
     callback(itemsForKind?.find((kvp) => kvp.key === key)?.item ?? undefined);
@@ -429,6 +429,21 @@ describe.each(['caching', 'non-caching'])(
         key: 'key1',
         version: 1,
       });
+    });
+
+    itif(isCaching)('reads the store again after a failed read', async () => {
+      await asyncWrapper.init({});
+      const read = jest
+        .spyOn(mockPersistentStore, 'get')
+        .mockImplementationOnce((_kind, _key, readCallback) =>
+          readCallback(undefined, new Error('store is down')),
+        );
+
+      // Fail the first read of an item, then ask for the item again.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toBeNull();
+      await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      // The failed read was not cached as a missing item.
+      expect(read).toBeCalledTimes(2);
     });
 
     it('it can delete an item', async () => {

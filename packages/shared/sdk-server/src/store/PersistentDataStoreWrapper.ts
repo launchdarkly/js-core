@@ -234,15 +234,16 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
 
     const persistKind = persistentStoreKinds[kind.namespace];
     const cacheWritesBeforeRead = this._itemCacheWrites;
-    this._core.get(persistKind, key, (descriptor) => {
+    this._core.get(persistKind, key, (descriptor, err) => {
       // A miss is cached as a deleted item, so that requests for an item that is not in the
       // store do not query the store again until the cache TTL expires.
       const value =
         descriptor && descriptor.serializedItem
           ? deserialize(persistKind, descriptor)
           : deletedDescriptor(descriptor?.version ?? 0);
-      // An init or upsert that changed the cache while this read was in flight has newer data.
-      if (cacheWritesBeforeRead === this._itemCacheWrites) {
+      // A failed read is not a miss, so the next request reads the store again. An init or
+      // upsert that changed the cache while this read was in flight has newer data.
+      if (!err && cacheWritesBeforeRead === this._itemCacheWrites) {
         this._itemCache?.set(cacheKey(kind, key), value);
       }
       callback(itemIfNotDeleted(value));
