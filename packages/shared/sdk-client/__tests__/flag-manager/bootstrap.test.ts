@@ -84,3 +84,20 @@ it('can handle invalid bootstrap data with $valid false', () => {
     'LaunchDarkly bootstrap data is not available because the back end could not read the flags.',
   );
 });
+
+it.each([
+  ['null', null],
+  ['undefined', undefined],
+  ['a number', 5],
+  ['a string', 'flags'],
+  ['an array', ['flag']],
+])('throws when the bootstrap data is %s', (_label, data) => {
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
+  expect(() => readFlagsFromBootstrap(logger, data)).toThrow(TypeError);
+});

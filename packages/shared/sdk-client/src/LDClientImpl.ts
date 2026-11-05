@@ -343,6 +343,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
         }
       } catch (error) {
         this.logger.error('Failed to bootstrap data', error);
+        // Drop the payload so the data manager does not parse it a second time.
+        delete identifyOptions.bootstrap;
+        delete identifyOptions.bootstrapParsed;
       }
     }
 
