@@ -107,6 +107,13 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
   private _itemCache: TtlCache | undefined;
 
   /**
+   * Counts the changes that init and upsert make to the item cache. A read caches its result
+   * only if this count did not change while the read was in flight. Otherwise a late read could
+   * replace newer data in the cache.
+   */
+  private _itemCacheWrites = 0;
+
+  /**
    * Cache for storing all items of a type.
    */
   private _allItemsCache: TtlCache | undefined;
@@ -159,6 +166,7 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             cb(err);
             return;
           }
+          this._itemCacheWrites += 1;
           if (err) {
             // A failed init must not present the rejected data as current. Clear the
             // caches and the initialized state, so reads and initialization checks
@@ -225,14 +233,20 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     }
 
     const persistKind = persistentStoreKinds[kind.namespace];
-    this._core.get(persistKind, key, (descriptor) => {
-      if (descriptor && descriptor.serializedItem) {
-        const value = deserialize(persistKind, descriptor);
+    const cacheWritesBeforeRead = this._itemCacheWrites;
+    this._core.get(persistKind, key, (descriptor, err) => {
+      // A miss is cached as a deleted item, so that requests for an item that is not in the
+      // store do not query the store again until the cache TTL expires.
+      const value =
+        descriptor && descriptor.serializedItem
+          ? deserialize(persistKind, descriptor)
+          : deletedDescriptor(descriptor?.version ?? 0);
+      // A failed read is not a miss, so the next request reads the store again. An init or
+      // upsert that changed the cache while this read was in flight has newer data.
+      if (!err && cacheWritesBeforeRead === this._itemCacheWrites) {
         this._itemCache?.set(cacheKey(kind, key), value);
-        callback(itemIfNotDeleted(value));
-        return;
       }
-      callback(null);
+      callback(itemIfNotDeleted(value));
     });
   }
 
@@ -303,16 +317,16 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
             this._logStoreError(err);
           }
           if (!err && updatedDescriptor) {
+            this._itemCacheWrites += 1;
             if (updatedDescriptor.serializedItem) {
               const value = deserialize(persistKind, updatedDescriptor);
               this._itemCache?.set(cacheKey(kind, data.key), value);
             } else if (updatedDescriptor.deleted) {
               // Deleted and there was not a serialized representation.
-              this._itemCache?.set(data.key, {
-                key: data.key,
-                version: updatedDescriptor.version,
-                deleted: true,
-              });
+              this._itemCache?.set(
+                cacheKey(kind, data.key),
+                deletedDescriptor(updatedDescriptor.version),
+              );
             }
           }
           cb(err);

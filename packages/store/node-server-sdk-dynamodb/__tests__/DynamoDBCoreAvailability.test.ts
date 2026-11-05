@@ -167,6 +167,35 @@ it('reports an init error through the callback when writing the initialized toke
   });
 });
 
+it('reports a get error through the callback when the read fails', (done) => {
+  const readError = new Error('connection failed');
+  const state = {
+    prefixedKey: (key: string) => key,
+    get: jest.fn().mockRejectedValue(readError),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state);
+  core.get(featuresKind, 'flagA', (descriptor, err) => {
+    expect(descriptor).toBeUndefined();
+    expect(err).toBe(readError);
+    done();
+  });
+});
+
+it('calls back without an error for a key that is not in the store', (done) => {
+  const state = {
+    prefixedKey: (key: string) => key,
+    get: jest.fn().mockResolvedValue(undefined),
+  };
+  // @ts-ignore Partial state mock for testing.
+  const core = new DynamoDBCore('test-table', state);
+  core.get(featuresKind, 'flagA', (descriptor, err) => {
+    expect(descriptor).toBeUndefined();
+    expect(err).toBeUndefined();
+    done();
+  });
+});
+
 it('calls back true from isStoreAvailable when the read succeeds', (done) => {
   const state = {
     prefixedKey: (key: string) => key,
