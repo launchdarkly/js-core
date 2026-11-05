@@ -20,8 +20,9 @@ export default class TestDataSource implements subsystem.LDStreamProcessor {
   ) {
     // make copies of these objects to decouple them from the originals
     // so updates made to the originals don't affect these internal data.
-    this._flags = { ...initialFlags };
-    this._segments = { ...initialSegments };
+    // The copies have no prototype, so that a key such as __proto__ is copied as an ordinary key.
+    this._flags = Object.assign(Object.create(null), initialFlags);
+    this._segments = Object.assign(Object.create(null), initialSegments);
   }
 
   async start() {
