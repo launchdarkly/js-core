@@ -13,6 +13,9 @@ export default defineConfig({
   splitting: false,
   sourcemap: true,
   clean: true,
+  // tsup does not auto-externalize optionalDependencies. Without this entry, the transport is
+  // inlined into the fetch-eventsource bundle. __tests__/fetch-eventsource/externalization.test.ts
+  // fails if that happens.
   external: ['@launchdarkly/eventsource'],
   noExternal: ['@launchdarkly/js-sdk-common', '@launchdarkly/js-client-sdk-common'],
   dts: true,

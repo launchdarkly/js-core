@@ -9,6 +9,12 @@ import {
   LDTransactionalFeatureStore,
 } from '../api/subsystems';
 
+// Copies the items into a null-prototype object, so that a key such as __proto__ is an ordinary
+// key. Object spread or assignment into an ordinary object sets the prototype for that key.
+function copyItems(items: LDFeatureStoreKindData): LDFeatureStoreKindData {
+  return Object.assign(Object.create(null), items);
+}
+
 export default class InMemoryFeatureStore implements LDTransactionalFeatureStore {
   private _allData: LDFeatureStoreDataStorage = {};
 
@@ -33,7 +39,8 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
   }
 
   all(kind: DataKind, callback: (res: LDFeatureStoreKindData) => void): void {
-    const result: LDFeatureStoreKindData = {};
+    // A null-prototype object, so that a flag key such as __proto__ is an ordinary key.
+    const result: LDFeatureStoreKindData = Object.create(null);
     const items = this._allData[kind.namespace] ?? {};
     Object.entries(items).forEach(([key, item]) => {
       if (item && !item.deleted) {
@@ -53,7 +60,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
   getAllRaw(): LDFeatureStoreDataStorage {
     const snapshot: LDFeatureStoreDataStorage = {};
     Object.entries(this._allData).forEach(([namespace, items]) => {
-      snapshot[namespace] = { ...items };
+      snapshot[namespace] = copyItems(items);
     });
     return snapshot;
   }
@@ -106,14 +113,14 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
       const tempData: LDFeatureStoreDataStorage = {};
       // shallow copy to protect against concurrent read
       Object.entries(this._allData).forEach(([namespace, items]) => {
-        tempData[namespace] = { ...items };
+        tempData[namespace] = copyItems(items);
       });
 
       Object.entries(data).forEach(([namespace, items]) => {
         Object.keys(items || {}).forEach((key) => {
           let existingItems = tempData[namespace];
           if (!existingItems) {
-            existingItems = {};
+            existingItems = Object.create(null);
             tempData[namespace] = existingItems;
           }
           const item = items[key];

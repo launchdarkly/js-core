@@ -39,23 +39,15 @@ export const createPayloadListener =
     const converted: LDFeatureStoreDataStorage = {};
     payload.updates.forEach((it: internal.Update) => {
       const namespace = namespaceForKind(it.kind);
-      if (converted[namespace]) {
-        // entry for kind already exists, add key
-        converted[namespace][it.key] = {
-          version: it.version,
-          ...(it.deleted && { deleted: it.deleted }),
-          ...it.object,
-        };
-      } else {
-        // entry for kind doesn't exist, add kind and key
-        converted[namespace] = {
-          [it.key]: {
-            version: it.version,
-            ...(it.deleted && { deleted: it.deleted }),
-            ...it.object,
-          },
-        };
+      if (!converted[namespace]) {
+        // A null-prototype object, so that an item key such as __proto__ is an ordinary key.
+        converted[namespace] = Object.create(null);
       }
+      converted[namespace][it.key] = {
+        version: it.version,
+        ...(it.deleted && { deleted: it.deleted }),
+        ...it.object,
+      };
 
       if (it.deleted) {
         logger?.debug(`Deleting ${it.key} in ${it.kind}`);

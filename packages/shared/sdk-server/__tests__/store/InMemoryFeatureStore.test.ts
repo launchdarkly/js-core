@@ -43,10 +43,13 @@ describe('given an initialized feature store', () => {
 
   it('gets all features', async () => {
     const features = await featureStore.all(VersionedDataKinds.Features);
-    expect(features).toStrictEqual({
-      foo: feature1,
-      bar: feature2,
-    });
+    // The result has no prototype, so that a flag key such as __proto__ is an ordinary key.
+    expect(features).toStrictEqual(
+      Object.assign(Object.create(null), {
+        foo: feature1,
+        bar: feature2,
+      }),
+    );
   });
 
   it('does not upsert an older version', async () => {
@@ -211,5 +214,45 @@ describe('given a feature store with flags, segments, and a deleted flag', () =>
       version: 3,
       deleted: true,
     });
+  });
+});
+
+describe('given a feature store with flags whose keys are names of built-in object members', () => {
+  let memoryStore: InMemoryFeatureStore;
+  let facade: AsyncStoreFacade;
+
+  beforeEach(async () => {
+    memoryStore = new InMemoryFeatureStore();
+    facade = new AsyncStoreFacade(memoryStore);
+    // Parse the data as a data source does, so that __proto__ is an own key.
+    await facade.init(
+      JSON.parse(
+        '{"features": {"__proto__": {"key": "__proto__", "version": 1},' +
+          ' "constructor": {"key": "constructor", "version": 1}}, "segments": {}}',
+      ),
+    );
+  });
+
+  it('keeps, lists and snapshots every flag after upserts', async () => {
+    // Upsert a new flag and a newer version of __proto__.
+    await facade.upsert(VersionedDataKinds.Features, { key: 'toString', version: 1 });
+    await facade.upsert(VersionedDataKinds.Features, { key: '__proto__', version: 2 });
+
+    // Every flag is an ordinary key in get, all and the raw snapshot.
+    expect(await facade.get(VersionedDataKinds.Features, '__proto__')).toEqual({
+      key: '__proto__',
+      version: 2,
+    });
+    expect(await facade.get(VersionedDataKinds.Features, 'constructor')).toEqual({
+      key: 'constructor',
+      version: 1,
+    });
+    expect(await facade.get(VersionedDataKinds.Features, 'toString')).toEqual({
+      key: 'toString',
+      version: 1,
+    });
+    const keys = ['__proto__', 'constructor', 'toString'];
+    expect(Object.keys(await facade.all(VersionedDataKinds.Features)).sort()).toEqual(keys);
+    expect(Object.keys(memoryStore.getAllRaw().features).sort()).toEqual(keys);
   });
 });

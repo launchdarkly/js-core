@@ -48,7 +48,8 @@ export function fileDataInitializerPolicy(yamlParser?: YamlParser): FileDataPoli
 }
 
 function byKey<T>(items: KeyedItem<T>[]): { [key: string]: T } {
-  const result: { [key: string]: T } = {};
+  // A null-prototype object, so that an item key such as __proto__ is an ordinary key.
+  const result: { [key: string]: T } = Object.create(null);
   items.forEach(({ key, item }) => {
     result[key] = item;
   });

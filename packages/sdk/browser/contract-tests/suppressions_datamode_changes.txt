@@ -30,3 +30,10 @@ tags/poll requests/{"applicationId":"___________________________________________
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":""}
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
 tags/poll requests/{"applicationId":"________________________________________________________________","applicationVersion":"________________________________________________________________"}
+# The shared client data system always configures an FDv1 fallback synchronizer when
+# the platform provides FDv1 endpoints, regardless of whether a fallback config is
+# present (see FDv2DataManagerBase.ts's fdv1Endpoints && synchronizerSlots.length > 0
+# check), so the SDK cannot be configured without one. The "not configured" state this
+# test exercises is unreachable. Only the fetch EventSource run reaches this test; the
+# native run lacks the client-event-source-http-errors capability.
+streaming/fdv2/FDv1 fallback directive/directive without FDv1 fallback configured halts the data system

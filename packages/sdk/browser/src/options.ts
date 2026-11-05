@@ -129,6 +129,17 @@ export interface BrowserOptions extends Omit<LDOptionsBase, 'initialConnectionMo
    * const options = { eventSource: fetchBrowserEventSource };
    * ```
    *
+   * The `fetch()`-based EventSource has these other differences from the native one:
+   *
+   * - It never sends the `x-launchdarkly-tags` header on the streaming request. The LaunchDarkly
+   *   streaming service's CORS allow-list does not include that header.
+   * - It gives the SDK the HTTP status and headers of a failed streaming request. The SDK uses them
+   *   to handle the failure. For example, it reports a 401 or 403 response as an error, not as a
+   *   network failure. With the native EventSource, the SDK treats every streaming failure as a
+   *   network failure and retries.
+   * - It depends on `@launchdarkly/eventsource`, which is an optional dependency. If an install
+   *   omits optional dependencies, install that package directly.
+   *
    * @remarks
    * A factory should declare what its event sources support through the optional `capabilities`
    * property. The SDK only streams over POST (the FDv2 `usePost` option) or REPORT (the FDv1
