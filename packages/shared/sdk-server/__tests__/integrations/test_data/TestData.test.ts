@@ -251,6 +251,14 @@ describe('given a TestData instance', () => {
     const built = flag.build(1);
     expect(built.variations).toEqual(['potato']);
     expect(built.fallthrough.variation).toEqual(0);
+    expect(built.offVariation).toEqual(0);
+  });
+
+  it('sets the off variation to the value for all when targeting is off', () => {
+    const built = td.flag('test-flag').valueForAll('potato').on(false).build(1);
+    expect(built.on).toBe(false);
+    expect(built.variations).toEqual(['potato']);
+    expect(built.offVariation).toEqual(0);
   });
 
   it('can handle boolean values for *Variation setters', () => {
