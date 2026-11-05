@@ -23,6 +23,15 @@ const CAPABILITIES: EventSourceCapabilities = {
  * over REPORT. It requires `fetch()`, `AbortController` and a streaming `Response.body`, which all
  * current browsers provide.
  *
+ * It never sends the `x-launchdarkly-tags` header on the streaming request. The LaunchDarkly
+ * streaming service's CORS allow-list does not include that header, so a request with it cannot
+ * connect.
+ *
+ * It also gives the SDK the HTTP status and headers of a failed streaming request. The SDK uses
+ * them to handle the failure. For example, it reports a 401 or 403 response as an error, not as a
+ * network failure. The native browser EventSource does not expose them, so with it the SDK treats
+ * every streaming failure as a network failure and retries.
+ *
  * It is not the default. Pass it as the `eventSource` option to opt in:
  *
  * ```javascript
