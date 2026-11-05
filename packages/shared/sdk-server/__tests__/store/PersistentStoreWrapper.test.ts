@@ -34,7 +34,7 @@ class MockPersistentStore implements PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: SerializedItemDescriptor | undefined, err?: Error) => void,
   ): void {
     const itemsForKind = this.allData?.find((kvp) => kvp.key.namespace === kind.namespace)?.item;
     callback(itemsForKind?.find((kvp) => kvp.key === key)?.item ?? undefined);
@@ -381,6 +381,89 @@ describe.each(['caching', 'non-caching'])(
       // Should not be in the cache, so we should hit the store.
       expect(spy).toBeCalledTimes(1);
     });
+
+    itif(isCaching)(
+      'does not query the store again for a missing item until the cache expires',
+      async () => {
+        await asyncWrapper.init({});
+
+        const spy = jest.spyOn(mockPersistentStore, 'get');
+        // Ask twice for an item that is not in the store.
+        const value = await asyncWrapper.get(VersionedDataKinds.Features, 'missing');
+        const value2 = await asyncWrapper.get(VersionedDataKinds.Features, 'missing');
+        // Both report the item as missing, and only the first request reaches the store.
+        expect(value).toBeNull();
+        expect(value2).toBeNull();
+        expect(spy).toBeCalledTimes(1);
+      },
+    );
+
+    itif(isCaching)('returns an item upserted after a cached miss', async () => {
+      await asyncWrapper.init({});
+      await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+
+      // Write the item that was just reported as missing.
+      await asyncWrapper.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+      // The upsert replaces the cached miss.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toEqual({
+        key: 'key1',
+        version: 1,
+      });
+    });
+
+    itif(isCaching)('does not cache a miss read before a concurrent upsert', async () => {
+      await asyncWrapper.init({});
+      // Hold the store read for the item until an upsert of the item completes.
+      let finishRead: (() => void) | undefined;
+      jest.spyOn(mockPersistentStore, 'get').mockImplementationOnce((_kind, _key, readCallback) => {
+        finishRead = () => readCallback(undefined);
+      });
+      const lateRead = asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      await asyncWrapper.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+
+      // Complete the read, which saw the store before the upsert.
+      finishRead?.();
+      await lateRead;
+      // The upserted item stays in the cache.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toEqual({
+        key: 'key1',
+        version: 1,
+      });
+    });
+
+    itif(isCaching)('reads the store again after a failed read', async () => {
+      await asyncWrapper.init({});
+      const read = jest
+        .spyOn(mockPersistentStore, 'get')
+        .mockImplementationOnce((_kind, _key, readCallback) =>
+          readCallback(undefined, new Error('store is down')),
+        );
+
+      // Fail the first read of an item, then ask for the item again.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toBeNull();
+      await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      // The failed read was not cached as a missing item.
+      expect(read).toBeCalledTimes(2);
+    });
+
+    itif(isCaching)(
+      'caches a delete that the store reports without a serialized item',
+      async () => {
+        await asyncWrapper.init({ features: { key1: { key: 'key1', version: 1 } } });
+        // The store reports the deleted item by its version and deletion state only.
+        jest
+          .spyOn(mockPersistentStore, 'upsert')
+          .mockImplementationOnce((_kind, _key, descriptor, upsertCallback) =>
+            upsertCallback(undefined, { version: descriptor.version, deleted: true }),
+          );
+
+        // Delete the item, then get it.
+        await asyncWrapper.delete(VersionedDataKinds.Features, 'key1', 2);
+        const value = await asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+        // The cached item is the deleted one, not the item from init.
+        expect(value).toBeNull();
+      },
+    );
 
     it('it can delete an item', async () => {
       await asyncWrapper.init({
