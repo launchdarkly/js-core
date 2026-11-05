@@ -1,9 +1,15 @@
 import common from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import resolve from '@rollup/plugin-node-resolve';
+import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 
 // This library is not minified as the final SDK package is responsible for minification.
+
+// Remove comments from the JavaScript output only. Do not use the TypeScript removeComments
+// option. It also removes the JSDoc comments from the declaration files.
+const stripComments = () =>
+  terser({ compress: false, mangle: false, format: { comments: false, beautify: true } });
 
 const getSharedConfig = (format, file) => ({
   input: 'src/index.ts',
@@ -34,6 +40,7 @@ export default [
       }),
       resolve(),
       json(),
+      stripComments(),
     ],
   },
   {
@@ -43,6 +50,7 @@ export default [
       common(),
       resolve(),
       json(),
+      stripComments(),
     ],
   },
 ];
