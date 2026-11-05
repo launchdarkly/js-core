@@ -128,18 +128,19 @@ export default class RedisCore implements interfaces.PersistentDataStore {
   get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined, err?: Error) => void,
   ): void {
     if (!this._state.isConnected() && !this._state.isInitialConnection()) {
       this._logger?.warn(`Attempted to fetch key '${key}' while Redis connection is down`);
-      callback(undefined);
+      // Pass the error, so that the SDK does not cache the failed read as a missing item.
+      callback(undefined, new Error('Redis connection is down'));
       return;
     }
 
     this._state.getClient().hget(this._state.prefixedKey(kind.namespace), key, (err, val) => {
       if (err) {
         this._logger?.error(`Error fetching key '${key}' from Redis in '${kind.namespace}' ${err}`);
-        callback(undefined);
+        callback(undefined, err);
       } else if (val) {
         // When getting we do not populate version and deleted.
         // The SDK will have to deserialize to access these values.

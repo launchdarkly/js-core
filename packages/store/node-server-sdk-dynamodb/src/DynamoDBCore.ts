@@ -255,9 +255,10 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
   async get(
     kind: interfaces.PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: interfaces.SerializedItemDescriptor | undefined, err?: Error) => void,
   ) {
     let descriptor: interfaces.SerializedItemDescriptor | undefined;
+    let readError: Error | undefined;
     try {
       const read = await this._state.get(this._tableName, {
         namespace: stringValue(this._state.prefixedKey(kind.namespace)),
@@ -268,9 +269,11 @@ export default class DynamoDBCore implements interfaces.PersistentDataStore {
       }
     } catch (error) {
       this._logger?.error(`Error reading ${kind.namespace}:${key}: ${error}`);
+      // Pass the error, so that the SDK does not cache the failed read as a missing item.
+      readError = error instanceof Error ? error : new Error(String(error));
     }
     // Callback outside the try. In case it raised an exception.
-    callback(descriptor);
+    callback(descriptor, readError);
   }
 
   async getAll(

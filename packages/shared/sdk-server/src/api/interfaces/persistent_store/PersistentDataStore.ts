@@ -66,6 +66,10 @@ export default interface PersistentDataStore {
    * the exact string that was persisted, and can leave the other properties as zero/false. See
    * comments on {@link PersistentDataStore} for more about this.
    *
+   * If the store cannot be read, the callback should be invoked with undefined and the error.
+   * The SDK caches a missing item until the cache TTL expires, but it does not cache a failed
+   * read. A store that does not pass the error has its failed reads cached as missing items.
+   *
    * @param kind specifies which collection to use
    * @param key the unique key of the item within that collection
    * @param callback a callback which will be invoked on completion of the get
@@ -73,7 +77,7 @@ export default interface PersistentDataStore {
   get(
     kind: PersistentStoreDataKind,
     key: string,
-    callback: (descriptor: SerializedItemDescriptor | undefined) => void,
+    callback: (descriptor: SerializedItemDescriptor | undefined, err?: Error) => void,
   ): void;
 
   /**
