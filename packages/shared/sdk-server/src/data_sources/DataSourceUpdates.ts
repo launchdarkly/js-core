@@ -98,7 +98,12 @@ export default class DataSourceUpdates implements LDDataSourceUpdates {
               Object.keys(allData).forEach((namespace) => {
                 const oldDataForKind = oldData?.[namespace] || {};
                 const newDataForKind = allData[namespace];
-                const mergedData = { ...oldDataForKind, ...newDataForKind };
+                // A null-prototype copy, so that a flag key such as __proto__ is an ordinary key.
+                const mergedData = Object.assign(
+                  Object.create(null),
+                  oldDataForKind,
+                  newDataForKind,
+                );
                 Object.keys(mergedData).forEach((key) => {
                   this.addIfModified(
                     namespace,

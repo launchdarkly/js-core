@@ -188,7 +188,9 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
               const items = allData[kindNamespace];
               // The all-items cache backs all(), which never returns tombstones, so it
               // must be populated with the same filtering the cache-miss path applies.
-              const filteredItems: LDFeatureStoreKindData = {};
+              // The object has no prototype, so that a flag key such as __proto__ is an
+              // ordinary key.
+              const filteredItems: LDFeatureStoreKindData = Object.create(null);
               Object.keys(items).forEach((key) => {
                 const itemForKey = items[key];
 
@@ -280,7 +282,8 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
         return;
       }
 
-      const filteredItems: LDFeatureStoreKindData = {};
+      // A null-prototype object, so that a flag key such as __proto__ is an ordinary key.
+      const filteredItems: LDFeatureStoreKindData = Object.create(null);
       storeItems.forEach(({ key, item }) => {
         const deserializedItem = deserialize(persistKind, item);
         const filteredItem = itemIfNotDeleted(deserializedItem);

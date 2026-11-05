@@ -74,7 +74,7 @@ export interface MergeResult {
 export function mergeDocuments(
   policy: FileDataPolicy,
   documents: FileDataDocument[],
-  previousFlags: Record<string, Flag> = {},
+  previousFlags: Record<string, Flag> = Object.create(null),
 ): MergeResult {
   const flags: KeyedItem<Flag>[] = [];
   const segments: KeyedItem<Segment>[] = [];
