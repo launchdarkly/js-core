@@ -1,6 +1,20 @@
+import EdgeCrypto from '../../../src/platform/crypto';
 import CryptoJSHasher from '../../../src/platform/crypto/cryptoJSHasher';
 import CryptoJSHmac from '../../../src/platform/crypto/cryptoJSHmac';
 import { SupportedHashAlgorithm } from '../../../src/platform/crypto/types';
+
+jest.mock('crypto', () => ({
+  crypto: {
+    getRandomValues: jest.fn((array: Uint32Array) => {
+      array[0] = 42;
+      return array;
+    }),
+  },
+}));
+
+it('uses the Akamai crypto export to generate a random identifier', () => {
+  expect(new EdgeCrypto().randomUUID()).toBe('42');
+});
 
 const vectors = [
   {

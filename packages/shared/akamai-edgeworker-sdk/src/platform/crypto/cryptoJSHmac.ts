@@ -1,8 +1,8 @@
-import CryptoJS from 'crypto-js/core';
-import 'crypto-js/sha1';
-import 'crypto-js/sha256';
-import 'crypto-js/hmac';
-import 'crypto-js/enc-base64';
+import CryptoJS from 'crypto-js/core.js';
+import 'crypto-js/sha1.js';
+import 'crypto-js/sha256.js';
+import 'crypto-js/hmac.js';
+import 'crypto-js/enc-base64.js';
 
 import { Hmac as LDHmac } from '@launchdarkly/js-server-sdk-common';
 
