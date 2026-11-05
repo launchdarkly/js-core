@@ -261,6 +261,7 @@ it('allows references in different branches', () => {
 
 it('falls back to user kind when kind is not a string and does not leak the invalid value', () => {
   const logger = new TestLogger();
+  const errorSpy = jest.spyOn(logger, 'error');
   expect(
     translateContext(logger, { targetingKey: 'the-key', kind: 42 as unknown as string }),
   ).toEqual({
@@ -268,6 +269,7 @@ it('falls back to user kind when kind is not a string and does not leak the inva
     kind: 'user',
   });
   expect(logger.logs).toEqual(["Specified 'kind' of context was not a string."]);
+  expect(errorSpy).toHaveBeenCalledWith("Specified 'kind' of context was not a string.");
 });
 
 it('preserves other attributes when kind is non-string', () => {
@@ -359,8 +361,9 @@ it('ignores a non-string targetingKey within a multi-context', () => {
   expect(logger.logs.length).toEqual(0);
 });
 
-it('logs an error and skips null sub-contexts in a multi-context without crashing', () => {
+it('logs a warning and skips null sub-contexts in a multi-context without crashing', () => {
   const logger = new TestLogger();
+  const warnSpy = jest.spyOn(logger, 'warn');
   expect(
     translateContext(logger, {
       kind: 'multi',
@@ -374,4 +377,7 @@ it('logs an error and skips null sub-contexts in a multi-context without crashin
   expect(logger.logs).toEqual([
     'Top level attributes in a multi-kind context should be Structure types.',
   ]);
+  expect(warnSpy).toHaveBeenCalledWith(
+    'Top level attributes in a multi-kind context should be Structure types.',
+  );
 });
