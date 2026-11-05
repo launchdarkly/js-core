@@ -411,6 +411,26 @@ describe.each(['caching', 'non-caching'])(
       });
     });
 
+    itif(isCaching)('does not cache a miss read before a concurrent upsert', async () => {
+      await asyncWrapper.init({});
+      // Hold the store read for the item until an upsert of the item completes.
+      let finishRead: (() => void) | undefined;
+      jest.spyOn(mockPersistentStore, 'get').mockImplementationOnce((_kind, _key, readCallback) => {
+        finishRead = () => readCallback(undefined);
+      });
+      const lateRead = asyncWrapper.get(VersionedDataKinds.Features, 'key1');
+      await asyncWrapper.upsert(VersionedDataKinds.Features, { key: 'key1', version: 1 });
+
+      // Complete the read, which saw the store before the upsert.
+      finishRead?.();
+      await lateRead;
+      // The upserted item stays in the cache.
+      expect(await asyncWrapper.get(VersionedDataKinds.Features, 'key1')).toEqual({
+        key: 'key1',
+        version: 1,
+      });
+    });
+
     it('it can delete an item', async () => {
       await asyncWrapper.init({
         features: {
