@@ -349,12 +349,16 @@ export async function makeSdkConfig(
 
     // FDv1Fallback configures the SDK's FDv1 Fallback Synchronizer -- engaged only in
     // response to a server-directed FDv1 Fallback Directive, separate from the FDv2
-    // Primary/Fallback synchronizer chain configured above.
+    // Primary/Fallback synchronizer chain configured above. The SDK adds a default FDv1
+    // fallback when the option is left out, so a harness config without one is passed
+    // as null to configure no FDv1 fallback.
     if (options.dataSystem.fdv1Fallback) {
       cf.dataSystem.fdv1Fallback = {
         baseUri: options.dataSystem.fdv1Fallback.baseUri,
         pollInterval: maybeTime(options.dataSystem.fdv1Fallback.pollIntervalMs),
       };
+    } else {
+      cf.dataSystem.fdv1Fallback = null;
     }
   } else {
     // The v2 harness sends the persistence config at the top level of the SDK
