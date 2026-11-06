@@ -26,8 +26,8 @@ export interface ChangeSetResult {
   freshness?: number;
   /**
    * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
-   * attempting FDv2 recovery. Always set by the source that read the directive:
-   * an absent, unparseable, or out-of-range server TTL is replaced with the
+   * attempting FDv2 recovery. Always set by the source that read the directive.
+   * An absent, unparseable, or out-of-range server TTL is replaced with the
    * jittered default, so fallback is never indefinite.
    */
   fdv1FallbackTtlMs?: number;
@@ -44,8 +44,8 @@ export interface StatusResult {
   fdv1Fallback: boolean;
   /**
    * When `fdv1Fallback` is true, how long (ms) to remain on FDv1 before
-   * attempting FDv2 recovery. Always set by the source that read the directive:
-   * an absent, unparseable, or out-of-range server TTL is replaced with the
+   * attempting FDv2 recovery. Always set by the source that read the directive.
+   * An absent, unparseable, or out-of-range server TTL is replaced with the
    * jittered default, so fallback is never indefinite.
    */
   fdv1FallbackTtlMs?: number;

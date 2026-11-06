@@ -12,8 +12,9 @@ const DEFAULT_TTL_JITTER_RATIO = 0.5;
  * Normalizes a fallback TTL expressed in seconds into milliseconds.
  *
  * A TTL is only honored when it falls in the range `(0, 1 hour]`. Fractions
- * of a second are dropped from an honored TTL, but the range check uses the
- * value as given, so a TTL a fraction over one hour is out of range. An absent,
+ * of a second are dropped, so a TTL under one second counts as zero. The upper
+ * bound applies to the value as given, so a TTL a fraction over one hour is
+ * out of range. An absent,
  * unparseable, zero, negative, or too-large TTL is replaced with the default
  * of 1 hour, minus a jitter value drawn uniformly from `[0, half the default]`
  * so that a fleet of SDKs that fell back together does not retry FDv2 in
@@ -48,7 +49,7 @@ export function resolveFallbackTtlMs(
  * server asked the SDK to fall back to FDv1.
  *
  * `fdv1FallbackTtlMs` is how long to remain on FDv1 before retrying FDv2. It is
- * always set when `fdv1Fallback` is true: a missing, unparseable, or
+ * always set when `fdv1Fallback` is true. A missing, unparseable, or
  * out-of-range TTL is replaced with the jittered default, so fallback is never
  * indefinite.
  *

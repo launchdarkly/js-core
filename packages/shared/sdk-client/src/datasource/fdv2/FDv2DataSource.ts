@@ -109,7 +109,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   );
 
   // Deadline for returning to FDv2 after the server directed a fallback to
-  // FDv1. It outlives individual synchronizer runs: it is armed while an FDv2
+  // FDv1. It outlives individual synchronizer runs. It is armed while an FDv2
   // source is active and must survive the switch to the fallback synchronizer.
   const recoveryTimer = createFDv2RecoveryTimer();
 
@@ -139,9 +139,9 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
   }
 
   /**
-   * Arms the deadline for returning to FDv2 and reports it. A directive whose
-   * TTL did not survive parsing falls back to the jittered default, so there is
-   * always a concrete deadline.
+   * Arms the deadline for returning to FDv2 and reports it. Every source
+   * resolves the TTL before it reports a directive. The default here only
+   * covers a result built without one.
    */
   function scheduleFdv2Recovery(result: FDv2SourceResult) {
     const ttlMs = result.fdv1FallbackTtlMs ?? internal.resolveFallbackTtlMs(undefined);
@@ -173,13 +173,13 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
 
     // Every directive arms the deadline. A directive from an FDv2 source
-    // halts that source below, so the same source cannot re-arm it again. A
-    // directive carried by the FDv1 fallback synchronizer's own response
-    // supersedes the pending deadline with its fresh TTL.
+    // halts that source below, so the same source cannot arm it again.
     scheduleFdv2Recovery(result);
 
-    // Guard: if the FDv1 fallback synchronizer itself produces this result,
-    // do not re-run the fallback machinery - we are already on FDv1.
+    // Defensive. The FDv1 fallback synchronizer does not read the directive
+    // today. If it ever does, its own result must not re-run the fallback
+    // machinery, because the SDK is already on FDv1. Its TTL still re-arms
+    // the deadline above.
     if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
       return false;
     }
@@ -301,8 +301,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       const synchronizer = sourceManager.getNextAvailableSynchronizerAndSetActive();
       if (synchronizer === undefined) {
         // Every slot is currently blocked. If a recovery deadline is still
-        // armed and there is at least one synchronizer slot for it to
-        // unblock, don't hold up this attempt on it -- settle it now, and
+        // armed, don't hold up this attempt on it -- settle it now, and
         // arm a background continuation that takes over responsibility for
         // `recoveryTimer`, restarting FDv2 on its own once the deadline
         // elapses. The returned boolean tells every caller (this call's
@@ -310,7 +309,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         // it can close the timer itself or whether responsibility has been
         // handed off elsewhere.
         const pendingDeadline = recoveryTimer.promise;
-        const handingOff = pendingDeadline !== undefined && synchronizerSlots.length > 0;
+        const handingOff = pendingDeadline !== undefined;
         if (handingOff) {
           pendingDeadline
             .then(() => {
@@ -366,8 +365,8 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
               conditions.promise.then((value) => ({ source: 'condition' as const, value })),
             );
           }
-          // Read the deadline fresh each iteration: it is armed part-way
-          // through the loop, when a directive arrives.
+          // Read the deadline fresh each iteration. A promise captured before a
+          // later schedule or clear never settles.
           const recoveryPromise = recoveryTimer.promise;
           if (recoveryPromise !== undefined) {
             racers.push(recoveryPromise.then(() => ({ source: 'fdv2Recovery' as const })));
@@ -380,10 +379,9 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           }
 
           if (winner.source === 'fdv2Recovery') {
-            // Unblocks the FDv2 slots, blocks the FDv1 fallback slot and rewinds
-            // to the primary. The outer loop then starts the primary FDv2
-            // synchronizer, which closes the fallback synchronizer first, so
-            // only ever one source writes to the store.
+            // The outer loop then starts the primary FDv2 synchronizer. The
+            // source manager closes the fallback synchronizer first, so only
+            // one source ever writes to the store.
             applyFdv2Recovery();
             synchronizerRunning = false;
           } else if (winner.source === 'condition') {
