@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsup",
+    "build": "rm -rf dist && tsup",
     "test": "npx jest --ci",
     "lint": "oxlint .",
     "format": "oxfmt .",
