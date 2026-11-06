@@ -15,7 +15,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">LDFlagsState</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#valid">valid</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#allvalues-1">allValues</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="LDFlagSet.html" class="tsd-signature-type tsd-kind-interface">LDFlagSet</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#getflagreason-1">getFlagReason</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="LDEvaluationReason.html" class="tsd-signature-type tsd-kind-interface">LDEvaluationReason</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#getflagvalue-1">getFlagValue</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#tojson-1">toJSON</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:485</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:489</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -43,7 +43,7 @@ state could not be computed (for instance, because the client was offline or the
 was no user).</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:491</li></ul></aside></section></section></details>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:495</li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -60,7 +60,7 @@ JavaScript client. Instead, use <a href="#tojson" class="tsd-kind-method">toJSON
 </div>
 <h4 class="tsd-returns-title">Returns <a href="LDFlagSet.html" class="tsd-signature-type tsd-kind-interface">LDFlagSet</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:515</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:519</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="getflagreason"><span>get<wbr/>Flag<wbr/>Reason</span><a href="#getflagreason" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -78,7 +78,7 @@ It will be null if reasons were not recorded, or if there was no such flag.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="LDEvaluationReason.html" class="tsd-signature-type tsd-kind-interface">LDEvaluationReason</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:507</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:511</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="getflagvalue"><span>get<wbr/>Flag<wbr/>Value</span><a href="#getflagvalue" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -96,7 +96,7 @@ It will be null if the flag returned the default value, or if there was no such 
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:499</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:503</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="tojson"><span>to<wbr/>JSON</span><a href="#tojson" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -111,7 +111,7 @@ the needs of the JavaScript client.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">object</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:524</li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:528</li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

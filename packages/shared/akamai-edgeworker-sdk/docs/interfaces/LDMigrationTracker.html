@@ -15,7 +15,7 @@
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">LDMigrationTracker</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-call-signature" href="#consistency-1">consistency</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">check</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#createevent-1">createEvent</a><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="LDMigrationOpEvent.html" class="tsd-signature-type tsd-kind-interface">LDMigrationOpEvent</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#error-1">error</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">origin</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDMigrationOrigin.html" class="tsd-signature-type tsd-kind-type-alias">LDMigrationOrigin</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#invoked-1">invoked</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">origin</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDMigrationOrigin.html" class="tsd-signature-type tsd-kind-type-alias">LDMigrationOrigin</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#latency-1">latency</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">origin</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDMigrationOrigin.html" class="tsd-signature-type tsd-kind-type-alias">LDMigrationOrigin</a><span class="tsd-signature-symbol">,</span> <span class="tsd-kind-parameter">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#op-1">op</a><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">op</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDMigrationOp.html" class="tsd-signature-type tsd-kind-type-alias">LDMigrationOp</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:708</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:712</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -59,7 +59,7 @@ migration options, but instead should be a parameter-less function that calls th
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:739</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:743</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="createevent"><span>create<wbr/>Event</span><a href="#createevent" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -71,7 +71,7 @@ operation, then undefined is returned.</p>
 </div>
 <h4 class="tsd-returns-title">Returns <a href="LDMigrationOpEvent.html" class="tsd-signature-type tsd-kind-interface">LDMigrationOpEvent</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:760</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:764</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="error"><span>error</span><a href="#error" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -88,7 +88,7 @@ operation, then undefined is returned.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:720</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:724</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="invoked"><span>invoked</span><a href="#invoked" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -108,7 +108,7 @@ for more accurate analytics.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:748</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:752</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="latency"><span>latency</span><a href="#latency" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -128,7 +128,7 @@ for more accurate analytics.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:755</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:759</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="op"><span>op</span><a href="#op" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
@@ -145,7 +145,7 @@ for more accurate analytics.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:714</li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:718</li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
