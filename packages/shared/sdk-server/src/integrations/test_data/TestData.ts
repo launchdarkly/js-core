@@ -43,13 +43,15 @@ import TestDataSource from './TestDataSource';
  * any changes made to the data will propagate to all of the `LDClient`s.
  */
 export default class TestData {
-  private _currentFlags: Record<string, Flag> = {};
+  // These objects have no prototype, so that a key such as constructor or __proto__ is an
+  // ordinary key and not a built-in object member.
+  private _currentFlags: Record<string, Flag> = Object.create(null);
 
-  private _currentSegments: Record<string, Segment> = {};
+  private _currentSegments: Record<string, Segment> = Object.create(null);
 
   private _dataSources: TestDataSource[] = [];
 
-  private _flagBuilders: Record<string, TestDataFlagBuilder> = {};
+  private _flagBuilders: Record<string, TestDataFlagBuilder> = Object.create(null);
 
   /**
    * Get a factory for update processors that will be attached to this TestData instance.
