@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.4.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.4.6...node-server-sdk-redis-v4.4.7) (2026-11-06)
+
+
+### Bug Fixes
+
+* Avoid querying a persistent store on every evaluation of an unknown flag ([#2169](https://github.com/launchdarkly/js-core/issues/2169)) ([da1cd35](https://github.com/launchdarkly/js-core/commit/da1cd35d196cafa2b29925aa65306ccc2201e865))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.16.3 to 9.16.4
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.16.4
+
 ## [4.4.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.4.5...node-server-sdk-redis-v4.4.6) (2026-11-04)
 
 

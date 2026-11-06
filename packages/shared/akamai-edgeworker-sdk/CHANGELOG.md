@@ -86,6 +86,20 @@ All notable changes to the LaunchDarkly SDK for Akamai Workers will be documente
   * dependencies
     * @launchdarkly/js-server-sdk-common bumped from ^2.2.1 to ^2.2.2
 
+## [2.0.49](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.48...akamai-edgeworker-sdk-common-v2.0.49) (2026-11-06)
+
+
+### Bug Fixes
+
+* **akamai-edgeworker-sdk:** reduce bundles with dual ESM and CJS output ([#2171](https://github.com/launchdarkly/js-core/issues/2171)) ([1504e6c](https://github.com/launchdarkly/js-core/commit/1504e6ccfc96c4821aa440200029889f32639f87))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.26.3 to ^2.26.4
+
 ## [2.0.48](https://github.com/launchdarkly/js-core/compare/akamai-edgeworker-sdk-common-v2.0.47...akamai-edgeworker-sdk-common-v2.0.48) (2026-11-04)
 
 

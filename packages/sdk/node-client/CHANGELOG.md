@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.4.3](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.4.2...node-client-sdk-v4.4.3) (2026-11-06)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/eventsource bumped from 0.2.3 to 0.2.4
+    * @launchdarkly/js-client-sdk-common bumped from 1.35.1 to 1.35.2
+
 ## [4.4.2](https://github.com/launchdarkly/js-core/compare/node-client-sdk-v4.4.1...node-client-sdk-v4.4.2) (2026-11-04)
 
 
