@@ -1,4 +1,9 @@
-import { readFallbackDirective, readGoodbyeFallbackDirective } from './fallbackDirective';
+import {
+  DEFAULT_FDV1_FALLBACK_TTL_MS,
+  readFallbackDirective,
+  readGoodbyeFallbackDirective,
+  resolveFallbackTtlMs,
+} from './fallbackDirective';
 import type { FallbackDirective } from './fallbackDirective';
 import { fdv1PayloadAdaptor as FDv1PayloadAdaptor } from './FDv1PayloadAdaptor';
 import { PayloadProcessor } from './payloadProcessor';
@@ -19,11 +24,13 @@ import type {
 
 export {
   createProtocolHandler,
+  DEFAULT_FDV1_FALLBACK_TTL_MS,
   FDv1PayloadAdaptor,
   PayloadProcessor,
   PayloadStreamReader,
   readFallbackDirective,
   readGoodbyeFallbackDirective,
+  resolveFallbackTtlMs,
 };
 
 export type {

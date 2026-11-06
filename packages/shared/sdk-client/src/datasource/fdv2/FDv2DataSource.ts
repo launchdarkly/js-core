@@ -8,6 +8,7 @@ import {
   DEFAULT_RECOVERY_TIMEOUT_MS,
   getConditions,
 } from './Conditions';
+import { createFDv2RecoveryTimer } from './FDv2RecoveryTimer';
 import { ChangeSetResult, FDv2SourceResult, StatusResult } from './FDv2SourceResult';
 import { createSourceManager, InitializerFactory, SynchronizerSlot } from './SourceManager';
 
@@ -68,7 +69,8 @@ export interface FDv2DataSource {
 
 type RaceResult =
   | { source: 'sync'; value: FDv2SourceResult }
-  | { source: 'condition'; value: ConditionType };
+  | { source: 'condition'; value: ConditionType }
+  | { source: 'fdv2Recovery' };
 
 /**
  * Creates an {@link FDv2DataSource} orchestrator.
@@ -106,6 +108,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     selectorGetter,
   );
 
+  // Deadline for returning to FDv2 after the server directed a fallback to
+  // FDv1. It outlives individual synchronizer runs. It is armed while an FDv2
+  // source is active and must survive the switch to the fallback synchronizer.
+  const recoveryTimer = createFDv2RecoveryTimer();
+
   function markInitialized() {
     if (!initialized) {
       initialized = true;
@@ -131,17 +138,64 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
   }
 
+  /**
+   * Arms the deadline for returning to FDv2 and reports it. Every source
+   * resolves the TTL before it reports a directive. The default here only
+   * covers a result built without one.
+   */
+  function scheduleFdv2Recovery(result: FDv2SourceResult) {
+    const ttlMs = result.fdv1FallbackTtlMs ?? internal.resolveFallbackTtlMs(undefined);
+    recoveryTimer.schedule(ttlMs);
+    logger?.info(`FDv2 retry scheduled in ${Math.round(ttlMs / 1000)}s.`);
+  }
+
+  /**
+   * Clears the recovery deadline and restarts FDv2. Only one caller ever
+   * observes a given deadline elapse -- the main synchronizer loop and a
+   * background continuation are never both live for the same deadline at
+   * once -- so this never double-applies.
+   */
+  function applyFdv2Recovery() {
+    recoveryTimer.clear();
+    logger?.info('Fallback TTL elapsed, restarting FDv2 data sources.');
+    sourceManager.fdv2Recovery();
+  }
+
   function handleFdv1Fallback(result: FDv2SourceResult): boolean {
-    // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
-    // fdv1Fallback, do not re-run the fallback machinery - we are already on FDv1.
+    if (!result.fdv1Fallback) {
+      return false;
+    }
+
+    // With no synchronizers configured at all (e.g. one-shot mode), there
+    // is nothing to halt or recover to -- keep trying other initializers.
+    if (synchronizerSlots.length === 0) {
+      return false;
+    }
+
+    // Every directive arms the deadline. A directive from an FDv2 source
+    // halts that source below, so the same source cannot arm it again.
+    scheduleFdv2Recovery(result);
+
+    // Defensive. The FDv1 fallback synchronizer does not read the directive
+    // today. If it ever does, its own result must not re-run the fallback
+    // machinery, because the SDK is already on FDv1. Its TTL still re-arms
+    // the deadline above.
     if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
       return false;
     }
-    if (result.fdv1Fallback && sourceManager.hasFDv1Fallback()) {
-      sourceManager.fdv1Fallback();
-      return true;
+
+    if (!sourceManager.hasFDv1Fallback()) {
+      // No FDv1 fallback synchronizer is configured, so no synchronizer runs
+      // while the recovery deadline is pending. The status manager reports
+      // this as INITIALIZING until the status has left that state once.
+      statusManager.requestStateUpdate('INTERRUPTED');
     }
-    return false;
+
+    // Halts the current run. With an FDv1 fallback configured it becomes
+    // the sole active source. Without one, every FDv2 slot is blocked and
+    // the orchestrator runs no synchronizer until recovery.
+    sourceManager.fdv1Fallback();
+    return true;
   }
 
   // The orchestration loops intentionally use await-in-loop for sequential
@@ -237,16 +291,53 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     }
   }
 
-  async function runSynchronizers(): Promise<void> {
+  /**
+   * @returns `true` if a background continuation has taken over
+   *   responsibility for `recoveryTimer` -- the caller must then leave it
+   *   alone rather than closing it.
+   */
+  async function runSynchronizers(): Promise<boolean> {
     while (!closed) {
       const synchronizer = sourceManager.getNextAvailableSynchronizerAndSetActive();
       if (synchronizer === undefined) {
+        // Every slot is currently blocked. If a recovery deadline is still
+        // armed, don't hold up this attempt on it -- settle it now, and
+        // arm a background continuation that takes over responsibility for
+        // `recoveryTimer`, restarting FDv2 on its own once the deadline
+        // elapses. The returned boolean tells every caller (this call's
+        // caller, and the continuation's own recursive call below) whether
+        // it can close the timer itself or whether responsibility has been
+        // handed off elsewhere.
+        const pendingDeadline = recoveryTimer.promise;
+        const handingOff = pendingDeadline !== undefined;
+        if (handingOff) {
+          pendingDeadline
+            .then(() => {
+              if (closed) {
+                return;
+              }
+              applyFdv2Recovery();
+              void runSynchronizers()
+                .then((handedOff) => {
+                  if (!handedOff) {
+                    recoveryTimer.close();
+                  }
+                })
+                .catch((err) => {
+                  logger?.error(`Orchestration error during recovery: ${err}`);
+                  recoveryTimer.close();
+                });
+            })
+            .catch((err) => {
+              logger?.error(`Error during background FDv2 recovery: ${err}`);
+            });
+        }
         if (!initialized) {
           initReject?.(new Error('All data sources exhausted without receiving data.'));
           initResolve = undefined;
           initReject = undefined;
         }
-        return;
+        return handingOff;
       }
 
       const conditions: ConditionGroup = getConditions(
@@ -274,14 +365,26 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
               conditions.promise.then((value) => ({ source: 'condition' as const, value })),
             );
           }
+          // Read the deadline fresh each iteration. A promise captured before a
+          // later schedule or clear never settles.
+          const recoveryPromise = recoveryTimer.promise;
+          if (recoveryPromise !== undefined) {
+            racers.push(recoveryPromise.then(() => ({ source: 'fdv2Recovery' as const })));
+          }
 
           // eslint-disable-next-line no-await-in-loop
           const winner = await Promise.race(racers);
           if (closed) {
-            return;
+            return false;
           }
 
-          if (winner.source === 'condition') {
+          if (winner.source === 'fdv2Recovery') {
+            // The outer loop then starts the primary FDv2 synchronizer. The
+            // source manager closes the fallback synchronizer first, so only
+            // one source ever writes to the store.
+            applyFdv2Recovery();
+            synchronizerRunning = false;
+          } else if (winner.source === 'condition') {
             const conditionType = winner.value as ConditionType;
 
             if (conditionType === 'fallback') {
@@ -319,7 +422,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
                   synchronizerRunning = false;
                   break;
                 case 'shutdown':
-                  return;
+                  return false;
                 case 'goodbye':
                   // The synchronizer will handle reconnection internally.
                   break;
@@ -338,6 +441,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         conditions.close();
       }
     }
+    return false;
   }
 
   async function runOrchestration(): Promise<void> {
@@ -349,9 +453,22 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return;
     }
 
-    await runInitializers();
-    if (!closed) {
-      await runSynchronizers();
+    let handedOff = false;
+    try {
+      await runInitializers();
+      if (!closed) {
+        handedOff = await runSynchronizers();
+      }
+    } finally {
+      // The deadline can be armed from either phase (an initializer or a
+      // synchronizer observing a directive), so it is released here once
+      // orchestration is done for good, whether by normal completion or by
+      // throw, unless a background continuation (armed when every slot was
+      // blocked but a deadline was still pending) has taken over
+      // responsibility for it and will restart FDv2 later.
+      if (!handedOff) {
+        recoveryTimer.close();
+      }
     }
   }
 
@@ -388,6 +505,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
 
     close() {
       closed = true;
+      recoveryTimer.close();
       sourceManager.close();
     },
   };
