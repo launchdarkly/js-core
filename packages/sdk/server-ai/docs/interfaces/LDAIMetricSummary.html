@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDAIMetricSummary | @launchdarkly/server-sdk-ai - v2.0.19</title><meta name="description" content="Documentation for @launchdarkly/server-sdk-ai"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/server-sdk-ai - v2.0.19</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDAIMetricSummary | @launchdarkly/server-sdk-ai - v2.0.20</title><meta name="description" content="Documentation for @launchdarkly/server-sdk-ai"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/server-sdk-ai - v2.0.20</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -16,7 +16,7 @@ Provides a flat view of the key metrics for the completed operation.</p>
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">LDAIMetricSummary</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#durationms">durationMs</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#feedback">feedback</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">kind</span><span class="tsd-signature-symbol">:</span> <a href="../enums/LDFeedbackKind.html" class="tsd-signature-type tsd-kind-enum">LDFeedbackKind</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#resumptiontoken">resumptionToken</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#success">success</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#timetofirsttokenms">timeToFirstTokenMs</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#tokens">tokens</a><span class="tsd-signature-symbol">?:</span> <a href="LDTokenUsage.html" class="tsd-signature-type tsd-kind-interface">LDTokenUsage</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#toolcalls">toolCalls</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L9">api/model/types.ts:9</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L9">api/model/types.ts:9</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -41,49 +41,49 @@ Provides a flat view of the key metrics for the completed operation.</p>
 <div class="tsd-comment tsd-typography"><p>Duration of the operation in milliseconds, if tracked.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L28">api/model/types.ts:28</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L28">api/model/types.ts:28</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="feedback"><code class="tsd-tag">Optional</code><span>feedback</span><a href="#feedback" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">feedback</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">kind</span><span class="tsd-signature-symbol">:</span> <a href="../enums/LDFeedbackKind.html" class="tsd-signature-type tsd-kind-enum">LDFeedbackKind</a> <span class="tsd-signature-symbol">}</span></div>
 <div class="tsd-comment tsd-typography"><p>User feedback sentiment for this generation, if provided.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L38">api/model/types.ts:38</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L38">api/model/types.ts:38</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="resumptiontoken"><code class="tsd-tag">Optional</code><span>resumption<wbr/>Token</span><a href="#resumptiontoken" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">resumptionToken</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span></div>
 <div class="tsd-comment tsd-typography"><p>Resumption token for deferred feedback association.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L43">api/model/types.ts:43</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L43">api/model/types.ts:43</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="success"><code class="tsd-tag">Optional</code><span>success</span><a href="#success" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">success</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
 <div class="tsd-comment tsd-typography"><p>Whether the AI operation was successful.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L13">api/model/types.ts:13</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L13">api/model/types.ts:13</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="timetofirsttokenms"><code class="tsd-tag">Optional</code><span>time<wbr/>To<wbr/>First<wbr/>Token<wbr/>Ms</span><a href="#timetofirsttokenms" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">timeToFirstTokenMs</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">number</span></div>
 <div class="tsd-comment tsd-typography"><p>Time to first token in milliseconds, if tracked.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L33">api/model/types.ts:33</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L33">api/model/types.ts:33</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="tokens"><code class="tsd-tag">Optional</code><span>tokens</span><a href="#tokens" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">tokens</span><span class="tsd-signature-symbol">?:</span> <a href="LDTokenUsage.html" class="tsd-signature-type tsd-kind-interface">LDTokenUsage</a></div>
 <div class="tsd-comment tsd-typography"><p>Token usage information, if available.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L18">api/model/types.ts:18</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L18">api/model/types.ts:18</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="toolcalls"><code class="tsd-tag">Optional</code><span>tool<wbr/>Calls</span><a href="#toolcalls" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">toolCalls</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></div>
 <div class="tsd-comment tsd-typography"><p>List of tool call identifiers made during the operation, if any.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/449d763101101e9181bcca50886319492647a2a5/packages/sdk/server-ai/src/api/model/types.ts#L23">api/model/types.ts:23</a></li></ul></aside></section></section></details></div>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/model/types.ts#L23">api/model/types.ts:23</a></li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -102,7 +102,7 @@ Provides a flat view of the key metrics for the completed operation.</p>
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#durationms"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>duration<wbr/>Ms</span></a><a href="#feedback"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>feedback</span></a><a href="#resumptiontoken"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>resumption<wbr/>Token</span></a><a href="#success"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>success</span></a><a href="#timetofirsttokenms"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>time<wbr/>To<wbr/>First<wbr/>Token<wbr/>Ms</span></a><a href="#tokens"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>tokens</span></a><a href="#toolcalls"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>tool<wbr/>Calls</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/server-sdk-ai - v2.0.19</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/server-sdk-ai - v2.0.20</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
