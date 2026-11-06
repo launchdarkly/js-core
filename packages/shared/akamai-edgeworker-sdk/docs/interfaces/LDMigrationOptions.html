@@ -22,7 +22,7 @@
 <li><span id="tmigrationreadinput"><span class="tsd-kind-type-parameter">TMigrationReadInput</span></span></li>
 <li><span id="tmigrationwriteinput"><span class="tsd-kind-type-parameter">TMigrationWriteInput</span></span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2021</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2025</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -49,7 +49,7 @@
 are read from, a check of read consistency may be done using this method.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2100</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2104</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="errortracking"><code class="tsd-tag">Optional</code><span>error<wbr/>Tracking</span><a href="#errortracking" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">errorTracking</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -57,7 +57,7 @@ are read from, a check of read consistency may be done using this method.</p>
 <p>Defaults to true.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2038</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2042</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="execution"><code class="tsd-tag">Optional</code><span>execution</span><a href="#execution" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">execution</span><span class="tsd-signature-symbol">?:</span> <a href="../classes/LDConcurrentExecution.html" class="tsd-signature-type tsd-kind-class">LDConcurrentExecution</a> <span class="tsd-signature-symbol">|</span> <a href="../classes/LDSerialExecution.html" class="tsd-signature-type tsd-kind-class">LDSerialExecution</a></div>
@@ -65,7 +65,7 @@ are read from, a check of read consistency may be done using this method.</p>
 be concurrent.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2026</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2030</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="latencytracking"><code class="tsd-tag">Optional</code><span>latency<wbr/>Tracking</span><a href="#latencytracking" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">latencyTracking</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -73,7 +73,7 @@ be concurrent.</p>
 <p>Defaults to true.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2032</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2036</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readnew"><span>read<wbr/>New</span><a href="#readnew" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">readNew</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationreadinput">TMigrationReadInput</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationread">TMigrationRead</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -100,7 +100,7 @@ function.</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationread">TMigrationRead</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The result of the operation. Use <a href="../functions/LDMigrationSuccess.html" class="tsd-kind-function">LDMigrationSuccess</a> or <a href="../functions/LDMigrationError.html" class="tsd-kind-function">LDMigrationError</a> to create a suitable return value.</p>
 </li></ul></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2053</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2057</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="readold"><span>read<wbr/>Old</span><a href="#readold" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">readOld</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationreadinput">TMigrationReadInput</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationread">TMigrationRead</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -112,7 +112,7 @@ function.</p>
 <p>Throwing an exception from this method will be treated as an error.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2081</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2085</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="writenew"><span>write<wbr/>New</span><a href="#writenew" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">writeNew</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwriteinput">TMigrationWriteInput</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwrite">TMigrationWrite</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -138,7 +138,7 @@ write to the new source. Not every stage requires</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwrite">TMigrationWrite</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The result of the operation. Use <a href="../functions/LDMigrationSuccess.html" class="tsd-kind-function">LDMigrationSuccess</a> or <a href="../functions/LDMigrationError.html" class="tsd-kind-function">LDMigrationError</a> to create a suitable return value.</p>
 </li></ul></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2068</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2072</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="writeold"><span>write<wbr/>Old</span><a href="#writeold" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">writeOld</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">payload</span><span class="tsd-signature-symbol">?:</span> <a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwriteinput">TMigrationWriteInput</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwrite">TMigrationWrite</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></div>
@@ -164,7 +164,7 @@ write to the new source. Not every stage requires</p>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../types/LDMethodResult.html" class="tsd-signature-type tsd-kind-type-alias">LDMethodResult</a><span class="tsd-signature-symbol">&lt;</span><a class="tsd-signature-type tsd-kind-type-parameter" href="#tmigrationwrite">TMigrationWrite</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">&gt;</span></h4><p>The result of the operation. Use <a href="../functions/LDMigrationSuccess.html" class="tsd-kind-function">LDMigrationSuccess</a> or <a href="../functions/LDMigrationError.html" class="tsd-kind-function">LDMigrationError</a> to create a suitable return value.</p>
 </li></ul></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2095</li></ul></aside></section></section></details></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.cts:2099</li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
