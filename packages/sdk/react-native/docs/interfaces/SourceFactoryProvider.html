@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>SourceFactoryProvider | @launchdarkly/react-native-client-sdk - v10.23.3</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>SourceFactoryProvider | @launchdarkly/react-native-client-sdk - v10.23.4</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -10,9 +10,15 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="" aria-current="page">SourceFactoryProvider</a></li></ul>
 <h1>Interface SourceFactoryProvider</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Converts declarative <a href="../types/InitializerEntry.html" class="tsd-kind-type-alias">InitializerEntry</a> and <a href="../types/SynchronizerEntry.html" class="tsd-kind-type-alias">SynchronizerEntry</a>
+descriptors from the mode table into concrete InitializerFactory
+and SynchronizerSlot instances that the FDv2DataSource
+orchestrator can use.</p>
+</div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">SourceFactoryProvider</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-call-signature" href="#createinitializerfactory-1">createInitializerFactory</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">entry</span><span class="tsd-signature-symbol">:</span> <a href="../types/InitializerEntry.html" class="tsd-signature-type tsd-kind-type-alias">InitializerEntry</a><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">ctx</span><span class="tsd-signature-symbol">:</span> <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">InitializerFactory</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#createsynchronizerslot-1">createSynchronizerSlot</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">entry</span><span class="tsd-signature-symbol">:</span> <a href="../types/SynchronizerEntry.html" class="tsd-signature-type tsd-kind-type-alias">SynchronizerEntry</a><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">ctx</span><span class="tsd-signature-symbol">:</span> <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SynchronizerSlot</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:33</li></ul></aside>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:69</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -32,6 +38,9 @@
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="createinitializerfactory-1"><span class="tsd-kind-call-signature">createInitializerFactory</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">entry</span><span class="tsd-signature-symbol">:</span> <a href="../types/InitializerEntry.html" class="tsd-signature-type tsd-kind-type-alias">InitializerEntry</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">ctx</span><span class="tsd-signature-symbol">:</span> <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">InitializerFactory</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#createinitializerfactory-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Create an initializer factory from an initializer entry descriptor.
+Returns <code>undefined</code> if the entry type is not supported.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
@@ -39,13 +48,16 @@
 <li><span><span class="tsd-kind-parameter">ctx</span>: <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">InitializerFactory</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:34</li></ul></aside></div></li></ul></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:74</li></ul></aside></div></li></ul></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="createsynchronizerslot"><span>create<wbr/>Synchronizer<wbr/>Slot</span><a href="#createsynchronizerslot" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <ul class="tsd-signatures">
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="createsynchronizerslot-1"><span class="tsd-kind-call-signature">createSynchronizerSlot</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">entry</span><span class="tsd-signature-symbol">:</span> <a href="../types/SynchronizerEntry.html" class="tsd-signature-type tsd-kind-type-alias">SynchronizerEntry</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">ctx</span><span class="tsd-signature-symbol">:</span> <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SynchronizerSlot</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><a href="#createsynchronizerslot-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Create a synchronizer slot from a synchronizer entry descriptor.
+Returns <code>undefined</code> if the entry type is not supported.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
@@ -53,7 +65,7 @@
 <li><span><span class="tsd-kind-parameter">ctx</span>: <a href="SourceFactoryContext.html" class="tsd-signature-type tsd-kind-interface">SourceFactoryContext</a></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">SynchronizerSlot</span> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:35</li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:79</li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -72,7 +84,7 @@
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
 <div><a href="#createinitializerfactory"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Initializer<wbr/>Factory</span></a><a href="#createsynchronizerslot"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Synchronizer<wbr/>Slot</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
