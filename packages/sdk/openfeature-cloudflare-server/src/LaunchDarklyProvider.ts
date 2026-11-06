@@ -14,11 +14,19 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
    * not to connect with LaunchDarkly servers.
    * @param kvNamespace The Cloudflare KV namespace configured for LaunchDarkly.
    * @param options Any options for the SDK.
+   * @param initTimeoutSeconds The maximum amount of time to wait for initialization in seconds.
+   * Defaults to 10 seconds. Zero does not wait, and 'forever' waits indefinitely.
    */
-  constructor(clientSideID: string, kvNamespace: KVNamespace, options: LDOptions = {}) {
+  constructor(
+    clientSideID: string,
+    kvNamespace: KVNamespace,
+    options: LDOptions = {},
+    initTimeoutSeconds: number | 'forever' = 10,
+  ) {
     super({
       logger: options.logger ?? BasicLogger.get(),
       providerName: 'launchdarkly-cloudflare-provider',
+      initTimeoutSeconds,
     });
 
     try {
