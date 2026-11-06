@@ -135,7 +135,8 @@ export default class FileDataSource implements subsystem.LDStreamProcessor {
     const allData: LDFeatureStoreDataStorage = {};
     const addItem = (kind: DataKind, item: any) => {
       if (!allData[kind.namespace]) {
-        allData[kind.namespace] = {};
+        // A null-prototype object, so that an item key such as __proto__ is an ordinary key.
+        allData[kind.namespace] = Object.create(null);
       }
       allData[kind.namespace][item.key] = item;
     };

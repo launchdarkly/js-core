@@ -165,6 +165,33 @@ describe('TestData', () => {
     expect(res.version).toEqual(2);
     expect(res.fallthrough.variation).toEqual(1);
   });
+
+  it('configures flags whose keys are names of built-in object members', async () => {
+    const td = new TestData();
+    const keys = ['__proto__', 'constructor', 'hasOwnProperty', 'toString'];
+    // Configure each flag, and then change it, before the data store is created.
+    keys.forEach((key) => td.update(td.flag(key).variationForAll(true)));
+    keys.forEach((key) => td.update(td.flag(key).variationForAll(false)));
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // The store has every flag in its changed version.
+    const facade = new AsyncStoreFacade(store);
+    const flags = (await Promise.all(
+      keys.map((key) => facade.get(VersionedDataKinds.Features, key)),
+    )) as Flag[];
+    flags.forEach((flag, index) => {
+      expect(flag.key).toEqual(keys[index]);
+      expect(flag.version).toEqual(2);
+      expect(flag.fallthrough.variation).toEqual(1);
+    });
+  });
 });
 
 describe('given a TestData instance', () => {
@@ -251,6 +278,14 @@ describe('given a TestData instance', () => {
     const built = flag.build(1);
     expect(built.variations).toEqual(['potato']);
     expect(built.fallthrough.variation).toEqual(0);
+    expect(built.offVariation).toEqual(0);
+  });
+
+  it('sets the off variation to the value for all when targeting is off', () => {
+    const built = td.flag('test-flag').valueForAll('potato').on(false).build(1);
+    expect(built.on).toBe(false);
+    expect(built.variations).toEqual(['potato']);
+    expect(built.offVariation).toEqual(0);
   });
 
   it('can handle boolean values for *Variation setters', () => {

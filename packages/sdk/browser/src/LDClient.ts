@@ -25,8 +25,9 @@ export interface LDStartOptions extends CommonLDStartOptions {
  * Applications should configure the client at page load time and reuse the same instance.
  *
  * For more information, see the [SDK Reference Guide](https://docs.launchdarkly.com/sdk/client-side/javascript).
+ *
+ * @interface
  */
-
 export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | 'identify'> & {
   /**
    * @ignore
@@ -90,13 +91,9 @@ export type LDClient = Omit<CommonClient, 'getConnectionMode' | 'getOffline' | '
    * @returns
    *    A promise which resolves to an object containing the result of the identify operation.
    *    The promise returned from this method will not be rejected.
-   *
-   * @ignore Implementation Note: Browser implementation has different options.
    */
-  identify(
-    pristineContext: LDContext,
-    identifyOptions?: LDIdentifyOptions,
-  ): Promise<LDIdentifyResult>;
+  // Implementation Note: Browser implementation has different options.
+  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult>;
 
   /**
    * Returns a Promise that tracks the client's initialization state.

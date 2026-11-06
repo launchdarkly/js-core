@@ -149,7 +149,9 @@ export default class FileReloader {
 
   // The flags of the last applied result, keyed by their key property, for the policy's version
   // handling. A failed reload leaves them as they were.
-  private _lastGoodFlags: Record<string, Flag> = {};
+  // A null-prototype object, so that a flag key such as constructor is not found as a previous
+  // flag before the first load.
+  private _lastGoodFlags: Record<string, Flag> = Object.create(null);
 
   private _lastFailureKey?: string;
 
@@ -348,7 +350,7 @@ export default class FileReloader {
     // Nothing is remembered until the consumer has accepted the result. A result the consumer
     // rejects must not become the baseline that skip-unchanged compares against, and must not
     // count as a recovery.
-    const nextFlags: Record<string, Flag> = {};
+    const nextFlags: Record<string, Flag> = Object.create(null);
     try {
       merged.flags.forEach(({ item }) => {
         nextFlags[String(item.key)] = item;

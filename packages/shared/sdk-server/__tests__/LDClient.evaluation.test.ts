@@ -200,6 +200,14 @@ describe('given an LDClient with test data', () => {
     expect(stringRes).toBe('potato');
   });
 
+  it('evaluates a value for all flag to its value when targeting is off', async () => {
+    await td.update(td.flag('flagkey').valueForAll('potato').on(false));
+    const detail = await client.variationDetail('flagkey', defaultUser, 'default');
+    expect(detail.value).toEqual('potato');
+    expect(detail.variationIndex).toEqual(0);
+    expect(detail.reason).toEqual({ kind: 'OFF' });
+  });
+
   it('evaluates an existing boolean flag', async () => {
     td.update(td.flag('flagkey').booleanFlag().on(true));
     expect(await client.boolVariation('flagkey', defaultUser, false)).toEqual(true);

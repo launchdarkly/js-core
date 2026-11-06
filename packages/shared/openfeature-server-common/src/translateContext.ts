@@ -151,7 +151,7 @@ export function translateContext(logger: LDLogger, evalContext: EvaluationContex
             valueRecord.targetingKey as string,
           );
         } else {
-          logger.error('Top level attributes in a multi-kind context should be Structure types.');
+          logger.warn('Top level attributes in a multi-kind context should be Structure types.');
         }
         return acc;
       },
@@ -161,7 +161,7 @@ export function translateContext(logger: LDLogger, evalContext: EvaluationContex
   if (evalContext.kind !== undefined && typeof evalContext.kind === 'string') {
     finalKind = evalContext.kind;
   } else if (evalContext.kind !== undefined && typeof evalContext.kind !== 'string') {
-    logger.warn("Specified 'kind' of context was not a string.");
+    logger.error("Specified 'kind' of context was not a string.");
   }
 
   const convertedContext: LDContext = {

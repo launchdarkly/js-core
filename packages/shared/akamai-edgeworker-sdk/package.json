@@ -15,14 +15,28 @@
   ],
   "type": "commonjs",
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "sideEffects": false,
   "files": [
     "dist"
   ],
   "scripts": {
     "test": "npx jest --ci",
-    "build": "npx tsc",
-    "clean": "npx tsc --build --clean",
+    "build": "tsup",
+    "clean": "rm -rf dist",
     "lint": "oxlint .",
     "lint:fix": "yarn run lint -- --fix",
     "format": "oxfmt .",
@@ -35,6 +49,7 @@
     "oxfmt": "0.63.0",
     "oxlint": "1.78.0",
     "ts-jest": "^29.1.0",
+    "tsup": "^8.5.1",
     "typedoc": "0.28.20",
     "typescript": "6.0.3"
   },

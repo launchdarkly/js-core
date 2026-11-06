@@ -38,6 +38,30 @@ it('can fail to initialize client', async () => {
   expect(ofClient.providerStatus).toEqual(ProviderStatus.ERROR);
 });
 
+it('forwards the initialization timeout to the client', async () => {
+  const ldProvider = new LaunchDarklyProvider(clientSideID, makeKvNamespace(), {}, 5);
+  const spy = jest.spyOn(ldProvider.getClient(), 'waitForInitialization');
+  await ldProvider.initialize({});
+  expect(spy).toHaveBeenCalledWith({ timeout: 5 });
+  await ldProvider.onClose();
+});
+
+it('defaults the initialization timeout to 10 seconds', async () => {
+  const ldProvider = new LaunchDarklyProvider(clientSideID, makeKvNamespace());
+  const spy = jest.spyOn(ldProvider.getClient(), 'waitForInitialization');
+  await ldProvider.initialize({});
+  expect(spy).toHaveBeenCalledWith({ timeout: 10 });
+  await ldProvider.onClose();
+});
+
+it("waits without a timeout when the initialization timeout is 'forever'", async () => {
+  const ldProvider = new LaunchDarklyProvider(clientSideID, makeKvNamespace(), {}, 'forever');
+  const spy = jest.spyOn(ldProvider.getClient(), 'waitForInitialization');
+  await ldProvider.initialize({});
+  expect(spy).toHaveBeenCalledWith();
+  await ldProvider.onClose();
+});
+
 describe('given a mock LaunchDarkly client', () => {
   let ldClient: LDClient;
   let ofClient: Client;
