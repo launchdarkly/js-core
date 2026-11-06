@@ -1,0 +1,298 @@
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>AgentGraphDefinition | @launchdarkly/server-sdk-ai - v2.0.20</title><meta name="description" content="Documentation for @launchdarkly/server-sdk-ai"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/server-sdk-ai - v2.0.20</a>
+<div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
+<ul role="listbox" id="tsd-search-results"></ul>
+<div id="tsd-search-status" aria-live="polite" aria-atomic="true">
+<div>Preparing search index...</div></div></dialog><a href="#" class="tsd-widget menu" id="tsd-toolbar-menu-trigger" data-toggle="menu" aria-label="Menu"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-menu"></use></svg></a></div></header>
+<div class="container container-main">
+<div class="col-content">
+<div class="tsd-page-title">
+<ul class="tsd-breadcrumb" aria-label="Breadcrumb">
+<li><a href="" aria-current="page">AgentGraphDefinition</a></li></ul>
+<h1>Class AgentGraphDefinition</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Encapsulates an agent graph configuration and its pre-built node collection.</p>
+<p>Provides graph-level orchestration including relationship queries (parent/child),
+topological traversal in both forward and reverse directions, and graph tracker creation.</p>
+<p>Obtain an instance via <a href="../interfaces/LDAIClient.html#agentgraph" class="tsd-kind-method">LDAIClient.agentGraph</a>. When the graph is disabled
+or invalid, the returned instance has <a href="#enabled" class="tsd-kind-property">enabled</a> set to <code>false</code> and an
+empty node collection.</p>
+</div></section><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L24">api/graph/AgentGraphDefinition.ts:24</a></li></ul></aside>
+<section class="tsd-panel-group tsd-index-group">
+<section class="tsd-panel tsd-index-panel">
+<details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h5 class="tsd-index-heading uppercase">Index</h5></summary>
+<div class="tsd-accordion-details">
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="constructors">Constructors<a href="#constructors" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="properties">Properties<a href="#properties" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#enabled" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>enabled</span></a>
+</div></section>
+<section class="tsd-index-section">
+<h3 class="tsd-index-heading tsd-anchor-link" id="methods">Methods<a href="#methods" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-index-list"><a href="#createtracker" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Tracker</span></a>
+<a href="#getchildnodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Child<wbr/>Nodes</span></a>
+<a href="#getconfig" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Config</span></a>
+<a href="#getnode" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Node</span></a>
+<a href="#getparentnodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Parent<wbr/>Nodes</span></a>
+<a href="#reversetraverse" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reverse<wbr/>Traverse</span></a>
+<a href="#rootnode" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>root<wbr/>Node</span></a>
+<a href="#terminalnodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>terminal<wbr/>Nodes</span></a>
+<a href="#traverse" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>traverse</span></a>
+<a href="#buildnodes" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>build<wbr/>Nodes</span></a>
+<a href="#collectallkeys" class="tsd-index-link"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>collect<wbr/>All<wbr/>Keys</span></a>
+</div></section></div></details></section></section>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="constructors-1">Constructors<a href="#constructors-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="constructor"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="constructoragentgraphdefinition"><span class="tsd-signature-keyword">new</span> <span class="tsd-kind-constructor-signature">AgentGraphDefinition</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">_agentGraph</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">_nodes</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">enabled</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">_createTracker</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <a href="../interfaces/LDGraphTracker.html" class="tsd-signature-type tsd-kind-interface">LDGraphTracker</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="" class="tsd-signature-type tsd-kind-class">AgentGraphDefinition</a><a href="#constructoragentgraphdefinition" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">_agentGraph</span>: <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a></span></li>
+<li><span><span class="tsd-kind-parameter">_nodes</span>: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">&gt;</span></span></li>
+<li><span><span class="tsd-kind-parameter">enabled</span>: <span class="tsd-signature-type">boolean</span></span></li>
+<li><span><span class="tsd-kind-parameter">_createTracker</span>: <span class="tsd-signature-symbol">()</span> <span class="tsd-signature-symbol">=&gt;</span> <a href="../interfaces/LDGraphTracker.html" class="tsd-signature-type tsd-kind-interface">LDGraphTracker</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="" class="tsd-signature-type tsd-kind-class">AgentGraphDefinition</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L25">api/graph/AgentGraphDefinition.ts:25</a></li></ul></aside></div></li></ul></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="properties-1">Properties<a href="#properties-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="enabled"><code class="tsd-tag">Readonly</code><span>enabled</span><a href="#enabled" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">enabled</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L28">api/graph/AgentGraphDefinition.ts:28</a></li></ul></aside></section></section></details>
+<details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
+<section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="createtracker"><span>create<wbr/>Tracker</span><a href="#createtracker" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="createtracker-1"><span class="tsd-kind-call-signature">createTracker</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/LDGraphTracker.html" class="tsd-signature-type tsd-kind-interface">LDGraphTracker</a><a href="#createtracker-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns a new <a href="../interfaces/LDGraphTracker.html" class="tsd-kind-interface">LDGraphTracker</a> for a fresh graph run.</p>
+<p>Call this once per graph run. Each call produces a tracker with a fresh <code>runId</code>
+that groups all events for that run.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/LDGraphTracker.html" class="tsd-signature-type tsd-kind-interface">LDGraphTracker</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L121">api/graph/AgentGraphDefinition.ts:121</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getchildnodes"><span>get<wbr/>Child<wbr/>Nodes</span><a href="#getchildnodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getchildnodes-1"><span class="tsd-kind-call-signature">getChildNodes</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">nodeKey</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span><a href="#getchildnodes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the children of the node identified by <code>nodeKey</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">nodeKey</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The agent config key of the parent node.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L63">api/graph/AgentGraphDefinition.ts:63</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getconfig"><span>get<wbr/>Config</span><a href="#getconfig" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getconfig-1"><span class="tsd-kind-call-signature">getConfig</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a><a href="#getconfig-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the underlying raw graph configuration from LaunchDarkly.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L111">api/graph/AgentGraphDefinition.ts:111</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getnode"><span>get<wbr/>Node</span><a href="#getnode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getnode-1"><span class="tsd-kind-call-signature">getNode</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">nodeKey</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><a href="#getnode-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the node with the given key, or <code>null</code> if not found.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">nodeKey</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The agent config key to look up.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L104">api/graph/AgentGraphDefinition.ts:104</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="getparentnodes"><span>get<wbr/>Parent<wbr/>Nodes</span><a href="#getparentnodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="getparentnodes-1"><span class="tsd-kind-call-signature">getParentNodes</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">nodeKey</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span><a href="#getparentnodes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns all nodes that have a direct edge to the node identified by <code>nodeKey</code>.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">nodeKey</span>: <span class="tsd-signature-type">string</span></span>
+<div class="tsd-comment tsd-typography"><p>The agent config key of the child node.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L79">api/graph/AgentGraphDefinition.ts:79</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="reversetraverse"><span>reverse<wbr/>Traverse</span><a href="#reversetraverse" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="reversetraverse-1"><span class="tsd-kind-call-signature">reverseTraverse</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">fn</span><span class="tsd-signature-symbol">:</span> <a href="../types/TraversalFn.html" class="tsd-signature-type tsd-kind-type-alias">TraversalFn</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">initialExecutionContext</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#reversetraverse-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Traverses the graph in reverse topological order (descendants-first).</p>
+<p>A node is visited only after every reachable descendant has been visited.
+The root is always visited last. When multiple nodes are simultaneously
+eligible, they are visited in graph-discovery order for determinism. Cyclic
+graphs are cycle-safe — each reachable node is visited exactly once (including
+graphs with no terminal nodes).</p>
+<p>Each call to <code>fn</code> receives a fresh context containing the caller-provided
+<code>initialExecutionContext</code> plus the return values of exactly that node's
+reachable descendants — not results from unrelated parallel-branch nodes.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">fn</span>: <a href="../types/TraversalFn.html" class="tsd-signature-type tsd-kind-type-alias">TraversalFn</a></span>
+<div class="tsd-comment tsd-typography"><p>Callback invoked for each node. Its return value is stored under
+the node's config key for use by dependent nodes.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">initialExecutionContext</span>: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = {}</span></span>
+<div class="tsd-comment tsd-typography"><p>Optional initial context visible to every node.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L219">api/graph/AgentGraphDefinition.ts:219</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="rootnode"><span>root<wbr/>Node</span><a href="#rootnode" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="rootnode-1"><span class="tsd-kind-call-signature">rootNode</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><a href="#rootnode-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns the root node of the graph.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L95">api/graph/AgentGraphDefinition.ts:95</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="terminalnodes"><span>terminal<wbr/>Nodes</span><a href="#terminalnodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="terminalnodes-1"><span class="tsd-kind-call-signature">terminalNodes</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span><a href="#terminalnodes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Returns all terminal nodes (nodes with no outgoing edges).</p>
+</div>
+<h4 class="tsd-returns-title">Returns <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L88">api/graph/AgentGraphDefinition.ts:88</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="traverse"><span>traverse</span><a href="#traverse" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="traverse-1"><span class="tsd-kind-call-signature">traverse</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">fn</span><span class="tsd-signature-symbol">:</span> <a href="../types/TraversalFn.html" class="tsd-signature-type tsd-kind-type-alias">TraversalFn</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">initialExecutionContext</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">void</span><a href="#traverse-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Traverses the graph in topological order from the root (predecessors-first).</p>
+<p>A node is visited only after every reachable predecessor has been visited.
+The root is visited first. When multiple nodes are simultaneously eligible,
+they are visited in graph-discovery order (BFS from root following declared
+edge order) for determinism. Cyclic graphs are cycle-safe — each reachable
+node is visited exactly once.</p>
+<p>Each call to <code>fn</code> receives a fresh context containing the caller-provided
+<code>initialExecutionContext</code> plus the return values of exactly that node's
+reachable predecessors — not results from unrelated parallel-branch nodes.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">fn</span>: <a href="../types/TraversalFn.html" class="tsd-signature-type tsd-kind-type-alias">TraversalFn</a></span>
+<div class="tsd-comment tsd-typography"><p>Callback invoked for each node. Its return value is stored under
+the node's config key for use by dependent nodes.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">initialExecutionContext</span>: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <span class="tsd-signature-type">unknown</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = {}</span></span>
+<div class="tsd-comment tsd-typography"><p>Optional initial context visible to every node.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L142">api/graph/AgentGraphDefinition.ts:142</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="buildnodes"><code class="tsd-tag">Static</code><span>build<wbr/>Nodes</span><a href="#buildnodes" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="buildnodes-1"><span class="tsd-kind-call-signature">buildNodes</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">graph</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">agentConfigs</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="../interfaces/LDAIAgentConfig.html" class="tsd-signature-type tsd-kind-interface">LDAIAgentConfig</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">&gt;</span><a href="#buildnodes-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Builds a node map from a raw agent graph flag value and a map of pre-fetched agent configs.</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">graph</span>: <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a></span>
+<div class="tsd-comment tsd-typography"><p>Raw graph flag value from LaunchDarkly.</p>
+</div></li>
+<li><span><span class="tsd-kind-parameter">agentConfigs</span>: <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="../interfaces/LDAIAgentConfig.html" class="tsd-signature-type tsd-kind-interface">LDAIAgentConfig</a><span class="tsd-signature-symbol">&gt;</span></span>
+<div class="tsd-comment tsd-typography"><p>Map of agent config key to resolved LDAIAgentConfig.</p>
+</div></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Record</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span> <a href="AgentGraphNode.html" class="tsd-signature-type tsd-kind-class">AgentGraphNode</a><span class="tsd-signature-symbol">&gt;</span></h4><p>Record mapping agent config keys to AgentGraphNode instances.</p>
+<aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L39">api/graph/AgentGraphDefinition.ts:39</a></li></ul></aside></div></li></ul></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="collectallkeys"><code class="tsd-tag">Static</code><span>collect<wbr/>All<wbr/>Keys</span><a href="#collectallkeys" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<ul class="tsd-signatures">
+<li class="">
+<div class="tsd-signature tsd-anchor-link" id="collectallkeys-1"><span class="tsd-kind-call-signature">collectAllKeys</span><span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">graph</span><span class="tsd-signature-symbol">:</span> <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span><a href="#collectallkeys-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
+<div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Collects every unique node key referenced in the graph (root + all edge sources
+and targets).</p>
+</div>
+<div class="tsd-parameters">
+<h4 class="tsd-parameters-title">Parameters</h4>
+<ul class="tsd-parameter-list">
+<li><span><span class="tsd-kind-parameter">graph</span>: <a href="../interfaces/LDAgentGraphFlagValue.html" class="tsd-signature-type tsd-kind-interface">LDAgentGraphFlagValue</a></span></li></ul></div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Set</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/launchdarkly/js-core/blob/152aa9b8776e4bca0d45c99d2a0336505cb23eb9/packages/sdk/server-ai/src/api/graph/AgentGraphDefinition.ts#L313">api/graph/AgentGraphDefinition.ts:313</a></li></ul></aside></div></li></ul></section></section></details></div>
+<div class="col-sidebar">
+<div class="page-menu">
+<div class="tsd-navigation settings">
+<details class="tsd-accordion"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>Settings</h3></summary>
+<div class="tsd-accordion-details">
+<div class="tsd-filter-visibility"><span class="settings-label">Member Visibility</span>
+<ul id="tsd-filter-options">
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-protected" name="protected"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Protected</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-inherited" name="inherited" checked/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>Inherited</span></label></li>
+<li class="tsd-filter-item"><label class="tsd-filter-input"><input type="checkbox" id="tsd-filter-external" name="external"/><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect class="tsd-checkbox-background" width="30" height="30" x="1" y="1" rx="6" fill="none"></rect><path class="tsd-checkbox-checkmark" d="M8.35422 16.8214L13.2143 21.75L24.6458 10.25" stroke="none" stroke-width="3.5" stroke-linejoin="round" fill="none"></path></svg><span>External</span></label></li></ul></div>
+<div class="tsd-theme-toggle"><label class="settings-label" for="tsd-theme">Theme</label><select id="tsd-theme"><option value="os">OS</option><option value="light">Light</option><option value="dark">Dark</option></select></div></div></details></div>
+<details open class="tsd-accordion tsd-page-navigation"><summary class="tsd-accordion-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
+<h3>On This Page</h3></summary>
+<div class="tsd-accordion-details">
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Constructors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Constructors</summary>
+<div><a href="#constructor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Constructor"><use href="../assets/icons.svg#icon-512"></use></svg><span>constructor</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
+<div><a href="#enabled"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>enabled</span></a></div></details>
+<details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
+<div><a href="#createtracker"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Tracker</span></a><a href="#getchildnodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Child<wbr/>Nodes</span></a><a href="#getconfig"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Config</span></a><a href="#getnode"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Node</span></a><a href="#getparentnodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>get<wbr/>Parent<wbr/>Nodes</span></a><a href="#reversetraverse"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>reverse<wbr/>Traverse</span></a><a href="#rootnode"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>root<wbr/>Node</span></a><a href="#terminalnodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>terminal<wbr/>Nodes</span></a><a href="#traverse"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>traverse</span></a><a href="#buildnodes"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>build<wbr/>Nodes</span></a><a href="#collectallkeys"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>collect<wbr/>All<wbr/>Keys</span></a></div></details></div></details></div>
+<div class="site-menu">
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/server-sdk-ai - v2.0.20</a>
+<ul class="tsd-small-nested-navigation" id="tsd-nav-container">
+<li>Loading...</li></ul></nav></div></div></div><footer>
+<p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
+<div class="overlay"></div></body></html>
