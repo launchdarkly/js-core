@@ -166,22 +166,36 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       return false;
     }
 
-    // The deadline is armed whether or not an FDv1 fallback synchronizer is
-    // configured, and a newer directive always supersedes the pending one.
+    // With no synchronizers configured at all (e.g. one-shot mode), there
+    // is nothing to halt or recover to -- keep trying other initializers.
+    if (synchronizerSlots.length === 0) {
+      return false;
+    }
+
+    // Every directive arms the deadline. A directive from an FDv2 source
+    // halts that source below, so the same source cannot re-arm it again. A
+    // directive carried by the FDv1 fallback synchronizer's own response
+    // supersedes the pending deadline with its fresh TTL.
     scheduleFdv2Recovery(result);
 
-    // Guard: if the FDv1 fallback synchronizer itself produces a result flagged
-    // fdv1Fallback, do not re-run the fallback machinery - we are already on
-    // FDv1. Only the new deadline applies.
+    // Guard: if the FDv1 fallback synchronizer itself produces this result,
+    // do not re-run the fallback machinery - we are already on FDv1.
     if (sourceManager.isCurrentSynchronizerFDv1Fallback) {
       return false;
     }
 
-    if (sourceManager.hasFDv1Fallback()) {
-      sourceManager.fdv1Fallback();
-      return true;
+    if (!sourceManager.hasFDv1Fallback()) {
+      // No FDv1 fallback synchronizer is configured, so no synchronizer runs
+      // while the recovery deadline is pending. The status manager reports
+      // this as INITIALIZING until the status has left that state once.
+      statusManager.requestStateUpdate('INTERRUPTED');
     }
-    return false;
+
+    // Halts the current run. With an FDv1 fallback configured it becomes
+    // the sole active source. Without one, every FDv2 slot is blocked and
+    // the orchestrator runs no synchronizer until recovery.
+    sourceManager.fdv1Fallback();
+    return true;
   }
 
   // The orchestration loops intentionally use await-in-loop for sequential
