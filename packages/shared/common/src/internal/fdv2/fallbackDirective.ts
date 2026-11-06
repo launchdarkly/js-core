@@ -9,9 +9,11 @@ export const DEFAULT_FDV1_FALLBACK_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_TTL_JITTER_RATIO = 0.5;
 
 /**
- * Normalizes a fallback TTL expressed in whole seconds into milliseconds.
+ * Normalizes a fallback TTL expressed in seconds into milliseconds.
  *
- * A TTL is only honored when it falls in the range `(0, 1 hour]`. An absent,
+ * A TTL is only honored when it falls in the range `(0, 1 hour]`. Fractions
+ * of a second are dropped from an honored TTL, but the range check uses the
+ * value as given, so a TTL a fraction over one hour is out of range. An absent,
  * unparseable, zero, negative, or too-large TTL is replaced with the default
  * of 1 hour, minus a jitter value drawn uniformly from `[0, half the default]`
  * so that a fleet of SDKs that fell back together does not retry FDv2 in
@@ -26,19 +28,18 @@ export function resolveFallbackTtlMs(
   ttlSeconds: number | undefined,
   random: () => number = Math.random,
 ): number {
-  const ttlMs = ttlSeconds === undefined ? undefined : ttlSeconds * 1000;
-  if (
-    ttlMs === undefined ||
-    !Number.isFinite(ttlMs) ||
-    ttlMs <= 0 ||
-    ttlMs > DEFAULT_FDV1_FALLBACK_TTL_MS
-  ) {
-    return (
-      DEFAULT_FDV1_FALLBACK_TTL_MS -
-      Math.trunc(random() * DEFAULT_TTL_JITTER_RATIO * DEFAULT_FDV1_FALLBACK_TTL_MS)
-    );
+  const jitteredDefault = () =>
+    DEFAULT_FDV1_FALLBACK_TTL_MS -
+    Math.trunc(random() * DEFAULT_TTL_JITTER_RATIO * DEFAULT_FDV1_FALLBACK_TTL_MS);
+
+  if (ttlSeconds === undefined || !Number.isFinite(ttlSeconds)) {
+    return jitteredDefault();
   }
-  return ttlMs;
+  const wholeSeconds = Math.trunc(ttlSeconds);
+  if (wholeSeconds <= 0 || ttlSeconds * 1000 > DEFAULT_FDV1_FALLBACK_TTL_MS) {
+    return jitteredDefault();
+  }
+  return wholeSeconds * 1000;
 }
 
 /**
@@ -76,7 +77,9 @@ export function readFallbackDirective(headers: {
   }
 
   const raw = headers.get('x-ld-fd-fallback-ttl');
-  const seconds = raw === null ? undefined : parseInt(raw, 10);
+  // parseFloat rather than parseInt, so a value such as "3600.5" reaches the
+  // range check intact instead of being truncated under the one-hour limit.
+  const seconds = raw === null ? undefined : parseFloat(raw);
 
   // A missing, unparseable, or out-of-range TTL becomes the jittered default,
   // so the directive always carries a concrete deadline for retrying FDv2.
@@ -105,5 +108,5 @@ export function readGoodbyeFallbackDirective(data: unknown): FallbackDirective {
     return { fdv1Fallback: false };
   }
 
-  return { fdv1Fallback: true, fdv1FallbackTtlMs: resolveFallbackTtlMs(Math.trunc(rawTtl)) };
+  return { fdv1Fallback: true, fdv1FallbackTtlMs: resolveFallbackTtlMs(rawTtl) };
 }

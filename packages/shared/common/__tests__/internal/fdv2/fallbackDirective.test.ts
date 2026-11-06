@@ -221,3 +221,41 @@ it('resolveFallbackTtlMs: defaults to Math.random for jitter and stays within bo
     expect(ttl).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
   }
 });
+
+it('applies the default TTL for an x-ld-fd-fallback-ttl value a fraction over one hour', () => {
+  const result = readFallbackDirective(
+    makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '3600.5' }),
+  );
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBeGreaterThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS / 2);
+  expect(result.fdv1FallbackTtlMs).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
+});
+
+it('drops the fraction of a second from an in-range x-ld-fd-fallback-ttl value', () => {
+  const result = readFallbackDirective(
+    makeHeaders({ 'x-ld-fd-fallback': 'true', 'x-ld-fd-fallback-ttl': '59.9' }),
+  );
+  expect(result).toEqual({ fdv1Fallback: true, fdv1FallbackTtlMs: 59000 });
+});
+
+it('readGoodbyeFallbackDirective: applies the default TTL for a protocolFallbackTTL a fraction over one hour', () => {
+  const result = readGoodbyeFallbackDirective({
+    reason: 'falling back',
+    protocolFallbackTTL: 3600.5,
+  });
+  expect(result.fdv1Fallback).toBe(true);
+  expect(result.fdv1FallbackTtlMs).toBeGreaterThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS / 2);
+  expect(result.fdv1FallbackTtlMs).toBeLessThanOrEqual(DEFAULT_FDV1_FALLBACK_TTL_MS);
+});
+
+it('resolveFallbackTtlMs: uses the default for a TTL a fraction over one hour', () => {
+  expect(resolveFallbackTtlMs(3600.5, () => 0)).toBe(DEFAULT_FDV1_FALLBACK_TTL_MS);
+});
+
+it('resolveFallbackTtlMs: drops the fraction of a second from an in-range TTL', () => {
+  expect(resolveFallbackTtlMs(59.9, () => 1)).toBe(59000);
+});
+
+it('resolveFallbackTtlMs: uses the default for a TTL under one second', () => {
+  expect(resolveFallbackTtlMs(0.5, () => 0)).toBe(DEFAULT_FDV1_FALLBACK_TTL_MS);
+});
