@@ -11,6 +11,7 @@ export default class GoalManager {
   private _watcher?: LocationWatcher;
   private _tracker?: GoalTracker;
   private _isTracking = false;
+  private _closed = false;
 
   constructor(
     credential: string,
@@ -42,7 +43,9 @@ export default class GoalManager {
   }
 
   private _createTracker() {
-    if (!this._isTracking) {
+    // After close, a late goals fetch, an identify, or a location change must not
+    // create a tracker. A new tracker adds a document listener that nothing removes.
+    if (this._closed || !this._isTracking) {
       return;
     }
     this._tracker?.close();
@@ -63,7 +66,9 @@ export default class GoalManager {
   }
 
   close(): void {
+    this._closed = true;
     this._watcher?.close();
     this._tracker?.close();
+    this._tracker = undefined;
   }
 }
