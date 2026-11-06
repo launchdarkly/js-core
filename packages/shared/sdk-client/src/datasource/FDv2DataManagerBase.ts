@@ -161,6 +161,8 @@ export function createFDv2DataManagerBase(
   let identifiedContext: Context | undefined;
   let factoryContext: SourceFactoryContext | undefined;
   let initialized = false;
+  // Whether flag data has arrived for the current identify, from any source.
+  let dataReceived = false;
   let bootstrapped = false;
   let closed = false;
   let flushCallback: (() => void) | undefined;
@@ -344,6 +346,7 @@ export function createFDv2DataManagerBase(
     // must not clear a selector already obtained from a prior payload.
     if (payload.type !== 'none') {
       selector = payload.state;
+      dataReceived = true;
     }
 
     const context = identifiedContext;
@@ -420,6 +423,12 @@ export function createFDv2DataManagerBase(
       logger,
       fallbackTimeoutMs,
       recoveryTimeoutMs,
+      // Whether the SDK already holds flag data from a previous data source
+      // instance, e.g. this call rebuilds the data source for a
+      // connection-mode switch rather than the first identify. `initialized`
+      // is not the same thing. An offline identify or a cache miss completes
+      // without data, and a rejected identify can still receive a basis later.
+      hasExistingData: dataReceived,
     });
 
     dataSource
@@ -505,6 +514,7 @@ export function createFDv2DataManagerBase(
       debounceManager = undefined;
       selector = undefined;
       initialized = false;
+      dataReceived = false;
       bootstrapped = false;
       minimumDataAvailability = identifyOptions?.waitForNetworkResults ? 'fresh' : 'cached';
       identifiedContext = context;
@@ -581,6 +591,7 @@ export function createFDv2DataManagerBase(
           bootstrapParsed = readFlagsFromBootstrap(logger, identifyOptions!.bootstrap);
         }
         flagManager.setBootstrap(context, bootstrapParsed);
+        dataReceived = true;
 
         // Resolve immediately - flag evaluations will use the bootstrap
         // data right away.
