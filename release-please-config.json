@@ -301,12 +301,12 @@
         "src/platform/BrowserInfo.ts",
         {
           "type": "json",
-          "path": "example/package.json",
+          "path": "examples/getting-started/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         },
         {
           "type": "json",
-          "path": "example-fdv2/package.json",
+          "path": "examples/features/data-saving-mode/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         },
         {
