@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>SourceFactoryContext | @launchdarkly/react-native-client-sdk - v10.23.3</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>SourceFactoryContext | @launchdarkly/react-native-client-sdk - v10.23.4</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -10,9 +10,14 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="" aria-current="page">SourceFactoryContext</a></li></ul>
 <h1>Interface SourceFactoryContext</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Context needed to create concrete initializer/synchronizer factories
+for a given identify call. Built once per identify and reused across
+mode switches.</p>
+</div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">SourceFactoryContext</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#baseheaders">baseHeaders</a><span class="tsd-signature-symbol">:</span> <a href="../types/LDHeaders.html" class="tsd-signature-type tsd-kind-type-alias">LDHeaders</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#context">context</a><span class="tsd-signature-symbol">:</span> <a href="../classes/Context.html" class="tsd-signature-type tsd-kind-class">Context</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#crypto">crypto</a><span class="tsd-signature-symbol">:</span> <a href="Crypto.html" class="tsd-signature-type tsd-kind-interface">Crypto</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#encoding">encoding</a><span class="tsd-signature-symbol">:</span> <a href="Encoding.html" class="tsd-signature-type tsd-kind-interface">Encoding</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#environmentnamespace">environmentNamespace</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#logger">logger</a><span class="tsd-signature-symbol">:</span> <a href="LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#plaincontextstring">plainContextString</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#polling">polling</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">intervalSeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#queryparams">queryParams</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#requestor">requestor</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">FDv2Requestor</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#requests">requests</a><span class="tsd-signature-symbol">:</span> <a href="Requests.html" class="tsd-signature-type tsd-kind-interface">Requests</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#serviceendpoints">serviceEndpoints</a><span class="tsd-signature-symbol">:</span> <a href="../classes/ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#storage">storage</a><span class="tsd-signature-symbol">:</span> <a href="Storage.html" class="tsd-signature-type tsd-kind-interface">Storage</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#streaming">streaming</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">initialReconnectDelaySeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#usepost">usePost</a><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:7</li></ul></aside>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:16</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -41,79 +46,131 @@
 <section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="baseheaders"><span>base<wbr/>Headers</span><a href="#baseheaders" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">baseHeaders</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDHeaders.html" class="tsd-signature-type tsd-kind-type-alias">LDHeaders</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">baseHeaders</span><span class="tsd-signature-symbol">:</span> <a href="../types/LDHeaders.html" class="tsd-signature-type tsd-kind-type-alias">LDHeaders</a></div>
+<div class="tsd-comment tsd-typography"><p>Default HTTP headers.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:12</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:26</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="context"><span>context</span><a href="#context" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">context</span><span class="tsd-signature-symbol">:</span> <a href="../classes/Context.html" class="tsd-signature-type tsd-kind-class">Context</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">context</span><span class="tsd-signature-symbol">:</span> <a href="../classes/Context.html" class="tsd-signature-type tsd-kind-class">Context</a></div>
+<div class="tsd-comment tsd-typography"><p>The context being identified.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:31</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:61</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="crypto"><span>crypto</span><a href="#crypto" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">crypto</span><span class="tsd-signature-symbol">:</span> <a href="Crypto.html" class="tsd-signature-type tsd-kind-interface">Crypto</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">crypto</span><span class="tsd-signature-symbol">:</span> <a href="Crypto.html" class="tsd-signature-type tsd-kind-interface">Crypto</a></div>
+<div class="tsd-comment tsd-typography"><p>Platform crypto for computing storage keys.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:29</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:57</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="encoding"><span>encoding</span><a href="#encoding" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">encoding</span><span class="tsd-signature-symbol">:</span> <a href="Encoding.html" class="tsd-signature-type tsd-kind-interface">Encoding</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">encoding</span><span class="tsd-signature-symbol">:</span> <a href="Encoding.html" class="tsd-signature-type tsd-kind-interface">Encoding</a></div>
+<div class="tsd-comment tsd-typography"><p>Platform encoding abstraction.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:10</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:22</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="environmentnamespace"><span>environment<wbr/>Namespace</span><a href="#environmentnamespace" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">environmentNamespace</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">environmentNamespace</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p>Environment namespace (hashed SDK key).</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:30</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:59</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="logger"><span>logger</span><a href="#logger" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">:</span> <a href="LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">logger</span><span class="tsd-signature-symbol">:</span> <a href="LDLogger.html" class="tsd-signature-type tsd-kind-interface">LDLogger</a></div>
+<div class="tsd-comment tsd-typography"><p>Logger.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:19</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:39</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="plaincontextstring"><span>plain<wbr/>Context<wbr/>String</span><a href="#plaincontextstring" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">plainContextString</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">plainContextString</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+<div class="tsd-comment tsd-typography"><p>JSON-serialized evaluation context.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:17</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:33</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="polling"><span>polling</span><a href="#polling" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">polling</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">intervalSeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">polling</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">intervalSeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p>Polling-specific configuration.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">intervalSeconds</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>Default poll interval in seconds.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">: </span><a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a></h5>
+<div class="tsd-comment tsd-typography"><p>The polling endpoint paths.</p>
+</div></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:20</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:41</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="queryparams"><span>query<wbr/>Params</span><a href="#queryparams" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">queryParams</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span></div><aside class="tsd-sources">
-<ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:13</li></ul></aside></section>
-<section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="requestor"><span>requestor</span><a href="#requestor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">requestor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">FDv2Requestor</span></div><aside class="tsd-sources">
-<ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:8</li></ul></aside></section>
-<section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="requests"><span>requests</span><a href="#requests" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">requests</span><span class="tsd-signature-symbol">:</span> <a href="Requests.html" class="tsd-signature-type tsd-kind-interface">Requests</a></div><aside class="tsd-sources">
-<ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:9</li></ul></aside></section>
-<section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="serviceendpoints"><span>service<wbr/>Endpoints</span><a href="#serviceendpoints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">serviceEndpoints</span><span class="tsd-signature-symbol">:</span> <a href="../classes/ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a></div><aside class="tsd-sources">
-<ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:11</li></ul></aside></section>
-<section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="storage"><span>storage</span><a href="#storage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">storage</span><span class="tsd-signature-symbol">:</span> <a href="Storage.html" class="tsd-signature-type tsd-kind-interface">Storage</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">queryParams</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">key</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">value</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span> <span class="tsd-signature-symbol">}</span><span class="tsd-signature-symbol">[]</span></div>
+<div class="tsd-comment tsd-typography"><p>Query parameters for requests (e.g., auth, secure mode hash).</p>
+</div><aside class="tsd-sources">
 <ul>
 <li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:28</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="streaming"><span>streaming</span><a href="#streaming" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">streaming</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">initialReconnectDelaySeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
+<h3 class="tsd-anchor-link" id="requestor"><span>requestor</span><a href="#requestor" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">requestor</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">FDv2Requestor</span></div>
+<div class="tsd-comment tsd-typography"><p>The FDv2 requestor for polling requests.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:18</li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="requests"><span>requests</span><a href="#requests" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">requests</span><span class="tsd-signature-symbol">:</span> <a href="Requests.html" class="tsd-signature-type tsd-kind-interface">Requests</a></div>
+<div class="tsd-comment tsd-typography"><p>Platform request abstraction.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:20</li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="serviceendpoints"><span>service<wbr/>Endpoints</span><a href="#serviceendpoints" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">serviceEndpoints</span><span class="tsd-signature-symbol">:</span> <a href="../classes/ServiceEndpoints.html" class="tsd-signature-type tsd-kind-class">ServiceEndpoints</a></div>
+<div class="tsd-comment tsd-typography"><p>Service endpoint configuration.</p>
+</div><aside class="tsd-sources">
 <ul>
 <li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:24</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
-<h3 class="tsd-anchor-link" id="usepost"><span>use<wbr/>Post</span><a href="#usepost" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">usePost</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div><aside class="tsd-sources">
+<h3 class="tsd-anchor-link" id="storage"><span>storage</span><a href="#storage" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">storage</span><span class="tsd-signature-symbol">:</span> <a href="Storage.html" class="tsd-signature-type tsd-kind-interface">Storage</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">undefined</span></div>
+<div class="tsd-comment tsd-typography"><p>Platform storage for reading cached data.</p>
+</div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:18</li></ul></aside></section></section></details></div>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:55</li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="streaming"><span>streaming</span><a href="#streaming" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">streaming</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{</span> <span class="tsd-kind-property">initialReconnectDelaySeconds</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">;</span> <span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">:</span> <a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a> <span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-comment tsd-typography"><p>Streaming-specific configuration.</p>
+</div>
+<div class="tsd-type-declaration">
+<h4>Type Declaration</h4>
+<ul class="tsd-parameters">
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">initialReconnectDelaySeconds</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
+<div class="tsd-comment tsd-typography"><p>Default initial reconnect delay in seconds.</p>
+</div></li>
+<li class="tsd-parameter">
+<h5><span class="tsd-kind-property">paths</span><span class="tsd-signature-symbol">: </span><a href="DataSourcePaths.html" class="tsd-signature-type tsd-kind-interface">DataSourcePaths</a></h5>
+<div class="tsd-comment tsd-typography"><p>The streaming endpoint paths.</p>
+</div></li></ul></div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:48</li></ul></aside></section>
+<section class="tsd-panel tsd-member">
+<h3 class="tsd-anchor-link" id="usepost"><span>use<wbr/>Post</span><a href="#usepost" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
+<div class="tsd-signature"><span class="tsd-kind-property">usePost</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+<div class="tsd-comment tsd-typography"><p>Whether requests should use POST instead of GET.</p>
+</div><aside class="tsd-sources">
+<ul>
+<li>Defined in packages/shared/sdk-client/dist/esm/datasource/SourceFactoryProvider.d.ts:37</li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -132,7 +189,7 @@
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#baseheaders"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>base<wbr/>Headers</span></a><a href="#context"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>context</span></a><a href="#crypto"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>crypto</span></a><a href="#encoding"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>encoding</span></a><a href="#environmentnamespace"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>environment<wbr/>Namespace</span></a><a href="#logger"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>logger</span></a><a href="#plaincontextstring"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>plain<wbr/>Context<wbr/>String</span></a><a href="#polling"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>polling</span></a><a href="#queryparams"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>query<wbr/>Params</span></a><a href="#requestor"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>requestor</span></a><a href="#requests"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>requests</span></a><a href="#serviceendpoints"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>service<wbr/>Endpoints</span></a><a href="#storage"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>storage</span></a><a href="#streaming"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>streaming</span></a><a href="#usepost"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>use<wbr/>Post</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>

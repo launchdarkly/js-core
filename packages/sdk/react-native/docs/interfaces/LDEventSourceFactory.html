@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDEventSourceFactory | @launchdarkly/react-native-client-sdk - v10.23.3</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDEventSourceFactory | @launchdarkly/react-native-client-sdk - v10.23.4</title><meta name="description" content="Documentation for @launchdarkly/react-native-client-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -10,9 +10,14 @@
 <ul class="tsd-breadcrumb" aria-label="Breadcrumb">
 <li><a href="" aria-current="page">LDEventSourceFactory</a></li></ul>
 <h1>Interface LDEventSourceFactory</h1></div>
+<section class="tsd-panel tsd-comment">
+<div class="tsd-comment tsd-typography"><p>Factory for the EventSource implementation a client-side SDK uses for its streaming connection.</p>
+<p>This should only be used when customizing the streaming transport. Typical usage of the SDK does
+not require implementing this.</p>
+</div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">LDEventSourceFactory</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#capabilities">capabilities</a><span class="tsd-signature-symbol">?:</span> <a href="EventSourceCapabilities.html" class="tsd-signature-type tsd-kind-interface">EventSourceCapabilities</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-call-signature" href="#createeventsource-1">createEventSource</a><span class="tsd-signature-symbol">(</span><br/>        <span class="tsd-kind-parameter">url</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>        <span class="tsd-kind-parameter">eventSourceInitDict</span><span class="tsd-signature-symbol">:</span> <a href="EventSourceInitDict.html" class="tsd-signature-type tsd-kind-interface">EventSourceInitDict</a><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="EventSource.html" class="tsd-signature-type tsd-kind-interface">EventSource</a><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:2</li></ul></aside>
+<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:8</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -31,9 +36,19 @@
 <section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="capabilities"><code class="tsd-tag">Optional</code><span>capabilities</span><a href="#capabilities" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
-<div class="tsd-signature"><span class="tsd-kind-property">capabilities</span><span class="tsd-signature-symbol">?:</span> <a href="EventSourceCapabilities.html" class="tsd-signature-type tsd-kind-interface">EventSourceCapabilities</a></div><aside class="tsd-sources">
+<div class="tsd-signature"><span class="tsd-kind-property">capabilities</span><span class="tsd-signature-symbol">?:</span> <a href="EventSourceCapabilities.html" class="tsd-signature-type tsd-kind-interface">EventSourceCapabilities</a></div>
+<div class="tsd-comment tsd-typography"><p>Capabilities of the event sources this factory produces.</p>
+<p>The SDK checks these before using a feature that not every transport supports -- for instance,
+it only issues a POST or REPORT streaming request when <code>customMethod</code> is true. When this is
+omitted, every capability is treated as unsupported.</p>
+</div>
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-remarks">
+<h4 class="tsd-anchor-link" id="remarks">Remarks<a href="#remarks" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p><code>customMethod</code> is currently the only capability that changes SDK behavior; declaring <code>headers: false</code>
+or <code>readTimeout: false</code> does not stop the SDK from supplying those init options.</p>
+</div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:4</li></ul></aside></section></section></details>
+<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:24</li></ul></aside></section></section></details>
 <details class="tsd-panel-group tsd-member-group tsd-accordion" open><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
 <h2 class="tsd-anchor-link" id="methods-1">Methods<a href="#methods-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h2></summary>
 <section>
@@ -43,6 +58,8 @@
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="createeventsource-1"><span class="tsd-kind-call-signature">createEventSource</span><span class="tsd-signature-symbol">(</span><br/>    <span class="tsd-kind-parameter">url</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">,</span><br/>    <span class="tsd-kind-parameter">eventSourceInitDict</span><span class="tsd-signature-symbol">:</span> <a href="EventSourceInitDict.html" class="tsd-signature-type tsd-kind-interface">EventSourceInitDict</a><span class="tsd-signature-symbol">,</span><br/><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">:</span> <a href="EventSource.html" class="tsd-signature-type tsd-kind-interface">EventSource</a><a href="#createeventsource-1" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
+<div class="tsd-comment tsd-typography"><p>Create an EventSource connected to the given URL with the given initialization options.</p>
+</div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
@@ -50,7 +67,7 @@
 <li><span><span class="tsd-kind-parameter">eventSourceInitDict</span>: <a href="EventSourceInitDict.html" class="tsd-signature-type tsd-kind-interface">EventSourceInitDict</a></span></li></ul></div>
 <h4 class="tsd-returns-title">Returns <a href="EventSource.html" class="tsd-signature-type tsd-kind-interface">EventSource</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:3</li></ul></aside></div></li></ul></section></section></details></div>
+<li>Defined in packages/shared/sdk-client/dist/esm/api/LDEventSourceFactory.d.ts:12</li></ul></aside></div></li></ul></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -71,7 +88,7 @@
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Methods"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Methods</summary>
 <div><a href="#createeventsource"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Method"><use href="../assets/icons.svg#icon-2048"></use></svg><span>create<wbr/>Event<wbr/>Source</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.3</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/react-native-client-sdk - v10.23.4</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
