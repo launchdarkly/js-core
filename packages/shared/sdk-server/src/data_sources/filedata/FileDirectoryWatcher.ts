@@ -88,6 +88,9 @@ class DirectoryWatch {
  * again once it exists, through the same retry. When a retry succeeds, the callback runs once so
  * that changes made in the meantime are picked up.
  *
+ * The Node platform implements the watches with `fs.watch()`, which has the limitations
+ * described at https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener.
+ *
  * @internal
  */
 export default class FileDirectoryWatcher {

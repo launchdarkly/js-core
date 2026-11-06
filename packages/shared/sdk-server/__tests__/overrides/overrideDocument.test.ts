@@ -1,3 +1,4 @@
+import { NO_ENTRIES } from '../../src/data_sources/filedata';
 import { parseOverrideDocument } from '../../src/overrides/overrideDocument';
 
 const flag1 = {
@@ -75,14 +76,32 @@ describe('given the override document parser', () => {
     );
   });
 
-  it('treats a parser result of null or undefined as an empty document', () => {
-    expect(parseOverrideDocument(() => null)('empty.yaml', '')).toEqual({});
-    expect(parseOverrideDocument(() => undefined)('empty.yaml', '')).toEqual({});
+  it('treats a parser result of null or undefined as a document with no entries', () => {
+    expect(parseOverrideDocument(() => null)('empty.yaml', '')).toBe(NO_ENTRIES);
+    expect(parseOverrideDocument(() => undefined)('empty.yaml', '# a comment')).toBe(NO_ENTRIES);
+    // An empty document is a document, which the reloader applies right away.
+    expect(parseOverrideDocument(() => ({}))('empty.yaml', '{}')).not.toBe(NO_ENTRIES);
+    expect(parseOverrideDocument()('empty.json', '{}')).not.toBe(NO_ENTRIES);
+  });
+
+  it.each(['', ' \n\t\n'])('rejects a JSON file with no content %j', (data) => {
+    expect(() => parseOverrideDocument()('empty.json', data)).toThrow(
+      'the file has no content, which is not a JSON document',
+    );
   });
 
   it('rejects malformed JSON', () => {
     expect(() => parseOverrideDocument()('data.json', '{"flagValues"')).toThrow(/json/i);
   });
+
+  it.each(['null', '[]', '42'])(
+    'rejects a JSON file holding %s, which is not an object',
+    (data) => {
+      expect(() => parseOverrideDocument()('data.json', data)).toThrow(
+        'file data must be an object',
+      );
+    },
+  );
 
   it('rejects a document that is not an object', () => {
     expect(() => parseOverrideDocument(() => ['a'])('data.yaml', '- a\n')).toThrow(
