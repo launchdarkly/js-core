@@ -2,6 +2,13 @@
 
 All notable changes to `@launchdarkly/js-sdk-common` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [2.32.2](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.32.1...js-sdk-common-v2.32.2) (2026-11-06)
+
+
+### Bug Fixes
+
+* Handle flag keys that are names of built-in object members ([#2170](https://github.com/launchdarkly/js-core/issues/2170)) ([4a18699](https://github.com/launchdarkly/js-core/commit/4a18699619e9335e905d88431dbdd1aefeb16a66))
+
 ## [2.32.1](https://github.com/launchdarkly/js-core/compare/js-sdk-common-v2.32.0...js-sdk-common-v2.32.1) (2026-11-04)
 
 

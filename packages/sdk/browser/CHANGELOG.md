@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.14.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.1...js-client-sdk-v4.14.2) (2026-11-06)
+
+
+### Bug Fixes
+
+* Keep JSDoc in sdk-client declarations and show inherited LDClient docs ([#2181](https://github.com/launchdarkly/js-core/issues/2181)) ([09b5f99](https://github.com/launchdarkly/js-core/commit/09b5f99ba0f605f1d809411cd2a8762189e947a7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.35.1 to 1.35.2
+  * optionalDependencies
+    * @launchdarkly/eventsource bumped from 0.2.3 to 0.2.4
+
 ## [4.14.1](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.0...js-client-sdk-v4.14.1) (2026-11-04)
 
 

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.1.3...openfeature-cloudflare-server-v1.2.0) (2026-11-06)
+
+
+### Features
+
+* Add an initialization timeout option to the OpenFeature Cloudflare provider ([#2182](https://github.com/launchdarkly/js-core/issues/2182)) ([ba6ee3a](https://github.com/launchdarkly/js-core/commit/ba6ee3a069adc950db6e59744f2599537445f8d3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 2.2.2 to 2.2.3
+  * devDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from 2.7.50 to 2.7.51
+  * peerDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from ^2.7.0 to ^2.7.51
+
 ## [1.1.3](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.1.2...openfeature-cloudflare-server-v1.1.3) (2026-11-04)
 
 
