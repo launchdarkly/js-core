@@ -1,12 +1,12 @@
 /**
  * A single elapsed-time deadline for returning to the FDv2 data sources after
- * the server directed the SDK onto its FDv1 fallback synchronizer.
+ * the server directed the SDK off FDv2.
  *
  * The orchestration loop races {@link FDv2RecoveryTimer.promise} alongside the
  * active synchronizer, so the deadline is honored no matter which synchronizer
  * is running and no matter how many slots are currently available. Unlike the
- * heuristic fallback and recovery conditions, this deadline is unconditional:
- * only the elapsed time governs the return to FDv2.
+ * heuristic fallback and recovery conditions, this deadline is unconditional.
+ * Only the elapsed time governs the return to FDv2.
  */
 export interface FDv2RecoveryTimer {
   /**
@@ -20,7 +20,7 @@ export interface FDv2RecoveryTimer {
   readonly promise: Promise<void> | undefined;
 
   /**
-   * Schedule the deadline. Supersedes any pending deadline: the newest
+   * Schedule the deadline. Supersedes any pending deadline. The newest
    * directive's TTL is the one that counts. No-op once closed.
    *
    * @param ttlMs Time to wait, in milliseconds.
