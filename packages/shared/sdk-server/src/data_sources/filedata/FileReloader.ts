@@ -162,7 +162,7 @@ function asError(err: unknown): Error {
  *
  * A file that is rewritten in place is truncated and then written, so a reload can find it
  * empty. A reload that finds a file empty whose content is in effect keeps the current data and
- * reads the file again later, whatever the file's format. See `_holdsBack`.
+ * reads the file again later, whatever the file's format. See `_shouldHoldBack`.
  *
  * @internal
  */
@@ -370,7 +370,7 @@ export default class FileReloader {
             reached.push(path);
             const missing = isFileNotFoundError(err);
             if (missing) {
-              this._fileChanged(path);
+              this._endEmptyState(path);
             }
             if (missing && policy.missingFile === 'skip') {
               logger?.debug(`File ${path} does not exist. It contributes no data.`);
@@ -394,15 +394,15 @@ export default class FileReloader {
             } catch (err) {
               // Content ends the file's empty state, even content that fails to parse.
               reached.push(path);
-              this._fileChanged(path);
+              this._endEmptyState(path);
               failure = failure ?? { kind: 'parse', error: asError(err), path, repeated: false };
               return;
             }
           }
           const noEntries = blank || isNoDocument(document);
           if (!noEntries) {
-            this._fileChanged(path);
-          } else if (await this._holdsBack(path)) {
+            this._endEmptyState(path);
+          } else if (await this._shouldHoldBack(path)) {
             heldBack.push(path);
             return;
           }
@@ -509,7 +509,7 @@ export default class FileReloader {
   // Called when a reload finds a file with content, even content that fails to parse, or finds it
   // missing. That ends the file's empty state: the next time a reload finds it empty, its delay
   // starts over. Its bound does not.
-  private _fileChanged(path: string): void {
+  private _endEmptyState(path: string): void {
     const empty = this._emptyFiles.get(path);
     if (empty) {
       empty.since = undefined;
@@ -540,7 +540,7 @@ export default class FileReloader {
    * The clock is read after the file's own read, so that a slow read of another file does not
    * shorten this file's delay.
    */
-  private async _holdsBack(path: string): Promise<boolean> {
+  private async _shouldHoldBack(path: string): Promise<boolean> {
     const { retryDelayMs } = this._config;
     if (retryDelayMs <= 0 || this._appliedHadContent.get(path) !== true) {
       return false;
@@ -570,12 +570,12 @@ export default class FileReloader {
   }
 
   /**
-   * Holds back the files that `_holdsBack` decided to hold back. Whatever their format, the reload
-   * keeps the current data and arms the retry without reporting a failure. The retry comes when the
-   * first of the files has stayed empty for the retry delay, or has been held back for as long as
-   * it may be, plus a tenth of the retry delay, so that a timer that fires a little early still
-   * finds the time over. The change signal for a write starts a reload sooner. Once a file has
-   * stayed empty for the retry delay, a reload parses it: a file that is still empty is invalid
+   * Holds back the files that `_shouldHoldBack` decided to hold back. Whatever their format, the
+   * reload keeps the current data and arms the retry without reporting a failure. The retry comes
+   * when the first of the files has stayed empty for the retry delay, or has been held back for as
+   * long as it may be, plus a tenth of the retry delay, so that a timer that fires a little early
+   * still finds the time over. The change signal for a write starts a reload sooner. Once a file
+   * has stayed empty for the retry delay, a reload parses it: a file that is still empty is invalid
    * JSON, or a YAML document with no entries.
    */
   private _holdBack(paths: string[], reason: ReloadReason): void {
