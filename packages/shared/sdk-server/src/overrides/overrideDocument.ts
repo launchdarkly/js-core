@@ -14,18 +14,29 @@ import { isPlainObject } from './validateDefinition';
  * orders and de-duplicates by, and what the Go and Python SDKs key the layer by, so a key field
  * inside the entry is set to it. Without that, an entry pasted under a new map key with its
  * old key field would be merged under one key and stored under another.
+ *
+ * An entry marked as deleted fails the file. It is a mistake in the file, not a way to remove an
+ * override, and the override layer would reject it anyway. Rejecting it here makes the load
+ * failure name the file and the key, so the operator knows what to correct. The ordinary file
+ * data sources keep loading such an entry: this rule belongs to the override source only.
  */
 function validateItems(document: Record<string, any>, member: 'flags' | 'segments'): void {
   const items = document[member];
   if (isNullish(items)) {
     return;
   }
+  const kind = member.slice(0, -1);
   if (!isPlainObject(items)) {
-    throw new Error(`"${member}" must be an object keyed by ${member.slice(0, -1)} key`);
+    throw new Error(`"${member}" must be an object keyed by ${kind} key`);
   }
   Object.entries(items).forEach(([key, item]) => {
     if (!isPlainObject(item)) {
-      throw new Error(`${member.slice(0, -1)} "${key}" must be an object`);
+      throw new Error(`${kind} "${key}" must be an object`);
+    }
+    if (item.deleted === true) {
+      throw new Error(
+        `${kind} "${key}" is marked as deleted; remove the entry to remove its override`,
+      );
     }
     item.key = key;
   });
@@ -64,8 +75,9 @@ function validateDocument(parsed: any): FileDataDocument {
  * is JSON. YAML needs a parser. Without one, a YAML file is an error.
  *
  * The result is validated: the document and its `flags`, `flagValues`, and `segments` members
- * must be objects, every flag and segment entry must be an object, and an entry that omits its
- * `key` gets it from the map key. An empty document is a document with no members.
+ * must be objects, every flag and segment entry must be an object that is not marked as deleted,
+ * and an entry that omits its `key` gets it from the map key. An empty document is a document
+ * with no members.
  *
  * @internal
  */

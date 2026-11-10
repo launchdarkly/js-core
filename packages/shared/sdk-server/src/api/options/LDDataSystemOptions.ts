@@ -116,8 +116,9 @@ export interface LDDataSystemOptions {
  * A configured file that does not exist contributes no overrides. It can be created later, and
  * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
  * reload: the previously loaded overrides stay in effect, the failure is logged, and the source
- * retries. Every applied change is logged at Info level with the overrides in effect and what
- * each file supplied.
+ * retries. A file that contains an entry marked as deleted fails to load in the same way; to
+ * remove an override, remove its entry or delete the file. Every applied change is logged at Info
+ * level with the overrides in effect and what each file supplied.
  *
  * @example
  * ```typescript

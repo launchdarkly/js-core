@@ -403,6 +403,43 @@ describe('FileDataInitializerFDv2', () => {
     expect(keys).toEqual(['__proto__']);
   });
 
+  it('passes an entry marked as deleted through, as it always has', async () => {
+    // The file-based override source fails a file with such an entry. The file data initializer
+    // keeps loading it, because rejecting it here would be a breaking change.
+    const goneFlag = { ...flag1, key: 'gone', deleted: true };
+    const goneSegment = { key: 'gone-segment', version: 1, deleted: true };
+    mockFilesystem.fileData['file.json'] = {
+      timestamp: 0,
+      data: JSON.stringify({
+        flags: { flag1, gone: goneFlag },
+        segments: { 'gone-segment': goneSegment },
+      }),
+    };
+    const initializer = new FileDataInitializerFDv2(
+      { type: 'file', paths: ['file.json'] },
+      platform,
+      logger,
+    );
+
+    initializer.start(mockDataCallback, mockStatusCallback);
+    await jest.runAllTimersAsync();
+
+    expect(mockStatusCallback).toHaveBeenCalledWith(subsystem.DataSourceState.Valid);
+    expect(mockStatusCallback.mock.calls.every((call) => call[1] === undefined)).toBe(true);
+    expect(logger.getCount(LogLevel.Error)).toEqual(0);
+    const { payload } = mockDataCallback.mock.calls[0][1];
+    const objects = Object.fromEntries(
+      payload.updates.map((update: any) => [`${update.kind}:${update.key}`, update.object]),
+    );
+    expect(Object.keys(objects).sort()).toEqual([
+      'flag:flag1',
+      'flag:gone',
+      'segment:gone-segment',
+    ]);
+    expect(objects['flag:gone']).toEqual(goneFlag);
+    expect(objects['segment:gone-segment']).toEqual(goneSegment);
+  });
+
   it('loads flags from the flagValues shorthand map', async () => {
     mockFilesystem.fileData['flagValues.json'] = { timestamp: 0, data: flagValuesOnlyJson };
 

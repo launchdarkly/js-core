@@ -13,6 +13,7 @@ import NamespacedDataSet from '../data_sources/NamespacedDataSet';
 import VersionedDataKinds from '../store/VersionedDataKinds';
 import OverrideLayer, { LayerContents } from './OverrideLayer';
 import { ReadStore } from './ReadStoreOverlay';
+import { DeletedDefinitionError } from './validateDefinition';
 
 const diffNamespaces = [
   VersionedDataKinds.Features.namespace,
@@ -124,7 +125,10 @@ export default class OverrideSink implements LDOverrideSink {
    * whose merged-view evaluation may have changed. The replacement is visible to evaluations
    * when this method returns. The notifications follow, because they can need asynchronous
    * reads of the base store. A snapshot with a definition of the wrong shape is rejected by the
-   * layer before any of it is applied, and the error reaches the caller.
+   * layer before any of it is applied, and the error reaches the caller. A snapshot that contains
+   * a flag or segment marked as deleted is rejected the same way, and the rejection is also
+   * logged here at Error level, because a custom source may not report the error. A rejected
+   * snapshot sends no notifications.
    */
   setOverrides(flags: LDKeyedFeatureStoreItem[], segments: LDKeyedFeatureStoreItem[]): void {
     if (this._closed) {
@@ -133,7 +137,18 @@ export default class OverrideSink implements LDOverrideSink {
       );
       return;
     }
-    const { previous, current } = this._layer.setAll(flags, segments);
+    let replaced: ReturnType<OverrideLayer['setAll']>;
+    try {
+      replaced = this._layer.setAll(flags, segments);
+    } catch (err) {
+      if (err instanceof DeletedDefinitionError) {
+        this._logger?.error(
+          `Rejected an override snapshot: ${err.message}. The overrides in effect are unchanged.`,
+        );
+      }
+      throw err;
+    }
+    const { previous, current } = replaced;
     // Computing the affected flags needs the merged view before and after the replacement. Skip
     // all of that work when nothing is listening.
     if (!this._hasEventListeners()) {

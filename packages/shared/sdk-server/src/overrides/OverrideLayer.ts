@@ -14,7 +14,7 @@ import { markOverrideEntry } from '../evaluation/data/overrideMarker';
 import { Segment } from '../evaluation/data/Segment';
 import { processFlag, processSegment } from '../store/serialization';
 import VersionedDataKinds from '../store/VersionedDataKinds';
-import { validateFlag, validateSegment } from './validateDefinition';
+import { checkNotDeleted, validateFlag, validateSegment } from './validateDefinition';
 
 /**
  * The entries of one kind, keyed by item key. Each entry is the prepared, marked copy of a
@@ -32,13 +32,19 @@ export type LayerKindContents = Record<string, LDFeatureStoreItem>;
 export type LayerContents = Record<string, LayerKindContents>;
 
 /**
- * Copies a definition the source supplied, checks that the copy has the shape evaluation
- * requires, prepares the copy for evaluation the way the SDK prepares LaunchDarkly data, and
- * marks it. The source's object is never modified. The check is on the copy, because the copy is
- * what the layer stores. A definition of the wrong shape throws.
+ * Copies the definitions the source supplied. The source's objects are never modified. Every
+ * check is on the copies, because the copies are what the layer stores.
  */
-function prepareFlag(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
-  const copy = clone<Record<string, any>>(item);
+function copyAll(items: LDKeyedFeatureStoreItem[]): Record<string, any>[] {
+  return items.map((item) => clone<Record<string, any>>(item));
+}
+
+/**
+ * Checks that a copied definition has the shape evaluation requires, prepares it for evaluation
+ * the way the SDK prepares LaunchDarkly data, and marks it. A definition of the wrong shape
+ * throws.
+ */
+function prepareFlag(copy: Record<string, any>): LDFeatureStoreItem {
   validateFlag(copy);
   const flag = copy as Flag;
   processFlag(flag);
@@ -46,8 +52,7 @@ function prepareFlag(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
   return flag;
 }
 
-function prepareSegment(item: LDKeyedFeatureStoreItem): LDFeatureStoreItem {
-  const copy = clone<Record<string, any>>(item);
+function prepareSegment(copy: Record<string, any>): LDFeatureStoreItem {
   validateSegment(copy);
   const segment = copy as Segment;
   processSegment(segment);
@@ -94,7 +99,10 @@ export default class OverrideLayer {
    * Every definition is checked and prepared before the assignment. When one definition does
    * not have the shape evaluation requires, this method throws an Error that names the kind, the
    * key, and the field, and the layer keeps its previous contents: no part of the snapshot is
-   * applied.
+   * applied. A snapshot that contains a flag or segment marked as deleted is rejected the same
+   * way, with a DeletedDefinitionError that names the kind and the key: the layer never holds a
+   * deleted item. That check comes first, so it reports a deleted item even when the item, or
+   * another definition of the snapshot, also has the wrong shape.
    *
    * @returns The previous and the new contents, for change comparison. Neither may be modified.
    */
@@ -102,11 +110,15 @@ export default class OverrideLayer {
     flags: LDKeyedFeatureStoreItem[],
     segments: LDKeyedFeatureStoreItem[],
   ): { previous: LayerContents; current: LayerContents } {
+    const flagCopies = copyAll(flags);
+    const segmentCopies = copyAll(segments);
+    flagCopies.forEach((flag) => checkNotDeleted('flag', flag));
+    segmentCopies.forEach((segment) => checkNotDeleted('segment', segment));
     const current = emptyContents();
-    flags.forEach((flag) => {
+    flagCopies.forEach((flag) => {
       current[VersionedDataKinds.Features.namespace][flag.key] = prepareFlag(flag);
     });
-    segments.forEach((segment) => {
+    segmentCopies.forEach((segment) => {
       current[VersionedDataKinds.Segments.namespace][segment.key] = prepareSegment(segment);
     });
     const dependencies = new DependencyTracker();
