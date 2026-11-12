@@ -5,6 +5,26 @@ import {
 
 import { CommandHandler } from './ClientEntity';
 
+const CAPABILITIES = [
+  'client-side',
+  'service-endpoints',
+  'tags',
+  'user-type',
+  'inline-context-all',
+  'anonymous-redaction',
+  'strongly-typed',
+  'client-prereq-events',
+  'client-prereq-cycle-detection',
+  'client-per-context-summaries',
+  'client-independence',
+  'evaluation-hooks',
+  'track-hooks',
+  'secure-mode-hash',
+  'polling-gzip',
+  'fdv1-fallback',
+  'bootstrap',
+];
+
 export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
   constructor(
     url: string,
@@ -12,7 +32,7 @@ export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
     private readonly _onCreateClient: (params: CreateInstanceParams) => Promise<string>,
     private readonly _onDeleteClient: (id: string) => void,
   ) {
-    super(url);
+    super(url, { capabilities: CAPABILITIES });
   }
 
   protected createClient(params: CreateInstanceParams): Promise<string> {

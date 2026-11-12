@@ -84,6 +84,23 @@ it('returns getInitializationState() === "initializing" initially', () => {
   expect(client.getInitializationState()).toBe('initializing');
 });
 
+it('passes the eventSource option to the base client unmodified', () => {
+  const { mock } = makeMockBaseClient();
+  (createBaseClient as jest.Mock).mockReturnValue(mock);
+  const eventSource = {
+    createEventSource: jest.fn(),
+    capabilities: { readTimeout: true, customMethod: true, headers: true },
+  };
+
+  createClient('test-id', { kind: 'user', key: 'u1' }, { eventSource });
+
+  expect(createBaseClient).toHaveBeenLastCalledWith(
+    'test-id',
+    { kind: 'user', key: 'u1' },
+    expect.objectContaining({ eventSource }),
+  );
+});
+
 it('sets initializedState to "complete" after start() resolves', async () => {
   const { mock, resolveStart } = makeMockBaseClient();
   (createBaseClient as jest.Mock).mockReturnValue(mock);

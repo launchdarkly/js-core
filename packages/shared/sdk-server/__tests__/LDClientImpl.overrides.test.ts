@@ -210,6 +210,7 @@ describe('given an initialized client with LaunchDarkly data and an override sou
 
   let source: TestOverrideSource;
   let client: LDClientImpl;
+  let logger: MockLogger;
 
   beforeEach(async () => {
     const platform = makeFDv2Platform(
@@ -220,8 +221,9 @@ describe('given an initialized client with LaunchDarkly data and an override sou
         'flag-normal': normal,
       }),
     );
+    logger = makeMockLogger();
     source = new TestOverrideSource({ flags: [overriddenTracked] });
-    client = makeFDv2Client(platform, { dataSystem: { overrides: source } });
+    client = makeFDv2Client(platform, { logger, dataSystem: { overrides: source } });
     await client.waitForInitialization({ timeout: 5 });
   });
 
@@ -270,6 +272,26 @@ describe('given an initialized client with LaunchDarkly data and an override sou
       expect(flagsState[key]).not.toHaveProperty('debugEventsUntilDate');
     });
     expect(flagsState['overridden-flag'].version).toEqual(7);
+  });
+
+  it('rejects and logs a snapshot that contains a deleted flag, keeping both data sets in effect', async () => {
+    // A deleted item cannot remove LaunchDarkly data for its key, and the snapshot it is part of
+    // does not apply: flag-normal keeps its LaunchDarkly value and the earlier override stays.
+    expect(() =>
+      source.setOverrides([
+        { ...overriddenTracked, variations: [false] },
+        { key: 'flag-normal', version: 101, deleted: true },
+      ]),
+    ).toThrow('flag "flag-normal" is marked as deleted');
+
+    expect(await client.variation('flag-normal', user, 'default')).toEqual('normal-value');
+    expect(await client.variation('overridden-flag', user, 'default')).toBe(true);
+    const state = await client.allFlagsState(user);
+    expect(state.getFlagValue('flag-normal')).toEqual('normal-value');
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error.mock.calls[0][0]).toMatch(
+      /^Rejected an override snapshot: flag "flag-normal" is marked as deleted/,
+    );
   });
 
   it('returns LaunchDarkly data again when the override is removed', async () => {

@@ -1,5 +1,4 @@
-// @ts-ignore. // this crypto is provided by Akamai's platform at runtime
-import { crypto as AkamaiCrypto } from 'crypto';
+import * as AkamaiCrypto from 'crypto';
 
 import type { Crypto, Hasher, Hmac } from '@launchdarkly/js-server-sdk-common';
 
@@ -23,7 +22,8 @@ export default class EdgeCrypto implements Crypto {
 
   randomUUID(): string {
     const array = new Uint32Array(1);
-    AkamaiCrypto.getRandomValues(array);
+    // @ts-expect-error - this crypto is provided by Akamai's platform at runtime
+    AkamaiCrypto.crypto.getRandomValues(array);
     return array.join();
   }
 }

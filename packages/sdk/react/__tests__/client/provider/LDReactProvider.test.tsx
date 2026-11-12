@@ -340,6 +340,17 @@ describe('createLDReactProvider (convenience factory)', () => {
     );
   });
 
+  it('passes the eventSource option to createClient unmodified', () => {
+    const eventSource = {
+      createEventSource: jest.fn(),
+      capabilities: { readTimeout: true, customMethod: true, headers: true },
+    };
+    createLDReactProvider('sdk-key', { kind: 'user', key: 'u1' }, { ldOptions: { eventSource } });
+
+    const clientOptions = (createClient as jest.Mock).mock.calls[0][2];
+    expect(clientOptions.eventSource).toBe(eventSource);
+  });
+
   it('does not forward deferInitialization/startOptions/reactContext to createClient', () => {
     const reactContext = initLDReactContext();
     const startOptions = { timeout: 3 };

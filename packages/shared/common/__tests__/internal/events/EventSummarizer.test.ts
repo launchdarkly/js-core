@@ -353,3 +353,34 @@ it('keeps override-affected evaluations in a separate counter that carries the m
     overrideAffected: true,
   });
 });
+
+it('summarizes flags whose keys are names of built-in object members', () => {
+  const summarizer = new EventSummarizer();
+  const context = Context.fromLDContext({ key: 'key' });
+  const keys = ['__proto__', 'constructor', 'hasOwnProperty', 'toString', 'valueOf'];
+
+  keys.forEach((key) => {
+    summarizer.summarizeEvent({
+      kind: 'feature',
+      creationDate: 1000,
+      key,
+      version: 1,
+      context,
+      variation: 0,
+      value: true,
+      default: false,
+    } as any);
+  });
+  const data = summarizer.getSummary();
+
+  // Every key gets its own summary, including __proto__, which survives serialization.
+  const features = JSON.parse(JSON.stringify(data)).features;
+  expect(Object.keys(features).sort()).toEqual([...keys].sort());
+  keys.forEach((key) => {
+    expect(features[key]).toEqual({
+      default: false,
+      counters: [{ value: true, count: 1, variation: 0, version: 1 }],
+      contextKinds: ['user'],
+    });
+  });
+});

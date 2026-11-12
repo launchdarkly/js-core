@@ -103,13 +103,15 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
               Object.keys(data).forEach((namespace) => {
                 const oldDataForKind = oldData[namespace];
                 const newDataForKind = data[namespace];
+                // The copies have no prototype, so that a flag key such as __proto__ is an
+                // ordinary key.
                 let iterateData;
                 if (basis) {
                   // for basis, need to iterate on all keys
-                  iterateData = { ...oldDataForKind, ...newDataForKind };
+                  iterateData = Object.assign(Object.create(null), oldDataForKind, newDataForKind);
                 } else {
                   // for non basis, only need to iterate on keys in incoming data
-                  iterateData = { ...newDataForKind };
+                  iterateData = Object.assign(Object.create(null), newDataForKind);
                 }
                 Object.keys(iterateData).forEach((key) => {
                   this.addIfModified(

@@ -1,5 +1,43 @@
 # Changelog
 
+## [6.4.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.6...node-server-sdk-dynamodb-v6.4.7) (2026-11-06)
+
+
+### Bug Fixes
+
+* Avoid querying a persistent store on every evaluation of an unknown flag ([#2169](https://github.com/launchdarkly/js-core/issues/2169)) ([da1cd35](https://github.com/launchdarkly/js-core/commit/da1cd35d196cafa2b29925aa65306ccc2201e865))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.16.3 to 9.16.4
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.16.4
+
+## [6.4.6](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.5...node-server-sdk-dynamodb-v6.4.6) (2026-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.16.2 to 9.16.3
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.16.3
+
+## [6.4.5](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.4...node-server-sdk-dynamodb-v6.4.5) (2026-11-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.16.1 to 9.16.2
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.16.2
+
 ## [6.4.4](https://github.com/launchdarkly/js-core/compare/node-server-sdk-dynamodb-v6.4.3...node-server-sdk-dynamodb-v6.4.4) (2026-11-02)
 
 

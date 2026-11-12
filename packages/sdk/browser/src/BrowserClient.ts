@@ -42,6 +42,7 @@ import { getAllStorageKeys } from './platform/LocalStorage';
 
 class BrowserClientImpl extends LDClientImpl {
   private readonly _goalManager?: GoalManager;
+  private readonly _removeStateListeners?: () => void;
   private readonly _plugins?: LDPlugin[];
 
   constructor(
@@ -217,11 +218,19 @@ class BrowserClientImpl extends LDClientImpl {
       // which emits the event, and assign its promise to a member. The "waitForGoalsReady" function
       // would return that promise.
       this._goalManager.initialize();
-
-      if (validatedBrowserOptions.automaticBackgroundHandling) {
-        registerStateDetection(() => this.flush());
-      }
     }
+
+    if (validatedBrowserOptions.automaticBackgroundHandling) {
+      this._removeStateListeners = registerStateDetection(() => this.flush());
+    }
+  }
+
+  override async close(): Promise<void> {
+    // Remove the page listeners first, so a page exit during the final flush does not call
+    // flush on a client that is closing.
+    this._removeStateListeners?.();
+    this._goalManager?.close();
+    await super.close();
   }
 
   registerPlugins(client: LDClient): void {

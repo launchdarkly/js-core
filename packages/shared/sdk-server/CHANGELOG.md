@@ -8,6 +8,40 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.4](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.3...js-server-sdk-common-v2.26.4) (2026-11-06)
+
+
+### Bug Fixes
+
+* Avoid querying a persistent store on every evaluation of an unknown flag ([#2169](https://github.com/launchdarkly/js-core/issues/2169)) ([da1cd35](https://github.com/launchdarkly/js-core/commit/da1cd35d196cafa2b29925aa65306ccc2201e865))
+* Handle flag keys that are names of built-in object members ([#2170](https://github.com/launchdarkly/js-core/issues/2170)) ([4a18699](https://github.com/launchdarkly/js-core/commit/4a18699619e9335e905d88431dbdd1aefeb16a66))
+* Keep a flag named __proto__ in file data, change events and persistent store reads ([#2174](https://github.com/launchdarkly/js-core/issues/2174)) ([1ffb29b](https://github.com/launchdarkly/js-core/commit/1ffb29b29362f951b10cb91cb04f68c6cccb2e6f))
+* Make TestData valueForAll return its value when targeting is off ([#2177](https://github.com/launchdarkly/js-core/issues/2177)) ([fc8c1f6](https://github.com/launchdarkly/js-core/commit/fc8c1f641eadbec54f811e6bea27c6928f46b2eb))
+* Prevent TestData from throwing for a flag named constructor or toString ([#2173](https://github.com/launchdarkly/js-core/issues/2173)) ([4e58d1d](https://github.com/launchdarkly/js-core/commit/4e58d1d08d20f46ba46bbdd92a1b52b3d665e3b7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.1 to 2.32.2
+
+## [2.26.3](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.2...js-server-sdk-common-v2.26.3) (2026-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.0 to 2.32.1
+
+## [2.26.2](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.1...js-server-sdk-common-v2.26.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* Base the validity of the uninitialized all flags state on the override layer's flags ([#2132](https://github.com/launchdarkly/js-core/issues/2132)) ([9cafac5](https://github.com/launchdarkly/js-core/commit/9cafac5abf2933146a5d78636bb48b7f4f23de02))
+
 ## [2.26.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.0...js-server-sdk-common-v2.26.1) (2026-11-02)
 
 

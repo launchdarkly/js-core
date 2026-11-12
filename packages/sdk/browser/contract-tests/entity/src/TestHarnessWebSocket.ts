@@ -16,7 +16,11 @@ const BASE_CAPABILITIES = [
   'client-prereq-events',
   'client-prereq-cycle-detection',
   'client-per-context-summaries',
+  'client-independence',
+  'evaluation-hooks',
   'track-hooks',
+  'secure-mode-hash',
+  'polling-gzip',
   'fdv1-fallback',
   'bootstrap',
   // The FDv1 streaming data source retries every HTTP error. On the
@@ -28,12 +32,13 @@ const BASE_CAPABILITIES = [
   'retry-conformance-fdv1-streaming',
 ];
 
-// The native browser EventSource cannot send a POST request and hides HTTP error
-// details. Only advertise the capabilities that need them when the run uses the
-// fetch-based EventSource.
+// The native browser EventSource cannot send a POST request or request headers, and
+// hides HTTP error details. Only advertise the capabilities that need them when the
+// run uses the fetch-based EventSource. The wrapper tests check the wrapper header on
+// the stream request.
 function browserCapabilities(): string[] {
   return useFetchEventSource()
-    ? [...BASE_CAPABILITIES, 'client-use-post', 'client-event-source-http-errors']
+    ? [...BASE_CAPABILITIES, 'client-use-post', 'client-event-source-http-errors', 'wrapper']
     : BASE_CAPABILITIES;
 }
 

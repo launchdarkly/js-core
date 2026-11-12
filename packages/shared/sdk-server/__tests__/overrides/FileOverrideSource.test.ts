@@ -333,6 +333,93 @@ describe('given a file override source over a mock filesystem', () => {
     expect(layer.get(VersionedDataKinds.Features, 'flag1')?.variations).toEqual([false]);
   });
 
+  it.each([
+    [
+      'flag',
+      '"flags": {"gone": {"key": "gone", "version": 1, "on": true, "variations": [true], "deleted": true}}',
+    ],
+    ['segment', '"segments": {"gone": {"key": "gone", "version": 1, "deleted": true}}'],
+  ])(
+    'fails the reload for a %s entry marked as deleted, keeps the overrides, and recovers',
+    async (kind, deletedMember) => {
+      filesystem.set(first, '{"flagValues": {"flag1": true}}');
+      await startSource({ paths: [first], changeDetection: 'watching' });
+      expect(sink.snapshots).toHaveLength(1);
+
+      // The edit also changes flag1. The source rejects the file before it calls the sink, so the
+      // sink, which would accept anything, receives nothing and the earlier overrides stay.
+      filesystem.set(first, `{"flagValues": {"flag1": false}, ${deletedMember}}`);
+      filesystem.emit(directory);
+      await jest.advanceTimersByTimeAsync(300);
+      expect(sink.snapshots).toHaveLength(1);
+      expect(logger.getMessages(LogLevel.Error)).toEqual([
+        `Unable to load flags: ${kind} "gone" is marked as deleted; remove the entry to remove` +
+          ` its override [${first}]`,
+      ]);
+
+      // The retry repeats the same failure at debug level only.
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(logger.getCount(LogLevel.Error)).toEqual(1);
+      expect(sink.snapshots).toHaveLength(1);
+
+      // Removing the entry, without a further notification, recovers through the retry.
+      filesystem.set(first, '{"flagValues": {"flag1": false}}');
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(sink.snapshots).toHaveLength(2);
+      expect(sink.last.flags[0].variations).toEqual([false]);
+    },
+  );
+
+  it('fails the initial load when one of the files has an entry marked as deleted', async () => {
+    // A reload is all or nothing across the files, so the valid first file applies nothing either.
+    filesystem.set(first, '{"flagValues": {"flag1": true}}');
+    filesystem.set(second, '{"segments": {"gone": {"version": 1, "deleted": true}}}');
+
+    await startSource({ paths: [first, second] });
+
+    expect(sink.snapshots).toHaveLength(0);
+    logger.expectMessages([
+      {
+        level: LogLevel.Error,
+        matches: new RegExp(`segment "gone" is marked as deleted.*\\[${second}\\]`),
+      },
+    ]);
+  });
+
+  it('loads flag and segment entries whose deleted marker is false', async () => {
+    // Entries copied from LaunchDarkly data carry "deleted": false. They are ordinary definitions,
+    // and the override layer accepts them.
+    const layer = new OverrideLayer();
+    const layerSink: LDOverrideSink = {
+      setOverrides: (flags, segments) => {
+        layer.setAll(flags, segments);
+      },
+    };
+    filesystem.set(
+      first,
+      JSON.stringify({
+        flags: { flag1: { version: 3, on: true, variations: [true], deleted: false } },
+        segments: { segment1: { version: 4, included: ['user-a'], deleted: false } },
+      }),
+    );
+    source = new FileOverrideSource(
+      {
+        paths: [first],
+        duplicateKeysHandling: 'fail',
+        changeDetection: 'polling',
+        pollIntervalMs: 1000,
+      },
+      filesystem,
+      logger,
+    );
+
+    await source.start(layerSink);
+
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')?.version).toEqual(3);
+    expect(layer.get(VersionedDataKinds.Segments, 'segment1')?.version).toEqual(4);
+    expect(logger.getCount(LogLevel.Error)).toEqual(0);
+  });
+
   it('stops detecting changes when closed', async () => {
     filesystem.set(first, '{"flagValues": {"flag1": true}}', 1);
     await startSource({ paths: [first] });

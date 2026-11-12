@@ -1,7 +1,7 @@
 import { Response } from 'express';
 
 import { ClientPool as GenericClientPool } from '@launchdarkly/js-contract-test-utils';
-import { LDClient } from '@launchdarkly/js-server-sdk-common';
+import { LDClient, LDOptions } from '@launchdarkly/js-server-sdk-common';
 import { init } from '@launchdarkly/shopify-oxygen-sdk';
 
 /**
@@ -28,6 +28,12 @@ export default class ClientPool {
               : await client.variation(flagKey, context, defaultValue);
             res.status(200);
             res.json({ value: evaluation });
+            break;
+          }
+          case 'secureModeHash': {
+            const { context } = rest.secureModeHash;
+            res.status(200);
+            res.json({ result: client.secureModeHash(context) });
             break;
           }
           default: {
@@ -66,17 +72,10 @@ export default class ClientPool {
         configuration: { credential = 'unknown-sdk-key', polling },
       } = options;
 
-      if (!polling) {
-        // We do not support non-polling clients yet
-        res.status(400);
-        res.send();
-        return;
-      }
-      const client = await init(credential, {
-        ...(polling && {
-          baseUri: polling.baseUri,
-        }),
-      });
+      // The SDK has no streaming data source. A configuration without polling gets an offline
+      // client, which still serves commands that need no flag data, such as secureModeHash.
+      const sdkOptions: LDOptions = polling ? { baseUri: polling.baseUri } : { offline: true };
+      const client = await init(credential, sdkOptions);
 
       await client.waitForInitialization({ timeout: 10 });
       const id = this._pool.add(client);

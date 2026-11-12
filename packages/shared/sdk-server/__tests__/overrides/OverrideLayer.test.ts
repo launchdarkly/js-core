@@ -330,6 +330,11 @@ describe('given a definition that does not have the shape evaluation requires', 
     ],
     ['an on switch that is not a boolean', flagWith({ on: 'off' }), '"on" must be a boolean'],
     [
+      'a deleted marker that is not a boolean',
+      flagWith({ deleted: 'true' }),
+      '"deleted" must be a boolean',
+    ],
+    [
       'a rollout that carries the bucket-by reference the SDK compiles',
       flagWith({ fallthrough: { rollout: { variations: [], bucketByAttributeReference: {} } } }),
       'fallthrough, rollout: "bucketByAttributeReference" is set by the SDK and cannot be supplied',
@@ -370,6 +375,11 @@ describe('given a definition that does not have the shape evaluation requires', 
       'excluded context 0: "values" must be an array',
     ],
     ['rules that are not an array', segmentWith({ rules: {} }), '"rules" must be an array'],
+    [
+      'a deleted marker that is not a boolean',
+      segmentWith({ deleted: 1 }),
+      '"deleted" must be a boolean',
+    ],
     [
       'clauses that are not an array',
       segmentWithRule({ clauses: {} }),
@@ -458,6 +468,80 @@ describe('given a definition that does not have the shape evaluation requires', 
     expect(Object.keys(layer.all(VersionedDataKinds.Features))).toEqual(['flag1']);
     expect(Object.keys(layer.all(VersionedDataKinds.Segments))).toEqual(['segment1']);
     expect(layer.isEmpty()).toBe(false);
+  });
+});
+
+describe('given a snapshot that contains a definition marked as deleted', () => {
+  // A deleted item is a store placeholder, not a definition, and an override is removed by
+  // leaving it out of the snapshot. The layer never holds one: the whole snapshot is rejected
+  // with an error that names the kind and the key, and the layer keeps its previous contents.
+  let layer: OverrideLayer;
+
+  beforeEach(() => {
+    layer = new OverrideLayer();
+    layer.setAll([rawFlag('flag1')], [rawSegment('segment1')]);
+  });
+
+  const expectPreviousContents = () => {
+    expect(Object.keys(layer.all(VersionedDataKinds.Features))).toEqual(['flag1']);
+    expect(Object.keys(layer.all(VersionedDataKinds.Segments))).toEqual(['segment1']);
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')?.version).toEqual(1);
+  };
+
+  it.each([
+    ['a deleted flag placeholder', { key: 'gone', version: 2, deleted: true }],
+    ['a full flag definition marked as deleted', { ...rawFlag('gone', 2), deleted: true }],
+  ])('rejects %s', (_description, deleted) => {
+    expect(() => layer.setAll([rawFlag('flag1', 2), deleted], [rawSegment('segment2')])).toThrow(
+      'flag "gone" is marked as deleted; to remove its override, leave it out of the snapshot',
+    );
+    expectPreviousContents();
+  });
+
+  it.each([
+    ['a deleted segment placeholder', { key: 'gone', version: 2, deleted: true }],
+    ['a full segment definition marked as deleted', { ...rawSegment('gone', 2), deleted: true }],
+  ])('rejects %s', (_description, deleted) => {
+    expect(() => layer.setAll([rawFlag('flag1', 2)], [rawSegment('segment2'), deleted])).toThrow(
+      'segment "gone" is marked as deleted; to remove its override, leave it out of the snapshot',
+    );
+    expectPreviousContents();
+  });
+
+  it('reports the deleted item when another definition of the snapshot has the wrong shape', () => {
+    // The deleted check runs over the whole snapshot first, so the rejection names the deleted
+    // item, not a missing field of the malformed flag that comes before it.
+    const malformed = { ...rawFlag('bad-flag'), variations: undefined };
+
+    expect(() =>
+      layer.setAll([malformed, rawFlag('flag2')], [{ key: 'gone', version: 1, deleted: true }]),
+    ).toThrow('segment "gone" is marked as deleted');
+    expectPreviousContents();
+  });
+
+  it('does not modify the supplied definitions', () => {
+    const deleted = { ...rawFlag('gone', 2), deleted: true };
+    const before = JSON.stringify(deleted);
+
+    expect(() => layer.setAll([deleted], [])).toThrow('is marked as deleted');
+
+    expect(JSON.stringify(deleted)).toEqual(before);
+  });
+
+  it('accepts definitions whose deleted marker is false or null', () => {
+    // Entries copied from LaunchDarkly data carry "deleted": false. That is an ordinary definition.
+    layer.setAll(
+      [
+        { ...rawFlag('flag2'), deleted: false },
+        { ...rawFlag('flag3'), deleted: null },
+      ],
+      [{ ...rawSegment('segment2'), deleted: false }],
+    );
+
+    expect(layer.get(VersionedDataKinds.Features, 'flag2')).toBeDefined();
+    expect(layer.get(VersionedDataKinds.Features, 'flag3')).toBeDefined();
+    expect(layer.get(VersionedDataKinds.Segments, 'segment2')).toBeDefined();
+    expect(layer.get(VersionedDataKinds.Features, 'flag1')).toBeUndefined();
   });
 });
 

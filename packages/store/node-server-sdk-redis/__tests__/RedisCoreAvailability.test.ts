@@ -142,6 +142,56 @@ it('sends init to the client while the connection drop is within the grace perio
   });
 });
 
+it('reports a get error through the callback when the read fails', (done) => {
+  const readError = new Error('connection refused');
+  const state = makeState({
+    getClient: () => ({
+      hget: (_key: string, _field: string, cb: (err: Error | null, val: string | null) => void) =>
+        cb(readError, null),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.get({ namespace: 'features', deserialize: JSON.parse }, 'flag', (descriptor, err) => {
+    expect(descriptor).toBeUndefined();
+    expect(err).toBe(readError);
+    done();
+  });
+});
+
+it('reports a get error through the callback when the connection is down', (done) => {
+  const state = makeState({
+    isConnected: () => false,
+    isInitialConnection: () => false,
+    getClient: () => {
+      throw new Error('should not create a client while disconnected');
+    },
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.get({ namespace: 'features', deserialize: JSON.parse }, 'flag', (descriptor, err) => {
+    expect(descriptor).toBeUndefined();
+    expect(err).toBeDefined();
+    done();
+  });
+});
+
+it('calls back without an error for a key that is not in the store', (done) => {
+  const state = makeState({
+    getClient: () => ({
+      hget: (_key: string, _field: string, cb: (err: Error | null, val: string | null) => void) =>
+        cb(null, null),
+    }),
+  });
+  // @ts-ignore Partial state mock for testing.
+  const core = new RedisCore(state);
+  core.get({ namespace: 'features', deserialize: JSON.parse }, 'flag', (descriptor, err) => {
+    expect(descriptor).toBeUndefined();
+    expect(err).toBeUndefined();
+    done();
+  });
+});
+
 it('calls back true from isStoreAvailable when the check succeeds', (done) => {
   const state = makeState({
     getClient: () => ({

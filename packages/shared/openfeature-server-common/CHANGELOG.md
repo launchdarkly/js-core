@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.2.3](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.2.2...openfeature-js-server-common-v2.2.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* Align OpenFeature context conversion log levels with the provider spec ([#2183](https://github.com/launchdarkly/js-core/issues/2183)) ([c356b22](https://github.com/launchdarkly/js-core/commit/c356b22c8a7226446afc13609b0ec4bfb1d86c0e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.1 to 2.32.2
+
+## [2.2.2](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.2.1...openfeature-js-server-common-v2.2.2) (2026-11-04)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.0 to 2.32.1
+
 ## [2.2.1](https://github.com/launchdarkly/js-core/compare/openfeature-js-server-common-v2.2.0...openfeature-js-server-common-v2.2.1) (2026-10-27)
 
 

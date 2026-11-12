@@ -28,6 +28,10 @@ const badCommandError = new Error('unsupported command');
 const malformedCommand = new Error('command was malformed');
 export { badCommandError };
 
+// The service uses a mobile key unless USE_MOBILE_KEY is 'false'. Then it uses a client-side
+// ID, which is the SDK default.
+export const useMobileKey = process.env.USE_MOBILE_KEY !== 'false';
+
 function translateInitializer(init: SDKConfigDataInitializer): InitializerEntry | undefined {
   if (init.polling) {
     return {
@@ -113,8 +117,15 @@ function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions {
     withReasons: options.clientSide.evaluationReasons,
     useReport: options.clientSide.useReport ?? undefined,
     disableCache: true,
-    useMobileKey: true,
+    useMobileKey,
   };
+
+  if (options.clientSide.usePost) {
+    cf.usePost = true;
+  }
+  if (options.clientSide.hash) {
+    cf.hash = options.clientSide.hash;
+  }
 
   if (options.serviceEndpoints) {
     cf.streamUri = options.serviceEndpoints.streaming;

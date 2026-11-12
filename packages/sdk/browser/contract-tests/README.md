@@ -88,7 +88,7 @@ Three skip lists live alongside this README; pass the appropriate one to `-skip-
 
 #### Fetch EventSource run
 
-Open the entity with `?eventsource=fetch` to make it use the fetch-based EventSource for every client and advertise the `client-use-post` capability:
+Open the entity with `?eventsource=fetch` to make it use the fetch-based EventSource for every client and advertise the `client-use-post`, `client-event-source-http-errors` and `wrapper` capabilities, which the native EventSource cannot support:
 
 ```bash
 node packages/sdk/browser/contract-tests/entity/open-browser.mjs 'http://localhost:5173/?eventsource=fetch' &

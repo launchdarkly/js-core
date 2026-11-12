@@ -274,6 +274,52 @@ describe('given a mock filesystem and memory feature store', () => {
     expect(filesystem.readFile).toHaveBeenCalledTimes(2);
   });
 
+  it('loads flags whose keys are names of built-in object members', async () => {
+    // Write the JSON text, so that __proto__ is an ordinary key of the file.
+    const data =
+      '{"flags": {"__proto__": {"key": "__proto__", "on": true, "fallthrough": {"variation": 0},' +
+      ' "variations": ["value of __proto__"], "version": 1}},' +
+      ' "flagValues": {"constructor": "value of constructor"}}';
+    await createFileDataSource(true, [{ path: 'file.json', data }]);
+
+    // The store has both flags, and the flagValues flag starts at version 1.
+    const protoFlag = (await asyncFeatureStore.get(
+      VersionedDataKinds.Features,
+      '__proto__',
+    )) as Flag;
+    const constructorFlag = (await asyncFeatureStore.get(
+      VersionedDataKinds.Features,
+      'constructor',
+    )) as Flag;
+    expect(protoFlag.variations).toEqual(['value of __proto__']);
+    expect(constructorFlag.variations).toEqual(['value of constructor']);
+    expect(constructorFlag.version).toEqual(1);
+  });
+
+  it('loads an entry marked as deleted as a deleted item, as it always has', async () => {
+    // The file-based override source fails a file with such an entry. The file data source keeps
+    // loading it, because rejecting it here would be a breaking change.
+    const data = JSON.stringify({
+      flags: {
+        flag1,
+        gone: { ...flag1, key: 'gone', version: 1, deleted: true },
+      },
+      segments: { goneSegment: { key: 'goneSegment', version: 1, deleted: true } },
+    });
+    await createFileDataSource(true, [{ path: 'file.json', data }]);
+
+    expect(mockErrorHandler).not.toHaveBeenCalled();
+    expect(mockInitSuccessHandler).toHaveBeenCalled();
+    expect(logger.getCount()).toEqual(0);
+    expect(await asyncFeatureStore.initialized()).toBeTruthy();
+    // The store holds them as deleted items, so they are not found.
+    expect(Object.keys(await asyncFeatureStore.all(VersionedDataKinds.Features))).toEqual([
+      flag1Key,
+    ]);
+    expect(await asyncFeatureStore.get(VersionedDataKinds.Features, 'gone')).toBeNull();
+    expect(await asyncFeatureStore.get(VersionedDataKinds.Segments, 'goneSegment')).toBeNull();
+  });
+
   it('does not create watchers if auto-update if off', async () => {
     await createFileDataSource(true, [
       { path: 'file1.json', data: flagOnlyJson },

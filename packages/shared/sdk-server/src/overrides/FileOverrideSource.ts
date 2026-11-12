@@ -83,7 +83,7 @@ export interface FileOverrideSourceConfig {
  * where its rules differ from the file data sources.
  *
  * - The parser is chosen by file extension, as for the file data sources, and the document
- *   is validated.
+ *   is validated. A flag or segment entry marked as deleted fails the load.
  * - A flag or segment entry is keyed by its map key, as the Go SDK's override source keys it.
  * - A `flagValues` entry becomes a flag that is on and serves the value by fallthrough, with
  *   version 1.
@@ -142,13 +142,14 @@ function countsText(flags: number, segments: number): string {
  *
  * A reload replaces the entire override set. A configured file that does not exist contributes
  * no overrides, so deleting a file removes its overrides. A file that exists but cannot be read
- * or parsed makes that whole reload fail. The previously loaded overrides stay in effect, the
- * failure is logged, and the source retries after a short delay. A JSON file with no content
- * cannot be parsed. A file whose content is in effect and that is found with no entries, empty or
- * with only a YAML comment, may be in the middle of an in-place rewrite, so it is held back until
- * it has stayed so, without being written, for the retry delay, and for at most five retry delays
- * while that file keeps being rewritten; the other files wait with it. Every applied change is logged
- * at Info level with the overrides in effect and what each file supplied.
+ * or parsed, or that contains an entry marked as deleted, makes that whole reload fail. The
+ * previously loaded overrides stay in effect, the failure is logged, and the source retries
+ * after a short delay. A JSON file with no content cannot be parsed. A file whose content is in
+ * effect and that is found with no entries, empty or with only a YAML comment, may be in the
+ * middle of an in-place rewrite, so it is held back until it has stayed so, without being
+ * written, for the retry delay, and for at most five retry delays while that file keeps being
+ * rewritten; the other files wait with it. Every applied change is logged at Info level with the
+ * overrides in effect and what each file supplied.
  *
  * Flag overrides are currently experimental and subject to change.
  *

@@ -1,6 +1,6 @@
 {
   "name": "@launchdarkly/react-sdk",
-  "version": "4.1.30",
+  "version": "4.2.2",
   "description": "LaunchDarkly SDK for React frameworks",
   "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/react",
   "repository": {
@@ -18,7 +18,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsup",
+    "build": "rm -rf dist && tsup",
     "test": "npx jest --ci",
     "lint": "oxlint .",
     "format": "oxfmt .",
@@ -36,6 +36,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./fetch-eventsource": {
+      "import": {
+        "types": "./dist/fetch-eventsource.d.ts",
+        "default": "./dist/fetch-eventsource.js"
+      },
+      "require": {
+        "types": "./dist/fetch-eventsource.d.cts",
+        "default": "./dist/fetch-eventsource.cjs"
+      }
+    },
     "./server": {
       "import": {
         "types": "./dist/server.d.ts",
@@ -45,6 +55,13 @@
         "types": "./dist/server.d.cts",
         "default": "./dist/server.cjs"
       }
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "fetch-eventsource": [
+        "./dist/fetch-eventsource.d.ts"
+      ]
     }
   },
   "files": [
@@ -66,8 +83,8 @@
     "typescript": "6.0.3"
   },
   "dependencies": {
-    "@launchdarkly/js-client-sdk": "^4.14.0",
-    "@launchdarkly/js-server-sdk-common": "^2.26.1"
+    "@launchdarkly/js-client-sdk": "4.14.2",
+    "@launchdarkly/js-server-sdk-common": "2.26.4"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

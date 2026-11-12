@@ -5,12 +5,18 @@ import { Server } from 'http';
 import { ClientPool } from '@launchdarkly/js-contract-test-utils';
 
 import { Log } from './log.js';
-import { badCommandError, newSdkClientEntity, SdkClientEntity } from './sdkClientEntity.js';
+import {
+  badCommandError,
+  newSdkClientEntity,
+  SdkClientEntity,
+  useMobileKey,
+} from './sdkClientEntity.js';
 
 const app = express();
 let server: Server | null = null;
 
-const port = 8000;
+// The port is configurable so a second instance can run with a client-side ID.
+const port = Number(process.env.PORT ?? 8000);
 
 const clients = new ClientPool<SdkClientEntity>();
 
@@ -23,7 +29,9 @@ app.get('/', (req: Request, res: Response) => {
   res.json({
     capabilities: [
       'client-side',
-      'mobile',
+      // Without 'mobile', the harness runs the client-side (JS) suite, which expects a
+      // client-side ID. Secure mode hashes apply only in that mode.
+      ...(useMobileKey ? ['mobile'] : ['secure-mode-hash']),
       'service-endpoints',
       'tags',
       'user-type',
@@ -46,6 +54,9 @@ app.get('/', (req: Request, res: Response) => {
       'retry-conformance-fdv1-streaming',
       'retry-conformance-fdv1-polling',
       'bootstrap',
+      'client-independence',
+      'optional-event-gzip',
+      'client-use-post',
     ],
   });
 });

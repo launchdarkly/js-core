@@ -14,8 +14,6 @@ import {
  * The basic interface for the LaunchDarkly client. Platform-specific SDKs may add some methods of their own.
  *
  * @see https://docs.launchdarkly.com/sdk/client-side/javascript
- *
- * @ignore (don't need to show this separately in TypeDoc output; all methods will be shown in LDClient)
  */
 export interface LDClient {
   /**
@@ -335,7 +333,7 @@ export interface LDClient {
    *
    * Hooks provide entrypoints which allow for observation of SDK functions.
    *
-   * @param Hook The hook to add.
+   * @param hook The hook to add.
    */
   addHook(hook: Hook): void;
 

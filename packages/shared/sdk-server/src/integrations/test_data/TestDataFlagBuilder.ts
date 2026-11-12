@@ -196,7 +196,7 @@ export default class TestDataFlagBuilder {
    * @return the flag builder
    */
   valueForAll(value: any): TestDataFlagBuilder {
-    return this.variations(value).variationForAll(0);
+    return this.variations(value).variationForAll(0).offVariation(0);
   }
 
   /**

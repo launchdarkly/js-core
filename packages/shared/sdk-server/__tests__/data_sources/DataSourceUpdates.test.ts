@@ -4,6 +4,7 @@ import { internal } from '@launchdarkly/js-sdk-common';
 
 import { LDTransactionalFeatureStore } from '../../src/api/subsystems';
 import promisify from '../../src/async/promisify';
+import FDv1DataSourceUpdates from '../../src/data_sources/DataSourceUpdates';
 import DataSourceUpdates from '../../src/data_sources/TransactionalDataSourceUpdates';
 import { OverrideLayer } from '../../src/overrides';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
@@ -214,6 +215,34 @@ describe.each([true, false])(
     });
   },
 );
+
+describe.each([
+  ['FDv1', FDv1DataSourceUpdates],
+  ['transactional', DataSourceUpdates],
+])('given %s data source updates with change listeners', (_name, UpdatesClass) => {
+  it('sends a change event for a flag whose key is __proto__', async () => {
+    const queue = new AsyncQueue<string>();
+    const updates = new UpdatesClass(
+      new InMemoryFeatureStore(),
+      () => true,
+      (key: string) => queue.add(key),
+    );
+
+    // Initialize with data parsed from JSON, as a data source does, so that __proto__ is an own key.
+    await promisify((cb) => {
+      updates.init(
+        JSON.parse(
+          '{"features": {"__proto__": {"key": "__proto__", "version": 1},' +
+            ' "a": {"key": "a", "version": 1}}, "segments": {}}',
+        ),
+        () => cb(undefined),
+      );
+    });
+
+    // Both flags are reported as changed.
+    expect([await queue.take(), await queue.take()].sort()).toEqual(['__proto__', 'a']);
+  });
+});
 
 describe('given a DataSourceUpdates whose external dependencies come from an override layer', () => {
   let store: LDTransactionalFeatureStore;

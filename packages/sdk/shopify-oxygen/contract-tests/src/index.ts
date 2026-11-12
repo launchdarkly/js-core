@@ -32,7 +32,7 @@ if (debugging) {
 app.get('/', (req: Request, res: Response) => {
   res.header('Content-Type', 'application/json');
   res.json({
-    capabilities: ['server-side-polling', 'server-side'],
+    capabilities: ['server-side-polling', 'server-side', 'polling-gzip', 'secure-mode-hash'],
   });
 });
 
