@@ -35,50 +35,46 @@ export function convertMessagesToLangChain(
 }
 
 /**
- * Fragments of `model.parameters` keys that choose the provider client, its credentials, or
- * where its requests go. `initChatModel` reaches many provider classes, each with its own
- * spelling (`baseURL`, `serverURL`, `endpoint`, `authOptions`, ...), so a key is dropped when
- * it contains any fragment, after removing `_` and `-` and lowercasing. Generation settings
- * contain none of these and are forwarded as written.
+ * Generation settings forwarded from `model.parameters` to `initChatModel`; every other key is
+ * dropped, so credentials, endpoints, and client options never reach a provider client.
+ * Keys are compared after removing `_` and `-` and lowercasing, so `max_tokens` and `maxTokens`
+ * both match. Add a key here only if it shapes what the model generates.
  */
-const BLOCKED_MODEL_PARAMETER_FRAGMENTS = [
-  'apikey',
-  'apisecret',
-  'accesskey',
-  'sessiontoken',
-  'tokenprovider',
-  'credential',
-  'auth',
-  'organization',
-  'url',
-  'endpoint',
-  'host',
-  'apibase',
-  'basepath',
-  'instancename',
-  'configuration',
-  'client',
-  'header',
-  'httpagent',
-  'fetch',
-  'proxy',
-];
+const ALLOWED_MODEL_PARAMETERS = new Set([
+  'temperature',
+  'maxtokens',
+  'maxcompletiontokens',
+  'maxoutputtokens',
+  'topp',
+  'topk',
+  'frequencypenalty',
+  'presencepenalty',
+  'stop',
+  'stopsequences',
+  'seed',
+  'n',
+  'logprobs',
+  'toplogprobs',
+  'logitbias',
+  'reasoningeffort',
+  'verbosity',
+  'thinking',
+]);
 
-function isBlockedModelParameter(key: string): boolean {
-  const normalized = key.replace(/[-_]/g, '').toLowerCase();
-  return BLOCKED_MODEL_PARAMETER_FRAGMENTS.some((fragment) => normalized.includes(fragment));
+function isAllowedModelParameter(key: string): boolean {
+  return ALLOWED_MODEL_PARAMETERS.has(key.replace(/[-_]/g, '').toLowerCase());
 }
 
 /**
  * Create a LangChain chat model from a LaunchDarkly AI configuration.
- * Credentials, endpoints, and client-option bags in `model.parameters` are dropped.
+ * Only allowlisted generation settings from `model.parameters` are forwarded.
  */
 export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
   const modelName = aiConfig.model?.name || '';
   const provider = aiConfig.provider?.name || '';
   const parameters = Object.fromEntries(
     Object.entries(aiConfig.model?.parameters ?? {}).filter(
-      ([key]) => key !== 'tools' && !isBlockedModelParameter(key),
+      ([key]) => isAllowedModelParameter(key),
     ),
   );
 
