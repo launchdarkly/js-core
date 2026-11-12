@@ -229,6 +229,34 @@ export type DataSourceConfiguration =
   | PollingDataSourceConfiguration
   | TestDataSourceConfiguration;
 
+/**
+ * Uses local files as a data source of the data system. The source does not use the network.
+ *
+ * Each file is a JSON or YAML document with optional `flags`, `flagValues`, and `segments`
+ * members, the same format as the file data source that `FileDataSourceOptions` configures. A
+ * `flagValues` entry becomes a flag that serves the given value for every context.
+ *
+ * As an initializer, the source loads the files one time. When the same key appears more than
+ * once, the last definition wins.
+ *
+ * As a synchronizer, the source loads the files and gives the data to the SDK. A key that appears
+ * more than once fails the load. When `autoUpdate` is true, the source also watches the files and
+ * loads them again when they change. A load that fails after a successful load keeps the last
+ * good data in effect, and the failure is logged.
+ *
+ * @example
+ * ```typescript
+ * const client = init(sdkKey, {
+ *   dataSystem: {
+ *     dataSource: {
+ *       dataSourceOptionsType: 'custom',
+ *       initializers: [],
+ *       synchronizers: [{ type: 'file', paths: ['flags.json'], autoUpdate: true }],
+ *     },
+ *   },
+ * });
+ * ```
+ */
 export interface FileSystemDataSourceConfiguration {
   type: 'file';
   /**
@@ -239,6 +267,11 @@ export interface FileSystemDataSourceConfiguration {
    * A function to parse the data from the file.
    */
   yamlParser?: (data: string) => any;
+  /**
+   * When true, a synchronizer watches the files and loads them again when they change. The
+   * default is false. An initializer ignores this option and loads the files one time.
+   */
+  autoUpdate?: boolean;
 }
 
 export interface StreamingDataSourceConfiguration {
@@ -363,9 +396,13 @@ export type InitializerDataSource =
   | TestDataSourceConfiguration;
 
 /**
- * Synchronizer configuration options
+ * Synchronizer configuration options.
+ *
+ * A file synchronizer such as `{ type: 'file', paths: ['flags.json'], autoUpdate: true }` loads
+ * the files again when they change. See {@link FileSystemDataSourceConfiguration}.
  */
 export type SynchronizerDataSource =
+  | FileSystemDataSourceConfiguration
   | PollingDataSourceConfiguration
   | StreamingDataSourceConfiguration
   | TestDataSourceConfiguration;

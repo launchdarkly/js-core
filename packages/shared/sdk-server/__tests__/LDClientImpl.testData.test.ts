@@ -179,20 +179,20 @@ describe('given a platform with mock network requests', () => {
     {
       description: 'a synchronizer with an unsupported type',
       initializers: [],
-      synchronizers: [{ type: 'file', paths: [] }],
+      synchronizers: [{ type: 'unknown' }],
       message: 'Unsupported synchronizer type',
     },
     {
       description: 'a file initializer without a paths field',
       initializers: [{ type: 'file' }],
       synchronizers: [],
-      message: 'The file initializer requires a paths array with at least one path',
+      message: 'The file initializer requires at least one file path',
     },
     {
       description: 'a file initializer with an empty paths array',
       initializers: [{ type: 'file', paths: [] }],
       synchronizers: [],
-      message: 'The file initializer requires a paths array with at least one path',
+      message: 'The file initializer requires at least one file path',
     },
   ])(
     'throws before it creates the persistent store, with $description',
