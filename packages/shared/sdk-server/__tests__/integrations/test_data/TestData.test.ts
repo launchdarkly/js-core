@@ -117,6 +117,129 @@ describe('TestData', () => {
     });
   });
 
+  it('uses version 1 for a preconfigured flag that has no version, and the next version for a replacement', async () => {
+    const td = new TestData();
+    td.usePreconfiguredFlag({ key: 'my-flag', on: true });
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // Replace the flag without providing a version.
+    await td.usePreconfiguredFlag({ key: 'my-flag', on: false });
+
+    const facade = new AsyncStoreFacade(store);
+    const stored = await facade.get(VersionedDataKinds.Features, 'my-flag');
+    expect(stored).toEqual({ key: 'my-flag', on: false, version: 2 });
+  });
+
+  it.each([null, 0])(
+    'uses version 1 for a first preconfigured flag that has a %s version',
+    async (version) => {
+      const td = new TestData();
+      td.usePreconfiguredFlag({ key: 'my-flag', on: true, version });
+
+      const store = new InMemoryFeatureStore();
+      const processor = td.getFactory()(
+        new ClientContext('', new Configuration({}), createBasicPlatform()),
+        store,
+        initSuccessHandler,
+      );
+      processor.start();
+
+      const facade = new AsyncStoreFacade(store);
+      const stored = await facade.get(VersionedDataKinds.Features, 'my-flag');
+      expect(stored).toEqual({ key: 'my-flag', on: true, version: 1 });
+    },
+  );
+
+  it('keeps a preconfigured flag version that is greater than the current version', async () => {
+    const td = new TestData();
+    td.usePreconfiguredFlag({ key: 'my-flag', on: true, version: 1 });
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // Replace the flag with a greater version.
+    await td.usePreconfiguredFlag({ key: 'my-flag', on: false, version: 100 });
+
+    const facade = new AsyncStoreFacade(store);
+    const stored = await facade.get(VersionedDataKinds.Features, 'my-flag');
+    expect(stored).toEqual({ key: 'my-flag', on: false, version: 100 });
+  });
+
+  it('uses the next version for a preconfigured flag whose provided version is not greater than the current version', async () => {
+    const td = new TestData();
+    td.usePreconfiguredFlag({ key: 'my-flag', on: true, version: 1000 });
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // The provided version is lower than the current version.
+    await td.usePreconfiguredFlag({ key: 'my-flag', on: false, version: 100 });
+    // The replacement has no version.
+    await td.usePreconfiguredFlag({ key: 'my-flag', on: true });
+
+    const facade = new AsyncStoreFacade(store);
+    const stored = await facade.get(VersionedDataKinds.Features, 'my-flag');
+    expect(stored).toEqual({ key: 'my-flag', on: true, version: 1002 });
+  });
+
+  it('uses version 1 for a preconfigured segment that has no version, and the next version for a replacement', async () => {
+    const td = new TestData();
+    td.usePreconfiguredSegment({ key: 'my-segment', included: ['a'] });
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // Replace the segment without providing a version.
+    await td.usePreconfiguredSegment({ key: 'my-segment', included: ['b'] });
+
+    const facade = new AsyncStoreFacade(store);
+    const stored = await facade.get(VersionedDataKinds.Segments, 'my-segment');
+    expect(stored).toEqual({ key: 'my-segment', included: ['b'], version: 2 });
+  });
+
+  it('keeps a first preconfigured segment version, and uses the next version for a replacement', async () => {
+    const td = new TestData();
+    td.usePreconfiguredSegment({ key: 'my-segment', included: ['a'], version: 2000 });
+
+    const store = new InMemoryFeatureStore();
+    const processor = td.getFactory()(
+      new ClientContext('', new Configuration({}), createBasicPlatform()),
+      store,
+      initSuccessHandler,
+    );
+    processor.start();
+
+    // A replacement segment always uses the next version, even when the provided
+    // version is greater than the current version.
+    await td.usePreconfiguredSegment({ key: 'my-segment', included: ['b'], version: 5000 });
+
+    const facade = new AsyncStoreFacade(store);
+    const stored = await facade.get(VersionedDataKinds.Segments, 'my-segment');
+    expect(stored).toEqual({ key: 'my-segment', included: ['b'], version: 2001 });
+  });
+
   it.each([true, false])('does not update the store after stop/close is called', async (stop) => {
     const td = new TestData();
 

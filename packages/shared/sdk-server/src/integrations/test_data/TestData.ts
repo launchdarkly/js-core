@@ -1,4 +1,4 @@
-import { LDClientContext, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
+import { internal, LDClientContext, subsystem, VoidFunction } from '@launchdarkly/js-sdk-common';
 
 import { LDFeatureStore } from '../../api';
 import { createStreamListeners } from '../../data_sources/createStreamListeners';
@@ -9,6 +9,14 @@ import { processFlag, processSegment } from '../../store/serialization';
 import VersionedDataKinds from '../../store/VersionedDataKinds';
 import TestDataFlagBuilder from './TestDataFlagBuilder';
 import TestDataSource from './TestDataSource';
+import TestDataSourceFDv2, { TestDataSourceFDv2Role } from './TestDataSourceFDv2';
+
+/**
+ * Makes an FDv2 update that puts one flag or segment.
+ */
+function fdv2Update(kind: 'flag' | 'segment', key: string, item: Flag | Segment): internal.Update {
+  return { kind, key, version: item.version, object: item };
+}
 
 /**
  * A mechanism for providing dynamically updatable feature flag state in a simplified form to an SDK
@@ -21,14 +29,14 @@ import TestDataSource from './TestDataSource';
  *     // Import TestData from the integrations package of the SDK you are using.
  *     // This is a common implementation and may be used in multiple SDKs.
  *
- *     const td = TestData();
- *     testData.update(td.flag("flag-key-1").booleanFlag().variationForAll(true));
+ *     const td = new TestData();
+ *     td.update(td.flag('flag-key-1').booleanFlag().variationForAll(true));
  *     // Use the initialization mechanism specified by your SDK.
  *     const client = LDClient.init(sdkKey, { updateProcessor: td.getFactory() });
  *
  *     // flags can be updated at any time:
- *     td.update(td.flag("flag-key-2")
- *         .variationForContext("user", "some-user-key", true)
+ *     td.update(td.flag('flag-key-2')
+ *         .variationForContext('user', 'some-user-key', true)
  *         .fallthroughVariation(false));
  * ```
  *
@@ -41,6 +49,28 @@ import TestDataSource from './TestDataSource';
  *
  * If the same `TestData` instance is used to configure multiple `LDClient` instances,
  * any changes made to the data will propagate to all of the `LDClient`s.
+ *
+ * To use the test data with the `dataSystem` option, add it to a custom data source. An entry
+ * with the type `testData` can be a synchronizer, or both an initializer and a synchronizer. The
+ * same `TestData` instance can also be used with {@link TestData.getFactory} at the same time.
+ *
+ * Use the entry as a synchronizer. If you use it only as an initializer, the client initializes
+ * from the test data that is present at start. Then the client reports an error because it has
+ * no more data sources. The client does not get the changes that you make after that.
+ *
+ * ```
+ *     const td = new TestData();
+ *     td.update(td.flag('flag-key-1').booleanFlag().variationForAll(true));
+ *     const client = LDClient.init(sdkKey, {
+ *       dataSystem: {
+ *         dataSource: {
+ *           dataSourceOptionsType: 'custom',
+ *           initializers: [],
+ *           synchronizers: [{ type: 'testData', testData: td }],
+ *         },
+ *       },
+ *     });
+ * ```
  */
 export default class TestData {
   // These objects have no prototype, so that a key such as constructor or __proto__ is an
@@ -52,6 +82,12 @@ export default class TestData {
   private _dataSources: TestDataSource[] = [];
 
   private _flagBuilders: Record<string, TestDataFlagBuilder> = Object.create(null);
+
+  private _fdv2Synchronizers: TestDataSourceFDv2[] = [];
+
+  // The selector number of the next payload. Every payload that this instance makes, full
+  // or partial, carries this number and then moves the counter forward.
+  private _fdv2Version = 0;
 
   /**
    * Get a factory for update processors that will be attached to this TestData instance.
@@ -91,6 +127,55 @@ export default class TestData {
       this._dataSources.push(newSource);
       return newSource;
     };
+  }
+
+  /**
+   * Creates an FDv2 data source that gets its data from this `TestData` instance.
+   *
+   * @param role how the data system uses the source
+   * @returns an FDv2 data source
+   *
+   * @internal
+   */
+  createFDv2Source(role: TestDataSourceFDv2Role): TestDataSourceFDv2 {
+    return new TestDataSourceFDv2(
+      role,
+      () => this._makeFDv2FullPayload(),
+      (source) => {
+        this._fdv2Synchronizers.push(source);
+      },
+      (source) => {
+        const index = this._fdv2Synchronizers.indexOf(source);
+        if (index > -1) {
+          this._fdv2Synchronizers.splice(index, 1);
+        }
+      },
+    );
+  }
+
+  private _makeFDv2Payload(type: 'full' | 'partial', updates: internal.Update[]): internal.Payload {
+    // Every payload carries the next version number as its selector. The test data does
+    // not come from LaunchDarkly, but the selector still makes a full payload a basis. A
+    // later streaming or polling synchronizer sends the selector to LaunchDarkly as a
+    // basis parameter.
+    const version = this._fdv2Version;
+    this._fdv2Version += 1;
+    return { version, state: String(version), type, updates };
+  }
+
+  private _makeFDv2FullPayload(): internal.Payload {
+    const flagUpdates = Object.entries(this._currentFlags).map(([key, flag]) =>
+      fdv2Update('flag', key, flag),
+    );
+    const segmentUpdates = Object.entries(this._currentSegments).map(([key, segment]) =>
+      fdv2Update('segment', key, segment),
+    );
+    return this._makeFDv2Payload('full', [...flagUpdates, ...segmentUpdates]);
+  }
+
+  private _sendFDv2Change(kind: 'flag' | 'segment', item: Flag | Segment): void {
+    const payload = this._makeFDv2Payload('partial', [fdv2Update(kind, item.key, item)]);
+    [...this._fdv2Synchronizers].forEach((source) => source.sendPayload(payload));
   }
 
   /**
@@ -143,6 +228,7 @@ export default class TestData {
     const newFlag = flagBuilder.build(oldVersion + 1);
     this._currentFlags[flagKey] = newFlag;
     this._flagBuilders[flagKey] = flagBuilder.clone();
+    this._sendFDv2Change('flag', newFlag);
 
     return Promise.all(
       this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newFlag)),
@@ -172,9 +258,15 @@ export default class TestData {
     // we do not want to modify the passed in value.
     const flagConfig = JSON.parse(JSON.stringify(inConfig));
     const oldItem = this._currentFlags[flagConfig.key];
-    const newItem = { ...flagConfig, version: oldItem ? oldItem.version + 1 : flagConfig.version };
+    const oldVersion = oldItem ? oldItem.version : 0;
+    // A provided version greater than the current version is kept. A missing,
+    // null, or zero version, or a version that is not greater than the current
+    // version, becomes the next version.
+    const providedVersion = typeof flagConfig.version === 'number' ? flagConfig.version : 0;
+    const newItem = { ...flagConfig, version: Math.max(providedVersion, oldVersion + 1) };
     processFlag(newItem);
     this._currentFlags[flagConfig.key] = newItem;
+    this._sendFDv2Change('flag', newItem);
 
     return Promise.all(
       this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Features, newItem)),
@@ -201,12 +293,17 @@ export default class TestData {
     const segmentConfig = JSON.parse(JSON.stringify(inConfig));
 
     const oldItem = this._currentSegments[segmentConfig.key];
+    const oldVersion = oldItem ? oldItem.version : 0;
+    // A first segment keeps a positive provided version. A replacement segment
+    // always uses the next version.
+    const providedVersion = typeof segmentConfig.version === 'number' ? segmentConfig.version : 0;
     const newItem = {
       ...segmentConfig,
-      version: oldItem ? oldItem.version + 1 : segmentConfig.version,
+      version: oldItem ? oldVersion + 1 : Math.max(providedVersion, 1),
     };
     processSegment(newItem);
     this._currentSegments[segmentConfig.key] = newItem;
+    this._sendFDv2Change('segment', newItem);
 
     return Promise.all(
       this._dataSources.map((impl) => impl.upsert(VersionedDataKinds.Segments, newItem)),
