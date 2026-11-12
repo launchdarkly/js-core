@@ -9,18 +9,15 @@ import {
 } from '@launchdarkly/js-sdk-common';
 
 import { FileSystemDataSourceConfiguration } from '../api';
-import { Flag } from '../evaluation/data/Flag';
-import { Segment } from '../evaluation/data/Segment';
-import { processFlag, processSegment } from '../store/serialization';
 import {
   FileDataPolicy,
   FileReloader,
-  KeyedItem,
   LoadFailure,
   parseDocumentByExtension,
   ReloadResult,
   YamlParser,
 } from './filedata';
+import { makeFullPayloadSender } from './fileDataPayloadFDv2';
 import { makeFlagWithValue } from './FileDataSource';
 
 /**
@@ -45,15 +42,6 @@ export function fileDataInitializerPolicy(yamlParser?: YamlParser): FileDataPoli
     missingFile: 'fail',
     entryKey: (mapKey) => mapKey,
   };
-}
-
-function byKey<T>(items: KeyedItem<T>[]): { [key: string]: T } {
-  // A null-prototype object, so that an item key such as __proto__ is an ordinary key.
-  const result: { [key: string]: T } = Object.create(null);
-  items.forEach(({ key, item }) => {
-    result[key] = item;
-  });
-  return result;
 }
 
 /**
@@ -105,17 +93,9 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
     statusCallback(subsystemCommon.DataSourceState.Initializing);
     const initMetadata = internal.initMetadataFromHeaders(undefined);
 
-    const payloadProcessor = new internal.PayloadProcessor(
-      {
-        flag: (flag: Flag) => {
-          processFlag(flag);
-          return flag;
-        },
-        segment: (segment: Segment) => {
-          processSegment(segment);
-          return segment;
-        },
-      },
+    // The initializer never has a basis. Its payload has no selector, and it passes false.
+    const sendFullPayload = makeFullPayloadSender(
+      (payload) => dataCallback(false, { initMetadata, payload }),
       (errorKind: DataSourceErrorKind, message: string) => {
         statusCallback(
           subsystemCommon.DataSourceState.Interrupted,
@@ -125,21 +105,9 @@ export default class FileDataInitializerFDv2 implements subsystemCommon.DataSour
       this._logger,
     );
 
-    const adaptor = internal.FDv1PayloadAdaptor(payloadProcessor);
-
     const apply = (result: ReloadResult) => {
-      payloadProcessor.addPayloadListener((payload) => {
-        // NOTE: file data initializer will never have a valid basis, so we always pass false
-        dataCallback(false, { initMetadata, payload });
-      });
-
       statusCallback(subsystemCommon.DataSourceState.Valid);
-
-      adaptor.processFullTransfer({
-        segments: byKey(result.segments),
-        flags: byKey(result.flags),
-      });
-
+      sendFullPayload(result);
       statusCallback(subsystemCommon.DataSourceState.Closed);
     };
 

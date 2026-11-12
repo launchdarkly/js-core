@@ -171,7 +171,7 @@ describe('given a platform with mock network requests', () => {
     {
       description: 'a synchronizer with an unsupported type',
       initializers: [],
-      synchronizers: [{ type: 'file', paths: [] }],
+      synchronizers: [{ type: 'unknown' }],
       message: 'Unsupported synchronizer type',
     },
   ])(
