@@ -73,8 +73,8 @@ export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseCh
   const modelName = aiConfig.model?.name || '';
   const provider = aiConfig.provider?.name || '';
   const parameters = Object.fromEntries(
-    Object.entries(aiConfig.model?.parameters ?? {}).filter(
-      ([key]) => isAllowedModelParameter(key),
+    Object.entries(aiConfig.model?.parameters ?? {}).filter(([key]) =>
+      isAllowedModelParameter(key),
     ),
   );
 
