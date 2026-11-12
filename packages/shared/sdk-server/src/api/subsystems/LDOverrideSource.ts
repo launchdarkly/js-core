@@ -18,7 +18,9 @@ export interface LDOverrideSink {
    * marks the copies as override entries. It never modifies the objects it was given. A
    * definition that does not have the shape the SDK requires, for example a flag without a
    * `variations` array, is rejected with an error that names the kind, the key, and the field,
-   * and no part of the snapshot is applied: the layer keeps its previous contents.
+   * and no part of the snapshot is applied: the layer keeps its previous contents. A snapshot
+   * that contains a flag or segment marked as deleted is rejected in the same way, and the
+   * rejection is logged; to remove an override, leave it out of the snapshot.
    *
    * The new contents are visible to evaluations when the call returns. Flag change notifications
    * for the affected flags follow.

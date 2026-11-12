@@ -18,6 +18,10 @@
  * it generates for large target lists, cannot be supplied. The checks go no further. The content
  * of a field, such as a variation index or an operator name, is evaluation's concern, and
  * evaluation reports a malformed-flag result for it.
+ *
+ * A definition marked as deleted is rejected separately, whatever its shape: the override layer
+ * never holds a deleted item. Its `deleted` field, when present, must be a boolean, and `false`
+ * is an ordinary definition.
  */
 
 import { isNullish, TypeValidators } from '@launchdarkly/js-sdk-common';
@@ -33,6 +37,35 @@ type Definition = Record<string, any>;
  */
 export function isPlainObject(value: unknown): value is Definition {
   return !isNullish(value) && TypeValidators.Object.is(value);
+}
+
+/**
+ * The error with which the override layer rejects a snapshot that contains a flag or segment
+ * marked as deleted.
+ *
+ * @internal
+ */
+export class DeletedDefinitionError extends Error {
+  constructor(kind: DefinitionKind, key: string) {
+    super(
+      `${kind} "${key}" is marked as deleted; to remove its override, leave it out of the snapshot`,
+    );
+    this.name = 'DeletedDefinitionError';
+  }
+}
+
+/**
+ * Throws a {@link DeletedDefinitionError} when a definition is marked as deleted. A deleted item
+ * is a store placeholder, not a definition, and an override is removed by leaving it out of the
+ * snapshot, so the layer does not hold one. Only `deleted: true` marks a definition as deleted.
+ * Any other value is left to the shape checks.
+ *
+ * @internal
+ */
+export function checkNotDeleted(kind: DefinitionKind, definition: unknown): void {
+  if (isPlainObject(definition) && definition.deleted === true) {
+    throw new DeletedDefinitionError(kind, `${definition.key}`);
+  }
 }
 
 /**
@@ -198,6 +231,7 @@ export function validateFlag(flag: Definition): void {
   at.string(flag, 'key', true);
   at.noInternalFields(flag);
   at.boolean(flag, 'on');
+  at.boolean(flag, 'deleted');
   at.array(flag, 'variations', true);
   at.entries(flag, 'prerequisites', 'prerequisite');
   checkTargets(flag, at, 'targets', 'target');
@@ -222,6 +256,7 @@ export function validateSegment(segment: Definition): void {
   const at = new Location('segment', `${segment.key}`);
   at.string(segment, 'key', true);
   at.noInternalFields(segment);
+  at.boolean(segment, 'deleted');
   at.array(segment, 'included');
   at.array(segment, 'excluded');
   checkTargets(segment, at, 'includedContexts', 'included context');

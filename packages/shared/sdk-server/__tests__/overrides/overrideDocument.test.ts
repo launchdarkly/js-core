@@ -116,6 +116,39 @@ describe('given the override document parser', () => {
     );
   });
 
+  it('rejects a flag or segment entry marked as deleted, naming the kind and the key', () => {
+    // A deleted entry is a mistake in the file, not a way to remove an override.
+    const parse = parseOverrideDocument();
+    expect(() =>
+      parse(
+        'data.json',
+        '{"flags": {"flag1": {"version": 1, "variations": [true], "deleted": true}}}',
+      ),
+    ).toThrow('flag "flag1" is marked as deleted; remove the entry to remove its override');
+    expect(() => parse('data.json', '{"segments": {"segment1": {"deleted": true}}}')).toThrow(
+      'segment "segment1" is marked as deleted; remove the entry to remove its override',
+    );
+  });
+
+  it('rejects an entry marked as deleted in a YAML file', () => {
+    const yamlParser = () => ({ flags: { flag1: { key: 'flag1', deleted: true } } });
+    expect(() => parseOverrideDocument(yamlParser)('data.yaml', '')).toThrow(
+      'flag "flag1" is marked as deleted',
+    );
+  });
+
+  it('accepts entries whose deleted marker is false', () => {
+    const document = parseOverrideDocument()(
+      'data.json',
+      JSON.stringify({
+        flags: { flag1: { ...flag1, deleted: false } },
+        segments: { segment1: { ...segment1, deleted: false } },
+      }),
+    );
+    expect(document.flags).toEqual({ flag1: { ...flag1, deleted: false } });
+    expect(document.segments).toEqual({ segment1: { ...segment1, deleted: false } });
+  });
+
   it('keys every entry by its map key, whatever its key field says', () => {
     // The map key is what the merge across files orders and de-duplicates by, so a key field
     // that differs, as after pasting a definition under a new key, is set to the map key.

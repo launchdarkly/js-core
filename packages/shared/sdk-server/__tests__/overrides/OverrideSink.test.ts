@@ -146,6 +146,51 @@ describe('given a sink over an initialized base store', () => {
     expect(takeNotified()).toEqual(['constructor']);
   });
 
+  it.each([
+    ['a deleted flag', [{ key: 'flag1', version: 2, deleted: true }], [], 'flag "flag1"'],
+    [
+      'a full flag definition marked as deleted',
+      [{ ...singleValueFlag('flag1', 'b', 2), deleted: true }],
+      [],
+      'flag "flag1"',
+    ],
+    [
+      'a deleted segment',
+      [],
+      [{ key: 'segment1', version: 2, deleted: true }],
+      'segment "segment1"',
+    ],
+  ])(
+    'rejects a snapshot that contains %s, logs the rejection, and notifies nothing',
+    async (_description, flags: any[], segments: any[], named) => {
+      await setupBase({
+        features: {
+          flag1: singleValueFlag('flag1', 'base', 1),
+          dependent: flagWithSegmentRule('dependent', 'segment1'),
+        },
+        segments: { segment1: { key: 'segment1', version: 1 } },
+      });
+      sink.setOverrides([singleValueFlag('flag1', 'a', 1)], [{ key: 'segment1', version: 5 }]);
+      await settle();
+      takeNotified();
+
+      // The rest of the snapshot would change flag1 or segment1 and add flag2. None of it applies.
+      expect(() =>
+        sink.setOverrides([singleValueFlag('flag2', 'a'), ...flags], [...segments]),
+      ).toThrow(`${named} is marked as deleted`);
+      await settle();
+
+      expect(takeNotified()).toEqual([]);
+      expect(layer.get(VersionedDataKinds.Features, 'flag1')?.variations).toEqual(['a']);
+      expect(layer.get(VersionedDataKinds.Features, 'flag2')).toBeUndefined();
+      expect(layer.get(VersionedDataKinds.Segments, 'segment1')?.version).toEqual(5);
+      expect(logger.getMessages(LogLevel.Error)).toEqual([
+        `Rejected an override snapshot: ${named} is marked as deleted; to remove its override,` +
+          ' leave it out of the snapshot. The overrides in effect are unchanged.',
+      ]);
+    },
+  );
+
   it('makes the new layer contents visible before the notifications run', () => {
     sink.setOverrides([singleValueFlag('flag1', 'a')], []);
     expect(layer.get(VersionedDataKinds.Features, 'flag1')).toBeDefined();
