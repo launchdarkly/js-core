@@ -35,13 +35,58 @@ export function convertMessagesToLangChain(
 }
 
 /**
+ * `model.parameters` keys that choose the provider client or where its requests go.
+ * Compared after dropping `_` and `-` and lowercasing, so `api_key` and `apiKey` match.
+ * Generation settings are forwarded as written.
+ */
+const BLOCKED_MODEL_PARAMETER_NAMES = new Set([
+  'apikey',
+  'openaiapikey',
+  'anthropicapikey',
+  'bedrockapikey',
+  'bedrockapisecret',
+  'bedrockapisessiontoken',
+  'awsaccesskeyid',
+  'awssecretaccesskey',
+  'awssessiontoken',
+  'azureopenaiapikey',
+  'credentials',
+  'organization',
+  'openaiorganization',
+  'baseurl',
+  'openaiapibase',
+  'anthropicapiurl',
+  'endpointurl',
+  'endpointhost',
+  'azureopenaibasepath',
+  'azureopenaiendpoint',
+  'configuration',
+  'clientoptions',
+  'client',
+  'defaultheaders',
+  'httpagent',
+  'fetch',
+  'proxy',
+  'openaiproxy',
+  'anthropicproxy',
+]);
+
+function isBlockedModelParameter(key: string): boolean {
+  return BLOCKED_MODEL_PARAMETER_NAMES.has(key.replace(/[-_]/g, '').toLowerCase());
+}
+
+/**
  * Create a LangChain chat model from a LaunchDarkly AI configuration.
+ * Credentials, endpoints, and client-option bags in `model.parameters` are dropped.
  */
 export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
   const modelName = aiConfig.model?.name || '';
   const provider = aiConfig.provider?.name || '';
-  const parameters = { ...(aiConfig.model?.parameters || {}) };
-  delete parameters.tools;
+  const parameters = Object.fromEntries(
+    Object.entries(aiConfig.model?.parameters ?? {}).filter(
+      ([key]) => key !== 'tools' && !isBlockedModelParameter(key),
+    ),
+  );
 
   return initChatModel(modelName, {
     ...parameters,
