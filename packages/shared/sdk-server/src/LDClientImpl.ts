@@ -37,6 +37,7 @@ import { Hook } from './api/integrations/Hook';
 import { BigSegmentStoreMembership } from './api/interfaces';
 import { LDWaitForInitializationOptions } from './api/LDWaitForInitializationOptions';
 import {
+  CustomDataSourceOptions,
   isCustomOptions,
   isPollingOnlyOptions,
   isStandardOptions,
@@ -280,6 +281,30 @@ function scopedServiceEndpoints(
   );
 }
 
+const SUPPORTED_INITIALIZER_TYPES = ['file', 'polling', 'testData'];
+const SUPPORTED_SYNCHRONIZER_TYPES = ['polling', 'streaming', 'testData'];
+
+function validateCustomDataSourceEntries(
+  entries: Array<{ type: string; testData?: { createFDv2Source?: unknown } }>,
+  role: 'initializer' | 'synchronizer',
+  supportedTypes: string[],
+): void {
+  entries.forEach((entry) => {
+    if (!supportedTypes.includes(entry.type)) {
+      throw new Error(`Unsupported ${role} type`);
+    }
+    if (entry.type === 'testData' && typeof entry.testData?.createFDv2Source !== 'function') {
+      throw new Error(`The testData ${role} requires a TestData instance`);
+    }
+  });
+}
+
+function validateCustomDataSource(options: CustomDataSourceOptions): void {
+  const { initializers = [], synchronizers = [] } = options;
+  validateCustomDataSourceEntries(initializers, 'initializer', SUPPORTED_INITIALIZER_TYPES);
+  validateCustomDataSourceEntries(synchronizers, 'synchronizer', SUPPORTED_SYNCHRONIZER_TYPES);
+}
+
 function constructFDv2(
   sdkKey: string,
   platform: Platform,
@@ -333,8 +358,12 @@ function constructFDv2(
 
   const clientContext = new ClientContext(sdkKey, config, platform);
   const dataSystem = config.dataSystem!; // dataSystem must be defined to get into this construct function
-  // The override source is created before the store, so that an invalid override configuration
-  // fails client construction before a persistent store has opened a connection.
+  // The client validates the data source configuration and creates the override source before it
+  // creates the store. Thus an invalid data source configuration or an invalid override
+  // configuration makes client construction fail before a persistent store opens a connection.
+  if (!(config.offline || dataSystem.useLdd) && isCustomOptions(dataSystem.dataSource)) {
+    validateCustomDataSource(dataSystem.dataSource);
+  }
   const overrideSource =
     dataSystem.overrides !== undefined && !config.offline
       ? createOverrideSource(dataSystem.overrides, clientContext)
@@ -460,6 +489,11 @@ function constructFDv2(
             );
             break;
           }
+          case 'testData': {
+            const { testData } = initializerConfig;
+            initializers.push(() => testData.createFDv2Source('initializer'));
+            break;
+          }
           default: {
             throw new Error('Unsupported initializer type');
           }
@@ -511,6 +545,11 @@ function constructFDv2(
                   config.logger,
                 ),
             );
+            break;
+          }
+          case 'testData': {
+            const { testData } = synchronizerConfig;
+            synchronizers.push(() => testData.createFDv2Source('synchronizer'));
             break;
           }
           default: {
