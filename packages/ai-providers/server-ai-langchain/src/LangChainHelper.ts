@@ -35,44 +35,38 @@ export function convertMessagesToLangChain(
 }
 
 /**
- * `model.parameters` keys that choose the provider client or where its requests go.
- * Compared after dropping `_` and `-` and lowercasing, so `api_key` and `apiKey` match.
- * Generation settings are forwarded as written.
+ * Fragments of `model.parameters` keys that choose the provider client, its credentials, or
+ * where its requests go. `initChatModel` reaches many provider classes, each with its own
+ * spelling (`baseURL`, `serverURL`, `endpoint`, `authOptions`, ...), so a key is dropped when
+ * it contains any fragment, after removing `_` and `-` and lowercasing. Generation settings
+ * contain none of these and are forwarded as written.
  */
-const BLOCKED_MODEL_PARAMETER_NAMES = new Set([
+const BLOCKED_MODEL_PARAMETER_FRAGMENTS = [
   'apikey',
-  'openaiapikey',
-  'anthropicapikey',
-  'bedrockapikey',
-  'bedrockapisecret',
-  'bedrockapisessiontoken',
-  'awsaccesskeyid',
-  'awssecretaccesskey',
-  'awssessiontoken',
-  'azureopenaiapikey',
-  'credentials',
+  'apisecret',
+  'accesskey',
+  'sessiontoken',
+  'tokenprovider',
+  'credential',
+  'auth',
   'organization',
-  'openaiorganization',
-  'baseurl',
-  'openaiapibase',
-  'anthropicapiurl',
-  'endpointurl',
-  'endpointhost',
-  'azureopenaibasepath',
-  'azureopenaiendpoint',
+  'url',
+  'endpoint',
+  'host',
+  'apibase',
+  'basepath',
+  'instancename',
   'configuration',
-  'clientoptions',
   'client',
-  'defaultheaders',
+  'header',
   'httpagent',
   'fetch',
   'proxy',
-  'openaiproxy',
-  'anthropicproxy',
-]);
+];
 
 function isBlockedModelParameter(key: string): boolean {
-  return BLOCKED_MODEL_PARAMETER_NAMES.has(key.replace(/[-_]/g, '').toLowerCase());
+  const normalized = key.replace(/[-_]/g, '').toLowerCase();
+  return BLOCKED_MODEL_PARAMETER_FRAGMENTS.some((fragment) => normalized.includes(fragment));
 }
 
 /**
