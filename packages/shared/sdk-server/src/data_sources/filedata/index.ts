@@ -1,8 +1,10 @@
 import {
   DocumentParser,
   FileDataDocument,
+  hasContent,
   isFileNotFoundError,
   isYamlPath,
+  NO_ENTRIES,
   parseDocumentByExtension,
   YamlParser,
 } from './document';
@@ -13,7 +15,7 @@ import {
   MissingFileHandling,
 } from './FileDataPolicy';
 import FileDirectoryWatcher, { directoryOf } from './FileDirectoryWatcher';
-import FilePoller from './FilePoller';
+import FilePoller, { FileState, observeFile, sameFileState } from './FilePoller';
 import FileReloader, {
   DEFAULT_DEBOUNCE_DELAY_MS,
   DEFAULT_RETRY_DELAY_MS,
@@ -37,7 +39,9 @@ export {
   FilePoller,
   FileReloader,
   FileReloaderConfig,
+  FileState,
   FileSummary,
+  hasContent,
   isFileNotFoundError,
   isYamlPath,
   ItemCategory,
@@ -47,7 +51,10 @@ export {
   mergeDocuments,
   MergeResult,
   MissingFileHandling,
+  NO_ENTRIES,
+  observeFile,
   parseDocumentByExtension,
   ReloadResult,
+  sameFileState,
   YamlParser,
 };

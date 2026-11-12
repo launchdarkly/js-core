@@ -11,22 +11,17 @@ export interface FileDataSourceOptions {
 
   /**
    * True if FileDataSource should reload flags whenever one of the data files is modified.
-   * This feature uses Node's `fs.watch()` API on the directories that contain the files, so it
-   * is subject to the limitations described
-   * [here](https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener).
-   * A file that is replaced by a rename, or deleted and created again, is detected. A load
-   * that fails, for example because a file was read while it was written, is retried after a
-   * short delay and the previously loaded data stays in effect until it succeeds.
-   * A change to another entry in a directory causes a reload only when the metadata of a
-   * configured file changed, read through any symbolic link, which is how a mounted ConfigMap
-   * or Secret is updated.
-   * Each configured file is also watched directly, so a path that is a symbolic link to a file
-   * in another directory is followed, and that watch is set up again after each change so it
-   * survives the file being replaced.
-   * A directory that cannot be watched, because it does not exist yet or because of its
-   * permissions, is logged at error level and watched once it can be, with an attempt every
-   * second. Its files are still read on every load; a file that cannot be read fails the load,
-   * which is reported through the error handler and retried.
+   *
+   * The data source watches the files for changes. A file that is replaced by a rename, or
+   * deleted and created again, is picked up, and so is an update of a mounted Kubernetes
+   * ConfigMap or Secret, which swaps a symbolic link. A file or directory that cannot be watched
+   * yet, for example because it does not exist, is still noticed: its changes are picked up once
+   * it can be watched.
+   *
+   * Files can be rewritten in place. If the data source reads a file while it is being written, or
+   * a file cannot be parsed, it keeps the flags it has and reads the file again shortly afterward.
+   * For a YAML file, replacing its contents in one operation, such as by renaming a fully written
+   * temporary file over it, avoids briefly loading a partly written file.
    */
   autoUpdate?: boolean;
 

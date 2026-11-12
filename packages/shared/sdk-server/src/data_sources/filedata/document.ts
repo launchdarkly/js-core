@@ -21,6 +21,16 @@ export interface FileDataDocument {
 }
 
 /**
+ * The document of a file that has no entries because its content is no document at all: a YAML
+ * file with only white space, a comment, or a document marker, for which a YAML parser returns
+ * null. A parser returns it, rather than an empty object, so that the reloader can tell such a
+ * file from one that holds an empty document such as `{}`.
+ *
+ * @internal
+ */
+export const NO_ENTRIES: FileDataDocument = Object.freeze({});
+
+/**
  * Parses the text of one file into a document.
  *
  * @internal
@@ -36,6 +46,16 @@ export function isYamlPath(path: string): boolean {
   return path.endsWith('.yml') || path.endsWith('.yaml');
 }
 
+/**
+ * Reports whether the text of a file has content: anything other than white space. A byte order
+ * mark counts as white space.
+ *
+ * @internal
+ */
+export function hasContent(data: string): boolean {
+  return /\S/.test(data);
+}
+
 function parseYaml(path: string, data: string, yamlParser?: YamlParser): any {
   if (!yamlParser) {
     throw new Error(`Attempted to parse yaml file (${path}) without parser.`);
@@ -43,10 +63,32 @@ function parseYaml(path: string, data: string, yamlParser?: YamlParser): any {
   return yamlParser(data);
 }
 
+function parseJson(data: string): any {
+  if (!hasContent(data)) {
+    // JSON.parse fails here too, with a message that does not say what is wrong. A file that is
+    // rewritten in place can be empty for a moment, and the failure keeps the last good data.
+    throw new SyntaxError('the file has no content, which is not a JSON document');
+  }
+  const parsed = JSON.parse(data);
+  // A document is an object. JSON such as `null` or `[]` is not one, so it fails to load and the
+  // last good data stays. A YAML parser returns null for a file with no document, which is
+  // handled by the caller.
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error('file data must be an object');
+  }
+  return parsed;
+}
+
 /**
  * A parser that chooses the format by file extension only. A `.yml` or `.yaml` file uses the
- * YAML parser, and every other file is JSON. The parsed value is returned as it is. This is the
- * rule of the file data sources.
+ * YAML parser, and every other file is JSON. A JSON document must be an object, and is otherwise
+ * returned as it is, without validation, as is the YAML parser's result. This is the rule of the
+ * file data sources.
+ *
+ * Whether a file with no content is valid depends on its format. A JSON file with no content,
+ * or only white space, is not a JSON document and fails to parse, and a JSON value that is not an
+ * object, such as `null`, fails too. A YAML parser returns null or undefined for a file with no
+ * document, which is returned as it is.
  *
  * @internal
  */
@@ -55,7 +97,7 @@ export function parseDocumentByExtension(yamlParser?: YamlParser): DocumentParse
     if (isYamlPath(path)) {
       return parseYaml(path, data, yamlParser);
     }
-    return JSON.parse(data);
+    return parseJson(data);
   };
 }
 

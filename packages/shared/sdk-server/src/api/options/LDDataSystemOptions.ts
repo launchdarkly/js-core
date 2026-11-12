@@ -107,18 +107,26 @@ export interface LDDataSystemOptions {
  *
  * The source reads flag and segment overrides from one or more local files and reloads them as
  * the files change. The files use the same document format as the file data source: a JSON or
- * YAML document with optional `flags`, `flagValues`, and `segments` members. `flagValues` entries
- * expand into full flag definitions that return the given value for every context. A `flagValues`
- * entry is not available to client-side SDKs, so `allFlagsState` with `clientSideOnly` leaves it
- * out, even when the flag it overrides is available to them. To override such a flag, define it
- * in `flags` with `"clientSideAvailability": { "usingEnvironmentId": true }`.
+ * YAML document with optional `flags`, `flagValues`, and `segments` members. A file whose name
+ * ends in `.yml` or `.yaml` is YAML, and any other file is JSON; files are read as UTF-8.
+ * `flagValues` entries expand into full flag definitions that return the given value for every
+ * context. A `flagValues` entry is not available to client-side SDKs, so `allFlagsState` with
+ * `clientSideOnly` leaves it out, even when the flag it overrides is available to them. To
+ * override such a flag, define it in `flags` with
+ * `"clientSideAvailability": { "usingEnvironmentId": true }`.
  *
  * A configured file that does not exist contributes no overrides. It can be created later, and
- * deleting it removes its overrides. A file that exists but cannot be read or parsed fails that
- * reload: the previously loaded overrides stay in effect, the failure is logged, and the source
- * retries. A file that contains an entry marked as deleted fails to load in the same way; to
- * remove an override, remove its entry or delete the file. Every applied change is logged at Info
- * level with the overrides in effect and what each file supplied.
+ * deleting it removes its overrides. If a file that exists cannot be read or parsed, the
+ * previously loaded overrides stay in effect, the failure is logged, and the source loads the
+ * file once it is valid again. A file that contains an entry marked as deleted fails to load in
+ * the same way; to remove an override, remove its entry or delete the file. Every applied change
+ * is logged at Info level with the overrides in effect and what each file supplied.
+ *
+ * Files can be rewritten in place: if the source finds a file empty while it is being rewritten,
+ * it keeps the overrides in effect until the new content is written. To remove a file's
+ * overrides, delete the file or write a document with no entries, such as `{}`. An empty JSON file
+ * is not a valid document. For a YAML file, replacing its contents in one operation, such as by
+ * renaming a fully written temporary file over it, avoids briefly applying a partly written file.
  *
  * @example
  * ```typescript
@@ -172,6 +180,8 @@ export interface FileOverrideSourceOptions {
    * A YAML parser for YAML files. The SDK does not include one; to read YAML files, supply a
    * parser that produces the same structure as `JSON.parse`, for example the `parse` function
    * of the `yaml` package. A YAML file configured without a parser fails client construction.
+   * A result of `null` or `undefined`, which YAML parsers return for an empty file, means that the
+   * file has no entries.
    */
   yamlParser?: (data: string) => any;
 }

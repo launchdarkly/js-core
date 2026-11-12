@@ -144,8 +144,12 @@ function countsText(flags: number, segments: number): string {
  * no overrides, so deleting a file removes its overrides. A file that exists but cannot be read
  * or parsed, or that contains an entry marked as deleted, makes that whole reload fail. The
  * previously loaded overrides stay in effect, the failure is logged, and the source retries
- * after a short delay. Every applied change is logged at Info level with the overrides in effect
- * and what each file supplied.
+ * after a short delay. A JSON file with no content cannot be parsed. A file whose content is in
+ * effect and that is found with no entries, empty or with only a YAML comment, may be in the
+ * middle of an in-place rewrite, so it is held back until it has stayed so, without being
+ * written, for the retry delay, and for at most five retry delays while that file keeps being
+ * rewritten; the other files wait with it. Every applied change is logged at Info level with the
+ * overrides in effect and what each file supplied.
  *
  * Flag overrides are currently experimental and subject to change.
  *
