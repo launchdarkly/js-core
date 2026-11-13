@@ -1,2 +1,6 @@
 # Repository Maintainers
 * @launchdarkly/team-sdk-js
+
+# AI packages
+/packages/ai-providers/ @launchdarkly/team-sdk-js @launchdarkly/team-ai-agents
+/packages/sdk/server-ai/ @launchdarkly/team-sdk-js @launchdarkly/team-ai-agents
