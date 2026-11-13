@@ -1,4 +1,4 @@
-import { Context, ServiceEndpoints } from '@launchdarkly/js-sdk-common';
+import { Context } from '@launchdarkly/js-sdk-common';
 
 import { MODE_TABLE } from '../../src/datasource/ConnectionModeConfig';
 import { createFDv1PollingSynchronizer } from '../../src/datasource/fdv2/FDv1PollingSynchronizer';
@@ -69,7 +69,14 @@ function makePlatform() {
 function makeConfig(overrides: Partial<any> = {}) {
   return {
     logger: makeLogger(),
-    serviceEndpoints: new ServiceEndpoints('https://stream', 'https://poll', 'https://events'),
+    serviceEndpoints: {
+      streaming: 'https://stream',
+      polling: 'https://poll',
+      events: 'https://events',
+      analyticsEventPath: '/bulk',
+      diagnosticEventPath: '/diagnostic',
+      includeAuthorizationHeader: true,
+    },
     withReasons: false,
     useReport: false,
     streamInitialReconnectDelay: 1,
@@ -1204,38 +1211,6 @@ it('populates polling and streaming config in the factory context', async () => 
   manager.close();
 });
 
-it('warns when a payload filter key is configured', () => {
-  const config = makeConfig({
-    serviceEndpoints: new ServiceEndpoints(
-      'https://stream',
-      'https://poll',
-      'https://events',
-      '/bulk',
-      '/diagnostic',
-      true,
-      'microservice-1',
-    ),
-  });
-
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ config }));
-
-  expect(config.logger.warn).toHaveBeenCalledWith(
-    expect.stringContaining('Payload filtering is not supported with the FDv2 data system'),
-  );
-
-  manager.close();
-});
-
-it('does not warn when no payload filter key is configured', () => {
-  const config = makeConfig();
-
-  const manager = createFDv2DataManagerBase(makeBaseConfig({ config }));
-
-  expect(config.logger.warn).not.toHaveBeenCalled();
-
-  manager.close();
-});
-
 function useActualDataSources() {
   const actual = jest.requireActual('../../src/datasource/fdv2/FDv2DataSource');
   mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
@@ -1345,6 +1320,50 @@ it('does not fail a new identify when the previous data source closes before it 
   expect(second.resolve).toHaveBeenCalledTimes(1);
   expect(second.reject).not.toHaveBeenCalled();
   expect(first.reject).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+it('builds the FDv1 fallback requestor with override endpoints', async () => {
+  const fdv1Endpoints = {
+    polling: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+    streaming: jest.fn(() => ({
+      pathGet: jest.fn(),
+      pathReport: jest.fn(),
+      pathPost: jest.fn(),
+      pathPing: jest.fn(),
+    })),
+  };
+  (makeRequestor as jest.Mock).mockReturnValue({});
+  (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+  const modeTable = {
+    ...MODE_TABLE,
+    streaming: {
+      ...MODE_TABLE.streaming,
+      fdv1Fallback: { endpoints: { pollingBaseUri: 'https://fallback-poll' } },
+    },
+  };
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      fdv1Endpoints,
+      modeTable,
+      foregroundMode: 'streaming',
+    }),
+  );
+  await identifyManager(manager);
+  const dsConfig = capturedDataSourceConfigs[0];
+  const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+
+  // Create the FDv1 fallback synchronizer so that it builds its requestor.
+  fdv1Slot.factory.create(() => undefined);
+
+  const fallbackEndpoints = (makeRequestor as jest.Mock).mock.calls[0][1];
+  expect(fallbackEndpoints.polling).toBe('https://fallback-poll');
 
   manager.close();
 });

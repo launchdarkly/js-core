@@ -376,6 +376,34 @@ describe('when setting different options', () => {
     logger(config).expectMessages(logs);
   });
 
+  it('omits the payload filter key and warns when the FDv2 data system is selected', () => {
+    const options = withLogger({
+      payloadFilterKey: 'microservice-1',
+      dataSystem: {},
+    });
+    const config = new Configuration(options);
+
+    expect(config.serviceEndpoints.payloadFilterKey).toBeUndefined();
+    expect(config.payloadFilterKey).toBeUndefined();
+    expect(logger(options).getCount(LogLevel.Warn)).toBe(1);
+    logger(options).expectMessages([
+      {
+        level: LogLevel.Warn,
+        matches:
+          /^Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests$/,
+      },
+    ]);
+  });
+
+  it('keeps the payload filter key without warning when the FDv1 data system is selected', () => {
+    const options = withLogger({ payloadFilterKey: 'microservice-1' });
+    const config = new Configuration(options);
+
+    expect(config.serviceEndpoints.payloadFilterKey).toBe('microservice-1');
+    expect(config.payloadFilterKey).toBe('microservice-1');
+    expect(logger(options).getCount()).toBe(0);
+  });
+
   it('discards unrecognized options with a warning', () => {
     // @ts-ignore
     const config = new Configuration(withLogger({ yes: 'no', cat: 'yes' }));

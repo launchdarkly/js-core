@@ -190,6 +190,12 @@ export default class ConfigurationImpl implements Configuration {
       }
     });
 
+    const payloadFilterKey = this.dataSystem ? undefined : pristineOptions.payloadFilterKey;
+    if (this.dataSystem && pristineOptions.payloadFilterKey !== undefined) {
+      this.logger.warn(
+        '[FDv2DataManagerBase] Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests',
+      );
+    }
     this.serviceEndpoints = new ServiceEndpoints(
       this.streamUri,
       this.baseUri,
@@ -197,7 +203,7 @@ export default class ConfigurationImpl implements Configuration {
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
-      pristineOptions.payloadFilterKey,
+      payloadFilterKey,
     );
     this.useReport = pristineOptions.useReport ?? false;
     // useReport is an FDv1 option with no effect in FDv2, where usePost is the

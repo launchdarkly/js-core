@@ -277,8 +277,8 @@ export interface LDOptions {
    * TestData or FileData data sources, nor will it be applied to any data source provided through the featureStore
    * config property.
    *
-   * Payload filtering is not supported with the FDv2 data system, so this key has no effect on requests made by
-   * FDv2 data sources.
+   * Payload filtering is not supported with the FDv2 data system. Data sources in that system,
+   * including the FDv1 fallback data source, do not send this key.
    */
   payloadFilterKey?: string;
 

@@ -528,6 +528,12 @@ export default class Configuration {
       });
     }
 
+    const payloadFilterKey = this.dataSystem ? undefined : validatedOptions.payloadFilterKey;
+    if (this.dataSystem && validatedOptions.payloadFilterKey !== undefined) {
+      this.logger?.warn(
+        'Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests',
+      );
+    }
     this.serviceEndpoints = new ServiceEndpoints(
       validatedOptions.streamUri,
       validatedOptions.baseUri,
@@ -535,7 +541,7 @@ export default class Configuration {
       internalOptions.analyticsEventPath,
       internalOptions.diagnosticEventPath,
       internalOptions.includeAuthorizationHeader,
-      validatedOptions.payloadFilterKey,
+      payloadFilterKey,
     );
     this.eventsCapacity = validatedOptions.capacity;
     this.timeout = validatedOptions.timeout;
@@ -557,7 +563,8 @@ export default class Configuration {
     this.tlsParams = validatedOptions.tlsParams;
     this.diagnosticOptOut = validatedOptions.diagnosticOptOut;
     this.wrapperName = validatedOptions.wrapperName;
-    this.payloadFilterKey = validatedOptions.payloadFilterKey;
+    // constructFDv2 in LDClientImpl warns again when this field is set, so it takes the stripped value
+    this.payloadFilterKey = payloadFilterKey;
     this.wrapperVersion = validatedOptions.wrapperVersion;
     this.tags = new ApplicationTags(validatedOptions);
     this.diagnosticRecordingInterval = validatedOptions.diagnosticRecordingInterval;

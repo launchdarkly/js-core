@@ -212,6 +212,62 @@ describe('dataSystem validation', () => {
     expect(config.dataSystem!.automaticModeSwitching).toBe(false);
   });
 
+  it('omits the payload filter key and warns when the FDv2 data system is selected', () => {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { payloadFilterKey: 'microservice-1', dataSystem: {}, logger },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+      },
+    );
+
+    expect(config.serviceEndpoints.payloadFilterKey).toBeUndefined();
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      '[FDv2DataManagerBase] Payload filtering is not supported with the FDv2 data system; the configured payload filter has no effect on FDv2 requests',
+    );
+  });
+
+  it('does not warn when the FDv2 data system has no payload filter key', () => {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const config = new ConfigurationImpl(
+      // @ts-ignore dataSystem is @internal
+      { dataSystem: {}, logger },
+      {
+        getImplementationHooks: () => [],
+        credentialType: 'clientSideId',
+      },
+    );
+
+    expect(config.serviceEndpoints.payloadFilterKey).toBeUndefined();
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('keeps the payload filter key without warning when the FDv1 data system is selected', () => {
+    const logger = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
+    const config = new ConfigurationImpl({ payloadFilterKey: 'microservice-1', logger });
+
+    expect(config.serviceEndpoints.payloadFilterKey).toBe('microservice-1');
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
   it('forces useReport to false and warns when dataSystem is also set', () => {
     const logger = {
       error: jest.fn(),
