@@ -596,6 +596,9 @@ function constructFDv2(
       );
     }
 
+    // Tracks whether a full payload has been applied to the memory store. The feature store's
+    // own initialized() can report a persistent store that was populated before this process.
+    let memoryStoreInitialized = false;
     const compositeDataSource = new CompositeDataSource(
       initializers,
       synchronizers,
@@ -604,11 +607,9 @@ function constructFDv2(
       undefined,
       undefined,
       () => {
-        featureStore.initialized((initialized) => {
-          if (initialized) {
-            initSuccess();
-          }
-        });
+        if (memoryStoreInitialized) {
+          initSuccess();
+        }
       },
     );
     dataSource = compositeDataSource;
@@ -617,6 +618,9 @@ function constructFDv2(
       logger,
       initSuccess,
       () => compositeDataSource.initializing,
+      () => {
+        memoryStoreInitialized = true;
+      },
     );
   }
 

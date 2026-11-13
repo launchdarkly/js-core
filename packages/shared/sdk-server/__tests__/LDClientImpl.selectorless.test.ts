@@ -1,5 +1,6 @@
 import { CustomDataSourceOptions } from '../src/api/options/LDDataSystemOptions';
 import LDClientImpl from '../src/LDClientImpl';
+import InMemoryFeatureStore from '../src/store/InMemoryFeatureStore';
 import MockFilesystem from './data_sources/filedata/MockFilesystem';
 import makeMockLogger from './mockLogger';
 import {
@@ -34,12 +35,13 @@ describe('FDv2 selectorless readiness', () => {
   const createClient = (
     platform: ReturnType<typeof makeFDv2Platform>,
     dataSource: CustomDataSourceOptions,
+    persistentStore?: InMemoryFeatureStore,
   ) => {
     client = makeFDv2Client(
       platform,
       {
         logger: makeMockLogger(),
-        dataSystem: { dataSource, fdv1Fallback: null },
+        dataSystem: { dataSource, fdv1Fallback: null, persistentStore },
       },
       callbacks,
     );
@@ -162,6 +164,28 @@ describe('FDv2 selectorless readiness', () => {
       platform.requests.fetch.mock.calls.some(([url]) => url.startsWith('http://sync')),
     );
     expect(client.initialized()).toBe(false);
+    expect(callbacks.onReady).not.toHaveBeenCalled();
+  });
+
+  it('does not become ready at initializer exhaustion from an initialized persistent store alone', async () => {
+    const persistentStore = new InMemoryFeatureStore();
+    persistentStore.init({ features: { flag: singleValueFlag('flag', true) }, segments: {} }, () => {});
+    const platform = makeFDv2Platform();
+    platform.requests.fetch = jest.fn((url: string) =>
+      url.startsWith('http://failed') ? Promise.resolve(response('', 503)) : new Promise(() => {}),
+    );
+    createClient(
+      platform,
+      {
+        dataSourceOptionsType: 'custom',
+        initializers: [{ type: 'polling', baseUri: 'http://failed' }],
+        synchronizers: [{ type: 'polling', baseUri: 'http://sync' }],
+      },
+      persistentStore,
+    );
+    await waitFor(() =>
+      platform.requests.fetch.mock.calls.some(([url]) => url.startsWith('http://sync')),
+    );
     expect(callbacks.onReady).not.toHaveBeenCalled();
   });
 });
