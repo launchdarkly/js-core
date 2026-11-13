@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2017", "dom"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noImplicitOverride": true,
+    "resolveJsonModule": true,
+    "rootDir": ".",
+    "outDir": "dist",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "strict": true,
+    "target": "ES2017",
+    "types": ["chrome"]
+  },
+  "include": ["src"]
+}

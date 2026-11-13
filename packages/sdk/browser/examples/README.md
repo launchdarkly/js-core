@@ -2,8 +2,9 @@
 
 This directory contains example applications demonstrating the LaunchDarkly JavaScript Browser SDK.
 
-| Example                                                       | Description                                                                                                                                          |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [getting-started](./getting-started/)                         | Minimal browser app that evaluates a boolean feature flag and displays the result with real-time updates. This is the recommended starting point.    |
-| [features/custom-eventsource](./features/custom-eventsource/) | Passes a `fetch()`-based EventSource as the `eventSource` option so that `usePost` also applies to the streaming connection.                         |
-| [features/data-saving-mode](./features/data-saving-mode/)     | Enables the FDv2 data system (`dataSystem`) and exposes controls for connection mode, streaming, context switching, and event handlers. EAP feature. |
+| Example                                                       | Description                                                                                                                                                                  |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [getting-started](./getting-started/)                         | Minimal browser app that evaluates a boolean feature flag and displays the result with real-time updates. This is the recommended starting point.                            |
+| [features/custom-eventsource](./features/custom-eventsource/) | Passes a `fetch()`-based EventSource as the `eventSource` option so that `usePost` also applies to the streaming connection.                                                 |
+| [features/data-saving-mode](./features/data-saving-mode/)     | Enables the FDv2 data system (`dataSystem`) and exposes controls for connection mode, streaming, context switching, and event handlers. EAP feature.                         |
+| [browser-extension](./browser-extension/)                     | Chrome Manifest V3 extension that runs the SDK in the background service worker. It streams with the `fetch()`-based EventSource and caches flags in `chrome.storage.local`. |
