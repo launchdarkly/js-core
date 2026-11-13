@@ -135,7 +135,9 @@ Evaluation results include LaunchDarkly specific information in the OpenFeature 
 | `overrideAffected`  | boolean | Present, and `true`, when the evaluation read a flag or segment definition supplied by an experimental override source. |
 
 ```typescript
-const details = await client.getBooleanDetails('my-boolean-flag', false);
+const details = await client.getBooleanDetails('my-boolean-flag', false, {
+  targetingKey: 'user-key',
+});
 const inExperiment = details.flagMetadata.inExperiment === true;
 ```
 
