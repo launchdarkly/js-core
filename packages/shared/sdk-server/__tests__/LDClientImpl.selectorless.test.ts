@@ -169,7 +169,10 @@ describe('FDv2 selectorless readiness', () => {
 
   it('does not become ready at initializer exhaustion from an initialized persistent store alone', async () => {
     const persistentStore = new InMemoryFeatureStore();
-    persistentStore.init({ features: { flag: singleValueFlag('flag', true) }, segments: {} }, () => {});
+    persistentStore.init(
+      { features: { flag: singleValueFlag('flag', true) }, segments: {} },
+      () => {},
+    );
     const platform = makeFDv2Platform();
     platform.requests.fetch = jest.fn((url: string) =>
       url.startsWith('http://failed') ? Promise.resolve(response('', 503)) : new Promise(() => {}),
