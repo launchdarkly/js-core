@@ -35,13 +35,48 @@ export function convertMessagesToLangChain(
 }
 
 /**
+ * Generation settings forwarded from `model.parameters` to `initChatModel`; every other key is
+ * dropped, so credentials, endpoints, and client options never reach a provider client.
+ * Keys are compared after removing `_` and `-` and lowercasing, so `max_tokens` and `maxTokens`
+ * both match. Add a key here only if it shapes what the model generates.
+ */
+const ALLOWED_MODEL_PARAMETERS = new Set([
+  'temperature',
+  'maxtokens',
+  'maxcompletiontokens',
+  'maxoutputtokens',
+  'topp',
+  'topk',
+  'frequencypenalty',
+  'presencepenalty',
+  'stop',
+  'stopsequences',
+  'seed',
+  'n',
+  'logprobs',
+  'toplogprobs',
+  'logitbias',
+  'reasoningeffort',
+  'verbosity',
+  'thinking',
+]);
+
+function isAllowedModelParameter(key: string): boolean {
+  return ALLOWED_MODEL_PARAMETERS.has(key.replace(/[-_]/g, '').toLowerCase());
+}
+
+/**
  * Create a LangChain chat model from a LaunchDarkly AI configuration.
+ * Only allowlisted generation settings from `model.parameters` are forwarded.
  */
 export async function createLangChainModel(aiConfig: LDAIConfig): Promise<BaseChatModel> {
   const modelName = aiConfig.model?.name || '';
   const provider = aiConfig.provider?.name || '';
-  const parameters = { ...(aiConfig.model?.parameters || {}) };
-  delete parameters.tools;
+  const parameters = Object.fromEntries(
+    Object.entries(aiConfig.model?.parameters ?? {}).filter(([key]) =>
+      isAllowedModelParameter(key),
+    ),
+  );
 
   return initChatModel(modelName, {
     ...parameters,

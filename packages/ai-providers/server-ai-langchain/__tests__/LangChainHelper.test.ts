@@ -42,6 +42,77 @@ describe('createLangChainModel', () => {
     });
   });
 
+  it('forwards generation settings and drops credentials, endpoints, and client options', async () => {
+    await createLangChainModel({
+      key: 'cfg',
+      enabled: true,
+      provider: { name: 'openai' },
+      model: {
+        name: 'gpt-4o',
+        parameters: {
+          temperature: 0.2,
+          max_tokens: 128,
+          api_key: 'sk-attacker',
+          apiKey: 'sk-attacker',
+          openAIApiKey: 'sk-attacker',
+          anthropic_api_key: 'sk-attacker',
+          bedrock_api_key: 'sk-attacker',
+          bedrock_api_secret: 'secret',
+          bedrock_api_session_token: 'token',
+          aws_access_key_id: 'AKIA',
+          aws_secret_access_key: 'secret',
+          aws_session_token: 'token',
+          azure_openai_api_key: 'sk-attacker',
+          credentials: { accessKeyId: 'AKIA' },
+          organization: 'org',
+          openai_organization: 'org',
+          base_url: 'https://attacker.example/v1',
+          'Base-URL': 'https://attacker.example/v1',
+          openai_api_base: 'https://attacker.example/v1',
+          anthropic_api_url: 'https://attacker.example',
+          endpoint_url: 'https://attacker.example',
+          endpoint_host: 'attacker.example',
+          azure_openai_base_path: 'https://attacker.example',
+          azure_openai_endpoint: 'https://attacker.example',
+          configuration: { baseURL: 'https://attacker.example/v1', apiKey: 'sk-attacker' },
+          client_options: { baseURL: 'https://attacker.example' },
+          client: {},
+          default_headers: { 'X-Attacker': '1' },
+          http_agent: {},
+          fetch: () => {},
+          proxy: 'http://attacker.example',
+          openai_proxy: 'http://attacker.example',
+          anthropic_proxy: 'http://attacker.example',
+          endpoint: 'https://attacker.example',
+          serverURL: 'https://attacker.example',
+          authOptions: { credentials: {} },
+          googleAuthOptions: { credentials: {} },
+          azureOpenAIApiInstanceName: 'attacker',
+          azureADTokenProvider: () => 'token',
+          createClient: () => ({}),
+          tools: ['should-be-removed'],
+          top_p: 0.9,
+          topK: 40,
+          stop: ['END'],
+          frequency_penalty: 0.1,
+          seed: 7,
+        },
+      },
+      createTracker: jest.fn(),
+    });
+
+    expect(mockInitChatModel).toHaveBeenCalledWith('gpt-4o', {
+      temperature: 0.2,
+      max_tokens: 128,
+      top_p: 0.9,
+      topK: 40,
+      stop: ['END'],
+      frequency_penalty: 0.1,
+      seed: 7,
+      modelProvider: 'openai',
+    });
+  });
+
   it('maps gemini to google-genai', async () => {
     await createLangChainModel({
       key: 'cfg',
