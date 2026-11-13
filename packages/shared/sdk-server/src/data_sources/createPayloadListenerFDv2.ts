@@ -23,6 +23,7 @@ export const createPayloadListener =
     dataSourceUpdates: LDTransactionalDataSourceUpdates,
     logger?: LDLogger,
     initializedCallback: VoidFunction = () => {},
+    isInitializing: () => boolean = () => false,
   ) =>
   (dataContainer: DataCallbackContainer) => {
     const { initMetadata, payload } = dataContainer;
@@ -61,10 +62,7 @@ export const createPayloadListener =
       payload.type === 'full',
       converted,
       () => {
-        if (payload.state !== '') {
-          // NOTE: The only condition that we will consider a valid basis
-          // is when there is a valid selector. Currently, the only data source that does not have a
-          // valid selector is the file data initializer, which will have a blank selector.
+        if (payload.type === 'full' && (payload.state || !isInitializing())) {
           initializedCallback();
         }
       },

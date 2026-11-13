@@ -596,13 +596,28 @@ function constructFDv2(
       );
     }
 
-    dataSource = new CompositeDataSource(
+    const compositeDataSource = new CompositeDataSource(
       initializers,
       synchronizers,
       fdv1FallbackSynchronizers,
       logger,
+      undefined,
+      undefined,
+      () => {
+        featureStore.initialized((initialized) => {
+          if (initialized) {
+            initSuccess();
+          }
+        });
+      },
     );
-    payloadListener = createPayloadListener(dataSourceUpdates, logger, initSuccess);
+    dataSource = compositeDataSource;
+    payloadListener = createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initSuccess,
+      () => compositeDataSource.initializing,
+    );
   }
 
   return {
