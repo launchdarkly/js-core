@@ -226,7 +226,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
         data.fallbackToFDv1 = true;
         this._logger?.warn(`Response header indicates to fallback to FDv1`);
       }
-      dataCallback(payload.type === 'full', data);
+      dataCallback(payload.type === 'full' && !!payload.state, data);
 
       if (fallbackRequested) {
         // Stop consuming the FDv2 stream now that the directive has been delivered.
