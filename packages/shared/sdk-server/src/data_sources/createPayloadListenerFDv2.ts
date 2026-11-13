@@ -62,7 +62,7 @@ export const createPayloadListener =
       payload.type === 'full',
       converted,
       () => {
-        if (payload.type === 'full' && (payload.state || !isInitializing())) {
+        if (payload.state !== '' || (payload.type === 'full' && !isInitializing())) {
           initializedCallback();
         }
       },

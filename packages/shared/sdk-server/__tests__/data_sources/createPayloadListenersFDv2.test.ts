@@ -285,9 +285,27 @@ describe('createPayloadListenerFDv2', () => {
     expect(initializedCallback).toHaveBeenCalledTimes(1);
   });
 
-  it('does not raise readiness for a partial payload', () => {
+  it('raises readiness for a selector-bearing partial payload during initialization', () => {
     dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
-    createPayloadListener(dataSourceUpdates, logger, initializedCallback)(changesTransferPayload);
+    createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initializedCallback,
+      () => true,
+    )(changesTransferPayload);
+    expect(initializedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not raise readiness for a selectorless partial payload', () => {
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+    createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initializedCallback,
+    )({
+      ...changesTransferPayload,
+      payload: { ...changesTransferPayload.payload, state: '' },
+    });
     expect(initializedCallback).not.toHaveBeenCalled();
   });
 });
