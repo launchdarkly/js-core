@@ -1,5 +1,5 @@
 {
-  "packages/ai-providers/server-ai-langchain": "0.8.32",
+  "packages/ai-providers/server-ai-langchain": "0.8.33",
   "packages/ai-providers/server-ai-openai": "0.7.32",
   "packages/ai-providers/server-ai-vercel": "0.7.32",
   "packages/sdk/akamai-base": "3.0.51",
