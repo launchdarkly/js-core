@@ -1,5 +1,5 @@
-<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDDataSystemOptions | @launchdarkly/akamai-server-edgekv-sdk - v1.4.52</title><meta name="description" content="Documentation for @launchdarkly/akamai-server-edgekv-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
-<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/akamai-server-edgekv-sdk - v1.4.52</a>
+<!DOCTYPE html><html class="default" lang="en" data-base="../"><head><meta charset="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>LDDataSystemOptions | @launchdarkly/akamai-server-edgekv-sdk - v1.4.53</title><meta name="description" content="Documentation for @launchdarkly/akamai-server-edgekv-sdk"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script defer src="../assets/main.js"></script><script async src="../assets/icons.js" id="tsd-icons-script"></script><script async src="../assets/search.js" id="tsd-search-script"></script><script async src="../assets/navigation.js" id="tsd-nav-script"></script><script async src="../assets/hierarchy.js" id="tsd-hierarchy-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os";document.body.style.display="none";setTimeout(() => window.app?app.showPage():document.body.style.removeProperty("display"),500)</script><header class="tsd-page-toolbar">
+<div class="tsd-toolbar-contents container"><a href="../index.html" class="title">@launchdarkly/akamai-server-edgekv-sdk - v1.4.53</a>
 <div id="tsd-toolbar-links"></div><button id="tsd-search-trigger" class="tsd-widget" aria-label="Search"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-search"></use></svg></button><dialog id="tsd-search" aria-label="Search"><input role="combobox" id="tsd-search-input" aria-controls="tsd-search-results" aria-autocomplete="list" aria-expanded="true" autocapitalize="off" autocomplete="off" placeholder="Search the docs" maxLength="100"/>
 <ul role="listbox" id="tsd-search-results"></ul>
 <div id="tsd-search-status" aria-live="polite" aria-atomic="true">
@@ -20,7 +20,7 @@ data from LaunchDarkly and other sources.</p>
 </div></section>
 <div class="tsd-signature"><span class="tsd-signature-keyword">interface</span> <span class="tsd-kind-interface">LDDataSystemOptions</span> <span class="tsd-signature-symbol">{</span><br/>    <a class="tsd-kind-property" href="#datasource">dataSource</a><span class="tsd-signature-symbol">?:</span> <a href="../types/DataSourceOptions.html" class="tsd-signature-type tsd-kind-type-alias">DataSourceOptions</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#fdv1fallback">fdv1Fallback</a><span class="tsd-signature-symbol">?:</span> <a href="FDv1FallbackConfiguration.html" class="tsd-signature-type tsd-kind-interface">FDv1FallbackConfiguration</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#overrides">overrides</a><span class="tsd-signature-symbol">?:</span> <a href="../types/LDOverrideSourceOptions.html" class="tsd-signature-type tsd-kind-type-alias">LDOverrideSourceOptions</a><span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#persistentstore">persistentStore</a><span class="tsd-signature-symbol">?:</span><br/>        <span class="tsd-signature-symbol">|</span> <a href="LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a><br/>        <span class="tsd-signature-symbol">|</span> (<span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">clientContext</span><span class="tsd-signature-symbol">:</span> <a href="LDClientContext.html" class="tsd-signature-type tsd-kind-interface">LDClientContext</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <a href="LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a>)<span class="tsd-signature-symbol">;</span><br/>    <a class="tsd-kind-property" href="#useldd">useLdd</a><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">;</span><br/><span class="tsd-signature-symbol">}</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1314</li></ul></aside>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1316</li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-accordion" open><summary class="tsd-accordion-summary tsd-index-summary"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>
@@ -49,7 +49,7 @@ performs a combination of streaming and polling.</p>
 <p>See <a href="#" class="tsd-kind-interface">LDDataSystemOptions</a> documentation for examples.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1326</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1328</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="fdv1fallback"><code class="tsd-tag">Optional</code><span>fdv1<wbr/>Fallback</span><a href="#fdv1fallback" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">fdv1Fallback</span><span class="tsd-signature-symbol">?:</span> <a href="FDv1FallbackConfiguration.html" class="tsd-signature-type tsd-kind-interface">FDv1FallbackConfiguration</a> <span class="tsd-signature-symbol">|</span> <span class="tsd-signature-type">null</span></div>
@@ -62,7 +62,7 @@ If explicitly set to <code>null</code>, no FDv1 fallback synchronizer is configu
 will transition to a terminal Closed state when the directive is received.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1359</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1361</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="overrides"><code class="tsd-tag">Optional</code> <code class="tsd-tag">Experimental</code><span>overrides</span><a href="#overrides" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">overrides</span><span class="tsd-signature-symbol">?:</span> <a href="../types/LDOverrideSourceOptions.html" class="tsd-signature-type tsd-kind-type-alias">LDOverrideSourceOptions</a></div>
@@ -82,7 +82,7 @@ either.</p>
 <p>Flag overrides are currently experimental and subject to change.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1381</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1383</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="persistentstore"><code class="tsd-tag">Optional</code><span>persistent<wbr/>Store</span><a href="#persistentstore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">persistentStore</span><span class="tsd-signature-symbol">?:</span><br/>    <span class="tsd-signature-symbol">|</span> <a href="LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a><br/>    <span class="tsd-signature-symbol">|</span> (<span class="tsd-signature-symbol">(</span><span class="tsd-kind-parameter">clientContext</span><span class="tsd-signature-symbol">:</span> <a href="LDClientContext.html" class="tsd-signature-type tsd-kind-interface">LDClientContext</a><span class="tsd-signature-symbol">)</span> <span class="tsd-signature-symbol">=&gt;</span> <a href="LDFeatureStore.html" class="tsd-signature-type tsd-kind-interface">LDFeatureStore</a>)</div>
@@ -99,7 +99,7 @@ configuration; this property accepts either.</p>
 <h4 class="tsd-anchor-link" id="param-clientcontext">Param: clientContext<a href="#param-clientcontext" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>whose properties may be used to influence creation of the persistent store.</p>
 </div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1339</li></ul></aside></section>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1341</li></ul></aside></section>
 <section class="tsd-panel tsd-member">
 <h3 class="tsd-anchor-link" id="useldd"><code class="tsd-tag">Optional</code><span>use<wbr/>Ldd</span><a href="#useldd" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h3>
 <div class="tsd-signature"><span class="tsd-kind-property">useLdd</span><span class="tsd-signature-symbol">?:</span> <span class="tsd-signature-type">boolean</span></div>
@@ -109,7 +109,7 @@ but will instead get feature state from a database (Redis or another supported f
 store integration) that is populated by the relay. By default, this is false.</p>
 </div><aside class="tsd-sources">
 <ul>
-<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1347</li></ul></aside></section></section></details></div>
+<li>Defined in packages/shared/sdk-server/dist/index.d.ts:1349</li></ul></aside></section></section></details></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
@@ -128,7 +128,7 @@ store integration) that is populated by the relay. By default, this is false.</p
 <details open class="tsd-accordion tsd-page-navigation-section"><summary class="tsd-accordion-summary" data-key="section-Properties"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><use href="../assets/icons.svg#icon-chevronDown"></use></svg>Properties</summary>
 <div><a href="#datasource"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>data<wbr/>Source</span></a><a href="#fdv1fallback"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>fdv1<wbr/>Fallback</span></a><a href="#overrides"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>overrides</span></a><a href="#persistentstore"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>persistent<wbr/>Store</span></a><a href="#useldd"><svg class="tsd-kind-icon" viewBox="0 0 24 24" aria-label="Property"><use href="../assets/icons.svg#icon-1024"></use></svg><span>use<wbr/>Ldd</span></a></div></details></div></details></div>
 <div class="site-menu">
-<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/akamai-server-edgekv-sdk - v1.4.52</a>
+<nav class="tsd-navigation"><a href="../index.html">@launchdarkly/akamai-server-edgekv-sdk - v1.4.53</a>
 <ul class="tsd-small-nested-navigation" id="tsd-nav-container">
 <li>Loading...</li></ul></nav></div></div></div><footer>
 <p class="tsd-generator">Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></footer>
