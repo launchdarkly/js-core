@@ -1251,3 +1251,128 @@ it('does not warn when no payload filter key is configured', () => {
 
   manager.close();
 });
+
+describe('given a configuration with a payload filter key', () => {
+  let config: any;
+
+  beforeEach(() => {
+    config = makeConfig({
+      serviceEndpoints: new ServiceEndpoints(
+        'https://stream',
+        'https://poll',
+        'https://events',
+        '/bulk',
+        '/diagnostic',
+        true,
+        'microservice-1',
+      ),
+    });
+  });
+
+  it('builds FDv2 requestors and sources with endpoints that have no payload filter key', async () => {
+    const sourceFactoryProvider = makeSourceFactoryProvider();
+    let capturedCtx: any;
+    // @ts-ignore - mock captures ctx argument
+    sourceFactoryProvider.createInitializerFactory.mockImplementation((_entry: any, ctx: any) => {
+      capturedCtx = ctx;
+      return { create: jest.fn() };
+    });
+    const manager = createFDv2DataManagerBase(makeBaseConfig({ config, sourceFactoryProvider }));
+
+    // Identify so that the manager builds the FDv2 requestor and the factory context.
+    await identifyManager(manager);
+
+    // The FDv2 endpoints keep the base URIs and drop the payload filter key.
+    const requestorEndpoints = mockMakeFDv2Requestor.mock.calls[0][1];
+    expect(requestorEndpoints.payloadFilterKey).toBeUndefined();
+    expect(requestorEndpoints.polling).toBe('https://poll');
+    expect(capturedCtx.serviceEndpoints.payloadFilterKey).toBeUndefined();
+    expect(capturedCtx.serviceEndpoints.streaming).toBe('https://stream');
+
+    manager.close();
+  });
+
+  it('builds the FDv1 fallback requestor with endpoints that keep the payload filter key', async () => {
+    const fdv1Endpoints = {
+      polling: jest.fn(() => ({
+        pathGet: jest.fn(),
+        pathReport: jest.fn(),
+        pathPost: jest.fn(),
+        pathPing: jest.fn(),
+      })),
+      streaming: jest.fn(() => ({
+        pathGet: jest.fn(),
+        pathReport: jest.fn(),
+        pathPost: jest.fn(),
+        pathPing: jest.fn(),
+      })),
+    };
+    (makeRequestor as jest.Mock).mockReturnValue({});
+    (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+    const manager = createFDv2DataManagerBase(
+      makeBaseConfig({
+        config,
+        fdv1Endpoints,
+        foregroundMode: 'streaming',
+      }),
+    );
+    await identifyManager(manager);
+    const dsConfig = capturedDataSourceConfigs[0];
+    const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+
+    // Create the FDv1 fallback synchronizer so that it builds its requestor.
+    fdv1Slot.factory.create(() => undefined);
+
+    // The FDv1 fallback requestor keeps the payload filter key.
+    expect((makeRequestor as jest.Mock).mock.calls[0][1].payloadFilterKey).toBe('microservice-1');
+
+    manager.close();
+  });
+
+  it('builds the FDv1 fallback requestor with the override endpoints and the payload filter key', async () => {
+    const fdv1Endpoints = {
+      polling: jest.fn(() => ({
+        pathGet: jest.fn(),
+        pathReport: jest.fn(),
+        pathPost: jest.fn(),
+        pathPing: jest.fn(),
+      })),
+      streaming: jest.fn(() => ({
+        pathGet: jest.fn(),
+        pathReport: jest.fn(),
+        pathPost: jest.fn(),
+        pathPing: jest.fn(),
+      })),
+    };
+    (makeRequestor as jest.Mock).mockReturnValue({});
+    (createFDv1PollingSynchronizer as jest.Mock).mockReturnValue({ close: jest.fn() });
+    const modeTable = {
+      ...MODE_TABLE,
+      streaming: {
+        ...MODE_TABLE.streaming,
+        fdv1Fallback: { endpoints: { pollingBaseUri: 'https://fallback-poll' } },
+      },
+    };
+    const manager = createFDv2DataManagerBase(
+      makeBaseConfig({
+        config,
+        fdv1Endpoints,
+        modeTable,
+        foregroundMode: 'streaming',
+      }),
+    );
+    await identifyManager(manager);
+    const dsConfig = capturedDataSourceConfigs[0];
+    const fdv1Slot = dsConfig.synchronizerSlots[dsConfig.synchronizerSlots.length - 1];
+
+    // Create the FDv1 fallback synchronizer so that it builds its requestor.
+    fdv1Slot.factory.create(() => undefined);
+
+    // The FDv1 fallback requestor uses the override host and keeps the payload filter key.
+    const fallbackEndpoints = (makeRequestor as jest.Mock).mock.calls[0][1];
+    expect(fallbackEndpoints.polling).toBe('https://fallback-poll');
+    expect(fallbackEndpoints.payloadFilterKey).toBe('microservice-1');
+
+    manager.close();
+  });
+});
