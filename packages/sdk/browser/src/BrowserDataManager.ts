@@ -93,9 +93,15 @@ export default class BrowserDataManager extends BaseDataManager {
     }
     this._secureModeHash = browserIdentifyOptions?.hash;
 
+    let bootstrapped = false;
     if (browserIdentifyOptions?.bootstrap) {
-      this._finishIdentifyFromBootstrap(context, browserIdentifyOptions, identifyResolve);
-    } else {
+      bootstrapped = this._finishIdentifyFromBootstrap(
+        context,
+        browserIdentifyOptions,
+        identifyResolve,
+      );
+    }
+    if (!bootstrapped) {
       if (await this.flagManager.loadCached(context)) {
         this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
@@ -190,15 +196,23 @@ export default class BrowserDataManager extends BaseDataManager {
     context: Context,
     browserIdentifyOptions: BrowserIdentifyOptions,
     identifyResolve: () => void,
-  ) {
+  ): boolean {
     let { bootstrapParsed } = browserIdentifyOptions;
     if (!bootstrapParsed) {
-      bootstrapParsed = readFlagsFromBootstrap(this.logger, browserIdentifyOptions.bootstrap);
+      try {
+        bootstrapParsed = readFlagsFromBootstrap(this.logger, browserIdentifyOptions.bootstrap);
+      } catch (error) {
+        // A malformed payload must not reject the identify. The caller
+        // continues as a normal identify.
+        this.logger.error('Failed to read bootstrap data.', error);
+        return false;
+      }
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
     this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Valid);
     this._debugLog('Identify - Initialization completed from bootstrap');
     identifyResolve();
+    return true;
   }
 
   setForcedStreaming(streaming?: boolean) {

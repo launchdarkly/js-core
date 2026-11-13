@@ -108,13 +108,15 @@ export default class NodeDataManager extends BaseDataManager {
     // Bootstrap and cache are mutually exclusive: when bootstrap data is provided it
     // resolves identify immediately, so we must not also load (and potentially overwrite
     // with) stale cached flags.
-    if (identifyOptions?.bootstrap) {
+    if (
+      identifyOptions?.bootstrap &&
+      this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve)
+    ) {
       if (identifyOptions.waitForNetworkResults) {
         this.logger.warn(
           `${logTag} 'waitForNetworkResults' is ignored when 'bootstrap' is provided.`,
         );
       }
-      this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
       if (!startedOffline) {
         // Open a connection for ongoing updates, but identify is already resolved so no
         // callbacks are forwarded.
@@ -172,16 +174,24 @@ export default class NodeDataManager extends BaseDataManager {
     context: Context,
     identifyOpts: LDIdentifyOptions,
     identifyResolve: () => void,
-  ): void {
+  ): boolean {
     let { bootstrapParsed } = identifyOpts;
     if (!bootstrapParsed) {
-      bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
+      try {
+        bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
+      } catch (error) {
+        // A malformed payload must not reject the identify. The caller
+        // continues as a normal identify.
+        this.logger.error(`${logTag} Failed to read bootstrap data.`, error);
+        return false;
+      }
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
     this.dataSourceStatusManager.requestStateUpdate(DataSourceState.Valid);
     this._debugLog('Identify - Initialization completed from bootstrap');
 
     identifyResolve();
+    return true;
   }
 
   private _setupConnection(
