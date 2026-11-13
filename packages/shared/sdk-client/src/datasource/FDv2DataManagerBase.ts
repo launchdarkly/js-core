@@ -144,6 +144,17 @@ export function createFDv2DataManagerBase(
     );
   }
 
+  // FDv2 does not support payload filters, so FDv2 sources use endpoints without the filter key.
+  // The FDv1 fallback synchronizer uses the configured endpoints and keeps the filter.
+  const fdv2ServiceEndpoints = new ServiceEndpoints(
+    config.serviceEndpoints.streaming,
+    config.serviceEndpoints.polling,
+    config.serviceEndpoints.events,
+    config.serviceEndpoints.analyticsEventPath,
+    config.serviceEndpoints.diagnosticEventPath,
+    config.serviceEndpoints.includeAuthorizationHeader,
+  );
+
   const statusManager: DataSourceStatusManager = createDataSourceStatusManager(emitter);
   const endpoints = fdv2Endpoints();
 
@@ -294,15 +305,15 @@ export function createFDv2DataManagerBase(
       const fallbackServiceEndpoints =
         fallbackConfig?.endpoints?.pollingBaseUri || fallbackConfig?.endpoints?.streamingBaseUri
           ? new ServiceEndpoints(
-              fallbackConfig.endpoints.streamingBaseUri ?? ctx.serviceEndpoints.streaming,
-              fallbackConfig.endpoints.pollingBaseUri ?? ctx.serviceEndpoints.polling,
-              ctx.serviceEndpoints.events,
-              ctx.serviceEndpoints.analyticsEventPath,
-              ctx.serviceEndpoints.diagnosticEventPath,
-              ctx.serviceEndpoints.includeAuthorizationHeader,
-              ctx.serviceEndpoints.payloadFilterKey,
+              fallbackConfig.endpoints.streamingBaseUri ?? config.serviceEndpoints.streaming,
+              fallbackConfig.endpoints.pollingBaseUri ?? config.serviceEndpoints.polling,
+              config.serviceEndpoints.events,
+              config.serviceEndpoints.analyticsEventPath,
+              config.serviceEndpoints.diagnosticEventPath,
+              config.serviceEndpoints.includeAuthorizationHeader,
+              config.serviceEndpoints.payloadFilterKey,
             )
-          : ctx.serviceEndpoints;
+          : config.serviceEndpoints;
 
       const fdv1RequestorFactory = () =>
         makeRequestor(
@@ -530,7 +541,7 @@ export function createFDv2DataManagerBase(
 
       const requestor = makeFDv2Requestor(
         plainContextString,
-        config.serviceEndpoints,
+        fdv2ServiceEndpoints,
         pollingEndpoints,
         platform.requests,
         platform.encoding!,
@@ -555,7 +566,7 @@ export function createFDv2DataManagerBase(
         requestor,
         requests: platform.requests,
         encoding: platform.encoding!,
-        serviceEndpoints: config.serviceEndpoints,
+        serviceEndpoints: fdv2ServiceEndpoints,
         baseHeaders,
         queryParams,
         plainContextString,
