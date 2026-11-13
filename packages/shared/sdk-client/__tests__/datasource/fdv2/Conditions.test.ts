@@ -3,6 +3,7 @@ import { DataSourceErrorKind } from '@launchdarkly/js-sdk-common';
 import {
   createConditionGroup,
   createFallbackCondition,
+  createInitFallbackCondition,
   createRecoveryCondition,
   getConditions,
 } from '../../../src/datasource/fdv2/Conditions';
@@ -180,6 +181,34 @@ it('recovery condition close can be called multiple times', () => {
   // Should not throw
 });
 
+// -- init fallback condition --
+
+it('init fallback condition fires after timeout without any inform calls', async () => {
+  const condition = createInitFallbackCondition(10);
+  expect(await condition.promise).toBe('fallback');
+  condition.close();
+});
+
+it('init fallback condition cancels timer when a changeSet is received', async () => {
+  const condition = createInitFallbackCondition(10);
+  condition.inform(makeChangeSet());
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+  condition.close();
+});
+
+it('init fallback condition is unaffected by an interrupted result', async () => {
+  const condition = createInitFallbackCondition(10);
+  condition.inform(makeInterrupted());
+  expect(await condition.promise).toBe('fallback');
+  condition.close();
+});
+
+it('init fallback condition does not fire after close', async () => {
+  const condition = createInitFallbackCondition(10);
+  condition.close();
+  expect(await raceTimeout(condition.promise, 50)).toBe(DID_NOT_RESOLVE);
+});
+
 // -- condition group --
 
 it('condition group returns undefined promise for empty group', () => {
@@ -233,17 +262,17 @@ it('condition group close stops all conditions', async () => {
 // -- getConditions --
 
 it('getConditions returns empty group when only one synchronizer is available', () => {
-  const group = getConditions(1, true, 10, 10);
+  const group = getConditions(1, true, true, 10, 10, 10);
   expect(group.promise).toBeUndefined();
 });
 
 it('getConditions returns empty group when zero synchronizers are available', () => {
-  const group = getConditions(0, true, 10, 10);
+  const group = getConditions(0, true, true, 10, 10, 10);
   expect(group.promise).toBeUndefined();
 });
 
-it('getConditions returns fallback only for prime synchronizer', async () => {
-  const group = getConditions(2, true, 10, 200);
+it('getConditions returns fallback only for prime synchronizer once initialized', async () => {
+  const group = getConditions(2, true, true, 10, 200, 200);
 
   group.inform(makeInterrupted());
 
@@ -251,9 +280,40 @@ it('getConditions returns fallback only for prime synchronizer', async () => {
   group.close();
 });
 
-it('getConditions returns fallback and recovery for non-prime synchronizer', async () => {
-  const group = getConditions(2, false, 200, 10);
+it('getConditions returns fallback and recovery for non-prime synchronizer once initialized', async () => {
+  const group = getConditions(2, false, true, 200, 10, 200);
 
   expect(await group.promise).toBe('recovery');
+  group.close();
+});
+
+it('getConditions adds an init-fallback leg for a prime synchronizer before initialization', async () => {
+  const group = getConditions(2, true, false, 200, 200, 10);
+
+  // No interrupted result ever arrives, so only the init-fallback leg can fire.
+  expect(await group.promise).toBe('fallback');
+  group.close();
+});
+
+it('getConditions adds an init-fallback leg for a non-prime synchronizer before initialization', async () => {
+  const group = getConditions(2, false, false, 200, 200, 10);
+
+  expect(await group.promise).toBe('fallback');
+  group.close();
+});
+
+it('getConditions does not fire the init-fallback leg once a changeSet is received', async () => {
+  const group = getConditions(2, true, false, 200, 200, 10);
+
+  group.inform(makeChangeSet());
+
+  expect(await raceTimeout(group.promise!, 50)).toBe(DID_NOT_RESOLVE);
+  group.close();
+});
+
+it('getConditions omits the init-fallback leg once the data system is initialized', async () => {
+  const group = getConditions(2, true, true, 200, 200, 10);
+
+  expect(await raceTimeout(group.promise!, 50)).toBe(DID_NOT_RESOLVE);
   group.close();
 });
