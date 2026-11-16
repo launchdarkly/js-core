@@ -124,15 +124,16 @@ There are several attributes with special handling within a single or multi-cont
 
 Evaluation results include LaunchDarkly specific information in the OpenFeature flag metadata. A key is only present when it applies to the evaluation.
 
-| Key                 | Type    | Description                                                                                                                                                                                                         |
-| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `variationIndex`    | number  | The index of the served variation. Absent when the default value was returned.                                                                                                                                      |
-| `inExperiment`      | boolean | Present, and `true`, when the evaluation was part of an experiment.                                                                                                                                                 |
-| `ruleIndex`         | number  | The index of the matched rule, for a `RULE_MATCH` reason.                                                                                                                                                           |
-| `ruleId`            | string  | The identifier of the matched rule, for a `RULE_MATCH` reason.                                                                                                                                                      |
-| `prerequisiteKey`   | string  | The key of the failed prerequisite flag, for a `PREREQUISITE_FAILED` reason.                                                                                                                                        |
-| `bigSegmentsStatus` | string  | The status of the Big Segment query, when the evaluation required one.                                                                                                                                              |
-| `overrideAffected`  | boolean | Present, and `true`, when the evaluation read a flag or segment definition supplied by an experimental override source. The Cloudflare SDK does not support override sources, so this key is not currently emitted. |
+| Key                 | Type    | Description                                                                    |
+| ------------------- | ------- | ------------------------------------------------------------------------------ |
+| `variationIndex`    | number  | The index of the served variation. Absent when the default value was returned. |
+| `inExperiment`      | boolean | Present, and `true`, when the evaluation was part of an experiment.            |
+| `ruleIndex`         | number  | The index of the matched rule, for a `RULE_MATCH` reason.                      |
+| `ruleId`            | string  | The identifier of the matched rule, for a `RULE_MATCH` reason.                 |
+| `prerequisiteKey`   | string  | The key of the failed prerequisite flag, for a `PREREQUISITE_FAILED` reason.   |
+| `bigSegmentsStatus` | string  | The status of the Big Segment query, when the evaluation required one.         |
+
+The Cloudflare SDK does not support override sources, so the `overrideAffected` key is not emitted.
 
 ```typescript
 const details = await client.getBooleanDetails('my-boolean-flag', false, {
