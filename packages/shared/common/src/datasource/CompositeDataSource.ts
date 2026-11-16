@@ -58,6 +58,7 @@ export class CompositeDataSource implements DataSource {
    * @param _logger for logging
    * @param _transitionConditions to control automated transition between datasources. Typically only used for testing.
    * @param _backoff to control delay between transitions. Typically only used for testing.
+   * @param _onInitializersExhausted called before starting synchronizers when all initializers have run.
    */
   constructor(
     initializers: LDDataSourceFactory[],
@@ -75,6 +76,7 @@ export class CompositeDataSource implements DataSource {
       },
     },
     private readonly _backoff: Backoff = new DefaultBackoff(1000, 30000),
+    private readonly _onInitializersExhausted?: () => void,
   ) {
     this._externalTransitionPromise = new Promise<TransitionRequest>((resolveTransition) => {
       this._externalTransitionResolve = resolveTransition;
@@ -83,6 +85,10 @@ export class CompositeDataSource implements DataSource {
     this._initFactories = new DataSourceList(false, initializers);
     this._syncFactories = new DataSourceList(true, synchronizers);
     this._fdv1Synchronizers = new DataSourceList(true, fdv1Synchronizers);
+  }
+
+  get initializing(): boolean {
+    return this._initPhaseActive;
   }
 
   async start(
@@ -342,6 +348,7 @@ export class CompositeDataSource implements DataSource {
         // if asked to fallback after using all init factories, switch to sync factories
         if (this._initPhaseActive && this._initFactories.pos() >= this._initFactories.length()) {
           this._initPhaseActive = false;
+          this._onInitializersExhausted?.();
           this._syncFactories.reset();
         }
 

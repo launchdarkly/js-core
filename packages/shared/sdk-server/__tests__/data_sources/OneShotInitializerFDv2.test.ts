@@ -79,6 +79,20 @@ describe('given a one shot initializer', () => {
     });
   });
 
+  it('does not report a selectorless full payload as a basis', () => {
+    const body = JSON.parse(jsonData);
+    body.events[0].data.payloads[0] = { id: '', target: 0, intentCode: 'xfer-full' };
+    body.events[2].data = { state: '', version: 0 };
+    requestor.requestAllData = jest.fn((cb) => cb(undefined, JSON.stringify(body)));
+    initializer.start(mockDataCallback, mockStatusCallback);
+    expect(mockDataCallback).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({
+        payload: expect.objectContaining({ type: 'full', state: '' }),
+      }),
+    );
+  });
+
   // On a 200 + directive, the payload and the directive must arrive atomically on the same
   // dataCallback so the composite can swap to FDv1 without losing either.
   it('applies the payload and signals fallback atomically on a 200 + directive', () => {

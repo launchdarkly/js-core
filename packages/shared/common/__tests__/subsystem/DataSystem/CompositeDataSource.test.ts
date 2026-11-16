@@ -39,6 +39,75 @@ function makeZeroBackoff(): Backoff {
   };
 }
 
+it('exhausts selectorless initializers before notifying and starting a synchronizer', async () => {
+  const order: string[] = [];
+  let underTest: CompositeDataSource;
+  const initializer =
+    (name: string): LDDataSourceFactory =>
+    () => ({
+      start(data, status) {
+        order.push(name);
+        expect(underTest.initializing).toBe(true);
+        data(false, { key: name });
+        status(DataSourceState.Closed);
+      },
+      stop() {},
+    });
+  let started: () => void;
+  const syncStarted = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const onExhausted = jest.fn(() => {
+    expect(underTest.initializing).toBe(false);
+    order.push('exhausted');
+  });
+  underTest = new CompositeDataSource(
+    [initializer('first'), initializer('second')],
+    [
+      () => ({
+        start() {
+          order.push('sync');
+          started();
+        },
+        stop() {},
+      }),
+    ],
+    [],
+    undefined,
+    undefined,
+    makeZeroBackoff(),
+    onExhausted,
+  );
+  const run = underTest.start(jest.fn(), jest.fn());
+  await syncStarted;
+  expect(order).toEqual(['first', 'second', 'exhausted', 'sync']);
+  expect(onExhausted).toHaveBeenCalledTimes(1);
+  await underTest.stop();
+  await run;
+});
+
+it('notifies initializer exhaustion even when there are no synchronizers', async () => {
+  const onExhausted = jest.fn();
+  const underTest = new CompositeDataSource(
+    [
+      () => ({
+        start(_data, status) {
+          status(DataSourceState.Closed);
+        },
+        stop() {},
+      }),
+    ],
+    [],
+    [],
+    undefined,
+    undefined,
+    makeZeroBackoff(),
+    onExhausted,
+  );
+  await underTest.start(jest.fn(), jest.fn());
+  expect(onExhausted).toHaveBeenCalledTimes(1);
+});
+
 it('handles initializer getting basis, switching to synchronizer', async () => {
   const mockInitializer1 = {
     start: jest

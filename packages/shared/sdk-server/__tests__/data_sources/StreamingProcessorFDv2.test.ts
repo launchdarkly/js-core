@@ -238,6 +238,20 @@ describe('given a stream processor with mock event source', () => {
     );
   });
 
+  it('does not report a selectorless full payload as a basis', () => {
+    simulateEvents({
+      ...events,
+      'server-intent': { data: '{"payloads":[{"id":"","target":0,"intentCode":"xfer-full"}]}' },
+      'payload-transferred': { data: '{"state":"","version":0}' },
+    });
+    expect(mockDataCallback).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({
+        payload: expect.objectContaining({ type: 'full', state: '' }),
+      }),
+    );
+  });
+
   it('uses selector when provided', () => {
     streamingProcessor = new StreamingProcessorFDv2(
       {

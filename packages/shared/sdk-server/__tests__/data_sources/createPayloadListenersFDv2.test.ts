@@ -220,7 +220,7 @@ describe('createPayloadListenerFDv2', () => {
     expect(initializedCallback).toHaveBeenCalledTimes(1);
   });
 
-  test('does not call initializedCallback when state is empty (file data initializer)', () => {
+  test('calls initializedCallback for a selectorless synchronizer full payload', () => {
     const fileDataPayload = {
       initMetadata: {
         environmentId: 'envId',
@@ -259,7 +259,53 @@ describe('createPayloadListenerFDv2', () => {
     // Simulate applyChanges calling the callback
     capturedCallback?.();
 
-    // Should still not be called because state is empty
+    expect(initializedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('defers selectorless initializer readiness until the initializer phase ends', () => {
+    let initializing = true;
+    const listener = createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initializedCallback,
+      () => initializing,
+    );
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+    const payload = {
+      ...fullTransferPayload,
+      payload: { ...fullTransferPayload.payload, state: '' },
+    };
+
+    listener(payload);
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledTimes(1);
+    expect(initializedCallback).not.toHaveBeenCalled();
+
+    initializing = false;
+    listener(payload);
+    expect(initializedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('raises readiness for a selector-bearing partial payload during initialization', () => {
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+    createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initializedCallback,
+      () => true,
+    )(changesTransferPayload);
+    expect(initializedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not raise readiness for a selectorless partial payload', () => {
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+    createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initializedCallback,
+    )({
+      ...changesTransferPayload,
+      payload: { ...changesTransferPayload.payload, state: '' },
+    });
     expect(initializedCallback).not.toHaveBeenCalled();
   });
 });

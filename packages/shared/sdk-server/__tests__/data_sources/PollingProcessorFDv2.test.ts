@@ -63,6 +63,26 @@ describe('given a polling processor', () => {
     expect(requestor.requestAllData).not.toHaveBeenCalled();
   });
 
+  it('does not report a selectorless full payload as a basis', () => {
+    const body = JSON.parse(fdv2JsonData);
+    body.events[0].data.payloads[0] = { id: '', target: 0, intentCode: 'xfer-full' };
+    body.events[2].data = { state: '', version: 0 };
+    const dataCallback = jest.fn();
+    const selectorlessProcessor = new PollingProcessorFDv2(
+      { requestAllData: (cb: any) => cb(undefined, JSON.stringify(body)) } as Requestor,
+      longInterval,
+      new TestLogger(),
+    );
+    selectorlessProcessor.start(dataCallback, jest.fn());
+    selectorlessProcessor.stop();
+    expect(dataCallback).toHaveBeenCalledWith(
+      false,
+      expect.objectContaining({
+        payload: expect.objectContaining({ type: 'full', state: '' }),
+      }),
+    );
+  });
+
   it('polls immediately on start', () => {
     processor.start(mockDataCallback, mockStatusCallback);
     expect(requestor.requestAllData).toHaveBeenCalledTimes(1);

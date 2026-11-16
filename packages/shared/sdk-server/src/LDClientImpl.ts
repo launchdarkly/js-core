@@ -596,13 +596,32 @@ function constructFDv2(
       );
     }
 
-    dataSource = new CompositeDataSource(
+    // Tracks whether a full payload has been applied to the memory store. The feature store's
+    // own initialized() can report a persistent store that was populated before this process.
+    let memoryStoreInitialized = false;
+    const compositeDataSource = new CompositeDataSource(
       initializers,
       synchronizers,
       fdv1FallbackSynchronizers,
       logger,
+      undefined,
+      undefined,
+      () => {
+        if (memoryStoreInitialized) {
+          initSuccess();
+        }
+      },
     );
-    payloadListener = createPayloadListener(dataSourceUpdates, logger, initSuccess);
+    dataSource = compositeDataSource;
+    payloadListener = createPayloadListener(
+      dataSourceUpdates,
+      logger,
+      initSuccess,
+      () => compositeDataSource.initializing,
+      () => {
+        memoryStoreInitialized = true;
+      },
+    );
   }
 
   return {

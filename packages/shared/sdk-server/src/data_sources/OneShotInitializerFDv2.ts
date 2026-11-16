@@ -133,7 +133,7 @@ export default class OneShotInitializerFDv2 implements subsystemCommon.DataSourc
             data.fallbackToFDv1 = true;
             this._logger?.warn(`Response header indicates to fallback to FDv1`);
           }
-          dataCallback(payload.type === 'full', data);
+          dataCallback(payload.type === 'full' && !!payload.state, data);
         });
 
         payloadProcessor.processEvents(parsed.events);
