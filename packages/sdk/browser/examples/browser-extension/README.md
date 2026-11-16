@@ -13,7 +13,8 @@ LaunchDarkly client in the extension. The other parts of the extension get flag 
 with `chrome.runtime` messages:
 
 - The popup ([`popup.html`](./popup.html), [`src/popup/popup.ts`](./src/popup/popup.ts)) shows
-  the flag value.
+  the flag value. When the SDK data source state is not `VALID`, for example after a wrong
+  client-side ID, the popup also shows that state.
 - The content script ([`src/content-script.ts`](./src/content-script.ts)) runs on each page and
   logs the flag value to the page console.
 
