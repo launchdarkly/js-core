@@ -1,4 +1,4 @@
-import { AttributeReference, Context, Crypto } from '@launchdarkly/js-sdk-common';
+import { AttributeReference, Context, Crypto, isNullish } from '@launchdarkly/js-sdk-common';
 
 /**
  * Bucketing can be done by string or integer values. The need to be converted to a string
@@ -67,7 +67,8 @@ export default class Bucketer {
       return [0, hadContext];
     }
 
-    const prefix = seed ? Number(seed) : `${key}.${salt}`;
+    // A seed of 0 is valid. Do not use a truthy check, because 0 is falsy.
+    const prefix = !isNullish(seed) ? Number(seed) : `${key}.${salt}`;
     const hashKey = `${prefix}.${bucketableValue}`;
     const hashVal = parseInt(this._sha1Hex(hashKey).substring(0, 15), 16);
 
