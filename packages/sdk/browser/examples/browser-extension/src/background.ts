@@ -18,9 +18,10 @@ const context: LDContext = {
   name: 'Sandy',
 };
 
-// A Manifest V3 service worker has fetch(), but it has no EventSource and no localStorage.
-// - eventSource: fetchBrowserEventSource streams flag updates over fetch(). The default
-//   transport is the native EventSource, which does not exist in a service worker.
+// A Manifest V3 service worker has no document and no localStorage.
+// - eventSource: fetchBrowserEventSource streams flag updates over fetch(). Unlike the native
+//   EventSource, it can send request headers, it can use REPORT or POST, it reports HTTP
+//   error statuses to the SDK, and it applies a read timeout.
 // - storage keeps the cached context and flag values in chrome.storage.local.
 // - fetchGoals: false turns off goals, because goals need a document.
 const client = createClient(clientSideID, context, {

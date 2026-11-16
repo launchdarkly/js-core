@@ -24,12 +24,12 @@ value one time, so a content script can log the same value two times. See
 
 ## Service worker configuration
 
-A Manifest V3 service worker has `fetch()`, but it has no `window`, no `document`, no
-`EventSource` and no `localStorage`. The example sets these options for that environment:
+A Manifest V3 service worker has no `window`, no `document` and no `localStorage`. The example
+sets these options for that environment:
 
 | Option        | Value                          | Why                                                                                                                                                                                                           |
 | ------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `eventSource` | `fetchBrowserEventSource`      | The default streaming transport is the native `EventSource`, which does not exist in a service worker. This `fetch()`-based transport works there.                                                            |
+| `eventSource` | `fetchBrowserEventSource`      | A `fetch()`-based streaming transport. Unlike the native `EventSource`, it can send request headers, it can use `REPORT` or `POST`, it reports HTTP error statuses to the SDK, and it applies a read timeout. |
 | `streaming`   | `true`                         | Keeps the streaming connection open, so flag changes arrive in real time.                                                                                                                                     |
 | `storage`     | `chrome.storage.local` adapter | `localStorage` does not exist in a service worker. The adapter ([`src/storage/chromeStorageAdapter.ts`](./src/storage/chromeStorageAdapter.ts)) caches the context and flag values in `chrome.storage.local`. |
 | `fetchGoals`  | `false`                        | Goals need a `document`.                                                                                                                                                                                      |

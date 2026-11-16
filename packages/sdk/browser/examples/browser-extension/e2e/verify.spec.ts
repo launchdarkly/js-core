@@ -12,8 +12,13 @@ import { fileURLToPath } from 'node:url';
 
 const extensionPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-function isStreamRequest(request: Request): boolean {
-  return request.url().includes('clientstream.launchdarkly.com/eval/');
+// The native EventSource and the fetch()-based one use the same stream URL. Only a request of
+// resource type 'fetch' comes from the fetch()-based EventSource.
+function isFetchStreamRequest(request: Request): boolean {
+  return (
+    request.url().includes('clientstream.launchdarkly.com/eval/') &&
+    request.resourceType() === 'fetch'
+  );
 }
 
 interface Fixtures {
@@ -37,7 +42,7 @@ const it = base.extend<Fixtures>({
     // The worker starts when the extension loads, and it can open the stream before the test
     // body runs. Record stream requests from the start, so the test cannot miss one.
     context.on('request', (request) => {
-      if (isStreamRequest(request)) {
+      if (isFetchStreamRequest(request)) {
         streamRequests.push(request);
       }
     });
@@ -65,8 +70,6 @@ it('shows the flag value in the popup and streams from the service worker', asyn
     timeout: 20_000,
   });
 
-  // A service worker has no native EventSource. A stream request from the worker proves that
-  // the fetch()-based EventSource is in use.
   await expect.poll(() => streamRequests.length, { timeout: 20_000 }).toBeGreaterThan(0);
 });
 
