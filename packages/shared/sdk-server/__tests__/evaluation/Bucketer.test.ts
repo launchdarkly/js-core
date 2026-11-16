@@ -47,6 +47,8 @@ describe('Bucketer.test', () => {
     [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, undefined, 'flag-key.salty.is-key'],
 
     [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, 82, '82.is-key'],
+    // A seed of 0 is a defined seed. It replaces the key and salt.
+    [{ key: 'is-key' }, 'flag-key', 'key', 'salty', undefined, 0, '0.is-key'],
     [
       { key: 'is-key', kind: 'org' },
       'flag-key',
