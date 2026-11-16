@@ -1,4 +1,3 @@
-// Temporary app for testing FDv2 functionality.
 import {
   basicLogger,
   createClient,

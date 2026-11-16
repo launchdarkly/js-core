@@ -16,6 +16,6 @@ jobs:
           node-version: 24
       - uses: ./actions/run-example
         with:
-          workspace_name: '@launchdarkly/browser-example'
+          workspace_name: '@launchdarkly/js-client-sdk-example-getting-started'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
-          before_test: 'yarn workspace @launchdarkly/browser-example playwright install --with-deps chromium'
+          before_test: 'yarn workspace @launchdarkly/js-client-sdk-example-getting-started playwright install --with-deps chromium'

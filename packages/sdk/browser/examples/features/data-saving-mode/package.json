@@ -1,9 +1,9 @@
 {
-  "name": "@launchdarkly/browser-example",
+  "name": "@launchdarkly/js-client-sdk-example-data-saving-mode",
   "version": "0.0.0",
   "private": true,
-  "description": "LaunchDarkly example for JavaScript Browser SDK",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/example",
+  "description": "LaunchDarkly example for the JavaScript Browser SDK FDv2 data saving mode",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/examples/features/data-saving-mode",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"

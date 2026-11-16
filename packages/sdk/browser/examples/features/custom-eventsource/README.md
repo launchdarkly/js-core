@@ -64,13 +64,13 @@ Nodejs 22 or later
 
    ```bash
    yarn workspaces foreach -pR --topological-dev --from '@launchdarkly/js-client-sdk' run build
-   yarn workspace @launchdarkly/browser-example-custom-eventsource build
+   yarn workspace @launchdarkly/js-client-sdk-example-custom-eventsource build
    ```
 
 4. On the command line, run the example:
 
    ```bash
-   yarn workspace @launchdarkly/browser-example-custom-eventsource start
+   yarn workspace @launchdarkly/js-client-sdk-example-custom-eventsource start
    ```
 
    > [!NOTE]
