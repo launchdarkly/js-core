@@ -8,6 +8,13 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.6](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.5...js-server-sdk-common-v2.26.6) (2026-11-16)
+
+
+### Bug Fixes
+
+* Use a rollout seed of 0 for bucketing instead of the flag key and salt ([#2197](https://github.com/launchdarkly/js-core/issues/2197)) ([8cd4135](https://github.com/launchdarkly/js-core/commit/8cd41356ae1f3f55a5c52f05a81a305e8c9b4a29))
+
 ## [2.26.5](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.4...js-server-sdk-common-v2.26.5) (2026-11-12)
 
 

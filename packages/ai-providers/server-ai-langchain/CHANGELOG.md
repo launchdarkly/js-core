@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.8.33](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.8.32...server-sdk-ai-langchain-v0.8.33) (2026-11-16)
+
+
+### Bug Fixes
+
+* **server-ai-langchain:** drop credentials and endpoints from model parameters ([#2190](https://github.com/launchdarkly/js-core/issues/2190)) ([e071279](https://github.com/launchdarkly/js-core/commit/e071279bbea3a4b07dc8992ebea09d3f4a5f3e4f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^2.0.21 to ^2.0.22
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^1.1.1 || ^2.0.0 to ^2.0.22
+
 ## [0.8.32](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.8.31...server-sdk-ai-langchain-v0.8.32) (2026-11-12)
 
 
