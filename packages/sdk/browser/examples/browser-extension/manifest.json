@@ -4,7 +4,11 @@
   "version": "0.0.0",
   "description": "Runs the LaunchDarkly browser SDK in a Manifest V3 extension service worker.",
   "permissions": ["storage"],
-  "host_permissions": ["https://*.launchdarkly.com/*"],
+  "host_permissions": [
+    "https://clientsdk.launchdarkly.com/*",
+    "https://clientstream.launchdarkly.com/*",
+    "https://events.launchdarkly.com/*"
+  ],
   "background": {
     "service_worker": "dist/background.js",
     "type": "module"

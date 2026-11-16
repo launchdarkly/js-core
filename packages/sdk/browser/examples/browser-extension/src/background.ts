@@ -35,6 +35,10 @@ const client = createClient(clientSideID, context, {
   storage: createChromeStorageAdapter(),
 });
 
+// By default, content scripts can read and write chrome.storage.local. Content scripts run in web
+// pages, so they are less trusted. Only the extension itself needs the SDK flag cache.
+chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+
 let initStatus: LDWaitForInitializationResult['status'] | undefined;
 
 function flagValueMessage(): FlagValueMessage {

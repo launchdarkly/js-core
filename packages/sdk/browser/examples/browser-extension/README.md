@@ -39,6 +39,17 @@ point. Only an application that imports this entry point gets it in its bundle. 
 `@launchdarkly/eventsource`, is an optional dependency of the SDK. If your install omits
 optional dependencies, install it directly.
 
+## Permissions
+
+- `host_permissions` lists the default LaunchDarkly endpoints. If you set `baseUri`, `streamUri`
+  or `eventsUri`, for example for the Relay Proxy or a federal instance, add those hosts to
+  [`manifest.json`](./manifest.json).
+- The content script runs on `<all_urls>` to show that every page can get the flag value. This
+  gives the widest install warning, and each page load wakes the worker. In your extension, set
+  `matches` to only the sites that need flag values.
+- The worker sets the access level of `chrome.storage.local` to `TRUSTED_CONTEXTS`. Content
+  scripts then cannot read or change the SDK flag cache.
+
 ## Service worker lifecycle
 
 Chrome stops an extension service worker when it is idle, and the stream closes with it. Chrome

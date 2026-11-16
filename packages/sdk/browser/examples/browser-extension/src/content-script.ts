@@ -1,7 +1,8 @@
+// The content script does not run the SDK. It asks the background worker for the flag value,
+// and it gets the new value from the worker when the flag changes.
+
 import type { FlagValueMessage, GetFlagMessage } from './messages';
 
-// A content script cannot run the SDK on behalf of the extension. It asks the background worker
-// for the flag value instead, and it gets the new value from the worker when the flag changes.
 function logFlagValue(message: FlagValueMessage): void {
   // eslint-disable-next-line no-console
   console.log(
