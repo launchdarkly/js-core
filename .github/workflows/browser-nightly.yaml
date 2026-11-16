@@ -19,3 +19,18 @@ jobs:
           workspace_name: '@launchdarkly/js-client-sdk-example-getting-started'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
           before_test: 'yarn workspace @launchdarkly/js-client-sdk-example-getting-started playwright install --with-deps chromium'
+
+  run-extension-example:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./actions/setup-yarn
+        with:
+          node-version: 24
+      - uses: ./actions/run-example
+        with:
+          workspace_name: '@launchdarkly/js-client-sdk-example-browser-extension'
+          aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
+          before_test: 'yarn workspace @launchdarkly/js-client-sdk-example-browser-extension playwright install --with-deps chromium'
