@@ -72,6 +72,7 @@ it('shows the flag value in the popup and streams from the service worker', asyn
 
   await expect.poll(() => streamRequests.length, { timeout: 20_000 }).toBeGreaterThan(0);
   const streamResponse = await streamRequests[0].response();
+  expect(streamResponse).not.toBeNull();
   expect(streamResponse?.status()).toBe(200);
 });
 

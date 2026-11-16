@@ -18,6 +18,12 @@ export interface FlagValueMessage {
   type: 'FLAG_VALUE';
   flagKey: string;
   value: unknown;
-  /** The result of SDK initialization. It is not set until initialization completes. */
-  status?: 'complete' | 'timeout' | 'failed';
+  /** The SDK data source state, for example `VALID` or `INTERRUPTED`. */
+  dataSourceState?: string;
+}
+
+/** The background worker sends this to the popup when the SDK data source state changes. */
+export interface DataSourceStateMessage {
+  type: 'DATA_SOURCE_STATE';
+  state: string;
 }

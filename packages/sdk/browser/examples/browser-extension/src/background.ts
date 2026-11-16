@@ -1,11 +1,7 @@
-import {
-  createClient,
-  type LDContext,
-  type LDWaitForInitializationResult,
-} from '@launchdarkly/js-client-sdk';
+import { createClient, type LDContext } from '@launchdarkly/js-client-sdk';
 import { fetchBrowserEventSource } from '@launchdarkly/js-client-sdk/fetch-eventsource';
 
-import type { FlagValueMessage, GetFlagMessage } from './messages';
+import type { DataSourceStateMessage, FlagValueMessage, GetFlagMessage } from './messages';
 import { createChromeStorageAdapter } from './storage/chromeStorageAdapter';
 
 // Set clientSideID to your LaunchDarkly client-side ID
@@ -39,7 +35,7 @@ const client = createClient(clientSideID, context, {
 // pages, so they are less trusted. Only the extension itself needs the SDK flag cache.
 chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
 
-let initStatus: LDWaitForInitializationResult['status'] | undefined;
+let dataSourceState: string | undefined;
 
 function flagValueMessage(): FlagValueMessage {
   const value = client.variation(flagKey, false);
@@ -47,7 +43,7 @@ function flagValueMessage(): FlagValueMessage {
   // updates. Queued events are then lost. This flush prevents that, but it sends one events
   // request for each evaluation instead of one batch every flush interval.
   client.flush();
-  return { type: 'FLAG_VALUE', flagKey, value, status: initStatus };
+  return { type: 'FLAG_VALUE', flagKey, value, dataSourceState };
 }
 
 function broadcast(message: FlagValueMessage): void {
@@ -78,11 +74,20 @@ client.on('change', (_context: LDContext, changedKeys: string[]) => {
   }
 });
 
+// The data source state shows if the SDK has current data from LaunchDarkly. It changes, for
+// example, when a failed first request later succeeds. The popup shows the state, so a wrong
+// client-side ID does not look like a real flag value.
+client.on('dataSourceStatus', (status: { state: string }) => {
+  dataSourceState = status.state;
+  const message: DataSourceStateMessage = { type: 'DATA_SOURCE_STATE', state: status.state };
+  // The popup gets this message only when it is open.
+  chrome.runtime.sendMessage(message).catch(() => {});
+});
+
 // Chrome can stop the service worker when it is idle and start it again for the next event.
 // This code runs again on each start. The SDK first loads the cached flag values from storage
 // and then opens a new stream.
 const started = client.start({ timeout: 5 }).then(({ status }) => {
-  initStatus = status;
   // eslint-disable-next-line no-console
   console.log(`[LaunchDarkly] initialization status: ${status}`);
 });
