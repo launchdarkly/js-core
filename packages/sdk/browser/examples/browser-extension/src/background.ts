@@ -1,4 +1,8 @@
-import { createClient, type LDContext } from '@launchdarkly/js-client-sdk';
+import {
+  createClient,
+  type LDContext,
+  type LDWaitForInitializationResult,
+} from '@launchdarkly/js-client-sdk';
 import { fetchBrowserEventSource } from '@launchdarkly/js-client-sdk/fetch-eventsource';
 
 import type { FlagValueMessage, GetFlagMessage } from './messages';
@@ -31,21 +35,16 @@ const client = createClient(clientSideID, context, {
   storage: createChromeStorageAdapter(),
 });
 
+let initStatus: LDWaitForInitializationResult['status'] | undefined;
+
 function flagValueMessage(): FlagValueMessage {
   const value = client.variation(flagKey, false);
-  // Chrome can stop the worker before the next scheduled flush, and the queued events are then
-  // lost. Send the evaluation event now.
+  // Chrome can stop the worker suddenly, for example when the browser closes or the extension
+  // updates. Queued events are then lost. This flush prevents that, but it sends one events
+  // request for each evaluation instead of one batch every flush interval.
   client.flush();
-  return { type: 'FLAG_VALUE', flagKey, value };
+  return { type: 'FLAG_VALUE', flagKey, value, status: initStatus };
 }
-
-// Chrome can stop the service worker when it is idle and start it again for the next event.
-// This code runs again on each start. The SDK first loads the cached flag values from storage
-// and then opens a new stream.
-const started = client.start({ timeout: 5 }).then(({ status }) => {
-  // eslint-disable-next-line no-console
-  console.log(`[LaunchDarkly] initialization status: ${status}`);
-});
 
 function broadcast(message: FlagValueMessage): void {
   // The popup gets this message only when it is open. If no extension page listens, the
@@ -54,21 +53,34 @@ function broadcast(message: FlagValueMessage): void {
 
   // A tab that has no content script also rejects the message. Examples are chrome:// pages and
   // tabs that were open before the extension was installed.
-  chrome.tabs.query({}).then((tabs) => {
-    tabs.forEach((tab) => {
-      if (tab.id !== undefined) {
-        chrome.tabs.sendMessage(tab.id, message).catch(() => {});
-      }
-    });
-  });
+  chrome.tabs
+    .query({})
+    .then((tabs) => {
+      tabs.forEach((tab) => {
+        if (tab.id !== undefined) {
+          chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+        }
+      });
+    })
+    .catch(() => {});
 }
 
 // The stream delivers flag updates while the service worker runs. Send the new value to all
-// listeners, so that they do not have to ask again.
+// listeners, so that they do not have to ask again. Register this listener before start(), so
+// that it also gets the change from the cached flags.
 client.on('change', (_context: LDContext, changedKeys: string[]) => {
   if (changedKeys.includes(flagKey)) {
     broadcast(flagValueMessage());
   }
+});
+
+// Chrome can stop the service worker when it is idle and start it again for the next event.
+// This code runs again on each start. The SDK first loads the cached flag values from storage
+// and then opens a new stream.
+const started = client.start({ timeout: 5 }).then(({ status }) => {
+  initStatus = status;
+  // eslint-disable-next-line no-console
+  console.log(`[LaunchDarkly] initialization status: ${status}`);
 });
 
 // Register listeners at the top level. Chrome dispatches the event that started the worker only

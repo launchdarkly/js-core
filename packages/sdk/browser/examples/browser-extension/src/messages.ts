@@ -18,4 +18,6 @@ export interface FlagValueMessage {
   type: 'FLAG_VALUE';
   flagKey: string;
   value: unknown;
+  /** The result of SDK initialization. It is not set until initialization completes. */
+  status?: 'complete' | 'timeout' | 'failed';
 }
