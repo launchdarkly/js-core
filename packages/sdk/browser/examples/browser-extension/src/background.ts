@@ -31,7 +31,11 @@ const client = createClient(clientSideID, context, {
 });
 
 function flagValueMessage(): FlagValueMessage {
-  return { type: 'FLAG_VALUE', flagKey, value: client.variation(flagKey, false) };
+  const value = client.variation(flagKey, false);
+  // Chrome can stop the worker before the next scheduled flush, and the queued events are then
+  // lost. Send the evaluation event now.
+  client.flush();
+  return { type: 'FLAG_VALUE', flagKey, value };
 }
 
 // Chrome can stop the service worker when it is idle and start it again for the next event.
