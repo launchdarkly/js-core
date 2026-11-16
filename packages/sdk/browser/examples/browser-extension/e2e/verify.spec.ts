@@ -71,6 +71,24 @@ it('shows the flag value in the popup and streams from the service worker', asyn
   });
 
   await expect.poll(() => streamRequests.length, { timeout: 20_000 }).toBeGreaterThan(0);
+  const streamResponse = await streamRequests[0].response();
+  expect(streamResponse?.status()).toBe(200);
+});
+
+it('answers GET_FLAG and caches the flags in chrome.storage.local', async ({
+  context,
+  extensionId,
+  serviceWorker,
+}) => {
+  // Send GET_FLAG directly. A broadcast from the worker cannot satisfy this check, so it tests
+  // the response path.
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${extensionId}/popup.html`);
+  const response = await page.evaluate(() => chrome.runtime.sendMessage({ type: 'GET_FLAG' }));
+  expect(response).toMatchObject({ type: 'FLAG_VALUE', value: true });
+
+  const stored = await serviceWorker.evaluate(() => chrome.storage.local.get(null));
+  expect(Object.keys(stored).some((key) => key.startsWith('LaunchDarkly_'))).toBe(true);
 });
 
 it('sends the flag value to content scripts', async ({ context }) => {
