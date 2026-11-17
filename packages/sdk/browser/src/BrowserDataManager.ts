@@ -169,16 +169,7 @@ export default class BrowserDataManager extends BaseDataManager {
       try {
         const listeners = this.createStreamListeners(context, identifyResolve);
         const putListener = listeners.get('put');
-        const flags = putListener!.deserializeData(payload);
-        if (flags === undefined) {
-          // The payload is not JSON, or it is not valid flag data.
-          this.dataSourceStatusManager.reportError(
-            DataSourceErrorKind.InvalidData,
-            'The poll response contained invalid data',
-          );
-        } else {
-          putListener!.processJson(flags);
-        }
+        putListener!.processJson(putListener!.deserializeData(payload));
       } catch (e: any) {
         this.dataSourceStatusManager.reportError(
           DataSourceErrorKind.InvalidData,

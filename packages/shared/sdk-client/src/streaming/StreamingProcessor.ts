@@ -52,7 +52,6 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   private _connectionAttemptStartTime?: number;
   private _stopped = false;
   private readonly _retryState: RetryState;
-  private _reconnectTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly _plainContextString: string,
@@ -130,25 +129,6 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
     this._logConnectionStarted();
   }
 
-  private _restartForInvalidData() {
-    // The event source can deliver more events from the same chunk after close. Only the first
-    // invalid event closes the stream and schedules the reconnect.
-    if (this._stopped || !this._eventSource) {
-      return;
-    }
-
-    this._retryState.recordFailure('normal');
-
-    this._eventSource.close();
-    this._eventSource = undefined;
-    this._reconnectTimeout = setTimeout(() => {
-      this._reconnectTimeout = undefined;
-      if (!this._stopped) {
-        this.start();
-      }
-    }, this._retryState.nextDelay);
-  }
-
   start() {
     this._logConnectionStarted();
 
@@ -223,14 +203,12 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
           try {
             dataJson = deserializeData(data);
           } catch {
-            // Data that cannot be deserialized is invalid data, the same as data that the
-            // listener rejects.
+            // Data that cannot be parsed is invalid data. Do not let the error leave the listener.
             dataJson = undefined;
           }
 
           if (!dataJson) {
             reportJsonError(eventName, data, this._logger, this._errorHandler);
-            this._restartForInvalidData();
             return;
           }
           processJson(dataJson);
@@ -241,7 +219,6 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
               'Unexpected payload from event stream',
             ),
           );
-          this._restartForInvalidData();
         }
       });
     });
@@ -295,10 +272,6 @@ class StreamingProcessor implements subsystem.LDStreamProcessor {
   }
 
   stop() {
-    if (this._reconnectTimeout) {
-      clearTimeout(this._reconnectTimeout);
-      this._reconnectTimeout = undefined;
-    }
     this._eventSource?.close();
     this._eventSource = undefined;
     this._stopped = true;
