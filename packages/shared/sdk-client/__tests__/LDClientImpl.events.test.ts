@@ -200,6 +200,47 @@ describe('sdk-client object', () => {
     );
   });
 
+  it('sends the default value with no variation when a typed evaluation has the wrong type', async () => {
+    await ldc.identify({ kind: 'user', key: 'bob' });
+    expect(ldc.stringVariation('dev-test-flag', 'default')).toBe('default');
+    ldc.flush();
+
+    const event = mockedSendEvent.mock.calls[1][0];
+    expect(event).toEqual(
+      expect.objectContaining({
+        default: 'default',
+        key: 'dev-test-flag',
+        kind: 'feature',
+        trackEvents: true,
+        value: 'default',
+        version: 555,
+      }),
+    );
+    expect(event.variation).toBeUndefined();
+    expect(event.reason).toBeUndefined();
+  });
+
+  it('sends the WRONG_TYPE reason when a typed detail evaluation has the wrong type', async () => {
+    await ldc.identify({ kind: 'user', key: 'bob' });
+    const detail = ldc.boolVariationDetail('easter-specials', false);
+    expect(detail.value).toBe(false);
+    ldc.flush();
+
+    const event = mockedSendEvent.mock.calls[1][0];
+    expect(event).toEqual(
+      expect.objectContaining({
+        default: false,
+        key: 'easter-specials',
+        kind: 'feature',
+        reason: { kind: 'ERROR', errorKind: 'WRONG_TYPE' },
+        value: false,
+        version: 37,
+        withReasons: true,
+      }),
+    );
+    expect(event.variation).toBeUndefined();
+  });
+
   it('sends events for prerequisite flags', async () => {
     await ldc.identify({ kind: 'user', key: 'bob' });
     ldc.variation('has-prereq-depth-1', false);
