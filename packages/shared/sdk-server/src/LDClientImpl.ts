@@ -1423,8 +1423,9 @@ export default class LDClientImpl implements LDClient {
       // A source that fails to close does not stop the rest of the shutdown.
       this._logger?.error(`Unable to close the override source: ${err}`);
     }
-    // The flush takes the pending events before the event processor stops. The events are then
-    // sent after close returns.
+    // Start a flush of the pending events before the event processor stops. close does not wait
+    // for the flush, so some events can still be lost. To deliver all events, await flush before
+    // close.
     this._eventProcessor.flush().catch((err) => {
       this._logger?.debug(`Flush on close failed: ${err}`);
     });

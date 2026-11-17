@@ -118,7 +118,7 @@ it('calls error callback once when flush fails with exception', async () => {
   expect(flushCallback).toHaveBeenCalledTimes(1);
 });
 
-it('sends pending events when the client is closed', async () => {
+it('starts a flush of pending events when the client is closed', async () => {
   const platform = createBasicPlatform();
   platform.requests.fetch.mockImplementation(() =>
     Promise.resolve({ status: 200, headers: new Headers() }),
