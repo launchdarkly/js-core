@@ -396,7 +396,7 @@ describe('given a stream processor', () => {
     expect(mockErrorHandler.mock.lastCall[0].message).toMatch(/malformed json/i);
   });
 
-  it('reports invalid data and keeps the stream open when the data cannot be parsed', () => {
+  it('reports invalid data and reconnects when the data cannot be parsed', () => {
     streamingProcessor = new StreamingProcessor(
       'mockContextString',
       getStreamingDataSourceConfig(),
@@ -411,6 +411,7 @@ describe('given a stream processor', () => {
       logger,
     );
     streamingProcessor.start();
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
     (mockListener.deserializeData as jest.Mock).mockImplementation(() => {
       throw new SyntaxError('Unexpected token');
     });
@@ -418,10 +419,68 @@ describe('given a stream processor', () => {
     // Deliver a put whose data cannot be parsed.
     expect(() => simulatePutEvent()).not.toThrow();
 
-    // The error is reported, the data is not applied, and the stream stays open.
+    // The error is reported, the data is not applied, and a new stream opens after the retry delay.
     expect(mockErrorHandler.mock.lastCall[0].kind).toEqual(DataSourceErrorKind.InvalidData);
     expect(mockListener.processJson).not.toHaveBeenCalled();
-    expect(mockEventSource.close).not.toHaveBeenCalled();
+    expect(mockEventSource.close).toHaveBeenCalled();
+    jest.advanceTimersByTime(1000);
+    expect(createSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('schedules one reconnect when two invalid events arrive together', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    const firstEventSource = mockEventSource;
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(undefined);
+
+    // The event source can deliver a second event from the same chunk after close.
+    simulatePutEvent();
+    firstEventSource.addEventListener.mock.calls[0][1](event);
+
+    // Only one stream closes and only one new stream opens.
+    expect(firstEventSource.close).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(5000);
+    expect(createSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not reconnect after invalid data if it is stopped first', () => {
+    streamingProcessor = new StreamingProcessor(
+      'mockContextString',
+      getStreamingDataSourceConfig(),
+      listeners,
+      basicPlatform.requests,
+      basicPlatform.encoding!,
+      makeTestRequestor({
+        requests: basicPlatform.requests,
+      }),
+      diagnosticsManager,
+      mockErrorHandler,
+      logger,
+    );
+    streamingProcessor.start();
+    const createSpy = basicPlatform.requests.createEventSource as jest.Mock;
+    (mockListener.deserializeData as jest.Mock).mockReturnValue(undefined);
+
+    // Invalid data schedules a reconnect, then the processor stops.
+    simulatePutEvent();
+    streamingProcessor.stop();
+
+    // The scheduled reconnect does not open a stream.
+    jest.advanceTimersByTime(5 * 60 * 1000);
+    expect(createSpy).toHaveBeenCalledTimes(1);
   });
 
   it('calls error handler if event.data prop is missing', async () => {
