@@ -3,7 +3,7 @@
   "name": "LaunchDarkly Browser Extension Example",
   "version": "0.0.0",
   "description": "Runs the LaunchDarkly browser SDK in a Manifest V3 extension service worker.",
-  "minimum_chrome_version": "102",
+  "minimum_chrome_version": "140",
   "permissions": ["storage"],
   "host_permissions": [
     "https://clientsdk.launchdarkly.com/*",

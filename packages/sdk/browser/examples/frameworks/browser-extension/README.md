@@ -61,7 +61,9 @@ is stopped arrive when the worker starts again.
 
 ## Prerequisites
 
-Nodejs 22 or later
+- Nodejs 22 or later
+- Chrome 140 or later. The worker calls `setAccessLevel` on `chrome.storage.local`, which Chrome
+  supports from version 140.
 
 ## Build instructions
 

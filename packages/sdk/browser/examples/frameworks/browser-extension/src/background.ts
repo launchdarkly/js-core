@@ -32,7 +32,8 @@ const client = createClient(clientSideID, context, {
 });
 
 // By default, content scripts can read and write chrome.storage.local. Content scripts run in web
-// pages, so they are less trusted. Only the extension itself needs the SDK flag cache.
+// pages, so they are less trusted. Only the extension itself needs the SDK flag cache. Chrome
+// supports this call on chrome.storage.local from version 140, so manifest.json requires it.
 chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
 
 let dataSourceState: string | undefined;
