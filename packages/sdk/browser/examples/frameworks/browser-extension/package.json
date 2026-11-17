@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "LaunchDarkly example for the JavaScript Browser SDK in a Manifest V3 browser extension",
-  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/examples/browser-extension",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/examples/frameworks/browser-extension",
   "repository": {
     "type": "git",
     "url": "https://github.com/launchdarkly/js-core.git"

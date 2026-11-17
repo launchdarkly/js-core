@@ -316,7 +316,7 @@
         },
         {
           "type": "json",
-          "path": "examples/browser-extension/package.json",
+          "path": "examples/frameworks/browser-extension/package.json",
           "jsonpath": "$.dependencies['@launchdarkly/js-client-sdk']"
         },
         {

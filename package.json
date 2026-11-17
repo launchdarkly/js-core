@@ -67,7 +67,7 @@
     "packages/sdk/browser/examples/getting-started",
     "packages/sdk/browser/examples/features/data-saving-mode",
     "packages/sdk/browser/examples/features/custom-eventsource",
-    "packages/sdk/browser/examples/browser-extension",
+    "packages/sdk/browser/examples/frameworks/browser-extension",
     "packages/sdk/openfeature-node-server",
     "packages/sdk/openfeature-node-server/examples/getting-started",
     "packages/sdk/openfeature-cloudflare-server",

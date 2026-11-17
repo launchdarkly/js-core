@@ -98,7 +98,7 @@ Nodejs 22 or later
    1. Open `chrome://extensions`.
    2. Turn on **Developer mode**.
    3. Click **Load unpacked** and select this directory
-      (`packages/sdk/browser/examples/browser-extension`).
+      (`packages/sdk/browser/examples/frameworks/browser-extension`).
 
 Click the extension icon on the toolbar to open the popup and see the flag value. To see the
 service worker logs, click **service worker** on the extension card in `chrome://extensions`. To
