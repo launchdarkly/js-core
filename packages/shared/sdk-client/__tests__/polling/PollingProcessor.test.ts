@@ -1,6 +1,7 @@
 import { waitFor } from '@testing-library/dom';
 
 import {
+  DataSourceErrorKind,
   Encoding,
   EventSource,
   EventSourceCapabilities,
@@ -623,3 +624,88 @@ it('resets to the normal poll cadence after two consecutive successes following 
     jest.useRealTimers();
   }
 });
+
+it('reports a recoverable HTTP error to the error handler and keeps polling', async () => {
+  jest.useFakeTimers();
+  const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+  try {
+    const requests = makeRequests();
+    requests.fetch = mockFetch('', 503);
+    const errorCallback = jest.fn();
+
+    const polling = new PollingProcessor(
+      makeTestRequestor({ requests }),
+      1,
+      jest.fn(),
+      errorCallback,
+    );
+    polling.start();
+
+    await jest.advanceTimersByTimeAsync(0);
+    expect(errorCallback).toHaveBeenCalledTimes(1);
+    expect(errorCallback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kind: DataSourceErrorKind.ErrorResponse,
+        status: 503,
+        recoverable: true,
+      }),
+    );
+
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+    polling.stop();
+  } finally {
+    randomSpy.mockRestore();
+    jest.useRealTimers();
+  }
+});
+
+it.each([
+  ['the request fails', () => Promise.reject(new Error('socket hang up'))],
+  [
+    'the response body cannot be read',
+    () =>
+      mockResponse('', 200).then((response) => ({
+        ...response,
+        text: () => Promise.reject(new Error('aborted')),
+      })),
+  ],
+])(
+  'reports a network error to the error handler and keeps polling when %s',
+  async (_name, fetch) => {
+    jest.useFakeTimers();
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    try {
+      const requests = makeRequests();
+      requests.fetch = jest.fn(fetch);
+      const errorCallback = jest.fn();
+
+      const polling = new PollingProcessor(
+        makeTestRequestor({ requests }),
+        1,
+        jest.fn(),
+        errorCallback,
+      );
+      polling.start();
+
+      await jest.advanceTimersByTimeAsync(0);
+      expect(errorCallback).toHaveBeenCalledTimes(1);
+      expect(errorCallback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kind: DataSourceErrorKind.NetworkError,
+          status: undefined,
+          recoverable: true,
+        }),
+      );
+
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(requests.fetch).toHaveBeenCalledTimes(2);
+
+      polling.stop();
+    } finally {
+      randomSpy.mockRestore();
+      jest.useRealTimers();
+    }
+  },
+);

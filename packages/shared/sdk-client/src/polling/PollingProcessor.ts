@@ -102,24 +102,27 @@ export default class PollingProcessor implements subsystem.LDStreamProcessor {
       this._retryState.recordFailure(failureKind);
 
       // No failure is terminal now; every failure is retried. An unexpected
-      // failure (e.g. 401/403) backs off into the extended regime but still
-      // retries, so it is surfaced to the error handler without stopping.
+      // failure (e.g. 401/403) backs off into the extended regime.
       if (failureKind === 'unexpected') {
         this._logger?.error(
           httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
-        );
-        this._errorHandler?.(
-          new LDPollingError(
-            DataSourceErrorKind.ErrorResponse,
-            requestError.message,
-            requestError.status,
-          ),
         );
       } else {
         this._logger?.warn(
           httpErrorMessage(err as HttpErrorResponse, 'polling request', 'will retry'),
         );
       }
+      // The error handler gets every failure. An identify operation that waits
+      // for this poll can then complete before the next poll.
+      this._errorHandler?.(
+        new LDPollingError(
+          requestError.status !== undefined
+            ? DataSourceErrorKind.ErrorResponse
+            : DataSourceErrorKind.NetworkError,
+          requestError.message,
+          requestError.status,
+        ),
+      );
     }
 
     const elapsed = monotonicNow() - startTime;
