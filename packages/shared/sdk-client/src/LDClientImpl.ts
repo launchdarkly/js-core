@@ -669,15 +669,18 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     if (typeChecker) {
       const [matched, type] = typeChecker(value);
       if (!matched) {
+        const errorDetail = createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
         if (hasContext) {
+          // The event describes the result that the application gets: the default value, no
+          // variation, and the WRONG_TYPE reason.
           this._eventProcessor?.sendEvent(
             eventFactory.evalEventClient(
               flagKey,
-              defaultValue, // track default value on type errors
               defaultValue,
-              foundItem.flag,
+              defaultValue,
+              { ...foundItem.flag, variation: undefined },
               evalContext,
-              reason,
+              errorDetail.reason,
             ),
           );
         }
@@ -685,7 +688,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
           `Wrong type "${type}" for feature flag "${flagKey}"; returning default value`,
         );
         this.emitter.emit('error', this._activeContextTracker.getUnwrappedContext(), error);
-        return createErrorEvaluationDetail(ErrorKinds.WrongType, defaultValue);
+        return errorDetail;
       }
     }
 
