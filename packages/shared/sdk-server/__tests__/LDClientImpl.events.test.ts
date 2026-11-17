@@ -2,6 +2,7 @@ import { LDClientImpl } from '../src';
 import { createBasicPlatform } from './createBasicPlatform';
 import TestLogger from './Logger';
 import makeCallbacks from './makeCallbacks';
+import waitFor from './waitFor';
 
 it('flushes events successfully and executes the callback', async () => {
   const platform = createBasicPlatform();
@@ -115,4 +116,39 @@ it('calls error callback once when flush fails with exception', async () => {
 
   expect(flushCallback).toHaveBeenCalledWith(expect.any(Error), false);
   expect(flushCallback).toHaveBeenCalledTimes(1);
+});
+
+it('sends pending events when the client is closed', async () => {
+  const platform = createBasicPlatform();
+  platform.requests.fetch.mockImplementation(() =>
+    Promise.resolve({ status: 200, headers: new Headers() }),
+  );
+
+  const client = new LDClientImpl(
+    'sdk-key-events',
+    platform,
+    {
+      logger: new TestLogger(),
+      stream: false,
+    },
+    makeCallbacks(false),
+  );
+
+  client.track('event-key', { key: 'user' });
+  client.close();
+
+  await waitFor(
+    () =>
+      platform.requests.fetch.mock.calls.some(
+        ([uri]: [string]) => uri === 'https://events.launchdarkly.com/bulk',
+      ),
+    1000,
+  );
+  expect(platform.requests.fetch).toHaveBeenCalledWith(
+    'https://events.launchdarkly.com/bulk',
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.stringContaining('"key":"event-key"'),
+    }),
+  );
 });
