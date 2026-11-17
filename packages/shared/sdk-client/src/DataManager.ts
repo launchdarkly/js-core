@@ -26,6 +26,7 @@ import { FlagManager } from './flag-manager/FlagManager';
 import LDEmitter from './LDEmitter';
 import PollingProcessor from './polling/PollingProcessor';
 import { DataSourcePaths, StreamingProcessor } from './streaming';
+import { deserializeDelete, deserializePatch, deserializePut } from './streaming/deserialize';
 import { DeleteFlag, Flags, PatchFlag } from './types';
 
 export interface DataManager {
@@ -225,7 +226,7 @@ export abstract class BaseDataManager implements DataManager {
     const listeners = new Map<EventName, ProcessStreamResponse>();
 
     listeners.set('put', {
-      deserializeData: JSON.parse,
+      deserializeData: deserializePut,
       processJson: async (flags: Flags) => {
         await this._dataSourceEventHandler.handlePut(context, flags);
         identifyResolve?.();
@@ -233,14 +234,14 @@ export abstract class BaseDataManager implements DataManager {
     });
 
     listeners.set('patch', {
-      deserializeData: JSON.parse,
+      deserializeData: deserializePatch,
       processJson: async (patchFlag: PatchFlag) => {
         this._dataSourceEventHandler.handlePatch(context, patchFlag);
       },
     });
 
     listeners.set('delete', {
-      deserializeData: JSON.parse,
+      deserializeData: deserializeDelete,
       processJson: async (deleteFlag: DeleteFlag) => {
         this._dataSourceEventHandler.handleDelete(context, deleteFlag);
       },
