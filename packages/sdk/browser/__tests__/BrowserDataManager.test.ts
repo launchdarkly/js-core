@@ -99,7 +99,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       getImplementationHooks: () => [],
       credentialType: 'clientSideId',
     };
-    const mockedFetch = mockFetch('{"flagA": true}', 200);
+    const mockedFetch = mockFetch('{"flagA": {"value": true, "version": 1}}', 200);
     platform = {
       crypto: {
         createHash: () => new MockHasher(),
@@ -364,7 +364,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(identifyResolve!).toHaveBeenCalled();
     expect(flagManager.init).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ flagA: { flag: true, version: undefined } }),
+      expect.objectContaining({ flagA: { flag: { value: true, version: 1 }, version: 1 } }),
     );
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
   });
@@ -426,7 +426,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(identifyResolve!).toHaveBeenCalled();
     expect(flagManager.init).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ flagA: { flag: true, version: undefined } }),
+      expect.objectContaining({ flagA: { flag: { value: true, version: 1 }, version: 1 } }),
     );
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
   });
@@ -587,7 +587,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
       if (callCount <= 2) {
         return mockResponse('', 500);
       }
-      return mockResponse('{"flagA": true}', 200);
+      return mockResponse('{"flagA": {"value": true, "version": 1}}', 200);
     });
 
     platform.requests.fetch = mockedFetch as typeof platform.requests.fetch;
@@ -607,7 +607,7 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(identifyReject).not.toHaveBeenCalled();
     expect(flagManager.init).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ flagA: { flag: true, version: undefined } }),
+      expect.objectContaining({ flagA: { flag: { value: true, version: 1 }, version: 1 } }),
     );
 
     jest.useRealTimers();
@@ -640,5 +640,27 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(identifyReject).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));
 
     jest.useRealTimers();
+  });
+
+  it.each([
+    ['malformed JSON', '{"flagA": '],
+    ['a flag that is not an object with a version', '{"flagA": true}'],
+  ])('reports invalid data when the initial poll response is %s', async (_name, body) => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    flagManager.loadCached.mockResolvedValue(false);
+    platform.requests.fetch = mockFetch(body, 200) as typeof platform.requests.fetch;
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    // Identify with a poll response that is not valid flag data.
+    await dataManager.identify(identifyResolve, identifyReject, context);
+
+    // The data manager reports invalid data and does not apply the response.
+    expect(emitter.emit).toHaveBeenCalledWith(
+      'dataSourceStatus',
+      expect.objectContaining({ lastError: expect.objectContaining({ kind: 'INVALID_DATA' }) }),
+    );
+    expect(flagManager.init).not.toHaveBeenCalled();
+    expect(identifyResolve).not.toHaveBeenCalled();
   });
 });

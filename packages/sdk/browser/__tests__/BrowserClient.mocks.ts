@@ -89,7 +89,7 @@ export function makeRequests(): Requests {
           200,
         )();
       }
-      return mockFetch('{ "flagA": true }', 200)();
+      return mockFetch('{ "flagA": { "value": true, "version": 1 } }', 200)();
     }),
     // @ts-ignore
     createEventSource(_url: string, _eventSourceInitDict: EventSourceInitDict): EventSource {
