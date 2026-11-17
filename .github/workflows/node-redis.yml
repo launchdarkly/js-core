@@ -31,3 +31,6 @@ jobs:
         with:
           workspace_name: '@launchdarkly/node-server-sdk-redis'
           workspace_path: packages/store/node-server-sdk-redis
+      # The shared steps test with ioredis 6. Run the suite again with ioredis 5.
+      - name: Test with ioredis 5
+        run: yarn workspace @launchdarkly/node-server-sdk-redis test:ioredis5

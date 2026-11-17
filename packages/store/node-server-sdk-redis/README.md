@@ -38,6 +38,12 @@ npm install @launchdarkly/node-server-sdk-redis --save
 npm install ioredis --save
 ```
 
+This package supports `ioredis` versions 5 and 6. `ioredis` 6 requires Node.js 20 or later. If your application uses an earlier version of Node.js, add a dependency on `ioredis` 5:
+
+```shell
+npm install ioredis@5 --save
+```
+
 3. Import the package:
 
 ```typescript
