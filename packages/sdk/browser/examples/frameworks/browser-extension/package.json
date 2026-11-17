@@ -1,0 +1,28 @@
+{
+  "name": "@launchdarkly/js-client-sdk-example-browser-extension",
+  "version": "0.0.0",
+  "private": true,
+  "description": "LaunchDarkly example for the JavaScript Browser SDK in a Manifest V3 browser extension",
+  "homepage": "https://github.com/launchdarkly/js-core/tree/main/packages/sdk/browser/examples/frameworks/browser-extension",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/launchdarkly/js-core.git"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsdown",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@launchdarkly/js-client-sdk": "4.14.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/chrome": "^0.3.7",
+    "playwright": "^1.65.0",
+    "tsdown": "^0.17.0-beta.4",
+    "typescript": "6.0.3"
+  }
+}
