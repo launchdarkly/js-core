@@ -114,4 +114,76 @@ describe('given a GoalManager with mocked dependencies', () => {
       urls: [{ kind: 'exact', url: 'https://example.com/target' }],
     });
   });
+
+  describe('given goals that match the current URL', () => {
+    const matchingGoals: Goal[] = [
+      {
+        key: 'pageview-goal',
+        kind: 'pageview',
+        urls: [{ kind: 'exact', url: 'https://example.com/target' }],
+      },
+      {
+        key: 'click-goal',
+        kind: 'click',
+        selector: '#button',
+        urls: [{ kind: 'exact', url: 'https://example.com/target' }],
+      },
+    ];
+    let addListenerSpy: jest.SpiedFunction<typeof document.addEventListener>;
+
+    beforeEach(() => {
+      Object.defineProperty(window, 'location', {
+        value: { href: 'https://example.com/target', search: '', hash: '' },
+        writable: true,
+      });
+      addListenerSpy = jest.spyOn(document, 'addEventListener');
+    });
+
+    afterEach(() => {
+      addListenerSpy.mockRestore();
+    });
+
+    it('creates no tracker when the goals fetch resolves after close', async () => {
+      let resolveFetch: (value: unknown) => void = () => {};
+      mockRequests.fetch.mockReturnValue(
+        new Promise((resolve) => {
+          resolveFetch = resolve;
+        }) as any,
+      );
+
+      goalManager.startTracking();
+      const initPromise = goalManager.initialize();
+      goalManager.close();
+      resolveFetch({ json: () => Promise.resolve(matchingGoals) });
+      await initPromise;
+
+      expect(mockReportGoal).not.toHaveBeenCalled();
+      expect(addListenerSpy).not.toHaveBeenCalledWith('click', expect.anything(), undefined);
+    });
+
+    it('creates no tracker when startTracking is called after close', async () => {
+      mockRequests.fetch.mockResolvedValue({
+        json: () => Promise.resolve(matchingGoals),
+      } as any);
+
+      await goalManager.initialize();
+      goalManager.close();
+      goalManager.startTracking();
+
+      expect(mockReportGoal).not.toHaveBeenCalled();
+      expect(addListenerSpy).not.toHaveBeenCalledWith('click', expect.anything(), undefined);
+    });
+
+    it('creates a tracker for matching goals when not closed', async () => {
+      mockRequests.fetch.mockResolvedValue({
+        json: () => Promise.resolve(matchingGoals),
+      } as any);
+
+      await goalManager.initialize();
+      goalManager.startTracking();
+
+      expect(mockReportGoal).toHaveBeenCalledWith('https://example.com/target', matchingGoals[0]);
+      expect(addListenerSpy).toHaveBeenCalledWith('click', expect.anything(), undefined);
+    });
+  });
 });
