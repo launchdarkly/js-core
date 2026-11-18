@@ -237,3 +237,91 @@ describe('FlagUpdater tests', () => {
     updaterUnderTest.off(mockCallback);
   });
 });
+
+function makeFlagWithValue(version: number, value: unknown): Flag {
+  return {
+    version,
+    flagVersion: version,
+    value,
+    variation: 0,
+    trackEvents: false,
+  };
+}
+
+it('does not notify for a partial update with identical data', () => {
+  const updater = createFlagUpdater(createDefaultFlagStore(), makeMockLogger());
+  const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+  updater.applyChanges(context, { flagA: { version: 1, flag: makeFlagWithValue(1, 'a') } }, 'full');
+
+  const callback = jest.fn();
+  updater.on(callback);
+  updater.applyChanges(
+    context,
+    { flagA: { version: 1, flag: makeFlagWithValue(1, 'a') } },
+    'partial',
+  );
+
+  expect(callback).not.toHaveBeenCalled();
+});
+
+it('notifies for a partial update when only a non-value field changes', () => {
+  const updater = createFlagUpdater(createDefaultFlagStore(), makeMockLogger());
+  const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+  updater.applyChanges(context, { flagA: { version: 1, flag: makeFlagWithValue(1, 'a') } }, 'full');
+
+  const callback = jest.fn();
+  updater.on(callback);
+  updater.applyChanges(
+    context,
+    {
+      flagA: {
+        version: 1,
+        flag: { ...makeFlagWithValue(1, 'a'), reason: { kind: 'FALLTHROUGH', inExperiment: true } },
+      },
+    },
+    'partial',
+  );
+
+  expect(callback).toHaveBeenCalledTimes(1);
+  expect(callback).toHaveBeenCalledWith(context, ['flagA'], 'patch');
+});
+
+it('notifies only for the changed and new keys in a partial update', () => {
+  const updater = createFlagUpdater(createDefaultFlagStore(), makeMockLogger());
+  const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+  updater.applyChanges(
+    context,
+    {
+      flagA: { version: 1, flag: makeFlagWithValue(1, 'a') },
+      flagB: { version: 1, flag: makeFlagWithValue(1, 'b') },
+    },
+    'full',
+  );
+
+  const callback = jest.fn();
+  updater.on(callback);
+  updater.applyChanges(
+    context,
+    {
+      flagA: { version: 1, flag: makeFlagWithValue(1, 'a') },
+      flagB: { version: 2, flag: makeFlagWithValue(2, 'b2') },
+      flagC: { version: 1, flag: makeFlagWithValue(1, 'c') },
+    },
+    'partial',
+  );
+
+  expect(callback).toHaveBeenCalledTimes(1);
+  expect(callback).toHaveBeenCalledWith(context, ['flagB', 'flagC'], 'patch');
+});
+
+it('does not notify for a full update with identical data', () => {
+  const updater = createFlagUpdater(createDefaultFlagStore(), makeMockLogger());
+  const context = Context.fromLDContext({ kind: 'user', key: 'user-key' });
+  updater.applyChanges(context, { flagA: { version: 1, flag: makeFlagWithValue(1, 'a') } }, 'full');
+
+  const callback = jest.fn();
+  updater.on(callback);
+  updater.applyChanges(context, { flagA: { version: 1, flag: makeFlagWithValue(1, 'a') } }, 'full');
+
+  expect(callback).not.toHaveBeenCalled();
+});
