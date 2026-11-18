@@ -24,6 +24,7 @@ const CAPABILITIES = [
   'secure-mode-hash',
   'polling-gzip',
   'flag-change-listeners',
+  'experiment-exposure-change',
   'fdv1-fallback',
   'bootstrap',
 ];

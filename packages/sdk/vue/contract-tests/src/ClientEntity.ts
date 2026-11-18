@@ -146,6 +146,13 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
         : false;
 
+      // A registered change listener makes the SDK promote the connection to
+      // streaming. Set the streaming option to match the initial mode, so that
+      // the SDK keeps the mode that the harness requests.
+      if (connMode.initialConnectionMode) {
+        cf.streaming = connMode.initialConnectionMode === 'streaming';
+      }
+
       if (connMode.customConnectionModes) {
         const { fdv1Fallback } = options.dataSystem;
         const connectionModes: Record<string, any> = {};

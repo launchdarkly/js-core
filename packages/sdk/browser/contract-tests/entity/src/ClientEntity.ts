@@ -166,6 +166,13 @@ function makeSdkConfig(options: SDKConfigParams, tag: string) {
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
         : false;
 
+      // A registered change listener makes the SDK promote the connection to
+      // streaming. Set the streaming option to match the initial mode, so that
+      // the SDK keeps the mode that the harness requests.
+      if (connMode.initialConnectionMode) {
+        cf.streaming = connMode.initialConnectionMode === 'streaming';
+      }
+
       if (connMode.customConnectionModes) {
         const { fdv1Fallback } = options.dataSystem;
         const connectionModes: Record<string, any> = {};
@@ -250,7 +257,11 @@ function makeDefaultInitialContext() {
   return { kind: 'user', key: 'key-not-specified' };
 }
 
+type FlagChangeListener = (...args: unknown[]) => void;
+
 export class ClientEntity {
+  private readonly _listeners = new Map<string, FlagChangeListener>();
+
   constructor(
     private readonly _client: LDClient,
     private readonly _logger: LDLogger,
@@ -355,6 +366,45 @@ export class ClientEntity {
       case CommandType.FlushEvents:
         this._client.flush();
         return undefined;
+
+      case CommandType.RegisterFlagChangeListener: {
+        const pr = params.registerFlagChangeListener;
+        if (!pr) {
+          throw malformedCommand;
+        }
+        const listeners = this._listeners;
+        const existing = listeners.get(pr.listenerId);
+        if (existing) {
+          this._client.off('change', existing);
+        }
+        const handler: FlagChangeListener = (...args) => {
+          const flagKeys = Array.isArray(args[1]) ? (args[1] as string[]) : [];
+          flagKeys.forEach((flagKey) => {
+            fetch(pr.callbackUri, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ listenerId: pr.listenerId, flagKey }),
+            }).catch(() => {});
+          });
+        };
+        listeners.set(pr.listenerId, handler);
+        this._client.on('change', handler);
+        return undefined;
+      }
+
+      case CommandType.UnregisterListener: {
+        const pu = params.unregisterListener;
+        if (!pu) {
+          throw malformedCommand;
+        }
+        const listeners = this._listeners;
+        const handler = listeners.get(pu.listenerId);
+        if (handler) {
+          this._client.off('change', handler);
+          listeners.delete(pu.listenerId);
+        }
+        return undefined;
+      }
 
       default:
         throw badCommandError;

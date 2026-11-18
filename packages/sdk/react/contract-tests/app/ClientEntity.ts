@@ -148,6 +148,13 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
         ? { type: 'manual', initialConnectionMode: connMode.initialConnectionMode }
         : false;
 
+      // A registered change listener makes the SDK promote the connection to
+      // streaming. Set the streaming option to match the initial mode, so that
+      // the SDK keeps the mode that the harness requests.
+      if (connMode.initialConnectionMode) {
+        cf.streaming = connMode.initialConnectionMode === 'streaming';
+      }
+
       if (connMode.customConnectionModes) {
         const { fdv1Fallback } = options.dataSystem;
         const connectionModes: Record<string, any> = {};
@@ -218,6 +225,19 @@ export function makeSdkConfig(options: SDKConfigParams, tag: string): LDOptions 
   cf.fetchGoals = false;
 
   return cf;
+}
+
+type FlagChangeListener = (...args: unknown[]) => void;
+
+const clientListeners = new WeakMap<LDReactClient, Map<string, FlagChangeListener>>();
+
+function listenersFor(client: LDReactClient): Map<string, FlagChangeListener> {
+  let listeners = clientListeners.get(client);
+  if (!listeners) {
+    listeners = new Map();
+    clientListeners.set(client, listeners);
+  }
+  return listeners;
 }
 
 export async function doCommand(client: LDReactClient, params: CommandParams): Promise<unknown> {
@@ -310,6 +330,45 @@ export async function doCommand(client: LDReactClient, params: CommandParams): P
     case CommandType.FlushEvents:
       client.flush();
       return undefined;
+
+    case CommandType.RegisterFlagChangeListener: {
+      const pr = params.registerFlagChangeListener;
+      if (!pr) {
+        throw malformedCommand;
+      }
+      const listeners = listenersFor(client);
+      const existing = listeners.get(pr.listenerId);
+      if (existing) {
+        client.off('change', existing);
+      }
+      const handler: FlagChangeListener = (...args) => {
+        const flagKeys = Array.isArray(args[1]) ? (args[1] as string[]) : [];
+        flagKeys.forEach((flagKey) => {
+          fetch(pr.callbackUri, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ listenerId: pr.listenerId, flagKey }),
+          }).catch(() => {});
+        });
+      };
+      listeners.set(pr.listenerId, handler);
+      client.on('change', handler);
+      return undefined;
+    }
+
+    case CommandType.UnregisterListener: {
+      const pu = params.unregisterListener;
+      if (!pu) {
+        throw malformedCommand;
+      }
+      const listeners = listenersFor(client);
+      const handler = listeners.get(pu.listenerId);
+      if (handler) {
+        client.off('change', handler);
+        listeners.delete(pu.listenerId);
+      }
+      return undefined;
+    }
 
     default:
       throw badCommandError;
