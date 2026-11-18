@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.23](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v2.0.22...server-sdk-ai-v2.0.23) (2026-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.26.6 to 2.26.7
+  * peerDependencies
+    * @launchdarkly/js-server-sdk-common bumped from ^2.0.0 to ^2.26.7
+
 ## [2.0.22](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-v2.0.21...server-sdk-ai-v2.0.22) (2026-11-16)
 
 
