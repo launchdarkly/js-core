@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.3](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.2.2...openfeature-cloudflare-server-v1.2.3) (2026-11-18)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/openfeature-js-server-common bumped from 2.2.3 to 2.2.4
+  * devDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from 2.7.53 to 2.7.54
+  * peerDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from ^2.7.0 to ^2.7.54
+
 ## [1.2.2](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.2.1...openfeature-cloudflare-server-v1.2.2) (2026-11-16)
 
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.35.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.2...js-client-sdk-common-v1.35.3) (2026-11-18)
+
+
+### Bug Fixes
+
+* Record no variation and a WRONG_TYPE reason in events when a typed evaluation has the wrong type ([#2201](https://github.com/launchdarkly/js-core/issues/2201)) ([07fd45a](https://github.com/launchdarkly/js-core/commit/07fd45a648e108c7c8772732c0e3f3a8972c3b61))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.2 to 2.32.3
+
 ## [1.35.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.1...js-client-sdk-common-v1.35.2) (2026-11-06)
 
 

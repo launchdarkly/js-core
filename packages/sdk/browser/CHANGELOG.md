@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.14.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.2...js-client-sdk-v4.14.3) (2026-11-18)
+
+
+### Bug Fixes
+
+* prevent browser goal tracking from restarting after close ([#2172](https://github.com/launchdarkly/js-core/issues/2172)) ([fa24a61](https://github.com/launchdarkly/js-core/commit/fa24a6125a3804747465da2c65f21295a082e695))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.35.2 to 1.35.3
+  * optionalDependencies
+    * @launchdarkly/eventsource bumped from 0.2.4 to 0.2.5
+
 ## [4.14.2](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.1...js-client-sdk-v4.14.2) (2026-11-06)
 
 
