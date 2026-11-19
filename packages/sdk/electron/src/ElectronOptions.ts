@@ -45,15 +45,27 @@ export interface ElectronOptions extends LDOptionsBase {
   enableIPC?: boolean;
 
   /**
-   * Will use the client side id as the sdk key instead of the mobile key
-   * this is here to support legacy usage of the sdk.
+   * Selects the client-side ID as the credential. When `true`, the credential passed to
+   * `createClient` is a client-side ID instead of a mobile key, and the SDK uses the client-side
+   * endpoints.
    *
-   * @default false
+   * Secure mode ({@link ElectronOptions.hash}) works only with the client-side ID. Setting `hash`
+   * while this option is `false` makes `createClient` throw.
    *
-   * @deprecated using client side id as the sdk key is deprecated and will be removed
-   * in future versions of this sdk. Please use mobile key instead.
+   * Defaults to `false` (mobile key).
    */
   useClientSideId?: boolean;
+
+  /**
+   * The secure mode hash for the initial context.
+   *
+   * Secure mode works only when {@link ElectronOptions.useClientSideId} is `true`. `createClient`
+   * throws when this option is set with a mobile key. A `hash` passed in the identify options
+   * replaces this value for that identify call and the requests that follow it.
+   *
+   * @see https://docs.launchdarkly.com/sdk/features/secure-mode
+   */
+  hash?: string;
 
   /**
    * An optional namespace to isolate this client's IPC channels

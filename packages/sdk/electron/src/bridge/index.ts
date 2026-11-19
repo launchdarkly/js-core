@@ -8,12 +8,12 @@ import type {
   LDEvaluationDetailTyped,
   LDFlagSet,
   LDFlagValue,
-  LDIdentifyOptions,
   LDIdentifyResult,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
 
+import type { ElectronIdentifyOptions } from '../ElectronIdentifyOptions';
 import type { IPCChannel } from '../ElectronIPC';
 import { getIPCChannelName } from '../ElectronIPC';
 import type { LDClientBridge, LDMessagePort } from './LDClientBridge';
@@ -59,7 +59,10 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
   getContext: (): LDContextStrict | undefined =>
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'getContext')),
 
-  identify: (context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult> =>
+  identify: (
+    context: LDContext,
+    identifyOptions?: ElectronIdentifyOptions,
+  ): Promise<LDIdentifyResult> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'identify'), context, identifyOptions),
 
   jsonVariation: (key: string, defaultValue: unknown): unknown =>

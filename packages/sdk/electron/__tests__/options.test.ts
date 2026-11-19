@@ -142,6 +142,72 @@ it('filters to base options', () => {
   expect(logger.error).not.toHaveBeenCalled();
 });
 
+it('applies hash when useClientSideId is true', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({ useClientSideId: true, hash: 'secure-hash' }, logger);
+
+  expect(opts.hash).toEqual('secure-hash');
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('leaves hash undefined by default', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({}, logger);
+
+  expect(opts.hash).toBeUndefined();
+});
+
+it('warns for invalid hash type', () => {
+  const logger = createMockLogger();
+
+  validateOptions(
+    {
+      useClientSideId: true,
+      // @ts-ignore
+      hash: 42,
+    },
+    logger,
+  );
+
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "hash" should be of type string, got number, using default value',
+  );
+});
+
+it('throws when hash is set and the client uses a mobile key', () => {
+  const logger = createMockLogger();
+
+  expect(() => validateOptions({ hash: 'secure-hash' }, logger)).toThrow(
+    'Invalid configuration: secure mode "hash" is not supported when "useClientSideId" is false. Remove "hash" or set "useClientSideId" to true.',
+  );
+});
+
+it('does not throw for an empty hash with a mobile key', () => {
+  const logger = createMockLogger();
+
+  expect(() => validateOptions({ hash: '' }, logger)).not.toThrow();
+});
+
+it('throws when hash is set and useClientSideId is explicitly false', () => {
+  const logger = createMockLogger();
+
+  expect(() => validateOptions({ useClientSideId: false, hash: 'secure-hash' }, logger)).toThrow(
+    /secure mode "hash" is not supported/,
+  );
+});
+
+it('does not throw when hash is invalid and dropped before the credential check', () => {
+  const logger = createMockLogger();
+
+  // @ts-ignore
+  const opts = validateOptions({ hash: 42 }, logger);
+
+  expect(opts.hash).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "hash" should be of type string, got number, using default value',
+  );
+});
+
 it('applies a custom storage implementation with get, set and clear functions', () => {
   const logger = createMockLogger();
   const storage = { get: jest.fn(), set: jest.fn(), clear: jest.fn() };

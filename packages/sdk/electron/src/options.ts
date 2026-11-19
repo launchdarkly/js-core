@@ -41,6 +41,7 @@ export interface ValidatedOptions {
   namespace?: string;
   storage?: LDElectronStorage;
   encryptStorage?: boolean;
+  hash?: string;
   wrapperName?: string;
   wrapperVersion?: string;
 }
@@ -54,6 +55,7 @@ const optDefaults: ValidatedOptions = {
   namespace: undefined,
   storage: undefined,
   encryptStorage: false,
+  hash: undefined,
   wrapperName: undefined,
   wrapperVersion: undefined,
 };
@@ -67,6 +69,7 @@ const validators: { [Property in keyof ElectronOptions]: TypeValidator | undefin
   namespace: TypeValidators.String,
   storage: new StorageOptionsValidator(),
   encryptStorage: TypeValidators.Boolean,
+  hash: TypeValidators.String,
   wrapperName: TypeValidators.String,
   wrapperVersion: TypeValidators.String,
 };
@@ -97,6 +100,13 @@ export default function validateOptions(opts: ElectronOptions, logger: LDLogger)
       }
     }
   });
+
+  if (output.hash && !output.useClientSideId) {
+    throw new Error(
+      'Invalid configuration: secure mode "hash" is not supported when "useClientSideId" is ' +
+        'false. Remove "hash" or set "useClientSideId" to true.',
+    );
+  }
 
   if (output.storage !== undefined && output.encryptStorage) {
     logger.warn(
