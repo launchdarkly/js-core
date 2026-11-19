@@ -110,7 +110,7 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
       defaultValue,
     ),
 
-  setConnectionMode: (mode: ConnectionMode): Promise<void> =>
+  setConnectionMode: (mode?: ConnectionMode): Promise<void> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'setConnectionMode'), mode),
 
   getConnectionMode: (): ConnectionMode =>

@@ -7,21 +7,30 @@ import {
   browserFdv1Endpoints,
   Configuration,
   ConnectionMode,
+  createDefaultSourceFactoryProvider,
+  createFDv2DataManagerBase,
+  DESKTOP_DATA_SYSTEM_DEFAULTS,
+  DESKTOP_TRANSITION_TABLE,
+  FDv2DataManagerControl,
   FlagManager,
   internal,
   LDClientImpl,
+  LDClientDataSystemOptions,
   LDClientInternalOptions,
   LDContext,
   LDEmitter,
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
+  LDIdentifyOptions,
   LDIdentifyResult,
   LDLogger,
   LDPluginEnvironmentMetadata,
   LDWaitForInitializationOptions,
   LDWaitForInitializationResult,
   mobileFdv1Endpoints,
+  MODE_TABLE,
+  resolveForegroundMode,
   safeRegisterDebugOverridePlugins,
 } from '@launchdarkly/js-client-sdk-common';
 
@@ -44,9 +53,34 @@ import ElectronPlatform from './platform/ElectronPlatform';
 
 const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(['error', 'warn', 'info', 'debug']);
 
+// Desktop defaults automatic switching to off, so a granular config without `network` stays off.
+function shouldAutoSwitchNetwork(
+  config: LDClientDataSystemOptions['automaticModeSwitching'],
+): boolean {
+  if (config === true) {
+    return true;
+  }
+  if (typeof config === 'object' && config.type === 'automatic') {
+    return config.network ?? false;
+  }
+  return false;
+}
+
 export class ElectronClient extends LDClientImpl {
   private readonly _plugins: LDPlugin[];
 
+  // The initial mode, which applies on the FDv2 path before any explicit request. It is also the
+  // fallback when the data system reports a mode the desktop API does not expose. The FDv1 path
+  // reads the mode from its data manager.
+  private _connectionMode: ConnectionMode;
+
+  // The mode set by an explicit setConnectionMode call on the FDv2 path. It stays until a call
+  // without a mode clears it, or until close.
+  private _fdv2ModeOverride?: ConnectionMode;
+
+  // Serializes FDv2 mode transitions so concurrent callers cannot interleave flush() and
+  // setEventSendingEnabled() across the offline branch's await.
+  private _fdv2ConnectionModeQueue: Promise<void> = Promise.resolve();
   private _closed: boolean = false;
 
   private _ipcNamespace?: string;
@@ -105,6 +139,7 @@ export class ElectronClient extends LDClientImpl {
       credentialType: useClientSideId ? 'clientSideId' : 'mobileKey',
       requiresStart: true,
       initialContext,
+      dataSystemDefaults: DESKTOP_DATA_SYSTEM_DEFAULTS,
     };
 
     const derivedNs = deriveNamespace(credential, validatedElectronOptions.namespace);
@@ -128,8 +163,54 @@ export class ElectronClient extends LDClientImpl {
         baseHeaders: LDHeaders,
         emitter: LDEmitter,
         diagnosticsManager?: internal.DiagnosticsManager,
-      ) =>
-        new ElectronDataManager(
+      ) => {
+        if (configuration.dataSystem) {
+          const rawForegroundMode = resolveForegroundMode(
+            configuration.dataSystem,
+            DESKTOP_DATA_SYSTEM_DEFAULTS,
+          );
+          // Desktop supports streaming, polling, and offline only.
+          const foregroundMode =
+            rawForegroundMode === 'streaming' ||
+            rawForegroundMode === 'polling' ||
+            rawForegroundMode === 'offline'
+              ? rawForegroundMode
+              : 'streaming';
+          return createFDv2DataManagerBase({
+            platform,
+            flagManager,
+            credential,
+            config: configuration,
+            baseHeaders,
+            emitter,
+            transitionTable: DESKTOP_TRANSITION_TABLE,
+            foregroundMode,
+            backgroundMode: undefined,
+            modeTable: MODE_TABLE,
+            sourceFactoryProvider: createDefaultSourceFactoryProvider(),
+            fdv1Endpoints: endpoints,
+            buildQueryParams: (identifyOptions?: LDIdentifyOptions) => {
+              const perIdentifyHash = (identifyOptions as ElectronIdentifyOptions | undefined)
+                ?.hash;
+              if (!useClientSideId) {
+                // The mobile endpoints do not support secure mode. Mobile key mode sends the
+                // Authorization header and no query parameters, so there is no place for a hash.
+                if (perIdentifyHash) {
+                  logger.warn("[ElectronClient] 'hash' is ignored in mobile key mode.");
+                }
+                return [];
+              }
+              const params: { key: string; value: string }[] = [{ key: 'auth', value: credential }];
+              // A per-identify hash replaces the construction-time hash, the same as the FDv1 path.
+              const hash = perIdentifyHash || validatedElectronOptions.hash;
+              if (hash) {
+                params.push({ key: 'h', value: hash });
+              }
+              return params;
+            },
+          });
+        }
+        return new ElectronDataManager(
           platform,
           flagManager,
           credential,
@@ -140,9 +221,24 @@ export class ElectronClient extends LDClientImpl {
           baseHeaders,
           emitter,
           diagnosticsManager,
-        ),
+        );
+      },
       internalOptions,
     );
+
+    if (this.dataSystemConfig) {
+      const rawMode = resolveForegroundMode(this.dataSystemConfig, DESKTOP_DATA_SYSTEM_DEFAULTS);
+      if (rawMode !== 'offline' && rawMode !== 'streaming' && rawMode !== 'polling') {
+        this.logger.warn(
+          `[ElectronClient] Connection mode '${rawMode}' is not supported; defaulting to 'streaming'.`,
+        );
+        this._connectionMode = 'streaming';
+      } else {
+        this._connectionMode = rawMode;
+      }
+    } else {
+      this._connectionMode = validatedElectronOptions.initialConnectionMode;
+    }
 
     this._plugins = validatedElectronOptions.plugins;
     this.setEventSendingEnabled(!this.isOffline(), false);
@@ -179,15 +275,48 @@ export class ElectronClient extends LDClientImpl {
     return super.identifyResult(context, options);
   }
 
-  async setConnectionMode(mode: ConnectionMode): Promise<void> {
+  async setConnectionMode(mode?: ConnectionMode): Promise<void> {
     // JS callers and renderers can pass any value. Log it bounded so a long string stays small.
-    if (mode !== 'offline' && mode !== 'streaming' && mode !== 'polling') {
+    if (mode !== undefined && mode !== 'offline' && mode !== 'streaming' && mode !== 'polling') {
       this.logger.warn(
         `[ElectronClient] Unknown connection mode ${JSON.stringify(String(mode).slice(0, 64))}, ignoring.`,
       );
       return;
     }
     if (this._closed) {
+      return;
+    }
+    if (this.isFDv2) {
+      const task = this._fdv2ConnectionModeQueue.then(async () => {
+        // close() may run while this task waits in the queue.
+        if (this._closed) {
+          return;
+        }
+        // The FDv2 data manager dedupes. The reported mode can differ from the data system mode
+        // after a network change, so the mode is always forwarded.
+        // An undefined mode clears the override. The data system then returns to the configured
+        // mode, and to network switching when it is enabled.
+        const targetMode = mode ?? this._connectionMode;
+        if (targetMode === 'offline') {
+          await this.flush();
+          this.setEventSendingEnabled(false, false);
+        }
+        (this.dataManager as FDv2DataManagerControl).setConnectionMode(mode);
+        this._fdv2ModeOverride = mode;
+        if (targetMode !== 'offline') {
+          this.setEventSendingEnabled(true, false);
+        }
+      });
+      // The failure still reaches this caller. Keep the queue alive for the next one.
+      this._fdv2ConnectionModeQueue = task.catch(() => {});
+      await task;
+      return;
+    }
+
+    if (mode === undefined) {
+      this.logger.warn(
+        '[ElectronClient] setConnectionMode without a mode is supported only with the dataSystem option, ignoring.',
+      );
       return;
     }
     if (mode === 'offline') {
@@ -202,17 +331,40 @@ export class ElectronClient extends LDClientImpl {
   }
 
   getConnectionMode(): ConnectionMode {
-    const dataManager = this.dataManager as ElectronDataManager;
-    return dataManager.getConnectionMode();
+    if (this.isFDv2) {
+      // An explicit request wins over network changes, and the data system applies it after a
+      // debounce, so the requested mode is reported at once.
+      if (this._fdv2ModeOverride) {
+        return this._fdv2ModeOverride;
+      }
+      // Without a request, network switching can move the data system offline.
+      const current = (this.dataManager as FDv2DataManagerControl).getCurrentMode();
+      if (current === 'streaming' || current === 'polling' || current === 'offline') {
+        return current;
+      }
+      return this._connectionMode;
+    }
+    return (this.dataManager as ElectronDataManager).getConnectionMode();
   }
 
   isOffline(): boolean {
-    const dataManager = this.dataManager as ElectronDataManager;
-    return dataManager.getConnectionMode() === 'offline';
+    return this.getConnectionMode() === 'offline';
   }
 
   setNetworkAvailability(available: boolean): void {
     const isAvailable = available === true;
+    if (this.isFDv2) {
+      if (!shouldAutoSwitchNetwork(this.dataSystemConfig?.automaticModeSwitching)) {
+        this.logger.debug(
+          '[ElectronClient] setNetworkAvailability ignored because automatic network switching is disabled in the dataSystem configuration.',
+        );
+        return;
+      }
+      (this.dataManager as FDv2DataManagerControl).setNetworkState(
+        isAvailable ? 'available' : 'unavailable',
+      );
+      return;
+    }
     (this.dataManager as ElectronDataManager).setNetworkAvailability(isAvailable);
   }
 

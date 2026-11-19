@@ -208,6 +208,24 @@ it('does not throw when hash is invalid and dropped before the credential check'
   );
 });
 
+it('warns when both dataSystem and initialConnectionMode are set', () => {
+  const logger = createMockLogger();
+
+  validateOptions({ dataSystem: {}, initialConnectionMode: 'polling' }, logger);
+
+  expect(logger.warn).toHaveBeenCalledTimes(1);
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('initialConnectionMode'));
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('dataSystem'));
+});
+
+it('does not warn when only dataSystem is set', () => {
+  const logger = createMockLogger();
+
+  validateOptions({ dataSystem: {} }, logger);
+
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
 it('applies a custom storage implementation with get, set and clear functions', () => {
   const logger = createMockLogger();
   const storage = { get: jest.fn(), set: jest.fn(), clear: jest.fn() };

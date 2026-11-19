@@ -362,6 +362,16 @@ describe('given an initialized ElectronClient', () => {
     expect(spy).toHaveBeenNthCalledWith(1, 'streaming');
   });
 
+  it('handles setConnectionMode() without a mode as a clear', async () => {
+    const spy = jest.spyOn(client, 'setConnectionMode');
+    spy.mockResolvedValueOnce();
+
+    await mockIpcMain.getHandler(getEventName('setConnectionMode'))?.({}, undefined);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenNthCalledWith(1, undefined);
+  });
+
   it('handles getConnectionMode() call', () => {
     const spy = jest.spyOn(client, 'getConnectionMode');
     spy.mockReturnValueOnce('streaming');

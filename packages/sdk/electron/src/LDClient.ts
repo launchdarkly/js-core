@@ -36,7 +36,19 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
    */
   start(options?: LDStartOptions): Promise<LDWaitForInitializationResult>;
 
-  setConnectionMode(mode: ConnectionMode): Promise<void>;
+  /**
+   * Sets the connection mode. With the `dataSystem` option, an explicit mode sets an override,
+   * and the SDK then ignores network changes. Call this method without a mode to clear the
+   * override. The SDK then returns to the configured mode, and to network switching when it is
+   * enabled.
+   *
+   * The data system applies a mode change after a short delay. {@link getConnectionMode} reports
+   * an explicit mode at once. After a clear, it reports the data system mode, so it can show the
+   * previous mode until the change applies.
+   *
+   * @param mode The connection mode to use. Omit it to clear the override (`dataSystem` only).
+   */
+  setConnectionMode(mode?: ConnectionMode): Promise<void>;
 
   getConnectionMode(): ConnectionMode;
 
@@ -46,7 +58,14 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
    * Tells the SDK whether the network is available. The SDK does not detect network changes on
    * its own. Call this from the main process when the application learns of a change.
    *
-   * `false` pauses the connection and `true` resumes it in the current connection mode.
+   * With the default data source, `false` pauses the connection and `true` resumes it in the
+   * current connection mode. With the `dataSystem` option, the value is forwarded to the data
+   * system. The data system switches to `offline` and back only when automatic network switching
+   * is enabled in `dataSystem.automaticModeSwitching`. Otherwise the call is ignored. Desktop
+   * turns automatic network switching off by default, so with a default `dataSystem`
+   * configuration this call has no effect. An explicit call to `setConnectionMode` under
+   * `dataSystem` sets an override, and the SDK then ignores network changes until a call without
+   * a mode clears the override.
    *
    * This method exists on the main-process client only.
    *
