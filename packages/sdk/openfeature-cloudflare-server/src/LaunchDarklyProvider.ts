@@ -30,10 +30,18 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
     });
 
     try {
-      const client = init(clientSideID, kvNamespace, options);
+      const client = init(clientSideID, kvNamespace, {
+        ...options,
+        wrapperName: 'open-feature-cloudflare-server',
+        wrapperVersion: '1.2.3', // x-release-please-version
+      });
       this.setClient(client);
-    } catch (e) {
-      this.setClientError(e);
+    } catch {
+      try {
+        this.setClient(init(clientSideID, kvNamespace, options));
+      } catch (e) {
+        this.setClientError(e);
+      }
     }
   }
 }

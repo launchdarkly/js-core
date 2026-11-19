@@ -457,6 +457,7 @@
     },
     "packages/sdk/openfeature-cloudflare-server": {
       "extra-files": [
+        "src/LaunchDarklyProvider.ts",
         {
           "type": "json",
           "path": "examples/getting-started/package.json",
