@@ -120,10 +120,11 @@ export default class PollingProcessorFDv2 implements subsystemCommon.DataSource 
         }
 
         const message = httpErrorMessage(err, 'polling request', 'will retry');
-        statusCallback(
-          subsystemCommon.DataSourceState.Interrupted,
-          new LDPollingError(DataSourceErrorKind.ErrorResponse, message, status),
-        );
+        // Report the interruption without an error, because this processor polls again after the
+        // poll interval. If the status has an error, the composite data source stops this
+        // processor and starts a new one after its backoff delay. That delay can be shorter than
+        // the poll interval.
+        statusCallback(subsystemCommon.DataSourceState.Interrupted);
         this._logger?.warn(message);
         // schedule poll
         this._timeoutHandle = setTimeout(() => {
