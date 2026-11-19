@@ -186,6 +186,7 @@ flowchart LR
     fastly[sdk/fastly]
     react-native[sdk/react-native]
     browser[sdk/browser]
+    electron[sdk/electron]
     vercel[sdk/vercel]
     akamai-base[sdk/akamai-base]
     akamai-edgekv[sdk/akamai-edgekv]
@@ -216,6 +217,7 @@ flowchart LR
     %% Dependencies for SDK packages
     sdk-client --> browser
     sdk-client --> react-native
+    sdk-client --> electron
     browser --> react
     browser --> vue
     sdk-server --> react
@@ -245,7 +247,7 @@ flowchart LR
     react-native -.-> jest
 
     class common,sdk-client,sdk-server,sdk-server-edge,akamai-edgeworker,openfeature-server-common shared
-    class server-node,cloudflare,fastly,react-native,browser,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen,openfeature-node-server,vue sdk
+    class server-node,cloudflare,fastly,react-native,browser,electron,vercel,akamai-base,akamai-edgekv,server-ai,react,shopify-oxygen,openfeature-node-server,vue sdk
     class redis,dynamodb store
     class node-otel telemetry
     class jest tooling
@@ -262,7 +264,7 @@ There are a number of categories of packages in the monorepo:
    - `shared/openfeature-server-common`: Common code for server-side OpenFeature providers
 
 2. **SDK packages** (blue): Actual SDK implementations for different platforms
-   - Browser, React Native, Server Node, Cloudflare, Fastly, Vercel, Akamai, OpenFeature, etc.
+   - Browser, React Native, Electron, Server Node, Cloudflare, Fastly, Vercel, Akamai, OpenFeature, etc.
 
 3. **Store packages** (green): Persistent storage implementations
    - Redis and DynamoDB implementations
