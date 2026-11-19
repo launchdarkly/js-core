@@ -1,4 +1,4 @@
-# Launchdarkly Electron SDK
+# LaunchDarkly Electron SDK
 
 <!--
 [![NPM][npm-badge]][npm-link]
@@ -19,7 +19,55 @@
 
 ## Getting started
 
-Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/electron#getting-started) for instructions on getting started with using the SDK.
+Install the SDK next to Electron (Electron 34.5.6 or later is a peer dependency):
+
+```sh
+npm install @launchdarkly/electron-client-sdk
+```
+
+The LaunchDarkly client runs in the **main process**. Renderer windows do not connect to
+LaunchDarkly directly. They call the main-process client over IPC through a small preload bridge.
+
+Main process:
+
+```ts
+import { createClient } from '@launchdarkly/electron-client-sdk';
+
+const client = createClient(mobileKey, { kind: 'user', key: 'user-key' });
+await client.start();
+
+const showFeature = client.boolVariation('my-flag', false);
+```
+
+Preload script (set as `webPreferences.preload` on the `BrowserWindow`):
+
+```ts
+import '@launchdarkly/electron-client-sdk/bridge';
+```
+
+Renderer:
+
+```ts
+import { createRendererClient } from '@launchdarkly/electron-client-sdk/renderer';
+
+const client = createRendererClient(mobileKey);
+await client.waitForInitialization();
+
+const showFeature = client.boolVariation('my-flag', false);
+```
+
+`createClient` returns a client that is not ready until `start()` resolves. `identify()` returns a
+result object and never throws.
+
+## Documentation
+
+- [Feature guide](temp_docs/README.md): credentials and secure mode, connection modes, network
+  availability, data source status, flag cache storage, multiple windows and clients, proxies, and
+  the Relay Proxy.
+- [SDK reference page draft](temp_docs/electron.mdx): the draft of the page for the LaunchDarkly
+  docs site.
+- [Migration guide](temp_docs/MIGRATION.md): the changes from the previous Electron SDK.
+- [IPC bridge design](temp_docs/ipc-bridge.md): how renderer windows use the main-process client.
 
 ## About LaunchDarkly
 
@@ -27,7 +75,7 @@ Refer to the [SDK documentation](https://launchdarkly.com/docs/sdk/client-side/e
   - Roll out a new feature to a subset of your users (like a group of users who opt-in to a beta tester group), gathering feedback and bug reports from real-world use cases.
   - Gradually roll out a feature to an increasing percentage of users, and track the effect that the feature has on key metrics (for instance, how likely is a user to complete a purchase if they have feature A versus feature B?).
   - Turn off a feature that you realize is causing performance problems in production, without needing to re-deploy, or even restart the application with a changed configuration file.
-  - Grant access to certain features based on user attributes, like payment plan (eg: users on the ‘gold’ plan get access to more features than users in the ‘silver’ plan).
+  - Grant access to certain features based on user attributes, like payment plan (eg: users on the 'gold' plan get access to more features than users in the 'silver' plan).
   - Disable parts of your application to facilitate maintenance, without taking everything offline.
 - LaunchDarkly provides feature flag SDKs for a wide variety of languages and technologies. Read [our documentation](https://docs.launchdarkly.com/sdk) for a complete list.
 - Explore LaunchDarkly
