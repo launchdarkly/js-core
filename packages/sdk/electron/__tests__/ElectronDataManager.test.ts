@@ -615,4 +615,249 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
       expect.anything(),
     );
   });
+
+  it('pauses the connection and keeps the mode when the network becomes unavailable', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+
+    dataManager.setNetworkAvailability(false);
+
+    expect(eventSourceCloseMethod).toHaveBeenCalledTimes(1);
+    expect(dataManager.getConnectionMode()).toBe('streaming');
+  });
+
+  it('resumes the connection in the current mode when the network returns', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+
+    dataManager.setNetworkAvailability(false);
+    dataManager.setNetworkAvailability(true);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(2);
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+  });
+
+  it('does not open a connection and resolves the identify while the network is unavailable', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+    dataManager.setNetworkAvailability(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, {});
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+    expect(identifyResolve).toHaveBeenCalled();
+    expect(identifyReject).not.toHaveBeenCalled();
+  });
+
+  it('opens the deferred connection when the network returns after an identify', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    dataManager.setNetworkAvailability(false);
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+
+    dataManager.setNetworkAvailability(true);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not open a connection when the network returns while offline', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.setConnectionMode('offline');
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+
+    dataManager.setNetworkAvailability(false);
+    dataManager.setNetworkAvailability(true);
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+  });
+
+  it('defers a mode change made while the network is unavailable until the network returns', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    dataManager.setNetworkAvailability(false);
+
+    await dataManager.setConnectionMode('polling');
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+
+    dataManager.setNetworkAvailability(true);
+    expect(platform.requests.fetch).toHaveBeenCalledTimes(1);
+    expect(dataManager.getConnectionMode()).toBe('polling');
+  });
+
+  it('ignores a repeated network availability value', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+
+    dataManager.setNetworkAvailability(true);
+
+    expect(eventSourceCloseMethod).not.toHaveBeenCalled();
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not resume the connection when the network returns after the data manager closed', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    dataManager.setNetworkAvailability(false);
+
+    dataManager.close();
+    dataManager.setNetworkAvailability(true);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports the data source as closed on pause and initializing on resume', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    emitter.emit.mockClear();
+
+    dataManager.setNetworkAvailability(false);
+    expect(emitter.emit).toHaveBeenCalledWith(
+      'dataSourceStatus',
+      expect.objectContaining({ state: 'CLOSED' }),
+    );
+
+    dataManager.setNetworkAvailability(true);
+    expect(emitter.emit).toHaveBeenCalledWith(
+      'dataSourceStatus',
+      expect.objectContaining({ state: 'INITIALIZING' }),
+    );
+  });
+
+  async function deliverPutOnLatestStream() {
+    diagnosticsManager.recordStreamInit = jest.fn();
+    const sources = (platform.requests.createEventSource as jest.Mock).mock.results;
+    const source = sources[sources.length - 1].value;
+    const putCall = source.addEventListener.mock.calls.find(([name]: [string]) => name === 'put');
+    putCall[1]({ data: '{}' });
+    await jest.advanceTimersByTimeAsync(0);
+  }
+
+  it('resolves a pending identify when the network pauses before the first put', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+    await dataManager.identify(identifyResolve, identifyReject, context, {});
+    expect(identifyResolve).not.toHaveBeenCalled();
+
+    dataManager.setNetworkAvailability(false);
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+    expect(identifyReject).not.toHaveBeenCalled();
+  });
+
+  it('resolves a second identify on its put after a pause and resume', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    dataManager.setNetworkAvailability(false);
+    dataManager.setNetworkAvailability(true);
+    const identifyResolve = jest.fn();
+
+    await dataManager.identify(identifyResolve, jest.fn(), context, {});
+    await deliverPutOnLatestStream();
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a pending identify alive across a mode switch until the put arrives', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    await dataManager.identify(identifyResolve, jest.fn(), context, {});
+    dataManager.setConnectionMode('polling');
+    dataManager.setConnectionMode('streaming');
+    expect(identifyResolve).not.toHaveBeenCalled();
+
+    await deliverPutOnLatestStream();
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves a pending identify when the connection mode changes to offline', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    await dataManager.identify(identifyResolve, jest.fn(), context, {});
+
+    await dataManager.setConnectionMode('offline');
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores an unknown connection mode when the network returns', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await dataManager.identify(jest.fn(), jest.fn(), context, {});
+    dataManager.setNetworkAvailability(false);
+
+    await dataManager.setConnectionMode('bogus' as any);
+
+    expect(() => dataManager.setNetworkAvailability(true)).not.toThrow();
+
+    expect(dataManager.getConnectionMode()).toBe('streaming');
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Unknown ConnectionMode'));
+  });
+
+  it('resolves once when the mode goes offline during the cache load of a waiting identify', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    let finishLoad: (loaded: boolean) => void = () => {};
+    flagManager.loadCached.mockReturnValue(new Promise((r) => (finishLoad = r)));
+    const identifyResolve = jest.fn();
+
+    const identifying = dataManager.identify(identifyResolve, jest.fn(), context, {
+      waitForNetworkResults: true,
+    });
+    await dataManager.setConnectionMode('offline');
+    finishLoad(true);
+    await identifying;
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves a pending identify when the data manager closes', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    await dataManager.identify(identifyResolve, jest.fn(), context, {});
+
+    dataManager.close();
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves an identify that starts after the data manager closed', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyResolve = jest.fn();
+    dataManager.close();
+
+    await dataManager.identify(identifyResolve, jest.fn(), context, {});
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves an identify when the data manager closes during the cache load', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    let finishLoad: (loaded: boolean) => void = () => {};
+    flagManager.loadCached.mockReturnValue(new Promise((r) => (finishLoad = r)));
+    const identifyResolve = jest.fn();
+
+    const identifying = dataManager.identify(identifyResolve, jest.fn(), context, {});
+    dataManager.close();
+    finishLoad(false);
+    await identifying;
+
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens no stream when the data manager closes during the cache load', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    let finishLoad: (loaded: boolean) => void = () => {};
+    flagManager.loadCached.mockReturnValue(new Promise((r) => (finishLoad = r)));
+
+    const identifying = dataManager.identify(jest.fn(), jest.fn(), context, {});
+    dataManager.close();
+    finishLoad(false);
+    await identifying;
+
+    expect(platform.requests.createEventSource).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).not.toHaveBeenCalled();
+  });
 });
