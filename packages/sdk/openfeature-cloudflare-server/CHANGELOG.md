@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.2.3...openfeature-cloudflare-server-v1.3.0) (2026-11-19)
+
+
+### Features
+
+* Report a wrapper name from the OpenFeature Cloudflare provider ([#2217](https://github.com/launchdarkly/js-core/issues/2217)) ([6397098](https://github.com/launchdarkly/js-core/commit/63970985ee77c7c91678d3b2cb374c1351418f33))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from 2.7.54 to 2.7.55
+  * peerDependencies
+    * @launchdarkly/cloudflare-server-sdk bumped from ^2.7.0 to ^2.7.55
+
 ## [1.2.3](https://github.com/launchdarkly/js-core/compare/openfeature-cloudflare-server-v1.2.2...openfeature-cloudflare-server-v1.2.3) (2026-11-18)
 
 
