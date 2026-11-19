@@ -28,12 +28,13 @@ import {
 import ElectronDataManager from './ElectronDataManager';
 import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import {
-  AllAsyncChannels,
-  AllSyncChannels,
+  assertNamespaceAvailable,
+  claimNamespace,
   deriveNamespace,
   getIPCChannelName,
   IpcEventCallback,
   IpcEventSubscription,
+  releaseNamespace,
 } from './ElectronIPC';
 import type { ElectronOptions } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
@@ -49,6 +50,14 @@ export class ElectronClient extends LDClientImpl {
   private _closed: boolean = false;
 
   private _ipcNamespace?: string;
+
+  // The listeners and handler channels this client registered, for exact removal.
+  private _ipcRegisteredSync?: Array<{
+    channel: string;
+    listener: Parameters<typeof ipcMain.on>[1];
+  }>;
+
+  private _ipcRegisteredAsync?: string[];
 
   private _ipcEventSubscriptions?: Map<LDEmitterEventName, IpcEventSubscription>;
 
@@ -98,8 +107,14 @@ export class ElectronClient extends LDClientImpl {
       initialContext,
     };
 
-    const platform = new ElectronPlatform(logger, validatedElectronOptions);
     const derivedNs = deriveNamespace(credential, validatedElectronOptions.namespace);
+
+    // A duplicate namespace fails here, before the base client or any ipcMain handler exists.
+    if (validatedElectronOptions.enableIPC) {
+      assertNamespaceAvailable(derivedNs);
+    }
+
+    const platform = new ElectronPlatform(logger, validatedElectronOptions);
     const endpoints = useClientSideId ? browserFdv1Endpoints(credential) : mobileFdv1Endpoints();
 
     super(
@@ -133,7 +148,15 @@ export class ElectronClient extends LDClientImpl {
     this.setEventSendingEnabled(!this.isOffline(), false);
 
     if (validatedElectronOptions.enableIPC) {
-      this._openIPCChannels(derivedNs);
+      try {
+        this._openIPCChannels(derivedNs);
+      } catch (e) {
+        // The base client already runs its timers and data manager. Stop them before the throw
+        // because the caller never receives an instance to close.
+        this._closed = true;
+        super.close().catch(() => {});
+        throw e;
+      }
     }
   }
 
@@ -194,114 +217,158 @@ export class ElectronClient extends LDClientImpl {
   }
 
   private _openIPCChannels(namespace: string): void {
+    claimNamespace(namespace);
     this._ipcNamespace = namespace;
     this._ipcEventSubscriptions = new Map<LDEmitterEventName, IpcEventSubscription>();
     this._ipcCallbackIdToEventName = new Map<string, LDEmitterEventName>();
     this._ipcSubscriptionQueue = [];
 
-    ipcMain.on(
-      getIPCChannelName(namespace, 'addEventHandler'),
-      (event: IpcMainEvent, messageData: IpcEventCallback) => {
-        this._ipcSubscriptionQueue!.push({ type: 'add', event, messageData });
-        this._processSubscriptionQueue();
-      },
+    // Tracks the exact listeners and handler channels this client registered, so neither a
+    // failure nor a close removes a listener that other code added to the same channel.
+    const registeredSync: Array<{ channel: string; listener: Parameters<typeof ipcMain.on>[1] }> =
+      [];
+    const registeredAsync: string[] = [];
+    this._ipcRegisteredSync = registeredSync;
+    this._ipcRegisteredAsync = registeredAsync;
+    const registerOn = (channel: string, listener: Parameters<typeof ipcMain.on>[1]) => {
+      ipcMain.on(channel, listener);
+      registeredSync.push({ channel, listener });
+    };
+    const registerHandle = (channel: string, listener: Parameters<typeof ipcMain.handle>[1]) => {
+      ipcMain.handle(channel, listener);
+      registeredAsync.push(channel);
+    };
+
+    try {
+      // A handler channel throws when it is already taken. Register those first so a throw
+      // happens before this client adds any listener.
+      registerHandle(
+        getIPCChannelName(namespace, 'waitForInitialization'),
+        (
+          _event,
+          options?: LDWaitForInitializationOptions,
+        ): Promise<LDWaitForInitializationResult> => this.waitForInitialization(options),
+      );
+
+      registerHandle(getIPCChannelName(namespace, 'flush'), (_event) => this.flush());
+
+      registerHandle(getIPCChannelName(namespace, 'identify'), (_event, context, identifyOptions) =>
+        this.identifyResult(context, identifyOptions),
+      );
+
+      registerHandle(getIPCChannelName(namespace, 'setConnectionMode'), (_event, mode) =>
+        this.setConnectionMode(mode),
+      );
+
+      registerOn(
+        getIPCChannelName(namespace, 'addEventHandler'),
+        (event: IpcMainEvent, messageData: IpcEventCallback) => {
+          this._ipcSubscriptionQueue!.push({ type: 'add', event, messageData });
+          this._processSubscriptionQueue();
+        },
+      );
+
+      registerOn(
+        getIPCChannelName(namespace, 'removeEventHandler'),
+        (event: IpcMainEvent, callbackId: string) => {
+          this._ipcSubscriptionQueue!.push({ type: 'remove', event, callbackId });
+          this._processSubscriptionQueue();
+        },
+      );
+
+      registerOn(getIPCChannelName(namespace, 'allFlags'), (event) => {
+        event.returnValue = this.allFlags();
+      });
+
+      registerOn(getIPCChannelName(namespace, 'boolVariation'), (event, key, defaultValue) => {
+        event.returnValue = this.boolVariation(key, defaultValue);
+      });
+
+      registerOn(
+        getIPCChannelName(namespace, 'boolVariationDetail'),
+        (event, key, defaultValue) => {
+          event.returnValue = this.boolVariationDetail(key, defaultValue);
+        },
+      );
+
+      registerOn(getIPCChannelName(namespace, 'getContext'), (event) => {
+        event.returnValue = this.getContext();
+      });
+
+      registerOn(getIPCChannelName(namespace, 'log'), (_event, level: string, message: string) => {
+        if (VALID_LOG_LEVELS.has(level)) {
+          this.logger[level as keyof LDLogger](message);
+        }
+      });
+
+      registerOn(getIPCChannelName(namespace, 'jsonVariation'), (event, key, defaultValue) => {
+        event.returnValue = this.jsonVariation(key, defaultValue);
+      });
+
+      registerOn(
+        getIPCChannelName(namespace, 'jsonVariationDetail'),
+        (event, key, defaultValue) => {
+          event.returnValue = this.jsonVariationDetail(key, defaultValue);
+        },
+      );
+
+      registerOn(getIPCChannelName(namespace, 'numberVariation'), (event, key, defaultValue) => {
+        event.returnValue = this.numberVariation(key, defaultValue);
+      });
+
+      registerOn(
+        getIPCChannelName(namespace, 'numberVariationDetail'),
+        (event, key, defaultValue) => {
+          event.returnValue = this.numberVariationDetail(key, defaultValue);
+        },
+      );
+
+      registerOn(getIPCChannelName(namespace, 'stringVariation'), (event, key, defaultValue) => {
+        event.returnValue = this.stringVariation(key, defaultValue);
+      });
+
+      registerOn(
+        getIPCChannelName(namespace, 'stringVariationDetail'),
+        (event, key, defaultValue) => {
+          event.returnValue = this.stringVariationDetail(key, defaultValue);
+        },
+      );
+
+      registerOn(getIPCChannelName(namespace, 'track'), (event, key, data, metricValue) => {
+        event.returnValue = this.track(key, data, metricValue);
+      });
+
+      registerOn(getIPCChannelName(namespace, 'variation'), (event, key, defaultValue) => {
+        event.returnValue = this.variation(key, defaultValue);
+      });
+
+      registerOn(getIPCChannelName(namespace, 'variationDetail'), (event, key, defaultValue) => {
+        event.returnValue = this.variationDetail(key, defaultValue);
+      });
+
+      registerOn(getIPCChannelName(namespace, 'getConnectionMode'), (event) => {
+        event.returnValue = this.getConnectionMode();
+      });
+
+      registerOn(getIPCChannelName(namespace, 'isOffline'), (event) => {
+        event.returnValue = this.isOffline();
+      });
+    } catch (e) {
+      // A failed registration must not leave the namespace claimed or this call's listeners attached.
+      this._removeRegisteredIPCChannels();
+      releaseNamespace(namespace);
+      this._ipcNamespace = undefined;
+      throw e;
+    }
+  }
+
+  private _removeRegisteredIPCChannels(): void {
+    this._ipcRegisteredSync?.forEach(({ channel, listener }) =>
+      ipcMain.removeListener(channel, listener),
     );
-
-    ipcMain.on(
-      getIPCChannelName(namespace, 'removeEventHandler'),
-      (event: IpcMainEvent, callbackId: string) => {
-        this._ipcSubscriptionQueue!.push({ type: 'remove', event, callbackId });
-        this._processSubscriptionQueue();
-      },
-    );
-
-    ipcMain.handle(
-      getIPCChannelName(namespace, 'waitForInitialization'),
-      (_event, options?: LDWaitForInitializationOptions): Promise<LDWaitForInitializationResult> =>
-        this.waitForInitialization(options),
-    );
-
-    ipcMain.on(getIPCChannelName(namespace, 'allFlags'), (event) => {
-      event.returnValue = this.allFlags();
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'boolVariation'), (event, key, defaultValue) => {
-      event.returnValue = this.boolVariation(key, defaultValue);
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'boolVariationDetail'), (event, key, defaultValue) => {
-      event.returnValue = this.boolVariationDetail(key, defaultValue);
-    });
-
-    ipcMain.handle(getIPCChannelName(namespace, 'flush'), (_event) => this.flush());
-
-    ipcMain.on(getIPCChannelName(namespace, 'getContext'), (event) => {
-      event.returnValue = this.getContext();
-    });
-
-    ipcMain.handle(getIPCChannelName(namespace, 'identify'), (_event, context, identifyOptions) =>
-      this.identifyResult(context, identifyOptions),
-    );
-
-    ipcMain.on(getIPCChannelName(namespace, 'log'), (_event, level: string, message: string) => {
-      if (VALID_LOG_LEVELS.has(level)) {
-        this.logger[level as keyof LDLogger](message);
-      }
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'jsonVariation'), (event, key, defaultValue) => {
-      event.returnValue = this.jsonVariation(key, defaultValue);
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'jsonVariationDetail'), (event, key, defaultValue) => {
-      event.returnValue = this.jsonVariationDetail(key, defaultValue);
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'numberVariation'), (event, key, defaultValue) => {
-      event.returnValue = this.numberVariation(key, defaultValue);
-    });
-
-    ipcMain.on(
-      getIPCChannelName(namespace, 'numberVariationDetail'),
-      (event, key, defaultValue) => {
-        event.returnValue = this.numberVariationDetail(key, defaultValue);
-      },
-    );
-
-    ipcMain.on(getIPCChannelName(namespace, 'stringVariation'), (event, key, defaultValue) => {
-      event.returnValue = this.stringVariation(key, defaultValue);
-    });
-
-    ipcMain.on(
-      getIPCChannelName(namespace, 'stringVariationDetail'),
-      (event, key, defaultValue) => {
-        event.returnValue = this.stringVariationDetail(key, defaultValue);
-      },
-    );
-
-    ipcMain.on(getIPCChannelName(namespace, 'track'), (event, key, data, metricValue) => {
-      event.returnValue = this.track(key, data, metricValue);
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'variation'), (event, key, defaultValue) => {
-      event.returnValue = this.variation(key, defaultValue);
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'variationDetail'), (event, key, defaultValue) => {
-      event.returnValue = this.variationDetail(key, defaultValue);
-    });
-
-    ipcMain.handle(getIPCChannelName(namespace, 'setConnectionMode'), (_event, mode) =>
-      this.setConnectionMode(mode),
-    );
-
-    ipcMain.on(getIPCChannelName(namespace, 'getConnectionMode'), (event) => {
-      event.returnValue = this.getConnectionMode();
-    });
-
-    ipcMain.on(getIPCChannelName(namespace, 'isOffline'), (event) => {
-      event.returnValue = this.isOffline();
-    });
+    this._ipcRegisteredAsync?.forEach((channel) => ipcMain.removeHandler(channel));
+    this._ipcRegisteredSync = undefined;
+    this._ipcRegisteredAsync = undefined;
   }
 
   /**
@@ -383,12 +450,8 @@ export class ElectronClient extends LDClientImpl {
     this._ipcCallbackIdToEventName?.clear();
     this._ipcSubscriptionQueue = undefined;
 
-    AllSyncChannels.forEach((channel) => {
-      ipcMain.removeAllListeners(getIPCChannelName(this._ipcNamespace!, channel));
-    });
-    AllAsyncChannels.forEach((channel) => {
-      ipcMain.removeHandler(getIPCChannelName(this._ipcNamespace!, channel));
-    });
+    this._removeRegisteredIPCChannels();
+    releaseNamespace(this._ipcNamespace);
 
     this._ipcEventSubscriptions = undefined;
     this._ipcCallbackIdToEventName = undefined;
