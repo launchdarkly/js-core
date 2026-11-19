@@ -30,6 +30,7 @@ export type {
   LDSingleKindContext,
   TrackSeriesContext,
   LDPluginBase,
+  LDStorage,
   LDPluginEnvironmentMetadata,
   LDPluginSdkMetadata,
   LDPluginApplicationMetadata,
