@@ -2,7 +2,7 @@ import type { LDClient } from '../LDClient';
 
 export interface LDRendererClient extends Omit<
   LDClient,
-  'logger' | 'addHook' | 'start' | 'on' | 'off'
+  'logger' | 'addHook' | 'start' | 'on' | 'off' | 'setNetworkAvailability'
 > {
   /**
    * In the renderer client, the on method returns a callback handle that can be used to remove the listener.
