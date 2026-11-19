@@ -46,6 +46,8 @@ const VALID_LOG_LEVELS: ReadonlySet<string> = new Set(['error', 'warn', 'info', 
 export class ElectronClient extends LDClientImpl {
   private readonly _plugins: LDPlugin[];
 
+  private _closed: boolean = false;
+
   private _ipcNamespace?: string;
 
   private _ipcEventSubscriptions?: Map<LDEmitterEventName, IpcEventSubscription>;
@@ -155,12 +157,23 @@ export class ElectronClient extends LDClientImpl {
   }
 
   async setConnectionMode(mode: ConnectionMode): Promise<void> {
+    // JS callers and renderers can pass any value. Log it bounded so a long string stays small.
+    if (mode !== 'offline' && mode !== 'streaming' && mode !== 'polling') {
+      this.logger.warn(
+        `[ElectronClient] Unknown connection mode ${JSON.stringify(String(mode).slice(0, 64))}, ignoring.`,
+      );
+      return;
+    }
+    if (this._closed) {
+      return;
+    }
     if (mode === 'offline') {
       this.setEventSendingEnabled(false, true);
     }
     const dataManager = this.dataManager as ElectronDataManager;
     await dataManager.setConnectionMode(mode);
-    if (mode !== 'offline') {
+    // A concurrent call may have changed the mode during the await.
+    if (mode !== 'offline' && dataManager.getConnectionMode() === mode) {
       this.setEventSendingEnabled(true, false);
     }
   }
@@ -173,6 +186,11 @@ export class ElectronClient extends LDClientImpl {
   isOffline(): boolean {
     const dataManager = this.dataManager as ElectronDataManager;
     return dataManager.getConnectionMode() === 'offline';
+  }
+
+  setNetworkAvailability(available: boolean): void {
+    const isAvailable = available === true;
+    (this.dataManager as ElectronDataManager).setNetworkAvailability(isAvailable);
   }
 
   private _openIPCChannels(namespace: string): void {
@@ -379,6 +397,7 @@ export class ElectronClient extends LDClientImpl {
   }
 
   override async close(): Promise<void> {
+    this._closed = true;
     this._closeIPCChannels();
     await super.close();
   }
@@ -432,6 +451,7 @@ export function makeClient(
       impl.setConnectionMode(mode),
     getConnectionMode: () => impl.getConnectionMode(),
     isOffline: () => impl.isOffline(),
+    setNetworkAvailability: (available: boolean) => impl.setNetworkAvailability(available),
   };
 
   impl.registerPluginsWith(client);

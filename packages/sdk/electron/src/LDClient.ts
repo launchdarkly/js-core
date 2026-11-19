@@ -37,4 +37,16 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
   getConnectionMode(): ConnectionMode;
 
   isOffline(): boolean;
+
+  /**
+   * Tells the SDK whether the network is available. The SDK does not detect network changes on
+   * its own. Call this from the main process when the application learns of a change.
+   *
+   * `false` pauses the connection and `true` resumes it in the current connection mode.
+   *
+   * This method exists on the main-process client only.
+   *
+   * @param available `true` when the network is available, `false` when it is not.
+   */
+  setNetworkAvailability(available: boolean): void;
 }
