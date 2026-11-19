@@ -41,6 +41,32 @@ it.each([undefined, {}, { wrapperName: 'custom-wrapper', wrapperVersion: 'custom
   },
 );
 
+it('retries without wrapper metadata when the SDK rejects it', async () => {
+  const initMock = jest.mocked(cloudflareSdk.init);
+  initMock.mockClear();
+  initMock.mockImplementationOnce(() => {
+    throw new Error('Invalid configuration: wrapperName,wrapperVersion not supported');
+  });
+  const kvNamespace = makeKvNamespace();
+  const options = { logger: new TestLogger(), sendEvents: false };
+  const ldProvider = new LaunchDarklyProvider(clientSideID, kvNamespace, options);
+
+  expect(initMock).toHaveBeenCalledTimes(2);
+  expect(initMock).toHaveBeenNthCalledWith(1, clientSideID, kvNamespace, {
+    ...options,
+    wrapperName: 'open-feature-cloudflare-server',
+    wrapperVersion: version,
+  });
+  expect(initMock).toHaveBeenNthCalledWith(2, clientSideID, kvNamespace, options);
+  expect(initMock.mock.calls[1][2]).toBe(options);
+
+  await OpenFeature.setProviderAndWait(ldProvider);
+  const ofClient = OpenFeature.getClient();
+  expect(ofClient.providerStatus).toEqual(ProviderStatus.READY);
+  expect(await ofClient.getBooleanValue(testFlagKey, false, basicContext)).toBe(false);
+  await ldProvider.onClose();
+});
+
 it('can be initialized', async () => {
   const ldProvider = new LaunchDarklyProvider(clientSideID, makeKvNamespace());
   await ldProvider.initialize({});

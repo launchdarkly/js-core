@@ -36,8 +36,12 @@ export default class LaunchDarklyProvider extends BaseOpenFeatureProvider<LDClie
         wrapperVersion: '1.2.3', // x-release-please-version
       });
       this.setClient(client);
-    } catch (e) {
-      this.setClientError(e);
+    } catch {
+      try {
+        this.setClient(init(clientSideID, kvNamespace, options));
+      } catch (e) {
+        this.setClientError(e);
+      }
     }
   }
 }
