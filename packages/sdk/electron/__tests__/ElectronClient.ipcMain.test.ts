@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import type { IpcMain } from 'electron';
 
+import { LDClientImpl } from '@launchdarkly/js-client-sdk-common';
 import type {
   LDContext,
   LDEvaluationDetail,
@@ -13,10 +14,12 @@ import { deriveNamespace, getIPCChannelName } from '../src/ElectronIPC';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
 import ElectronInfo from '../src/platform/ElectronInfo';
+import ElectronPlatform from '../src/platform/ElectronPlatform';
 import { createMockLogger } from './testHelpers';
 
 type MockIpcMain = IpcMain & {
   getHandler: (eventName: string) => ((...args: any[]) => void) | undefined;
+  getListeners: (eventName: string) => Array<(...args: any[]) => void>;
   removeAllListeners: (channel: string) => void;
   removeHandler: (channel: string) => void;
 };
@@ -24,15 +27,35 @@ type MockPort = { postMessage: (...args: any[]) => void; close: (...args: any[])
 type MockIpcEvent = { returnValue?: any; ports?: MockPort[] };
 
 jest.mock('electron', () => {
+  const listeners = new Map<string, Array<(...args: any[]) => void>>();
   const handlers = new Map<string, (...args: any[]) => void>();
   return {
     ipcMain: {
-      on: (eventName: string, handler: (...args: any[]) => void) =>
-        handlers.set(eventName, handler),
-      handle: (eventName: string, handler: (...args: any[]) => void) =>
-        handlers.set(eventName, handler),
-      getHandler: (eventName: string) => handlers.get(eventName),
-      removeAllListeners: (channel: string) => handlers.delete(channel),
+      on: (eventName: string, listener: (...args: any[]) => void) => {
+        listeners.set(eventName, [...(listeners.get(eventName) ?? []), listener]);
+      },
+      handle: (eventName: string, handler: (...args: any[]) => void) => {
+        // Electron throws on a second handler for one channel; the mock does the same.
+        if (handlers.has(eventName)) {
+          throw new Error(`Attempted to register a second handler for '${eventName}'`);
+        }
+        handlers.set(eventName, handler);
+      },
+      // The most recent registration, so a test reaches the listener it just added.
+      getHandler: (eventName: string) => {
+        const channelListeners = listeners.get(eventName) ?? [];
+        return handlers.get(eventName) ?? channelListeners[channelListeners.length - 1];
+      },
+      getListeners: (eventName: string) => listeners.get(eventName) ?? [],
+      removeListener: (channel: string, listener: (...args: any[]) => void) => {
+        const remaining = (listeners.get(channel) ?? []).filter((l) => l !== listener);
+        if (remaining.length > 0) {
+          listeners.set(channel, remaining);
+        } else {
+          listeners.delete(channel);
+        }
+      },
+      removeAllListeners: (channel: string) => listeners.delete(channel),
       removeHandler: (channel: string) => handlers.delete(channel),
     },
   };
@@ -64,10 +87,23 @@ const mockPort: MockPort = {
   close: jest.fn(),
 };
 
-const getEventName = (baseName: Parameters<typeof getIPCChannelName>[1]) =>
-  getIPCChannelName(deriveNamespace(clientSideId), baseName);
+const getEventName = (baseName: Parameters<typeof getIPCChannelName>[1], namespace?: string) =>
+  getIPCChannelName(deriveNamespace(clientSideId, namespace), baseName);
 
 const DEFAULT_INITIAL_CONTEXT = { kind: 'user' as const, key: 'test-user' };
+
+// A stream mock that delivers an empty put so a streaming identify completes.
+const createMockEventSourceThatDeliversPut = (streamUri: string = '', options: any = {}) => ({
+  streamUri,
+  options,
+  onclose: jest.fn(),
+  addEventListener: jest.fn((eventName: string, callback: (e: { data?: string }) => void) => {
+    if (eventName === 'put') {
+      Promise.resolve().then(() => callback({ data: '{}' }));
+    }
+  }),
+  close: jest.fn(),
+});
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -508,6 +544,97 @@ describe('given an initialized ElectronClient', () => {
     expect(livePort.postMessage).toHaveBeenNthCalledWith(2, ['arg3', 'arg4']);
     expect(logger.warn).toHaveBeenCalledTimes(2);
   });
+
+  it('keeps broadcasting to the remaining renderer after one renderer unsubscribes', () => {
+    const portA: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const portB: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const onSpy = jest.spyOn(client, 'on');
+    const offSpy = jest.spyOn(client, 'off');
+    const eventName = 'change-two-renderers';
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.({ ports: [portA] } as MockIpcEvent, {
+      callbackId: 'renderer-a',
+      eventName,
+    });
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.({ ports: [portB] } as MockIpcEvent, {
+      callbackId: 'renderer-b',
+      eventName,
+    });
+
+    const removeEvent: MockIpcEvent = {};
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.(removeEvent, 'renderer-a');
+
+    expect(removeEvent.returnValue).toEqual(true);
+    expect(portA.close).toHaveBeenCalledTimes(1);
+    expect(offSpy).not.toHaveBeenCalled();
+
+    const broadcastCallback = onSpy.mock.calls[0][1];
+    broadcastCallback('payload');
+
+    expect(portA.postMessage).not.toHaveBeenCalled();
+    expect(portB.postMessage).toHaveBeenCalledTimes(1);
+    expect(portB.postMessage).toHaveBeenNthCalledWith(1, ['payload']);
+  });
+
+  it('unsubscribes from the SDK event only after the last renderer leaves', () => {
+    const portA: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const portB: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const offSpy = jest.spyOn(client, 'off');
+    const eventName = 'change-last-renderer';
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.({ ports: [portA] } as MockIpcEvent, {
+      callbackId: 'last-a',
+      eventName,
+    });
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.({ ports: [portB] } as MockIpcEvent, {
+      callbackId: 'last-b',
+      eventName,
+    });
+
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.({}, 'last-a');
+    expect(offSpy).not.toHaveBeenCalled();
+
+    mockIpcMain.getHandler(getEventName('removeEventHandler'))?.({}, 'last-b');
+    expect(offSpy).toHaveBeenCalledTimes(1);
+    expect(offSpy).toHaveBeenNthCalledWith(1, eventName, expect.any(Function));
+    expect(portB.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('serves flag evaluations from the same client to every renderer window', () => {
+    const spy = jest.spyOn(client, 'boolVariation').mockReturnValue(true);
+    const eventFromWindowA: MockIpcEvent = {};
+    const eventFromWindowB: MockIpcEvent = {};
+
+    mockIpcMain.getHandler(getEventName('boolVariation'))?.(eventFromWindowA, 'flag1', false);
+    mockIpcMain.getHandler(getEventName('boolVariation'))?.(eventFromWindowB, 'flag1', false);
+
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(eventFromWindowA.returnValue).toEqual(true);
+    expect(eventFromWindowB.returnValue).toEqual(true);
+    spy.mockRestore();
+  });
+
+  it('keeps separate subscriptions for renderers listening to different events', () => {
+    const portChange: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const portError: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const onSpy = jest.spyOn(client, 'on');
+
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [portChange] } as MockIpcEvent,
+      { callbackId: 'diff-change', eventName: 'change-different-a' },
+    );
+    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(
+      { ports: [portError] } as MockIpcEvent,
+      { callbackId: 'diff-error', eventName: 'change-different-b' },
+    );
+
+    expect(onSpy).toHaveBeenCalledTimes(2);
+    const broadcastChange = onSpy.mock.calls[0][1];
+    broadcastChange('only-change');
+
+    expect(portChange.postMessage).toHaveBeenNthCalledWith(1, ['only-change']);
+    expect(portError.postMessage).not.toHaveBeenCalled();
+  });
 });
 
 describe('close()', () => {
@@ -515,6 +642,7 @@ describe('close()', () => {
 
   it('removes all ipcMain listeners and handlers for the client so channels are no longer registered', async () => {
     const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      namespace: 'close-remove',
       initialConnectionMode: 'offline',
       enableIPC: true,
       logger,
@@ -522,16 +650,17 @@ describe('close()', () => {
     });
     await client.start();
 
-    expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeDefined();
+    expect(mockIpcMain.getHandler(getEventName('allFlags', 'close-remove'))).toBeDefined();
 
     await client.close();
 
-    expect(mockIpcMain.getHandler(getEventName('allFlags'))).toBeUndefined();
-    expect(mockIpcMain.getHandler(getEventName('flush'))).toBeUndefined();
+    expect(mockIpcMain.getHandler(getEventName('allFlags', 'close-remove'))).toBeUndefined();
+    expect(mockIpcMain.getHandler(getEventName('flush', 'close-remove'))).toBeUndefined();
   });
 
   it('closes all event-handler MessagePorts when addEventHandler had been used', async () => {
     const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      namespace: 'close-ports',
       initialConnectionMode: 'offline',
       enableIPC: true,
       logger,
@@ -540,7 +669,7 @@ describe('close()', () => {
     await client.start();
 
     const event: MockIpcEvent = { ports: [mockPort] };
-    mockIpcMain.getHandler(getEventName('addEventHandler'))?.(event, {
+    mockIpcMain.getHandler(getEventName('addEventHandler', 'close-ports'))?.(event, {
       callbackId: 'callback1',
       eventName: 'change',
     });
@@ -552,6 +681,7 @@ describe('close()', () => {
 
   it('is idempotent so calling close() twice does not throw', async () => {
     const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      namespace: 'close-twice',
       initialConnectionMode: 'offline',
       enableIPC: true,
       logger,
@@ -561,5 +691,321 @@ describe('close()', () => {
 
     await client.close();
     await expect(client.close()).resolves.not.toThrow();
+  });
+
+  it('closes the ports of every renderer on close()', async () => {
+    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'offline',
+      enableIPC: true,
+      logger,
+      diagnosticOptOut: true,
+      namespace: 'close-multi',
+    });
+    await client.start();
+    const portA: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+    const portB: MockPort = { postMessage: jest.fn(), close: jest.fn() };
+
+    mockIpcMain.getHandler(getEventName('addEventHandler', 'close-multi'))?.(
+      { ports: [portA] } as MockIpcEvent,
+      { callbackId: 'close-a', eventName: 'change' },
+    );
+    mockIpcMain.getHandler(getEventName('addEventHandler', 'close-multi'))?.(
+      { ports: [portB] } as MockIpcEvent,
+      { callbackId: 'close-b', eventName: 'dataSourceStatus' },
+    );
+
+    await client.close();
+
+    expect(portA.close).toHaveBeenCalledTimes(1);
+    expect(portB.close).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('given a second client on an IPC namespace that is already in use', () => {
+  const logger = createMockLogger();
+  const options = {
+    initialConnectionMode: 'offline' as const,
+    enableIPC: true,
+    logger,
+    diagnosticOptOut: true,
+  };
+
+  it('mock ipcMain rejects a second handler for the same channel', () => {
+    mockIpcMain.handle('ld:mock-dup:flush', () => undefined);
+
+    expect(() => mockIpcMain.handle('ld:mock-dup:flush', () => undefined)).toThrow(
+      "Attempted to register a second handler for 'ld:mock-dup:flush'",
+    );
+    mockIpcMain.removeHandler('ld:mock-dup:flush');
+  });
+
+  it('throws a clear error before registering any IPC channel', async () => {
+    const owner = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      namespace: 'dup-owner',
+    });
+    const handleSpy = jest.spyOn(mockIpcMain, 'handle');
+    const onSpy = jest.spyOn(mockIpcMain, 'on');
+
+    expect(
+      () =>
+        new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+          ...options,
+          namespace: 'dup-owner',
+        }),
+    ).toThrow(
+      `IPC namespace "${deriveNamespace(clientSideId, 'dup-owner')}" is already in use by another LaunchDarkly client`,
+    );
+
+    expect(handleSpy).not.toHaveBeenCalled();
+    expect(onSpy).not.toHaveBeenCalled();
+    handleSpy.mockRestore();
+    onSpy.mockRestore();
+    await owner.close();
+  });
+
+  it('releases the namespace when channel registration throws', async () => {
+    const foreignChannel = getEventName('flush', 'failed-open');
+    mockIpcMain.handle(foreignChannel, () => undefined);
+
+    expect(
+      () =>
+        new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+          ...options,
+          namespace: 'failed-open',
+        }),
+    ).toThrow('Attempted to register a second handler');
+    expect(mockIpcMain.getHandler(foreignChannel)).toBeDefined();
+    mockIpcMain.removeHandler(foreignChannel);
+
+    const retry = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      namespace: 'failed-open',
+    });
+
+    expect(mockIpcMain.getHandler(getEventName('allFlags', 'failed-open'))).toBeDefined();
+    await retry.close();
+  });
+
+  it('keeps a foreign listener on a shared channel when a later registration fails', async () => {
+    const foreignListener = jest.fn();
+    const channel = getEventName('allFlags', 'failed-on');
+    mockIpcMain.on(channel, foreignListener);
+    const realOn = mockIpcMain.on.bind(mockIpcMain);
+    const onSpy = jest.spyOn(mockIpcMain, 'on').mockImplementation(((
+      eventName: string,
+      listener: (...args: any[]) => void,
+    ) => {
+      if (eventName === getEventName('isOffline', 'failed-on')) {
+        throw new Error('on failed');
+      }
+      return realOn(eventName, listener);
+    }) as any);
+
+    try {
+      expect(
+        () =>
+          new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+            ...options,
+            namespace: 'failed-on',
+          }),
+      ).toThrow('on failed');
+
+      expect(mockIpcMain.getListeners(channel)).toEqual([foreignListener]);
+      expect(mockIpcMain.getHandler(getEventName('flush', 'failed-on'))).toBeUndefined();
+    } finally {
+      onSpy.mockRestore();
+      mockIpcMain.removeAllListeners(channel);
+    }
+  });
+
+  it('registers every handle channel before any on channel', async () => {
+    const order: string[] = [];
+    const handleSpy = jest.spyOn(mockIpcMain, 'handle').mockImplementation((() => {
+      order.push('handle');
+    }) as any);
+    const onSpy = jest.spyOn(mockIpcMain, 'on').mockImplementation((() => {
+      order.push('on');
+    }) as any);
+
+    try {
+      const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        ...options,
+        namespace: 'ordered',
+      });
+      handleSpy.mockRestore();
+      onSpy.mockRestore();
+
+      expect(order.lastIndexOf('handle')).toBeLessThan(order.indexOf('on'));
+      await client.close();
+    } finally {
+      handleSpy.mockRestore();
+      onSpy.mockRestore();
+    }
+  });
+
+  it('keeps a foreign listener on a shared channel when the client closes', async () => {
+    const foreignListener = jest.fn();
+    const channel = getEventName('allFlags', 'close-foreign');
+    mockIpcMain.on(channel, foreignListener);
+    try {
+      const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        ...options,
+        namespace: 'close-foreign',
+      });
+
+      await client.close();
+
+      expect(mockIpcMain.getListeners(channel)).toEqual([foreignListener]);
+    } finally {
+      mockIpcMain.removeAllListeners(channel);
+    }
+  });
+
+  it('stops the base client when the IPC channels fail to open', async () => {
+    const foreignChannel = getEventName('flush', 'failed-stop');
+    mockIpcMain.handle(foreignChannel, () => undefined);
+    const baseCloseSpy = jest.spyOn(LDClientImpl.prototype, 'close');
+
+    try {
+      expect(
+        () =>
+          new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+            ...options,
+            namespace: 'failed-stop',
+          }),
+      ).toThrow('Attempted to register a second handler');
+
+      expect(baseCloseSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      baseCloseSpy.mockRestore();
+      mockIpcMain.removeHandler(foreignChannel);
+    }
+  });
+
+  it('does not throw when the second client sets a different namespace option', async () => {
+    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      namespace: 'second-window',
+    });
+
+    expect(mockIpcMain.getHandler(getEventName('allFlags', 'second-window'))).toBeDefined();
+    await client.close();
+  });
+
+  it('frees the namespace when the owning client closes', async () => {
+    const first = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      namespace: 'reusable',
+    });
+    await first.close();
+
+    const second = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      namespace: 'reusable',
+    });
+
+    expect(mockIpcMain.getHandler(getEventName('allFlags', 'reusable'))).toBeDefined();
+    await second.close();
+  });
+
+  it('does not reserve a namespace when enableIPC is false', async () => {
+    const first = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      ...options,
+      enableIPC: false,
+      namespace: 'no-ipc',
+    });
+    let second: ElectronClient | undefined;
+
+    expect(() => {
+      second = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        ...options,
+        enableIPC: false,
+        namespace: 'no-ipc',
+      });
+    }).not.toThrow();
+    await first.close();
+    await second?.close();
+  });
+});
+
+describe('given two renderers subscribed to dataSourceStatus before start()', () => {
+  const logger = createMockLogger();
+  // Plain arrays record the broadcasts because the file-level beforeEach clears every jest mock.
+  const receivedByA: unknown[][] = [];
+  const receivedByB: unknown[][] = [];
+  const rendererPortA: MockPort = {
+    postMessage: (message: unknown[]) => {
+      receivedByA.push(message);
+    },
+    close: jest.fn(),
+  };
+  const rendererPortB: MockPort = {
+    postMessage: (message: unknown[]) => {
+      receivedByB.push(message);
+    },
+    close: jest.fn(),
+  };
+  let client: ElectronClient;
+
+  beforeAll(async () => {
+    (ElectronPlatform as jest.Mock).mockReturnValueOnce({
+      crypto: new ElectronCrypto(),
+      info: new ElectronInfo(),
+      requests: {
+        createEventSource: jest.fn((streamUri: string = '', options: any = {}) =>
+          createMockEventSourceThatDeliversPut(streamUri, options),
+        ),
+        fetch: jest.fn(),
+        getEventSourceCapabilities: jest.fn(),
+      },
+      encoding: new ElectronEncoding(),
+      storage: {
+        clear: jest.fn(),
+        get: jest.fn(),
+        set: jest.fn(),
+      },
+    });
+    client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+      initialConnectionMode: 'streaming',
+      enableIPC: true,
+      logger,
+      diagnosticOptOut: true,
+      sendEvents: false,
+      namespace: 'status-window',
+    });
+
+    mockIpcMain.getHandler(getEventName('addEventHandler', 'status-window'))?.(
+      { ports: [rendererPortA] } as MockIpcEvent,
+      { callbackId: 'status-a', eventName: 'dataSourceStatus' },
+    );
+    mockIpcMain.getHandler(getEventName('addEventHandler', 'status-window'))?.(
+      { ports: [rendererPortB] } as MockIpcEvent,
+      { callbackId: 'status-b', eventName: 'dataSourceStatus' },
+    );
+
+    await client.start();
+  });
+
+  afterAll(async () => {
+    await client.close();
+  });
+
+  const statesOf = (received: unknown[][]) =>
+    received.map((message) => (message[0] as { state: string }).state);
+
+  it('delivers the INITIALIZING and VALID statuses to the first renderer in order', () => {
+    expect(statesOf(receivedByA)).toEqual(['INITIALIZING', 'VALID']);
+  });
+
+  it('delivers the same statuses to the second renderer', () => {
+    expect(statesOf(receivedByB)).toEqual(['INITIALIZING', 'VALID']);
+  });
+
+  it('sends the full status object with stateSince to renderers', () => {
+    const [lastMessage] = receivedByA.slice(-1);
+    expect(lastMessage[0]).toEqual(
+      expect.objectContaining({ state: 'VALID', stateSince: expect.any(Number) }),
+    );
   });
 });
