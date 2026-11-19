@@ -16,6 +16,7 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from '../src/ElectronDataManager';
+import type { ElectronIdentifyOptions } from '../src/ElectronIdentifyOptions';
 import { ValidatedOptions } from '../src/options';
 import ElectronCrypto from '../src/platform/ElectronCrypto';
 import ElectronEncoding from '../src/platform/ElectronEncoding';
@@ -182,6 +183,184 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
 
   afterEach(() => {
     jest.resetAllMocks();
+  });
+
+  function makeDataManagerWith(options: ValidatedOptions): ElectronDataManager {
+    return new ElectronDataManager(
+      platform,
+      flagManager,
+      'test-credential',
+      config,
+      options,
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/sdk/evalx/test-credential/contexts/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return '/sdk/evalx/test-credential/context';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Ping for polling unsupported.');
+        },
+      }),
+      () => ({
+        pathGet(encoding: Encoding, _plainContextString: string): string {
+          return `/eval/test-credential/${base64UrlEncode(_plainContextString, encoding)}`;
+        },
+        pathReport(_encoding: Encoding, _plainContextString: string): string {
+          return '/eval/test-credential';
+        },
+        pathPost(_encoding: Encoding, _plainContextString: string): string {
+          throw new Error('Post unsupported.');
+        },
+        pathPing(_encoding: Encoding, _plainContextString: string): string {
+          return '/ping/test-credential';
+        },
+      }),
+      baseHeaders,
+      emitter,
+      diagnosticsManager,
+    );
+  }
+
+  const clientSideOptions = (overrides: Partial<ValidatedOptions> = {}): ValidatedOptions => ({
+    initialConnectionMode: 'streaming',
+    plugins: [],
+    enableIPC: false,
+    useClientSideId: true,
+    ...overrides,
+  });
+
+  it('includes the config hash in streaming requests', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await manager.identify(jest.fn(), jest.fn(), context, {});
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('h=config-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('includes the config hash in polling requests', async () => {
+    const manager = makeDataManagerWith(
+      clientSideOptions({ initialConnectionMode: 'polling', hash: 'config-hash' }),
+    );
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      manager.identify(jest.fn().mockImplementation(resolve), jest.fn(), context, {});
+    });
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=config-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('uses the per-identify hash instead of the config hash in streaming requests', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await manager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as ElectronIdentifyOptions);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledWith(
+      expect.stringContaining('h=per-identify-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('uses the per-identify hash instead of the config hash in polling requests', async () => {
+    const manager = makeDataManagerWith(
+      clientSideOptions({ initialConnectionMode: 'polling', hash: 'config-hash' }),
+    );
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      manager.identify(jest.fn().mockImplementation(resolve), jest.fn(), context, {
+        hash: 'per-identify-hash',
+      } as ElectronIdentifyOptions);
+    });
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=per-identify-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('omits the h parameter from streaming requests when no hash is configured', async () => {
+    const manager = makeDataManagerWith(clientSideOptions());
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await manager.identify(jest.fn(), jest.fn(), context, {});
+
+    const [streamUri] = (platform.requests.createEventSource as jest.Mock).mock.calls[0];
+    expect(streamUri).not.toContain('h=');
+  });
+
+  it('omits the h parameter from polling requests when no hash is configured', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ initialConnectionMode: 'polling' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      manager.identify(jest.fn().mockImplementation(resolve), jest.fn(), context, {});
+    });
+
+    const [pollUri] = (platform.requests.fetch as jest.Mock).mock.calls[0];
+    expect(pollUri).not.toContain('h=');
+  });
+
+  it('falls back to the config hash on a later identify without a per-identify hash', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await manager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as ElectronIdentifyOptions);
+    await manager.identify(jest.fn(), jest.fn(), context, {});
+
+    expect(platform.requests.createEventSource).toHaveBeenLastCalledWith(
+      expect.stringContaining('h=config-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('keeps the per-identify hash when the connection mode switches to polling', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await manager.identify(jest.fn(), jest.fn(), context, {
+      hash: 'per-identify-hash',
+    } as ElectronIdentifyOptions);
+    await manager.setConnectionMode('polling');
+
+    expect(platform.requests.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('h=per-identify-hash'),
+      expect.anything(),
+    );
+  });
+
+  it('warns and ignores the per-identify hash when the client uses a mobile key', async () => {
+    const manager = makeDataManagerWith(
+      clientSideOptions({ initialConnectionMode: 'polling', useClientSideId: false }),
+    );
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+
+    await new Promise<void>((resolve) => {
+      manager.identify(jest.fn().mockImplementation(resolve), jest.fn(), context, {
+        hash: 'some-hash',
+      } as ElectronIdentifyOptions);
+    });
+
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('hash'));
+    const [pollUri] = (platform.requests.fetch as jest.Mock).mock.calls[0];
+    expect(pollUri).not.toContain('h=some-hash');
   });
 
   it('should initialize with the correct initial connection mode', () => {
@@ -695,6 +874,21 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
 
     expect(eventSourceCloseMethod).not.toHaveBeenCalled();
     expect(platform.requests.createEventSource).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the hash on the connection that resumes after a network pause', async () => {
+    const manager = makeDataManagerWith(clientSideOptions({ hash: 'config-hash' }));
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    await manager.identify(jest.fn(), jest.fn(), context, {});
+
+    manager.setNetworkAvailability(false);
+    manager.setNetworkAvailability(true);
+
+    expect(platform.requests.createEventSource).toHaveBeenCalledTimes(2);
+    expect(platform.requests.createEventSource).toHaveBeenLastCalledWith(
+      expect.stringContaining('h=config-hash'),
+      expect.anything(),
+    );
   });
 
   it('does not resume the connection when the network returns after the data manager closed', async () => {

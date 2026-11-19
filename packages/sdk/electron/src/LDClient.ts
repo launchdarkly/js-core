@@ -2,11 +2,12 @@ import type {
   ConnectionMode,
   LDClient as LDClientBase,
   LDContext,
-  LDIdentifyOptions,
   LDIdentifyResult,
   LDStartOptions,
   LDWaitForInitializationResult,
 } from '@launchdarkly/js-client-sdk-common';
+
+import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 
 export type { LDStartOptions };
 
@@ -14,14 +15,17 @@ export interface LDClient extends Omit<LDClientBase, 'identify'> {
   /**
    * Identifies a context to LaunchDarkly and returns a promise which resolves to an object
    * containing the result of the identify operation. Optionally accepts bootstrap data so that
-   * the identify operation completes without waiting for the network.
+   * the identify operation completes without waiting for the network, and a secure mode `hash`.
    * Must not be called before {@link LDClient.start} has been called.
    *
    * @param context The context to identify.
-   * @param identifyOptions Optional configuration including {@link LDIdentifyOptions.bootstrap}.
+   * @param identifyOptions Optional configuration. See {@link ElectronIdentifyOptions}.
    * @returns A promise which resolves to an object containing the result of the identify operation.
    */
-  identify(context: LDContext, identifyOptions?: LDIdentifyOptions): Promise<LDIdentifyResult>;
+  identify(
+    context: LDContext,
+    identifyOptions?: ElectronIdentifyOptions,
+  ): Promise<LDIdentifyResult>;
 
   /**
    * Starts the client by performing the first identify with the initial context passed to

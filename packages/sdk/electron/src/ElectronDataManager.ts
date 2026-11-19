@@ -14,6 +14,7 @@ import {
   readFlagsFromBootstrap,
 } from '@launchdarkly/js-client-sdk-common';
 
+import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import type { ValidatedOptions } from './options';
 
 const logTag = '[ElectronDataManager]';
@@ -22,6 +23,7 @@ export default class ElectronDataManager extends BaseDataManager {
   // The network counts as available until the application reports otherwise.
   protected networkAvailable: boolean = true;
   protected connectionMode: ConnectionMode = 'streaming';
+  private _currentHash?: string;
 
   // The callbacks of an identify that has not yet completed. They survive a pause or a mode
   // switch so the connection that replaces the closed one can still complete the identify.
@@ -51,6 +53,7 @@ export default class ElectronDataManager extends BaseDataManager {
       diagnosticsManager,
     );
     this.connectionMode = _electronConfig.initialConnectionMode;
+    this._currentHash = _electronConfig.hash;
   }
 
   private _debugLog(message: any, ...args: any[]) {
@@ -71,6 +74,18 @@ export default class ElectronDataManager extends BaseDataManager {
     this.context = context;
     // The identify queue runs one identify at a time, so the previous identify has already settled.
     this._pendingIdentify = undefined;
+    const electronIdentifyOptions = identifyOptions as ElectronIdentifyOptions | undefined;
+    // An empty string counts as no hash, so callers can pass one variable in every mode.
+    this._currentHash = electronIdentifyOptions?.hash || this._electronConfig.hash;
+    if (this._currentHash && !this._electronConfig.useClientSideId) {
+      this.logger.warn(`${logTag} 'hash' is ignored in mobile key mode.`);
+      this._currentHash = undefined;
+    }
+    if (this._currentHash) {
+      this.setConnectionParams({ queryParameters: [{ key: 'h', value: this._currentHash }] });
+    } else {
+      this.setConnectionParams();
+    }
 
     // When bootstrap is provided, we will resolve the identify immediately. Then we will fallthrough to connect
     // to the configured connection mode.
@@ -190,6 +205,7 @@ export default class ElectronDataManager extends BaseDataManager {
       [],
       this.config.withReasons,
       this.config.useReport,
+      this._currentHash,
     );
 
     this.updateProcessor?.close();
