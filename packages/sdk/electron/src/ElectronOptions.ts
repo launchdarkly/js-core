@@ -25,6 +25,9 @@ export interface ElectronOptions extends LDOptionsBase {
    * @remarks
    * Possible values are offline, streaming, or polling. See {@link ConnectionMode} for more information.
    *
+   * This option applies only to the default data source. When the `dataSystem` option is set, the
+   * SDK ignores it and logs a warning. Use `dataSystem.automaticModeSwitching` instead.
+   *
    * Defaults to streaming.
    */
   initialConnectionMode?: ConnectionMode;

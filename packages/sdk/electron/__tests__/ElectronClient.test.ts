@@ -731,6 +731,30 @@ it('can set connection mode to not offline', async () => {
   expect(setEventSendingEnabled).toHaveBeenNthCalledWith(1, true, false);
 });
 
+it('ignores setConnectionMode without a mode on the default data source', async () => {
+  const logger: LDLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'polling',
+    logger,
+  });
+  const setConnectionMode = jest.spyOn((client as any).dataManager, 'setConnectionMode');
+
+  await client.setConnectionMode();
+
+  expect(setConnectionMode).not.toHaveBeenCalled();
+  expect(client.getConnectionMode()).toBe('polling');
+  expect(logger.warn).toHaveBeenCalledWith(
+    '[ElectronClient] setConnectionMode without a mode is supported only with the dataSystem option, ignoring.',
+  );
+});
+
 it('does not re-enable event sending when the connection mode is set after close', async () => {
   const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
     enableIPC: false,

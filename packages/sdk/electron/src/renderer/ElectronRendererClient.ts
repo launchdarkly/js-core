@@ -124,7 +124,7 @@ export class ElectronRendererClient implements LDRendererClient {
     return this._ldClientBridge.variationDetail(key, defaultValue);
   }
 
-  setConnectionMode(mode: ConnectionMode): Promise<void> {
+  setConnectionMode(mode?: ConnectionMode): Promise<void> {
     return this._ldClientBridge.setConnectionMode(mode);
   }
 

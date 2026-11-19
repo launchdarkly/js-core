@@ -157,6 +157,17 @@ describe('given a registered LDClientBridge', () => {
     );
   });
 
+  it('passes setConnectionMode() without a mode through to ipcRenderer', async () => {
+    await bridge.setConnectionMode();
+
+    expect(ipcRenderer.invoke).toHaveBeenCalledTimes(1);
+    expect(ipcRenderer.invoke).toHaveBeenNthCalledWith(
+      1,
+      getEventName('setConnectionMode'),
+      undefined,
+    );
+  });
+
   it('passes getConnectionMode() call through to ipcRenderer', () => {
     (ipcRenderer.sendSync as jest.Mock).mockReturnValueOnce('streaming');
 
