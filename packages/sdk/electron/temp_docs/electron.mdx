@@ -1,0 +1,479 @@
+---
+slug: /sdk/client-side/electron
+title: Electron SDK reference
+description: This topic documents how to get started with the LaunchDarkly SDK for the Electron desktop application framework, and links to reference information on all of the supported features.
+keywords: electron, electron sdk, sdk, client-side, desktop, electron-client-sdk
+---
+
+This topic documents how to get started with the LaunchDarkly SDK for the [Electron](https://electronjs.org/) desktop application framework, and links to reference information on all of the supported features. The Electron SDK shares its core with the other LaunchDarkly JavaScript-based client-side SDKs and adds functionality for Electron.
+
+<Callout intent="note" title='SDK quick links'>
+
+LaunchDarkly's SDKs are open source. In addition to this reference guide, we provide source and a sample application:
+
+<table class="fern-table">
+  <tr>
+    <th>Resource</th>
+    <th>Location</th>
+  </tr>
+  <tr>
+    <td>GitHub repository</td>
+    <td>[electron](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/electron)</td>
+  </tr>
+  <tr>
+    <td>Sample application</td>
+    <td>
+      [Electron](https://github.com/launchdarkly/js-core/tree/main/packages/sdk/electron/examples/getting-started)
+    </td>
+  </tr>
+  <tr>
+    <td>Published module</td>
+    <td>[npm](https://www.npmjs.com/package/@launchdarkly/electron-client-sdk)</td>
+  </tr>
+</table>
+
+</Callout>
+
+<Callout intent="note" title='For use in Electron desktop applications only'>
+
+This SDK is intended for use in Electron desktop applications. Every Electron application has one _main process_ and any number of _renderer processes_. Each renderer process runs a Chromium web page in its own window.
+
+The LaunchDarkly client runs in the main process. Renderer windows do not connect to LaunchDarkly directly. They use the main-process client over inter-process communication (IPC) through a preload bridge.
+
+The SDK uses a mobile key by default. To use secure mode, you can use a client-side ID instead. To learn how, read [Initialize the client](#initialize-the-client).
+
+To learn more about LaunchDarkly's different SDK types, read [Choosing an SDK type](/sdk/concepts/client-side-server-side).
+
+</Callout>
+
+<Callout intent="tip" title='Why use this SDK instead of a Node.js SDK?'>
+
+Electron is based on Node.js, so the [server-side Node.js SDK](/sdk/server-side/node-js) can run in it. We strongly discourage this, because the server-side Node.js SDK is not meant for applications that you distribute to end users:
+
+- Server-side SDKs use an SDK key. The SDK key can download the full definition of every feature flag, including rollout rules and individual targets. If you embed an SDK key in an application, anyone who inspects the application can read all of your flag definitions. These may include sensitive data such as the email addresses of other end users. Client-side and mobile SDKs use credentials that do not allow this.
+- Server-side SDKs download the full flag data so they can evaluate flags for any context. This can be a large amount of data. Client-side and mobile SDKs evaluate flags for one context at a time. They request only the flag values for that context.
+
+LaunchDarkly also provides a [client-side Node.js SDK](/sdk/client-side/node-js). However, we recommend the Electron SDK for Electron applications. The Electron SDK includes features that are specific to Electron, such as access to the main-process client from renderer windows.
+
+</Callout>
+
+This SDK does two things:
+
+- Makes feature flags available to the main process and the renderer windows of your Electron application.
+- Sends analytics events, including custom events, from your application to LaunchDarkly.
+
+## Runtime requirements
+
+The Electron SDK requires Electron 34.5.6 or later. Electron is a peer dependency of the SDK, so your application provides its own copy of Electron.
+
+The SDK package provides both ES module and CommonJS builds. It has three entry points:
+
+- `@launchdarkly/electron-client-sdk` for the main process.
+- `@launchdarkly/electron-client-sdk/bridge` for the preload script.
+- `@launchdarkly/electron-client-sdk/renderer` for renderer windows.
+
+## Get started
+
+After you complete the [Get started](/home/getting-started) process, follow these instructions to start using the LaunchDarkly SDK in your Electron application:
+
+- [Install the SDK](#install-the-sdk)
+- [Initialize the client](#initialize-the-client) in the main process
+- [Use the client from renderer windows](#use-the-client-from-renderer-windows)
+- [Determine when the client is ready](#determine-when-the-client-is-ready), using a promise or an event
+- [Evaluate a flag](#evaluate-a-flag)
+- [Subscribe to flag changes](#subscribe-to-flag-changes)
+- [Shut down the client](#shut-down-the-client) when your application terminates
+
+### Install the SDK
+
+The first step is to make the Electron SDK available as a dependency of your application.
+
+Here's how to install the SDK:
+
+<CodeBlocks>
+<CodeBlock title='npm'>
+
+```bash
+npm install @launchdarkly/electron-client-sdk
+```
+
+</CodeBlock>
+<CodeBlock title='yarn'>
+
+```bash
+yarn add @launchdarkly/electron-client-sdk
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+The package name is `@launchdarkly/electron-client-sdk`. The previous Electron SDK used the package name `launchdarkly-electron-client-sdk`. Before that, its package name was `ldclient-electron`.
+
+### Initialize the client
+
+To create a client instance, you need your LaunchDarkly environment's mobile key and the context for which you want to evaluate flags. The mobile key authorizes your application to connect to a particular environment within LaunchDarkly.
+
+<Callout intent="warning" title='Electron SDK credentials'>
+
+The Electron SDK uses a mobile key by default. Keys are specific to each project and environment. They are available on the **SDK keys** page under **Settings**. To learn more about key types, read [Keys](/sdk/concepts/client-side-server-side#keys-and-credentials).
+
+Mobile keys are not secret and you can expose them in your client-side code. However, never embed a server-side SDK key into a client-side application.
+
+</Callout>
+
+Create the client in the main process with `createClient(credential, context, options)`. The client does not connect to LaunchDarkly when you create it. Call `start()` to identify the initial context and connect. The client is not ready until the promise that `start()` returns resolves.
+
+Here's how to create and start the client:
+
+<CodeBlocks>
+<CodeBlock title='TypeScript'>
+
+```ts
+import { createClient } from '@launchdarkly/electron-client-sdk';
+import type { LDContext, LDOptions } from '@launchdarkly/electron-client-sdk';
+
+const context: LDContext = {
+  kind: 'user',
+  key: 'example-context-key',
+};
+const options: LDOptions = {};
+
+const client = createClient('example-mobile-key', context, options);
+const result = await client.start();
+```
+
+</CodeBlock>
+<CodeBlock title='JavaScript'>
+
+```js
+const { createClient } = require('@launchdarkly/electron-client-sdk');
+
+const context = {
+  kind: 'user',
+  key: 'example-context-key',
+};
+
+const client = createClient('example-mobile-key', context, {});
+client.start().then((result) => {
+  // result.status is 'complete', 'failed', or 'timeout'
+});
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+To change the context later, call `identify()`. The `identify()` method returns a promise that resolves to a result object. It does not throw. To learn more, read [Identifying and changing contexts](/sdk/features/identify#electron).
+
+When you create the client, you can optionally provide configuration options. To learn how, read [SDK configuration](/sdk/features/config#electron).
+
+<Callout intent="warning" title='Create one client for each credential'>
+
+Create one client for each credential in the main process, and keep it for the life of the application. The client instance maintains internal state that allows LaunchDarkly to serve feature flags without making any remote requests. Do not create a new client each time you evaluate a flag.
+
+By default, `createClient` throws if another open client already uses the same credential. To run two clients that share a credential, give each client a unique `namespace` option.
+
+</Callout>
+
+The mobile key endpoints do not support secure mode. To use secure mode, use a client-side ID instead of a mobile key.
+
+<Accordion title="Expand Use a client-side ID for secure mode">
+
+#### Use a client-side ID for secure mode
+
+To use a client-side ID, pass it as the credential and set the `useClientSideId` option to `true`. Then set the `hash` option to the secure mode hash that your server computes for the context. A later call to `identify()` can pass its own hash.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='TypeScript'>
+
+```ts
+import { createClient } from '@launchdarkly/electron-client-sdk';
+
+const client = createClient(
+  'example-client-side-id',
+  { kind: 'user', key: 'example-context-key' },
+  {
+    useClientSideId: true,
+    hash: 'example-server-generated-hash',
+  },
+);
+await client.start();
+
+// A later identify can pass its own hash.
+await client.identify(
+  { kind: 'user', key: 'example-other-context-key' },
+  { hash: 'example-other-server-generated-hash' },
+);
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+If you set the `hash` option without `useClientSideId: true`, `createClient` throws. To learn more, read [Secure mode](/sdk/features/secure-mode#electron).
+
+</Accordion>
+
+### Use the client from renderer windows
+
+Renderer windows use the main-process client through a preload bridge. The bridge exposes only the LaunchDarkly client API to the renderer. The renderer does not receive `ipcRenderer` or other Electron APIs.
+
+To set up the bridge, import `@launchdarkly/electron-client-sdk/bridge` in the preload script of each window that uses LaunchDarkly.
+
+Here's the preload script:
+
+<CodeBlocks>
+<CodeBlock title='preload.ts'>
+
+```ts
+import '@launchdarkly/electron-client-sdk/bridge';
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+Then set the preload script on the window.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='main.ts'>
+
+```ts
+import { BrowserWindow } from 'electron';
+import path from 'node:path';
+
+const mainWindow = new BrowserWindow({
+  webPreferences: {
+    preload: path.join(__dirname, 'preload.js'),
+  },
+});
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+In the renderer, create a renderer client with `createRendererClient(credential, namespace?)`. Pass the same credential that the main-process client uses. If the main-process client sets the `namespace` option, pass the same namespace as the second argument.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='renderer.ts'>
+
+```ts
+import { createRendererClient } from '@launchdarkly/electron-client-sdk/renderer';
+
+const client = createRendererClient('example-mobile-key');
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+The renderer client has the same flag evaluation, `identify()`, and event tracking methods as the main-process client. It delegates every call to the main-process client, so all windows get the same flag values. Only the main-process client communicates with LaunchDarkly. We recommend that you create one renderer client for each window and keep it, rather than creating one each time you evaluate a flag.
+
+The renderer client does not have `start()`. Start the client in the main process.
+
+### Determine when the client is ready
+
+The client starts to connect to LaunchDarkly when you call `start()`. Then, you must check that it is ready to use. Until the client is ready, flag evaluations can return fallback values.
+
+To find out when the client is ready, you can use one of two mechanisms:
+
+- promises
+- events
+
+<Accordion title="Expand Use promises to determine when the client is ready">
+
+#### Use promises to determine when the client is ready
+
+In the main process, the promise that `start()` returns resolves to a result object. The `status` of the result is `complete`, `failed`, or `timeout`. The `start()` method takes an optional timeout in seconds. The default timeout is five seconds.
+
+In the main process and in renderer windows, you can also use `waitForInitialization()`. It resolves to the same kind of result object.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='Main process'>
+
+```ts
+const result = await client.start({ timeout: 5 });
+
+if (result.status === 'complete') {
+  // The client is ready
+} else if (result.status === 'failed') {
+  console.error('Initialization failed:', result.error);
+} else if (result.status === 'timeout') {
+  console.error('Initialization timed out');
+}
+```
+
+</CodeBlock>
+<CodeBlock title='Renderer'>
+
+```ts
+const result = await client.waitForInitialization({ timeout: 5 });
+
+if (result.status === 'complete') {
+  // The client is ready
+}
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+</Accordion>
+
+<Accordion title="Expand Use events to determine when the client is ready">
+
+#### Use events to determine when the client is ready
+
+The main-process client emits a `ready` event when initialization finishes, whether it succeeds or fails. It also emits an `initialized` event when initialization succeeds.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='Main process'>
+
+```ts
+client.on('ready', () => {
+  // Initialization finished
+});
+
+client.on('initialized', () => {
+  // Initialization succeeded
+});
+
+await client.start();
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+The client emits each event only once. Register the listeners before you call `start()`.
+
+</Accordion>
+
+## Evaluate a flag
+
+After the client is ready, you can use it to check which variation a context receives for a feature flag. The SDK has a typed method for each flag type, and a general `variation()` method.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='TypeScript'>
+
+```ts
+const boolFlagValue = client.boolVariation('bool-example-flag-key', false);
+const numberFlagValue = client.numberVariation('number-example-flag-key', 2);
+const stringFlagValue = client.stringVariation('string-example-flag-key', 'default');
+
+if (boolFlagValue) {
+  // feature flag targeting is on
+} else {
+  // feature flag targeting is off
+}
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+The same methods work in the main-process client and in renderer clients. To learn more, read [Flag variation evaluation](/sdk/features/evaluating#electron).
+
+<Callout intent="warning" title='Making feature flags available to this SDK'>
+
+You must make feature flags available to mobile SDKs before the SDK can evaluate those flags. If an SDK tries to evaluate a feature flag that is not available, LaunchDarkly serves the fallback value for that flag.
+
+To make a flag available to this SDK, check the **SDKs using Mobile key** checkbox during flag creation, or toggle on the option in the flag's right sidebar. To make all of a project's flags available to this SDK by default, check the **SDKs using Mobile key** checkbox on your project's [Flag settings page](/home/account/edit-project).
+
+If you use a client-side ID, make the flags available to **SDKs using Client-side ID** instead.
+
+</Callout>
+
+## Subscribe to flag changes
+
+The client connects in streaming mode by default, so it receives flag changes in real time. The client emits a `change` event when flag values change. It also emits a `change:flag-key` event for each flag that changes.
+
+In the main process, `on()` registers a listener and `off()` removes it.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='Main process'>
+
+```ts
+import type { LDContext } from '@launchdarkly/electron-client-sdk';
+
+const listener = (context: LDContext, changedFlagKeys: string[]) => {
+  console.log('Flags changed:', changedFlagKeys);
+};
+
+client.on('change', listener);
+
+// later
+client.off('change', listener);
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+In a renderer window, `on()` returns a handle. Pass the handle to `off()` to remove the listener.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='Renderer'>
+
+```ts
+const handle = client.on('change', () => {
+  // Evaluate the flags again
+});
+
+// later
+client.off(handle);
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+To learn more, read [Subscribing to flag changes](/sdk/features/flag-changes#electron).
+
+## Shut down the client
+
+Shut down the main-process client when your application terminates. The `close()` method flushes pending analytics events and closes the connection to LaunchDarkly.
+
+Here's how:
+
+<CodeBlocks>
+<CodeBlock title='Main process'>
+
+```ts
+await client.close();
+```
+
+</CodeBlock>
+</CodeBlocks>
+
+In a renderer window, `close()` removes the event listeners of that renderer client. It does not shut down the main-process client. To learn more, read [Shutting down](/sdk/features/shutdown#electron).
+
+## Supported features
+
+This SDK supports the following features:
+
+- [Anonymous contexts and users](/sdk/features/anonymous#electron)
+- [Bootstrapping](/sdk/features/bootstrapping#electron)
+- [Caching contexts to local storage](/sdk/features/local-storage#electron)
+- [Context configuration](/sdk/features/context-config#electron)
+- [Flag variation evaluation](/sdk/features/evaluating#electron)
+- [Flag variation evaluation details](/sdk/features/evaluation-reasons#electron)
+- [Getting all flags](/sdk/features/all-flags#electron)
+- [Identifying and changing contexts](/sdk/features/identify#electron)
+- [Logging configuration](/sdk/features/logging#electron)
+- [Monitoring SDK status](/sdk/features/monitoring#electron)
+- [Private attributes](/sdk/features/private-attributes#electron)
+- [Relay Proxy configuration, using proxy mode](/sdk/features/relay-proxy-configuration/proxy-mode#electron)
+- [SDK configuration](/sdk/features/config#electron)
+- [Secure mode](/sdk/features/secure-mode#electron)
+- [Service endpoint configuration](/sdk/features/service-endpoint-configuration#electron)
+- [Shutting down](/sdk/features/shutdown#electron)
+- [Subscribing to flag changes](/sdk/features/flag-changes#electron)
+- [Tracking custom events](/sdk/features/events#electron)
