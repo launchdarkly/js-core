@@ -18,6 +18,23 @@ jest.mock('@launchdarkly/js-sdk-common', () => {
 });
 
 const mockEventProcessor = internal.EventProcessor as jest.Mock;
+
+it.each([
+  [{ wrapperName: 'test-wrapper', wrapperVersion: '1.0.0' }, 'test-wrapper/1.0.0'],
+  [{ wrapperName: 'test-wrapper' }, 'test-wrapper'],
+  [{ wrapperVersion: '1.0.0' }, undefined],
+  [{}, undefined],
+] as const)('sets the wrapper header for options %p', async (options, expectedHeader) => {
+  mockEventProcessor.mockClear();
+  const client = new LDClient('client-side-id', createBasicPlatform().info, {
+    sendEvents: true,
+    ...options,
+  });
+  await client.waitForInitialization({ timeout: 10 });
+
+  expect(mockEventProcessor.mock.calls[0][2]['x-launchdarkly-wrapper']).toBe(expectedHeader);
+});
+
 describe('Edge LDClient', () => {
   it('uses clientSideID endpoints', async () => {
     const client = new LDClient('client-side-id', createBasicPlatform().info, {

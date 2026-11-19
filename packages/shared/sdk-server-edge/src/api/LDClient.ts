@@ -16,7 +16,14 @@ export default class LDClient extends LDClientImpl {
   // clientSideID is only used to query the edge key-value store and send analytics, not to initialize with LD servers
   constructor(clientSideID: string, platformInfo: Info, options: LDOptions) {
     const em = new EventEmitter();
-    const platform = new EdgePlatform(platformInfo);
+    const platform = new EdgePlatform({
+      platformData: () => platformInfo.platformData(),
+      sdkData: () => ({
+        ...platformInfo.sdkData(),
+        wrapperName: options.wrapperName,
+        wrapperVersion: options.wrapperVersion,
+      }),
+    });
     const internalOptions: internal.LDInternalOptions = {
       analyticsEventPath: `/events/bulk/${clientSideID}`,
       diagnosticEventPath: `/events/diagnostic/${clientSideID}`,

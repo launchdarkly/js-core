@@ -2,8 +2,10 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 import { Client, ErrorCode, OpenFeature, ProviderStatus } from '@openfeature/server-sdk';
 
 import type { LDClient } from '@launchdarkly/cloudflare-server-sdk';
+import * as cloudflareSdk from '@launchdarkly/cloudflare-server-sdk';
 import { translateContext } from '@launchdarkly/openfeature-js-server-common';
 
+import { version } from '../package.json';
 import { LaunchDarklyProvider } from '../src';
 import TestLogger from './TestLogger';
 
@@ -11,9 +13,33 @@ const basicContext = { targetingKey: 'the-key' };
 const testFlagKey = 'a-key';
 const clientSideID = 'test-client-side-id';
 
+jest.mock('@launchdarkly/cloudflare-server-sdk', () => {
+  const actual = jest.requireActual('@launchdarkly/cloudflare-server-sdk');
+  return { ...actual, init: jest.fn(actual.init) };
+});
+
 function makeKvNamespace(): KVNamespace {
   return { get: jest.fn() } as unknown as KVNamespace;
 }
+
+it.each([undefined, {}, { wrapperName: 'custom-wrapper', wrapperVersion: 'custom-version' }])(
+  'initializes the client with provider wrapper metadata and options %p',
+  async (options) => {
+    const initMock = jest.mocked(cloudflareSdk.init);
+    initMock.mockClear();
+    const kvNamespace = makeKvNamespace();
+    const logger = new TestLogger();
+    const ldProvider = new LaunchDarklyProvider(clientSideID, kvNamespace, { ...options, logger });
+
+    expect(initMock).toHaveBeenCalledWith(clientSideID, kvNamespace, {
+      logger,
+      wrapperName: 'open-feature-cloudflare-server',
+      wrapperVersion: version,
+    });
+
+    await ldProvider.onClose();
+  },
+);
 
 it('can be initialized', async () => {
   const ldProvider = new LaunchDarklyProvider(clientSideID, makeKvNamespace());

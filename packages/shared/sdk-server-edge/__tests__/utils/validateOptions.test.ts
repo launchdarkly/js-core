@@ -32,6 +32,21 @@ describe('validateOptions', () => {
     ).toBeTruthy();
   });
 
+  it.each([
+    { wrapperName: 'test-wrapper' },
+    { wrapperVersion: '1.0.0' },
+    { wrapperName: 'test-wrapper', wrapperVersion: '1.0.0' },
+    { wrapperName: '', wrapperVersion: '' },
+  ])('accepts wrapper options %p', (wrapperOptions) => {
+    expect(
+      validateOptions('test-sdk-key', {
+        featureStore: mockFeatureStore,
+        logger: BasicLogger.get(),
+        ...wrapperOptions,
+      }),
+    ).toBeTruthy();
+  });
+
   test('throws with invalid options', () => {
     expect(() => {
       validateOptions('test-sdk-key', {
