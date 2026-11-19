@@ -75,7 +75,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
 
   delete(kind: DataKind, key: string, version: number, callback: () => void): void {
     const item: LDKeyedFeatureStoreItem = { key, version, deleted: true };
-    this.applyChanges(
+    this._applyChanges(
       false,
       {
         [kind.namespace]: {
@@ -83,11 +83,12 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
         },
       },
       callback,
+      true,
     );
   }
 
   upsert(kind: DataKind, data: LDKeyedFeatureStoreItem, callback: () => void): void {
-    this.applyChanges(
+    this._applyChanges(
       false,
       {
         [kind.namespace]: {
@@ -95,6 +96,7 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
         },
       },
       callback,
+      true,
     );
   }
 
@@ -102,6 +104,23 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
     basis: boolean,
     data: LDFeatureStoreDataStorage,
     callback: () => void,
+    initMetadata?: internal.InitMetadata,
+    selector?: string,
+  ): void {
+    this._applyChanges(basis, data, callback, false, initMetadata, selector);
+  }
+
+  /**
+   * @param checkVersions When true, an item replaces a stored item only if its version is higher.
+   * Single upserts and deletes use the item version to keep the updates in order. A change set
+   * does not use it: the payload selector keeps change sets in order, and the store applies each
+   * item of a change set.
+   */
+  private _applyChanges(
+    basis: boolean,
+    data: LDFeatureStoreDataStorage,
+    callback: () => void,
+    checkVersions: boolean,
     initMetadata?: internal.InitMetadata,
     selector?: string,
   ): void {
@@ -124,9 +143,8 @@ export default class InMemoryFeatureStore implements LDTransactionalFeatureStore
             tempData[namespace] = existingItems;
           }
           const item = items[key];
-          if (Object.hasOwnProperty.call(existingItems, key)) {
+          if (checkVersions && Object.hasOwnProperty.call(existingItems, key)) {
             const old = existingItems[key];
-            // TODO: SDK-1046 - Determine if version check should be removed
             if (!old || old.version < item.version) {
               existingItems[key] = { key, ...item };
             }

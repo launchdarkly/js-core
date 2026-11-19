@@ -244,6 +244,38 @@ describe.each([
   });
 });
 
+describe('given transactional data source updates with change listeners', () => {
+  it('sends a change event for a change whose version is lower than the stored version', async () => {
+    const queue = new AsyncQueue<string>();
+    const updates = new DataSourceUpdates(
+      new InMemoryFeatureStore(),
+      () => true,
+      (key: string) => queue.add(key),
+    );
+    await promisify((cb) => {
+      updates.init({ features: { a: { key: 'a', version: 100 } }, segments: {} }, () =>
+        cb(undefined),
+      );
+    });
+    expect(await queue.take()).toEqual('a');
+
+    // Apply a change set that holds the flag at a lower version.
+    await promisify((cb) => {
+      updates.applyChanges(
+        false,
+        { features: { a: { key: 'a', version: 1 } } },
+        () => cb(undefined),
+        undefined,
+        'after-update',
+      );
+    });
+
+    // The flag is reported as changed.
+    expect(await queue.take()).toEqual('a');
+    expect(queue.isEmpty()).toBeTruthy();
+  });
+});
+
 describe('given a DataSourceUpdates whose external dependencies come from an override layer', () => {
   let store: LDTransactionalFeatureStore;
   let layer: OverrideLayer;

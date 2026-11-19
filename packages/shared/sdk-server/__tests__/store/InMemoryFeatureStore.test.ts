@@ -1,4 +1,5 @@
 import AsyncStoreFacade from '../../src/store/AsyncStoreFacade';
+import AsyncTransactionalStoreFacade from '../../src/store/AsyncTransactionalStoreFacade';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import VersionedDataKinds from '../../src/store/VersionedDataKinds';
 
@@ -153,6 +154,43 @@ describe('given an initialized feature store', () => {
 
   it('returns undefined initMetadata', () => {
     expect(featureStore.getInitMetadata?.()).toBeUndefined();
+  });
+});
+
+describe('given a feature store that has a basis', () => {
+  let featureStore: AsyncTransactionalStoreFacade;
+
+  beforeEach(async () => {
+    featureStore = new AsyncTransactionalStoreFacade(new InMemoryFeatureStore());
+    await featureStore.applyChanges(
+      true,
+      {
+        features: { foo: { key: 'foo', version: 100 } },
+        segments: { seg: { key: 'seg', version: 100 } },
+      },
+      undefined,
+      'initial',
+    );
+  });
+
+  it('applies changes whose versions are lower than the stored versions', async () => {
+    // Apply a change set that updates the flag and deletes the segment at lower versions.
+    await featureStore.applyChanges(
+      false,
+      {
+        features: { foo: { key: 'foo', version: 1 } },
+        segments: { seg: { key: 'seg', version: 1, deleted: true } },
+      },
+      undefined,
+      'after-update',
+    );
+
+    // The store holds the data from the change set.
+    expect(await featureStore.get(VersionedDataKinds.Features, 'foo')).toEqual({
+      key: 'foo',
+      version: 1,
+    });
+    expect(await featureStore.get(VersionedDataKinds.Segments, 'seg')).toBeNull();
   });
 });
 
