@@ -158,6 +158,14 @@ it('passes setConnectionMode() call through to bridge', async () => {
   expect(ldClientBridge.setConnectionMode).toHaveBeenNthCalledWith(1, 'streaming');
 });
 
+it('passes setConnectionMode() without a mode through to bridge', async () => {
+  const client = new ElectronRendererClient(clientSideId);
+  await client.setConnectionMode();
+
+  expect(ldClientBridge.setConnectionMode).toHaveBeenCalledTimes(1);
+  expect(ldClientBridge.setConnectionMode).toHaveBeenNthCalledWith(1, undefined);
+});
+
 it('passes getConnectionMode() call through to bridge', () => {
   (ldClientBridge.getConnectionMode as jest.Mock).mockReturnValueOnce('streaming');
 
