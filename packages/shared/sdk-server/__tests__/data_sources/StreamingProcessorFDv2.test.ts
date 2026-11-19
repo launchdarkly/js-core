@@ -234,6 +234,7 @@ describe('given a stream processor with mock event source', () => {
         initialRetryDelayMillis: 1000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
+        urlBuilder: expect.any(Function),
       },
     );
   });
@@ -276,6 +277,33 @@ describe('given a stream processor with mock event source', () => {
     );
   });
 
+  it('uses the latest selector as the basis when the stream reconnects', () => {
+    let selector: string | undefined = 'initial';
+    streamingProcessor = new StreamingProcessorFDv2(
+      {
+        basicConfiguration: getBasicConfiguration(logger),
+        platform: basicPlatform,
+      },
+      '/all',
+      [],
+      {
+        authorization: 'my-sdk-key',
+        'user-agent': 'TestUserAgent/2.0.2',
+        'x-launchdarkly-wrapper': 'Rapper/1.2.3',
+      },
+      diagnosticsManager,
+    );
+    streamingProcessor.start(jest.fn(), jest.fn(), () => selector);
+
+    // The store gets a new selector while the stream is open.
+    selector = 'after-update';
+
+    // The URL for the next connection carries the new selector.
+    expect(mockEventSource.options.urlBuilder()).toEqual(
+      `${serviceEndpoints.streaming}/all?basis=after-update`,
+    );
+  });
+
   it('sets streamInitialReconnectDelay correctly', () => {
     streamingProcessor = new StreamingProcessorFDv2(
       {
@@ -302,6 +330,7 @@ describe('given a stream processor with mock event source', () => {
         initialRetryDelayMillis: 22000,
         readTimeoutMillis: 300000,
         retryResetIntervalMillis: 60000,
+        urlBuilder: expect.any(Function),
       },
     );
   });

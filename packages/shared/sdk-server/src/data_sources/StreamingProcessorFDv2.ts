@@ -119,12 +119,17 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
     this._logConnectionAttempt();
     statusCallback(subsystemCommon.DataSourceState.Initializing);
 
-    const selector = selectorGetter?.();
-    const params = selector
-      ? [...this._parameters, { key: 'basis', value: selector }] // if selector exists add basis parameter
-      : this._parameters; // otherwise use params as is
+    // The event source calls this function again before each reconnection. Thus the basis is
+    // the selector of the most recent payload, not the selector from the start of the stream.
+    const buildStreamUri = () => {
+      const selector = selectorGetter?.();
+      const params = selector
+        ? [...this._parameters, { key: 'basis', value: selector }] // if selector exists add basis parameter
+        : this._parameters; // otherwise use params as is
+      return getStreamingUri(this._serviceEndpoints, this._streamUriPath, params);
+    };
 
-    const uri = getStreamingUri(this._serviceEndpoints, this._streamUriPath, params);
+    const uri = buildStreamUri();
     this._logger?.debug(`Streaming processor opening event source to uri: ${uri}`);
 
     // Set when the most recent successful connection carried `x-ld-fd-fallback: true`. We
@@ -138,6 +143,7 @@ export default class StreamingProcessorFDv2 implements subsystemCommon.DataSourc
       initialRetryDelayMillis: 1000 * this._streamInitialReconnectDelay,
       readTimeoutMillis: 5 * 60 * 1000,
       retryResetIntervalMillis: 60 * 1000,
+      urlBuilder: buildStreamUri,
     });
     this._eventSource = eventSource;
 
