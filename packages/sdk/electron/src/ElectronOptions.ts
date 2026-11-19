@@ -1,15 +1,21 @@
-import { ConnectionMode, LDOptions as LDOptionsBase } from '@launchdarkly/js-client-sdk-common';
+import {
+  ConnectionMode,
+  LDOptions as LDOptionsBase,
+  LDStorage,
+} from '@launchdarkly/js-client-sdk-common';
 
 import type { LDPlugin } from './LDPlugin';
 
+/**
+ * A custom storage implementation for the flag cache. See {@link LDStorage} for the contract.
+ */
+export type LDElectronStorage = LDStorage;
+
 export interface ElectronOptions extends LDOptionsBase {
   /**
-   * Set to true to opt in to compressing event payloads if the SDK supports it, since the
-   * compression library may not be supported in the underlying SDK framework.  If the compression
-   * library is not supported then event payloads will not be compressed even if this option
-   * is enabled.
+   * Set to `true` to compress analytics event payloads with gzip before they are sent.
    *
-   * Defaults to false.
+   * Defaults to `false`.
    */
   enableEventCompression?: boolean;
 
@@ -54,4 +60,32 @@ export interface ElectronOptions extends LDOptionsBase {
    * from other clients using the same credential in the same process.
    */
   namespace?: string;
+
+  /**
+   * A custom storage implementation that replaces the built-in file cache.
+   *
+   * @remarks
+   * By default the SDK persists cached flags to a file in the `ldclient-user-cache` directory
+   * under the Electron `userData` directory.
+   * Provide an {@link LDElectronStorage} to store that data somewhere else. The SDK catches and logs
+   * errors thrown by a custom storage, so they never reach the application.
+   */
+  storage?: LDElectronStorage;
+
+  /**
+   * When `true`, the built-in file cache is encrypted with Electron's `safeStorage` API and is
+   * written to its own file. A plain-text cache from an earlier run is deleted and never read.
+   *
+   * When `safeStorage` reports that encryption is not available, the SDK logs a warning and keeps
+   * flags in memory only. It never writes a plain-text cache while this option is `true`. On
+   * Linux, the SDK also keeps flags in memory only when `safeStorage` uses the `basic_text`
+   * backend, because that backend encrypts with a hardcoded password.
+   * `safeStorage` is usable only after the Electron `ready` event on Windows and Linux. The cache
+   * waits for that event on every platform.
+   *
+   * This option has no effect when {@link ElectronOptions.storage} is set.
+   *
+   * Defaults to `false`.
+   */
+  encryptStorage?: boolean;
 }

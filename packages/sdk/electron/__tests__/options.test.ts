@@ -141,3 +141,86 @@ it('filters to base options', () => {
   expect(logger.warn).not.toHaveBeenCalled();
   expect(logger.error).not.toHaveBeenCalled();
 });
+
+it('applies a custom storage implementation with get, set and clear functions', () => {
+  const logger = createMockLogger();
+  const storage = { get: jest.fn(), set: jest.fn(), clear: jest.fn() };
+
+  const opts = validateOptions({ storage }, logger);
+
+  expect(opts.storage).toBe(storage);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('leaves storage undefined by default', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({}, logger);
+
+  expect(opts.storage).toBeUndefined();
+});
+
+it('warns and falls back to the default storage when storage is not an object', () => {
+  const logger = createMockLogger();
+
+  // @ts-ignore
+  const opts = validateOptions({ storage: 'disk' }, logger);
+
+  expect(opts.storage).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "storage" should be of type LDElectronStorage ({ get, set, clear }), got string, using default value',
+  );
+});
+
+it('warns and falls back to the default storage when storage lacks the required functions', () => {
+  const logger = createMockLogger();
+
+  // @ts-ignore
+  const opts = validateOptions({ storage: { get: jest.fn() } }, logger);
+
+  expect(opts.storage).toBeUndefined();
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "storage" should be of type LDElectronStorage ({ get, set, clear }), got object, using default value',
+  );
+});
+
+it('applies encryptStorage when set', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({ encryptStorage: true }, logger);
+
+  expect(opts.encryptStorage).toBe(true);
+  expect(logger.warn).not.toHaveBeenCalled();
+});
+
+it('defaults encryptStorage to false', () => {
+  const logger = createMockLogger();
+  const opts = validateOptions({}, logger);
+
+  expect(opts.encryptStorage).toBe(false);
+});
+
+it('warns for invalid encryptStorage type', () => {
+  const logger = createMockLogger();
+
+  validateOptions(
+    {
+      // @ts-ignore
+      encryptStorage: 'yes',
+    },
+    logger,
+  );
+
+  expect(logger.warn).toHaveBeenCalledWith(
+    'Config option "encryptStorage" should be of type boolean, got string, using default value',
+  );
+});
+
+it('warns that encryptStorage has no effect when a custom storage is provided', () => {
+  const logger = createMockLogger();
+  const storage = { get: jest.fn(), set: jest.fn(), clear: jest.fn() };
+
+  const opts = validateOptions({ storage, encryptStorage: true }, logger);
+
+  expect(opts.storage).toBe(storage);
+  expect(logger.warn).toHaveBeenCalledTimes(1);
+  expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('encryptStorage'));
+});
