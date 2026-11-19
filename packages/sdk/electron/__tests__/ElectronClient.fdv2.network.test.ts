@@ -62,6 +62,23 @@ async function startClient(
   return { client, dataManager };
 }
 
+it('leaves network-driven offline when setConnectionMode requests the foreground mode', async () => {
+  const { client, dataManager } = await startClient();
+  expect(dataManager.getCurrentMode()).toBe('streaming');
+
+  client.setNetworkAvailability(false);
+  await jest.advanceTimersByTimeAsync(DEBOUNCE_WINDOW_MS);
+  expect(dataManager.getCurrentMode()).toBe('offline');
+
+  await client.setConnectionMode('streaming');
+  await jest.advanceTimersByTimeAsync(DEBOUNCE_WINDOW_MS);
+
+  expect(client.getConnectionMode()).toBe('streaming');
+  expect(dataManager.getCurrentMode()).toBe('streaming');
+
+  await client.close();
+});
+
 it('applies an override when the app repeats it within the debounce window', async () => {
   const { client, dataManager } = await startClient();
 
@@ -75,6 +92,23 @@ it('applies an override when the app repeats it within the debounce window', asy
   }
 
   expect(dataManager.getCurrentMode()).toBe('polling');
+
+  await client.close();
+});
+
+it('follows network changes again after the override is cleared', async () => {
+  const { client, dataManager } = await startClient();
+
+  await client.setConnectionMode('streaming');
+  client.setNetworkAvailability(false);
+  await jest.advanceTimersByTimeAsync(DEBOUNCE_WINDOW_MS);
+  expect(dataManager.getCurrentMode()).toBe('streaming');
+
+  await client.setConnectionMode();
+  await jest.advanceTimersByTimeAsync(DEBOUNCE_WINDOW_MS);
+
+  expect(dataManager.getCurrentMode()).toBe('offline');
+  expect(client.getConnectionMode()).toBe('offline');
 
   await client.close();
 });
