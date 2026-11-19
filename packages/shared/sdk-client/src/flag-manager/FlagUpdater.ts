@@ -1,4 +1,4 @@
-import { Context, fastDeepEqual, internal, LDLogger } from '@launchdarkly/js-sdk-common';
+import { Context, internal, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import calculateChangedKeys from './calculateChangedKeys';
 import FlagStore from './FlagStore';
@@ -66,7 +66,7 @@ export interface FlagUpdater {
    * is handled at the protocol layer.
    *
    * - `'full'`: replaces all flags and emits change events for differences.
-   * - `'partial'`: merges updates and emits change events for each changed key.
+   * - `'partial'`: merges updates and emits change events for each key.
    * - `'none'`: no flag changes (caller handles freshness separately).
    */
   applyChanges(
@@ -136,9 +136,7 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
       type: internal.PayloadType,
     ): void {
       activeContext = context;
-      // A partial update changes the store map in place. Copy the map so that
-      // the compare uses the data from before the update.
-      const oldFlags = { ...flagStore.getAll() };
+      const oldFlags = flagStore.getAll();
       flagStore.applyChanges(updates, type);
 
       if (type === 'full') {
@@ -147,13 +145,9 @@ export default function createFlagUpdater(_flagStore: FlagStore, _logger: LDLogg
           this.handleFlagChanges(changed, 'init');
         }
       } else if (type === 'partial') {
-        // Notify only for keys whose data is different. Identical data does
-        // not cause a notification.
-        const changed = Object.keys(updates).filter(
-          (key) => !oldFlags[key] || !fastDeepEqual(oldFlags[key], updates[key]),
-        );
-        if (changed.length > 0) {
-          this.handleFlagChanges(changed, 'patch');
+        const keys = Object.keys(updates);
+        if (keys.length > 0) {
+          this.handleFlagChanges(keys, 'patch');
         }
       }
       // 'none' — no flag changes, caller handles freshness.
