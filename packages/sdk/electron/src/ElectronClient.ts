@@ -16,7 +16,6 @@ import {
   LDEmitterEventName,
   LDFlagValue,
   LDHeaders,
-  LDIdentifyOptions,
   LDIdentifyResult,
   LDLogger,
   LDPluginEnvironmentMetadata,
@@ -27,6 +26,7 @@ import {
 } from '@launchdarkly/js-client-sdk-common';
 
 import ElectronDataManager from './ElectronDataManager';
+import type { ElectronIdentifyOptions } from './ElectronIdentifyOptions';
 import {
   AllAsyncChannels,
   AllSyncChannels,
@@ -147,7 +147,7 @@ export class ElectronClient extends LDClientImpl {
 
   override async identifyResult(
     context: LDContext,
-    identifyOptions?: LDIdentifyOptions,
+    identifyOptions?: ElectronIdentifyOptions,
   ): Promise<LDIdentifyResult> {
     const options =
       identifyOptions?.sheddable === undefined
@@ -437,7 +437,7 @@ export function makeClient(
     off: (key: string, callback: (...args: unknown[]) => void) =>
       impl.off(key as LDEmitterEventName, callback as (...args: unknown[]) => void),
     flush: () => impl.flush(),
-    identify: (ctx: LDContext, identifyOptions?: LDIdentifyOptions) =>
+    identify: (ctx: LDContext, identifyOptions?: ElectronIdentifyOptions) =>
       impl.identifyResult(ctx, identifyOptions),
     getContext: () => impl.getContext(),
     close: () => impl.close(),

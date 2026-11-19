@@ -853,6 +853,23 @@ it('parses bootstrap data when start is called with bootstrap', async () => {
   expect(client.allFlags().cat).toBe(false);
 });
 
+it('accepts a per-identify hash in the identify options', async () => {
+  const client = createClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
+    enableIPC: false,
+    useClientSideId: true,
+    diagnosticOptOut: true,
+    initialConnectionMode: 'offline',
+  });
+  await client.start();
+
+  const result = await client.identify(
+    { kind: 'user', key: 'hashed-user' },
+    { hash: 'per-identify-hash' },
+  );
+
+  expect(result).toEqual({ status: 'completed' });
+});
+
 it('forwards setNetworkAvailability to the FDv1 data manager', () => {
   const client = new ElectronClient('client-side-id', DEFAULT_INITIAL_CONTEXT, {
     enableIPC: false,
