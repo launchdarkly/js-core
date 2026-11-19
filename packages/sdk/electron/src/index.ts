@@ -34,6 +34,8 @@ export type {
  * @returns The client instance. Call `client.start()` before you evaluate flags. Call `identify()`
  *   for later context changes. The returned client's `identify()` resolves to an
  *   {@link LDIdentifyResult} and does not throw.
+ * @throws When `options.enableIPC` is `true` (the default) and another open client already uses
+ *   the same credential and `namespace`.
  * @throws When `options.hash` is set and `options.useClientSideId` is `false`.
  */
 export function createClient(

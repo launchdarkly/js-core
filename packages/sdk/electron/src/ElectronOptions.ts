@@ -37,10 +37,13 @@ export interface ElectronOptions extends LDOptionsBase {
   plugins?: LDPlugin[];
 
   /**
-   * When true (the default), registers the Electron IpcMain event handlers so a
-   * LaunchDarkly client in renderer processes can communicate with the main process.
+   * When `true`, the client registers `ipcMain` handlers so a renderer client created with
+   * `createRendererClient` can use this client through the preload bridge.
    *
-   * Defaults to true.
+   * Set to `false` when only the main process uses the SDK. No IPC channel is registered and
+   * renderer clients cannot connect.
+   *
+   * Defaults to `true`.
    */
   enableIPC?: boolean;
 
@@ -68,8 +71,12 @@ export interface ElectronOptions extends LDOptionsBase {
   hash?: string;
 
   /**
-   * An optional namespace to isolate this client's IPC channels
-   * from other clients using the same credential in the same process.
+   * An optional namespace that isolates this client's IPC channels from other clients that use
+   * the same credential in the same main process.
+   *
+   * Two IPC-enabled clients (`enableIPC` is `true`) that share a credential must each set a unique
+   * namespace. Otherwise the second `createClient` call throws before it builds the client.
+   * Renderer clients must pass the same namespace to `createRendererClient`.
    */
   namespace?: string;
 

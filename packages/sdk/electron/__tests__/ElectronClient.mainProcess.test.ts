@@ -61,6 +61,10 @@ const mockOn = jest.fn((eventName: string, handler: (...args: any[]) => void) =>
   handlers.set(eventName, handler);
 });
 const mockHandle = jest.fn((eventName: string, handler: (...args: any[]) => void) => {
+  // Electron throws on a second handler for one channel; the mock does the same.
+  if (handlers.has(eventName)) {
+    throw new Error(`Attempted to register a second handler for '${eventName}'`);
+  }
   handlers.set(eventName, handler);
 });
 
@@ -70,6 +74,11 @@ jest.mock('electron', () => ({
     handle: (eventName: string, handler: (...args: any[]) => void) =>
       mockHandle(eventName, handler),
     getHandler: (eventName: string) => handlers.get(eventName),
+    removeListener: (channel: string, listener: (...args: any[]) => void) => {
+      if (handlers.get(channel) === listener) {
+        handlers.delete(channel);
+      }
+    },
     removeAllListeners: (channel: string) => handlers.delete(channel),
     removeHandler: (channel: string) => handlers.delete(channel),
   },
