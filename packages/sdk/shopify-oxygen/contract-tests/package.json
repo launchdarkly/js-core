@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/express": "^5.0.1",
     "@types/node": "^18.11.9",
-    "tsup": "^8.5.0",
+    "tsup": "^9.0.0",
     "typescript": "6.0.3"
   }
 }
