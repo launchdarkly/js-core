@@ -23,6 +23,7 @@ const BASE_CAPABILITIES = [
   'polling-gzip',
   'fdv1-fallback',
   'bootstrap',
+  'diagnostic-events',
   // The FDv1 streaming data source retries every HTTP error. On the
   // fetch transport an unexpected status retries after the extended
   // delay of minutes, which is longer than the legacy permanent-stop
