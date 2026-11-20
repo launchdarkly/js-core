@@ -9,5 +9,4 @@ streaming/fdv2/reconnection state management/initializes from 2 polling initiali
 streaming/fdv2/reconnection state management/saves previously known state
 streaming/fdv2/reconnection state management/replaces previously known state
 streaming/fdv2/reconnection state management/updates previously known state
-streaming/fdv2/ignores model version
 streaming/fdv2/can discard partial events on errors

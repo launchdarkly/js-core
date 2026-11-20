@@ -157,7 +157,9 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
     newValue: LDFeatureStoreItem,
     toDataSet: NamespacedDataSet<boolean>,
   ) {
-    if (newValue && oldValue && newValue.version <= oldValue.version) {
+    // The store applies each item of a change set, also when its version is lower than the
+    // stored version. Thus an item with a different version, higher or lower, is modified.
+    if (newValue && oldValue && newValue.version === oldValue.version) {
       return;
     }
     this._addAffectedItems(toDataSet, namespace, key);
