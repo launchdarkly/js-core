@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.35.4](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.3...js-client-sdk-common-v1.35.4) (2026-11-20)
+
+
+### Bug Fixes
+
+* Prevent malformed stream data from crashing the client ([#2211](https://github.com/launchdarkly/js-core/issues/2211)) ([742797d](https://github.com/launchdarkly/js-core/commit/742797dcbf2866bef2879072bfaae751db4a09c2))
+
 ## [1.35.3](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.2...js-client-sdk-common-v1.35.3) (2026-11-18)
 
 
