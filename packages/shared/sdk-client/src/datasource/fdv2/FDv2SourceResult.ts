@@ -61,6 +61,15 @@ export interface StatusResult {
 export type FDv2SourceResult = ChangeSetResult | StatusResult;
 
 /**
+ * Whether a result delivers flag data. A `'none'` payload, such as an
+ * unchanged poll response, only confirms that existing data is current and
+ * carries nothing to apply, so it does not count as data.
+ */
+export function hasPayloadData(result: FDv2SourceResult): result is ChangeSetResult {
+  return result.type === 'changeSet' && result.payload.type !== 'none';
+}
+
+/**
  * Wraps a processed FDv2 payload in a {@link ChangeSetResult}.
  */
 export function changeSet(

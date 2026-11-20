@@ -767,6 +767,123 @@ it('rejects identify when data source start fails', async () => {
   manager.close();
 });
 
+it('reports existing data on a mode switch when a basis arrived after identify was rejected', async () => {
+  // A pre-init directive with no FDv1 synchronizer exhausts every slot and
+  // rejects start(). The data source stays live and recovers later.
+  mockDataSource.start.mockRejectedValueOnce(
+    new Error('All data sources exhausted without receiving data.'),
+  );
+
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
+  const { resolve, reject } = await identifyManager(manager);
+  expect(reject).toHaveBeenCalledTimes(1);
+  expect(resolve).not.toHaveBeenCalled();
+
+  // Recovery delivers a basis through the still-live data source.
+  const firstConfig = capturedDataSourceConfigs[0];
+  firstConfig.dataCallback({ type: 'full', updates: [], state: 'recovered-selector' });
+
+  mockCreateFDv2DataSource.mockClear();
+  capturedDataSourceConfigs = [];
+  mockDataSource = {
+    start: jest.fn(() => new Promise<void>(() => {})),
+    close: jest.fn(),
+  };
+  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
+    capturedDataSourceConfigs.push(cfg);
+    return mockDataSource;
+  });
+
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'polling',
+  });
+
+  // The rebuilt data source must know data exists even though identify
+  // never resolved, or the init-fallback leg would fire on every 'none'.
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].hasExistingData).toBe(true);
+
+  manager.close();
+});
+
+it('reports no existing data on a mode switch before any basis has arrived', async () => {
+  mockDataSource.start.mockRejectedValueOnce(
+    new Error('All data sources exhausted without receiving data.'),
+  );
+
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
+  await identifyManager(manager);
+
+  mockCreateFDv2DataSource.mockClear();
+  capturedDataSourceConfigs = [];
+  mockDataSource = {
+    start: jest.fn(() => new Promise<void>(() => {})),
+    close: jest.fn(),
+  };
+  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
+    capturedDataSourceConfigs.push(cfg);
+    return mockDataSource;
+  });
+
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'polling',
+  });
+
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].hasExistingData).toBe(false);
+
+  manager.close();
+});
+
+it('reports no existing data on a mode switch after an offline identify completed without data', async () => {
+  // Offline mode has only the cache initializer. Its data source resolves
+  // start() on a cache miss, so identify completes with no flag data.
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'offline' }));
+  const { resolve } = await identifyManager(manager);
+  expect(resolve).toHaveBeenCalledTimes(1);
+
+  mockCreateFDv2DataSource.mockClear();
+  capturedDataSourceConfigs = [];
+  mockDataSource = {
+    start: jest.fn(() => new Promise<void>(() => {})),
+    close: jest.fn(),
+  };
+  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
+    capturedDataSourceConfigs.push(cfg);
+    return mockDataSource;
+  });
+
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'streaming',
+  });
+
+  // A completed identify is not proof of data. With none, the rebuilt data
+  // source must keep its init-fallback leg, or a silent stream would never
+  // fall back to polling.
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].hasExistingData).toBe(false);
+
+  manager.close();
+});
+
+it('reports existing data to the synchronizers started after a bootstrapped identify', async () => {
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
+  await identifyManager(manager, { bootstrap: {} });
+
+  // Bootstrap data has no selector, but it is data: a 'none' response from
+  // the synchronizer is a healthy answer and must not fire the init-fallback leg.
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].hasExistingData).toBe(true);
+
+  manager.close();
+});
+
 it('exposes configuredForegroundMode from the initial config', () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'polling' }));
 
