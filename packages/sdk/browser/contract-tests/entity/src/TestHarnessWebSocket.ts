@@ -22,6 +22,8 @@ const BASE_CAPABILITIES = [
   'secure-mode-hash',
   'polling-gzip',
   'fdv1-fallback',
+  'flag-change-listeners',
+  'experiment-exposure-change',
   'bootstrap',
   // The FDv1 streaming data source retries every HTTP error. On the
   // fetch transport an unexpected status retries after the extended
