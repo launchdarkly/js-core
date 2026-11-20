@@ -12,7 +12,7 @@
 
 ## Supported Node versions
 
-This package is compatible with Node.js versions 16 and above.
+While this package requires Node.js 16 or later, you should use the latest patched version of a supported Node.js release.
 
 ## Quick setup
 
