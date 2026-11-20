@@ -5,7 +5,12 @@ import {
   LDOptions,
   LDTransactionalFeatureStore,
 } from '../../src';
-import { LDOverrideSourceOptions } from '../../src/api/options/LDDataSystemOptions';
+import {
+  CustomDataSourceOptions,
+  LDOverrideSourceOptions,
+  TestDataSourceConfiguration,
+} from '../../src/api/options/LDDataSystemOptions';
+import TestData from '../../src/integrations/test_data/TestData';
 import Configuration from '../../src/options/Configuration';
 import InMemoryFeatureStore from '../../src/store/InMemoryFeatureStore';
 import TestLogger, { LogLevel } from '../Logger';
@@ -794,5 +799,29 @@ it('does not affect the top-level baseUri option', () => {
   });
   const config = new Configuration(opts);
   expect(config.serviceEndpoints.polling).toEqual('https://example.com');
+  expect(logger(opts).getCount()).toEqual(0);
+});
+
+it('keeps a TestData entry in a custom mode data source', () => {
+  const td = new TestData();
+  const opts = withLogger({
+    dataSystem: {
+      dataSource: {
+        dataSourceOptionsType: 'custom',
+        initializers: [{ type: 'testData', testData: td }],
+        synchronizers: [{ type: 'testData', testData: td }],
+      },
+    },
+  });
+
+  // Validate the options.
+  const config = new Configuration(opts);
+
+  // The entries keep the same TestData instance and validation logs nothing.
+  const dataSource = config.dataSystem!.dataSource as CustomDataSourceOptions;
+  expect(dataSource.initializers).toHaveLength(1);
+  expect(dataSource.synchronizers).toHaveLength(1);
+  expect((dataSource.initializers[0] as TestDataSourceConfiguration).testData).toBe(td);
+  expect((dataSource.synchronizers[0] as TestDataSourceConfiguration).testData).toBe(td);
   expect(logger(opts).getCount()).toEqual(0);
 });
