@@ -304,7 +304,7 @@ describe('given a streaming server', () => {
       `http://localhost:${STREAM_PORT}/stream`,
       {
         method: 'REPORT',
-        headers: { 'Sample-Header': 'Some header value' },
+        headers: { 'Sample-Header': 'Some header value', 'accept-encoding': 'identity' },
         body: '{"key":"user"}',
         signal: controller.signal,
         redirect: 'follow',
@@ -316,7 +316,7 @@ describe('given a streaming server', () => {
     expect(serverResult.method).toEqual('REPORT');
     expect(serverResult.body).toEqual('{"key":"user"}');
     expect(serverResult.headers['sample-header']).toEqual('Some header value');
-    expect(serverResult.headers['accept-encoding']).not.toEqual('gzip');
+    expect(serverResult.headers['accept-encoding']).toEqual('identity');
     controller.abort();
     await expect(res.body!.getReader().read()).rejects.toThrow('This operation was aborted');
   });

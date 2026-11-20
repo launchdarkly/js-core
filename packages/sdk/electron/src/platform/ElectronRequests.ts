@@ -17,9 +17,7 @@ export default class ElectronRequests implements platform.Requests {
   /**
    * Uses Electron's `net` module (Chromium's networking stack) for streaming, polling,
    * analytics, and diagnostic requests. The `net` module is only usable once Electron's `ready`
-   * event has fired; this method transparently waits for that milestone (which Electron reaches
-   * on its own, independent of application code) rather than requiring callers to
-   * sequence their own calls around it.
+   * event has fired. This method waits for that event, so callers do not have to.
    *
    * https://www.electronjs.org/docs/latest/api/net
    */
@@ -36,7 +34,6 @@ export default class ElectronRequests implements platform.Requests {
     let bodyData: string | Uint8Array<ArrayBuffer> | undefined = options.body;
 
     // For get requests we are going to automatically support compressed responses.
-    // Streaming requests return above, so this does not affect SSE.
     if (options.method?.toLowerCase() === 'get') {
       headers['accept-encoding'] = 'gzip';
     }
@@ -50,13 +47,13 @@ export default class ElectronRequests implements platform.Requests {
       options.body
     ) {
       headers['content-encoding'] = 'gzip';
-      // net.fetch accepts only views backed by an ArrayBuffer. A zlib Buffer can sit on a shared
-      // pool, so copy it into its own buffer.
+      // The net.fetch body type accepts only a view backed by an ArrayBuffer. A Buffer has
+      // the wider ArrayBufferLike type, so copy it into a plain Uint8Array.
       bodyData = new Uint8Array(await gzip(Buffer.from(options.body, 'utf8')));
     }
 
-    // net.fetch has no built-in request timeout, unlike Node's http/https, so we abort the
-    // request ourselves and surface it the same way. The timer stops when the headers arrive.
+    // net.fetch applies no timeout. This timer limits only the wait for the response
+    // headers. It stops when the headers arrive, so it does not limit the body read.
     const controller = new AbortController();
     let timedOut = false;
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
@@ -73,12 +70,9 @@ export default class ElectronRequests implements platform.Requests {
         headers,
         body: bodyData,
         signal: controller.signal,
-        // Node's http/https never followed redirects, sent ambient session credentials, or
-        // served requests from a shared cache; net.fetch() defaults to all three (`redirect:
-        // 'follow'`, session-ambient auth, `cache: 'default'`). Preserve the prior behavior:
-        // surface any redirect as an error instead of silently following it with credentials
-        // attached, don't attach ambient session auth, and don't let polling/analytics/
-        // diagnostic responses be served from or written into the app's shared HTTP cache.
+        // A redirect fails the request, so the SDK key never follows it to another host.
+        // Ambient session credentials stay off. Responses never come from, or go into,
+        // the app's shared HTTP cache.
         redirect: 'error',
         credentials: 'omit',
         cache: 'no-store',
@@ -94,19 +88,21 @@ export default class ElectronRequests implements platform.Requests {
   }
 
   /**
-   * The transport for a streaming request. `net.fetch` returns a standard response whose body
+   * Sends a streaming request. `net.fetch` returns a standard response whose body
    * streams, and it rejects a pending read when the signal aborts. It applies no timeout; the
-   * caller owns the read timeout. Chromium negotiates and decodes content encoding by itself.
+   * caller owns the read timeout. It asks for an uncompressed body, so that a proxy
+   * does not hold events back in a compression buffer.
    *
    * Unlike `fetch`, this follows redirects. `net.fetch` cannot hand a redirect back to the
    * caller (`redirect: 'manual'` cancels the request), and the stream must survive a
-   * redirect. Chromium keeps the request headers, the Authorization header included, on each
-   * hop.
+   * redirect. Chromium follows 301, 302, 303, 307 and 308, up to 20 hops. It keeps the
+   * request headers on each hop, the Authorization header included, also to another
+   * origin. A 303 changes the method to GET and drops the body.
    */
   private _streamingFetch(url: string, options: platform.Options): Promise<platform.Response> {
     return net.fetch(url, {
       method: options.method,
-      headers: options.headers,
+      headers: { ...options.headers, 'accept-encoding': 'identity' },
       body: options.body,
       signal: options.signal,
       redirect: 'follow',
