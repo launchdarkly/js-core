@@ -8,6 +8,14 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.26.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.7...js-server-sdk-common-v2.26.8) (2026-11-20)
+
+
+### Bug Fixes
+
+* Send the basis of the latest payload when the FDv2 stream reconnects ([#2214](https://github.com/launchdarkly/js-core/issues/2214)) ([1cc0375](https://github.com/launchdarkly/js-core/commit/1cc03756d76ba436ed54968ff9a324ddac4f9d58))
+* Wait the poll interval after an FDv2 polling error response ([#2216](https://github.com/launchdarkly/js-core/issues/2216)) ([9aa2295](https://github.com/launchdarkly/js-core/commit/9aa2295d17c5c48b85ea50f184a3312bfff16eff))
+
 ## [2.26.7](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.6...js-server-sdk-common-v2.26.7) (2026-11-18)
 
 

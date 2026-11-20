@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.8.35](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.8.34...server-sdk-ai-langchain-v0.8.35) (2026-11-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^2.0.23 to ^2.0.24
+  * peerDependencies
+    * @launchdarkly/server-sdk-ai bumped from ^1.1.1 || ^2.0.0 to ^2.0.24
+
 ## [0.8.34](https://github.com/launchdarkly/js-core/compare/server-sdk-ai-langchain-v0.8.33...server-sdk-ai-langchain-v0.8.34) (2026-11-18)
 
 
