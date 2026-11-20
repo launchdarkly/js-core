@@ -56,6 +56,7 @@ app.get('/', (req: Request, res: Response) => {
       'bootstrap',
       'client-independence',
       'optional-event-gzip',
+      'diagnostic-events',
       'client-use-post',
     ],
   });
