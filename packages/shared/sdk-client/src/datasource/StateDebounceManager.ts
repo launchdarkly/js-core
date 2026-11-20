@@ -64,8 +64,14 @@ export interface StateDebounceManager {
   setRequestedMode(mode: FDv2ConnectionMode): void;
 
   /**
+   * Resets the debounce timer without a change to the pending state. Use it when an input that
+   * the pending state does not hold, such as the connection mode override, changes.
+   */
+  requestReconcile(): void;
+
+  /**
    * Cancel any pending debounce timer and release resources.
-   * After close(), further calls to set* methods will not
+   * After close(), further calls to the update methods will not
    * trigger reconciliation.
    */
   close(): void;
@@ -154,6 +160,10 @@ export function createStateDebounceManager(
         return;
       }
       requestedMode = mode;
+      resetTimer();
+    },
+
+    requestReconcile(): void {
       resetTimer();
     },
 
