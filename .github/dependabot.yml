@@ -2,7 +2,9 @@ version: 2
 updates:
   # GitHub Actions — no cooldown for our own actions, 7 days for third-party
   - package-ecosystem: 'github-actions'
-    directory: '/'
+    directories:
+      - '/'
+      - '/actions/*'
     schedule:
       interval: 'monthly'
     cooldown:
