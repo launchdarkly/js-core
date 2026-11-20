@@ -573,13 +573,19 @@ export function createFDv2DataManagerBase(
       const mode = resolveMode();
       logger.debug(`${logTag} Identify: initial mode resolved to '${mode}'.`);
 
-      bootstrapped = identifyOptions?.bootstrap !== undefined;
-
-      if (bootstrapped) {
-        let { bootstrapParsed } = identifyOptions!;
-        if (!bootstrapParsed) {
-          bootstrapParsed = readFlagsFromBootstrap(logger, identifyOptions!.bootstrap);
+      let bootstrapParsed = identifyOptions?.bootstrapParsed;
+      if (!bootstrapParsed && identifyOptions?.bootstrap) {
+        try {
+          bootstrapParsed = readFlagsFromBootstrap(logger, identifyOptions.bootstrap);
+        } catch (error) {
+          // A malformed payload must not reject the identify. Continue as a
+          // normal identify so the data source still provides flags.
+          logger.error(`${logTag} Failed to read bootstrap data.`, error);
         }
+      }
+      bootstrapped = bootstrapParsed !== undefined;
+
+      if (bootstrapParsed) {
         flagManager.setBootstrap(context, bootstrapParsed);
 
         // Resolve immediately - flag evaluations will use the bootstrap

@@ -8,7 +8,7 @@ import { createBasicPlatform } from './createBasicPlatform';
 import mockResponseJson from './evaluation/mockResponse.json';
 import { goodBootstrapData, goodBootstrapDataWithReasons } from './flag-manager/testBootstrapData';
 import { MockEventSource } from './streaming/LDClientImpl.mocks';
-import { makeTestDataManagerFactory } from './TestDataManager';
+import TestDataManager, { makeTestDataManagerFactory } from './TestDataManager';
 
 const testSdkKey = 'test-sdk-key';
 const context: LDContext = { kind: 'user', key: 'test-user' };
@@ -235,6 +235,23 @@ describe('LDClientImpl.start()', () => {
       );
 
       readFlagsFromBootstrapSpy.mockRestore();
+    });
+
+    it('logs an error and starts without bootstrap when the bootstrap data is malformed', async () => {
+      const identifySpy = jest.spyOn(TestDataManager.prototype, 'identify');
+
+      const mockPlatform = setupStreamingPlatform();
+      const { ldc, logger } = setupClient(mockPlatform, { initialContext: context });
+
+      const result = await ldc.start({ bootstrap: 5 });
+
+      expect(result.status).toBe('complete');
+      expect(logger.error).toHaveBeenCalledWith('Failed to bootstrap data', expect.any(TypeError));
+      // The malformed payload is not forwarded to the data manager.
+      expect(identifySpy).toHaveBeenCalledTimes(1);
+      expect(identifySpy.mock.calls[0][3]).not.toHaveProperty('bootstrap');
+
+      identifySpy.mockRestore();
     });
   });
 

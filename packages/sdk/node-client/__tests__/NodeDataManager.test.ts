@@ -383,6 +383,26 @@ describe('given a NodeDataManager with mocked dependencies', () => {
     expect(pollUri).not.toContain('h=config-hash');
   });
 
+  it('logs an error and connects normally when bootstrap data is malformed', async () => {
+    const dataManager = makeDataManager(makeNodeConfig());
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyReject = jest.fn();
+
+    await dataManager.identify(jest.fn(), identifyReject, context, {
+      bootstrap: 'not-an-object',
+    } as NodeIdentifyOptions);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to read bootstrap data'),
+      expect.any(TypeError),
+    );
+    expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+    expect(identifyReject).not.toHaveBeenCalled();
+    // The normal identify path loads the cache and opens a connection.
+    expect(flagManager.loadCached).toHaveBeenCalledWith(context);
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+  });
+
   it('includes the per-identify hash in the connection opened after bootstrap', async () => {
     const dataManager = makeDataManager(makeNodeConfig());
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });

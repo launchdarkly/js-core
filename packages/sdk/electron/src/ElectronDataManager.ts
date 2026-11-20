@@ -67,11 +67,15 @@ export default class ElectronDataManager extends BaseDataManager {
 
     // When bootstrap is provided, we will resolve the identify immediately. Then we will fallthrough to connect
     // to the configured connection mode.
+    // The bootstrap path already called resolve, so this prevents duplicate resolve calls.
+    let resolvedFromBootstrap = false;
     if (identifyOptions?.bootstrap) {
-      this._finishIdentifyFromBootstrap(context, identifyOptions, identifyResolve);
+      resolvedFromBootstrap = this._finishIdentifyFromBootstrap(
+        context,
+        identifyOptions,
+        identifyResolve,
+      );
     }
-    // Bootstrap path already called resolve so we use this to prevent duplicate resolve calls.
-    const resolvedFromBootstrap = !!identifyOptions?.bootstrap;
 
     const offline = this.connectionMode === 'offline';
     // In offline mode we do not support waiting for results.
@@ -109,15 +113,23 @@ export default class ElectronDataManager extends BaseDataManager {
     context: Context,
     identifyOpts: LDIdentifyOptions,
     identifyResolve: () => void,
-  ): void {
+  ): boolean {
     let { bootstrapParsed } = identifyOpts;
     if (!bootstrapParsed) {
-      bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
+      try {
+        bootstrapParsed = readFlagsFromBootstrap(this.logger, identifyOpts.bootstrap);
+      } catch (error) {
+        // A malformed payload must not reject the identify. The caller
+        // continues as a normal identify.
+        this.logger.error('Failed to read bootstrap data.', error);
+        return false;
+      }
     }
     this.flagManager.setBootstrap(context, bootstrapParsed);
     this._debugLog('Identify - Initialization completed from bootstrap');
 
     identifyResolve();
+    return true;
   }
 
   private _setupConnection(

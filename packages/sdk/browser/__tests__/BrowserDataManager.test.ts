@@ -369,6 +369,27 @@ describe('given a BrowserDataManager with mocked dependencies', () => {
     expect(platform.requests.createEventSource).not.toHaveBeenCalled();
   });
 
+  it('logs an error and polls normally when bootstrap data is malformed', async () => {
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    const identifyOptions: BrowserIdentifyOptions = { bootstrap: 'not-an-object' };
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+
+    flagManager.loadCached.mockResolvedValue(false);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, identifyOptions);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to read bootstrap data.',
+      expect.any(TypeError),
+    );
+    expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+    expect(platform.requests.fetch).toHaveBeenCalled();
+    expect(flagManager.init).toHaveBeenCalled();
+    expect(identifyResolve).toHaveBeenCalled();
+    expect(identifyReject).not.toHaveBeenCalled();
+  });
+
   it('uses data from bootstrap and does not make an initial poll', async () => {
     const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
     const identifyOptions: BrowserIdentifyOptions = {

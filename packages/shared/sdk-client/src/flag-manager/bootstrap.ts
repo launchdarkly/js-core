@@ -7,6 +7,9 @@ export function readFlagsFromBootstrap(
   logger: LDLogger,
   data: any,
 ): { [key: string]: ItemDescriptor } {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new TypeError('Bootstrap data must be an object.');
+  }
   // If the bootstrap data came from an older server-side SDK, we'll have just a map of keys to values.
   // Newer SDKs that have an allFlagsState method will provide an extra "$flagsState" key that contains
   // the rest of the metadata we want. We do it this way for backward compatibility with older JS SDKs.

@@ -266,6 +266,45 @@ it('applies new bootstrap data to the flag manager on re-identify', async () => 
   manager.close();
 });
 
+it.each([
+  ['null', null],
+  ['undefined', undefined],
+])('runs a normal identify when bootstrap is %s', async (_label, bootstrap) => {
+  const flagManager = makeFlagManager();
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ flagManager }));
+  const { resolve, reject } = await identifyManager(manager, { bootstrap });
+
+  expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+  // The full pipeline runs, including initializers.
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].initializerFactories.length).toBeGreaterThan(0);
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(reject).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+it('logs an error and runs a normal identify when bootstrap is malformed', async () => {
+  const logger = makeLogger();
+  const flagManager = makeFlagManager();
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({ flagManager, config: makeConfig({ logger }) }),
+  );
+  const { resolve, reject } = await identifyManager(manager, { bootstrap: 5 });
+
+  expect(logger.error).toHaveBeenCalledWith(
+    expect.stringContaining('Failed to read bootstrap data'),
+    expect.any(TypeError),
+  );
+  expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+  expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
+  expect(capturedDataSourceConfigs[0].initializerFactories.length).toBeGreaterThan(0);
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(reject).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
 it('does not create a data source when bootstrap is used with one-shot mode', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'one-shot' }));
   await identifyManager(manager, { bootstrap: {} });
