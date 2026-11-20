@@ -1,12 +1,16 @@
 version: 2
 updates:
+  # GitHub Actions — no cooldown for our own actions, 7 days for third-party
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'monthly'
     cooldown:
       default-days: 7
+      exclude:
+        - 'launchdarkly/*'
 
+  # npm — examples and contract-tests only (directories with lockfiles)
   - package-ecosystem: 'npm'
     directories:
       - 'packages/sdk/*/example'
