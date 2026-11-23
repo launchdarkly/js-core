@@ -101,10 +101,45 @@ function makeSourceFactoryProvider() {
   };
 }
 
+interface MockDataSource {
+  start: jest.Mock;
+  close: jest.Mock;
+  resolveStart: () => void;
+  rejectStart: (err: Error) => void;
+}
+
+// Make a data source mock with a start() promise that the test can settle.
+// Like the real data source, close() rejects a start() that is not settled.
+// When autoResolve is true, start() resolves immediately.
+function makeMockDataSource(autoResolve: boolean): MockDataSource {
+  let resolveStart!: () => void;
+  let rejectStart!: (err: Error) => void;
+  const startPromise = new Promise<void>((res, rej) => {
+    resolveStart = res;
+    rejectStart = rej;
+  });
+  return {
+    start: jest.fn(() => {
+      if (autoResolve) {
+        resolveStart();
+      }
+      return startPromise;
+    }),
+    close: jest.fn(() =>
+      rejectStart(new Error('Data source closed before initialization completed.')),
+    ),
+    resolveStart,
+    rejectStart,
+  };
+}
+
 // Captured config and callbacks from mocks.
 let capturedDataSourceConfigs: any[];
 let capturedOnReconcile: ((pendingState: PendingState) => void) | undefined;
-let mockDataSource: { start: jest.Mock; close: jest.Mock };
+// The data sources that createFDv2DataSource made, in creation order.
+let createdDataSources: MockDataSource[];
+// Set to false before the data source is made to settle start() in the test.
+let autoResolveStart: boolean;
 let mockDebounceManager: {
   setNetworkState: jest.Mock;
   setLifecycleState: jest.Mock;
@@ -142,14 +177,14 @@ beforeEach(() => {
   capturedDataSourceConfigs = [];
   capturedOnReconcile = undefined;
 
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
+  createdDataSources = [];
+  autoResolveStart = true;
 
   mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
     capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
+    const source = makeMockDataSource(autoResolveStart);
+    createdDataSources.push(source);
+    return source as any;
   });
 
   mockDebounceManager = {
@@ -181,12 +216,18 @@ async function identifyManager(
   return { resolve, reject };
 }
 
+async function flushPromises() {
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
 it('creates a data source for the resolved mode on identify', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig());
   await identifyManager(manager);
 
   expect(mockCreateFDv2DataSource).toHaveBeenCalledTimes(1);
-  expect(mockDataSource.start).toHaveBeenCalledTimes(1);
+  expect(createdDataSources[0].start).toHaveBeenCalledTimes(1);
 
   manager.close();
 });
@@ -195,18 +236,11 @@ it('tears down the previous data source on re-identify', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig());
   await identifyManager(manager);
 
-  const firstDataSource = mockDataSource;
   const firstDebounceManager = mockDebounceManager;
-
-  // Create new mocks for second identify.
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
 
   await identifyManager(manager);
 
-  expect(firstDataSource.close).toHaveBeenCalledTimes(1);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
   expect(firstDebounceManager.close).toHaveBeenCalledTimes(1);
 
   manager.close();
@@ -296,14 +330,6 @@ it('includes initializers on mode switch when no selector has been obtained', as
 
   // Reset mock to capture second data source creation.
   mockCreateFDv2DataSource.mockClear();
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
-  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
-    capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
-  });
 
   // Simulate mode switch via reconcile: one-shot -> streaming.
   capturedOnReconcile!({
@@ -325,28 +351,13 @@ it('closes data source on mode switch from streaming to one-shot and updates cur
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
-  const firstDataSource = mockDataSource;
-
-  mockCreateFDv2DataSource.mockClear();
-  // one-shot post-init has no sources, so createFDv2DataSource won't be called again
-  // because includeInitializers will be true (no selector) but the factories will be built.
-  // Actually, one-shot has initializers and no synchronizers. Since no selector, initializers included.
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
-  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
-    capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
-  });
-
   capturedOnReconcile!({
     networkState: 'available',
     lifecycleState: 'foreground',
     requestedMode: 'one-shot',
   });
 
-  expect(firstDataSource.close).toHaveBeenCalledTimes(1);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
   expect(manager.getCurrentMode()).toBe('one-shot');
 
   manager.close();
@@ -380,14 +391,6 @@ it('uses only synchronizers on mode switch after selector has been obtained', as
 
   mockCreateFDv2DataSource.mockClear();
   capturedDataSourceConfigs = [];
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
-  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
-    capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
-  });
 
   // Mode switch to streaming.
   capturedOnReconcile!({
@@ -645,14 +648,6 @@ it('skips cache initializer on mode switch when bootstrapped', async () => {
   // Now simulate a mode switch that would include initializers.
   mockCreateFDv2DataSource.mockClear();
   capturedDataSourceConfigs = [];
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
-  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
-    capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
-  });
 
   // Switch to polling (which has cache initializer).
   capturedOnReconcile!({
@@ -720,7 +715,7 @@ it('closes data source and debounce manager on close', async () => {
 
   manager.close();
 
-  expect(mockDataSource.close).toHaveBeenCalledTimes(1);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
   expect(mockDebounceManager.close).toHaveBeenCalledTimes(1);
 });
 
@@ -750,17 +745,15 @@ it('resolves identify when data source start completes', async () => {
 });
 
 it('rejects identify when data source start fails', async () => {
-  const error = new Error('start failed');
-  mockDataSource.start.mockRejectedValueOnce(error);
-
+  autoResolveStart = false;
   const manager = createFDv2DataManagerBase(makeBaseConfig());
-  const resolve = jest.fn();
-  const reject = jest.fn();
-  await manager.identify(resolve, reject, makeContext());
-  // Flush microtasks for the rejected promise.
-  await Promise.resolve();
-  await Promise.resolve();
+  const { resolve, reject } = await identifyManager(manager);
 
+  const error = new Error('start failed');
+  createdDataSources[0].rejectStart(error);
+  await flushPromises();
+
+  expect(resolve).not.toHaveBeenCalled();
   expect(reject).toHaveBeenCalledTimes(1);
   expect(reject).toHaveBeenCalledWith(error);
 
@@ -805,7 +798,6 @@ it('resolves to offline when network is unavailable via reconcile', async () => 
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
-  const firstDataSource = mockDataSource;
   mockCreateFDv2DataSource.mockClear();
 
   capturedOnReconcile!({
@@ -815,7 +807,7 @@ it('resolves to offline when network is unavailable via reconcile', async () => 
   });
 
   // Should close previous data source.
-  expect(firstDataSource.close).toHaveBeenCalledTimes(1);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
   // Offline mode resolves via the browser transition table.
   expect(manager.getCurrentMode()).toBe('offline');
 
@@ -915,14 +907,6 @@ it('stores selector from payload state for subsequent data source creations', as
   // Now switch mode. Since selector exists, no initializers.
   mockCreateFDv2DataSource.mockClear();
   capturedDataSourceConfigs = [];
-  mockDataSource = {
-    start: jest.fn().mockResolvedValue(undefined),
-    close: jest.fn(),
-  };
-  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
-    capturedDataSourceConfigs.push(cfg);
-    return mockDataSource;
-  });
 
   capturedOnReconcile!({
     networkState: 'available',
@@ -1248,6 +1232,119 @@ it('does not warn when no payload filter key is configured', () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig({ config }));
 
   expect(config.logger.warn).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+function useActualDataSources() {
+  const actual = jest.requireActual('../../src/datasource/fdv2/FDv2DataSource');
+  mockCreateFDv2DataSource.mockImplementation((cfg: any) => {
+    capturedDataSourceConfigs.push(cfg);
+    return actual.createFDv2DataSource(cfg);
+  });
+}
+
+// The cache initializer of this provider always reports a cache miss.
+function makeCacheMissSourceFactoryProvider() {
+  const provider = makeSourceFactoryProvider();
+  provider.createInitializerFactory.mockImplementation((entry: any) => {
+    if (entry?.type !== 'cache') {
+      return { create: jest.fn() };
+    }
+    return {
+      isCache: true,
+      create: jest.fn(() => ({
+        run: jest.fn(async () => ({
+          type: 'changeSet',
+          payload: { version: 0, type: 'none', updates: [] },
+          fdv1Fallback: false,
+        })),
+        close: jest.fn(),
+      })),
+    } as any;
+  });
+  return provider;
+}
+
+it('completes a pending identify from the new data source after a mode switch', async () => {
+  autoResolveStart = false;
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'polling' }));
+  const { resolve, reject } = await identifyManager(manager, { waitForNetworkResults: true });
+
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'streaming',
+  });
+  await flushPromises();
+
+  expect(createdDataSources).toHaveLength(2);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
+  expect(resolve).not.toHaveBeenCalled();
+  expect(reject).not.toHaveBeenCalled();
+
+  createdDataSources[1].resolveStart();
+  await flushPromises();
+
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(reject).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+it('completes a pending identify with defaults after a switch to offline with no cached data', async () => {
+  autoResolveStart = false;
+  const flagManager = makeFlagManager();
+  const manager = createFDv2DataManagerBase(
+    makeBaseConfig({
+      foregroundMode: 'polling',
+      flagManager,
+      sourceFactoryProvider: makeCacheMissSourceFactoryProvider(),
+    }),
+  );
+  const { resolve, reject } = await identifyManager(manager, { waitForNetworkResults: true });
+
+  useActualDataSources();
+  capturedOnReconcile!({
+    networkState: 'unavailable',
+    lifecycleState: 'foreground',
+    requestedMode: 'polling',
+  });
+  await flushPromises();
+
+  expect(manager.getCurrentMode()).toBe('offline');
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
+  expect(resolve).toHaveBeenCalledTimes(1);
+  expect(reject).not.toHaveBeenCalled();
+  expect(flagManager.applyChanges).not.toHaveBeenCalled();
+
+  manager.close();
+});
+
+it('does not fail a new identify when the previous data source closes before it initializes', async () => {
+  autoResolveStart = false;
+  const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'polling' }));
+
+  // Identify A completes from cached data while its data source still initializes.
+  const first = await identifyManager(manager);
+  capturedDataSourceConfigs[0].dataCallback({ version: 0, type: 'full', updates: [] });
+  expect(first.resolve).toHaveBeenCalledTimes(1);
+
+  // Identify B closes the data source of identify A.
+  const second = await identifyManager(manager, { waitForNetworkResults: true });
+  await flushPromises();
+
+  expect(createdDataSources).toHaveLength(2);
+  expect(createdDataSources[0].close).toHaveBeenCalledTimes(1);
+  expect(second.resolve).not.toHaveBeenCalled();
+  expect(second.reject).not.toHaveBeenCalled();
+
+  createdDataSources[1].resolveStart();
+  await flushPromises();
+
+  expect(second.resolve).toHaveBeenCalledTimes(1);
+  expect(second.reject).not.toHaveBeenCalled();
+  expect(first.reject).not.toHaveBeenCalled();
 
   manager.close();
 });
