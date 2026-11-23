@@ -19,7 +19,7 @@
     "@launchdarkly/js-contract-test-utils": "workspace:^"
   },
   "devDependencies": {
-    "oxfmt": "0.63.0",
+    "oxfmt": "0.79.0",
     "oxlint": "1.93.0",
     "playwright": "^1.49.1",
     "typescript": "6.0.3",
