@@ -57,9 +57,11 @@ export interface StateDebounceManager {
   setLifecycleState(state: LifecycleState): void;
 
   /**
-   * Update the pending connection mode. Resets the debounce timer.
-   * This is how `setConnectionMode()` participates in debouncing
-   * (CONNMODE spec 3.5.5).
+   * Update the pending requested mode. Resets the debounce timer.
+   * The requested mode is the foreground mode that the platform asks
+   * for. Mode resolution reads it after the connection mode override.
+   * An override change does not use this method. It calls
+   * scheduleReconcile() instead.
    */
   setRequestedMode(mode: FDv2ConnectionMode): void;
 
