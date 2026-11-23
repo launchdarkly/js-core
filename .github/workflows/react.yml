@@ -18,14 +18,14 @@ jobs:
         # Node versions to run on.
         version: [22, 24]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: ${{ matrix.version }}
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/react-sdk'
           workspace_path: packages/sdk/react
@@ -98,11 +98,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/react-sdk-example-hello-react'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -115,11 +115,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/react-sdk-example-react-server'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -132,11 +132,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/react-sdk-example-bootstrap'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -145,8 +145,8 @@ jobs:
   run-testing-example:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
       - name: Install dependencies

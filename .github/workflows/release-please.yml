@@ -118,7 +118,7 @@ jobs:
       package-sdk-vue-released: ${{ steps.release.outputs['packages/sdk/vue--release_created'] }}
       package-node-client-released: ${{ steps.release.outputs['packages/sdk/node-client--release_created'] }}
     steps:
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0
+      - uses: googleapis/release-please-action@v5.0.0
         id: release
         with:
           token: ${{secrets.GITHUB_TOKEN}}
@@ -131,10 +131,10 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-common-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-common
         name: Full release of packages/shared/common
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/common
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -147,10 +147,10 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-eventsource-released == 'true' }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-eventsource
         name: Full release of packages/shared/eventsource
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/eventsource
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -163,10 +163,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-client-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-sdk-client
         name: Full release of packages/shared/sdk-client
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/sdk-client
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -179,10 +179,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-sdk-server
         name: Full release of packages/shared/sdk-server
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/sdk-server
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -195,10 +195,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-server-edge-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-sdk-server-edge
         name: Full release of packages/shared/sdk-server-edge
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/sdk-server-edge
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -211,10 +211,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgeworker-sdk-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-akamai-edgeworker-sdk
         name: Full release of packages/shared/akamai-edgeworker-sdk
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/akamai-edgeworker-sdk
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -227,10 +227,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-cloudflare-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-cloudflare
         name: Full release of packages/sdk/cloudflare
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/cloudflare
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -243,10 +243,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-fastly-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-fastly
         name: Full release of packages/sdk/fastly
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/fastly
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -259,10 +259,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-react-native-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-react-native
         name: Full release of packages/sdk/react-native
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/react-native
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -275,10 +275,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-browser-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-browser
         name: Full release of packages/sdk/browser
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/browser
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -291,10 +291,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-node-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-server-node
         name: Full release of packages/sdk/server-node
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/server-node
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -307,10 +307,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-vercel
         name: Full release of packages/sdk/vercel
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/vercel
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -323,10 +323,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-base-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-akamai-base
         name: Full release of packages/sdk/akamai-base
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/akamai-base
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -339,10 +339,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-akamai-edgekv-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-akamai-edgekv
         name: Full release of packages/sdk/akamai-edgekv
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/akamai-edgekv
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -355,14 +355,14 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-redis-release == 'true' }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - run: |
           sudo apt-get update
           sudo apt-get install redis-server
           sudo service redis-server start
       - id: release-node-server-sdk-redis
         name: Full release of packages/store/node-server-sdk-redis
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/store/node-server-sdk-redis
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -375,12 +375,12 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-dynamodb-release == 'true' }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - run: |
           sudo docker run -d -p 8000:8000 amazon/dynamodb-local
       - id: release-node-server-sdk-dynamodb
         name: Full release of packages/store/node-server-sdk-dynamodb
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/store/node-server-sdk-dynamodb
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -393,10 +393,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-server-sdk-otel-release == 'true' }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-node-server-sdk-otel
         name: Full release of packages/telemetry/node-server-sdk-otel
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/telemetry/node-server-sdk-otel
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -409,10 +409,10 @@ jobs:
       contents: write
     if: ${{ needs.release-please.outputs.package-tooling-jest-release == 'true' }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-tooling-jest
         name: Full release of packages/tooling/jest
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/tooling/jest
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -425,10 +425,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-tooling-client-testing-plugin-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-tooling-client-testing-plugin
         name: Full release of packages/tooling/client-testing-plugin
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/tooling/client-testing-plugin
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -441,10 +441,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-node-client-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-node-client
         name: Full release of packages/sdk/node-client
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/node-client
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -457,10 +457,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-react-native
         name: Full release of packages/sdk/server-ai
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/server-ai
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -473,10 +473,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-langchain-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-server-ai-langchain
         name: Full release of packages/ai-providers/server-ai-langchain
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/ai-providers/server-ai-langchain
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -489,10 +489,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-openai-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-server-ai-openai
         name: Full release of packages/ai-providers/server-ai-openai
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/ai-providers/server-ai-openai
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -505,10 +505,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-server-ai-vercel-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-server-ai-vercel
         name: Full release of packages/ai-providers/server-ai-vercel
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/ai-providers/server-ai-vercel
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -521,10 +521,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-shopify-oxygen-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-shopify-oxygen
         name: Full release of packages/sdk/shopify-oxygen
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/shopify-oxygen
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -539,10 +539,10 @@ jobs:
     # TODO: Uncomment this when the package is ready to be released.
     if: false
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-electron
         name: Full release of packages/sdk/electron
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/electron
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -555,10 +555,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-react-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-react
         name: Full release of packages/sdk/react
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/react
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -571,10 +571,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-shared-openfeature-server-common-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-openfeature-server-common
         name: Full release of packages/shared/openfeature-server-common
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/shared/openfeature-server-common
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -587,10 +587,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-openfeature-node-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-openfeature-node-server
         name: Full release of packages/sdk/openfeature-node-server
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/openfeature-node-server
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -603,10 +603,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-openfeature-cloudflare-server-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-openfeature-cloudflare-server
         name: Full release of packages/sdk/openfeature-cloudflare-server
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/openfeature-cloudflare-server
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -619,10 +619,10 @@ jobs:
       contents: write
     if: ${{ always() && !failure() && !cancelled() && needs.release-please.outputs.package-sdk-vue-released == 'true'}}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@v7.0.1
       - id: release-vue
         name: Full release of packages/sdk/vue
-        uses: ./actions/full-release
+        uses: $/actions/full-release
         with:
           workspace_path: packages/sdk/vue
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -634,8 +634,8 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-release-node
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-release-node
 
       - name: 'Setup Redis'
         if: ${{ inputs.workspace_path == 'packages/store/node-server-sdk-redis' }}
@@ -655,14 +655,14 @@ jobs:
           echo "WORKSPACE_NAME=$WORKSPACE_NAME" >> $GITHUB_ENV
       - id: build-and-test
         name: Build and Test
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           workspace_path: ${{ inputs.workspace_path }}
       - id: publish-jsr
         name: Publish Package to jsr
         if: ${{ inputs.package_registry == 'jsr' }}
-        uses: ./actions/publish-jsr
+        uses: $/actions/publish-jsr
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           workspace_path: ${{ inputs.workspace_path }}
@@ -671,7 +671,7 @@ jobs:
       - id: publish-npm
         name: Publish Package to npm
         if: ${{ inputs.package_registry == 'npm' }}
-        uses: ./actions/publish
+        uses: $/actions/publish
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           workspace_path: ${{ inputs.workspace_path }}

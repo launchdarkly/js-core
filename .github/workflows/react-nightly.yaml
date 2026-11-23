@@ -10,11 +10,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/react-sdk-example-hello-react'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

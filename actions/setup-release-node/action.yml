@@ -6,7 +6,7 @@ runs:
   using: composite
   steps:
     - name: Setup Node.js and Yarn
-      uses: ./actions/setup-yarn
+      uses: $/actions/setup-yarn
       with:
         node-version: 24.x
         registry-url: 'https://registry.npmjs.org'

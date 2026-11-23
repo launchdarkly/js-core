@@ -22,20 +22,20 @@ jobs:
         version: [22, 24]
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: ${{ matrix.version }}
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/js-client-sdk'
           workspace_path: packages/sdk/browser
       - name: Check package size
         if: github.event_name == 'pull_request' && matrix.version == '24'
-        uses: ./actions/package-size
+        uses: $/actions/package-size
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           target_file: 'packages/sdk/browser/dist/index.js'
@@ -177,11 +177,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/js-client-sdk-example-getting-started'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -194,11 +194,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/js-client-sdk-example-custom-eventsource'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}
@@ -211,11 +211,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/js-client-sdk-example-browser-extension'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

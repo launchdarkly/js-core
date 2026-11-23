@@ -14,11 +14,11 @@ jobs:
   build-test-cloudflare:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/cloudflare-server-sdk'
           workspace_path: packages/sdk/cloudflare
@@ -26,8 +26,8 @@ jobs:
   build-test-cloudflare-example:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7.0.1
+      - uses: $/actions/setup-yarn
       # The example's test is a Playwright e2e test, so the browser has to be
       # present before the shared CI steps run it. Installing dependencies first
       # is what puts the playwright CLI on the path; ./actions/ci repeats that
@@ -38,7 +38,7 @@ jobs:
         run: yarn workspace @launchdarkly/cloudflare-example playwright install --with-deps chromium
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/cloudflare-example'
           workspace_path: packages/sdk/cloudflare/example
