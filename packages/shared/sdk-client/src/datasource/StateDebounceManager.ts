@@ -64,10 +64,10 @@ export interface StateDebounceManager {
   setRequestedMode(mode: FDv2ConnectionMode): void;
 
   /**
-   * Resets the debounce timer without a change to the pending state. Use it when an input that
+   * Schedules a reconcile without a change to the pending state. Use it when an input that
    * the pending state does not hold, such as the connection mode override, changes.
    */
-  requestReconcile(): void;
+  scheduleReconcile(): void;
 
   /**
    * Cancel any pending debounce timer and release resources.
@@ -163,7 +163,7 @@ export function createStateDebounceManager(
       resetTimer();
     },
 
-    requestReconcile(): void {
+    scheduleReconcile(): void {
       resetTimer();
     },
 

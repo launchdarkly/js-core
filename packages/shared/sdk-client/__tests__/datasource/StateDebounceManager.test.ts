@@ -81,10 +81,10 @@ it('fires callback after debounce window when connection mode changes', () => {
   manager.close();
 });
 
-it('fires callback after debounce window when a reconcile is requested without a state change', () => {
+it('fires callback after debounce window when a reconcile is scheduled without a state change', () => {
   const { manager, onReconcile } = makeManager();
 
-  manager.requestReconcile();
+  manager.scheduleReconcile();
   jest.advanceTimersByTime(DEFAULT_DEBOUNCE_MS - 1);
   expect(onReconcile).not.toHaveBeenCalled();
 

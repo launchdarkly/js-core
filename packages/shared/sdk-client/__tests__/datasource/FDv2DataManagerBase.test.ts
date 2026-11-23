@@ -109,7 +109,7 @@ let mockDebounceManager: {
   setNetworkState: jest.Mock;
   setLifecycleState: jest.Mock;
   setRequestedMode: jest.Mock;
-  requestReconcile: jest.Mock;
+  scheduleReconcile: jest.Mock;
   close: jest.Mock;
 };
 
@@ -157,7 +157,7 @@ beforeEach(() => {
     setNetworkState: jest.fn(),
     setLifecycleState: jest.fn(),
     setRequestedMode: jest.fn(),
-    requestReconcile: jest.fn(),
+    scheduleReconcile: jest.fn(),
     close: jest.fn(),
   };
 
@@ -566,9 +566,9 @@ it('setConnectionMode overrides all automatic behavior', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
 
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
   manager.setConnectionMode('polling');
-  expect(mockDebounceManager.requestReconcile).toHaveBeenCalledTimes(1);
+  expect(mockDebounceManager.scheduleReconcile).toHaveBeenCalledTimes(1);
 
   capturedOnReconcile!({
     networkState: 'available',
@@ -585,10 +585,10 @@ it('setConnectionMode overrides forced streaming', async () => {
   await identifyManager(manager);
 
   manager.setForcedStreaming!(true);
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
 
   manager.setConnectionMode('polling');
-  expect(mockDebounceManager.requestReconcile).toHaveBeenCalledTimes(1);
+  expect(mockDebounceManager.scheduleReconcile).toHaveBeenCalledTimes(1);
 
   // The override bypasses the transition table, so the forced streaming input loses.
   capturedOnReconcile!({
@@ -613,11 +613,11 @@ it('clearing setConnectionMode returns to streaming logic', async () => {
     requestedMode: 'streaming',
   });
   expect(manager.getCurrentMode()).toBe('polling');
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
 
   // Without the override, the forced streaming input decides the mode again.
   manager.setConnectionMode(undefined);
-  expect(mockDebounceManager.requestReconcile).toHaveBeenCalledTimes(1);
+  expect(mockDebounceManager.scheduleReconcile).toHaveBeenCalledTimes(1);
 
   capturedOnReconcile!({
     networkState: 'available',
@@ -634,12 +634,12 @@ it('does not request a reconcile when setConnectionMode repeats the current over
   await identifyManager(manager);
 
   manager.setConnectionMode('polling');
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
 
   manager.setConnectionMode('polling');
   manager.setConnectionMode('polling');
 
-  expect(mockDebounceManager.requestReconcile).not.toHaveBeenCalled();
+  expect(mockDebounceManager.scheduleReconcile).not.toHaveBeenCalled();
 
   manager.close();
 });
@@ -647,11 +647,11 @@ it('does not request a reconcile when setConnectionMode repeats the current over
 it('does not request a reconcile when setConnectionMode clears an override that is not set', async () => {
   const manager = createFDv2DataManagerBase(makeBaseConfig({ foregroundMode: 'streaming' }));
   await identifyManager(manager);
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
 
   manager.setConnectionMode(undefined);
 
-  expect(mockDebounceManager.requestReconcile).not.toHaveBeenCalled();
+  expect(mockDebounceManager.scheduleReconcile).not.toHaveBeenCalled();
 
   manager.close();
 });
@@ -668,9 +668,9 @@ it('requests a reconcile when setConnectionMode repeats the requested mode', asy
   });
   expect(manager.getCurrentMode()).toBe('offline');
 
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
   manager.setConnectionMode('streaming');
-  expect(mockDebounceManager.requestReconcile).toHaveBeenCalledTimes(1);
+  expect(mockDebounceManager.scheduleReconcile).toHaveBeenCalledTimes(1);
 
   capturedOnReconcile!({
     networkState: 'unavailable',
@@ -687,10 +687,10 @@ it('requests a reconcile when setConnectionMode clears the override', async () =
   await identifyManager(manager);
 
   manager.setConnectionMode('streaming');
-  mockDebounceManager.requestReconcile.mockClear();
+  mockDebounceManager.scheduleReconcile.mockClear();
 
   manager.setConnectionMode(undefined);
-  expect(mockDebounceManager.requestReconcile).toHaveBeenCalledTimes(1);
+  expect(mockDebounceManager.scheduleReconcile).toHaveBeenCalledTimes(1);
 
   manager.close();
 });

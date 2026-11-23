@@ -642,13 +642,13 @@ export function createFDv2DataManagerBase(
     },
 
     setConnectionMode(mode?: FDv2ConnectionMode): void {
-      // The pending state does not hold the override, so an override change requests the
+      // The pending state does not hold the override, so an override change schedules the
       // reconcile itself. A repeated call does not, so it cannot hold back a pending transition.
       if (connectionModeOverride === mode) {
         return;
       }
       connectionModeOverride = mode;
-      debounceManager?.requestReconcile();
+      debounceManager?.scheduleReconcile();
     },
 
     getCurrentMode(): FDv2ConnectionMode {
