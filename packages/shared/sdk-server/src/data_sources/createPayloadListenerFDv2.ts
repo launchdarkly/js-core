@@ -39,6 +39,13 @@ export const createPayloadListener =
 
     // convert to LDFeatureStoreDataStorage structure
     const converted: LDFeatureStoreDataStorage = {};
+    if (payload.type === 'full') {
+      // A full payload replaces the complete data set, so it always provides the flag
+      // namespace and the segment namespace. A persistent store clears only the
+      // namespaces it receives, so a missing namespace keeps its old entries.
+      converted.features = Object.create(null);
+      converted.segments = Object.create(null);
+    }
     payload.updates.forEach((it: internal.Update) => {
       const namespace = namespaceForKind(it.kind);
       if (!converted[namespace]) {
