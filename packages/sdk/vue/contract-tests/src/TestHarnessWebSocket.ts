@@ -26,6 +26,7 @@ const CAPABILITIES = [
   'flag-change-listeners',
   'fdv1-fallback',
   'bootstrap',
+  'diagnostic-events',
 ];
 
 export default class TestHarnessWebSocket extends BaseTestHarnessWebSocket {
