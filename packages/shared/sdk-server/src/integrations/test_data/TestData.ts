@@ -58,6 +58,9 @@ function fdv2Update(kind: 'flag' | 'segment', key: string, item: Flag | Segment)
  * from the test data that is present at start. Then the client reports an error because it has
  * no more data sources. The client does not get the changes that you make after that.
  *
+ * A test data initializer does not write to a persistent store. A test data synchronizer writes
+ * each payload to a persistent store, so its first payload replaces the content of that store.
+ *
  * ```
  *     const td = new TestData();
  *     td.update(td.flag('flag-key-1').booleanFlag().variationForAll(true));

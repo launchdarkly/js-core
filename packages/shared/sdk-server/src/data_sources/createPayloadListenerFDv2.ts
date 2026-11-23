@@ -16,6 +16,12 @@ const namespaceForKind = (kind: string) => {
 export interface DataCallbackContainer {
   initMetadata?: internal.InitMetadata;
   payload: internal.Payload;
+  /**
+   * Whether the store mirrors the payload to a persistent store. The default is
+   * true, so a data source that sends no indicator keeps the mirroring behavior.
+   * Set it to false to keep the payload out of the persistent store.
+   */
+  persist?: boolean;
 }
 
 export const createPayloadListener =
@@ -27,7 +33,7 @@ export const createPayloadListener =
     onFullPayloadApplied: VoidFunction = () => {},
   ) =>
   (dataContainer: DataCallbackContainer) => {
-    const { initMetadata, payload } = dataContainer;
+    const { initMetadata, payload, persist = true } = dataContainer;
     if (payload.type === 'full') {
       logger?.debug('Initializing all data');
     } else if (payload.updates.length > 0) {
@@ -79,5 +85,6 @@ export const createPayloadListener =
       },
       initMetadata,
       payload.state,
+      persist,
     );
   };

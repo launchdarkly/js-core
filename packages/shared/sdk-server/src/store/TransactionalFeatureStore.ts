@@ -97,6 +97,11 @@ function invokeStoreCall(
  * the store unavailable. When the store recovers, this writes the full in-memory data
  * set back to it.
  *
+ * Every change is applied to the in-memory store. A change is mirrored to the
+ * persistence store unless its persist indicator is false. The indicator
+ * defaults to true. The store keeps the latest indicator. While the latest
+ * indicator is false, recovery marks the store available without a write-back.
+ *
  * At most one full-store write is in flight at a time: a new write-back starts
  * only after the previous write-back's store call has answered. A write-back is
  * never abandoned. Its answer, however late, decides the outcome.
@@ -143,6 +148,10 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   // Later slow write-backs in the same outage log at debug, so a store that
   // answers slowly cannot flood the log.
   private _slowWriteBackWarnedThisOutage = false;
+
+  // The persist indicator of the most recent change. The write-back consults it
+  // before it writes the memory state to the persistence store.
+  private _persistIndicator = true;
 
   private _closed = false;
 
@@ -221,22 +230,30 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
     callback: () => void,
     initMetadata?: internal.InitMetadata,
     selector?: string,
+    persist?: boolean,
   ): void {
+    this._persistIndicator = persist !== false;
     this._memoryStore.applyChanges(
       basis,
       data,
       () => {
-        // TODO: SDK-1047 conditional propgation to persistence based on parameter
-        if (this._closed) {
-          // The stores are closed, so nothing is mirrored to persistence. The
-          // change's own callback must still fire.
+        if (basis) {
+          // A basis makes the memory store the active store. This happens whether
+          // or not the change is mirrored to the persistence store.
+          this._activeStore = this._memoryStore;
+          if (!this._closed) {
+            // The memory store is the source of truth now. A persistent store
+            // that keeps its own cache drops it, even when the basis is not
+            // mirrored.
+            this._basePersistenceStore.dropCache?.();
+          }
+        }
+        if (this._closed || persist === false) {
+          // The change's own callback must still fire.
           callback();
           return;
         }
         if (basis) {
-          // basis causes memory store to become the active store
-          this._activeStore = this._memoryStore;
-
           // A persistence failure must not fail the change. The memory store already
           // holds the data, so the change's own callback must still fire, even when
           // a throwing logger escapes the availability handling.
@@ -591,6 +608,12 @@ export default class TransactionalFeatureStore implements LDTransactionalFeature
   private _writeBack(generation: number): void {
     if (this._closed) {
       this._writeBackOp.settle(generation);
+      return;
+    }
+    if (!this._persistIndicator) {
+      // The latest change does not want its data mirrored. Recovery completes
+      // without a write-back, and the store is available again.
+      this._markAvailable();
       return;
     }
     if (this._activeStore !== this._memoryStore) {

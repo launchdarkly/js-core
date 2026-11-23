@@ -178,6 +178,15 @@ export interface LDFeatureStore {
   isStoreAvailable?(callback: (isAvailable: boolean) => void): void;
 
   /**
+   * Drop any cached data, when the store keeps a cache that is separate from the SDK's
+   * in-memory store.
+   *
+   * The SDK calls this when its in-memory store becomes the source of truth. The cache
+   * must not keep data from before that point.
+   */
+  dropCache?(): void;
+
+  /**
    * Releases any resources being used by the feature store.
    */
   close(): void;

@@ -15,6 +15,9 @@ export type TestDataSourceFDv2Role = 'initializer' | 'synchronizer';
  * synchronizer, the source sends one full payload of the current data. Then it sends each change
  * payload that the `TestData` instance gives to it, until it stops.
  *
+ * An initializer's payload is not mirrored to a persistent store. A synchronizer's payloads are
+ * mirrored to a persistent store.
+ *
  * Every payload carries a selector that increases with each payload that the `TestData` instance
  * makes. A full payload is therefore always a basis.
  *
@@ -64,7 +67,13 @@ export default class TestDataSourceFDv2 implements subsystem.DataSource {
     const payload = this._makeFullPayload();
     // The full payload always carries a selector, so the data system treats it as a basis.
     // After an initializer sends it, the data system does not run the next initializer.
-    dataCallback(true, { payload });
+    if (this._role === 'initializer') {
+      // An initializer's data is only a starting point for this process. The data system
+      // must not mirror it to a persistent store.
+      dataCallback(true, { payload, persist: false });
+    } else {
+      dataCallback(true, { payload });
+    }
   }
 
   /**

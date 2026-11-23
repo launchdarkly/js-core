@@ -59,7 +59,8 @@ it('sends the current data one time and closes when used as an initializer', () 
   td.update(td.flag('flag2').variationForAll(true));
 
   // The initializer sends only the data present at start, as one full payload with a
-  // selector, and then closes.
+  // selector, and then closes. The payload asks the store not to mirror it to a
+  // persistent store.
   expect(dataCallback).toHaveBeenCalledTimes(1);
   expect(dataCallback).toHaveBeenCalledWith(true, {
     payload: expect.objectContaining({
@@ -67,6 +68,7 @@ it('sends the current data one time and closes when used as an initializer', () 
       state: '1',
       updates: [expect.objectContaining({ kind: 'flag', key: 'flag1' })],
     }),
+    persist: false,
   });
   expect(statusCallback).toHaveBeenLastCalledWith(subsystem.DataSourceState.Closed);
 });

@@ -74,6 +74,7 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
     callback: () => void,
     initMetadata?: internal.InitMetadata,
     selector?: string,
+    persist?: boolean,
   ): void {
     const checkForChanges = this._hasEventListeners();
     const doApplyChanges = (oldData: LDFeatureStoreDataStorage) => {
@@ -131,6 +132,7 @@ export default class TransactionalDataSourceUpdates implements LDTransactionalDa
         },
         initMetadata,
         selector,
+        persist,
       );
     };
 
