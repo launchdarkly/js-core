@@ -34,7 +34,7 @@ jobs:
           yarn workspace @launchdarkly/eventsource-contract-tests start \
             > /tmp/eventsource-contract-tests.log 2>&1 &
       - name: Run SSE contract tests
-        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           repo: sse-contract-tests
           version: v2
