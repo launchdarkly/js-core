@@ -32,7 +32,7 @@
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
     "@types/node": "^25.9.1",
-    "oxfmt": "0.63.0",
+    "oxfmt": "0.79.0",
     "oxlint": "1.93.0",
     "typescript": "6.0.3"
   }
