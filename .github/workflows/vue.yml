@@ -14,7 +14,7 @@ jobs:
   build-test-vue:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
       - id: shared
         name: Shared CI Steps
@@ -40,7 +40,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
       - uses: $/actions/run-example
         with:
@@ -51,7 +51,7 @@ jobs:
   contract-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
       - name: Install contract test dependencies
         env:
@@ -117,7 +117,7 @@ jobs:
           sleep 5  # Give the browser time to initialize and connect via WebSocket
 
       - name: Run contract tests (FDv1)
-        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1.3.0
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -125,7 +125,7 @@ jobs:
           extra_params: '--skip-from=${{ github.workspace }}/packages/sdk/vue/contract-tests/testharness-suppressions.txt'
 
       - name: Run contract tests (FDv2)
-        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1.3.0
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}

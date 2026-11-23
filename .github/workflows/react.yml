@@ -18,7 +18,7 @@ jobs:
         # Node versions to run on.
         version: [22, 24]
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: ${{ matrix.version }}
@@ -98,7 +98,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: 24
@@ -115,7 +115,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: 24
@@ -132,7 +132,7 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: 24
@@ -145,7 +145,7 @@ jobs:
   run-testing-example:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: 24

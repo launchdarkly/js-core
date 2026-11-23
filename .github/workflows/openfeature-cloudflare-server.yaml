@@ -20,7 +20,7 @@ jobs:
         version: [22]
 
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
         with:
           node-version: ${{ matrix.version }}
@@ -35,7 +35,7 @@ jobs:
   build-test-openfeature-cloudflare-server-example:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
       - name: Install Dependencies
         run: yarn workspaces focus @launchdarkly/hello-openfeature-cloudflare-server

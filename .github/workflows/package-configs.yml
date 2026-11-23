@@ -23,7 +23,7 @@ jobs:
   pack:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
       - name: Install dependencies
         run: yarn workspaces focus $(node scripts/released-packages.js)
@@ -34,7 +34,7 @@ jobs:
         run: yarn workspaces foreach -pR --topological-dev $(node scripts/released-packages.js | sed 's/^/--from /') run build
       - name: Pack released packages
         run: node scripts/package-config-tests/run.js pack --packs ${{ runner.temp }}/packs
-      - uses: actions/upload-artifact@v7.0.2
+      - uses: actions/upload-artifact@v7
         with:
           name: packs
           path: ${{ runner.temp }}/packs
@@ -49,9 +49,9 @@ jobs:
         suite: ['types:5.0.4', 'types:5.9.3', 'types:6.0.3', attw, runtime, cloudflare, vercel]
     name: test (${{ matrix.suite }})
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@v7
       - uses: $/actions/setup-yarn
-      - uses: actions/download-artifact@v8.0.2
+      - uses: actions/download-artifact@v8
         with:
           name: packs
           path: ${{ runner.temp }}/packs
