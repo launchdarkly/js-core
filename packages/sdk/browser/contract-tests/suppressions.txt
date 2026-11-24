@@ -7,6 +7,7 @@ streaming/requests/URL path is computed correctly/no environment filter/base URI
 streaming/requests/context properties/single kind minimal/REPORT
 streaming/requests/context properties/single kind with all attributes/REPORT
 streaming/requests/context properties/multi-kind/REPORT
+streaming/requests/context properties/old user with private attribute names that look like references/REPORT
 # The native EventSource cannot send request headers, so the tags header never
 # reaches the stream endpoint.
 tags/stream requests/{"applicationId":null,"applicationVersion":"._-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678"}
