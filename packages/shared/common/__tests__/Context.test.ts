@@ -195,7 +195,7 @@ describe('given a user context with private attributes', () => {
     dog: 'lab',
     anonymous: true,
     _meta: {
-      privateAttributes: ['/a/b/c', 'cat', 'custom/dog'],
+      privateAttributes: ['/~1a~1b~1c', 'cat', 'custom/dog'],
     },
   };
 
@@ -441,4 +441,23 @@ it('should handle complex nested objects in canonicalUnfilteredJson', () => {
   expect(parsed.kind).toBe('user');
   expect(parsed.nested.array).toEqual([3, 1, 2]);
   expect(parsed.nested.value).toBe('test');
+});
+
+it('escapes legacy private attribute names that look like references when converting to a context', () => {
+  const context = Context.fromLDContext({
+    key: 'user-key',
+    custom: { '/a': 'private', '/b/c': 'private', '/~x': 'private', c: 'public' },
+    privateAttributeNames: ['/a', '/b/c', '/~x', 'plain', 'with/slash', 'with~tilde'],
+  });
+  expect(Context.toLDContext(context)).toEqual({
+    kind: 'user',
+    key: 'user-key',
+    '/a': 'private',
+    '/b/c': 'private',
+    '/~x': 'private',
+    c: 'public',
+    _meta: {
+      privateAttributes: ['/~1a', '/~1b~1c', '/~1~0x', 'plain', 'with/slash', 'with~tilde'],
+    },
+  });
 });

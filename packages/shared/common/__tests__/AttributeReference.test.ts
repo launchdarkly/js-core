@@ -49,6 +49,11 @@ describe.each([
   [new AttributeReference(' /a/b', true), { ' /a/b': true }, true],
   [new AttributeReference(' /a/b', false), { ' /a/b': true }, true],
   [new AttributeReference('/a/b'), { a: { b: 'c' } }, 'c'],
+  [new AttributeReference('/~1a'), { '/a': true }, true],
+  [new AttributeReference('/~0x'), { '~x': true }, true],
+  [new AttributeReference('/~1~0x'), { '/~x': true }, true],
+  [new AttributeReference('/~1b~1c'), { '/b/c': 'private', b: { c: 'public' } }, 'private'],
+  [new AttributeReference('/b/~1c'), { b: { '/c': 'nested' } }, 'nested'],
 ])('when given valid attribute references', (reference, object, expected) => {
   it('should be valid', () => {
     expect(reference.isValid).toBeTruthy();
@@ -79,4 +84,14 @@ it('should not allow indexing an array', () => {
   expect(
     new AttributeReference('/foo/0').get(AsContextCommon({ foo: ['bar', 'baz'] })),
   ).toBeUndefined();
+});
+
+it.each([
+  ['/~1a', ['/a']],
+  ['/~0x', ['~x']],
+  ['/~1~0x', ['/~x']],
+  ['/~1b~1c', ['/b/c']],
+  ['/~1b/~0c', ['/b', '~c']],
+])('unescapes components that begin with an escape sequence: %s', (reference, components) => {
+  expect(new AttributeReference(reference).components).toEqual(components);
 });
