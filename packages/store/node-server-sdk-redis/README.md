@@ -16,7 +16,7 @@ The minimum version of the LaunchDarkly Server-Side SDK for Node for use with th
 
 ## Supported Node versions
 
-This package is compatible with Node.js versions 16 and above.
+While this package requires Node.js 16 or later, you should use the latest patched version of a supported Node.js release.
 
 ## Getting started
 
@@ -36,6 +36,12 @@ npm install @launchdarkly/node-server-sdk-redis --save
 
 ```shell
 npm install ioredis --save
+```
+
+This package supports `ioredis` versions 5 and 6. `ioredis` 6 requires Node.js 20 or later. If your application uses an earlier version of Node.js, add a dependency on `ioredis` 5:
+
+```shell
+npm install ioredis@5 --save
 ```
 
 3. Import the package:

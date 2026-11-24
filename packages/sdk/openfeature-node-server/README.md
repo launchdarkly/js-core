@@ -12,7 +12,7 @@ This provider is designed primarily for use in multi-user systems such as web se
 
 ## Supported Node versions
 
-This version of the LaunchDarkly OpenFeature provider is compatible with Node.js versions 20 and above.
+While this version of the LaunchDarkly OpenFeature provider requires Node.js 20 or later, you should use the latest patched version of a supported Node.js release.
 
 ## Feature matrix
 

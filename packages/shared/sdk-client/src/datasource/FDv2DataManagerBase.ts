@@ -411,7 +411,7 @@ export function createFDv2DataManagerBase(
 
     const selectorGetter = () => selector;
 
-    dataSource = createFDv2DataSource({
+    const ds = createFDv2DataSource({
       initializerFactories,
       synchronizerSlots,
       dataCallback,
@@ -421,10 +421,16 @@ export function createFDv2DataManagerBase(
       fallbackTimeoutMs,
       recoveryTimeoutMs,
     });
+    dataSource = ds;
 
-    dataSource
-      .start()
+    // A mode switch or a new identify closes this data source. A closed data
+    // source rejects start(). Only the current data source can settle the
+    // pending identify, so ignore results from a replaced data source.
+    ds.start()
       .then(() => {
+        if (dataSource !== ds) {
+          return;
+        }
         initialized = true;
         if (pendingIdentifyResolve) {
           pendingIdentifyResolve();
@@ -433,6 +439,9 @@ export function createFDv2DataManagerBase(
         }
       })
       .catch((err) => {
+        if (dataSource !== ds) {
+          return;
+        }
         if (pendingIdentifyReject) {
           pendingIdentifyReject(err instanceof Error ? err : new Error(String(err)));
           pendingIdentifyResolve = undefined;

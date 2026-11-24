@@ -2,6 +2,27 @@
 
 All notable changes to `@launchdarkly/node-server-sdk` will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org).
 
+## [9.17.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.17.0...node-server-sdk-v9.17.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* Send the basis of the latest payload when the FDv2 stream reconnects ([#2214](https://github.com/launchdarkly/js-core/issues/2214)) ([1cc0375](https://github.com/launchdarkly/js-core/commit/1cc03756d76ba436ed54968ff9a324ddac4f9d58))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.26.7 to 2.26.8
+
+## [9.17.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.16.7...node-server-sdk-v9.17.0) (2026-11-19)
+
+
+### Features
+
+* Support ioredis 6 in the Redis store ([#2210](https://github.com/launchdarkly/js-core/issues/2210)) ([79f047d](https://github.com/launchdarkly/js-core/commit/79f047d3a41d21da9ddf68e0b9e1a9fc0eeb4e88))
+
 ## [9.16.7](https://github.com/launchdarkly/js-core/compare/node-server-sdk-v9.16.6...node-server-sdk-v9.16.7) (2026-11-18)
 
 

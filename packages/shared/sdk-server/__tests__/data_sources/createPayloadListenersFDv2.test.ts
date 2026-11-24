@@ -140,6 +140,54 @@ describe('createPayloadListenerFDv2', () => {
     );
   });
 
+  it('provides both namespaces for a full payload that has no items', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+
+    // Transfer a full payload that has no updates.
+    listener({
+      ...fullTransferPayload,
+      payload: { ...fullTransferPayload.payload, updates: [] },
+    });
+
+    // The converted data provides the flag namespace and the segment namespace, so a
+    // persistent store clears both, even though both are empty.
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
+      true,
+      { features: {}, segments: {} },
+      expect.any(Function),
+      { environmentId: 'envId' },
+      'initial',
+    );
+  });
+
+  it('provides an empty segment namespace for a full payload that has no segments', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+    dataSourceUpdates.applyChanges = jest.fn((_basis, _data, callback) => callback());
+
+    // Transfer a full payload that has one flag and no segments.
+    listener({
+      ...fullTransferPayload,
+      payload: {
+        ...fullTransferPayload.payload,
+        updates: [fullTransferPayload.payload.updates[0]],
+      },
+    });
+
+    // The converted data still provides the segment namespace, so a persistent store clears
+    // the old segments.
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
+      true,
+      {
+        features: { flagkey: { key: 'flagkey', version: 1 } },
+        segments: {},
+      },
+      expect.any(Function),
+      { environmentId: 'envId' },
+      'initial',
+    );
+  });
+
   test('data source updates called with basis false', async () => {
     const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
     listener(changesTransferPayload);

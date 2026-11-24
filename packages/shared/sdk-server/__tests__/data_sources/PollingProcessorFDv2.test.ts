@@ -1,4 +1,4 @@
-import { LDFlagDeliveryFallbackError } from '@launchdarkly/js-sdk-common';
+import { CompositeDataSource, LDFlagDeliveryFallbackError } from '@launchdarkly/js-sdk-common';
 
 import { DataSourceErrorKind, LDPollingError, subsystem } from '../../src';
 import PollingProcessorFDv2 from '../../src/data_sources/PollingProcessorFDv2';
@@ -437,15 +437,9 @@ describe('given a polling processor with a short poll duration', () => {
 
       expect(mockDataCallback).not.toHaveBeenCalled();
       expect(mockStatusCallback).toHaveBeenNthCalledWith(1, subsystem.DataSourceState.Initializing);
-      expect(mockStatusCallback).toHaveBeenNthCalledWith(
-        2,
-        subsystem.DataSourceState.Interrupted,
-        new LDPollingError(
-          DataSourceErrorKind.ErrorResponse,
-          `Received error ${status} for polling request - will retry`,
-          status as number,
-        ),
-      );
+      // The processor retries on its own schedule, so the status has no error. An error would
+      // tell the composite data source to restart the processor.
+      expect(mockStatusCallback).toHaveBeenNthCalledWith(2, subsystem.DataSourceState.Interrupted);
       expect(requestor.requestAllData.mock.calls.length).toBeGreaterThanOrEqual(2);
       expect(testLogger.getCount(LogLevel.Error)).toBe(0);
       expect(testLogger.getCount(LogLevel.Warn)).toBeGreaterThan(2);
@@ -512,4 +506,41 @@ describe('given a polling processor with a short poll duration', () => {
       }, 300);
     },
   );
+});
+
+describe('given a polling synchronizer in a composite data source', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('does not poll again before the poll interval after an error response', async () => {
+    const requestor = {
+      requestAllData: jest.fn((cb) => cb({ status: 503 }, undefined)),
+    };
+    const dataSource = new CompositeDataSource(
+      [],
+      [() => new PollingProcessorFDv2(requestor as unknown as Requestor, 30, new TestLogger())],
+      [],
+    );
+    const running = dataSource.start(jest.fn(), jest.fn());
+
+    // Let the first poll fail and let less than one poll interval go by.
+    await jest.advanceTimersByTimeAsync(29000);
+
+    // The synchronizer made no request after the first one.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(1);
+
+    // Let the remainder of the poll interval go by.
+    await jest.advanceTimersByTimeAsync(1000);
+
+    // The synchronizer polls again.
+    expect(requestor.requestAllData).toHaveBeenCalledTimes(2);
+
+    await dataSource.stop();
+    await running;
+  });
 });

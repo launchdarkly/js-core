@@ -1,5 +1,32 @@
 # Changelog
 
+## [4.5.1](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.5.0...node-server-sdk-redis-v4.5.1) (2026-11-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.17.0 to 9.17.1
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.17.1
+
+## [4.5.0](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.4.10...node-server-sdk-redis-v4.5.0) (2026-11-19)
+
+
+### Features
+
+* Support ioredis 6 in the Redis store ([#2210](https://github.com/launchdarkly/js-core/issues/2210)) ([79f047d](https://github.com/launchdarkly/js-core/commit/79f047d3a41d21da9ddf68e0b9e1a9fc0eeb4e88))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @launchdarkly/node-server-sdk bumped from 9.16.7 to 9.17.0
+  * peerDependencies
+    * @launchdarkly/node-server-sdk bumped from >=9.14.1 to >=9.17.0
+
 ## [4.4.10](https://github.com/launchdarkly/js-core/compare/node-server-sdk-redis-v4.4.9...node-server-sdk-redis-v4.4.10) (2026-11-18)
 
 

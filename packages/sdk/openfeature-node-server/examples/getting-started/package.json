@@ -24,16 +24,16 @@
   "author": "LaunchDarkly",
   "license": "Apache-2.0",
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.16.7",
-    "@launchdarkly/openfeature-node-server": "2.1.10",
+    "@launchdarkly/node-server-sdk": "9.17.1",
+    "@launchdarkly/openfeature-node-server": "2.1.12",
     "@openfeature/core": "^1.10.0",
     "@openfeature/server-sdk": "^1.16.0"
   },
   "devDependencies": {
     "@tsconfig/node20": "20.1.4",
     "@types/node": "^25.9.1",
-    "oxfmt": "0.63.0",
-    "oxlint": "1.78.0",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.93.0",
     "typescript": "6.0.3"
   }
 }

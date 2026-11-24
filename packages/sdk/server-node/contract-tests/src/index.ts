@@ -48,6 +48,7 @@ app.get('/', (req: Request, res: Response) => {
       'client-prereq-events',
       'event-gzip',
       'optional-event-gzip',
+      'diagnostic-events',
       'flag-change-listeners',
       'fdv1-fallback',
       'instance-id',

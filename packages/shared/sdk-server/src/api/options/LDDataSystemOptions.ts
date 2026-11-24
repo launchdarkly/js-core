@@ -1,5 +1,6 @@
 import { LDClientContext } from '@launchdarkly/js-sdk-common';
 
+import type TestData from '../../integrations/test_data/TestData';
 import { LDFeatureStore, LDOverrideSource } from '../subsystems';
 
 /**
@@ -225,7 +226,8 @@ export type DataSourceOptions =
 export type DataSourceConfiguration =
   | FileSystemDataSourceConfiguration
   | StreamingDataSourceConfiguration
-  | PollingDataSourceConfiguration;
+  | PollingDataSourceConfiguration
+  | TestDataSourceConfiguration;
 
 export interface FileSystemDataSourceConfiguration {
   type: 'file';
@@ -276,6 +278,46 @@ export interface PollingDataSourceConfiguration {
 }
 
 /**
+ * Uses a {@link TestData} instance as a data source of the data system. The source does not
+ * use the network.
+ *
+ * As an initializer, the source sends the current test data one time. As a synchronizer, the
+ * source sends the current test data. Then it sends each change that you make with
+ * `TestData.update`, `TestData.usePreconfiguredFlag`, or `TestData.usePreconfiguredSegment`.
+ *
+ * Use the entry as a synchronizer. If you use it only as an initializer, the client initializes
+ * from the test data that is present at start. Then the client reports an error because it has
+ * no more data sources. The client does not get the changes that you make after that.
+ *
+ * You can use one `TestData` instance in more than one entry and with more than one client. A
+ * change goes to all of the clients that use the instance.
+ *
+ * @example
+ * ```typescript
+ * const td = new TestData();
+ * td.update(td.flag('flag-key').booleanFlag().variationForAll(true));
+ *
+ * const client = init(sdkKey, {
+ *   dataSystem: {
+ *     dataSource: {
+ *       dataSourceOptionsType: 'custom',
+ *       initializers: [],
+ *       synchronizers: [{ type: 'testData', testData: td }],
+ *     },
+ *   },
+ * });
+ * ```
+ */
+export interface TestDataSourceConfiguration {
+  type: 'testData';
+
+  /**
+   * The test data that the source sends to the SDK.
+   */
+  testData: TestData;
+}
+
+/**
  * This standard data source is the recommended datasource for most customers. It will use
  * a combination of streaming and polling to initialize the SDK, provide real time updates,
  * and can switch between streaming and polling automatically to provide redundancy.
@@ -317,14 +359,16 @@ export interface PollingDataSourceOptions extends Omit<
  */
 export type InitializerDataSource =
   | FileSystemDataSourceConfiguration
-  | PollingDataSourceConfiguration;
+  | PollingDataSourceConfiguration
+  | TestDataSourceConfiguration;
 
 /**
  * Synchronizer configuration options
  */
 export type SynchronizerDataSource =
   | PollingDataSourceConfiguration
-  | StreamingDataSourceConfiguration;
+  | StreamingDataSourceConfiguration
+  | TestDataSourceConfiguration;
 
 /**
  * This data source will allow developers to define their own composite data source.

@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.7.1](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.7.0...js-server-sdk-common-edge-v2.7.1) (2026-11-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-server-sdk-common bumped from 2.26.7 to 2.26.8
+
+## [2.7.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.50...js-server-sdk-common-edge-v2.7.0) (2026-11-19)
+
+
+### Features
+
+* Report a wrapper name from the OpenFeature Cloudflare provider ([#2217](https://github.com/launchdarkly/js-core/issues/2217)) ([6397098](https://github.com/launchdarkly/js-core/commit/63970985ee77c7c91678d3b2cb374c1351418f33))
+
 ## [2.6.50](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-edge-v2.6.49...js-server-sdk-common-edge-v2.6.50) (2026-11-18)
 
 

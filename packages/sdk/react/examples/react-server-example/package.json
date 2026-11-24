@@ -11,8 +11,8 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@launchdarkly/node-server-sdk": "9.16.7",
-    "@launchdarkly/react-sdk": "4.2.5",
+    "@launchdarkly/node-server-sdk": "9.17.1",
+    "@launchdarkly/react-sdk": "4.2.6",
     "next": "^16",
     "react": "^19",
     "react-dom": "^19"
@@ -22,8 +22,8 @@
     "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "oxfmt": "0.63.0",
-    "oxlint": "1.78.0",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.93.0",
     "typescript": "6.0.3"
   }
 }
