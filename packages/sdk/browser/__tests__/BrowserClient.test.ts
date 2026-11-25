@@ -209,6 +209,32 @@ describe('given a mock platform for a BrowserClient', () => {
     });
   });
 
+  it('resolves waitForCache with a miss when bootstrap data skips the cache', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { kind: 'user', key: 'bob' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+      },
+      platform,
+    );
+    const listener = jest.fn();
+    client.on('cacheLoaded', listener);
+
+    const cachePromise = client.waitForCache();
+    await client.start({
+      identifyOptions: {
+        bootstrap: goodBootstrapDataWithReasons,
+      },
+    });
+
+    await expect(cachePromise).resolves.toEqual({ hit: false });
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it('can evaluate flags with bootstrap data before identify completes', async () => {
     const client = makeClient(
       'client-side-id',

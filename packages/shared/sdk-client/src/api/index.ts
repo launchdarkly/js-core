@@ -14,5 +14,6 @@ export * from './LDIdentifyResult';
 export * from './LDPlugin';
 export * from './LDStartOptions';
 export * from './LDWaitForInitialization';
+export * from './LDCacheLookupResult';
 export * from './LDContext';
 export * from './datasource';

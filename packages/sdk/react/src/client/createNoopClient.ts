@@ -93,6 +93,7 @@ export function createNoopClient(bootstrap?: object): LDReactClient {
     track: noop,
     addHook: noop,
     waitForInitialization: noopPromise,
+    waitForCache: () => Promise.resolve({ hit: false }),
     setStreaming: noop,
     start: noopPromise,
     logger: { debug: noop, info: noop, warn: noop, error: noop },

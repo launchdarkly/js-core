@@ -18,6 +18,7 @@ import {
 
 import {
   Hook,
+  LDCacheLookupResult,
   LDClient,
   LDClientIdentifyResult,
   LDContext,
@@ -100,6 +101,8 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   protected initializedPromise?: Promise<LDWaitForInitializationResult>;
   protected initResolve?: (result: LDWaitForInitializationResult) => void;
   protected initializeResult?: LDWaitForInitializationResult;
+  private _cacheLookupResult?: LDCacheLookupResult;
+  private _cacheLookupWaiters: ((result: LDCacheLookupResult) => void)[] = [];
 
   // NOTE: this is used to ease the transition to the new initialization pattern.
   // All client SDKs should set this to true with the exception of React Native which is
@@ -178,6 +181,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this.emitter = new LDEmitter();
     this.emitter.on('error', (c: LDContextStrict, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
+    });
+    this.emitter.on('cacheLoaded', (_c: LDContextStrict, result: LDCacheLookupResult) => {
+      this._settleCacheLookup(result);
     });
 
     this._flagManager.on((context, flagKeys, type) => {
@@ -455,6 +461,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               return Promise.reject(error);
             }
             this._activeContextTracker.set(context, checkedContext);
+            this._cacheLookupResult = undefined;
 
             this._eventProcessor?.sendEvent(
               this._eventFactoryDefault.identifyEvent(checkedContext),
@@ -470,7 +477,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               identifyOptions,
             );
 
-            return identifyPromise;
+            // An identify that never read the cache, such as one with bootstrap data, will not
+            // read it later, so waitForCache must not wait past it.
+            return identifyPromise.finally(() => this._settleCacheLookup({ hit: false }));
           },
           after: async (res, beforeResult) => {
             if (res.status === 'complete') {
@@ -556,6 +565,25 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     }
 
     return this._promiseWithTimeout(this.initializedPromise, timeout);
+  }
+
+  waitForCache(): Promise<LDCacheLookupResult> {
+    if (this._cacheLookupResult) {
+      return Promise.resolve(this._cacheLookupResult);
+    }
+    return new Promise((resolve) => {
+      this._cacheLookupWaiters.push(resolve);
+    });
+  }
+
+  private _settleCacheLookup(result: LDCacheLookupResult): void {
+    if (this._cacheLookupResult) {
+      return;
+    }
+    this._cacheLookupResult = result;
+    const waiters = this._cacheLookupWaiters;
+    this._cacheLookupWaiters = [];
+    waiters.forEach((resolve) => resolve(result));
   }
 
   /**

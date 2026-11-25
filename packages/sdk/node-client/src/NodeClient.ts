@@ -274,6 +274,7 @@ export function makeClient(
     addHook: (hook: Parameters<LDClient['addHook']>[0]) => impl.addHook(hook),
     waitForInitialization: (waitOptions?: Parameters<LDClient['waitForInitialization']>[0]) =>
       impl.waitForInitialization(waitOptions),
+    waitForCache: () => impl.waitForCache(),
     logger: impl.logger,
     start: (startOptions?: LDStartOptions) => impl.start(startOptions),
     setConnectionMode: (mode: Parameters<LDClient['setConnectionMode']>[0]) =>
