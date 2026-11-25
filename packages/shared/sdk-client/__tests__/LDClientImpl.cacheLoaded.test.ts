@@ -131,3 +131,30 @@ it('resolves waitForCache with a miss when identify fails on an invalid context'
 
   await expect(cachePromise).resolves.toEqual({ hit: false });
 });
+
+it('does not resolve waitForCache with the previous result while a new identify is pending', async () => {
+  storeFlags(clone<Flags>(mockResponseJson));
+  const ldc = makeClient();
+  await ldc.identify(context);
+
+  storeFlags(undefined);
+  const identifyPromise = ldc.identify(context);
+  const cachePromise = ldc.waitForCache();
+  await identifyPromise;
+
+  await expect(cachePromise).resolves.toEqual({ hit: false });
+});
+
+it('ignores the result of an earlier identify that finishes after a later identify call', async () => {
+  storeFlags(clone<Flags>(mockResponseJson));
+  const ldc = makeClient();
+
+  // @ts-expect-error - invalid context
+  const failedIdentify = ldc.identify({ kind: 'car' });
+  const secondIdentify = ldc.identify(context);
+  const cachePromise = ldc.waitForCache();
+  await expect(failedIdentify).rejects.toThrow(/no key/);
+  await secondIdentify;
+
+  await expect(cachePromise).resolves.toEqual({ hit: true });
+});
