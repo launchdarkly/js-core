@@ -8,6 +8,25 @@ All notable changes to `@launchdarkly/js-server-sdk-common` will be documented i
   * dependencies
     * @launchdarkly/js-sdk-common bumped from 2.3.0 to 2.3.1
 
+## [2.27.0](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.8...js-server-sdk-common-v2.27.0) (2026-11-25)
+
+
+### Features
+
+* Support TestData as an FDv2 data source ([#2220](https://github.com/launchdarkly/js-core/issues/2220)) ([ae17850](https://github.com/launchdarkly/js-core/commit/ae178508e3c28d86c58ca5cb2b86ae6f5610f19f))
+
+
+### Bug Fixes
+
+* Stop sending the unsupported payload filter on FDv2 requests ([#2249](https://github.com/launchdarkly/js-core/issues/2249)) ([60b89ad](https://github.com/launchdarkly/js-core/commit/60b89ad5b7ff5a6a2907b051b87406d14f876e2e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.3 to 2.32.4
+
 ## [2.26.8](https://github.com/launchdarkly/js-core/compare/js-server-sdk-common-v2.26.7...js-server-sdk-common-v2.26.8) (2026-11-20)
 
 

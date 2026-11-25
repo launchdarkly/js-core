@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.35.5](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.4...js-client-sdk-common-v1.35.5) (2026-11-25)
+
+
+### Bug Fixes
+
+* Prevent FDv2 identify from failing when the connection mode changes during initialization ([#2191](https://github.com/launchdarkly/js-core/issues/2191)) ([9e95494](https://github.com/launchdarkly/js-core/commit/9e95494964a5798d4886b183de3ab710dc45a23d))
+* Stop sending the unsupported payload filter on FDv2 requests ([#2249](https://github.com/launchdarkly/js-core/issues/2249)) ([60b89ad](https://github.com/launchdarkly/js-core/commit/60b89ad5b7ff5a6a2907b051b87406d14f876e2e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-sdk-common bumped from 2.32.3 to 2.32.4
+
 ## [1.35.4](https://github.com/launchdarkly/js-core/compare/js-client-sdk-common-v1.35.3...js-client-sdk-common-v1.35.4) (2026-11-20)
 
 
