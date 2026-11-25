@@ -97,9 +97,21 @@ jest.mock('../src/platform/ElectronPlatform', () => ({
 const clientSideId = 'client-side-id';
 const DEFAULT_INITIAL_CONTEXT = { kind: 'user' as const, key: 'test-user' };
 
+// A client that stays open keeps its poll and flush timers, and jest cannot exit.
+const openClients: { close(): Promise<void> }[] = [];
+
+function closeAfterTest<T extends { close(): Promise<void> }>(client: T): T {
+  openClients.push(client);
+  return client;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   handlers.clear();
+});
+
+afterEach(async () => {
+  await Promise.all(openClients.splice(0).map((client) => client.close()));
 });
 
 describe('given an initialized ElectronClient with enableIPC: false', () => {
@@ -119,6 +131,10 @@ describe('given an initialized ElectronClient with enableIPC: false', () => {
 
   beforeAll(async () => {
     await client.start();
+  });
+
+  afterAll(async () => {
+    await client.close();
   });
 
   it('does not register any IPC channels so ipcMain.on and ipcMain.handle are never called', () => {
@@ -195,12 +211,14 @@ describe('given an initialized ElectronClient with enableIPC: false and bootstra
   };
 
   it('evaluates flags from bootstrap when called directly on the client', async () => {
-    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'offline',
-      enableIPC: false,
-      logger,
-      diagnosticOptOut: true,
-    });
+    const client = closeAfterTest(
+      new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'offline',
+        enableIPC: false,
+        logger,
+        diagnosticOptOut: true,
+      }),
+    );
     await client.start({ bootstrap: goodBootstrapData });
 
     expect(client.variation('killswitch', false)).toBe(true);
@@ -223,12 +241,14 @@ describe('enableIPC: false and close()', () => {
   };
 
   it('does not register channels so close() does not remove any handlers', async () => {
-    const client = new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'offline',
-      enableIPC: false,
-      logger,
-      diagnosticOptOut: true,
-    });
+    const client = closeAfterTest(
+      new ElectronClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'offline',
+        enableIPC: false,
+        logger,
+        diagnosticOptOut: true,
+      }),
+    );
     await client.start();
 
     expect(mockOn).not.toHaveBeenCalled();
@@ -267,13 +287,15 @@ describe('given an initialized ElectronClient with enableIPC: false and polling'
       },
     });
 
-    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'polling',
-      enableIPC: false,
-      logger,
-      diagnosticOptOut: true,
-      sendEvents: false,
-    });
+    const client = closeAfterTest(
+      createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'polling',
+        enableIPC: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+      }),
+    );
     await client.start();
 
     expect(client.boolVariation('on-off-flag', false)).toBe(true);
@@ -319,13 +341,15 @@ describe('maxCachedContexts', () => {
       storage,
     });
 
-    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'polling',
-      enableIPC: false,
-      diagnosticOptOut: true,
-      sendEvents: false,
-      maxCachedContexts: 1,
-    });
+    const client = closeAfterTest(
+      createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'polling',
+        enableIPC: false,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        maxCachedContexts: 1,
+      }),
+    );
     await client.start();
 
     // After start, context A's flags are cached.
@@ -364,13 +388,15 @@ describe('maxCachedContexts', () => {
       storage,
     });
 
-    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'polling',
-      enableIPC: false,
-      diagnosticOptOut: true,
-      sendEvents: false,
-      maxCachedContexts: 0,
-    });
+    const client = closeAfterTest(
+      createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'polling',
+        enableIPC: false,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        maxCachedContexts: 0,
+      }),
+    );
     await client.start();
 
     // Flags should still evaluate correctly from the network response
@@ -412,13 +438,15 @@ describe('given an initialized ElectronClient with enableIPC: false and streamin
       },
     });
 
-    const client = createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
-      initialConnectionMode: 'streaming',
-      enableIPC: false,
-      logger,
-      diagnosticOptOut: true,
-      sendEvents: false,
-    });
+    const client = closeAfterTest(
+      createClient(clientSideId, DEFAULT_INITIAL_CONTEXT, {
+        initialConnectionMode: 'streaming',
+        enableIPC: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+      }),
+    );
     await client.start();
 
     expect(client.boolVariation('on-off-flag', false)).toBe(true);
