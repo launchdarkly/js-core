@@ -5,11 +5,17 @@ import {
   ConditionGroup,
   ConditionType,
   DEFAULT_FALLBACK_TIMEOUT_MS,
+  DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
   DEFAULT_RECOVERY_TIMEOUT_MS,
   getConditions,
 } from './Conditions';
 import { createFDv2RecoveryTimer } from './FDv2RecoveryTimer';
-import { ChangeSetResult, FDv2SourceResult, StatusResult } from './FDv2SourceResult';
+import {
+  ChangeSetResult,
+  FDv2SourceResult,
+  hasPayloadData,
+  StatusResult,
+} from './FDv2SourceResult';
 import { createSourceManager, InitializerFactory, SynchronizerSlot } from './SourceManager';
 
 /**
@@ -48,6 +54,26 @@ export interface FDv2DataSourceConfig {
 
   /** Recovery condition timeout in ms (default 300s). */
   recoveryTimeoutMs?: number;
+
+  /**
+   * Not-yet-initialized fallback leg timeout in ms (default 10s). Fires if
+   * the data system has never received data within this long of the current
+   * synchronizer becoming active.
+   */
+  initFallbackTimeoutMs?: number;
+
+  /**
+   * Whether the data system already has data from a previous data source
+   * instance -- e.g. this instance was created for a connection-mode switch
+   * after the SDK was already initialized. A fresh instance otherwise has
+   * no way to know that, so without this flag a data-less `'none'` response
+   * (the server's "you're already up to date" answer) looks identical to a
+   * still-uninitialized system: it would never satisfy the init-fallback
+   * leg's data check, so that leg would keep firing forever. When true, the
+   * leg never applies, and a `'none'` response is enough to settle this
+   * instance's {@link FDv2DataSource.start} promise.
+   */
+  hasExistingData?: boolean;
 }
 
 /**
@@ -85,6 +111,8 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     logger,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
+    initFallbackTimeoutMs = DEFAULT_INIT_FALLBACK_TIMEOUT_MS,
+    hasExistingData = false,
   } = config;
 
   let initialized = false;
@@ -218,7 +246,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         return;
       }
 
-      if (result.type === 'changeSet' && result.payload.type !== 'none') {
+      if (hasPayloadData(result)) {
         applyChangeSet(result);
 
         // Data was received. Recorded before the fallback check below so that
@@ -253,7 +281,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
         break;
       }
 
-      if (result.type === 'changeSet' && result.payload.type !== 'none' && result.payload.state) {
+      if (hasPayloadData(result) && result.payload.state) {
         // Got basis data with a selector -- initialization is complete.
         markInitialized();
         return;
@@ -343,8 +371,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
       const conditions: ConditionGroup = getConditions(
         sourceManager.getAvailableSynchronizerCount(),
         sourceManager.isPrimeSynchronizer(),
+        initialized || hasExistingData,
         fallbackTimeoutMs,
         recoveryTimeoutMs,
+        initFallbackTimeoutMs,
       );
 
       if (conditions.promise) {
@@ -402,7 +432,11 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
 
             if (syncResult.type === 'changeSet') {
               applyChangeSet(syncResult);
-              if (!initialized) {
+              // If the data system already has data from a prior instance,
+              // a 'none' response is a genuine "already up to date" answer
+              // rather than evidence of an empty system, so it still settles
+              // this instance's start() promise.
+              if (!initialized && (hasPayloadData(syncResult) || hasExistingData)) {
                 markInitialized();
               }
             } else if (syncResult.type === 'status') {
