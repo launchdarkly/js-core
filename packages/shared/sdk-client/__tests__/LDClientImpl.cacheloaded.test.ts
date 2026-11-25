@@ -132,6 +132,16 @@ it('resolves waitForCache with a miss when identify fails on an invalid context'
   await expect(cachePromise).resolves.toEqual({ hit: false });
 });
 
+it('resolves waitForCache with a miss when identify fails before it runs', async () => {
+  (mockPlatform.storage.get as jest.Mock).mockRejectedValue(new Error('storage failed'));
+  const ldc = makeClient();
+  const cachePromise = ldc.waitForCache();
+
+  await expect(ldc.identify({ kind: 'org', anonymous: true })).rejects.toThrow(/storage failed/);
+
+  await expect(cachePromise).resolves.toEqual({ hit: false });
+});
+
 it('does not resolve waitForCache with the previous result while a new identify is pending', async () => {
   storeFlags(clone<Flags>(mockResponseJson));
   const ldc = makeClient();

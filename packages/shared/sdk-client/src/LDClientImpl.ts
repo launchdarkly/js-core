@@ -466,7 +466,6 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             if (!checkedContext.valid) {
               const error = new Error('Context was unspecified or had no key');
               this.emitter.emit('error', context, error);
-              this._settleCacheLookup(cacheLookupId, { hit: false });
               return Promise.reject(error);
             }
             this._activeContextTracker.set(context, checkedContext);
@@ -485,13 +484,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
               identifyOptions,
             );
 
-            // An identify that never read the cache, such as one with bootstrap data, will not
-            // read it later, so waitForCache must not wait past it.
-            return identifyPromise.finally(() =>
-              this._settleCacheLookup(cacheLookupId, { hit: false }),
-            );
+            return identifyPromise;
           },
           after: async (res, beforeResult) => {
+            // An identify that never read the cache, such as one with bootstrap data or one whose
+            // before step failed, will not read it later, so waitForCache must not wait past it.
+            this._settleCacheLookup(cacheLookupId, { hit: false });
             if (res.status === 'complete') {
               beforeResult?.afterIdentify?.({ status: 'completed' });
             } else if (res.status === 'shed') {
