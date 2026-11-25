@@ -1348,3 +1348,19 @@ it('does not fail a new identify when the previous data source closes before it 
 
   manager.close();
 });
+
+it('emits cacheLoaded for the identified context when the cache lookup finishes', async () => {
+  const config = makeBaseConfig();
+  const manager = createFDv2DataManagerBase(config);
+  await identifyManager(manager);
+
+  capturedDataSourceConfigs[0].onCacheLoaded(false);
+
+  expect(config.emitter.emit).toHaveBeenCalledWith(
+    'cacheLoaded',
+    { kind: 'user', key: 'test-key' },
+    { hit: false },
+  );
+
+  manager.close();
+});

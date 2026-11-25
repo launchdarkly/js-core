@@ -418,6 +418,11 @@ export function createFDv2DataManagerBase(
       statusManager,
       selectorGetter,
       logger,
+      onCacheLoaded: (hit) => {
+        if (identifiedContext) {
+          emitter.emit('cacheLoaded', Context.toLDContext(identifiedContext), { hit });
+        }
+      },
       fallbackTimeoutMs,
       recoveryTimeoutMs,
     });
