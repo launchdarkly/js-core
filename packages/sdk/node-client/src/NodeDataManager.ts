@@ -123,7 +123,7 @@ export default class NodeDataManager extends BaseDataManager {
       return;
     }
 
-    const loadedFromCache = await this.flagManager.loadCached(context);
+    const loadedFromCache = await this.loadCached(context);
     if (this.closed) {
       this._debugLog('Identify called after data manager was closed (during cache load).');
       identifyReject(new Error('Client has been closed.'));

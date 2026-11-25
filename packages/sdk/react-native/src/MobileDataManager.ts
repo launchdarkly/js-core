@@ -76,7 +76,7 @@ export default class MobileDataManager extends BaseDataManager {
     // In offline mode we do not support waiting for results.
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults && !offline;
 
-    const loadedFromCache = await this.flagManager.loadCached(context);
+    const loadedFromCache = await this.loadCached(context);
     if (loadedFromCache && !waitForNetworkResults && !resolvedFromBootstrap) {
       this._debugLog('Identify completing with cached flags');
       identifyResolve();

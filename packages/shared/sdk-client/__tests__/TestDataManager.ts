@@ -49,7 +49,7 @@ export default class TestDataManager extends BaseDataManager {
     this.context = context;
     const waitForNetworkResults = !!identifyOptions?.waitForNetworkResults;
 
-    const loadedFromCache = await this.flagManager.loadCached(context);
+    const loadedFromCache = await this.loadCached(context);
     if (loadedFromCache && !waitForNetworkResults) {
       this.logger.debug('Identify completing with cached flags');
       identifyResolve();
