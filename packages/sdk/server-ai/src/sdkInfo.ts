@@ -1,3 +1,3 @@
 export const aiSdkName = '@launchdarkly/server-sdk-ai';
-export const aiSdkVersion = '2.0.24'; // x-release-please-version
+export const aiSdkVersion = '2.0.25'; // x-release-please-version
 export const aiSdkLanguage = 'javascript';

@@ -1,5 +1,21 @@
 # Changelog
 
+## [4.14.5](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.4...js-client-sdk-v4.14.5) (2026-11-25)
+
+
+### Bug Fixes
+
+* Stop sending the unsupported payload filter on FDv2 requests ([#2249](https://github.com/launchdarkly/js-core/issues/2249)) ([60b89ad](https://github.com/launchdarkly/js-core/commit/60b89ad5b7ff5a6a2907b051b87406d14f876e2e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @launchdarkly/js-client-sdk-common bumped from 1.35.4 to 1.35.5
+  * optionalDependencies
+    * @launchdarkly/eventsource bumped from 0.2.5 to 0.2.6
+
 ## [4.14.4](https://github.com/launchdarkly/js-core/compare/js-client-sdk-v4.14.3...js-client-sdk-v4.14.4) (2026-11-20)
 
 

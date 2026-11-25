@@ -13,9 +13,9 @@
     "test": "npx jest --ci"
   },
   "dependencies": {
-    "@launchdarkly/client-testing-plugin": "1.0.35",
-    "@launchdarkly/js-client-sdk": "4.14.4",
-    "@launchdarkly/react-sdk": "4.2.6",
+    "@launchdarkly/client-testing-plugin": "1.0.36",
+    "@launchdarkly/js-client-sdk": "4.14.5",
+    "@launchdarkly/react-sdk": "4.2.7",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
