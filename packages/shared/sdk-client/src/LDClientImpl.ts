@@ -458,6 +458,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             if (!checkedContext.valid) {
               const error = new Error('Context was unspecified or had no key');
               this.emitter.emit('error', context, error);
+              this._settleCacheLookup({ hit: false });
               return Promise.reject(error);
             }
             this._activeContextTracker.set(context, checkedContext);

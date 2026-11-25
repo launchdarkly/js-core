@@ -121,3 +121,13 @@ it('resolves waitForCache with a miss when identify completes without a cache lo
   await expect(cachePromise).resolves.toEqual({ hit: false });
   expect(listener).not.toHaveBeenCalled();
 });
+
+it('resolves waitForCache with a miss when identify fails on an invalid context', async () => {
+  const ldc = makeClient();
+  const cachePromise = ldc.waitForCache();
+
+  // @ts-expect-error - invalid context
+  await expect(ldc.identify({ kind: 'car' })).rejects.toThrow(/no key/);
+
+  await expect(cachePromise).resolves.toEqual({ hit: false });
+});

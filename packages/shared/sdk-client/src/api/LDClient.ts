@@ -398,10 +398,10 @@ export interface LDClient {
    * ```
    *
    * @remarks
-   * If the cache was already read, the Promise resolves immediately. If the identify operation
-   * does not read the cache, the Promise resolves with `{ hit: false }` when that operation
-   * completes. The Promise is never rejected. You can also listen for the `"cacheLoaded"`
-   * event ({@link on}).
+   * If the cache was already read, the Promise resolves immediately. Before the first identify,
+   * it waits for that identify. If the identify operation does not read the cache, the Promise
+   * resolves with `{ hit: false }` when that operation completes or fails. The Promise is never
+   * rejected. You can also listen for the `"cacheLoaded"` event ({@link on}).
    *
    * @returns
    *   A Promise that resolves to an {@link LDCacheLookupResult}.
