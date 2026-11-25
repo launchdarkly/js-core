@@ -229,8 +229,7 @@ export interface LDClient {
    * - `"cacheLoaded"`: The client has finished reading cached flag values for the context passed
    *   to {@link identify}, whether or not it found any. The callback parameters are the context
    *   and an {@link LDCacheLookupResult}. It does not fire when the identify operation does not
-   *   read the cache. Some SDKs do not read the cache when identify is given bootstrap data. To
-   *   get the result without a race against the event, use {@link waitForCache}.
+   *   read the cache. To get the result without a race against the event, use {@link waitForCache}.
    *
    * @param key
    *   The name of the event for which to listen.

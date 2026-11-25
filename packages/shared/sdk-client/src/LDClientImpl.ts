@@ -103,8 +103,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   protected initializeResult?: LDWaitForInitializationResult;
   private _cacheLookupResult?: LDCacheLookupResult;
   private _cacheLookupWaiters: ((result: LDCacheLookupResult) => void)[] = [];
-  // The identify call that the cache lookup result belongs to, and the one whose execute step runs.
+  /** The latest identify call, which the cache lookup result belongs to. */
   private _cacheLookupId = 0;
+  /** The identify call whose execute step is running, which a `cacheLoaded` event belongs to. */
   private _executingCacheLookupId = 0;
 
   // NOTE: this is used to ease the transition to the new initialization pattern.
