@@ -50,6 +50,7 @@ import { createPayloadListener } from './data_sources/createPayloadListenerFDv2'
 import { createStreamListeners } from './data_sources/createStreamListeners';
 import DataSourceUpdates from './data_sources/DataSourceUpdates';
 import FileDataInitializerFDv2 from './data_sources/fileDataInitilizerFDv2';
+import FileDataSynchronizerFDv2, { SharedFileFlags } from './data_sources/FileDataSynchronizerFDv2';
 import OneShotInitializerFDv2 from './data_sources/OneShotInitializerFDv2';
 import PollingProcessor from './data_sources/PollingProcessor';
 import PollingProcessorFDv2 from './data_sources/PollingProcessorFDv2';
@@ -282,19 +283,23 @@ function scopedServiceEndpoints(
 }
 
 const SUPPORTED_INITIALIZER_TYPES = ['file', 'polling', 'testData'];
-const SUPPORTED_SYNCHRONIZER_TYPES = ['polling', 'streaming', 'testData'];
+const SUPPORTED_SYNCHRONIZER_TYPES = ['file', 'polling', 'streaming', 'testData'];
 
 function validateCustomDataSourceEntries(
   entries: Array<{ type: string; paths?: unknown; testData?: { createFDv2Source?: unknown } }>,
   role: 'initializer' | 'synchronizer',
   supportedTypes: string[],
+  platform: Platform,
 ): void {
   entries.forEach((entry) => {
     if (!supportedTypes.includes(entry.type)) {
       throw new Error(`Unsupported ${role} type`);
     }
-    if (entry.type === 'file' && (!Array.isArray(entry.paths) || entry.paths.length === 0)) {
-      throw new Error('The file initializer requires a paths array with at least one path');
+    if (entry.type === 'file' && !(Array.isArray(entry.paths) && entry.paths.length > 0)) {
+      throw new Error(`The file ${role} requires at least one file path`);
+    }
+    if (entry.type === 'file' && !platform.fileSystem) {
+      throw new Error(`The file ${role} requires a platform with a file system`);
     }
     if (entry.type === 'testData' && typeof entry.testData?.createFDv2Source !== 'function') {
       throw new Error(`The testData ${role} requires a TestData instance`);
@@ -302,10 +307,20 @@ function validateCustomDataSourceEntries(
   });
 }
 
-function validateCustomDataSource(options: CustomDataSourceOptions): void {
+function validateCustomDataSource(options: CustomDataSourceOptions, platform: Platform): void {
   const { initializers = [], synchronizers = [] } = options;
-  validateCustomDataSourceEntries(initializers, 'initializer', SUPPORTED_INITIALIZER_TYPES);
-  validateCustomDataSourceEntries(synchronizers, 'synchronizer', SUPPORTED_SYNCHRONIZER_TYPES);
+  validateCustomDataSourceEntries(
+    initializers,
+    'initializer',
+    SUPPORTED_INITIALIZER_TYPES,
+    platform,
+  );
+  validateCustomDataSourceEntries(
+    synchronizers,
+    'synchronizer',
+    SUPPORTED_SYNCHRONIZER_TYPES,
+    platform,
+  );
 }
 
 function constructFDv2(
@@ -365,7 +380,7 @@ function constructFDv2(
   // creates the store. Thus an invalid data source configuration or an invalid override
   // configuration makes client construction fail before a persistent store opens a connection.
   if (!(config.offline || dataSystem.useLdd) && isCustomOptions(dataSystem.dataSource)) {
-    validateCustomDataSource(dataSystem.dataSource);
+    validateCustomDataSource(dataSystem.dataSource, platform);
   }
   const overrideSource =
     dataSystem.overrides !== undefined && !config.offline
@@ -504,6 +519,21 @@ function constructFDv2(
       });
       synchronizerConfigs.forEach((synchronizerConfig) => {
         switch (synchronizerConfig.type) {
+          case 'file': {
+            // Each synchronizer that this entry creates continues the flag versions of the one
+            // before it.
+            const sharedFlags: SharedFileFlags = {};
+            synchronizers.push(
+              () =>
+                new FileDataSynchronizerFDv2(
+                  synchronizerConfig,
+                  platform,
+                  config.logger,
+                  sharedFlags,
+                ),
+            );
+            break;
+          }
           case 'streaming': {
             const { streamInitialReconnectDelay = DEFAULT_STREAM_RECONNECT_DELAY } =
               synchronizerConfig;

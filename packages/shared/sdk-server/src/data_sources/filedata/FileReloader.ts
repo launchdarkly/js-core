@@ -126,6 +126,17 @@ export interface FileReloaderConfig {
    * call `apply`.
    */
   skipUnchanged: boolean;
+  /**
+   * The flags of an earlier good load, keyed by flag key. The policy's version handling starts
+   * from them instead of from no flags. The reloader does not change the object.
+   */
+  initialFlags?: Record<string, Flag>;
+  /**
+   * Whether each path contributed content to the data in effect, from an earlier reloader of the
+   * same data. The reloader uses the map as its own and updates it when it applies data, so that
+   * an empty file that had content is held back as it is within one reloader.
+   */
+  appliedHadContent?: Map<string, boolean>;
 }
 
 type ReloadReason = 'initial' | 'change' | 'retry';
@@ -195,7 +206,7 @@ export default class FileReloader {
 
   // Whether each configured path contributed content to the data in effect, that is, to the last
   // reload that was applied or skipped as unchanged. A missing or empty file contributed none.
-  private readonly _appliedHadContent = new Map<string, boolean>();
+  private readonly _appliedHadContent: Map<string, boolean>;
 
   // The paths whose content is in effect and that reloads have found empty since.
   private readonly _emptyFiles = new Map<string, EmptyFile>();
@@ -208,7 +219,12 @@ export default class FileReloader {
   // it reports a failure the way the deferred reload would have.
   private _readAgainReason?: ReloadReason;
 
-  constructor(private readonly _config: FileReloaderConfig) {}
+  constructor(private readonly _config: FileReloaderConfig) {
+    if (_config.initialFlags) {
+      this._lastGoodFlags = _config.initialFlags;
+    }
+    this._appliedHadContent = _config.appliedHadContent ?? new Map();
+  }
 
   /**
    * Loads the files and applies the result, or reports the failure. Use it for the initial
