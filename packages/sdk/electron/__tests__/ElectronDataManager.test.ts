@@ -199,6 +199,27 @@ describe('given an ElectronDataManager with mocked dependencies', () => {
     expect(dataManager.getConnectionMode()).toBe('offline');
   });
 
+  it('logs an error and identifies normally when bootstrap data is malformed', async () => {
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    flagManager.loadCached.mockResolvedValue(true);
+
+    await dataManager.identify(identifyResolve, identifyReject, context, {
+      bootstrap: 'not-an-object',
+    } as LDIdentifyOptions);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to read bootstrap data.',
+      expect.any(TypeError),
+    );
+    expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+    // Cached flags resolve the identify, and a connection opens for live updates.
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+    expect(identifyReject).not.toHaveBeenCalled();
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
+  });
+
   it('uses data from bootstrap and then starts streaming for live updates', async () => {
     const identifyResolve = jest.fn();
     const identifyReject = jest.fn();

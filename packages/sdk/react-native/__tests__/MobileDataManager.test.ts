@@ -120,6 +120,7 @@ describe('given a MobileDataManager with mocked dependencies', () => {
       upsert: jest.fn(),
       on: jest.fn(),
       off: jest.fn(),
+      setBootstrap: jest.fn(),
     } as unknown as jest.Mocked<FlagManager>;
 
     rnConfig = { initialConnectionMode: 'streaming' } as ValidatedOptions;
@@ -253,6 +254,27 @@ describe('given a MobileDataManager with mocked dependencies', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       '[MobileDataManager] Identify called after data manager was closed.',
     );
+  });
+
+  it('logs an error and identifies normally when bootstrap data is malformed', async () => {
+    const identifyResolve = jest.fn();
+    const identifyReject = jest.fn();
+    const context = Context.fromLDContext({ kind: 'user', key: 'test-user' });
+    flagManager.loadCached.mockResolvedValue(true);
+
+    await mobileDataManager.identify(identifyResolve, identifyReject, context, {
+      bootstrap: 'not-an-object',
+    } as LDIdentifyOptions);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to read bootstrap data.',
+      expect.any(TypeError),
+    );
+    expect(flagManager.setBootstrap).not.toHaveBeenCalled();
+    // Cached flags resolve the identify, and a connection opens for live updates.
+    expect(identifyResolve).toHaveBeenCalledTimes(1);
+    expect(identifyReject).not.toHaveBeenCalled();
+    expect(platform.requests.createEventSource).toHaveBeenCalled();
   });
 
   it('should load cached flags and resolve the identify', async () => {
