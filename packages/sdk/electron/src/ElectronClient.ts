@@ -204,9 +204,8 @@ export class ElectronClient extends LDClientImpl {
         this.waitForInitialization(options),
     );
 
-    ipcMain.handle(
-      getIPCChannelName(namespace, 'waitForCache'),
-      (): Promise<LDCacheLookupResult> => this.waitForCache(),
+    ipcMain.handle(getIPCChannelName(namespace, 'waitForCache'), (): Promise<LDCacheLookupResult> =>
+      this.waitForCache(),
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'allFlags'), (event) => {
