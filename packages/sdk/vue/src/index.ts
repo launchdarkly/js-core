@@ -28,4 +28,5 @@ export type {
   LDIdentifyResult,
   LDStartOptions,
   LDWaitForInitializationResult,
+  LDCacheLookupResult,
 } from '@launchdarkly/js-client-sdk';
