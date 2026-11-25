@@ -14,15 +14,15 @@ jobs:
   build-test-shopify-oxygen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7
+      - uses: $/actions/setup-yarn
         with:
           # https://shopify.dev/docs/storefronts/headless/hydrogen/getting-started#requirements
           node-version: lts/*
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/shopify-oxygen-sdk'
           workspace_path: packages/sdk/shopify-oxygen

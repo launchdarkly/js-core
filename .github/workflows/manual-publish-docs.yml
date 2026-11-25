@@ -36,8 +36,8 @@ jobs:
     permissions:
       contents: write # Needed to push docs to the gh-pages branch.
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
@@ -61,12 +61,12 @@ jobs:
       - id: build
         # Build using the same steps from CI.
         name: Build and Test
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
           workspace_path: ${{ inputs.workspace_path }}
       - id: publish
         name: Publish Documentation
-        uses: ./actions/publish-docs
+        uses: $/actions/publish-docs
         with:
           workspace_path: ${{ inputs.workspace_path }}

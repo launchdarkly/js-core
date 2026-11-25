@@ -16,20 +16,20 @@ jobs:
       pull-requests: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/js-sdk-common'
           workspace_path: packages/shared/common
       - name: Check package size
         if: github.event_name == 'pull_request'
-        uses: ./actions/package-size
+        uses: $/actions/package-size
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           target_file: 'packages/shared/common/dist/esm/index.mjs'

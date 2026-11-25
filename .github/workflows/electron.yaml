@@ -25,14 +25,14 @@ jobs:
         # putting this back to latest LTS.
         version: [24.15]
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7
+      - uses: $/actions/setup-yarn
         with:
           node-version: ${{ matrix.version }}
           registry-url: 'https://registry.npmjs.org'
       - id: shared
         name: Shared CI Steps
-        uses: ./actions/ci
+        uses: $/actions/ci
         with:
           workspace_name: '@launchdarkly/electron-client-sdk'
           workspace_path: packages/sdk/electron
@@ -69,7 +69,7 @@ jobs:
           done
 
       - name: Run contract tests
-        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests-v1
+        uses: launchdarkly/gh-actions/actions/contract-tests@contract-tests/v1
         with:
           test_service_port: 8000
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -82,11 +82,11 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./actions/setup-yarn
+      - uses: actions/checkout@v7
+      - uses: $/actions/setup-yarn
         with:
           node-version: 24.15
-      - uses: ./actions/run-example
+      - uses: $/actions/run-example
         with:
           workspace_name: '@launchdarkly/electron-example'
           aws_assume_role: ${{ vars.AWS_ROLE_ARN }}

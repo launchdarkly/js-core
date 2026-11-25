@@ -15,30 +15,30 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: ./actions/setup-release-node
+    - uses: $/actions/setup-release-node
 
     - name: 'Set WORKSPACE_NAME variable'
       shell: bash
       run: |
         WORKSPACE_NAME=$(./scripts/package-name.sh ${{ inputs.workspace_path }})
         echo "WORKSPACE_NAME=$WORKSPACE_NAME" >> $GITHUB_ENV
-    - uses: ./actions/ci
+    - uses: $/actions/ci
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
-    - uses: ./actions/publish-jsr
+    - uses: $/actions/publish-jsr
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
         dry_run: false
     # Publishing credentials for NPM come from OIDC.
-    - uses: ./actions/publish
+    - uses: $/actions/publish
       with:
         workspace_name: ${{ env.WORKSPACE_NAME }}
         workspace_path: ${{ inputs.workspace_path }}
         prerelease: ${{ inputs.prerelease }}
         dry_run: false
     - if: ${{ inputs.prerelease != 'true' }}
-      uses: ./actions/publish-docs
+      uses: $/actions/publish-docs
       with:
         workspace_path: ${{ inputs.workspace_path }}
