@@ -1,5 +1,5 @@
 import { makeClient } from './ElectronClient';
-import type { ElectronOptions } from './ElectronOptions';
+import type { ElectronOptions, LDElectronStorage } from './ElectronOptions';
 import type { LDClient, LDStartOptions } from './LDClient';
 import type { LDContext } from './LDCommon';
 import type { LDPlugin } from './LDPlugin';
@@ -9,7 +9,7 @@ export * from './LDCommon';
 /** @internal */
 export { resetElectronStorage } from './platform/ElectronStorage';
 
-export type { ElectronOptions as LDOptions, LDClient, LDPlugin, LDStartOptions };
+export type { ElectronOptions as LDOptions, LDClient, LDElectronStorage, LDPlugin, LDStartOptions };
 
 /**
  * Creates the LaunchDarkly client in the Electron main process. The client is not ready until
