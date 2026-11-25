@@ -137,6 +137,7 @@ describe('createPayloadListenerFDv2', () => {
       expect.any(Function),
       { environmentId: 'envId' },
       'initial',
+      true,
     );
   });
 
@@ -158,6 +159,7 @@ describe('createPayloadListenerFDv2', () => {
       expect.any(Function),
       { environmentId: 'envId' },
       'initial',
+      true,
     );
   });
 
@@ -185,6 +187,7 @@ describe('createPayloadListenerFDv2', () => {
       expect.any(Function),
       { environmentId: 'envId' },
       'initial',
+      true,
     );
   });
 
@@ -219,6 +222,7 @@ describe('createPayloadListenerFDv2', () => {
       expect.any(Function),
       { environmentId: 'envId' },
       'changes',
+      true,
     );
   });
 
@@ -355,5 +359,35 @@ describe('createPayloadListenerFDv2', () => {
       payload: { ...changesTransferPayload.payload, state: '' },
     });
     expect(initializedCallback).not.toHaveBeenCalled();
+  });
+
+  it('passes a false persist indicator to the data source updates', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+
+    listener({ ...fullTransferPayload, persist: false });
+
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
+      true,
+      expect.any(Object),
+      expect.any(Function),
+      { environmentId: 'envId' },
+      'initial',
+      false,
+    );
+  });
+
+  it('passes a true persist indicator to the data source updates', () => {
+    const listener = createPayloadListener(dataSourceUpdates, logger, initializedCallback);
+
+    listener({ ...changesTransferPayload, persist: true });
+
+    expect(dataSourceUpdates.applyChanges).toHaveBeenCalledWith(
+      false,
+      expect.any(Object),
+      expect.any(Function),
+      { environmentId: 'envId' },
+      'changes',
+      true,
+    );
   });
 });

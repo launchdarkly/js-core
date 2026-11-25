@@ -69,11 +69,12 @@ export default class AsyncTransactionalStoreFacade {
     data: LDFeatureStoreDataStorage,
     initMetadata?: internal.InitMetadata,
     selector?: string,
+    persist?: boolean,
   ): Promise<void> {
     return promisify((cb) => {
       // The store may report an error through its callback. The promise resolves
       // either way, so drop the callback arguments.
-      this._store.applyChanges(basis, data, () => cb(undefined), initMetadata, selector);
+      this._store.applyChanges(basis, data, () => cb(undefined), initMetadata, selector, persist);
     });
   }
 

@@ -20,6 +20,9 @@ export interface LDTransactionalFeatureStore extends LDFeatureStore {
    * @param callback Will be called after the changes are applied.
    * @param initMetadata Optional metadata to initialize the feature store with.
    * @param selector opaque string that uniquely identifies the state that contains the changes
+   * @param persist Whether the changes are mirrored to a persistent store. The
+   * default is true. Set it to false to keep the changes out of the persistent
+   * store.
    */
   applyChanges(
     basis: boolean,
@@ -27,6 +30,7 @@ export interface LDTransactionalFeatureStore extends LDFeatureStore {
     callback: () => void,
     initMetadata?: internal.InitMetadata,
     selector?: string,
+    persist?: boolean,
   ): void;
 
   /**

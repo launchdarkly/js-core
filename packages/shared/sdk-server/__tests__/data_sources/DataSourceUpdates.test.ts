@@ -30,6 +30,7 @@ it('passes initialization metadata to underlying feature store', () => {
     expect.any(Function),
     metadata,
     undefined,
+    undefined,
   );
 });
 

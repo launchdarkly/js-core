@@ -156,6 +156,11 @@ export default class PersistentDataStoreWrapper implements LDFeatureStore {
     }
   }
 
+  dropCache(): void {
+    this._itemCache?.clear();
+    this._allItemsCache?.clear();
+  }
+
   init(allData: LDFeatureStoreDataStorage, callback: (err?: Error) => void): void {
     this._queue.enqueue(
       (cb, isAbandoned) => {

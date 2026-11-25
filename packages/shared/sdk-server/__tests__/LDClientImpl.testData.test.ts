@@ -300,4 +300,79 @@ describe('given a platform with mock network requests', () => {
     expect(initCalls[0].features).toEqual({});
     expect(initCalls[0].segments).toEqual({});
   });
+
+  it('does not mirror a TestData initializer to the persistent store', async () => {
+    const initCalls: LDFeatureStoreDataStorage[] = [];
+    const upsertCalls: { kind: string; key: string }[] = [];
+    const persistentStore: LDFeatureStore = {
+      init: (allData, callback) => {
+        initCalls.push(allData);
+        callback();
+      },
+      get: (_kind, _key, callback) => callback(null),
+      all: (_kind, callback) => callback({}),
+      upsert: (kind, data, callback) => {
+        upsertCalls.push({ kind: kind.namespace, key: data.key });
+        callback();
+      },
+      delete: (_kind, _key, _version, callback) => callback(),
+      initialized: (callback) => callback(false),
+      close: () => {},
+    };
+    const td = new TestData();
+    td.update(td.flag('flag-key').variationForAll(true));
+    const options: LDOptions = {
+      sendEvents: false,
+      dataSystem: {
+        persistentStore: () => persistentStore,
+        dataSource: {
+          dataSourceOptionsType: 'custom',
+          initializers: [{ type: 'testData', testData: td }],
+          synchronizers: [],
+        },
+      },
+    };
+    client = new LDClientImpl('sdk-key', platform, options, makeCallbacks(false));
+    await client.waitForInitialization({ timeout: 10 });
+
+    expect(await client.variation('flag-key', context, false)).toBe(true);
+    expect(initCalls).toHaveLength(0);
+    expect(upsertCalls).toHaveLength(0);
+  });
+
+  it('mirrors a TestData synchronizer change to the persistent store', async () => {
+    const upsertCalls: { kind: string; key: string }[] = [];
+    const persistentStore: LDFeatureStore = {
+      init: (_allData, callback) => callback(),
+      get: (_kind, _key, callback) => callback(null),
+      all: (_kind, callback) => callback({}),
+      upsert: (kind, data, callback) => {
+        upsertCalls.push({ kind: kind.namespace, key: data.key });
+        callback();
+      },
+      delete: (_kind, _key, _version, callback) => callback(),
+      initialized: (callback) => callback(false),
+      close: () => {},
+    };
+    const td = new TestData();
+    const options: LDOptions = {
+      sendEvents: false,
+      dataSystem: {
+        persistentStore: () => persistentStore,
+        dataSource: {
+          dataSourceOptionsType: 'custom',
+          initializers: [],
+          synchronizers: [{ type: 'testData', testData: td }],
+        },
+      },
+    };
+    client = new LDClientImpl('sdk-key', platform, options, makeCallbacks(false));
+    await client.waitForInitialization({ timeout: 10 });
+
+    td.update(td.flag('flag-key').variationForAll(true));
+    await waitFor(() => upsertCalls.length > 0);
+
+    // The change is mirrored as an upsert of the flag.
+    expect(upsertCalls).toEqual([{ kind: 'features', key: 'flag-key' }]);
+  });
 });
