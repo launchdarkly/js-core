@@ -145,6 +145,15 @@ export abstract class BaseDataManager implements DataManager {
     this._connectionParams = connectionParams;
   }
 
+  /**
+   * Loads cached flags for the context and emits `cacheLoaded` with the result.
+   */
+  protected async loadCached(context: Context): Promise<boolean> {
+    const hit = await this.flagManager.loadCached(context);
+    this.emitter.emit('cacheLoaded', Context.toLDContext(context), { hit });
+    return hit;
+  }
+
   abstract identify(
     identifyResolve: () => void,
     identifyReject: (err: Error) => void,

@@ -42,6 +42,12 @@ export interface FDv2DataSourceConfig {
   /** Optional logger. */
   logger?: LDLogger;
 
+  /**
+   * Called when a cache initializer finishes, after any cached data has been
+   * delivered to {@link dataCallback}. `hit` is true when the cache had data.
+   */
+  onCacheLoaded?: (hit: boolean) => void;
+
   /** Fallback condition timeout in ms (default 120s). */
   fallbackTimeoutMs?: number;
 
@@ -81,6 +87,7 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
     statusManager,
     selectorGetter,
     logger,
+    onCacheLoaded,
     fallbackTimeoutMs = DEFAULT_FALLBACK_TIMEOUT_MS,
     recoveryTimeoutMs = DEFAULT_RECOVERY_TIMEOUT_MS,
   } = config;
@@ -187,6 +194,10 @@ export function createFDv2DataSource(config: FDv2DataSourceConfig): FDv2DataSour
           default:
             break;
         }
+      }
+
+      if (result.type === 'changeSet' && sourceManager.isCurrentInitializerCache) {
+        onCacheLoaded?.(result.payload.type !== 'none');
       }
 
       // Check for FDv1 fallback after all result handling, in one place. Any

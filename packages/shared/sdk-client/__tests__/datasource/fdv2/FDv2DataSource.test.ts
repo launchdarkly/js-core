@@ -1246,3 +1246,72 @@ it('does not re-trigger fallback when the fdv1 synchronizer itself yields a fall
 
   ds.close();
 });
+
+// -- cache lookup reporting --
+
+it('reports a cache hit after the cached data is delivered', async () => {
+  const calls: string[] = [];
+  const dataCallback = jest.fn(() => calls.push('data'));
+  const onCacheLoaded = jest.fn((hit: boolean) => calls.push(`cache:${hit}`));
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeCacheInitFactory(
+        makeMockInitializer(changeSet(makePayload({ state: undefined }), { fdv1Fallback: false })),
+      ),
+    ],
+    synchronizerSlots: [],
+    dataCallback,
+    statusManager: makeStatusManager(),
+    selectorGetter: noSelector,
+    onCacheLoaded,
+  });
+
+  await ds.start();
+
+  expect(calls).toEqual(['data', 'cache:true']);
+  ds.close();
+});
+
+it('reports a cache miss when the cache initializer returns transfer-none', async () => {
+  const onCacheLoaded = jest.fn();
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeCacheInitFactory(
+        makeMockInitializer(changeSet(makePayload({ type: 'none' }), { fdv1Fallback: false })),
+      ),
+    ],
+    synchronizerSlots: [],
+    dataCallback: jest.fn(),
+    statusManager: makeStatusManager(),
+    selectorGetter: noSelector,
+    onCacheLoaded,
+  });
+
+  await ds.start();
+
+  expect(onCacheLoaded).toHaveBeenCalledTimes(1);
+  expect(onCacheLoaded).toHaveBeenCalledWith(false);
+  ds.close();
+});
+
+it('does not report a cache lookup for a non-cache initializer', async () => {
+  const onCacheLoaded = jest.fn();
+
+  const ds = createFDv2DataSource({
+    initializerFactories: [
+      makeInitFactory(makeMockInitializer(changeSet(makePayload(), { fdv1Fallback: false }))),
+    ],
+    synchronizerSlots: [],
+    dataCallback: jest.fn(),
+    statusManager: makeStatusManager(),
+    selectorGetter: noSelector,
+    onCacheLoaded,
+  });
+
+  await ds.start();
+
+  expect(onCacheLoaded).not.toHaveBeenCalled();
+  ds.close();
+});

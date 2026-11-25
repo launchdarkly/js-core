@@ -96,7 +96,7 @@ export default class BrowserDataManager extends BaseDataManager {
     if (browserIdentifyOptions?.bootstrap) {
       this._finishIdentifyFromBootstrap(context, browserIdentifyOptions, identifyResolve);
     } else {
-      if (await this.flagManager.loadCached(context)) {
+      if (await this.loadCached(context)) {
         this._debugLog('Identify - Flags loaded from cache. Continuing to initialize via a poll.');
       }
 

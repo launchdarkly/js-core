@@ -45,6 +45,7 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
+  LDCacheLookupResult,
 } from '@launchdarkly/js-client-sdk-common';
 
 /**

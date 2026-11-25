@@ -55,6 +55,7 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
+  LDCacheLookupResult,
   // FDv2 data system configuration types.
   FDv2ConnectionMode,
   InitializerEntry,

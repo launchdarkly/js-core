@@ -1348,3 +1348,40 @@ it('does not fail a new identify when the previous data source closes before it 
 
   manager.close();
 });
+
+it('emits cacheLoaded for the identified context when the cache lookup finishes', async () => {
+  const config = makeBaseConfig();
+  const manager = createFDv2DataManagerBase(config);
+  await identifyManager(manager);
+
+  capturedDataSourceConfigs[0].onCacheLoaded(false);
+
+  expect(config.emitter.emit).toHaveBeenCalledWith(
+    'cacheLoaded',
+    { kind: 'user', key: 'test-key' },
+    { hit: false },
+  );
+
+  manager.close();
+});
+
+it('emits cacheLoaded once per identify when a mode switch reads the cache again', async () => {
+  const config = makeBaseConfig({ foregroundMode: 'one-shot' });
+  const manager = createFDv2DataManagerBase(config);
+  await identifyManager(manager);
+  capturedDataSourceConfigs[0].onCacheLoaded(true);
+
+  capturedOnReconcile!({
+    networkState: 'available',
+    lifecycleState: 'foreground',
+    requestedMode: 'streaming',
+  });
+  capturedDataSourceConfigs[1].onCacheLoaded(true);
+
+  const cacheLoadedCalls = (config.emitter.emit as jest.Mock).mock.calls.filter(
+    ([name]) => name === 'cacheLoaded',
+  );
+  expect(cacheLoadedCalls).toHaveLength(1);
+
+  manager.close();
+});

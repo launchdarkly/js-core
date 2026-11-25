@@ -356,6 +356,7 @@ export function makeClient(
     addHook: (hook: Hook) => impl.addHook(hook),
     waitForInitialization: (waitOptions?: LDWaitForInitializationOptions) =>
       impl.waitForInitialization(waitOptions),
+    waitForCache: () => impl.waitForCache(),
     logger: impl.logger,
     start: (startOptions?: LDStartOptions) => impl.start(startOptions),
   };

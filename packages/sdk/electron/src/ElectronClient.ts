@@ -8,6 +8,7 @@ import {
   Configuration,
   ConnectionMode,
   FlagManager,
+  LDCacheLookupResult,
   internal,
   LDClientImpl,
   LDClientInternalOptions,
@@ -201,6 +202,10 @@ export class ElectronClient extends LDClientImpl {
       getIPCChannelName(namespace, 'waitForInitialization'),
       (_event, options?: LDWaitForInitializationOptions): Promise<LDWaitForInitializationResult> =>
         this.waitForInitialization(options),
+    );
+
+    ipcMain.handle(getIPCChannelName(namespace, 'waitForCache'), (): Promise<LDCacheLookupResult> =>
+      this.waitForCache(),
     );
 
     ipcMain.on(getIPCChannelName(namespace, 'allFlags'), (event) => {
@@ -426,6 +431,7 @@ export function makeClient(
     addHook: (hook: Parameters<LDClient['addHook']>[0]) => impl.addHook(hook),
     waitForInitialization: (waitOptions?: Parameters<LDClient['waitForInitialization']>[0]) =>
       impl.waitForInitialization(waitOptions),
+    waitForCache: () => impl.waitForCache(),
     logger: impl.logger,
     start: (startOptions?: LDStartOptions) => impl.start(startOptions),
     setConnectionMode: (mode: Parameters<LDClient['setConnectionMode']>[0]) =>

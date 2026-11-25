@@ -1,5 +1,6 @@
 import type {
   ConnectionMode,
+  LDCacheLookupResult,
   LDContext,
   LDContextStrict,
   LDEvaluationDetail,
@@ -54,6 +55,10 @@ export class ElectronRendererClient implements LDRendererClient {
     options?: LDWaitForInitializationOptions,
   ): Promise<LDWaitForInitializationResult> {
     return this._ldClientBridge.waitForInitialization(options);
+  }
+
+  waitForCache(): Promise<LDCacheLookupResult> {
+    return this._ldClientBridge.waitForCache();
   }
 
   getContext(): LDContextStrict | undefined {

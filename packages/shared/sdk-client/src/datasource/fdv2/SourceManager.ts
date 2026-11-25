@@ -112,6 +112,9 @@ export interface SourceManager {
   /** True if the currently active synchronizer slot is an FDv1 fallback. */
   readonly isCurrentSynchronizerFDv1Fallback: boolean;
 
+  /** True if the currently active initializer was created by a cache factory. */
+  readonly isCurrentInitializerCache: boolean;
+
   /** True if the current synchronizer is the first available (primary). */
   isPrimeSynchronizer(): boolean;
 
@@ -232,6 +235,10 @@ export function createSourceManager(
 
     get isCurrentSynchronizerFDv1Fallback(): boolean {
       return synchronizerSlots[synchronizerIndex]?.isFDv1Fallback === true;
+    },
+
+    get isCurrentInitializerCache(): boolean {
+      return initializerFactories[initializerIndex]?.isCache === true;
     },
 
     isPrimeSynchronizer(): boolean {

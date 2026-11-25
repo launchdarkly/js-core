@@ -18,6 +18,7 @@ import {
 
 import {
   Hook,
+  LDCacheLookupResult,
   LDClient,
   LDClientIdentifyResult,
   LDContext,
@@ -100,6 +101,12 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
   protected initializedPromise?: Promise<LDWaitForInitializationResult>;
   protected initResolve?: (result: LDWaitForInitializationResult) => void;
   protected initializeResult?: LDWaitForInitializationResult;
+  private _cacheLookupResult?: LDCacheLookupResult;
+  private _cacheLookupWaiters: ((result: LDCacheLookupResult) => void)[] = [];
+  /** The latest identify call, which the cache lookup result belongs to. */
+  private _cacheLookupId = 0;
+  /** The identify call whose execute step is running, which a `cacheLoaded` event belongs to. */
+  private _executingCacheLookupId = 0;
 
   // NOTE: this is used to ease the transition to the new initialization pattern.
   // All client SDKs should set this to true with the exception of React Native which is
@@ -178,6 +185,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     this.emitter = new LDEmitter();
     this.emitter.on('error', (c: LDContextStrict, err: any) => {
       this.logger.error(`error: ${err}, context: ${JSON.stringify(c)}`);
+    });
+    this.emitter.on('cacheLoaded', (_c: LDContextStrict, result: LDCacheLookupResult) => {
+      this._settleCacheLookup(this._executingCacheLookupId, result);
     });
 
     this._flagManager.on((context, flagKeys, type) => {
@@ -411,6 +421,10 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
       return { status: 'error', error: new Error('Identify called before start') };
     }
 
+    this._cacheLookupId += 1;
+    const cacheLookupId = this._cacheLookupId;
+    this._cacheLookupResult = undefined;
+
     const identifyTimeout = identifyOptions?.timeout ?? DEFAULT_IDENTIFY_TIMEOUT_SECONDS;
     const noTimeout = identifyOptions?.timeout === undefined && identifyOptions?.noTimeout === true;
 
@@ -448,6 +462,7 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
           },
           execute: async (beforeResult) => {
             const { context, checkedContext } = beforeResult!;
+            this._executingCacheLookupId = cacheLookupId;
 
             if (!checkedContext.valid) {
               const error = new Error('Context was unspecified or had no key');
@@ -473,6 +488,9 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
             return identifyPromise;
           },
           after: async (res, beforeResult) => {
+            // An identify that never read the cache, such as one with bootstrap data or one whose
+            // before step failed, will not read it later, so waitForCache must not wait past it.
+            this._settleCacheLookup(cacheLookupId, { hit: false });
             if (res.status === 'complete') {
               beforeResult?.afterIdentify?.({ status: 'completed' });
             } else if (res.status === 'shed') {
@@ -556,6 +574,25 @@ export default class LDClientImpl implements LDClient, LDClientIdentifyResult {
     }
 
     return this._promiseWithTimeout(this.initializedPromise, timeout);
+  }
+
+  waitForCache(): Promise<LDCacheLookupResult> {
+    if (this._cacheLookupResult) {
+      return Promise.resolve(this._cacheLookupResult);
+    }
+    return new Promise((resolve) => {
+      this._cacheLookupWaiters.push(resolve);
+    });
+  }
+
+  private _settleCacheLookup(cacheLookupId: number, result: LDCacheLookupResult): void {
+    if (cacheLookupId !== this._cacheLookupId || this._cacheLookupResult) {
+      return;
+    }
+    this._cacheLookupResult = result;
+    const waiters = this._cacheLookupWaiters;
+    this._cacheLookupWaiters = [];
+    waiters.forEach((resolve) => resolve(result));
   }
 
   /**

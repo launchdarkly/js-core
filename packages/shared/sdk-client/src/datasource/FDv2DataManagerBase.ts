@@ -162,6 +162,8 @@ export function createFDv2DataManagerBase(
   let factoryContext: SourceFactoryContext | undefined;
   let initialized = false;
   let bootstrapped = false;
+  // A mode switch before the first basis can read the cache again for the same identify.
+  let cacheLookupReported = false;
   let closed = false;
   let flushCallback: (() => void) | undefined;
 
@@ -418,6 +420,12 @@ export function createFDv2DataManagerBase(
       statusManager,
       selectorGetter,
       logger,
+      onCacheLoaded: (hit) => {
+        if (identifiedContext && !cacheLookupReported) {
+          cacheLookupReported = true;
+          emitter.emit('cacheLoaded', Context.toLDContext(identifiedContext), { hit });
+        }
+      },
       fallbackTimeoutMs,
       recoveryTimeoutMs,
     });
@@ -515,6 +523,7 @@ export function createFDv2DataManagerBase(
       selector = undefined;
       initialized = false;
       bootstrapped = false;
+      cacheLookupReported = false;
       minimumDataAvailability = identifyOptions?.waitForNetworkResults ? 'fresh' : 'cached';
       identifiedContext = context;
       pendingIdentifyResolve = identifyResolve;

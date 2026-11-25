@@ -1,6 +1,7 @@
 import { LDFlagSet, LDFlagValue, LDLogger } from '@launchdarkly/js-sdk-common';
 
 import { Hook } from './integrations/Hooks';
+import { LDCacheLookupResult } from './LDCacheLookupResult';
 import type { LDContext, LDContextStrict } from './LDContext';
 import { LDEvaluationDetail, LDEvaluationDetailTyped } from './LDEvaluationDetail';
 import { LDIdentifyOptions } from './LDIdentifyOptions';
@@ -225,6 +226,11 @@ export interface LDClient {
    * - `"dataSourceStatus"`: Event indicating that there has been a change in the status of the
    *   data source. This will include the state of the data source as well any error information.
    *
+   * - `"cacheLoaded"`: The client has finished reading cached flag values for the context passed
+   *   to {@link identify}, whether or not it found any. The callback parameters are the context
+   *   and an {@link LDCacheLookupResult}. It does not fire when the identify operation does not
+   *   read the cache. To get the result without a race against the event, use {@link waitForCache}.
+   *
    * @param key
    *   The name of the event for which to listen.
    * @param callback
@@ -371,6 +377,35 @@ export interface LDClient {
   waitForInitialization(
     options?: LDWaitForInitializationOptions,
   ): Promise<LDWaitForInitializationResult>;
+
+  /**
+   * Returns a Promise that resolves when the client has finished reading cached flag values
+   * for the most recent {@link identify} call, whether or not it found any.
+   *
+   * Use this to start with cached flag values without waiting on the network, and to know
+   * immediately when there are none.
+   *
+   * @example
+   * ```
+   *     const { hit } = await client.waitForCache();
+   *
+   *     if (hit) {
+   *       renderWithCachedFlags();
+   *     } else {
+   *       await client.waitForInitialization({ timeout: 5 });
+   *     }
+   * ```
+   *
+   * @remarks
+   * If the cache was already read, the Promise resolves immediately. Before the first identify,
+   * it waits for that identify. If the identify operation does not read the cache, the Promise
+   * resolves with `{ hit: false }` when that operation completes or fails. The Promise is never
+   * rejected. You can also listen for the `"cacheLoaded"` event ({@link on}).
+   *
+   * @returns
+   *   A Promise that resolves to an {@link LDCacheLookupResult}.
+   */
+  waitForCache(): Promise<LDCacheLookupResult>;
 }
 
 /**

@@ -6,6 +6,7 @@ import {
 } from '../../../src/datasource/fdv2/SourceManager';
 import { Synchronizer } from '../../../src/datasource/fdv2/Synchronizer';
 import {
+  makeCacheInitFactory,
   makeInitFactory,
   makeMockInitializer,
   makeMockSynchronizer,
@@ -507,4 +508,20 @@ it('isCurrentSynchronizerFDv1Fallback returns false when synchronizer index is -
   const sm = createSourceManager([], slots, () => undefined);
   // No selection made yet (index = -1)
   expect(sm.isCurrentSynchronizerFDv1Fallback).toBe(false);
+});
+
+// -- isCurrentInitializerCache --
+
+it('isCurrentInitializerCache is true only while the cache initializer is active', () => {
+  const cacheFactory = makeCacheInitFactory(makeMockInitializer());
+  const pollFactory = makeInitFactory(makeMockInitializer());
+  const sm = createSourceManager([cacheFactory, pollFactory], [], () => undefined);
+
+  expect(sm.isCurrentInitializerCache).toBe(false);
+
+  sm.getNextInitializerAndSetActive();
+  expect(sm.isCurrentInitializerCache).toBe(true);
+
+  sm.getNextInitializerAndSetActive();
+  expect(sm.isCurrentInitializerCache).toBe(false);
 });

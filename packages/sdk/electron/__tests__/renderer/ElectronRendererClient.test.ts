@@ -26,6 +26,7 @@ const ldClientBridge: LDClientBridge = {
   variation: jest.fn(),
   variationDetail: jest.fn(),
   waitForInitialization: jest.fn(),
+  waitForCache: jest.fn(),
 };
 
 globalThis.window = {
@@ -116,6 +117,16 @@ it('passes flush() call through to bridge', async () => {
 
   expect(ldClientBridge.flush).toHaveBeenCalledTimes(1);
   expect(result).toEqual({ result: true });
+});
+
+it('passes waitForCache() call through to bridge', async () => {
+  (ldClientBridge.waitForCache as jest.Mock).mockResolvedValueOnce({ hit: true });
+
+  const client = new ElectronRendererClient(clientSideId);
+  const result = await client.waitForCache();
+
+  expect(ldClientBridge.waitForCache).toHaveBeenCalledTimes(1);
+  expect(result).toEqual({ hit: true });
 });
 
 it('passes getContext() call through to bridge', () => {

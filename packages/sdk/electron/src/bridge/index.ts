@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import type {
   ConnectionMode,
+  LDCacheLookupResult,
   LDContext,
   LDContextStrict,
   LDEvaluationDetail,
@@ -78,6 +79,9 @@ const ldClientBridge = (namespace: string): LDClientBridge => ({
     options?: LDWaitForInitializationOptions,
   ): Promise<LDWaitForInitializationResult> =>
     ipcRenderer.invoke(getIPCChannelName(namespace, 'waitForInitialization'), options),
+
+  waitForCache: (): Promise<LDCacheLookupResult> =>
+    ipcRenderer.invoke(getIPCChannelName(namespace, 'waitForCache')),
 
   numberVariation: (key: string, defaultValue: number): number =>
     ipcRenderer.sendSync(getIPCChannelName(namespace, 'numberVariation'), key, defaultValue),

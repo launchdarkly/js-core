@@ -7,6 +7,7 @@ type FlagChangeKey = `change:${string}`;
  * for specific flag changes.
  */
 export type EventName =
+  | 'cacheLoaded'
   | 'change'
   | FlagChangeKey
   | 'dataSourceStatus'

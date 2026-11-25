@@ -42,6 +42,7 @@ export type {
   LDWaitForInitializationComplete,
   LDWaitForInitializationFailed,
   LDWaitForInitializationTimeout,
+  LDCacheLookupResult,
   LDStartOptions,
   LDContext,
   LDContextStrict,

@@ -28,7 +28,12 @@ type IPCSyncChannel =
 /**
  * Asynchronous IPC channel names and helpers for type-safe main/renderer communication.
  */
-type IPCAsyncChannel = 'waitForInitialization' | 'flush' | 'identify' | 'setConnectionMode';
+type IPCAsyncChannel =
+  | 'waitForInitialization'
+  | 'waitForCache'
+  | 'flush'
+  | 'identify'
+  | 'setConnectionMode';
 
 export const AllSyncChannels: readonly IPCSyncChannel[] = [
   'addEventHandler',
@@ -56,6 +61,7 @@ export const AllSyncChannels: readonly IPCSyncChannel[] = [
  */
 export const AllAsyncChannels: readonly IPCAsyncChannel[] = [
   'waitForInitialization',
+  'waitForCache',
   'flush',
   'identify',
   'setConnectionMode',
