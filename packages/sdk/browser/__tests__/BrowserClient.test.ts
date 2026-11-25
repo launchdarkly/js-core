@@ -881,6 +881,31 @@ describe('given a mock platform for a BrowserClient', () => {
     expect(fetchUrl).toContain('/sdk/poll/eval/');
   });
 
+  it('sends the payload filter on FDv1 requests', async () => {
+    const client = makeClient(
+      'client-side-id',
+      { key: 'user-key', kind: 'user' },
+      AutoEnvAttributes.Disabled,
+      {
+        streaming: false,
+        logger,
+        diagnosticOptOut: true,
+        sendEvents: false,
+        fetchGoals: false,
+        payloadFilterKey: 'microservice-1',
+      },
+      platform,
+    );
+
+    // Start the client so that it polls for flags.
+    await client.start();
+
+    // The FDv1 request carries the filter.
+    const fetchUrl = platform.requests.fetch.mock.calls[0][0];
+    expect(fetchUrl).toContain('/sdk/evalx/');
+    expect(fetchUrl).toContain('filter=microservice-1');
+  });
+
   it('validates dataSystem options and applies browser defaults', async () => {
     const client = makeClient(
       'client-side-id',
