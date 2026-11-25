@@ -15,7 +15,7 @@ function toRefString(value: string): string {
  * @returns A literal version of the ref.
  */
 function unescape(ref: string): string {
-  return ref.indexOf('~') ? ref.replace(/~1/g, '/').replace(/~0/g, '~') : ref;
+  return ref.includes('~') ? ref.replace(/~1/g, '/').replace(/~0/g, '~') : ref;
 }
 
 function getComponents(reference: string): string[] {

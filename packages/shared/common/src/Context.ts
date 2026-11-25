@@ -141,8 +141,12 @@ function legacyToSingleKind(user: LDUser): LDSingleKindContext {
     singleKindContext.country = user.country;
   }
   if (user.privateAttributeNames !== null && user.privateAttributeNames !== undefined) {
+    // Legacy private attribute names are literal attribute names, not references,
+    // so names beginning with '/' must be escaped to keep their meaning.
     singleKindContext._meta = {
-      privateAttributes: user.privateAttributeNames,
+      privateAttributes: user.privateAttributeNames.map(
+        (name) => new AttributeReference(name, true).redactionName,
+      ),
     };
   }
 

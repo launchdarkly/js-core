@@ -464,3 +464,53 @@ describe('when handling mult-kind contexts', () => {
     });
   });
 });
+
+it('redacts attributes named by escaped references without touching similarly named nested attributes', () => {
+  const context = Context.fromLDContext({
+    kind: 'user',
+    key: 'user-key',
+    '/a': 'private',
+    '/b/c': 'private',
+    '/~x': 'private',
+    b: { c: 'public' },
+    _meta: { privateAttributes: ['/~1a', '/~1b~1c', '/~1~0x'] },
+  });
+  const uf = new ContextFilter(false, []);
+  expect(uf.filter(context)).toEqual({
+    kind: 'user',
+    key: 'user-key',
+    b: { c: 'public' },
+    _meta: { redactedAttributes: ['/~1a', '/~1b~1c', '/~1~0x'] },
+  });
+});
+
+it('redacts legacy user private attribute names that look like references', () => {
+  const context = Context.fromLDContext({
+    key: 'user-key',
+    custom: { '/a': 'private', '/b/c': 'private', '/~x': 'private', c: 'public' },
+    privateAttributeNames: ['/a', '/b/c', '/~x'],
+  });
+  const uf = new ContextFilter(false, []);
+  expect(uf.filter(context)).toEqual({
+    kind: 'user',
+    key: 'user-key',
+    c: 'public',
+    _meta: { redactedAttributes: ['/~1a', '/~1b~1c', '/~1~0x'] },
+  });
+});
+
+it('redacts the same attributes after a legacy user is converted to a context and parsed again', () => {
+  const legacy = Context.fromLDContext({
+    key: 'user-key',
+    custom: { '/a': 'private', '/b/c': 'private', '/~x': 'private', c: 'public' },
+    privateAttributeNames: ['/a', '/b/c', '/~x'],
+  });
+  const reparsed = Context.fromLDContext(Context.toLDContext(legacy)!);
+  const uf = new ContextFilter(false, []);
+  expect(uf.filter(reparsed)).toEqual({
+    kind: 'user',
+    key: 'user-key',
+    c: 'public',
+    _meta: { redactedAttributes: ['/~1a', '/~1b~1c', '/~1~0x'] },
+  });
+});
