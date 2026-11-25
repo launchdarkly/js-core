@@ -54,6 +54,7 @@ function makeMockBaseClient(overrides: Record<string, any> = {}) {
     variation: jest.fn(),
     variationDetail: jest.fn(),
     waitForInitialization: jest.fn(() => Promise.resolve({ status: 'complete' as const })),
+    waitForCache: jest.fn(() => Promise.resolve({ hit: false })),
     addHook: jest.fn(),
     ...overrides,
   };

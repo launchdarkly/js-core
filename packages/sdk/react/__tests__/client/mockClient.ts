@@ -87,6 +87,7 @@ export function makeMockClient(options: MockClientOptions = {}): MockClient {
     variationDetail: jest.fn(),
     // @ts-ignore
     waitForInitialization: jest.fn(() => Promise.resolve({ status: 'complete' as const })),
+    waitForCache: jest.fn(() => Promise.resolve({ hit: false })),
     addHook: jest.fn(),
     isReady: jest.fn(() => true),
     shouldUseCamelCaseFlagKeys: jest.fn(() => true),
