@@ -58,6 +58,7 @@ export const ldClientMock: jest.Mocked<LDClient> = {
   variationDetail: jest.fn(),
   addHook: jest.fn(),
   waitForInitialization: jest.fn(),
+  waitForCache: jest.fn(),
 };
 
 export const mockLDProvider = LDProvider as jest.Mock;
